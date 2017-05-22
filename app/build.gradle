@@ -1,0 +1,80 @@
+apply plugin: 'com.android.application'
+apply plugin: 'idea'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.3"
+    publishNonDefault true
+    // Multiple targets use the package name "dummy.package"
+    enforceUniquePackageName false
+    defaultConfig {
+        applicationId "org.chromium.chrome"
+        minSdkVersion 19
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        vectorDrawables.useSupportLibrary = true
+        multiDexEnabled true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    aaptOptions {
+        noCompress "dat", "bin", "pak"
+    }
+    sourceSets {
+        main {
+            java.filter.exclude(
+                    "com/google/protobuf/*.java",
+                    "com/google/protobuf/micro/*.java",
+                    "org/chromium/chrome/browser/offlinepages/evaluation/*.java",
+            )
+        }
+    }
+}
+
+idea {
+    module {
+        // downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile fileTree(
+            dir: 'libs/third_party/android_tools',
+            include:[
+                    'gcm.jar'
+            ]
+    )
+    compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.android.support:design:25.3.1'
+    compile 'com.android.support:mediarouter-v7:25.3.1'
+    compile 'com.android.support:multidex:1.0.1'
+    compile 'com.android.support:support-v13:25.3.1'
+    compile 'com.android.support:gridlayout-v7:25.3.1'
+    compile 'com.google.android.gms:play-services-auth:10.2.6'
+    compile 'com.google.android.gms:play-services-cast:10.2.6'
+    compile 'com.google.android.gms:play-services-gcm:10.2.6'
+    compile 'com.google.android.gms:play-services-identity:10.2.6'
+    compile 'com.google.android.gms:play-services-nearby:10.2.6'
+    compile 'com.google.android.gms:play-services-vision:10.2.6'
+    compile 'com.google.code.findbugs:jsr305:2.0.1'
+    compile 'com.google.vr:sdk-base:1.10.0'
+    compile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.1'
+    compile project(':components:autofill')
+    compile project(':components:web_contents_delegate')
+    compile project(':content')
+    compile project(':data_chart')
+    compile project(':media')
+    compile project(':ui')
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    testCompile 'junit:junit:4.12'
+}

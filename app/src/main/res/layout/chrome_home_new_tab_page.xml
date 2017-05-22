@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2017 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:background="@color/ntp_bg" >
+
+    <org.chromium.chrome.browser.widget.TintedImageButton
+        android:id="@+id/close_button"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:src="@drawable/btn_close"
+        android:scaleType="center"
+        android:background="@android:color/transparent"
+        chrome:tint="@color/dark_mode_tint" />
+
+    <View
+        android:id="@+id/centered_view"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:layout_centerInParent="true" />
+
+    <org.chromium.chrome.browser.ntp.LogoView
+        android:id="@+id/search_provider_logo"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/ntp_logo_height"
+        android:padding="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_above="@id/centered_view" />
+
+</RelativeLayout>
