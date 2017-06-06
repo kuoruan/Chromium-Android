@@ -15,18 +15,18 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class InvalidateTypes {
-  @IntDef({
-      URL, TAB, LOAD, TITLE, ALL
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface InvalidateTypesEnum {}
-  public static final int URL = 1 << 0;
-  public static final int TAB = 1 << 1;
+@IntDef({
+    InvalidateTypes.URL, InvalidateTypes.TAB, InvalidateTypes.LOAD, InvalidateTypes.TITLE,
+    InvalidateTypes.ALL
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface InvalidateTypes {
+  int URL = 1 << 0;
+  int TAB = 1 << 1;
   /**
    * state changed.
    */
-  public static final int LOAD = 1 << 2;
-  public static final int TITLE = 1 << 3;
-  public static final int ALL = (1 << 4) - 1;
+  int LOAD = 1 << 2;
+  int TITLE = 1 << 3;
+  int ALL = (1 << 4) - 1;
 }

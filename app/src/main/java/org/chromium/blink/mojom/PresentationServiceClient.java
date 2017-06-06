@@ -35,28 +35,28 @@ org.chromium.url.mojom.Url url, boolean available);
 
 
 
-    void onDefaultSessionStarted(
-PresentationSessionInfo sessionInfo);
-
-
-
-    void onConnectionStateChanged(
-PresentationSessionInfo connection, int newState);
-
-
-
-    void onConnectionClosed(
-PresentationSessionInfo connection, int reason, String message);
-
-
-
-    void onConnectionMessagesReceived(
-PresentationSessionInfo sessionInfo, ConnectionMessage[] messages);
+    void onDefaultPresentationStarted(
+PresentationInfo presentationInfo);
 
 
 
     void onReceiverConnectionAvailable(
-PresentationSessionInfo sessionInfo, PresentationConnection controllerConnectionPtr, org.chromium.mojo.bindings.InterfaceRequest<PresentationConnection> receiverConnectionRequest);
+PresentationInfo presentationInfo, PresentationConnection controllerConnectionPtr, org.chromium.mojo.bindings.InterfaceRequest<PresentationConnection> receiverConnectionRequest);
+
+
+
+    void onConnectionStateChanged(
+PresentationInfo presentationInfo, int newState);
+
+
+
+    void onConnectionClosed(
+PresentationInfo presentationInfo, int reason, String message);
+
+
+
+    void onConnectionMessagesReceived(
+PresentationInfo presentationInfo, PresentationConnectionMessage[] messages);
 
 
 }

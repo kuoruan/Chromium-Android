@@ -399,11 +399,6 @@ public class TabModelImpl extends TabModelJniBridge {
             return;
         }
 
-        if (getCount() == 1) {
-            closeTab(getTabAt(0), true, false, true);
-            return;
-        }
-
         closeAllTabs(true, false, true);
     }
 
@@ -422,10 +417,10 @@ public class TabModelImpl extends TabModelJniBridge {
     public void closeAllTabs(boolean animate, boolean uponExit, boolean canUndo) {
         for (int i = 0; i < getCount(); i++) getTabAt(i).setClosing(true);
 
-        ArrayList<Integer> closedTabs = new ArrayList<Integer>();
+        List<Tab> closedTabs = new ArrayList<>();
         while (getCount() > 0) {
             Tab tab = getTabAt(0);
-            closedTabs.add(tab.getId());
+            closedTabs.add(tab);
             closeTab(tab, animate, uponExit, canUndo, false);
         }
 

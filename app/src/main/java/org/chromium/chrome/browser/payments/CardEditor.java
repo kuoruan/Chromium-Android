@@ -469,7 +469,7 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
 
         // Card scanner is expensive to query.
         if (mCardScanner == null) {
-            mCardScanner = CreditCardScanner.create(mContext, mWebContents, this);
+            mCardScanner = CreditCardScanner.create(mWebContents, this);
             mCanScan = mCardScanner.canScan();
         }
 
@@ -678,16 +678,19 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
                     }
                     return;
                 }
-                assert isAddingNewAddress || isSelectingIncompleteAddress;
+                assert isAddingNewAddress != isSelectingIncompleteAddress;
 
-                AutofillProfile profile = isSelectingIncompleteAddress
-                        ? findTargetProfile(mProfilesForBillingAddress, eventData.first)
-                        : new AutofillProfile();
-                if (TextUtils.isEmpty(profile.getFullName())) {
-                    // Prefill card holder name as the billing address name.
+                AutofillProfile profile;
+                if (isAddingNewAddress) {
+                    profile = new AutofillProfile();
+                    // Prefill card holder name as the billing address name only when adding a new
+                    // address.
                     profile.setFullName(
                             card.getIsLocal() ? mNameField.getValue().toString() : card.getName());
+                } else {
+                    profile = findTargetProfile(mProfilesForBillingAddress, eventData.first);
                 }
+
                 final AutofillAddress editAddress = new AutofillAddress(mContext, profile);
                 mAddressEditor.edit(editAddress, new Callback<AutofillAddress>() {
                     @Override

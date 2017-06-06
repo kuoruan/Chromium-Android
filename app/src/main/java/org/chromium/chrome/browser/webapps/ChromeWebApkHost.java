@@ -4,16 +4,16 @@
 
 package org.chromium.chrome.browser.webapps;
 
-import android.content.Context;
 import android.os.StrictMode;
-import android.provider.Settings;
 
+import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.library_loader.LibraryLoader;
 import org.chromium.chrome.browser.AppHooks;
 import org.chromium.chrome.browser.ChromeFeatureList;
+import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.GooglePlayInstallState;
 import org.chromium.chrome.browser.externalauth.ExternalAuthUtils;
 import org.chromium.chrome.browser.externalauth.UserRecoverableErrorHandler;
@@ -32,11 +32,14 @@ public class ChromeWebApkHost {
     private static Boolean sEnabledForTesting;
 
     public static void init() {
-        WebApkValidator.initWithBrowserHostSignature(ChromeWebApkHostSignature.EXPECTED_SIGNATURE);
+        WebApkValidator.init(isAnyPackageNameEnabledInPrefs(),
+                ChromeWebApkHostSignature.EXPECTED_SIGNATURE, ChromeWebApkHostSignature.PUBLIC_KEY);
     }
 
     public static void initForTesting(boolean enabled) {
         sEnabledForTesting = enabled;
+        sGooglePlayInstallState = enabled ? GooglePlayInstallState.SUPPORTED
+                                          : GooglePlayInstallState.NO_PLAY_SERVICES;
     }
 
     public static boolean isEnabled() {
@@ -45,23 +48,8 @@ public class ChromeWebApkHost {
         return isEnabledInPrefs();
     }
 
-    // Returns whether updating the WebAPK is enabled.
-    public static boolean areUpdatesEnabled() {
-        if (!isEnabled()) return false;
-
-        // Updating a WebAPK without going through Google Play requires "installation from unknown
-        // sources" to be enabled. It is confusing for a user to see a dialog asking them to enable
-        // "installation from unknown sources" when they are in the middle of using the WebAPK (as
-        // opposed to after requesting to add a WebAPK to the homescreen).
-        return installingFromUnknownSourcesAllowed() || canUseGooglePlayToInstallWebApk();
-    }
-
     /** Computes the GooglePlayInstallState. */
     private static int computeGooglePlayInstallState() {
-        if (!isGooglePlayInstallEnabledByChromeFeature()) {
-            return GooglePlayInstallState.DISABLED_BY_VARIATIONS;
-        }
-
         if (!ExternalAuthUtils.getInstance().canUseGooglePlayServices(
                     ContextUtils.getApplicationContext(),
                     new UserRecoverableErrorHandler.Silent())) {
@@ -77,32 +65,10 @@ public class ChromeWebApkHost {
         return GooglePlayInstallState.SUPPORTED;
     }
 
-    /**
-     * Returns whether installing WebAPKs from Google Play is possible.
-     * If {@link sCanUseGooglePlayInstall} hasn't been set yet, it returns false immediately and
-     * calls the Google Play Install API to update {@link sCanUseGooglePlayInstall} asynchronously.
-     */
-    public static boolean canUseGooglePlayToInstallWebApk() {
-        return getGooglePlayInstallState() == GooglePlayInstallState.SUPPORTED;
-    }
-
-    /**
-     * Returns whether Google Play install is enabled by Chrome. Does not check whether installing
-     * from Google Play is possible.
-     */
-    public static boolean isGooglePlayInstallEnabledByChromeFeature() {
-        return isEnabled() && LibraryLoader.isInitialized()
-                && nativeCanUseGooglePlayToInstallWebApk();
-    }
-
-    /**
-     * Returns whether installing WebAPKs is possible either from "unknown resources" or Google
-     * Play.
-     */
+    /** Returns whether installing WebAPKs is possible. */
     @CalledByNative
     private static boolean canInstallWebApk() {
-        return isEnabled()
-                && (canUseGooglePlayToInstallWebApk() || nativeCanInstallFromUnknownSources());
+        return isEnabled() && getGooglePlayInstallState() == GooglePlayInstallState.SUPPORTED;
     }
 
     @CalledByNative
@@ -135,6 +101,21 @@ public class ChromeWebApkHost {
     }
 
     /**
+     * Check the cached value to figure out if any WebAPK package name may be used. We have to use
+     * the cached value because native library may not yet been loaded.
+     * @return Whether the feature is enabled.
+     */
+    private static boolean isAnyPackageNameEnabledInPrefs() {
+        // Will go away once the feature is enabled for everyone by default.
+        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
+        try {
+            return ChromePreferenceManager.getInstance().getCachedWebApkAnyPackageName();
+        } finally {
+            StrictMode.setThreadPolicy(oldPolicy);
+        }
+    }
+
+    /**
      * Once native is loaded we can consult the command-line (set via about:flags) and also finch
      * state to see if we should enable WebAPKs.
      */
@@ -147,24 +128,16 @@ public class ChromeWebApkHost {
             Log.d(TAG, "WebApk setting changed (%s => %s)", wasEnabled, isEnabled);
             preferenceManager.setCachedWebApkRuntimeEnabled(isEnabled);
         }
-    }
 
-    /**
-     * Returns whether the user has enabled installing apps from sources other than the Google Play
-     * Store.
-     */
-    private static boolean installingFromUnknownSourcesAllowed() {
-        Context applicationContext = ContextUtils.getApplicationContext();
-        try {
-            return Settings.Secure.getInt(applicationContext.getContentResolver(),
-                           Settings.Secure.INSTALL_NON_MARKET_APPS)
-                    == 1;
-        } catch (Settings.SettingNotFoundException e) {
-            return false;
+        boolean wasAnyPackageNameEnabled = isAnyPackageNameEnabledInPrefs();
+        boolean isAnyPackageNameEnabled =
+                CommandLine.getInstance().hasSwitch(ChromeSwitches.ENABLE_ANY_WEBAPK_PACKAGE_NAME);
+        if (wasAnyPackageNameEnabled != isAnyPackageNameEnabled) {
+            Log.d(TAG, "WebApk Any Package name setting changed (%s => %s)",
+                    wasAnyPackageNameEnabled, isAnyPackageNameEnabled);
+            preferenceManager.setCachedWebApkAnyPackageNameEnabled(isAnyPackageNameEnabled);
         }
     }
 
-    private static native boolean nativeCanUseGooglePlayToInstallWebApk();
     private static native boolean nativeCanLaunchRendererInWebApkProcess();
-    private static native boolean nativeCanInstallFromUnknownSources();
 }

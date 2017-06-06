@@ -15,14 +15,14 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class TabLoadStatus {
-  @IntDef({
-      PAGE_LOAD_FAILED, DEFAULT_PAGE_LOAD, PARTIAL_PRERENDERED_PAGE_LOAD, FULL_PRERENDERED_PAGE_LOAD
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface TabLoadStatusEnum {}
-  public static final int PAGE_LOAD_FAILED = 0;
-  public static final int DEFAULT_PAGE_LOAD = 1;
-  public static final int PARTIAL_PRERENDERED_PAGE_LOAD = 2;
-  public static final int FULL_PRERENDERED_PAGE_LOAD = 3;
+@IntDef({
+    TabLoadStatus.PAGE_LOAD_FAILED, TabLoadStatus.DEFAULT_PAGE_LOAD,
+    TabLoadStatus.PARTIAL_PRERENDERED_PAGE_LOAD, TabLoadStatus.FULL_PRERENDERED_PAGE_LOAD
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface TabLoadStatus {
+  int PAGE_LOAD_FAILED = 0;
+  int DEFAULT_PAGE_LOAD = 1;
+  int PARTIAL_PRERENDERED_PAGE_LOAD = 2;
+  int FULL_PRERENDERED_PAGE_LOAD = 3;
 }

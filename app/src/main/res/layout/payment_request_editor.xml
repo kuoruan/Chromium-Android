@@ -20,7 +20,7 @@
         android:background="@color/dark_action_bar_color" />
     
     <!-- All the page content in scrollable form. -->
-    <org.chromium.chrome.browser.payments.ui.FadingEdgeScrollView
+    <org.chromium.chrome.browser.widget.FadingEdgeScrollView
         android:id="@+id/scroll_view"
         android:layout_height="0dp"
         android:layout_width="match_parent"
@@ -37,7 +37,7 @@
             android:paddingEnd="@dimen/pref_autofill_content_spacing"
             android:orientation="vertical" />
 
-    </org.chromium.chrome.browser.payments.ui.FadingEdgeScrollView>
+    </org.chromium.chrome.browser.widget.FadingEdgeScrollView>
 
     <!-- Shadow overlaps the FadingEdgeScrollView. -->
     <org.chromium.chrome.browser.widget.FadingShadowView

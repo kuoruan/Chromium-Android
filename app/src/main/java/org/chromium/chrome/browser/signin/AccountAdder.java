@@ -53,7 +53,8 @@ public class AccountAdder {
     }
 
     private void onOpenAddGoogleAccountPageFailed(final Activity activity, final int result) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.AlertDialogTheme);
+        AlertDialog.Builder builder =
+                new AlertDialog.Builder(activity, R.style.SigninAlertDialogTheme);
         builder.setMessage(R.string.signin_open_add_google_account_page_failed);
         builder.setPositiveButton(
                 R.string.signin_open_settings_accounts, new DialogInterface.OnClickListener() {

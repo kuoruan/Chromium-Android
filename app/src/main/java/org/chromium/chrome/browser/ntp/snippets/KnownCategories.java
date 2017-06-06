@@ -15,50 +15,55 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class KnownCategories {
-  @IntDef({
-      RECENT_TABS, DOWNLOADS, BOOKMARKS, PHYSICAL_WEB_PAGES, FOREIGN_TABS, LOCAL_CATEGORIES_COUNT,
-      REMOTE_CATEGORIES_OFFSET, ARTICLES, LAST_KNOWN_REMOTE_CATEGORY
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface KnownCategoriesEnum {}
+@IntDef({
+    KnownCategories.RECENT_TABS, KnownCategories.DOWNLOADS, KnownCategories.BOOKMARKS,
+    KnownCategories.PHYSICAL_WEB_PAGES, KnownCategories.FOREIGN_TABS, KnownCategories.READING_LIST,
+    KnownCategories.LOCAL_CATEGORIES_COUNT, KnownCategories.REMOTE_CATEGORIES_OFFSET,
+    KnownCategories.ARTICLES, KnownCategories.LAST_KNOWN_REMOTE_CATEGORY
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface KnownCategories {
   /**
    * Pages recently downloaded during normal navigation.
    */
-  public static final int RECENT_TABS = 0;
+  int RECENT_TABS = 0;
   /**
    * Pages downloaded by the user for offline consumption.
    */
-  public static final int DOWNLOADS = 1;
+  int DOWNLOADS = 1;
   /**
    * Recently used bookmarks.
    */
-  public static final int BOOKMARKS = 2;
+  int BOOKMARKS = 2;
   /**
    * Physical Web page available in the vicinity.
    */
-  public static final int PHYSICAL_WEB_PAGES = 3;
+  int PHYSICAL_WEB_PAGES = 3;
   /**
    * Pages recently browsed to on other devices.
    */
-  public static final int FOREIGN_TABS = 4;
+  int FOREIGN_TABS = 4;
+  /**
+   * Pages from the user reading list.
+   */
+  int READING_LIST = 5;
   /**
    * ****************** INSERT NEW LOCAL CATEGORIES HERE! ****************** Existing categories are
    * persisted and they must never be removed. This may happen implicitly, e.g. when an older
    * version without some local category is installed. Follows the last local category.
    */
-  public static final int LOCAL_CATEGORIES_COUNT = 5;
+  int LOCAL_CATEGORIES_COUNT = 6;
   /**
    * Remote categories come after this.
    */
-  public static final int REMOTE_CATEGORIES_OFFSET = 10000;
+  int REMOTE_CATEGORIES_OFFSET = 10000;
   /**
    * Articles for you.
    */
-  public static final int ARTICLES = 10001;
+  int ARTICLES = 10001;
   /**
    * ****************** INSERT NEW REMOTE CATEGORIES HERE! ****************** Tracks the last known
    * remote category
    */
-  public static final int LAST_KNOWN_REMOTE_CATEGORY = 10001;
+  int LAST_KNOWN_REMOTE_CATEGORY = 10001;
 }

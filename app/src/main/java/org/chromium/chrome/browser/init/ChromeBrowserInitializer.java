@@ -39,6 +39,7 @@ import org.chromium.chrome.browser.FileProviderHelper;
 import org.chromium.chrome.browser.crash.MinidumpDirectoryObserver;
 import org.chromium.chrome.browser.device.DeviceClassManager;
 import org.chromium.chrome.browser.download.DownloadManagerService;
+import org.chromium.chrome.browser.searchwidget.SearchWidgetProvider;
 import org.chromium.chrome.browser.services.GoogleServicesManager;
 import org.chromium.chrome.browser.tabmodel.document.DocumentTabModelImpl;
 import org.chromium.chrome.browser.webapps.ActivityAssigner;
@@ -118,9 +119,26 @@ public class ChromeBrowserInitializer {
      * @throws ProcessInitException if there is a problem with the native library.
      */
     public void handleSynchronousStartup() throws ProcessInitException {
+        handleSynchronousStartupInternal(false);
+    }
+
+    /**
+     * Initializes the Chrome browser process synchronously with GPU process warmup.
+     */
+    public void handleSynchronousStartupWithGpuWarmUp() throws ProcessInitException {
+        handleSynchronousStartupInternal(true);
+    }
+
+    private void handleSynchronousStartupInternal(final boolean startGpuProcess)
+            throws ProcessInitException {
         assert ThreadUtils.runningOnUiThread() : "Tried to start the browser on the wrong thread";
 
-        BrowserParts parts = new EmptyBrowserParts();
+        BrowserParts parts = new EmptyBrowserParts() {
+            @Override
+            public boolean shouldStartGpuProcess() {
+                return startGpuProcess;
+            }
+        };
         handlePreNativeStartup(parts);
         handlePostNativeStartup(false, parts);
     }
@@ -388,6 +406,9 @@ public class ChromeBrowserInitializer {
 
         mNativeInitializationComplete = true;
         ContentUriUtils.setFileProviderUtil(new FileProviderHelper());
+
+        // Initialize the search widget.
+        SearchWidgetProvider.initialize();
 
         // Start the file observer to watch the minidump directory.
         new AsyncTask<Void, Void, MinidumpDirectoryObserver>() {

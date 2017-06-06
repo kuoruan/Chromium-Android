@@ -25,6 +25,7 @@ public interface InterfaceRegistrar<ParamType> {
     public static class Registry<ParamType> {
         private static Registry<Context> sContextRegistry;
         private static Registry<WebContents> sWebContentsRegistry;
+        private static Registry<RenderFrameHost> sRenderFrameHostRegistry;
 
         private List<InterfaceRegistrar<ParamType>> mRegistrars =
                 new ArrayList<InterfaceRegistrar<ParamType>>();
@@ -45,6 +46,14 @@ public interface InterfaceRegistrar<ParamType> {
             sWebContentsRegistry.applyRegistrars(interfaceRegistry, webContents);
         }
 
+        public static void applyRenderFrameHostRegistrars(
+                InterfaceRegistry interfaceRegistry, RenderFrameHost renderFrameHost) {
+            if (sRenderFrameHostRegistry == null) {
+                return;
+            }
+            sRenderFrameHostRegistry.applyRegistrars(interfaceRegistry, renderFrameHost);
+        }
+
         public static void addContextRegistrar(InterfaceRegistrar<Context> registrar) {
             if (sContextRegistry == null) {
                 sContextRegistry = new Registry<Context>();
@@ -57,6 +66,14 @@ public interface InterfaceRegistrar<ParamType> {
                 sWebContentsRegistry = new Registry<WebContents>();
             }
             sWebContentsRegistry.addRegistrar(registrar);
+        }
+
+        public static void addRenderFrameHostRegistrar(
+                InterfaceRegistrar<RenderFrameHost> registrar) {
+            if (sRenderFrameHostRegistry == null) {
+                sRenderFrameHostRegistry = new Registry<RenderFrameHost>();
+            }
+            sRenderFrameHostRegistry.addRegistrar(registrar);
         }
 
         private Registry() {}

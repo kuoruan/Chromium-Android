@@ -86,7 +86,4 @@ public class NotificationConstants {
     // For example, 'Web:chromium.org' for a notification from chromium.org.
     static final String GROUP_WEB_PREFIX = "Web:";
 
-    public static final String CATEGORY_ID_BROWSER = "browser";
-    public static final String CATEGORY_ID_SITES = "sites";
-    public static final String CATEGORY_GROUP_ID_GENERAL = "general";
 }

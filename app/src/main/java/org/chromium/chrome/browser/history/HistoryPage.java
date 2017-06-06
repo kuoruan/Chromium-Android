@@ -11,6 +11,7 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.BasicNativePage;
 import org.chromium.chrome.browser.NativePageHost;
 import org.chromium.chrome.browser.UrlConstants;
+import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarManageable;
 
 /**
  * Native page for managing browsing history.
@@ -31,7 +32,8 @@ public class HistoryPage extends BasicNativePage {
 
     @Override
     protected void initialize(Activity activity, final NativePageHost host) {
-        mHistoryManager = new HistoryManager(activity, this);
+        mHistoryManager = new HistoryManager(
+                activity, false, ((SnackbarManageable) activity).getSnackbarManager());
         mTitle = activity.getString(R.string.menu_history);
     }
 

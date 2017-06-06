@@ -6,7 +6,7 @@
 <!-- Base layout for Autofill editors.
      Editor fields are expected to be added to the LinearLayout inside of the ScrollView.
 -->
-<org.chromium.chrome.browser.payments.ui.FadingEdgeScrollView
+<org.chromium.chrome.browser.widget.FadingEdgeScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/scroll_view"
     android:layout_width="match_parent"
@@ -23,4 +23,4 @@
         android:paddingEnd="@dimen/pref_autofill_content_spacing"
         android:orientation="vertical" />
 
-</org.chromium.chrome.browser.payments.ui.FadingEdgeScrollView>
+</org.chromium.chrome.browser.widget.FadingEdgeScrollView>

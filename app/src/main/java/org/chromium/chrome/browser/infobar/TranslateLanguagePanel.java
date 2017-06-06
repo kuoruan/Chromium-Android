@@ -52,7 +52,7 @@ public class TranslateLanguagePanel
     public TranslateLanguagePanel(SubPanelListener listener, TranslateOptions options) {
         mListener = listener;
         mOptions = options;
-        mSessionOptions = new TranslateOptions(mOptions);
+        mSessionOptions = mOptions.copy();
     }
 
     @Override

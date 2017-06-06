@@ -14,6 +14,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.DrawerLayout.DrawerListener;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.Toolbar.OnMenuItemClickListener;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -37,7 +38,6 @@ import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.snackbar.Snackbar;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;
 import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarController;
-import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarManageable;
 import org.chromium.chrome.browser.widget.selection.SelectableListLayout;
 import org.chromium.chrome.browser.widget.selection.SelectableListToolbar.SearchDelegate;
 import org.chromium.chrome.browser.widget.selection.SelectionDelegate;
@@ -81,16 +81,14 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
             Resources resources = ContextUtils.getApplicationContext().getResources();
             int iconSize = resources.getDimensionPixelSize(R.dimen.downloads_item_icon_size);
 
-            mOfflinePageBridge = new OfflinePageDownloadBridge(
-                    Profile.getLastUsedProfile().getOriginalProfile());
-            mSelectionDelegate = new SelectionDelegate<DownloadHistoryItemWrapper>();
+            mOfflinePageBridge = new OfflinePageDownloadBridge(Profile.getLastUsedProfile());
+            mSelectionDelegate = new DownloadItemSelectionDelegate();
             mThumbnailProvider = new ThumbnailProviderImpl(iconSize);
         }
 
         @Override
         public DownloadDelegate getDownloadDelegate() {
-            return DownloadManagerService.getDownloadManagerService(
-                    ContextUtils.getApplicationContext());
+            return DownloadManagerService.getDownloadManagerService();
         }
 
         @Override
@@ -168,6 +166,7 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
     private final FilterAdapter mFilterAdapter;
     private final ObserverList<DownloadUiObserver> mObservers = new ObserverList<>();
     private final BackendProvider mBackendProvider;
+    private final SnackbarManager mSnackbarManager;
 
     private final SpaceDisplay mSpaceDisplay;
     private final ListView mFilterView;
@@ -179,13 +178,25 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
     private ViewGroup mMainView;
     private DownloadManagerToolbar mToolbar;
     private SelectableListLayout<DownloadHistoryItemWrapper> mSelectableListLayout;
+    private boolean mIsSeparateActivity;
 
-    @SuppressWarnings("unchecked")  // mSelectableListLayout
-    public DownloadManagerUi(
-            Activity activity, boolean isOffTheRecord, ComponentName parentComponent) {
+    /**
+     * Constructs a new DownloadManagerUi.
+     * @param activity The {@link Activity} associated with the download manager.
+     * @param isOffTheRecord Whether an off-the-record tab is currently being displayed.
+     * @param parentComponent The {@link ComponentName} of the parent activity.
+     * @param isSeparateActivity Whether the download manager UI will be shown in a separate
+     *                           activity than the main Chrome activity.
+     * @param snackbarManager The {@link SnackbarManager} used to display snackbars.
+     */
+    @SuppressWarnings("unchecked") // mSelectableListLayout
+    public DownloadManagerUi(Activity activity, boolean isOffTheRecord,
+            ComponentName parentComponent, boolean isSeparateActivity,
+            SnackbarManager snackbarManager) {
         mActivity = activity;
         mBackendProvider =
                 sProviderForTests == null ? new DownloadBackendProvider() : sProviderForTests;
+        mSnackbarManager = snackbarManager;
 
         mMainView = (ViewGroup) LayoutInflater.from(activity).inflate(R.layout.download_main, null);
 
@@ -233,6 +244,9 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
         mFilterView.setOnItemClickListener(mFilterAdapter);
 
         mUndoDeletionSnackbarController = new UndoDeletionSnackbarController();
+
+        mIsSeparateActivity = isSeparateActivity;
+        if (!mIsSeparateActivity) mToolbar.removeCloseButton();
     }
 
     /**
@@ -288,6 +302,20 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
     }
 
     /**
+     * See {@link SelectableListLayout#detachToolbarView()}.
+     */
+    public Toolbar detachToolbarView() {
+        return mSelectableListLayout.detachToolbarView();
+    }
+
+    /**
+     * @return The vertical scroll offset of the content view.
+     */
+    public int getVerticalScrollOffset() {
+        return mRecyclerView.computeVerticalScrollOffset();
+    }
+
+    /**
      * Sets the download manager to the state that the url represents.
      */
     public void updateForUrl(String url) {
@@ -297,7 +325,7 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        if (item.getItemId() == R.id.close_menu_id && !DeviceFormFactor.isTablet(mActivity)) {
+        if (item.getItemId() == R.id.close_menu_id && mIsSeparateActivity) {
             mActivity.finish();
             return true;
         } else if (item.getItemId() == R.id.selection_mode_delete_menu_id) {
@@ -437,7 +465,7 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
         snackbar.setAction(mActivity.getString(R.string.undo), itemsToDelete);
         snackbar.setTemplateText(mActivity.getString(snackbarTemplateId));
 
-        ((SnackbarManageable) mActivity).getSnackbarManager().showSnackbar(snackbar);
+        mSnackbarManager.showSnackbar(snackbar);
     }
 
     private List<DownloadHistoryItemWrapper> getItemsForDeletion() {
@@ -482,13 +510,12 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
     }
 
     private void dismissUndoDeletionSnackbars() {
-        ((SnackbarManageable) mActivity).getSnackbarManager().dismissSnackbars(
-                mUndoDeletionSnackbarController);
+        mSnackbarManager.dismissSnackbars(mUndoDeletionSnackbarController);
     }
 
     @VisibleForTesting
     public SnackbarManager getSnackbarManagerForTesting() {
-        return ((SnackbarManageable) mActivity).getSnackbarManager();
+        return mSnackbarManager;
     }
 
     /** Returns the {@link DownloadManagerToolbar}. */

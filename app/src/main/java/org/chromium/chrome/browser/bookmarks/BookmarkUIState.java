@@ -17,6 +17,7 @@ import org.chromium.components.bookmarks.BookmarkId;
 class BookmarkUIState {
     static final int STATE_LOADING = 1;
     static final int STATE_FOLDER = 2;
+    static final int STATE_SEARCHING = 3;
     private static final int STATE_INVALID = 0;
 
     /**
@@ -29,6 +30,13 @@ class BookmarkUIState {
     static BookmarkUIState createLoadingState() {
         BookmarkUIState state = new BookmarkUIState();
         state.mState = STATE_LOADING;
+        state.mUrl = "";
+        return state;
+    }
+
+    static BookmarkUIState createSearchState() {
+        BookmarkUIState state = new BookmarkUIState();
+        state.mState = STATE_SEARCHING;
         state.mUrl = "";
         return state;
     }

@@ -281,7 +281,7 @@ public class TabContentManager {
      * Update the priority-ordered list of visible tabs.
      * @param priority The list of tab ids ordered in terms of priority.
      */
-    public void updateVisibleIds(List<Integer> priority) {
+    public void updateVisibleIds(List<Integer> priority, int primaryTabId) {
         if (mNativeTabContentManager != 0) {
             int idsSize = Math.min(mFullResThumbnailsMaxSize, priority.size());
 
@@ -292,7 +292,7 @@ public class TabContentManager {
             for (int i = 0; i < idsSize; i++) {
                 mPriorityTabIds[i] = priority.get(i);
             }
-            nativeUpdateVisibleIds(mNativeTabContentManager, mPriorityTabIds);
+            nativeUpdateVisibleIds(mNativeTabContentManager, mPriorityTabIds, primaryTabId);
         }
     }
 
@@ -324,7 +324,8 @@ public class TabContentManager {
             Object bitmap, float thumbnailScale);
     private native void nativeInvalidateIfChanged(long nativeTabContentManager, int tabId,
             String url);
-    private native void nativeUpdateVisibleIds(long nativeTabContentManager, int[] priority);
+    private native void nativeUpdateVisibleIds(
+            long nativeTabContentManager, int[] priority, int primaryTabId);
     private native void nativeRemoveTabThumbnail(long nativeTabContentManager, int tabId);
     private native void nativeGetDecompressedThumbnail(long nativeTabContentManager, int tabId);
     private static native void nativeDestroy(long nativeTabContentManager);

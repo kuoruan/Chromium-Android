@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.media.router;
 
-import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Handler;
 import android.support.v4.app.DialogFragment;
@@ -23,9 +22,8 @@ public class MediaRouteChooserDialogManager extends BaseMediaRouteDialogManager 
     private static final String DIALOG_FRAGMENT_TAG =
             "android.support.v7.mediarouter:MediaRouteChooserDialogFragment";
 
-    public MediaRouteChooserDialogManager(MediaSource source, Context applicationContext,
-            MediaRouteDialogDelegate delegate) {
-        super(source, applicationContext, delegate);
+    public MediaRouteChooserDialogManager(MediaSource source, MediaRouteDialogDelegate delegate) {
+        super(source, delegate);
     }
 
     /**

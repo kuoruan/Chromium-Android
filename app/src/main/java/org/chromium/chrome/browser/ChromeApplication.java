@@ -6,10 +6,8 @@ package org.chromium.chrome.browser;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
-import android.util.Log;
 
 import org.chromium.base.ActivityState;
 import org.chromium.base.ApplicationStatus;
@@ -17,7 +15,6 @@ import org.chromium.base.CommandLineInitUtil;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.TraceEvent;
-import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.MainDex;
 import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.library_loader.ProcessInitException;
@@ -25,11 +22,6 @@ import org.chromium.chrome.browser.document.DocumentActivity;
 import org.chromium.chrome.browser.document.IncognitoDocumentActivity;
 import org.chromium.chrome.browser.init.InvalidStartupDialog;
 import org.chromium.chrome.browser.metrics.UmaUtils;
-import org.chromium.chrome.browser.partnercustomizations.PartnerBrowserCustomizations;
-import org.chromium.chrome.browser.preferences.PreferencesLauncher;
-import org.chromium.chrome.browser.preferences.autofill.AutofillAndPaymentsPreferences;
-import org.chromium.chrome.browser.preferences.password.SavePasswordsPreferences;
-import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.document.ActivityDelegateImpl;
 import org.chromium.chrome.browser.tabmodel.document.DocumentTabModelSelector;
 import org.chromium.chrome.browser.tabmodel.document.StorageDelegate;
@@ -73,18 +65,6 @@ public class ChromeApplication extends ContentApplication {
         TraceEvent.end("ChromeApplication.onCreate");
     }
 
-    @CalledByNative
-    protected void showAutofillSettings() {
-        PreferencesLauncher.launchSettingsPage(
-                this, AutofillAndPaymentsPreferences.class.getName());
-    }
-
-    @CalledByNative
-    protected void showPasswordSettings() {
-        PreferencesLauncher.launchSettingsPage(this,
-                SavePasswordsPreferences.class.getName());
-    }
-
     /**
      * Shows an error dialog following a startup error, and then exits the application.
      * @param e The exception reported by Chrome initialization.
@@ -100,32 +80,6 @@ public class ChromeApplication extends ContentApplication {
     @Override
     public void initCommandLine() {
         CommandLineInitUtil.initCommandLine(this, COMMAND_LINE_FILE);
-    }
-
-    /**
-     * Opens the UI to clear browsing data.
-     * @param tab The tab that triggered the request.
-     */
-    @CalledByNative
-    protected void openClearBrowsingData(Tab tab) {
-        Activity activity = tab.getWindowAndroid().getActivity().get();
-        if (activity == null) {
-            Log.e(TAG,
-                    "Attempting to open clear browsing data for a tab without a valid activity");
-            return;
-        }
-
-        Intent intent = PreferencesLauncher.createIntentForClearBrowsingDataPage(activity);
-        activity.startActivity(intent);
-    }
-
-    /**
-     * @return Whether parental controls are enabled.  Returning true will disable
-     *         incognito mode.
-     */
-    @CalledByNative
-    protected boolean areParentalControlsEnabled() {
-        return PartnerBrowserCustomizations.isIncognitoDisabled();
     }
 
     /**

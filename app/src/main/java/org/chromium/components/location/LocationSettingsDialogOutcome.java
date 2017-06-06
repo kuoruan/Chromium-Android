@@ -15,20 +15,20 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class LocationSettingsDialogOutcome {
-  @IntDef({
-      GRANTED, DENIED, NO_PROMPT
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface LocationSettingsDialogOutcomeEnum {}
+@IntDef({
+    LocationSettingsDialogOutcome.GRANTED, LocationSettingsDialogOutcome.DENIED,
+    LocationSettingsDialogOutcome.NO_PROMPT
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface LocationSettingsDialogOutcome {
   /**
    * The user accepted the prompt and the system location setting has been flipped to granted.
    */
-  public static final int GRANTED = 1;
+  int GRANTED = 1;
   /**
    * The user rejected the prompt and the system location setting has not been flipped.
    */
-  public static final int DENIED = 2;
+  int DENIED = 2;
   /**
    * The prompt could not be triggered. When CanPromptToEnableSystemLocationSetting() returns true,
    * this should only happen in exceptional circonstances, e.g. - In the case of a race condition
@@ -37,5 +37,5 @@ public class LocationSettingsDialogOutcome {
    * became unavailable or unresponsive after the response from
    * CanPromptToEnableSystemLocationSetting() was received.
    */
-  public static final int NO_PROMPT = 3;
+  int NO_PROMPT = 3;
 }

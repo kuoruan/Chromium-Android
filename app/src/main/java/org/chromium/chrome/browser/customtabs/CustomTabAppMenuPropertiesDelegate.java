@@ -124,7 +124,7 @@ public class CustomTabAppMenuPropertiesDelegate extends AppMenuPropertiesDelegat
                 }
             }
 
-            prepareAddToHomescreenMenuItem(menu, currentTab.getUrl(), addToHomeScreenVisible);
+            prepareAddToHomescreenMenuItem(menu, currentTab, addToHomeScreenVisible);
         }
     }
 

@@ -34,6 +34,8 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.download.ui.BackendProvider;
 import org.chromium.chrome.browser.download.ui.DownloadHistoryAdapter;
 import org.chromium.chrome.browser.externalnav.ExternalNavigationDelegateImpl;
+import org.chromium.components.offline_items_collection.ContentId;
+import org.chromium.components.offline_items_collection.LegacyHelpers;
 import org.chromium.net.ConnectionType;
 import org.chromium.net.NetworkChangeNotifierAutoDetect;
 import org.chromium.net.RegistrationPolicyAlwaysRegister;
@@ -77,6 +79,8 @@ public class DownloadManagerService extends BroadcastReceiver implements
     private static final String UNKNOWN_MIME_TYPE = "application/unknown";
     private static final String DOWNLOAD_UMA_ENTRY = "DownloadUmaEntry";
     private static final String DOWNLOAD_RETRY_COUNT_FILE_NAME = "DownloadRetryCount";
+    private static final String DOWNLOAD_MANUAL_RETRY_SUFFIX = ".Manual";
+    private static final String DOWNLOAD_TOTAL_RETRY_SUFFIX = ".Total";
     private static final long UPDATE_DELAY_MILLIS = 1000;
     // Wait 10 seconds to resume all downloads, so that we won't impact tab loading.
     private static final long RESUME_DELAY_MILLIS = 10000;
@@ -223,12 +227,12 @@ public class DownloadManagerService extends BroadcastReceiver implements
      * Creates DownloadManagerService.
      */
     @SuppressFBWarnings("LI_LAZY_INIT") // Findbugs doesn't see this is only UI thread.
-    public static DownloadManagerService getDownloadManagerService(Context context) {
+    public static DownloadManagerService getDownloadManagerService() {
         ThreadUtils.assertOnUiThread();
-        context = context.getApplicationContext();
+        Context appContext = ContextUtils.getApplicationContext();
         if (sDownloadManagerService == null) {
-            sDownloadManagerService = new DownloadManagerService(context,
-                    new SystemDownloadNotifier(context),  new Handler(), UPDATE_DELAY_MILLIS);
+            sDownloadManagerService = new DownloadManagerService(appContext,
+                    new SystemDownloadNotifier(appContext), new Handler(), UPDATE_DELAY_MILLIS);
         }
         return sDownloadManagerService;
     }
@@ -597,7 +601,7 @@ public class DownloadManagerService extends BroadcastReceiver implements
                     }
                     break;
                 case DOWNLOAD_STATUS_CANCELLED:
-                    mDownloadNotifier.notifyDownloadCanceled(item.getId());
+                    mDownloadNotifier.notifyDownloadCanceled(item.getContentId());
                     break;
                 case DOWNLOAD_STATUS_INTERRUPTED:
                     mDownloadNotifier.notifyDownloadInterrupted(info, progress.mIsAutoResumable);
@@ -781,7 +785,8 @@ public class DownloadManagerService extends BroadcastReceiver implements
             case DOWNLOAD_STATUS_CANCELLED:
                 recordDownloadFinishedUMA(downloadStatus, downloadItem.getId(),
                         downloadItem.getDownloadInfo().getBytesReceived());
-                clearDownloadRetryCount(downloadItem.getId());
+                clearDownloadRetryCount(downloadItem.getId(), true);
+                clearDownloadRetryCount(downloadItem.getId(), false);
                 break;
             case DOWNLOAD_STATUS_INTERRUPTED:
                 entry = getUmaStatsEntry(downloadItem.getId());
@@ -1083,10 +1088,11 @@ public class DownloadManagerService extends BroadcastReceiver implements
                 ? false : ExternalNavigationDelegateImpl.resolveIntent(intent, true);
     }
 
-    /** See {@link #openDownloadedContent(Context, String, boolean, long)}. */
+    /** See {@link #openDownloadedContent(Context, String, boolean, boolean, String, long)}. */
     protected void openDownloadedContent(final DownloadInfo downloadInfo, final long downloadId) {
         openDownloadedContent(mContext, downloadInfo.getFilePath(),
-                isSupportedMimeType(downloadInfo.getMimeType()), downloadId);
+                isSupportedMimeType(downloadInfo.getMimeType()), downloadInfo.isOffTheRecord(),
+                downloadInfo.getDownloadGuid(), downloadId);
     }
 
     /**
@@ -1096,10 +1102,13 @@ public class DownloadManagerService extends BroadcastReceiver implements
      * @param context             Context to use.
      * @param filePath            Path to the downloaded item.
      * @param isSupportedMimeType MIME type of the downloaded item.
+     * @param isOffTheRecord      Whether the download was for a off the record profile.
+     * @param downloadGuid        GUID of the download item in DownloadManager.
      * @param downloadId          ID of the download item in DownloadManager.
      */
     protected static void openDownloadedContent(final Context context, final String filePath,
-            final boolean isSupportedMimeType, final long downloadId) {
+            final boolean isSupportedMimeType, final boolean isOffTheRecord,
+            final String downloadGuid, final long downloadId) {
         new AsyncTask<Void, Void, Intent>() {
             @Override
             public Intent doInBackground(Void... params) {
@@ -1109,10 +1118,14 @@ public class DownloadManagerService extends BroadcastReceiver implements
 
             @Override
             protected void onPostExecute(Intent intent) {
-                if (intent == null
-                        || !ExternalNavigationDelegateImpl.resolveIntent(intent, true)
-                        || !DownloadUtils.fireOpenIntentForDownload(context, intent)) {
+                if (intent == null || !ExternalNavigationDelegateImpl.resolveIntent(intent, true)
+                        || !DownloadUtils.fireOpenIntentForDownload(context, intent)
+                        || !hasDownloadManagerService()) {
                     openDownloadsPage(context);
+                } else {
+                    DownloadManagerService service =
+                            DownloadManagerService.getDownloadManagerService();
+                    service.updateLastAccessTime(downloadGuid, isOffTheRecord);
                 }
             }
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -1148,7 +1161,7 @@ public class DownloadManagerService extends BroadcastReceiver implements
      * Open the Activity which shows a list of all downloads.
      * @param context Application context
      */
-    protected static void openDownloadsPage(Context context) {
+    public static void openDownloadsPage(Context context) {
         if (DownloadUtils.showDownloadManager(null, null)) return;
 
         // Open the Android Download Manager.
@@ -1162,7 +1175,7 @@ public class DownloadManagerService extends BroadcastReceiver implements
     }
 
     @Override
-    public void resumeDownload(DownloadItem item, boolean hasUserGesture) {
+    public void resumeDownload(ContentId id, DownloadItem item, boolean hasUserGesture) {
         DownloadProgress progress = mDownloadProgressMap.get(item.getId());
         if (progress != null && progress.mDownloadStatus == DOWNLOAD_STATUS_IN_PROGRESS
                 && !progress.mDownloadItem.getDownloadInfo().isPaused()) {
@@ -1186,14 +1199,19 @@ public class DownloadManagerService extends BroadcastReceiver implements
             if (!progress.mCanDownloadWhileMetered) {
                 progress.mCanDownloadWhileMetered = isActiveNetworkMetered(mContext);
             }
-            clearDownloadRetryCount(item.getId());
+            incrementDownloadRetryCount(item.getId(), true);
+            clearDownloadRetryCount(item.getId(), true);
         } else {
-            int count = incrementAndReturnDownloadRetryCount(item.getId());
-            if (count > getAutoResumptionLimit()) {
+            // TODO(qinmin): Consolidate this logic with the logic in notification service that
+            // throttles browser restarts.
+            SharedPreferences sharedPrefs = getAutoRetryCountSharedPreference(mContext);
+            int count = sharedPrefs.getInt(item.getId(), 0);
+            if (count >= getAutoResumptionLimit()) {
                 removeAutoResumableDownload(item.getId());
                 onDownloadInterrupted(item.getDownloadInfo(), false);
                 return;
             }
+            incrementDownloadRetryCount(item.getId(), false);
         }
         nativeResumeDownload(getNativeDownloadManagerService(), item.getId(),
                 item.getDownloadInfo().isOffTheRecord());
@@ -1201,27 +1219,25 @@ public class DownloadManagerService extends BroadcastReceiver implements
 
     /**
      * Called to cancel a download.
-     * @param downloadGuid GUID of the download.
+     * @param id The {@link ContentId} of the download to cancel.
      * @param isOffTheRecord Whether the download is off the record.
-     * @param isNotificationDismissed Whether cancel is caused by dismissing the notification.
      */
     @Override
-    public void cancelDownload(
-            String downloadGuid, boolean isOffTheRecord) {
-        nativeCancelDownload(getNativeDownloadManagerService(), downloadGuid, isOffTheRecord);
-        removeDownloadProgress(downloadGuid);
-        recordDownloadFinishedUMA(DOWNLOAD_STATUS_CANCELLED, downloadGuid, 0);
+    public void cancelDownload(ContentId id, boolean isOffTheRecord) {
+        nativeCancelDownload(getNativeDownloadManagerService(), id.id, isOffTheRecord);
+        removeDownloadProgress(id.id);
+        recordDownloadFinishedUMA(DOWNLOAD_STATUS_CANCELLED, id.id, 0);
     }
 
     /**
      * Called to pause a download.
-     * @param downloadGuid GUID of the download.
+     * @param id The {@link ContentId} of the download to pause.
      * @param isOffTheRecord Whether the download is off the record.
      */
     @Override
-    public void pauseDownload(String downloadGuid, boolean isOffTheRecord) {
-        nativePauseDownload(getNativeDownloadManagerService(), downloadGuid, isOffTheRecord);
-        DownloadProgress progress = mDownloadProgressMap.get(downloadGuid);
+    public void pauseDownload(ContentId id, boolean isOffTheRecord) {
+        nativePauseDownload(getNativeDownloadManagerService(), id.id, isOffTheRecord);
+        DownloadProgress progress = mDownloadProgressMap.get(id.id);
         // Calling pause will stop listening to the download item. Update its progress now.
         // If download is already completed, canceled or failed, there is no need to update the
         // download notification.
@@ -1508,7 +1524,8 @@ public class DownloadManagerService extends BroadcastReceiver implements
                 mHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        resumeDownload(progress.mDownloadItem, false);
+                        resumeDownload(LegacyHelpers.buildLegacyContentId(false, id),
+                                progress.mDownloadItem, false);
                     }
                 }, mUpdateDelayInMillis);
             }
@@ -1651,7 +1668,8 @@ public class DownloadManagerService extends BroadcastReceiver implements
     @Override
     public void broadcastDownloadAction(DownloadItem downloadItem, String action) {
         Intent intent = DownloadNotificationService.buildActionIntent(mContext, action,
-                downloadItem.getId(), downloadItem.getDownloadInfo().isOffTheRecord(), false);
+                LegacyHelpers.buildLegacyContentId(false, downloadItem.getId()),
+                downloadItem.getDownloadInfo().isOffTheRecord());
         mContext.sendBroadcast(intent);
     }
 
@@ -1710,8 +1728,7 @@ public class DownloadManagerService extends BroadcastReceiver implements
      */
     @CalledByNative
     private static void onDownloadItemCanceled(String fileName, boolean isExternalStorageMissing) {
-        DownloadManagerService service = getDownloadManagerService(
-                ContextUtils.getApplicationContext());
+        DownloadManagerService service = getDownloadManagerService();
         int reason = isExternalStorageMissing ? DownloadManager.ERROR_DEVICE_NOT_FOUND
                 : DownloadManager.ERROR_FILE_ALREADY_EXISTS;
         service.onDownloadFailed(fileName, reason);
@@ -1762,29 +1779,73 @@ public class DownloadManagerService extends BroadcastReceiver implements
 
     /**
      * Increments the interruption count for a download. If the interruption count reaches a certain
-     * threshold, the download will no longer auto resume unless user click the resume button
-     * to clear the count.
+     * threshold, the download will no longer auto resume unless user click the resume button to
+     * clear the count.
+     *
      * @param downloadGuid Download GUID.
-     * @return The interruption count of the download, after incrementation.
+     * @param hasUserGesture Whether the retry is caused by user gesture.
      */
-    private int incrementAndReturnDownloadRetryCount(String downloadGuid) {
-        SharedPreferences sharedPrefs = getAutoRetryCountSharedPreference(mContext);
-        int count = sharedPrefs.getInt(downloadGuid, 0);
-        count++;
-        SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putInt(downloadGuid, count);
-        editor.apply();
-        return count;
+    private void incrementDownloadRetryCount(String downloadGuid, boolean hasUserGesture) {
+        String name = getDownloadRetryCountSharedPrefName(downloadGuid, hasUserGesture, false);
+        incrementDownloadRetrySharedPreferenceCount(name);
+        name = getDownloadRetryCountSharedPrefName(downloadGuid, hasUserGesture, true);
+        incrementDownloadRetrySharedPreferenceCount(name);
     }
 
     /**
-     * clears the interruption count for a download.
-     * @param downloadGuid Download GUID.
+     * Helper method to increment the retry count for a SharedPreference entry.
+     * @param sharedPreferenceName Name of the SharedPreference entry.
      */
-    private void clearDownloadRetryCount(String downloadGuid) {
+    private void incrementDownloadRetrySharedPreferenceCount(String sharedPreferenceName) {
         SharedPreferences sharedPrefs = getAutoRetryCountSharedPreference(mContext);
+        int count = sharedPrefs.getInt(sharedPreferenceName, 0);
         SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.remove(downloadGuid);
+        count++;
+        editor.putInt(sharedPreferenceName, count);
+        editor.apply();
+    }
+
+    /**
+     * Helper method to retrieve the SharedPreference name for different download retry types.
+     * TODO(qinmin): introduce a proto for this and consolidate all the UMA metrics (including
+     * retry counts in DownloadHistory) stored in persistent storage.
+     * @param downloadGuid Guid of the download.
+     * @param hasUserGesture Whether the SharedPreference is for manual retry attempts.
+     * @param isTotalCount Whether the SharedPreference is for total retry attempts.
+     */
+    private String getDownloadRetryCountSharedPrefName(
+            String downloadGuid, boolean hasUserGesture, boolean isTotalCount) {
+        if (isTotalCount) return downloadGuid + DOWNLOAD_TOTAL_RETRY_SUFFIX;
+        if (hasUserGesture) return downloadGuid + DOWNLOAD_MANUAL_RETRY_SUFFIX;
+        return downloadGuid;
+    }
+
+    /**
+     * clears the retry count for a download.
+     *
+     * @param downloadGuid Download GUID.
+     * @param isAutoRetryOnly Whether to clear the auto retry count only.
+     */
+    private void clearDownloadRetryCount(String downloadGuid, boolean isAutoRetryOnly) {
+        SharedPreferences sharedPrefs = getAutoRetryCountSharedPreference(mContext);
+        String name = getDownloadRetryCountSharedPrefName(downloadGuid, !isAutoRetryOnly, false);
+        int count = Math.min(sharedPrefs.getInt(name, 0), 200);
+        assert count >= 0;
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.remove(name);
+        if (isAutoRetryOnly) {
+            RecordHistogram.recordSparseSlowlyHistogram(
+                    "MobileDownload.ResumptionsCount.Automatic", count);
+        } else {
+            RecordHistogram.recordSparseSlowlyHistogram(
+                    "MobileDownload.ResumptionsCount.Manual", count);
+            name = getDownloadRetryCountSharedPrefName(downloadGuid, false, true);
+            count = sharedPrefs.getInt(name, 0);
+            assert count >= 0;
+            RecordHistogram.recordSparseSlowlyHistogram(
+                    "MobileDownload.ResumptionsCount.Total", Math.min(count, 500));
+            editor.remove(name);
+        }
         editor.apply();
     }
 
@@ -1793,6 +1854,18 @@ public class DownloadManagerService extends BroadcastReceiver implements
             mAutoResumptionLimit = nativeGetAutoResumptionLimit();
         }
         return mAutoResumptionLimit;
+    }
+
+    /**
+     * Updates the last access time of a download.
+     * @param downloadGuid Download GUID.
+     * @param isOffTheRecord Whether the download is off the record.
+     */
+    @Override
+    public void updateLastAccessTime(String downloadGuid, boolean isOffTheRecord) {
+        if (TextUtils.isEmpty(downloadGuid)) return;
+
+        nativeUpdateLastAccessTime(getNativeDownloadManagerService(), downloadGuid, isOffTheRecord);
     }
 
     @Override
@@ -1826,4 +1899,6 @@ public class DownloadManagerService extends BroadcastReceiver implements
             long nativeDownloadManagerService, boolean isOffTheRecord);
     private native void nativeCheckForExternallyRemovedDownloads(
             long nativeDownloadManagerService, boolean isOffTheRecord);
+    private native void nativeUpdateLastAccessTime(
+            long nativeDownloadManagerService, String downloadGuid, boolean isOffTheRecord);
 }

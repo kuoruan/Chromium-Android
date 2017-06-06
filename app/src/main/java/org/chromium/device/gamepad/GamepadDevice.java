@@ -76,7 +76,7 @@ class GamepadDevice {
                 mAxes[i++] = axis;
             }
         }
-        mMappings = GamepadMappings.getMappings(mDeviceName, mAxes);
+        mMappings = GamepadMappings.getMappings(inputDevice, mAxes);
     }
 
     /**

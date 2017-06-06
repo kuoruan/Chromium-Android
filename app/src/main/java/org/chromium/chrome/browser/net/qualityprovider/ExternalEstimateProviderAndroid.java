@@ -4,8 +4,6 @@
 
 package org.chromium.chrome.browser.net.qualityprovider;
 
-import android.content.Context;
-
 import org.chromium.base.NonThreadSafe;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -29,7 +27,7 @@ public class ExternalEstimateProviderAndroid {
     private long mNativePtr;
 
     @CalledByNative
-    private static ExternalEstimateProviderAndroid create(Context context, long nativePtr) {
+    private static ExternalEstimateProviderAndroid create(long nativePtr) {
         return AppHooks.get().createExternalEstimateProviderAndroid(nativePtr);
     }
 

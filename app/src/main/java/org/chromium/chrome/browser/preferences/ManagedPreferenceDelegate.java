@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.preferences;
 import android.preference.Preference;
 import android.view.View;
 
+import org.chromium.chrome.R;
 import org.chromium.chrome.browser.util.ViewUtils;
 
 /**
@@ -72,6 +73,8 @@ public abstract class ManagedPreferenceDelegate {
     public void initPreference(Preference preference) {
         if (isPreferenceControlledByPolicy(preference)) {
             preference.setIcon(ManagedPreferencesUtils.getManagedByEnterpriseIconId());
+        } else if (isPreferenceControlledByCustodian(preference)) {
+            preference.setIcon(R.drawable.ic_account_child_grey600_36dp);
         }
 
         if (isPreferenceClickDisabledByPolicy(preference)) {

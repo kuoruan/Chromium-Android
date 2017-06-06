@@ -15,13 +15,13 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class SystemUIResourceType {
-  @IntDef({
-      OVERSCROLL_EDGE, OVERSCROLL_GLOW, OVERSCROLL_GLOW_L
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface SystemUIResourceTypeEnum {}
-  public static final int OVERSCROLL_EDGE = 0;
-  public static final int OVERSCROLL_GLOW = 1;
-  public static final int OVERSCROLL_GLOW_L = 2;
+@IntDef({
+    SystemUIResourceType.OVERSCROLL_EDGE, SystemUIResourceType.OVERSCROLL_GLOW,
+    SystemUIResourceType.OVERSCROLL_GLOW_L
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface SystemUIResourceType {
+  int OVERSCROLL_EDGE = 0;
+  int OVERSCROLL_GLOW = 1;
+  int OVERSCROLL_GLOW_L = 2;
 }

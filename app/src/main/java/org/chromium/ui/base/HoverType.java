@@ -15,15 +15,13 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class HoverType {
-  @IntDef({
-      NONE, FIRST, ON_DEMAND, HOVER, LAST
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface HoverTypeEnum {}
-  public static final int NONE = 1 << 0;
-  public static final int FIRST = NONE;
-  public static final int ON_DEMAND = 1 << 1;
-  public static final int HOVER = 1 << 2;
-  public static final int LAST = HOVER;
+@IntDef({
+    HoverType.NONE, HoverType.FIRST, HoverType.HOVER, HoverType.LAST
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface HoverType {
+  int NONE = 1 << 0;
+  int FIRST = NONE;
+  int HOVER = 1 << 1;
+  int LAST = HOVER;
 }

@@ -26,7 +26,7 @@ public abstract class SnackbarActivity extends SynchronousInitializationActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        mSnackbarManager = new SnackbarManager(this);
+        mSnackbarManager = new SnackbarManager(this, null);
     }
 
     @Override

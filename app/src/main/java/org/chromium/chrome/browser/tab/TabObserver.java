@@ -66,9 +66,9 @@ public interface TabObserver {
     /**
      * Called when a tab has started to load a page.
      * <p>
-     * This will occur when the main frame has committed a provisional load, and will also
-     * occur in instances where we need to simulate load progress (i.e. swapping in a not
-     * fully loaded pre-rendered page).
+     * This will occur when the main frame starts the navigation, and will also occur in instances
+     * where we need to simulate load progress (i.e. swapping in a not fully loaded pre-rendered
+     * page).
      * <p>
      * For visual loading indicators/throbbers, {@link #onLoadStarted(Tab)} and
      * {@link #onLoadStopped(Tab)} should be used to drive updates.
@@ -208,12 +208,12 @@ public interface TabObserver {
      * @param tab The notifying {@link Tab}.
      * @param url The validated URL for the loading page.
      * @param isInMainFrame Whether the navigation is for the main frame.
-     * @param isSamePage Whether the main frame navigation did not cause changes to the
+     * @param isSameDocument Whether the main frame navigation did not cause changes to the
      *                   document (for example scrolling to a named anchor or PopState).
      * @param isErrorPage Whether the navigation shows an error page.
      */
-    public void onDidStartNavigation(
-            Tab tab, String url, boolean isInMainFrame, boolean isSamePage, boolean isErrorPage);
+    public void onDidStartNavigation(Tab tab, String url, boolean isInMainFrame,
+            boolean isSameDocument, boolean isErrorPage);
 
     /**
      * Called when a navigation is finished i.e. committed, aborted or replaced by a new one.
@@ -225,7 +225,7 @@ public interface TabObserver {
      *                     successful commits or error pages that replace the previous page
      *                     (distinguished by |isErrorPage|), and false for errors that leave the
      *                     user on the previous page.
-     * @param isSamePage Whether the main frame navigation did not cause changes to the
+     * @param isSameDocument Whether the main frame navigation did not cause changes to the
      *                   document (for example scrolling to a named anchor or PopState).
      * @param isFragmentNavigation Whether the main frame navigation did not cause changes
      *                             to the document (for example scrolling to a named anchor
@@ -235,7 +235,7 @@ public interface TabObserver {
      * @param httpStatusCode The HTTP status code of the navigation.
      */
     public void onDidFinishNavigation(Tab tab, String url, boolean isInMainFrame,
-            boolean isErrorPage, boolean hasCommitted, boolean isSamePage,
+            boolean isErrorPage, boolean hasCommitted, boolean isSameDocument,
             boolean isFragmentNavigation, @Nullable Integer pageTransition, int errorCode,
             int httpStatusCode);
 

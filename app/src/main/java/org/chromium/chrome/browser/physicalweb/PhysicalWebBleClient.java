@@ -4,35 +4,24 @@
 
 package org.chromium.chrome.browser.physicalweb;
 
-import android.app.Activity;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.messages.Message;
 import com.google.android.gms.nearby.messages.MessageFilter;
 import com.google.android.gms.nearby.messages.MessageListener;
 
-import org.chromium.base.Log;
 import org.chromium.chrome.browser.AppHooks;
 
 /**
  * The Client that harvests URLs from BLE signals.
- * This class is designed to scan URSs from Bluetooth Low Energy beacons.
+ * This class is designed to scan URLs from Bluetooth Low Energy beacons.
  * This class is currently an empty implementation and must be extended by a
  * subclass.
  */
 public class PhysicalWebBleClient {
     private static PhysicalWebBleClient sInstance;
     private static final String TAG = "PhysicalWeb";
-
-    // We don't actually listen to any of the onFound or onLost events in the foreground.
-    // The background listener will get these.
-    protected static class ForegroundMessageListener extends MessageListener {
-        @Override
-        public void onFound(Message message) {}
-    }
 
     protected static class BackgroundMessageListener extends MessageListener {
         @Override
@@ -74,78 +63,11 @@ public class PhysicalWebBleClient {
     }
 
     /**
-     * Begin a background subscription to URLs broadcasted from BLE beacons.
-     * This currently does nothing and should be overridden by a subclass.
-     * @param callback Callback to be run when subscription task is done, regardless of whether it
-     *         is successful.
-     */
-    void backgroundSubscribe(Runnable callback) {
-        Log.d(TAG, "background subscribing in empty client");
-        if (callback != null) {
-            callback.run();
-        }
-    }
-
-    /**
-     * Begin a background subscription to URLs broadcasted from BLE beacons.
-     * This currently does nothing and should be overridden by a subclass.
-     */
-    void backgroundSubscribe() {
-        backgroundSubscribe(null);
-    }
-
-    /**
-     * Cancel a background subscription to URLs broadcasted from BLE beacons.
-     * This currently does nothing and should be overridden by a subclass.
-     * @param callback Callback to be run when subscription cancellation task is done, regardless of
-     *         whether it is successful.
-     */
-    void backgroundUnsubscribe(Runnable callback) {
-        Log.d(TAG, "background unsubscribing in empty client");
-        if (callback != null) {
-            callback.run();
-        }
-    }
-
-    /**
-     * Cancel a background subscription to URLs broadcasted from BLE beacons.
-     * This currently does nothing and should be overridden by a subclass.
-     */
-    void backgroundUnsubscribe() {
-        backgroundUnsubscribe(null);
-    }
-
-    /**
      * Create a MessageListener that listens during a background scan.
      * @return the MessageListener.
      */
     MessageListener createBackgroundMessageListener() {
         return new BackgroundMessageListener();
-    }
-
-    /**
-     * Begin a foreground subscription to URLs broadcasted from BLE beacons.
-     * This currently does nothing and should be overridden by a subclass.
-     * @param activity The Activity that is performing the scan.
-     */
-    void foregroundSubscribe(Activity activity) {
-        Log.d(TAG, "foreground subscribing in empty client");
-    }
-
-    /**
-     * Cancel a foreground subscription to URLs broadcasted from BLE beacons.
-     * This currently does nothing and should be overridden by a subclass.
-     */
-    void foregroundUnsubscribe() {
-        Log.d(TAG, "foreground unsubscribing in empty client");
-    }
-
-    /**
-     * Create a MessageListener that listens during a foreground scan.
-     * @return the MessageListener.
-     */
-    MessageListener createForegroundMessageListener() {
-        return new ForegroundMessageListener();
     }
 
     /**
@@ -155,15 +77,6 @@ public class PhysicalWebBleClient {
      */
     String getUrlFromMessage(Message message) {
         return null;
-    }
-
-    /**
-     * Modify a GoogleApiClient.Builder as necessary for doing Physical Web scanning.
-     * @param builder The builder to be modified.
-     * @return The Builder.
-     */
-    GoogleApiClient.Builder modifyGoogleApiClientBuilder(GoogleApiClient.Builder builder) {
-        return builder.addApi(Nearby.MESSAGES_API);
     }
 
     /**

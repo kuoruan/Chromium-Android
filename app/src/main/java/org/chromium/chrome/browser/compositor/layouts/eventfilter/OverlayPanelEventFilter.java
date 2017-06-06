@@ -22,7 +22,7 @@ import java.util.ArrayList;
 /**
  * The {@link GestureEventFilter} used when an overlay panel is being shown. It filters
  * events that happen in the Content View area and propagates them to the appropriate
- * ContentViewCore via {@link EventFilterHost}.
+ * ContentViewCore.
  */
 public class OverlayPanelEventFilter extends GestureEventFilter {
 
@@ -110,6 +110,9 @@ public class OverlayPanelEventFilter extends GestureEventFilter {
     /** The initial Y position of the current gesture. */
     private float mInitialEventY;
 
+    /** Whether or not the superclass has seen a down event. */
+    private boolean mFilterHadDownEvent;
+
     private class SwipeRecognizerImpl extends SwipeRecognizer {
         public SwipeRecognizerImpl(Context context) {
             super(context);
@@ -127,11 +130,10 @@ public class OverlayPanelEventFilter extends GestureEventFilter {
     /**
      * Creates a {@link GestureEventFilter} with offset touch events.
      * @param context The {@link Context} for Android.
-     * @param host The {@link EventFilterHost} for this event filter.
      * @param panelManager The {@link OverlayPanelManager} responsible for showing panels.
      */
-    public OverlayPanelEventFilter(Context context, EventFilterHost host, OverlayPanel panel) {
-        super(context, host, panel, false, false);
+    public OverlayPanelEventFilter(Context context, OverlayPanel panel) {
+        super(context, panel, false, false);
 
         mGestureDetector = new GestureDetector(context, new InternalGestureDetector());
         mPanel = panel;
@@ -329,6 +331,14 @@ public class OverlayPanelEventFilter extends GestureEventFilter {
      */
     private void propagateEvent(MotionEvent e, EventTarget target) {
         if (target == EventTarget.PANEL) {
+            // Make sure the internal gesture detector has seen at least on down event.
+            if (e.getActionMasked() == MotionEvent.ACTION_DOWN) mFilterHadDownEvent = true;
+            if (!mFilterHadDownEvent) {
+                MotionEvent down = MotionEvent.obtain(e);
+                down.setAction(MotionEvent.ACTION_DOWN);
+                super.onTouchEventInternal(down);
+                mFilterHadDownEvent = true;
+            }
             super.onTouchEventInternal(e);
         } else if (target == EventTarget.CONTENT_VIEW) {
             propagateEventToContentViewCore(e);
@@ -441,11 +451,6 @@ public class OverlayPanelEventFilter extends GestureEventFilter {
      * @return Whether the event has been consumed.
      */
     protected boolean handleScroll(MotionEvent e1, MotionEvent e2, float distanceY) {
-        // TODO(mdjones): It seems impossible that either of the two MotionEvents passed into this
-        // function would be null provided the InternalGestureDetector checks them. However, it
-        // still seems to be possible...
-        if (e1 == null || e2 == null) return false;
-
         // If the panel is peeking then the swipe recognizer will handle the scroll event.
         if (mPanel.getPanelState() == PanelState.PEEKED) return false;
 
@@ -562,15 +567,11 @@ public class OverlayPanelEventFilter extends GestureEventFilter {
 
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
-            // TODO(mdjones): Investigate how this is ever the case. The API docs do not say this
-            // can happen (https://crbug.com/613069).
-            if (e == null) return false;
             return handleSingleTapUp(e);
         }
 
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            if (e1 == null || e2 == null) return false;
             return handleScroll(e1, e2, distanceY);
         }
     }

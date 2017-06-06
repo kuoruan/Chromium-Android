@@ -4,11 +4,13 @@
 
 package org.chromium.content.browser;
 
-import android.os.Bundle;
+import android.os.IBinder;
 
-import org.chromium.content.common.FileDescriptorInfo;
-import org.chromium.content.common.IChildProcessCallback;
-import org.chromium.content.common.IChildProcessService;
+import org.chromium.base.process_launcher.ChildProcessCreationParams;
+import org.chromium.base.process_launcher.FileDescriptorInfo;
+import org.chromium.base.process_launcher.IChildProcessService;
+
+import javax.annotation.Nullable;
 
 /**
  * Manages a connection between the browser activity and a child service. ChildProcessConnection is
@@ -83,16 +85,13 @@ public interface ChildProcessConnection {
      * Setups the connection after it was started with start().
      * @param commandLine (optional) will be ignored if the command line was already sent in start()
      * @param filesToBeMapped a list of file descriptors that should be registered
-     * @param processCallback used for status updates regarding this process connection
+     * @param callback optional client specified callbacks that the child can use to communicate
+     *                 with the parent process
      * @param connectionCallback will be called exactly once after the connection is set up or the
      *                           setup fails
      */
-    void setupConnection(
-            String[] commandLine,
-            FileDescriptorInfo[] filesToBeMapped,
-            IChildProcessCallback processCallback,
-            ConnectionCallback connectionCallback,
-            Bundle sharedRelros);
+    void setupConnection(String[] commandLine, FileDescriptorInfo[] filesToBeMapped,
+            @Nullable IBinder callback, ConnectionCallback connectionCallback);
 
     /**
      * Terminates the connection to IChildProcessService, closing all bindings. It is safe to call

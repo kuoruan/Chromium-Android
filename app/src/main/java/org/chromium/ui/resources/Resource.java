@@ -7,6 +7,8 @@ package org.chromium.ui.resources;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 
+import org.chromium.ui.resources.statics.NinePatchData;
+
 /**
  * A basic resource interface that all assets must use to be exposed to the CC layer as
  * UIResourceIds.
@@ -24,15 +26,16 @@ public interface Resource {
     Rect getBitmapSize();
 
     /**
-     * @return The padded content area of this resource.  For 9-patches this will represent the
-     *         valid content of the 9-patch.  It can mean other things for other Resources though.
+     * Returns the nine patch data if the resource is backed by a nine patch bitmap. In all other
+     * cases, this will be null.
+     * @return The nine patch data for the bitmap or null.
      */
-    Rect getPadding();
+    NinePatchData getNinePatchData();
 
     /**
-     * @return The aperture of this resource.  For 9-patches this will represent the area of the
-     *         {@link Bitmap} that should not be stretched.  It can mean other things for other
-     *         Resources though.
+     * Creates the native representation of this Resource. Note that the ownership is passed to the
+     * caller.
+     * @return The pointer to the native Resource.
      */
-    Rect getAperture();
+    long createNativeResource();
 }

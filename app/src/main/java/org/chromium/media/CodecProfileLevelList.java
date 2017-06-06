@@ -226,30 +226,43 @@ class CodecProfileLevelList {
                 }
             case VideoCodec.kCodecHEVC:
                 switch (level) {
+                    case CodecProfileLevel.HEVCHighTierLevel1:
                     case CodecProfileLevel.HEVCMainTierLevel1:
                         return 30;
+                    case CodecProfileLevel.HEVCHighTierLevel2:
                     case CodecProfileLevel.HEVCMainTierLevel2:
                         return 60;
+                    case CodecProfileLevel.HEVCHighTierLevel21:
                     case CodecProfileLevel.HEVCMainTierLevel21:
                         return 63;
+                    case CodecProfileLevel.HEVCHighTierLevel3:
                     case CodecProfileLevel.HEVCMainTierLevel3:
                         return 90;
+                    case CodecProfileLevel.HEVCHighTierLevel31:
                     case CodecProfileLevel.HEVCMainTierLevel31:
                         return 93;
+                    case CodecProfileLevel.HEVCHighTierLevel4:
                     case CodecProfileLevel.HEVCMainTierLevel4:
                         return 120;
+                    case CodecProfileLevel.HEVCHighTierLevel41:
                     case CodecProfileLevel.HEVCMainTierLevel41:
                         return 123;
+                    case CodecProfileLevel.HEVCHighTierLevel5:
                     case CodecProfileLevel.HEVCMainTierLevel5:
                         return 150;
+                    case CodecProfileLevel.HEVCHighTierLevel51:
                     case CodecProfileLevel.HEVCMainTierLevel51:
                         return 153;
+                    case CodecProfileLevel.HEVCHighTierLevel52:
                     case CodecProfileLevel.HEVCMainTierLevel52:
                         return 156;
+                    case CodecProfileLevel.HEVCHighTierLevel6:
                     case CodecProfileLevel.HEVCMainTierLevel6:
                         return 180;
+                    case CodecProfileLevel.HEVCHighTierLevel61:
                     case CodecProfileLevel.HEVCMainTierLevel61:
                         return 183;
+                    case CodecProfileLevel.HEVCHighTierLevel62:
                     case CodecProfileLevel.HEVCMainTierLevel62:
                         return 186;
                     default:

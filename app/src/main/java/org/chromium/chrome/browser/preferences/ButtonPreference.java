@@ -25,14 +25,14 @@ public class ButtonPreference extends Preference {
      */
     public ButtonPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
-        setLayoutResource(R.layout.preference_button);
+        setLayoutResource(R.layout.button_preference_layout);
+        setWidgetLayoutResource(R.layout.button_preference_button);
         setSelectable(false);
     }
 
     @Override
     protected void onBindView(View view) {
         super.onBindView(view);
-
         Button button = (Button) view.findViewById(R.id.button_preference);
         button.setText(this.getTitle());
         button.setOnClickListener(new View.OnClickListener() {

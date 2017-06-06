@@ -81,6 +81,7 @@ public class GroupedPermissionInfoBar extends PermissionInfoBar {
         super.onButtonClicked(isPrimaryButton);
     }
 
+    @Override
     @CalledByNative
     protected boolean isPersistSwitchOn() {
         return super.isPersistSwitchOn();

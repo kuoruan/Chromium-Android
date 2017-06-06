@@ -8,7 +8,6 @@ import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.ntp.snippets.CategoryInt;
 import org.chromium.chrome.browser.ntp.snippets.CategoryStatus;
-import org.chromium.chrome.browser.ntp.snippets.CategoryStatus.CategoryStatusEnum;
 import org.chromium.chrome.browser.ntp.snippets.KnownCategories;
 import org.chromium.chrome.browser.ntp.snippets.SnippetArticle;
 import org.chromium.chrome.browser.ntp.snippets.SnippetsBridge;
@@ -89,7 +88,7 @@ public class SectionList
      *     they are empty, even when they are normally not.
      * @return The number of suggestions for the section.
      */
-    private int resetSection(@CategoryInt int category, @CategoryStatusEnum int categoryStatus,
+    private int resetSection(@CategoryInt int category, @CategoryStatus int categoryStatus,
             boolean alwaysAllowEmptySections) {
         SuggestionsSource suggestionsSource = mUiDelegate.getSuggestionsSource();
         List<SnippetArticle> suggestions = suggestionsSource.getSuggestionsForCategory(category);
@@ -120,7 +119,7 @@ public class SectionList
 
     @Override
     public void onNewSuggestions(@CategoryInt int category) {
-        @CategoryStatusEnum
+        @CategoryStatus
         int status = mUiDelegate.getSuggestionsSource().getCategoryStatus(category);
 
         if (!canLoadSuggestions(category, status)) return;
@@ -138,7 +137,7 @@ public class SectionList
 
     @Override
     public void onMoreSuggestions(@CategoryInt int category, List<SnippetArticle> suggestions) {
-        @CategoryStatusEnum
+        @CategoryStatus
         int status = mUiDelegate.getSuggestionsSource().getCategoryStatus(category);
         if (!canLoadSuggestions(category, status)) return;
 
@@ -146,7 +145,7 @@ public class SectionList
     }
 
     @Override
-    public void onCategoryStatusChanged(@CategoryInt int category, @CategoryStatusEnum int status) {
+    public void onCategoryStatusChanged(@CategoryInt int category, @CategoryStatus int status) {
         // Observers should not be registered for this state.
         assert status != CategoryStatus.ALL_SUGGESTIONS_EXPLICITLY_DISABLED;
 
@@ -162,10 +161,6 @@ public class SectionList
             case CategoryStatus.LOADING_ERROR:
                 // Need to remove the entire section from the UI immediately.
                 removeSection(mSections.get(category));
-                return;
-
-            case CategoryStatus.SIGNED_OUT:
-                resetSection(category, status, /* alwaysAllowEmptySections = */ false);
                 return;
 
             default:
@@ -205,11 +200,11 @@ public class SectionList
      * If false, {@code suggestions} are appended to current list of suggestions.
      */
     private void setSuggestions(@CategoryInt int category, List<SnippetArticle> suggestions,
-            @CategoryStatusEnum int status, boolean replaceExisting) {
+            @CategoryStatus int status, boolean replaceExisting) {
         mSections.get(category).setSuggestions(suggestions, status, replaceExisting);
     }
 
-    private boolean canLoadSuggestions(@CategoryInt int category, @CategoryStatusEnum int status) {
+    private boolean canLoadSuggestions(@CategoryInt int category, @CategoryStatus int status) {
         // We never want to add suggestions from unknown categories.
         if (!mSections.containsKey(category)) return false;
 

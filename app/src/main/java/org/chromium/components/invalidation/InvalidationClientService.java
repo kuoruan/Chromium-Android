@@ -242,7 +242,8 @@ public class InvalidationClientService extends AndroidListener {
     @Override
     public void requestAuthToken(final PendingIntent pendingIntent,
             @Nullable String invalidAuthToken) {
-        @Nullable Account account = ChromeSigninController.get(this).getSignedInUser();
+        @Nullable
+        Account account = ChromeSigninController.get().getSignedInUser();
         if (account == null) {
             // This should never happen, because this code should only be run if a user is
             // signed-in.
@@ -252,7 +253,7 @@ public class InvalidationClientService extends AndroidListener {
 
         // Attempt to retrieve a token for the user. This method will also invalidate
         // invalidAuthToken if it is non-null.
-        AccountManagerHelper.get(this).getNewAuthToken(account, invalidAuthToken,
+        AccountManagerHelper.get().getNewAuthToken(account, invalidAuthToken,
                 getOAuth2ScopeWithType(), new AccountManagerHelper.GetAuthTokenCallback() {
                     @Override
                     public void tokenAvailable(String token) {
@@ -478,7 +479,7 @@ public class InvalidationClientService extends AndroidListener {
         }
         Bundle bundle =
                 PendingInvalidation.createBundle(objectName, objectSource, version, payload);
-        Account account = ChromeSigninController.get(this).getSignedInUser();
+        Account account = ChromeSigninController.get().getSignedInUser();
         String contractAuthority = AndroidSyncSettings.getContractAuthority(this);
         requestSyncFromContentResolver(bundle, account, contractAuthority);
     }

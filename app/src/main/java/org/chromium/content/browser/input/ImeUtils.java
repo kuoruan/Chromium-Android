@@ -37,11 +37,10 @@ public class ImeUtils {
      */
     public static void computeEditorInfo(int inputType, int inputFlags, int inputMode,
             int initialSelStart, int initialSelEnd, EditorInfo outAttrs) {
-        outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_FULLSCREEN | EditorInfo.IME_FLAG_NO_EXTRACT_UI;
         outAttrs.inputType =
                 EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT;
 
-        if ((inputFlags & WebTextInputFlags.AutocompleteOff) != 0) {
+        if ((inputFlags & WebTextInputFlags.kAutocompleteOff) != 0) {
             outAttrs.inputType |= EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
         }
 
@@ -50,13 +49,13 @@ public class ImeUtils {
             if (inputType == TextInputType.TEXT) {
                 // Normal text field
                 imeAction = EditorInfo.IME_ACTION_GO;
-                if ((inputFlags & WebTextInputFlags.AutocorrectOff) == 0) {
+                if ((inputFlags & WebTextInputFlags.kAutocorrectOff) == 0) {
                     outAttrs.inputType |= EditorInfo.TYPE_TEXT_FLAG_AUTO_CORRECT;
                 }
             } else if (inputType == TextInputType.TEXT_AREA
                     || inputType == TextInputType.CONTENT_EDITABLE) {
                 outAttrs.inputType |= EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
-                if ((inputFlags & WebTextInputFlags.AutocorrectOff) == 0) {
+                if ((inputFlags & WebTextInputFlags.kAutocorrectOff) == 0) {
                     outAttrs.inputType |= EditorInfo.TYPE_TEXT_FLAG_AUTO_CORRECT;
                 }
                 imeAction = EditorInfo.IME_ACTION_NONE;
@@ -100,7 +99,7 @@ public class ImeUtils {
                 case WebTextInputMode.kKanaName:
                 case WebTextInputMode.kKataKana:
                     outAttrs.inputType |= EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
-                    if ((inputFlags & WebTextInputFlags.AutocorrectOff) == 0) {
+                    if ((inputFlags & WebTextInputFlags.kAutocorrectOff) == 0) {
                         outAttrs.inputType |= EditorInfo.TYPE_TEXT_FLAG_AUTO_CORRECT;
                     }
                     imeAction = EditorInfo.IME_ACTION_NONE;
@@ -132,11 +131,11 @@ public class ImeUtils {
         // type. This is not using AutocapitalizeNone because Android does not autocapitalize by
         // default and there is no way to express no capitalization.
         // Autocapitalize is meant as a hint to the virtual keyboard.
-        if ((inputFlags & WebTextInputFlags.AutocapitalizeCharacters) != 0) {
+        if ((inputFlags & WebTextInputFlags.kAutocapitalizeCharacters) != 0) {
             outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS;
-        } else if ((inputFlags & WebTextInputFlags.AutocapitalizeWords) != 0) {
+        } else if ((inputFlags & WebTextInputFlags.kAutocapitalizeWords) != 0) {
             outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_WORDS;
-        } else if ((inputFlags & WebTextInputFlags.AutocapitalizeSentences) != 0) {
+        } else if ((inputFlags & WebTextInputFlags.kAutocapitalizeSentences) != 0) {
             outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
         }
         // Content editable doesn't use autocapitalize so we need to set it manually.

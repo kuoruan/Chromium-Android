@@ -5,7 +5,6 @@
 package org.chromium.components.signin;
 
 import android.accounts.Account;
-import android.content.Context;
 
 import org.chromium.base.ContextUtils;
 
@@ -22,22 +21,17 @@ public class ChromeSigninController {
 
     private static ChromeSigninController sChromeSigninController;
 
-    private final Context mApplicationContext;
-
-    private ChromeSigninController(Context context) {
-        mApplicationContext = context.getApplicationContext();
-    }
+    private ChromeSigninController() {}
 
     /**
      * A factory method for the ChromeSigninController.
      *
-     * @param context the ApplicationContext is retrieved from the context used as an argument.
      * @return a singleton instance of the ChromeSigninController
      */
-    public static ChromeSigninController get(Context context) {
+    public static ChromeSigninController get() {
         synchronized (LOCK) {
             if (sChromeSigninController == null) {
-                sChromeSigninController = new ChromeSigninController(context);
+                sChromeSigninController = new ChromeSigninController();
             }
         }
         return sChromeSigninController;

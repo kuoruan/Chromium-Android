@@ -15,17 +15,18 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class QuickActionCategory {
-  @IntDef({
-      NONE, ADDRESS, EMAIL, EVENT, PHONE, WEBSITE, BOUNDARY
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface QuickActionCategoryEnum {}
-  public static final int NONE = 0;
-  public static final int ADDRESS = 1;
-  public static final int EMAIL = 2;
-  public static final int EVENT = 3;
-  public static final int PHONE = 4;
-  public static final int WEBSITE = 5;
-  public static final int BOUNDARY = 6;
+@IntDef({
+    QuickActionCategory.NONE, QuickActionCategory.ADDRESS, QuickActionCategory.EMAIL,
+    QuickActionCategory.EVENT, QuickActionCategory.PHONE, QuickActionCategory.WEBSITE,
+    QuickActionCategory.BOUNDARY
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface QuickActionCategory {
+  int NONE = 0;
+  int ADDRESS = 1;
+  int EMAIL = 2;
+  int EVENT = 3;
+  int PHONE = 4;
+  int WEBSITE = 5;
+  int BOUNDARY = 6;
 }

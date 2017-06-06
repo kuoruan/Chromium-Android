@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.contextmenu;
 
 import android.text.TextUtils;
 
+import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.chrome.browser.UrlConstants;
@@ -133,7 +134,8 @@ public class ContextMenuParams {
         return false;
     }
 
-    private ContextMenuParams(int mediaType, String pageUrl, String linkUrl, String linkText,
+    @VisibleForTesting
+    ContextMenuParams(int mediaType, String pageUrl, String linkUrl, String linkText,
             String unfilteredLinkUrl, String srcUrl, String titleText, boolean imageWasFetchedLoFi,
             Referrer referrer, boolean canSavemedia) {
         mPageUrl = pageUrl;

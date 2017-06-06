@@ -15,7 +15,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_marginTop="8dp"
-        android:layout_marginBottom="12dp" >
+        android:layout_marginBottom="16dp" >
 
         <org.chromium.ui.widget.TextViewWithClickableSpans
             android:id="@+id/signed_in_not_synced"
@@ -34,7 +34,6 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
         android:background="@drawable/list_item_single" >
 
         <!-- TODO(twellington): change start/end padding back to 16dp

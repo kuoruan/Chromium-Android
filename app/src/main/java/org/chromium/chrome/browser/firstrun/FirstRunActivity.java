@@ -266,6 +266,11 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
         }
     }
 
+    @Override
+    public boolean shouldStartGpuProcess() {
+        return true;
+    }
+
     // Activity:
 
     @Override

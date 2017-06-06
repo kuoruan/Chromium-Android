@@ -8,7 +8,7 @@ import android.content.Context;
 
 import org.chromium.base.Callback;
 import org.chromium.base.Log;
-import org.chromium.base.library_loader.LibraryLoader;
+import org.chromium.base.library_loader.LibraryProcessType;
 import org.chromium.base.library_loader.ProcessInitException;
 import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
 import org.chromium.chrome.browser.offlinepages.interfaces.BackgroundSchedulerProcessor;
@@ -16,6 +16,7 @@ import org.chromium.components.background_task_scheduler.BackgroundTask;
 import org.chromium.components.background_task_scheduler.BackgroundTask.TaskFinishedCallback;
 import org.chromium.components.background_task_scheduler.TaskIds;
 import org.chromium.components.background_task_scheduler.TaskParameters;
+import org.chromium.content.browser.BrowserStartupController;
 
 /**
  * Handles servicing background offlining requests coming via background_task_scheduler component.
@@ -57,7 +58,10 @@ public class OfflineBackgroundTask implements BackgroundTask {
     }
 
     private static void launchBrowserIfNecessary(Context context) {
-        if (LibraryLoader.isInitialized()) return;
+        if (BrowserStartupController.get(LibraryProcessType.PROCESS_BROWSER)
+                        .isStartupSuccessfullyCompleted()) {
+            return;
+        }
 
         // TODO(fgorski): This method is taken from ChromeBackgroundService as a local fix and will
         // be removed with BackgroundTaskScheduler supporting GcmNetworkManager scheduling.

@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser.download;
 
+import org.chromium.components.offline_items_collection.ContentId;
+
 /**
  * Class for reporting the status of a download.
  */
@@ -50,9 +52,9 @@ public interface DownloadNotifier {
 
     /**
      * Cancel the notification for a download.
-     * @param downloadGuid The GUID of the cancelled download.
+     * @param id The {@link ContentId} of the download.
      */
-    void notifyDownloadCanceled(String downloadGuid);
+    void notifyDownloadCanceled(ContentId id);
 
     /**
      * Remove the download notification for an already finished download.

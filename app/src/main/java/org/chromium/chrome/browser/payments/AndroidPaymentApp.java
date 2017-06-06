@@ -7,6 +7,9 @@ package org.chromium.chrome.browser.payments;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.drawable.Drawable;
@@ -15,13 +18,15 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Parcelable;
 import android.os.RemoteException;
+import android.support.v7.app.AlertDialog;
 import android.util.JsonWriter;
 
 import org.chromium.IsReadyToPayService;
 import org.chromium.IsReadyToPayServiceCallback;
+import org.chromium.base.ContextUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.chrome.R;
-import org.chromium.content.browser.ContentViewCore;
+import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.payments.mojom.PaymentDetailsModifier;
 import org.chromium.payments.mojom.PaymentItem;
@@ -37,15 +42,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /** The point of interaction with a locally installed 3rd party native Android payment app. */
-public class AndroidPaymentApp extends PaymentInstrument implements PaymentApp,
-        WindowAndroid.IntentCallback {
+public class AndroidPaymentApp
+        extends PaymentInstrument implements PaymentApp, WindowAndroid.IntentCallback {
     /** The action name for the Pay Intent. */
     public static final String ACTION_PAY = "org.chromium.intent.action.PAY";
 
+    /** The maximum number of milliseconds to wait for a response from a READY_TO_PAY service. */
+    private static final long READY_TO_PAY_TIMEOUT_MS = 400;
+
+    /** The maximum number of milliseconds to wait for a connection to READY_TO_PAY service. */
+    private static final long SERVICE_CONNECTION_TIMEOUT_MS = 1000;
+
+    private static final String EXTRA_MERCHANT_NAME = "merchantName";
     private static final String EXTRA_METHOD_NAME = "methodName";
+    private static final String EXTRA_METHOD_NAMES = "methodNames";
     private static final String EXTRA_DATA = "data";
     private static final String EXTRA_ORIGIN = "origin";
+    private static final String EXTRA_IFRAME_ORIGIN = "iframeOrigin";
+    private static final String EXTRA_DATA_MAP = "dataMap";
     private static final String EXTRA_DETAILS = "details";
     private static final String EXTRA_INSTRUMENT_DETAILS = "instrumentDetails";
     private static final String EXTRA_CERTIFICATE_CHAIN = "certificateChain";
@@ -56,25 +73,11 @@ public class AndroidPaymentApp extends PaymentInstrument implements PaymentApp,
     private final Intent mIsReadyToPayIntent;
     private final Intent mPayIntent;
     private final Set<String> mMethodNames;
-    private IsReadyToPayService mIsReadyToPayService;
+    private final boolean mIsIncognito;
     private InstrumentsCallback mInstrumentsCallback;
     private InstrumentDetailsCallback mInstrumentDetailsCallback;
-    private final ServiceConnection mServiceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            mIsReadyToPayService = IsReadyToPayService.Stub.asInterface(service);
-            if (mIsReadyToPayService == null) {
-                respondToGetInstrumentsQuery(null);
-            } else {
-                sendIsReadyToPayIntentToPaymentApp();
-            }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            respondToGetInstrumentsQuery(null);
-        }
-    };
+    private ServiceConnection mServiceConnection;
+    private boolean mIsReadyToPayQueried;
 
     /**
      * Builds the point of interaction with a locally installed 3rd party native Android payment
@@ -85,9 +88,10 @@ public class AndroidPaymentApp extends PaymentInstrument implements PaymentApp,
      * @param activity    The name of the payment activity in the payment app.
      * @param label       The UI label to use for the payment app.
      * @param icon        The icon to use in UI for the payment app.
+     * @param isIncognito Whether the user is in incognito mode.
      */
     public AndroidPaymentApp(WebContents webContents, String packageName, String activity,
-            String label, Drawable icon) {
+            String label, Drawable icon, boolean isIncognito) {
         super(packageName, label, null, icon);
         ThreadUtils.assertOnUiThread();
         mHandler = new Handler();
@@ -98,6 +102,7 @@ public class AndroidPaymentApp extends PaymentInstrument implements PaymentApp,
         mPayIntent.setClassName(packageName, activity);
         mPayIntent.setAction(ACTION_PAY);
         mMethodNames = new HashSet<>();
+        mIsIncognito = isIncognito;
     }
 
     /** @param methodName A payment method that this app supports, e.g., "https://bobpay.com". */
@@ -110,61 +115,65 @@ public class AndroidPaymentApp extends PaymentInstrument implements PaymentApp,
         mIsReadyToPayIntent.setClassName(mIsReadyToPayIntent.getPackage(), className);
     }
 
-    private void addCertificateChain(Bundle extras, byte[][] certificateChain) {
-        if (certificateChain != null && certificateChain.length > 0) {
-            Parcelable[] certificateArray = new Parcelable[certificateChain.length];
-            for (int i = 0; i < certificateChain.length; i++) {
-                Bundle bundle = new Bundle();
-                bundle.putByteArray(EXTRA_CERTIFICATE, certificateChain[i]);
-                certificateArray[i] = bundle;
-            }
-            extras.putParcelableArray(EXTRA_CERTIFICATE_CHAIN, certificateArray);
-        }
-    }
-
     @Override
-    public void getInstruments(Map<String, PaymentMethodData> methodData, String origin,
-            byte[][] certificateChain, InstrumentsCallback callback) {
-        assert mInstrumentsCallback == null
-                : "Have not responded to previous request for instruments yet";
+    public void getInstruments(Map<String, PaymentMethodData> methodDataMap, String origin,
+            String iframeOrigin, @Nullable byte[][] certificateChain,
+            InstrumentsCallback callback) {
+        assert mMethodNames.containsAll(methodDataMap.keySet());
+        assert mInstrumentsCallback
+                == null : "Have not responded to previous request for instruments yet";
+
         mInstrumentsCallback = callback;
-        if (mIsReadyToPayIntent.getPackage() == null) {
+        if (mIsReadyToPayIntent.getComponent() == null) {
             respondToGetInstrumentsQuery(AndroidPaymentApp.this);
             return;
         }
-        Bundle extras = new Bundle();
-        extras.putString(EXTRA_METHOD_NAME, mMethodNames.iterator().next());
-        extras.putString(EXTRA_ORIGIN, origin);
-        PaymentMethodData data = methodData.get(mMethodNames.iterator().next());
-        extras.putString(EXTRA_DATA, data == null ? EMPTY_JSON_DATA : data.stringifiedData);
-        addCertificateChain(extras, certificateChain);
-        mIsReadyToPayIntent.putExtras(extras);
 
-        if (mIsReadyToPayService != null) {
-            sendIsReadyToPayIntentToPaymentApp();
-        } else {
-            ContentViewCore contentView = ContentViewCore.fromWebContents(mWebContents);
-            if (contentView == null) {
+        assert !mIsIncognito;
+        mServiceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                IsReadyToPayService isReadyToPayService =
+                        IsReadyToPayService.Stub.asInterface(service);
+                if (isReadyToPayService == null) {
+                    respondToGetInstrumentsQuery(null);
+                } else {
+                    sendIsReadyToPayIntentToPaymentApp(isReadyToPayService);
+                }
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {}
+        };
+
+        mIsReadyToPayIntent.putExtras(buildExtras(
+                null, origin, iframeOrigin, certificateChain, methodDataMap, null, null, null));
+        try {
+            if (!ContextUtils.getApplicationContext().bindService(
+                        mIsReadyToPayIntent, mServiceConnection, Context.BIND_AUTO_CREATE)) {
                 respondToGetInstrumentsQuery(null);
                 return;
             }
-
-            WindowAndroid window = contentView.getWindowAndroid();
-            if (window == null) {
-                respondToGetInstrumentsQuery(null);
-                return;
-            }
-
-            try {
-                window.getApplicationContext().bindService(
-                        mIsReadyToPayIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
-            } catch (SecurityException e) {
-                respondToGetInstrumentsQuery(null);
-            }
+        } catch (SecurityException e) {
+            respondToGetInstrumentsQuery(null);
+            return;
         }
+
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (!mIsReadyToPayQueried) respondToGetInstrumentsQuery(null);
+            }
+        }, SERVICE_CONNECTION_TIMEOUT_MS);
     }
 
     private void respondToGetInstrumentsQuery(final PaymentInstrument instrument) {
+        if (mServiceConnection != null) {
+            ContextUtils.getApplicationContext().unbindService(mServiceConnection);
+            mServiceConnection = null;
+        }
+
+        if (mInstrumentsCallback == null) return;
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -181,8 +190,9 @@ public class AndroidPaymentApp extends PaymentInstrument implements PaymentApp,
         });
     }
 
-    private void sendIsReadyToPayIntentToPaymentApp() {
-        assert mIsReadyToPayService != null;
+    private void sendIsReadyToPayIntentToPaymentApp(IsReadyToPayService isReadyToPayService) {
+        if (mInstrumentsCallback == null) return;
+        mIsReadyToPayQueried = true;
         IsReadyToPayServiceCallback.Stub callback = new IsReadyToPayServiceCallback.Stub() {
             @Override
             public void handleIsReadyToPay(boolean isReadyToPay) throws RemoteException {
@@ -194,12 +204,19 @@ public class AndroidPaymentApp extends PaymentInstrument implements PaymentApp,
             }
         };
         try {
-            mIsReadyToPayService.isReadyToPay(callback);
+            isReadyToPayService.isReadyToPay(callback);
         } catch (Throwable e) {
-            /** Many undocument exceptions are not caught in the remote Service but passed on to
-                the Service caller, see writeException in Parcel.java. */
+            // Many undocumented exceptions are not caught in the remote Service but passed on to
+            // the Service caller, see writeException in Parcel.java.
             respondToGetInstrumentsQuery(null);
+            return;
         }
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                respondToGetInstrumentsQuery(null);
+            }
+        }, READY_TO_PAY_TIMEOUT_MS);
     }
 
     @Override
@@ -226,46 +243,130 @@ public class AndroidPaymentApp extends PaymentInstrument implements PaymentApp,
     }
 
     @Override
-    public void invokePaymentApp(String merchantName, String origin, byte[][] certificateChain,
-            Map<String, PaymentMethodData> methodDataMap, PaymentItem total,
-            List<PaymentItem> displayItems, Map<String, PaymentDetailsModifier> modifiers,
+    public void invokePaymentApp(final String merchantName, final String origin,
+            final String iframeOrigin, final byte[][] certificateChain,
+            final Map<String, PaymentMethodData> methodDataMap, final PaymentItem total,
+            final List<PaymentItem> displayItems,
+            final Map<String, PaymentDetailsModifier> modifiers,
             InstrumentDetailsCallback callback) {
-        assert !mMethodNames.isEmpty();
-        Bundle extras = new Bundle();
-        extras.putString(EXTRA_ORIGIN, origin);
-        addCertificateChain(extras, certificateChain);
-
-        String methodName = mMethodNames.iterator().next();
-        extras.putString(EXTRA_METHOD_NAME, methodName);
-
-        PaymentMethodData methodData = methodDataMap.get(methodName);
-        extras.putString(
-                EXTRA_DATA, methodData == null ? EMPTY_JSON_DATA : methodData.stringifiedData);
-
-        String details = serializeDetails(total, displayItems);
-        extras.putString(EXTRA_DETAILS, details == null ? EMPTY_JSON_DATA : details);
-        mPayIntent.putExtras(extras);
-
         mInstrumentDetailsCallback = callback;
 
-        ContentViewCore contentView = ContentViewCore.fromWebContents(mWebContents);
-        if (contentView == null) {
-            notifyError();
+        if (!mIsIncognito) {
+            launchPaymentApp(merchantName, origin, iframeOrigin, certificateChain, methodDataMap,
+                    total, displayItems, modifiers);
             return;
         }
 
-        WindowAndroid window = contentView.getWindowAndroid();
+        ChromeActivity activity = ChromeActivity.fromWebContents(mWebContents);
+        if (activity == null) {
+            notifyErrorInvokingPaymentApp();
+            return;
+        }
+
+        new AlertDialog.Builder(activity, R.style.AlertDialogTheme)
+                .setTitle(R.string.external_app_leave_incognito_warning_title)
+                .setMessage(R.string.external_payment_app_leave_incognito_warning)
+                .setPositiveButton(R.string.ok,
+                        new OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                launchPaymentApp(merchantName, origin, iframeOrigin,
+                                        certificateChain, methodDataMap, total, displayItems,
+                                        modifiers);
+                            }
+                        })
+                .setNegativeButton(R.string.cancel,
+                        new OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                notifyErrorInvokingPaymentApp();
+                            }
+                        })
+                .setOnCancelListener(new OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        notifyErrorInvokingPaymentApp();
+                    }
+                })
+                .show();
+    }
+
+    private void launchPaymentApp(String merchantName, String origin, String iframeOrigin,
+            byte[][] certificateChain, Map<String, PaymentMethodData> methodDataMap,
+            PaymentItem total, List<PaymentItem> displayItems,
+            Map<String, PaymentDetailsModifier> modifiers) {
+        assert mMethodNames.containsAll(methodDataMap.keySet());
+        assert mInstrumentDetailsCallback != null;
+
+        if (mWebContents.isDestroyed()) {
+            notifyErrorInvokingPaymentApp();
+            return;
+        }
+
+        WindowAndroid window = mWebContents.getTopLevelNativeWindow();
         if (window == null) {
-            notifyError();
+            notifyErrorInvokingPaymentApp();
             return;
         }
 
+        mPayIntent.putExtras(buildExtras(merchantName, origin, iframeOrigin, certificateChain,
+                methodDataMap, total, displayItems, modifiers));
         if (!window.showIntent(mPayIntent, this, R.string.payments_android_app_error)) {
-            notifyError();
+            notifyErrorInvokingPaymentApp();
         }
     }
 
-    private void notifyError() {
+    private static Bundle buildExtras(@Nullable String merchantName, String origin,
+            String iframeOrigin, @Nullable byte[][] certificateChain,
+            Map<String, PaymentMethodData> methodDataMap, @Nullable PaymentItem total,
+            @Nullable List<PaymentItem> displayItems,
+            @Nullable Map<String, PaymentDetailsModifier> modifiers) {
+        Bundle extras = new Bundle();
+
+        if (merchantName != null) extras.putString(EXTRA_MERCHANT_NAME, merchantName);
+        extras.putString(EXTRA_ORIGIN, origin);
+        extras.putString(EXTRA_IFRAME_ORIGIN, iframeOrigin);
+
+        if (certificateChain != null && certificateChain.length > 0) {
+            extras.putParcelableArray(
+                    EXTRA_CERTIFICATE_CHAIN, buildCertificateChain(certificateChain));
+        }
+
+        // Deprecated:
+        String methodName = methodDataMap.entrySet().iterator().next().getKey();
+        extras.putString(EXTRA_METHOD_NAME, methodName);
+        PaymentMethodData firstMethodData = methodDataMap.get(methodName);
+        extras.putString(EXTRA_DATA,
+                firstMethodData == null ? EMPTY_JSON_DATA : firstMethodData.stringifiedData);
+
+        extras.putStringArrayList(EXTRA_METHOD_NAMES, new ArrayList<>(methodDataMap.keySet()));
+        Bundle methodDataBundle = new Bundle();
+        for (Map.Entry<String, PaymentMethodData> methodData : methodDataMap.entrySet()) {
+            methodDataBundle.putString(methodData.getKey(),
+                    methodData.getValue() == null ? EMPTY_JSON_DATA
+                                                  : methodData.getValue().stringifiedData);
+        }
+        extras.putParcelable(EXTRA_DATA_MAP, methodDataBundle);
+
+        if (total != null) {
+            String details = serializeDetails(total, displayItems);
+            extras.putString(EXTRA_DETAILS, details == null ? EMPTY_JSON_DATA : details);
+        }
+
+        return extras;
+    }
+
+    private static Parcelable[] buildCertificateChain(byte[][] certificateChain) {
+        Parcelable[] result = new Parcelable[certificateChain.length];
+        for (int i = 0; i < certificateChain.length; i++) {
+            Bundle bundle = new Bundle();
+            bundle.putByteArray(EXTRA_CERTIFICATE, certificateChain[i]);
+            result[i] = bundle;
+        }
+        return result;
+    }
+
+    private void notifyErrorInvokingPaymentApp() {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -274,7 +375,8 @@ public class AndroidPaymentApp extends PaymentInstrument implements PaymentApp,
         });
     }
 
-    private static String serializeDetails(PaymentItem total, List<PaymentItem> displayItems) {
+    private static String serializeDetails(
+            PaymentItem total, @Nullable List<PaymentItem> displayItems) {
         StringWriter stringWriter = new StringWriter();
         JsonWriter json = new JsonWriter(stringWriter);
         try {
@@ -283,14 +385,14 @@ public class AndroidPaymentApp extends PaymentInstrument implements PaymentApp,
 
             // total {{{
             json.name("total");
-            serializePaymentItem(json, total);
+            serializePaymentItem(total, json);
             // }}} total
 
             // displayitems {{{
             if (displayItems != null) {
                 json.name("displayItems").beginArray();
                 for (int i = 0; i < displayItems.size(); i++) {
-                    serializePaymentItem(json, displayItems.get(i));
+                    serializePaymentItem(displayItems.get(i), json);
                 }
                 json.endArray();
             }
@@ -305,7 +407,7 @@ public class AndroidPaymentApp extends PaymentInstrument implements PaymentApp,
         return stringWriter.toString();
     }
 
-    private static void serializePaymentItem(JsonWriter json, PaymentItem item) throws IOException {
+    private static void serializePaymentItem(PaymentItem item, JsonWriter json) throws IOException {
         // item {{{
         json.beginObject();
         json.name("label").value(item.label);

@@ -15,45 +15,48 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ProtocolErrorClientAction {
-  @IntDef({
-      UPGRADE_CLIENT, CLEAR_USER_DATA_AND_RESYNC, ENABLE_SYNC_ON_ACCOUNT, STOP_AND_RESTART_SYNC,
-      DISABLE_SYNC_ON_CLIENT, STOP_SYNC_FOR_DISABLED_ACCOUNT, RESET_LOCAL_SYNC_DATA, UNKNOWN_ACTION
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ProtocolErrorClientActionEnum {}
+@IntDef({
+    ProtocolErrorClientAction.UPGRADE_CLIENT, ProtocolErrorClientAction.CLEAR_USER_DATA_AND_RESYNC,
+    ProtocolErrorClientAction.ENABLE_SYNC_ON_ACCOUNT,
+    ProtocolErrorClientAction.STOP_AND_RESTART_SYNC,
+    ProtocolErrorClientAction.DISABLE_SYNC_ON_CLIENT,
+    ProtocolErrorClientAction.STOP_SYNC_FOR_DISABLED_ACCOUNT,
+    ProtocolErrorClientAction.RESET_LOCAL_SYNC_DATA, ProtocolErrorClientAction.UNKNOWN_ACTION
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ProtocolErrorClientAction {
   /**
    * Upgrade the client to latest version.
    */
-  public static final int UPGRADE_CLIENT = 0;
+  int UPGRADE_CLIENT = 0;
   /**
    * Clear user data and setup sync again.
    */
-  public static final int CLEAR_USER_DATA_AND_RESYNC = 1;
+  int CLEAR_USER_DATA_AND_RESYNC = 1;
   /**
    * Set the bit on the account to enable sync.
    */
-  public static final int ENABLE_SYNC_ON_ACCOUNT = 2;
+  int ENABLE_SYNC_ON_ACCOUNT = 2;
   /**
    * Stop sync and restart sync.
    */
-  public static final int STOP_AND_RESTART_SYNC = 3;
+  int STOP_AND_RESTART_SYNC = 3;
   /**
    * Wipe this client of any sync data.
    */
-  public static final int DISABLE_SYNC_ON_CLIENT = 4;
+  int DISABLE_SYNC_ON_CLIENT = 4;
   /**
    * Account is disabled by admin. Stop sync, clear prefs and show message on settings page that
    * account is disabled.
    */
-  public static final int STOP_SYNC_FOR_DISABLED_ACCOUNT = 5;
+  int STOP_SYNC_FOR_DISABLED_ACCOUNT = 5;
   /**
    * Generated in response to CLIENT_DATA_OBSOLETE error. ProfileSyncService should stop sync
    * engine, delete directory and restart sync engine.
    */
-  public static final int RESET_LOCAL_SYNC_DATA = 6;
+  int RESET_LOCAL_SYNC_DATA = 6;
   /**
    * The default. No action.
    */
-  public static final int UNKNOWN_ACTION = 7;
+  int UNKNOWN_ACTION = 7;
 }

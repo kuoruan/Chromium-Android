@@ -159,6 +159,7 @@ public class AppBannerInfoBarAndroid extends ConfirmInfoBar implements View.OnCl
         } else if (mInstallState == INSTALL_STATE_INSTALLING) {
             text = mIsWebApk ? context.getString(R.string.app_banner_installing_webapk)
                     : context.getString(R.string.app_banner_installing);
+            mButton.announceForAccessibility(text);
             enabled = false;
         } else {
             text = context.getString(R.string.app_banner_open);

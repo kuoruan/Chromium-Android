@@ -18,7 +18,7 @@
                 android:icon="@drawable/btn_star"/>
               <item android:id="@+id/offline_page_id"
                 android:title="@string/download_page"
-                android:icon="@drawable/ic_get_app_white_24dp"/>
+                android:icon="@drawable/ic_file_download_white_24dp"/>
               <item android:id="@+id/info_menu_id"
                 android:title="@string/accessibility_menu_info"
                 android:icon="@drawable/btn_info" />

@@ -25,11 +25,6 @@ public interface WebBluetoothService extends org.chromium.mojo.bindings.Interfac
     Manager<WebBluetoothService, WebBluetoothService.Proxy> MANAGER = WebBluetoothService_Internal.MANAGER;
 
 
-    void setClient(
-org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client);
-
-
-
     void requestDevice(
 WebBluetoothRequestDeviceOptions options, 
 RequestDeviceResponse callback);
@@ -39,7 +34,7 @@ RequestDeviceResponse callback);
 
 
     void remoteServerConnect(
-WebBluetoothDeviceId deviceId, 
+WebBluetoothDeviceId deviceId, org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client, 
 RemoteServerConnectResponse callback);
 
     interface RemoteServerConnectResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Integer> { }
@@ -84,7 +79,7 @@ RemoteCharacteristicWriteValueResponse callback);
 
 
     void remoteCharacteristicStartNotifications(
-String characteristicInstanceId, 
+String characteristicInstanceId, org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client, 
 RemoteCharacteristicStartNotificationsResponse callback);
 
     interface RemoteCharacteristicStartNotificationsResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Integer> { }

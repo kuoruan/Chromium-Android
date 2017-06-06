@@ -15,25 +15,24 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class LoadURLType {
-  @IntDef({
-      DEFAULT, HTTP_POST, DATA
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface LoadURLTypeEnum {}
+@IntDef({
+    LoadURLType.DEFAULT, LoadURLType.HTTP_POST, LoadURLType.DATA
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface LoadURLType {
   /**
    * For loads that do not fall into any types below.
    */
-  public static final int DEFAULT = 0;
+  int DEFAULT = 0;
   /**
    * An http post load request.  The post data is passed in |post_data|.
    */
-  public static final int HTTP_POST = 1;
+  int HTTP_POST = 1;
   /**
    * Loads a 'data:' scheme URL with specified base URL and a history entry URL. This is only safe
    * to be used for browser-initiated data: URL navigations, since it shows arbitrary content as if
    * it comes from |virtual_url_for_data_url|. Adding new LoadURLType? Also update
    * LoadUrlParams.java static constants.
    */
-  public static final int DATA = 2;
+  int DATA = 2;
 }

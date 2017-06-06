@@ -52,52 +52,12 @@ public class PaymentInformation {
     }
 
     /**
-     * Returns the label for the selected shipping address.
-     *
-     * @return The label for the selected shipping address or null.
-     */
-    public String getSelectedShippingAddressLabel() {
-        PaymentOption address = mShippingAddresses.getSelectedItem();
-        return address != null ? address.getLabel() : null;
-    }
-
-    /**
-     * Returns the sublabel for the selected shipping address.
-     *
-     * @return The sublabel for the selected shipping address or null.
-     */
-    public String getSelectedShippingAddressSublabel() {
-        PaymentOption address = mShippingAddresses.getSelectedItem();
-        return address != null ? address.getSublabel() : null;
-    }
-
-    /**
-     * Returns the tertiary label for the selected shipping address.
-     *
-     * @return The tertiary label for the selected shipping address or null.
-     */
-    public String getSelectedShippingAddressTertiaryLabel() {
-        PaymentOption address = mShippingAddresses.getSelectedItem();
-        return address != null ? address.getTertiaryLabel() : null;
-    }
-
-    /**
      * Returns the shipping options.
      *
      * @return The shipping options.
      */
     public SectionInformation getShippingOptions() {
         return mShippingOptions;
-    }
-
-    /**
-     * Returns the label for the selected shipping option.
-     *
-     * @return The label for the selected shipping option or null.
-     */
-    public String getSelectedShippingOptionLabel() {
-        PaymentOption option = mShippingOptions.getSelectedItem();
-        return option != null ? option.getLabel() : null;
     }
 
     /**

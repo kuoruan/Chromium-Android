@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.StrictMode;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 
@@ -39,6 +38,7 @@ public class MainPreferences extends PreferenceFragment
     public static final String PREF_SEARCH_ENGINE = "search_engine";
     public static final String PREF_SAVED_PASSWORDS = "saved_passwords";
     public static final String PREF_HOMEPAGE = "homepage";
+    public static final String PREF_SUGGESTIONS = "suggestions";
     public static final String PREF_DATA_REDUCTION = "data_reduction";
 
     public static final String ACCOUNT_PICKER_DIALOG_TAG = "account_picker_dialog_tag";
@@ -97,12 +97,7 @@ public class MainPreferences extends PreferenceFragment
     private void updatePreferences() {
         if (getPreferenceScreen() != null) getPreferenceScreen().removeAll();
 
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-        try {
-            addPreferencesFromResource(R.xml.main_preferences);
-        } finally {
-            StrictMode.setThreadPolicy(oldPolicy);
-        }
+        PreferenceUtils.addPreferencesFromResource(this, R.xml.main_preferences);
 
         if (TemplateUrlService.getInstance().isLoaded()) {
             updateSummary();
@@ -179,7 +174,6 @@ public class MainPreferences extends PreferenceFragment
     private void setupSignInPref() {
         mSignInPreference = (SignInPreference) findPreference(PREF_SIGN_IN);
         mSignInPreference.registerForUpdates();
-        mSignInPreference.setEnabled(true);
     }
 
     private void clearSignInPref() {

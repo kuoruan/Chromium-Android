@@ -17,6 +17,7 @@ import android.text.TextUtils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
@@ -91,20 +92,18 @@ public class ExternalAuthUtils {
 
     /**
      * Returns whether the current build of Chrome is a Google-signed package.
-     *
-     * @param context the current context.
      * @return whether the currently running application is signed with Google keys.
      */
-    public boolean isChromeGoogleSigned(Context context) {
-        return isGoogleSigned(context, context.getPackageName());
+    public boolean isChromeGoogleSigned() {
+        String packageName = ContextUtils.getApplicationContext().getPackageName();
+        return isGoogleSigned(packageName);
     }
 
     /**
      * Returns whether the call is originating from a Google-signed package.
-     * @param appContext the current context.
      * @param packageName The package name to inquire about.
      */
-    public boolean isGoogleSigned(Context context, String packageName) {
+    public boolean isGoogleSigned(String packageName) {
         // This is overridden in a subclass.
         return false;
     }
@@ -128,7 +127,7 @@ public class ExternalAuthUtils {
         for (String packageName : callingPackages) {
             if (!TextUtils.isEmpty(packageToMatch) && !packageName.equals(packageToMatch)) continue;
             matchFound = true;
-            if ((shouldBeGoogleSigned && !isGoogleSigned(context, packageName))
+            if ((shouldBeGoogleSigned && !isGoogleSigned(packageName))
                     || (shouldBeSystem && !isSystemBuild(pm, packageName))) {
                 return false;
             }
@@ -242,7 +241,7 @@ public class ExternalAuthUtils {
     public boolean canUseFirstPartyGooglePlayServices(
             Context context, UserRecoverableErrorHandler userRecoverableErrorHandler) {
         return canUseGooglePlayServices(context, userRecoverableErrorHandler)
-                && isChromeGoogleSigned(context);
+                && isChromeGoogleSigned();
     }
 
     /**

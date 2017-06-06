@@ -14,6 +14,7 @@ import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.payments.AndroidPaymentAppFactory;
 import org.chromium.chrome.browser.preferences.ChromeSwitchPreference;
+import org.chromium.chrome.browser.preferences.PreferenceUtils;
 
 /**
  * Autofill and payments settings fragment, which allows the user to edit autofill and credit card
@@ -31,7 +32,7 @@ public class AutofillAndPaymentsPreferences extends PreferenceFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        addPreferencesFromResource(R.xml.autofill_and_payments_preferences);
+        PreferenceUtils.addPreferencesFromResource(this, R.xml.autofill_and_payments_preferences);
         getActivity().setTitle(R.string.prefs_autofill_and_payments);
 
         ChromeSwitchPreference autofillSwitch =

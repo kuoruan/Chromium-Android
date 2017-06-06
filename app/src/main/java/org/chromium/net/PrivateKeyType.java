@@ -15,16 +15,15 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class PrivateKeyType {
-  @IntDef({
-      RSA, ECDSA, INVALID
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface PrivateKeyTypeEnum {}
-  public static final int RSA = 0;
+@IntDef({
+    PrivateKeyType.RSA, PrivateKeyType.ECDSA, PrivateKeyType.INVALID
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface PrivateKeyType {
+  int RSA = 0;
   /**
    * Obsolete: DSA = 1,
    */
-  public static final int ECDSA = 2;
-  public static final int INVALID = 255;
+  int ECDSA = 2;
+  int INVALID = 255;
 }

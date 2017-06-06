@@ -15,25 +15,27 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class WebTextInputMode {
-  @IntDef({
-      kDefault, kVerbatim, kLatin, kLatinName, kLatinProse, kFullWidthLatin, kKana, kKanaName,
-      kKataKana, kNumeric, kTel, kEmail, kUrl, kMax
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface WebTextInputModeEnum {}
-  public static final int kDefault = 0;
-  public static final int kVerbatim = 1;
-  public static final int kLatin = 2;
-  public static final int kLatinName = 3;
-  public static final int kLatinProse = 4;
-  public static final int kFullWidthLatin = 5;
-  public static final int kKana = 6;
-  public static final int kKanaName = 7;
-  public static final int kKataKana = 8;
-  public static final int kNumeric = 9;
-  public static final int kTel = 10;
-  public static final int kEmail = 11;
-  public static final int kUrl = 12;
-  public static final int kMax = 12;
+@IntDef({
+    WebTextInputMode.kDefault, WebTextInputMode.kVerbatim, WebTextInputMode.kLatin,
+    WebTextInputMode.kLatinName, WebTextInputMode.kLatinProse, WebTextInputMode.kFullWidthLatin,
+    WebTextInputMode.kKana, WebTextInputMode.kKanaName, WebTextInputMode.kKataKana,
+    WebTextInputMode.kNumeric, WebTextInputMode.kTel, WebTextInputMode.kEmail,
+    WebTextInputMode.kUrl, WebTextInputMode.kMax
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface WebTextInputMode {
+  int kDefault = 0;
+  int kVerbatim = 1;
+  int kLatin = 2;
+  int kLatinName = 3;
+  int kLatinProse = 4;
+  int kFullWidthLatin = 5;
+  int kKana = 6;
+  int kKanaName = 7;
+  int kKataKana = 8;
+  int kNumeric = 9;
+  int kTel = 10;
+  int kEmail = 11;
+  int kUrl = 12;
+  int kMax = 12;
 }

@@ -15,16 +15,16 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class MediaCodecStatus {
-  @IntDef({
-      OK, TRY_AGAIN_LATER, OUTPUT_BUFFERS_CHANGED, OUTPUT_FORMAT_CHANGED, NO_KEY, ERROR
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface MediaCodecStatusEnum {}
-  public static final int OK = 0;
-  public static final int TRY_AGAIN_LATER = 1;
-  public static final int OUTPUT_BUFFERS_CHANGED = 2;
-  public static final int OUTPUT_FORMAT_CHANGED = 3;
-  public static final int NO_KEY = 4;
-  public static final int ERROR = 5;
+@IntDef({
+    MediaCodecStatus.OK, MediaCodecStatus.TRY_AGAIN_LATER, MediaCodecStatus.OUTPUT_BUFFERS_CHANGED,
+    MediaCodecStatus.OUTPUT_FORMAT_CHANGED, MediaCodecStatus.NO_KEY, MediaCodecStatus.ERROR
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface MediaCodecStatus {
+  int OK = 0;
+  int TRY_AGAIN_LATER = 1;
+  int OUTPUT_BUFFERS_CHANGED = 2;
+  int OUTPUT_FORMAT_CHANGED = 3;
+  int NO_KEY = 4;
+  int ERROR = 5;
 }

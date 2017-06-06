@@ -244,20 +244,27 @@ public class ChromeBrowserProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        ContentApplication.initCommandLine(getContext());
+        // Work around for broken Android versions that break the Android contract and initialize
+        // ContentProviders on non-UI threads.  crbug.com/705442
+        ThreadUtils.runOnUiThreadBlocking(new Runnable() {
+            @Override
+            public void run() {
+                ContentApplication.initCommandLine(getContext());
 
-        BrowserStartupController.get(LibraryProcessType.PROCESS_BROWSER)
-                .addStartupCompletedObserver(
-                        new BrowserStartupController.StartupCallback() {
-                            @Override
-                            public void onSuccess(boolean alreadyStarted) {
-                                ensureNativeSideInitialized();
-                            }
+                BrowserStartupController.get(LibraryProcessType.PROCESS_BROWSER)
+                        .addStartupCompletedObserver(
+                                new BrowserStartupController.StartupCallback() {
+                                    @Override
+                                    public void onSuccess(boolean alreadyStarted) {
+                                        ensureNativeSideInitialized();
+                                    }
 
-                            @Override
-                            public void onFailure() {
-                            }
-                        });
+                                    @Override
+                                    public void onFailure() {
+                                    }
+                                });
+            }
+        });
 
         return true;
     }

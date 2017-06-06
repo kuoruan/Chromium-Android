@@ -47,15 +47,15 @@ class PresentationServiceClient_Internal {
 
     private static final int ON_SCREEN_AVAILABILITY_UPDATED_ORDINAL = 1;
 
-    private static final int ON_DEFAULT_SESSION_STARTED_ORDINAL = 2;
+    private static final int ON_DEFAULT_PRESENTATION_STARTED_ORDINAL = 2;
 
-    private static final int ON_CONNECTION_STATE_CHANGED_ORDINAL = 3;
+    private static final int ON_RECEIVER_CONNECTION_AVAILABLE_ORDINAL = 3;
 
-    private static final int ON_CONNECTION_CLOSED_ORDINAL = 4;
+    private static final int ON_CONNECTION_STATE_CHANGED_ORDINAL = 4;
 
-    private static final int ON_CONNECTION_MESSAGES_RECEIVED_ORDINAL = 5;
+    private static final int ON_CONNECTION_CLOSED_ORDINAL = 5;
 
-    private static final int ON_RECEIVER_CONNECTION_AVAILABLE_ORDINAL = 6;
+    private static final int ON_CONNECTION_MESSAGES_RECEIVED_ORDINAL = 6;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements PresentationServiceClient.Proxy {
@@ -103,29 +103,50 @@ org.chromium.url.mojom.Url url, boolean available) {
 
 
         @Override
-        public void onDefaultSessionStarted(
-PresentationSessionInfo sessionInfo) {
+        public void onDefaultPresentationStarted(
+PresentationInfo presentationInfo) {
 
-            PresentationServiceClientOnDefaultSessionStartedParams _message = new PresentationServiceClientOnDefaultSessionStartedParams();
+            PresentationServiceClientOnDefaultPresentationStartedParams _message = new PresentationServiceClientOnDefaultPresentationStartedParams();
 
-            _message.sessionInfo = sessionInfo;
+            _message.presentationInfo = presentationInfo;
 
 
             getProxyHandler().getMessageReceiver().accept(
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
-                            new org.chromium.mojo.bindings.MessageHeader(ON_DEFAULT_SESSION_STARTED_ORDINAL)));
+                            new org.chromium.mojo.bindings.MessageHeader(ON_DEFAULT_PRESENTATION_STARTED_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void onReceiverConnectionAvailable(
+PresentationInfo presentationInfo, PresentationConnection controllerConnectionPtr, org.chromium.mojo.bindings.InterfaceRequest<PresentationConnection> receiverConnectionRequest) {
+
+            PresentationServiceClientOnReceiverConnectionAvailableParams _message = new PresentationServiceClientOnReceiverConnectionAvailableParams();
+
+            _message.presentationInfo = presentationInfo;
+
+            _message.controllerConnectionPtr = controllerConnectionPtr;
+
+            _message.receiverConnectionRequest = receiverConnectionRequest;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(ON_RECEIVER_CONNECTION_AVAILABLE_ORDINAL)));
 
         }
 
 
         @Override
         public void onConnectionStateChanged(
-PresentationSessionInfo connection, int newState) {
+PresentationInfo presentationInfo, int newState) {
 
             PresentationServiceClientOnConnectionStateChangedParams _message = new PresentationServiceClientOnConnectionStateChangedParams();
 
-            _message.connection = connection;
+            _message.presentationInfo = presentationInfo;
 
             _message.newState = newState;
 
@@ -140,11 +161,11 @@ PresentationSessionInfo connection, int newState) {
 
         @Override
         public void onConnectionClosed(
-PresentationSessionInfo connection, int reason, String message) {
+PresentationInfo presentationInfo, int reason, String message) {
 
             PresentationServiceClientOnConnectionClosedParams _message = new PresentationServiceClientOnConnectionClosedParams();
 
-            _message.connection = connection;
+            _message.presentationInfo = presentationInfo;
 
             _message.reason = reason;
 
@@ -161,11 +182,11 @@ PresentationSessionInfo connection, int reason, String message) {
 
         @Override
         public void onConnectionMessagesReceived(
-PresentationSessionInfo sessionInfo, ConnectionMessage[] messages) {
+PresentationInfo presentationInfo, PresentationConnectionMessage[] messages) {
 
             PresentationServiceClientOnConnectionMessagesReceivedParams _message = new PresentationServiceClientOnConnectionMessagesReceivedParams();
 
-            _message.sessionInfo = sessionInfo;
+            _message.presentationInfo = presentationInfo;
 
             _message.messages = messages;
 
@@ -174,27 +195,6 @@ PresentationSessionInfo sessionInfo, ConnectionMessage[] messages) {
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
                             new org.chromium.mojo.bindings.MessageHeader(ON_CONNECTION_MESSAGES_RECEIVED_ORDINAL)));
-
-        }
-
-
-        @Override
-        public void onReceiverConnectionAvailable(
-PresentationSessionInfo sessionInfo, PresentationConnection controllerConnectionPtr, org.chromium.mojo.bindings.InterfaceRequest<PresentationConnection> receiverConnectionRequest) {
-
-            PresentationServiceClientOnReceiverConnectionAvailableParams _message = new PresentationServiceClientOnReceiverConnectionAvailableParams();
-
-            _message.sessionInfo = sessionInfo;
-
-            _message.controllerConnectionPtr = controllerConnectionPtr;
-
-            _message.receiverConnectionRequest = receiverConnectionRequest;
-
-
-            getProxyHandler().getMessageReceiver().accept(
-                    _message.serializeWithHeader(
-                            getProxyHandler().getCore(),
-                            new org.chromium.mojo.bindings.MessageHeader(ON_RECEIVER_CONNECTION_AVAILABLE_ORDINAL)));
 
         }
 
@@ -252,51 +252,12 @@ PresentationSessionInfo sessionInfo, PresentationConnection controllerConnection
             
             
             
-                    case ON_DEFAULT_SESSION_STARTED_ORDINAL: {
+                    case ON_DEFAULT_PRESENTATION_STARTED_ORDINAL: {
             
-                        PresentationServiceClientOnDefaultSessionStartedParams data =
-                                PresentationServiceClientOnDefaultSessionStartedParams.deserialize(messageWithHeader.getPayload());
+                        PresentationServiceClientOnDefaultPresentationStartedParams data =
+                                PresentationServiceClientOnDefaultPresentationStartedParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().onDefaultSessionStarted(data.sessionInfo);
-                        return true;
-                    }
-            
-            
-            
-            
-            
-                    case ON_CONNECTION_STATE_CHANGED_ORDINAL: {
-            
-                        PresentationServiceClientOnConnectionStateChangedParams data =
-                                PresentationServiceClientOnConnectionStateChangedParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().onConnectionStateChanged(data.connection, data.newState);
-                        return true;
-                    }
-            
-            
-            
-            
-            
-                    case ON_CONNECTION_CLOSED_ORDINAL: {
-            
-                        PresentationServiceClientOnConnectionClosedParams data =
-                                PresentationServiceClientOnConnectionClosedParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().onConnectionClosed(data.connection, data.reason, data.message);
-                        return true;
-                    }
-            
-            
-            
-            
-            
-                    case ON_CONNECTION_MESSAGES_RECEIVED_ORDINAL: {
-            
-                        PresentationServiceClientOnConnectionMessagesReceivedParams data =
-                                PresentationServiceClientOnConnectionMessagesReceivedParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().onConnectionMessagesReceived(data.sessionInfo, data.messages);
+                        getImpl().onDefaultPresentationStarted(data.presentationInfo);
                         return true;
                     }
             
@@ -309,7 +270,46 @@ PresentationSessionInfo sessionInfo, PresentationConnection controllerConnection
                         PresentationServiceClientOnReceiverConnectionAvailableParams data =
                                 PresentationServiceClientOnReceiverConnectionAvailableParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().onReceiverConnectionAvailable(data.sessionInfo, data.controllerConnectionPtr, data.receiverConnectionRequest);
+                        getImpl().onReceiverConnectionAvailable(data.presentationInfo, data.controllerConnectionPtr, data.receiverConnectionRequest);
+                        return true;
+                    }
+            
+            
+            
+            
+            
+                    case ON_CONNECTION_STATE_CHANGED_ORDINAL: {
+            
+                        PresentationServiceClientOnConnectionStateChangedParams data =
+                                PresentationServiceClientOnConnectionStateChangedParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().onConnectionStateChanged(data.presentationInfo, data.newState);
+                        return true;
+                    }
+            
+            
+            
+            
+            
+                    case ON_CONNECTION_CLOSED_ORDINAL: {
+            
+                        PresentationServiceClientOnConnectionClosedParams data =
+                                PresentationServiceClientOnConnectionClosedParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().onConnectionClosed(data.presentationInfo, data.reason, data.message);
+                        return true;
+                    }
+            
+            
+            
+            
+            
+                    case ON_CONNECTION_MESSAGES_RECEIVED_ORDINAL: {
+            
+                        PresentationServiceClientOnConnectionMessagesReceivedParams data =
+                                PresentationServiceClientOnConnectionMessagesReceivedParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().onConnectionMessagesReceived(data.presentationInfo, data.messages);
                         return true;
                     }
             
@@ -561,22 +561,22 @@ PresentationSessionInfo sessionInfo, PresentationConnection controllerConnection
 
 
     
-    static final class PresentationServiceClientOnDefaultSessionStartedParams extends org.chromium.mojo.bindings.Struct {
+    static final class PresentationServiceClientOnDefaultPresentationStartedParams extends org.chromium.mojo.bindings.Struct {
     
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public PresentationSessionInfo sessionInfo;
+        public PresentationInfo presentationInfo;
     
-        private PresentationServiceClientOnDefaultSessionStartedParams(int version) {
+        private PresentationServiceClientOnDefaultPresentationStartedParams(int version) {
             super(STRUCT_SIZE, version);
         }
     
-        public PresentationServiceClientOnDefaultSessionStartedParams() {
+        public PresentationServiceClientOnDefaultPresentationStartedParams() {
             this(0);
         }
     
-        public static PresentationServiceClientOnDefaultSessionStartedParams deserialize(org.chromium.mojo.bindings.Message message) {
+        public static PresentationServiceClientOnDefaultPresentationStartedParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
     
@@ -585,7 +585,7 @@ PresentationSessionInfo sessionInfo, PresentationConnection controllerConnection
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
-        public static PresentationServiceClientOnDefaultSessionStartedParams deserialize(java.nio.ByteBuffer data) {
+        public static PresentationServiceClientOnDefaultPresentationStartedParams deserialize(java.nio.ByteBuffer data) {
             if (data == null)
                 return null;
     
@@ -594,19 +594,19 @@ PresentationSessionInfo sessionInfo, PresentationConnection controllerConnection
         }
     
         @SuppressWarnings("unchecked")
-        public static PresentationServiceClientOnDefaultSessionStartedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+        public static PresentationServiceClientOnDefaultPresentationStartedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
                 return null;
             }
             decoder0.increaseStackDepth();
-            PresentationServiceClientOnDefaultSessionStartedParams result;
+            PresentationServiceClientOnDefaultPresentationStartedParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new PresentationServiceClientOnDefaultSessionStartedParams(mainDataHeader.elementsOrVersion);
+                result = new PresentationServiceClientOnDefaultPresentationStartedParams(mainDataHeader.elementsOrVersion);
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                    result.sessionInfo = PresentationSessionInfo.decode(decoder1);
+                    result.presentationInfo = PresentationInfo.decode(decoder1);
                 }
             } finally {
                 decoder0.decreaseStackDepth();
@@ -619,7 +619,7 @@ PresentationSessionInfo sessionInfo, PresentationConnection controllerConnection
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(sessionInfo, 8, false);
+            encoder0.encode(presentationInfo, 8, false);
         }
     
         /**
@@ -633,8 +633,8 @@ PresentationSessionInfo sessionInfo, PresentationConnection controllerConnection
                 return false;
             if (getClass() != object.getClass())
                 return false;
-            PresentationServiceClientOnDefaultSessionStartedParams other = (PresentationServiceClientOnDefaultSessionStartedParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sessionInfo, other.sessionInfo))
+            PresentationServiceClientOnDefaultPresentationStartedParams other = (PresentationServiceClientOnDefaultPresentationStartedParams) object;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.presentationInfo, other.presentationInfo))
                 return false;
             return true;
         }
@@ -646,345 +646,7 @@ PresentationSessionInfo sessionInfo, PresentationConnection controllerConnection
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sessionInfo);
-            return result;
-        }
-    }
-
-
-
-    
-    static final class PresentationServiceClientOnConnectionStateChangedParams extends org.chromium.mojo.bindings.Struct {
-    
-        private static final int STRUCT_SIZE = 24;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
-        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public PresentationSessionInfo connection;
-        public int newState;
-    
-        private PresentationServiceClientOnConnectionStateChangedParams(int version) {
-            super(STRUCT_SIZE, version);
-        }
-    
-        public PresentationServiceClientOnConnectionStateChangedParams() {
-            this(0);
-        }
-    
-        public static PresentationServiceClientOnConnectionStateChangedParams deserialize(org.chromium.mojo.bindings.Message message) {
-            return decode(new org.chromium.mojo.bindings.Decoder(message));
-        }
-    
-        /**
-         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
-         *
-         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
-         */
-        public static PresentationServiceClientOnConnectionStateChangedParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
-            return deserialize(new org.chromium.mojo.bindings.Message(
-                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
-        }
-    
-        @SuppressWarnings("unchecked")
-        public static PresentationServiceClientOnConnectionStateChangedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
-            if (decoder0 == null) {
-                return null;
-            }
-            decoder0.increaseStackDepth();
-            PresentationServiceClientOnConnectionStateChangedParams result;
-            try {
-                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new PresentationServiceClientOnConnectionStateChangedParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                    result.connection = PresentationSessionInfo.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.newState = decoder0.readInt(16);
-                        PresentationConnectionState.validate(result.newState);
-                }
-            } finally {
-                decoder0.decreaseStackDepth();
-            }
-            return result;
-        }
-    
-        @SuppressWarnings("unchecked")
-        @Override
-        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
-            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-            
-            encoder0.encode(connection, 8, false);
-            
-            encoder0.encode(newState, 16);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            PresentationServiceClientOnConnectionStateChangedParams other = (PresentationServiceClientOnConnectionStateChangedParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.connection, other.connection))
-                return false;
-            if (this.newState!= other.newState)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(connection);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(newState);
-            return result;
-        }
-    }
-
-
-
-    
-    static final class PresentationServiceClientOnConnectionClosedParams extends org.chromium.mojo.bindings.Struct {
-    
-        private static final int STRUCT_SIZE = 32;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
-        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public PresentationSessionInfo connection;
-        public int reason;
-        public String message;
-    
-        private PresentationServiceClientOnConnectionClosedParams(int version) {
-            super(STRUCT_SIZE, version);
-        }
-    
-        public PresentationServiceClientOnConnectionClosedParams() {
-            this(0);
-        }
-    
-        public static PresentationServiceClientOnConnectionClosedParams deserialize(org.chromium.mojo.bindings.Message message) {
-            return decode(new org.chromium.mojo.bindings.Decoder(message));
-        }
-    
-        /**
-         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
-         *
-         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
-         */
-        public static PresentationServiceClientOnConnectionClosedParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
-            return deserialize(new org.chromium.mojo.bindings.Message(
-                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
-        }
-    
-        @SuppressWarnings("unchecked")
-        public static PresentationServiceClientOnConnectionClosedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
-            if (decoder0 == null) {
-                return null;
-            }
-            decoder0.increaseStackDepth();
-            PresentationServiceClientOnConnectionClosedParams result;
-            try {
-                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new PresentationServiceClientOnConnectionClosedParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                    result.connection = PresentationSessionInfo.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.reason = decoder0.readInt(16);
-                        PresentationConnectionCloseReason.validate(result.reason);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.message = decoder0.readString(24, false);
-                }
-            } finally {
-                decoder0.decreaseStackDepth();
-            }
-            return result;
-        }
-    
-        @SuppressWarnings("unchecked")
-        @Override
-        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
-            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-            
-            encoder0.encode(connection, 8, false);
-            
-            encoder0.encode(reason, 16);
-            
-            encoder0.encode(message, 24, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            PresentationServiceClientOnConnectionClosedParams other = (PresentationServiceClientOnConnectionClosedParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.connection, other.connection))
-                return false;
-            if (this.reason!= other.reason)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.message, other.message))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(connection);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(reason);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(message);
-            return result;
-        }
-    }
-
-
-
-    
-    static final class PresentationServiceClientOnConnectionMessagesReceivedParams extends org.chromium.mojo.bindings.Struct {
-    
-        private static final int STRUCT_SIZE = 24;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
-        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public PresentationSessionInfo sessionInfo;
-        public ConnectionMessage[] messages;
-    
-        private PresentationServiceClientOnConnectionMessagesReceivedParams(int version) {
-            super(STRUCT_SIZE, version);
-        }
-    
-        public PresentationServiceClientOnConnectionMessagesReceivedParams() {
-            this(0);
-        }
-    
-        public static PresentationServiceClientOnConnectionMessagesReceivedParams deserialize(org.chromium.mojo.bindings.Message message) {
-            return decode(new org.chromium.mojo.bindings.Decoder(message));
-        }
-    
-        /**
-         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
-         *
-         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
-         */
-        public static PresentationServiceClientOnConnectionMessagesReceivedParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
-            return deserialize(new org.chromium.mojo.bindings.Message(
-                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
-        }
-    
-        @SuppressWarnings("unchecked")
-        public static PresentationServiceClientOnConnectionMessagesReceivedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
-            if (decoder0 == null) {
-                return null;
-            }
-            decoder0.increaseStackDepth();
-            PresentationServiceClientOnConnectionMessagesReceivedParams result;
-            try {
-                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new PresentationServiceClientOnConnectionMessagesReceivedParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                    result.sessionInfo = PresentationSessionInfo.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
-                    {
-                        org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                        result.messages = new ConnectionMessage[si1.elementsOrVersion];
-                        for (int i1 = 0; i1 < si1.elementsOrVersion; ++i1) {
-                            
-                            org.chromium.mojo.bindings.Decoder decoder2 = decoder1.readPointer(org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i1, false);
-                            result.messages[i1] = ConnectionMessage.decode(decoder2);
-                        }
-                    }
-                }
-            } finally {
-                decoder0.decreaseStackDepth();
-            }
-            return result;
-        }
-    
-        @SuppressWarnings("unchecked")
-        @Override
-        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
-            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-            
-            encoder0.encode(sessionInfo, 8, false);
-            
-            if (messages == null) {
-                encoder0.encodeNullPointer(16, false);
-            } else {
-                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(messages.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                for (int i0 = 0; i0 < messages.length; ++i0) {
-                    
-                    encoder1.encode(messages[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
-                }
-            }
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            PresentationServiceClientOnConnectionMessagesReceivedParams other = (PresentationServiceClientOnConnectionMessagesReceivedParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sessionInfo, other.sessionInfo))
-                return false;
-            if (!java.util.Arrays.deepEquals(this.messages, other.messages))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sessionInfo);
-            result = prime * result + java.util.Arrays.deepHashCode(messages);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(presentationInfo);
             return result;
         }
     }
@@ -997,7 +659,7 @@ PresentationSessionInfo sessionInfo, PresentationConnection controllerConnection
         private static final int STRUCT_SIZE = 32;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public PresentationSessionInfo sessionInfo;
+        public PresentationInfo presentationInfo;
         public PresentationConnection controllerConnectionPtr;
         public org.chromium.mojo.bindings.InterfaceRequest<PresentationConnection> receiverConnectionRequest;
     
@@ -1039,7 +701,7 @@ PresentationSessionInfo sessionInfo, PresentationConnection controllerConnection
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                    result.sessionInfo = PresentationSessionInfo.decode(decoder1);
+                    result.presentationInfo = PresentationInfo.decode(decoder1);
                 }
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
@@ -1060,7 +722,7 @@ PresentationSessionInfo sessionInfo, PresentationConnection controllerConnection
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(sessionInfo, 8, false);
+            encoder0.encode(presentationInfo, 8, false);
             
             encoder0.encode(controllerConnectionPtr, 16, false, PresentationConnection.MANAGER);
             
@@ -1079,7 +741,7 @@ PresentationSessionInfo sessionInfo, PresentationConnection controllerConnection
             if (getClass() != object.getClass())
                 return false;
             PresentationServiceClientOnReceiverConnectionAvailableParams other = (PresentationServiceClientOnReceiverConnectionAvailableParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sessionInfo, other.sessionInfo))
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.presentationInfo, other.presentationInfo))
                 return false;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.controllerConnectionPtr, other.controllerConnectionPtr))
                 return false;
@@ -1095,9 +757,348 @@ PresentationSessionInfo sessionInfo, PresentationConnection controllerConnection
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sessionInfo);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(presentationInfo);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(controllerConnectionPtr);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(receiverConnectionRequest);
+            return result;
+        }
+    }
+
+
+
+    
+    static final class PresentationServiceClientOnConnectionStateChangedParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public PresentationInfo presentationInfo;
+        public int newState;
+    
+        private PresentationServiceClientOnConnectionStateChangedParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public PresentationServiceClientOnConnectionStateChangedParams() {
+            this(0);
+        }
+    
+        public static PresentationServiceClientOnConnectionStateChangedParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static PresentationServiceClientOnConnectionStateChangedParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static PresentationServiceClientOnConnectionStateChangedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            PresentationServiceClientOnConnectionStateChangedParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new PresentationServiceClientOnConnectionStateChangedParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.presentationInfo = PresentationInfo.decode(decoder1);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.newState = decoder0.readInt(16);
+                        PresentationConnectionState.validate(result.newState);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(presentationInfo, 8, false);
+            
+            encoder0.encode(newState, 16);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            PresentationServiceClientOnConnectionStateChangedParams other = (PresentationServiceClientOnConnectionStateChangedParams) object;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.presentationInfo, other.presentationInfo))
+                return false;
+            if (this.newState!= other.newState)
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(presentationInfo);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(newState);
+            return result;
+        }
+    }
+
+
+
+    
+    static final class PresentationServiceClientOnConnectionClosedParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 32;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public PresentationInfo presentationInfo;
+        public int reason;
+        public String message;
+    
+        private PresentationServiceClientOnConnectionClosedParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public PresentationServiceClientOnConnectionClosedParams() {
+            this(0);
+        }
+    
+        public static PresentationServiceClientOnConnectionClosedParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static PresentationServiceClientOnConnectionClosedParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static PresentationServiceClientOnConnectionClosedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            PresentationServiceClientOnConnectionClosedParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new PresentationServiceClientOnConnectionClosedParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.presentationInfo = PresentationInfo.decode(decoder1);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.reason = decoder0.readInt(16);
+                        PresentationConnectionCloseReason.validate(result.reason);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.message = decoder0.readString(24, false);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(presentationInfo, 8, false);
+            
+            encoder0.encode(reason, 16);
+            
+            encoder0.encode(message, 24, false);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            PresentationServiceClientOnConnectionClosedParams other = (PresentationServiceClientOnConnectionClosedParams) object;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.presentationInfo, other.presentationInfo))
+                return false;
+            if (this.reason!= other.reason)
+                return false;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.message, other.message))
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(presentationInfo);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(reason);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(message);
+            return result;
+        }
+    }
+
+
+
+    
+    static final class PresentationServiceClientOnConnectionMessagesReceivedParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public PresentationInfo presentationInfo;
+        public PresentationConnectionMessage[] messages;
+    
+        private PresentationServiceClientOnConnectionMessagesReceivedParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public PresentationServiceClientOnConnectionMessagesReceivedParams() {
+            this(0);
+        }
+    
+        public static PresentationServiceClientOnConnectionMessagesReceivedParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static PresentationServiceClientOnConnectionMessagesReceivedParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static PresentationServiceClientOnConnectionMessagesReceivedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            PresentationServiceClientOnConnectionMessagesReceivedParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new PresentationServiceClientOnConnectionMessagesReceivedParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.presentationInfo = PresentationInfo.decode(decoder1);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                    {
+                        org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                        result.messages = new PresentationConnectionMessage[si1.elementsOrVersion];
+                        for (int i1 = 0; i1 < si1.elementsOrVersion; ++i1) {
+                            
+                            result.messages[i1] = PresentationConnectionMessage.decode(decoder1, org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + 
+                            org.chromium.mojo.bindings.BindingsHelper.UNION_SIZE * i1);
+                        }
+                    }
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(presentationInfo, 8, false);
+            
+            if (messages == null) {
+                encoder0.encodeNullPointer(16, false);
+            } else {
+                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodeUnionArray(messages.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                for (int i0 = 0; i0 < messages.length; ++i0) {
+                    
+                    encoder1.encode(messages[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + 
+                    org.chromium.mojo.bindings.BindingsHelper.UNION_SIZE * i0, false);
+                }
+            }
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            PresentationServiceClientOnConnectionMessagesReceivedParams other = (PresentationServiceClientOnConnectionMessagesReceivedParams) object;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.presentationInfo, other.presentationInfo))
+                return false;
+            if (!java.util.Arrays.deepEquals(this.messages, other.messages))
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(presentationInfo);
+            result = prime * result + java.util.Arrays.deepHashCode(messages);
             return result;
         }
     }

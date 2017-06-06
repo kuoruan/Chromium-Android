@@ -87,6 +87,8 @@ class BookmarkDrawerListView extends ListView implements BookmarkUIObserver {
     }
 
     @Override
-    public void onSelectionStateChange(List<BookmarkId> selectedBookmarks) {
-    }
+    public void onSearchStateSet() {}
+
+    @Override
+    public void onSelectionStateChange(List<BookmarkId> selectedBookmarks) {}
 }

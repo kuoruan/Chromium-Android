@@ -15,16 +15,17 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class FilteringBehaviorReason {
-  @IntDef({
-      DEFAULT, ASYNC_CHECKER, BLACKLIST, MANUAL, WHITELIST, NOT_SIGNED_IN
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface FilteringBehaviorReasonEnum {}
-  public static final int DEFAULT = 0;
-  public static final int ASYNC_CHECKER = 1;
-  public static final int BLACKLIST = 2;
-  public static final int MANUAL = 3;
-  public static final int WHITELIST = 4;
-  public static final int NOT_SIGNED_IN = 5;
+@IntDef({
+    FilteringBehaviorReason.DEFAULT, FilteringBehaviorReason.ASYNC_CHECKER,
+    FilteringBehaviorReason.BLACKLIST, FilteringBehaviorReason.MANUAL,
+    FilteringBehaviorReason.WHITELIST, FilteringBehaviorReason.NOT_SIGNED_IN
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface FilteringBehaviorReason {
+  int DEFAULT = 0;
+  int ASYNC_CHECKER = 1;
+  int BLACKLIST = 2;
+  int MANUAL = 3;
+  int WHITELIST = 4;
+  int NOT_SIGNED_IN = 5;
 }

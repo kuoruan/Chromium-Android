@@ -30,8 +30,14 @@ import java.util.Locale;
 public class ClearBrowsingDataTabsFragment extends Fragment {
     public static final int CBD_TAB_COUNT = 2;
 
-    public ClearBrowsingDataTabsFragment() {}
+    public ClearBrowsingDataTabsFragment() {
+        // TODO(dullweber): Remove this migration after after three milestones (probably M61)
+        PrefServiceBridge.getInstance().migrateBrowsingDataPreferences();
+    }
 
+    /**
+     * @return Returns whether the CBD dialog with tabs is enabled.
+     */
     public static boolean isFeatureEnabled() {
         return ChromeFeatureList.isEnabled(ChromeFeatureList.TABS_IN_CBD);
     }

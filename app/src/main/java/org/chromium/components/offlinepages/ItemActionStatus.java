@@ -15,14 +15,14 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ItemActionStatus {
-  @IntDef({
-      SUCCESS, ALREADY_EXISTS, NOT_FOUND, STORE_ERROR
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ItemActionStatusEnum {}
-  public static final int SUCCESS = 0;
-  public static final int ALREADY_EXISTS = 1;
-  public static final int NOT_FOUND = 2;
-  public static final int STORE_ERROR = 3;
+@IntDef({
+    ItemActionStatus.SUCCESS, ItemActionStatus.ALREADY_EXISTS, ItemActionStatus.NOT_FOUND,
+    ItemActionStatus.STORE_ERROR
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ItemActionStatus {
+  int SUCCESS = 0;
+  int ALREADY_EXISTS = 1;
+  int NOT_FOUND = 2;
+  int STORE_ERROR = 3;
 }

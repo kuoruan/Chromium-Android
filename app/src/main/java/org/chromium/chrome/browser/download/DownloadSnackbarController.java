@@ -13,9 +13,11 @@ import org.chromium.base.ApplicationStatus;
 import org.chromium.base.BuildInfo;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.customtabs.CustomTabActivity;
+import org.chromium.chrome.browser.download.items.OfflineContentAggregatorNotificationBridgeUiFactory;
 import org.chromium.chrome.browser.offlinepages.downloads.OfflinePageDownloadBridge;
 import org.chromium.chrome.browser.snackbar.Snackbar;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;
+import org.chromium.components.offline_items_collection.LegacyHelpers;
 
 /**
  * Class for displaying a snackbar when a download completes.
@@ -50,18 +52,23 @@ public class DownloadSnackbarController implements SnackbarManager.SnackbarContr
             DownloadManagerService.openDownloadsPage(mContext);
             return;
         }
+
+        DownloadManagerService manager = DownloadManagerService.getDownloadManagerService();
         final ActionDataInfo download = (ActionDataInfo) actionData;
-        if (download.downloadInfo.isOfflinePage()) {
-            OfflinePageDownloadBridge.openDownloadedPage(download.downloadInfo.getDownloadGuid());
-            return;
+        if (LegacyHelpers.isLegacyOfflinePage(download.downloadInfo.getContentId())) {
+            OfflinePageDownloadBridge.openDownloadedPage(download.downloadInfo.getContentId());
+        } else if (LegacyHelpers.isLegacyDownload(download.downloadInfo.getContentId())) {
+            if (download.usesAndroidDownloadManager) {
+                mContext.startActivity(new Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)
+                                               .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            } else {
+                manager.openDownloadedContent(download.downloadInfo, download.systemDownloadId);
+            }
+        } else {
+            OfflineContentAggregatorNotificationBridgeUiFactory.instance().openItem(
+                    download.downloadInfo.getContentId());
         }
-        if (download.usesAndroidDownloadManager) {
-            mContext.startActivity(new Intent(DownloadManager.ACTION_VIEW_DOWNLOADS).addFlags(
-                    Intent.FLAG_ACTIVITY_NEW_TASK));
-            return;
-        }
-        DownloadManagerService manager = DownloadManagerService.getDownloadManagerService(mContext);
-        manager.openDownloadedContent(download.downloadInfo, download.systemDownloadId);
+
         if (download.notificationId != INVALID_NOTIFICATION_ID) {
             manager.getDownloadNotifier().removeDownloadNotification(
                     download.notificationId, download.downloadInfo);
@@ -87,7 +94,7 @@ public class DownloadSnackbarController implements SnackbarManager.SnackbarContr
         if (getSnackbarManager() == null) return;
         Snackbar snackbar;
         if (getActivity() instanceof CustomTabActivity) {
-            String packageLabel = BuildInfo.getPackageLabel(getActivity());
+            String packageLabel = BuildInfo.getPackageLabel();
             snackbar = Snackbar.make(mContext.getString(R.string.download_succeeded_message,
                     downloadInfo.getFileName(), packageLabel),
                     this, Snackbar.TYPE_NOTIFICATION, Snackbar.UMA_DOWNLOAD_SUCCEEDED);
@@ -99,7 +106,8 @@ public class DownloadSnackbarController implements SnackbarManager.SnackbarContr
         // TODO(qinmin): Coalesce snackbars if multiple downloads finish at the same time.
         snackbar.setDuration(SNACKBAR_DURATION_IN_MILLISECONDS).setSingleLine(false);
         ActionDataInfo info = null;
-        if (canBeResolved || downloadInfo.isOfflinePage() || usesAndroidDownloadManager) {
+        if (canBeResolved || !LegacyHelpers.isLegacyDownload(downloadInfo.getContentId())
+                || usesAndroidDownloadManager) {
             info = new ActionDataInfo(downloadInfo, notificationId, downloadId,
                     usesAndroidDownloadManager);
         }

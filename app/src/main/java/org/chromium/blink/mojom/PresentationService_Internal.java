@@ -51,9 +51,9 @@ class PresentationService_Internal {
 
     private static final int STOP_LISTENING_FOR_SCREEN_AVAILABILITY_ORDINAL = 3;
 
-    private static final int START_SESSION_ORDINAL = 4;
+    private static final int START_PRESENTATION_ORDINAL = 4;
 
-    private static final int JOIN_SESSION_ORDINAL = 5;
+    private static final int RECONNECT_PRESENTATION_ORDINAL = 5;
 
     private static final int SET_PRESENTATION_CONNECTION_ORDINAL = 6;
 
@@ -141,11 +141,11 @@ org.chromium.url.mojom.Url availabilityUrl) {
 
 
         @Override
-        public void startSession(
+        public void startPresentation(
 org.chromium.url.mojom.Url[] presentationUrls, 
-StartSessionResponse callback) {
+StartPresentationResponse callback) {
 
-            PresentationServiceStartSessionParams _message = new PresentationServiceStartSessionParams();
+            PresentationServiceStartPresentationParams _message = new PresentationServiceStartPresentationParams();
 
             _message.presentationUrls = presentationUrls;
 
@@ -154,20 +154,20 @@ StartSessionResponse callback) {
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
                             new org.chromium.mojo.bindings.MessageHeader(
-                                    START_SESSION_ORDINAL,
+                                    START_PRESENTATION_ORDINAL,
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
                                     0)),
-                    new PresentationServiceStartSessionResponseParamsForwardToCallback(callback));
+                    new PresentationServiceStartPresentationResponseParamsForwardToCallback(callback));
 
         }
 
 
         @Override
-        public void joinSession(
+        public void reconnectPresentation(
 org.chromium.url.mojom.Url[] presentationUrls, String presentationId, 
-JoinSessionResponse callback) {
+ReconnectPresentationResponse callback) {
 
-            PresentationServiceJoinSessionParams _message = new PresentationServiceJoinSessionParams();
+            PresentationServiceReconnectPresentationParams _message = new PresentationServiceReconnectPresentationParams();
 
             _message.presentationUrls = presentationUrls;
 
@@ -178,21 +178,21 @@ JoinSessionResponse callback) {
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
                             new org.chromium.mojo.bindings.MessageHeader(
-                                    JOIN_SESSION_ORDINAL,
+                                    RECONNECT_PRESENTATION_ORDINAL,
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
                                     0)),
-                    new PresentationServiceJoinSessionResponseParamsForwardToCallback(callback));
+                    new PresentationServiceReconnectPresentationResponseParamsForwardToCallback(callback));
 
         }
 
 
         @Override
         public void setPresentationConnection(
-PresentationSessionInfo sessionInfo, PresentationConnection controllerConnectionPtr, org.chromium.mojo.bindings.InterfaceRequest<PresentationConnection> receiverConnectionRequest) {
+PresentationInfo presentationInfo, PresentationConnection controllerConnectionPtr, org.chromium.mojo.bindings.InterfaceRequest<PresentationConnection> receiverConnectionRequest) {
 
             PresentationServiceSetPresentationConnectionParams _message = new PresentationServiceSetPresentationConnectionParams();
 
-            _message.sessionInfo = sessionInfo;
+            _message.presentationInfo = presentationInfo;
 
             _message.controllerConnectionPtr = controllerConnectionPtr;
 
@@ -247,11 +247,11 @@ org.chromium.url.mojom.Url presentationUrl, String presentationId) {
 
         @Override
         public void listenForConnectionMessages(
-PresentationSessionInfo sessionInfo) {
+PresentationInfo presentationInfo) {
 
             PresentationServiceListenForConnectionMessagesParams _message = new PresentationServiceListenForConnectionMessagesParams();
 
-            _message.sessionInfo = sessionInfo;
+            _message.presentationInfo = presentationInfo;
 
 
             getProxyHandler().getMessageReceiver().accept(
@@ -350,7 +350,7 @@ PresentationSessionInfo sessionInfo) {
                         PresentationServiceSetPresentationConnectionParams data =
                                 PresentationServiceSetPresentationConnectionParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().setPresentationConnection(data.sessionInfo, data.controllerConnectionPtr, data.receiverConnectionRequest);
+                        getImpl().setPresentationConnection(data.presentationInfo, data.controllerConnectionPtr, data.receiverConnectionRequest);
                         return true;
                     }
             
@@ -389,7 +389,7 @@ PresentationSessionInfo sessionInfo) {
                         PresentationServiceListenForConnectionMessagesParams data =
                                 PresentationServiceListenForConnectionMessagesParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().listenForConnectionMessages(data.sessionInfo);
+                        getImpl().listenForConnectionMessages(data.presentationInfo);
                         return true;
                     }
             
@@ -432,12 +432,12 @@ PresentationSessionInfo sessionInfo) {
             
             
             
-                    case START_SESSION_ORDINAL: {
+                    case START_PRESENTATION_ORDINAL: {
             
-                        PresentationServiceStartSessionParams data =
-                                PresentationServiceStartSessionParams.deserialize(messageWithHeader.getPayload());
+                        PresentationServiceStartPresentationParams data =
+                                PresentationServiceStartPresentationParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().startSession(data.presentationUrls, new PresentationServiceStartSessionResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        getImpl().startPresentation(data.presentationUrls, new PresentationServiceStartPresentationResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
             
@@ -447,12 +447,12 @@ PresentationSessionInfo sessionInfo) {
             
             
             
-                    case JOIN_SESSION_ORDINAL: {
+                    case RECONNECT_PRESENTATION_ORDINAL: {
             
-                        PresentationServiceJoinSessionParams data =
-                                PresentationServiceJoinSessionParams.deserialize(messageWithHeader.getPayload());
+                        PresentationServiceReconnectPresentationParams data =
+                                PresentationServiceReconnectPresentationParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().joinSession(data.presentationUrls, data.presentationId, new PresentationServiceJoinSessionResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        getImpl().reconnectPresentation(data.presentationUrls, data.presentationId, new PresentationServiceReconnectPresentationResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
             
@@ -864,22 +864,22 @@ PresentationSessionInfo sessionInfo) {
 
 
     
-    static final class PresentationServiceStartSessionParams extends org.chromium.mojo.bindings.Struct {
+    static final class PresentationServiceStartPresentationParams extends org.chromium.mojo.bindings.Struct {
     
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.url.mojom.Url[] presentationUrls;
     
-        private PresentationServiceStartSessionParams(int version) {
+        private PresentationServiceStartPresentationParams(int version) {
             super(STRUCT_SIZE, version);
         }
     
-        public PresentationServiceStartSessionParams() {
+        public PresentationServiceStartPresentationParams() {
             this(0);
         }
     
-        public static PresentationServiceStartSessionParams deserialize(org.chromium.mojo.bindings.Message message) {
+        public static PresentationServiceStartPresentationParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
     
@@ -888,7 +888,7 @@ PresentationSessionInfo sessionInfo) {
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
-        public static PresentationServiceStartSessionParams deserialize(java.nio.ByteBuffer data) {
+        public static PresentationServiceStartPresentationParams deserialize(java.nio.ByteBuffer data) {
             if (data == null)
                 return null;
     
@@ -897,15 +897,15 @@ PresentationSessionInfo sessionInfo) {
         }
     
         @SuppressWarnings("unchecked")
-        public static PresentationServiceStartSessionParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+        public static PresentationServiceStartPresentationParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
                 return null;
             }
             decoder0.increaseStackDepth();
-            PresentationServiceStartSessionParams result;
+            PresentationServiceStartPresentationParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new PresentationServiceStartSessionParams(mainDataHeader.elementsOrVersion);
+                result = new PresentationServiceStartPresentationParams(mainDataHeader.elementsOrVersion);
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
@@ -952,7 +952,7 @@ PresentationSessionInfo sessionInfo) {
                 return false;
             if (getClass() != object.getClass())
                 return false;
-            PresentationServiceStartSessionParams other = (PresentationServiceStartSessionParams) object;
+            PresentationServiceStartPresentationParams other = (PresentationServiceStartPresentationParams) object;
             if (!java.util.Arrays.deepEquals(this.presentationUrls, other.presentationUrls))
                 return false;
             return true;
@@ -973,23 +973,23 @@ PresentationSessionInfo sessionInfo) {
 
 
     
-    static final class PresentationServiceStartSessionResponseParams extends org.chromium.mojo.bindings.Struct {
+    static final class PresentationServiceStartPresentationResponseParams extends org.chromium.mojo.bindings.Struct {
     
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public PresentationSessionInfo sessionInfo;
+        public PresentationInfo presentationInfo;
         public PresentationError error;
     
-        private PresentationServiceStartSessionResponseParams(int version) {
+        private PresentationServiceStartPresentationResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
     
-        public PresentationServiceStartSessionResponseParams() {
+        public PresentationServiceStartPresentationResponseParams() {
             this(0);
         }
     
-        public static PresentationServiceStartSessionResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+        public static PresentationServiceStartPresentationResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
     
@@ -998,7 +998,7 @@ PresentationSessionInfo sessionInfo) {
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
-        public static PresentationServiceStartSessionResponseParams deserialize(java.nio.ByteBuffer data) {
+        public static PresentationServiceStartPresentationResponseParams deserialize(java.nio.ByteBuffer data) {
             if (data == null)
                 return null;
     
@@ -1007,19 +1007,19 @@ PresentationSessionInfo sessionInfo) {
         }
     
         @SuppressWarnings("unchecked")
-        public static PresentationServiceStartSessionResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+        public static PresentationServiceStartPresentationResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
                 return null;
             }
             decoder0.increaseStackDepth();
-            PresentationServiceStartSessionResponseParams result;
+            PresentationServiceStartPresentationResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new PresentationServiceStartSessionResponseParams(mainDataHeader.elementsOrVersion);
+                result = new PresentationServiceStartPresentationResponseParams(mainDataHeader.elementsOrVersion);
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, true);
-                    result.sessionInfo = PresentationSessionInfo.decode(decoder1);
+                    result.presentationInfo = PresentationInfo.decode(decoder1);
                 }
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
@@ -1037,7 +1037,7 @@ PresentationSessionInfo sessionInfo) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(sessionInfo, 8, true);
+            encoder0.encode(presentationInfo, 8, true);
             
             encoder0.encode(error, 16, true);
         }
@@ -1053,8 +1053,8 @@ PresentationSessionInfo sessionInfo) {
                 return false;
             if (getClass() != object.getClass())
                 return false;
-            PresentationServiceStartSessionResponseParams other = (PresentationServiceStartSessionResponseParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sessionInfo, other.sessionInfo))
+            PresentationServiceStartPresentationResponseParams other = (PresentationServiceStartPresentationResponseParams) object;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.presentationInfo, other.presentationInfo))
                 return false;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.error, other.error))
                 return false;
@@ -1068,17 +1068,17 @@ PresentationSessionInfo sessionInfo) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sessionInfo);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(presentationInfo);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(error);
             return result;
         }
     }
 
-    static class PresentationServiceStartSessionResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+    static class PresentationServiceStartPresentationResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
             implements org.chromium.mojo.bindings.MessageReceiver {
-        private final PresentationService.StartSessionResponse mCallback;
+        private final PresentationService.StartPresentationResponse mCallback;
 
-        PresentationServiceStartSessionResponseParamsForwardToCallback(PresentationService.StartSessionResponse callback) {
+        PresentationServiceStartPresentationResponseParamsForwardToCallback(PresentationService.StartPresentationResponse callback) {
             this.mCallback = callback;
         }
 
@@ -1088,14 +1088,14 @@ PresentationSessionInfo sessionInfo) {
                 org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
                         message.asServiceMessage();
                 org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
-                if (!header.validateHeader(START_SESSION_ORDINAL,
+                if (!header.validateHeader(START_PRESENTATION_ORDINAL,
                                            org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
                     return false;
                 }
 
-                PresentationServiceStartSessionResponseParams response = PresentationServiceStartSessionResponseParams.deserialize(messageWithHeader.getPayload());
+                PresentationServiceStartPresentationResponseParams response = PresentationServiceStartPresentationResponseParams.deserialize(messageWithHeader.getPayload());
 
-                mCallback.call(response.sessionInfo, response.error);
+                mCallback.call(response.presentationInfo, response.error);
                 return true;
             } catch (org.chromium.mojo.bindings.DeserializationException e) {
                 return false;
@@ -1103,13 +1103,13 @@ PresentationSessionInfo sessionInfo) {
         }
     }
 
-    static class PresentationServiceStartSessionResponseParamsProxyToResponder implements PresentationService.StartSessionResponse {
+    static class PresentationServiceStartPresentationResponseParamsProxyToResponder implements PresentationService.StartPresentationResponse {
 
         private final org.chromium.mojo.system.Core mCore;
         private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
         private final long mRequestId;
 
-        PresentationServiceStartSessionResponseParamsProxyToResponder(
+        PresentationServiceStartPresentationResponseParamsProxyToResponder(
                 org.chromium.mojo.system.Core core,
                 org.chromium.mojo.bindings.MessageReceiver messageReceiver,
                 long requestId) {
@@ -1119,10 +1119,10 @@ PresentationSessionInfo sessionInfo) {
         }
 
         @Override
-        public void call(PresentationSessionInfo sessionInfo, PresentationError error) {
-            PresentationServiceStartSessionResponseParams _response = new PresentationServiceStartSessionResponseParams();
+        public void call(PresentationInfo presentationInfo, PresentationError error) {
+            PresentationServiceStartPresentationResponseParams _response = new PresentationServiceStartPresentationResponseParams();
 
-            _response.sessionInfo = sessionInfo;
+            _response.presentationInfo = presentationInfo;
 
             _response.error = error;
 
@@ -1130,7 +1130,7 @@ PresentationSessionInfo sessionInfo) {
                     _response.serializeWithHeader(
                             mCore,
                             new org.chromium.mojo.bindings.MessageHeader(
-                                    START_SESSION_ORDINAL,
+                                    START_PRESENTATION_ORDINAL,
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
                                     mRequestId));
             mMessageReceiver.accept(_message);
@@ -1140,7 +1140,7 @@ PresentationSessionInfo sessionInfo) {
 
 
     
-    static final class PresentationServiceJoinSessionParams extends org.chromium.mojo.bindings.Struct {
+    static final class PresentationServiceReconnectPresentationParams extends org.chromium.mojo.bindings.Struct {
     
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
@@ -1148,15 +1148,15 @@ PresentationSessionInfo sessionInfo) {
         public org.chromium.url.mojom.Url[] presentationUrls;
         public String presentationId;
     
-        private PresentationServiceJoinSessionParams(int version) {
+        private PresentationServiceReconnectPresentationParams(int version) {
             super(STRUCT_SIZE, version);
         }
     
-        public PresentationServiceJoinSessionParams() {
+        public PresentationServiceReconnectPresentationParams() {
             this(0);
         }
     
-        public static PresentationServiceJoinSessionParams deserialize(org.chromium.mojo.bindings.Message message) {
+        public static PresentationServiceReconnectPresentationParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
     
@@ -1165,7 +1165,7 @@ PresentationSessionInfo sessionInfo) {
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
-        public static PresentationServiceJoinSessionParams deserialize(java.nio.ByteBuffer data) {
+        public static PresentationServiceReconnectPresentationParams deserialize(java.nio.ByteBuffer data) {
             if (data == null)
                 return null;
     
@@ -1174,15 +1174,15 @@ PresentationSessionInfo sessionInfo) {
         }
     
         @SuppressWarnings("unchecked")
-        public static PresentationServiceJoinSessionParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+        public static PresentationServiceReconnectPresentationParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
                 return null;
             }
             decoder0.increaseStackDepth();
-            PresentationServiceJoinSessionParams result;
+            PresentationServiceReconnectPresentationParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new PresentationServiceJoinSessionParams(mainDataHeader.elementsOrVersion);
+                result = new PresentationServiceReconnectPresentationParams(mainDataHeader.elementsOrVersion);
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
@@ -1235,7 +1235,7 @@ PresentationSessionInfo sessionInfo) {
                 return false;
             if (getClass() != object.getClass())
                 return false;
-            PresentationServiceJoinSessionParams other = (PresentationServiceJoinSessionParams) object;
+            PresentationServiceReconnectPresentationParams other = (PresentationServiceReconnectPresentationParams) object;
             if (!java.util.Arrays.deepEquals(this.presentationUrls, other.presentationUrls))
                 return false;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.presentationId, other.presentationId))
@@ -1259,23 +1259,23 @@ PresentationSessionInfo sessionInfo) {
 
 
     
-    static final class PresentationServiceJoinSessionResponseParams extends org.chromium.mojo.bindings.Struct {
+    static final class PresentationServiceReconnectPresentationResponseParams extends org.chromium.mojo.bindings.Struct {
     
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public PresentationSessionInfo sessionInfo;
+        public PresentationInfo presentationInfo;
         public PresentationError error;
     
-        private PresentationServiceJoinSessionResponseParams(int version) {
+        private PresentationServiceReconnectPresentationResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
     
-        public PresentationServiceJoinSessionResponseParams() {
+        public PresentationServiceReconnectPresentationResponseParams() {
             this(0);
         }
     
-        public static PresentationServiceJoinSessionResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+        public static PresentationServiceReconnectPresentationResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
     
@@ -1284,7 +1284,7 @@ PresentationSessionInfo sessionInfo) {
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
-        public static PresentationServiceJoinSessionResponseParams deserialize(java.nio.ByteBuffer data) {
+        public static PresentationServiceReconnectPresentationResponseParams deserialize(java.nio.ByteBuffer data) {
             if (data == null)
                 return null;
     
@@ -1293,19 +1293,19 @@ PresentationSessionInfo sessionInfo) {
         }
     
         @SuppressWarnings("unchecked")
-        public static PresentationServiceJoinSessionResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+        public static PresentationServiceReconnectPresentationResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
                 return null;
             }
             decoder0.increaseStackDepth();
-            PresentationServiceJoinSessionResponseParams result;
+            PresentationServiceReconnectPresentationResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new PresentationServiceJoinSessionResponseParams(mainDataHeader.elementsOrVersion);
+                result = new PresentationServiceReconnectPresentationResponseParams(mainDataHeader.elementsOrVersion);
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, true);
-                    result.sessionInfo = PresentationSessionInfo.decode(decoder1);
+                    result.presentationInfo = PresentationInfo.decode(decoder1);
                 }
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
@@ -1323,7 +1323,7 @@ PresentationSessionInfo sessionInfo) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(sessionInfo, 8, true);
+            encoder0.encode(presentationInfo, 8, true);
             
             encoder0.encode(error, 16, true);
         }
@@ -1339,8 +1339,8 @@ PresentationSessionInfo sessionInfo) {
                 return false;
             if (getClass() != object.getClass())
                 return false;
-            PresentationServiceJoinSessionResponseParams other = (PresentationServiceJoinSessionResponseParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sessionInfo, other.sessionInfo))
+            PresentationServiceReconnectPresentationResponseParams other = (PresentationServiceReconnectPresentationResponseParams) object;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.presentationInfo, other.presentationInfo))
                 return false;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.error, other.error))
                 return false;
@@ -1354,17 +1354,17 @@ PresentationSessionInfo sessionInfo) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sessionInfo);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(presentationInfo);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(error);
             return result;
         }
     }
 
-    static class PresentationServiceJoinSessionResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+    static class PresentationServiceReconnectPresentationResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
             implements org.chromium.mojo.bindings.MessageReceiver {
-        private final PresentationService.JoinSessionResponse mCallback;
+        private final PresentationService.ReconnectPresentationResponse mCallback;
 
-        PresentationServiceJoinSessionResponseParamsForwardToCallback(PresentationService.JoinSessionResponse callback) {
+        PresentationServiceReconnectPresentationResponseParamsForwardToCallback(PresentationService.ReconnectPresentationResponse callback) {
             this.mCallback = callback;
         }
 
@@ -1374,14 +1374,14 @@ PresentationSessionInfo sessionInfo) {
                 org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
                         message.asServiceMessage();
                 org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
-                if (!header.validateHeader(JOIN_SESSION_ORDINAL,
+                if (!header.validateHeader(RECONNECT_PRESENTATION_ORDINAL,
                                            org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
                     return false;
                 }
 
-                PresentationServiceJoinSessionResponseParams response = PresentationServiceJoinSessionResponseParams.deserialize(messageWithHeader.getPayload());
+                PresentationServiceReconnectPresentationResponseParams response = PresentationServiceReconnectPresentationResponseParams.deserialize(messageWithHeader.getPayload());
 
-                mCallback.call(response.sessionInfo, response.error);
+                mCallback.call(response.presentationInfo, response.error);
                 return true;
             } catch (org.chromium.mojo.bindings.DeserializationException e) {
                 return false;
@@ -1389,13 +1389,13 @@ PresentationSessionInfo sessionInfo) {
         }
     }
 
-    static class PresentationServiceJoinSessionResponseParamsProxyToResponder implements PresentationService.JoinSessionResponse {
+    static class PresentationServiceReconnectPresentationResponseParamsProxyToResponder implements PresentationService.ReconnectPresentationResponse {
 
         private final org.chromium.mojo.system.Core mCore;
         private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
         private final long mRequestId;
 
-        PresentationServiceJoinSessionResponseParamsProxyToResponder(
+        PresentationServiceReconnectPresentationResponseParamsProxyToResponder(
                 org.chromium.mojo.system.Core core,
                 org.chromium.mojo.bindings.MessageReceiver messageReceiver,
                 long requestId) {
@@ -1405,10 +1405,10 @@ PresentationSessionInfo sessionInfo) {
         }
 
         @Override
-        public void call(PresentationSessionInfo sessionInfo, PresentationError error) {
-            PresentationServiceJoinSessionResponseParams _response = new PresentationServiceJoinSessionResponseParams();
+        public void call(PresentationInfo presentationInfo, PresentationError error) {
+            PresentationServiceReconnectPresentationResponseParams _response = new PresentationServiceReconnectPresentationResponseParams();
 
-            _response.sessionInfo = sessionInfo;
+            _response.presentationInfo = presentationInfo;
 
             _response.error = error;
 
@@ -1416,7 +1416,7 @@ PresentationSessionInfo sessionInfo) {
                     _response.serializeWithHeader(
                             mCore,
                             new org.chromium.mojo.bindings.MessageHeader(
-                                    JOIN_SESSION_ORDINAL,
+                                    RECONNECT_PRESENTATION_ORDINAL,
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
                                     mRequestId));
             mMessageReceiver.accept(_message);
@@ -1431,7 +1431,7 @@ PresentationSessionInfo sessionInfo) {
         private static final int STRUCT_SIZE = 32;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public PresentationSessionInfo sessionInfo;
+        public PresentationInfo presentationInfo;
         public PresentationConnection controllerConnectionPtr;
         public org.chromium.mojo.bindings.InterfaceRequest<PresentationConnection> receiverConnectionRequest;
     
@@ -1473,7 +1473,7 @@ PresentationSessionInfo sessionInfo) {
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                    result.sessionInfo = PresentationSessionInfo.decode(decoder1);
+                    result.presentationInfo = PresentationInfo.decode(decoder1);
                 }
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
@@ -1494,7 +1494,7 @@ PresentationSessionInfo sessionInfo) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(sessionInfo, 8, false);
+            encoder0.encode(presentationInfo, 8, false);
             
             encoder0.encode(controllerConnectionPtr, 16, false, PresentationConnection.MANAGER);
             
@@ -1513,7 +1513,7 @@ PresentationSessionInfo sessionInfo) {
             if (getClass() != object.getClass())
                 return false;
             PresentationServiceSetPresentationConnectionParams other = (PresentationServiceSetPresentationConnectionParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sessionInfo, other.sessionInfo))
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.presentationInfo, other.presentationInfo))
                 return false;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.controllerConnectionPtr, other.controllerConnectionPtr))
                 return false;
@@ -1529,7 +1529,7 @@ PresentationSessionInfo sessionInfo) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sessionInfo);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(presentationInfo);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(controllerConnectionPtr);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(receiverConnectionRequest);
             return result;
@@ -1750,7 +1750,7 @@ PresentationSessionInfo sessionInfo) {
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public PresentationSessionInfo sessionInfo;
+        public PresentationInfo presentationInfo;
     
         private PresentationServiceListenForConnectionMessagesParams(int version) {
             super(STRUCT_SIZE, version);
@@ -1790,7 +1790,7 @@ PresentationSessionInfo sessionInfo) {
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                    result.sessionInfo = PresentationSessionInfo.decode(decoder1);
+                    result.presentationInfo = PresentationInfo.decode(decoder1);
                 }
             } finally {
                 decoder0.decreaseStackDepth();
@@ -1803,7 +1803,7 @@ PresentationSessionInfo sessionInfo) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(sessionInfo, 8, false);
+            encoder0.encode(presentationInfo, 8, false);
         }
     
         /**
@@ -1818,7 +1818,7 @@ PresentationSessionInfo sessionInfo) {
             if (getClass() != object.getClass())
                 return false;
             PresentationServiceListenForConnectionMessagesParams other = (PresentationServiceListenForConnectionMessagesParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sessionInfo, other.sessionInfo))
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.presentationInfo, other.presentationInfo))
                 return false;
             return true;
         }
@@ -1830,7 +1830,7 @@ PresentationSessionInfo sessionInfo) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sessionInfo);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(presentationInfo);
             return result;
         }
     }

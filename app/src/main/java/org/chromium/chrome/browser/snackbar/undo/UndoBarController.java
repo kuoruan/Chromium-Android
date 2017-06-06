@@ -85,9 +85,15 @@ public class UndoBarController implements SnackbarManager.SnackbarController {
             }
 
             @Override
-            public void allTabsPendingClosure(List<Integer> tabIds) {
+            public void allTabsPendingClosure(List<Tab> tabs) {
                 if (disableUndo()) return;
-                showUndoCloseAllBar(tabIds);
+
+                if (tabs.size() == 1) {
+                    tabPendingClosure(tabs.get(0));
+                    return;
+                }
+
+                showUndoCloseAllBar(tabs);
             }
 
             @Override
@@ -139,15 +145,14 @@ public class UndoBarController implements SnackbarManager.SnackbarController {
      * for each tab in {@code closedTabIds}. This will happen unless
      * {@code SnackbarManager#removeFromStackForData(Object)} is called.
      *
-     * @param closedTabIds A list of ids corresponding to tabs that were closed
+     * @param closedTabs A list of tabs that were closed.
      */
-    private void showUndoCloseAllBar(List<Integer> closedTabIds) {
-        String content = String.format(Locale.getDefault(), "%d", closedTabIds.size());
+    private void showUndoCloseAllBar(List<Tab> closedTabs) {
+        String content = String.format(Locale.getDefault(), "%d", closedTabs.size());
         mSnackbarManager.showSnackbar(
                 Snackbar.make(content, this, Snackbar.TYPE_ACTION, Snackbar.UMA_TAB_CLOSE_ALL_UNDO)
-                .setTemplateText(mContext.getString(R.string.undo_bar_close_all_message))
-                .setAction(mContext.getString(R.string.undo), closedTabIds));
-
+                        .setTemplateText(mContext.getString(R.string.undo_bar_close_all_message))
+                        .setAction(mContext.getString(R.string.undo), closedTabs));
     }
 
     /**
@@ -162,8 +167,8 @@ public class UndoBarController implements SnackbarManager.SnackbarController {
         if (actionData instanceof Integer) {
             cancelTabClosure((Integer) actionData);
         } else {
-            for (Integer id : (List<Integer>) actionData) {
-                cancelTabClosure(id);
+            for (Tab tab : (List<Tab>) actionData) {
+                cancelTabClosure(tab.getId());
             }
         }
     }
@@ -183,8 +188,8 @@ public class UndoBarController implements SnackbarManager.SnackbarController {
         if (actionData instanceof Integer) {
             commitTabClosure((Integer) actionData);
         } else {
-            for (Integer tabId : (List<Integer>) actionData) {
-                commitTabClosure(tabId);
+            for (Tab tab : (List<Tab>) actionData) {
+                commitTabClosure(tab.getId());
             }
         }
     }

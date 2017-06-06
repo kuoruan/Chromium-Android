@@ -173,6 +173,7 @@ public class NotificationCompatBuilder implements ChromeNotificationBuilder {
         return this;
     }
 
+    @Override
     public ChromeNotificationBuilder setOnlyAlertOnce(boolean onlyAlertOnce) {
         mBuilder.setOnlyAlertOnce(onlyAlertOnce);
         return this;

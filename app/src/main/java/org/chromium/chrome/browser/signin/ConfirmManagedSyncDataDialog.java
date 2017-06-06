@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.signin;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -108,7 +109,9 @@ public class ConfirmManagedSyncDataDialog extends DialogFragment
                 newInstance(title, description, positiveButton, negativeButton);
 
         confirmSync.setListener(callback);
-        confirmSync.show(fragmentManager, CONFIRM_IMPORT_SYNC_DATA_DIALOG_TAG);
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        transaction.add(confirmSync, CONFIRM_IMPORT_SYNC_DATA_DIALOG_TAG);
+        transaction.commitAllowingStateLoss();
     }
 
     private static ConfirmManagedSyncDataDialog newInstance(String title, String description,
@@ -130,7 +133,7 @@ public class ConfirmManagedSyncDataDialog extends DialogFragment
         String positiveButton = getArguments().getString(KEY_POSITIVE_BUTTON);
         String negativeButton = getArguments().getString(KEY_NEGATIVE_BUTTON);
 
-        return new AlertDialog.Builder(getActivity(), R.style.AlertDialogTheme)
+        return new AlertDialog.Builder(getActivity(), R.style.SigninAlertDialogTheme)
                 .setTitle(title)
                 .setMessage(description)
                 .setPositiveButton(positiveButton, this)

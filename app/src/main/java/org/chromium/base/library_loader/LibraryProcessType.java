@@ -15,30 +15,31 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class LibraryProcessType {
-  @IntDef({
-      PROCESS_UNINITIALIZED, PROCESS_BROWSER, PROCESS_CHILD, PROCESS_WEBVIEW, PROCESS_WEBVIEW_CHILD
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface LibraryProcessTypeEnum {}
+@IntDef({
+    LibraryProcessType.PROCESS_UNINITIALIZED, LibraryProcessType.PROCESS_BROWSER,
+    LibraryProcessType.PROCESS_CHILD, LibraryProcessType.PROCESS_WEBVIEW,
+    LibraryProcessType.PROCESS_WEBVIEW_CHILD
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface LibraryProcessType {
   /**
    * The LibraryLoad has not been initialized.
    */
-  public static final int PROCESS_UNINITIALIZED = 0;
+  int PROCESS_UNINITIALIZED = 0;
   /**
    * Shared library is running in browser process.
    */
-  public static final int PROCESS_BROWSER = 1;
+  int PROCESS_BROWSER = 1;
   /**
    * Shared library is running in child process.
    */
-  public static final int PROCESS_CHILD = 2;
+  int PROCESS_CHILD = 2;
   /**
    * Shared library is running in the app that uses webview.
    */
-  public static final int PROCESS_WEBVIEW = 3;
+  int PROCESS_WEBVIEW = 3;
   /**
    * Shared library is running in child process as part of webview.
    */
-  public static final int PROCESS_WEBVIEW_CHILD = 4;
+  int PROCESS_WEBVIEW_CHILD = 4;
 }

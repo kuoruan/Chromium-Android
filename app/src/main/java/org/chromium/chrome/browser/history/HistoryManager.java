@@ -12,12 +12,12 @@ import android.content.Intent;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.provider.Browser;
-import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.OnScrollListener;
+import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.Toolbar.OnMenuItemClickListener;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -30,7 +30,6 @@ import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.IntentHandler;
-import org.chromium.chrome.browser.NativePage;
 import org.chromium.chrome.browser.document.ChromeLauncherActivity;
 import org.chromium.chrome.browser.favicon.LargeIconBridge;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
@@ -38,8 +37,8 @@ import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.signin.SigninManager;
 import org.chromium.chrome.browser.signin.SigninManager.SignInStateObserver;
 import org.chromium.chrome.browser.snackbar.Snackbar;
+import org.chromium.chrome.browser.snackbar.SnackbarManager;
 import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarController;
-import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarManageable;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.chrome.browser.widget.selection.SelectableListLayout;
 import org.chromium.chrome.browser.widget.selection.SelectableListToolbar.SearchDelegate;
@@ -65,13 +64,14 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
     private final int mListItemLateralShadowSizePx;
 
     private final Activity mActivity;
-    private final boolean mIsDisplayedInNativePage;
+    private final boolean mIsSeparateActivity;
     private final SelectableListLayout<HistoryItem> mSelectableListLayout;
     private final HistoryAdapter mHistoryAdapter;
     private final SelectionDelegate<HistoryItem> mSelectionDelegate;
     private final HistoryManagerToolbar mToolbar;
     private final TextView mEmptyView;
     private final RecyclerView mRecyclerView;
+    private final SnackbarManager mSnackbarManager;
     private LargeIconBridge mLargeIconBridge;
 
     private boolean mIsSearching;
@@ -79,11 +79,16 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
     /**
      * Creates a new HistoryManager.
      * @param activity The Activity associated with the HistoryManager.
+     * @param isSeparateActivity Whether the history UI will be shown in a separate activity than
+     *                           the main Chrome activity.
+     * @param snackbarManager The {@link SnackbarManager} used to display snackbars.
      */
-    @SuppressWarnings("unchecked")  // mSelectableListLayout
-    public HistoryManager(Activity activity, @Nullable NativePage nativePage) {
+    @SuppressWarnings("unchecked") // mSelectableListLayout
+    public HistoryManager(
+            Activity activity, boolean isSeparateActivity, SnackbarManager snackbarManager) {
         mActivity = activity;
-        mIsDisplayedInNativePage = nativePage != null;
+        mIsSeparateActivity = isSeparateActivity;
+        mSnackbarManager = snackbarManager;
 
         mSelectionDelegate = new SelectionDelegate<>();
         mSelectionDelegate.addObserver(this);
@@ -126,9 +131,6 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
                 VectorDrawableCompat.create(
                         mActivity.getResources(), R.drawable.history_big, mActivity.getTheme()),
                 R.string.history_manager_empty, R.string.history_manager_no_results);
-        // TODO(twellington): remove this after unifying bookmarks and downloads UI with history.
-        mEmptyView.setTextColor(ApiCompatibilityUtils.getColor(mActivity.getResources(),
-                R.color.google_grey_500));
 
         // 6. Create large icon bridge.
         mLargeIconBridge = new LargeIconBridge(Profile.getLastUsedProfile().getOriginalProfile());
@@ -164,17 +166,18 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
     }
 
     /**
-     * @return Whether the history manager UI is displayed in a native page.
+     * @return Whether the history manager UI is displayed in a separate activity than the main
+     *         Chrome activity.
      */
-    public boolean isDisplayedInNativePage() {
-        return mIsDisplayedInNativePage;
+    public boolean isDisplayedInSeparateActivity() {
+        return mIsSeparateActivity;
     }
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         mToolbar.hideOverflowMenu();
 
-        if (item.getItemId() == R.id.close_menu_id && !isDisplayedInNativePage()) {
+        if (item.getItemId() == R.id.close_menu_id && isDisplayedInSeparateActivity()) {
             mActivity.finish();
             return true;
         } else if (item.getItemId() == R.id.selection_mode_open_in_new_tab) {
@@ -183,12 +186,11 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
             return true;
         } else if (item.getItemId() == R.id.selection_mode_copy_link) {
             recordUserActionWithOptionalSearch("CopyLink");
-            Clipboard clipboard = new Clipboard(mActivity);
-            clipboard.setText(mSelectionDelegate.getSelectedItems().get(0).getUrl());
+            Clipboard.getInstance().setText(mSelectionDelegate.getSelectedItems().get(0).getUrl());
             mSelectionDelegate.clearSelection();
             Snackbar snackbar = Snackbar.make(mActivity.getString(R.string.copied), this,
                     Snackbar.TYPE_NOTIFICATION, Snackbar.UMA_HISTORY_LINK_COPIED);
-            ((SnackbarManageable) mActivity).getSnackbarManager().showSnackbar(snackbar);
+            mSnackbarManager.showSnackbar(snackbar);
             return true;
         } else if (item.getItemId() == R.id.selection_mode_open_in_incognito) {
             openItemsInNewTabs(mSelectionDelegate.getSelectedItems(), true);
@@ -220,6 +222,20 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
      */
     public ViewGroup getView() {
         return mSelectableListLayout;
+    }
+
+    /**
+     * See {@link SelectableListLayout#detachToolbarView()}.
+     */
+    public Toolbar detachToolbarView() {
+        return mSelectableListLayout.detachToolbarView();
+    }
+
+    /**
+     * @return The vertical scroll offset of the content view.
+     */
+    public int getVerticalScrollOffset() {
+        return mRecyclerView.computeVerticalScrollOffset();
     }
 
     /**

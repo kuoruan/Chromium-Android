@@ -16,6 +16,7 @@ import org.chromium.chrome.browser.BasicNativePage;
 import org.chromium.chrome.browser.NativePageHost;
 import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.download.ui.DownloadManagerUi;
+import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarManageable;
 
 /**
  * Native page for managing downloads handled through Chrome.
@@ -39,7 +40,8 @@ public class DownloadPage extends BasicNativePage {
     protected void initialize(Activity activity, final NativePageHost host) {
         ThreadUtils.assertOnUiThread();
 
-        mManager = new DownloadManagerUi(activity, host.isIncognito(), activity.getComponentName());
+        mManager = new DownloadManagerUi(activity, host.isIncognito(), activity.getComponentName(),
+                false, ((SnackbarManageable) activity).getSnackbarManager());
         mManager.setBasicNativePage(this);
         mTitle = activity.getString(R.string.download_manager_ui_all_downloads);
 

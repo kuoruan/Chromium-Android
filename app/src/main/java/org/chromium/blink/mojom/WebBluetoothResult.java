@@ -27,9 +27,7 @@ public final class WebBluetoothResult {
 
     public static final int CONNECT_ALREADY_IN_PROGRESS = CHARACTERISTIC_NO_LONGER_EXISTS + 1;
 
-    public static final int CONNECT_ATTRIBUTE_LENGTH_INVALID = CONNECT_ALREADY_IN_PROGRESS + 1;
-
-    public static final int CONNECT_AUTH_CANCELED = CONNECT_ATTRIBUTE_LENGTH_INVALID + 1;
+    public static final int CONNECT_AUTH_CANCELED = CONNECT_ALREADY_IN_PROGRESS + 1;
 
     public static final int CONNECT_AUTH_FAILED = CONNECT_AUTH_CANCELED + 1;
 
@@ -37,41 +35,19 @@ public final class WebBluetoothResult {
 
     public static final int CONNECT_AUTH_TIMEOUT = CONNECT_AUTH_REJECTED + 1;
 
-    public static final int CONNECT_CONNECTION_CONGESTED = CONNECT_AUTH_TIMEOUT + 1;
-
-    public static final int CONNECT_INSUFFICIENT_ENCRYPTION = CONNECT_CONNECTION_CONGESTED + 1;
-
-    public static final int CONNECT_OFFSET_INVALID = CONNECT_INSUFFICIENT_ENCRYPTION + 1;
-
-    public static final int CONNECT_READ_NOT_PERMITTED = CONNECT_OFFSET_INVALID + 1;
-
-    public static final int CONNECT_REQUEST_NOT_SUPPORTED = CONNECT_READ_NOT_PERMITTED + 1;
-
-    public static final int CONNECT_UNKNOWN_ERROR = CONNECT_REQUEST_NOT_SUPPORTED + 1;
+    public static final int CONNECT_UNKNOWN_ERROR = CONNECT_AUTH_TIMEOUT + 1;
 
     public static final int CONNECT_UNKNOWN_FAILURE = CONNECT_UNKNOWN_ERROR + 1;
 
     public static final int CONNECT_UNSUPPORTED_DEVICE = CONNECT_UNKNOWN_FAILURE + 1;
 
-    public static final int CONNECT_WRITE_NOT_PERMITTED = CONNECT_UNSUPPORTED_DEVICE + 1;
-
-    public static final int DEVICE_NO_LONGER_IN_RANGE = CONNECT_WRITE_NOT_PERMITTED + 1;
+    public static final int DEVICE_NO_LONGER_IN_RANGE = CONNECT_UNSUPPORTED_DEVICE + 1;
 
     public static final int GATT_NOT_PAIRED = DEVICE_NO_LONGER_IN_RANGE + 1;
 
     public static final int GATT_OPERATION_IN_PROGRESS = GATT_NOT_PAIRED + 1;
 
-    public static final int GATT_SERVER_DISCONNECTED = GATT_OPERATION_IN_PROGRESS + 1;
-
-    public static final int GATT_SERVER_NOT_CONNECTED = GATT_SERVER_DISCONNECTED + 1;
-
-    public static final int GATT_SERVER_DISCONNECTED_WHILE_RETRIEVING_CHARACTERISTICS = GATT_SERVER_NOT_CONNECTED + 1;
-
-    public static final int GATT_SERVER_NOT_CONNECTED_CANNOT_RETRIEVE_CHARACTERISTICS = GATT_SERVER_DISCONNECTED_WHILE_RETRIEVING_CHARACTERISTICS + 1;
-
-    public static final int UNTRANSLATED_CONNECT_ERROR_CODE = GATT_SERVER_NOT_CONNECTED_CANNOT_RETRIEVE_CHARACTERISTICS + 1;
-
-    public static final int NO_BLUETOOTH_ADAPTER = UNTRANSLATED_CONNECT_ERROR_CODE + 1;
+    public static final int NO_BLUETOOTH_ADAPTER = GATT_OPERATION_IN_PROGRESS + 1;
 
     public static final int CHOSEN_DEVICE_VANISHED = NO_BLUETOOTH_ADAPTER + 1;
 
@@ -178,18 +154,6 @@ public final class WebBluetoothResult {
             case 41:
             case 42:
             case 43:
-            case 44:
-            case 45:
-            case 46:
-            case 47:
-            case 48:
-            case 49:
-            case 50:
-            case 51:
-            case 52:
-            case 53:
-            case 54:
-            case 55:
                 return true;
         }
         return false;

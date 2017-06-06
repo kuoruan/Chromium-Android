@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.util.MathUtils;
 
@@ -161,7 +162,8 @@ public class TileGridLayout extends FrameLayout {
     }
 
     /** @return A tile view associated to the provided URL, or {@code null} if none is found. */
-    private TileView getTileView(String url) {
+    @VisibleForTesting
+    TileView getTileView(String url) {
         int childCount = getChildCount();
         for (int i = 0; i < childCount; i++) {
             TileView tileView = (TileView) getChildAt(i);

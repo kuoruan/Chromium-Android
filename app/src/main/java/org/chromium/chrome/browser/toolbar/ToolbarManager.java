@@ -144,6 +144,7 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
     private int mFullscreenFocusToken = FullscreenManager.INVALID_TOKEN;
     private int mFullscreenFindInPageToken = FullscreenManager.INVALID_TOKEN;
     private int mFullscreenMenuToken = FullscreenManager.INVALID_TOKEN;
+    private int mFullscreenHighlightToken = FullscreenManager.INVALID_TOKEN;
 
     private int mPreselectedTabId = Tab.INVALID_TAB_ID;
 
@@ -201,7 +202,7 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
             }
         };
 
-        mToolbarModel = new ToolbarModelImpl();
+        mToolbarModel = new ToolbarModelImpl(activity.getBottomSheet());
         mControlContainer = controlContainer;
         assert mControlContainer != null;
 
@@ -295,7 +296,7 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
             }
 
             @Override
-            public void allTabsPendingClosure(List<Integer> tabIds) {
+            public void allTabsPendingClosure(List<Tab> tabs) {
                 updateTabCount();
                 refreshSelectedTab();
             }
@@ -431,7 +432,7 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
 
             @Override
             public void onDidStartNavigation(Tab tab, String url, boolean isInMainFrame,
-                    boolean isSamePage, boolean isErrorPage) {
+                    boolean isSameDocument, boolean isErrorPage) {
                 if (!isInMainFrame) return;
                 // Update URL as soon as it becomes available when it's a new tab.
                 // But we want to update only when it's a new tab. So we check whether the current
@@ -443,7 +444,7 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
                     mLocationBar.setUrlToPageUrl();
                 }
 
-                if (isSamePage) return;
+                if (isSameDocument) return;
                 // This event is used as the primary trigger for the progress bar because it
                 // is the earliest indication that a load has started for a particular frame. In
                 // the case of the progress bar, it should only traverse the screen a single time
@@ -462,10 +463,10 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
 
             @Override
             public void onDidFinishNavigation(Tab tab, String url, boolean isInMainFrame,
-                    boolean isErrorPage, boolean hasCommitted, boolean isSamePage,
+                    boolean isErrorPage, boolean hasCommitted, boolean isSameDocument,
                     boolean isFragmentNavigation, Integer pageTransition, int errorCode,
                     int httpStatusCode) {
-                if (hasCommitted && isInMainFrame && !isSamePage) {
+                if (hasCommitted && isInMainFrame && !isSameDocument) {
                     mToolbar.onNavigatedToDifferentPage();
                 }
 
@@ -827,6 +828,21 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
                 } else {
                     mControlsVisibilityDelegate.hideControlsPersistent(mFullscreenMenuToken);
                     mFullscreenMenuToken = FullscreenManager.INVALID_TOKEN;
+                }
+            }
+
+            @Override
+            public void onMenuHighlightChanged(boolean highlighting) {
+                mToolbar.setMenuButtonHighlight(highlighting);
+
+                if (mControlsVisibilityDelegate == null) return;
+                if (highlighting) {
+                    mFullscreenHighlightToken =
+                            mControlsVisibilityDelegate.showControlsPersistentAndClearOldToken(
+                                    mFullscreenHighlightToken);
+                } else {
+                    mControlsVisibilityDelegate.hideControlsPersistent(mFullscreenHighlightToken);
+                    mFullscreenHighlightToken = FullscreenManager.INVALID_TOKEN;
                 }
             }
         });

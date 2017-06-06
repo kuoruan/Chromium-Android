@@ -117,7 +117,7 @@ public class ThreadedInputConnectionFactory implements ChromiumBaseInputConnecti
         ImeUtils.computeEditorInfo(
                 inputType, inputFlags, inputMode, selectionStart, selectionEnd, outAttrs);
         if (DEBUG_LOGS) {
-            Log.w(TAG, "initializeAndGet. outAttr: " + ImeUtils.getEditorInfoDebugString(outAttrs));
+            Log.i(TAG, "initializeAndGet. outAttr: " + ImeUtils.getEditorInfoDebugString(outAttrs));
         }
 
         // IMM can internally ignore subsequent activation requests, e.g., by checking
@@ -128,10 +128,10 @@ public class ThreadedInputConnectionFactory implements ChromiumBaseInputConnecti
             triggerDelayedOnCreateInputConnection(view);
             return null;
         }
-        if (DEBUG_LOGS) Log.w(TAG, "initializeAndGet: called from proxy view");
+        if (DEBUG_LOGS) Log.i(TAG, "initializeAndGet: called from proxy view");
 
         if (mThreadedInputConnection == null) {
-            if (DEBUG_LOGS) Log.w(TAG, "Creating ThreadedInputConnection...");
+            if (DEBUG_LOGS) Log.i(TAG, "Creating ThreadedInputConnection...");
             mThreadedInputConnection = new ThreadedInputConnection(view, imeAdapter, getHandler());
         } else {
             mThreadedInputConnection.resetOnUiThread();
@@ -140,7 +140,7 @@ public class ThreadedInputConnectionFactory implements ChromiumBaseInputConnecti
     }
 
     private void triggerDelayedOnCreateInputConnection(final View view) {
-        if (DEBUG_LOGS) Log.w(TAG, "triggerDelayedOnCreateInputConnection");
+        if (DEBUG_LOGS) Log.i(TAG, "triggerDelayedOnCreateInputConnection");
         // Prevent infinite loop when View methods trigger onCreateInputConnection
         // on some OEM phones. (crbug.com/636197)
         if (mReentrantTriggering) return;
@@ -206,7 +206,7 @@ public class ThreadedInputConnectionFactory implements ChromiumBaseInputConnecti
     }
 
     private void checkRegisterResult(View view, CheckInvalidator checkInvalidator, int retry) {
-        if (DEBUG_LOGS) Log.w(TAG, "checkRegisterResult - retry: " + retry);
+        if (DEBUG_LOGS) Log.i(TAG, "checkRegisterResult - retry: " + retry);
         // Success.
         if (mInputMethodManagerWrapper.isActive(mProxyView)) {
             onRegisterProxyViewSuccess();

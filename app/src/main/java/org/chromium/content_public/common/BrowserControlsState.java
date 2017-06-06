@@ -15,14 +15,14 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class BrowserControlsState {
-  @IntDef({
-      SHOWN, HIDDEN, BOTH, LAST
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface BrowserControlsStateEnum {}
-  public static final int SHOWN = 1;
-  public static final int HIDDEN = 2;
-  public static final int BOTH = 3;
-  public static final int LAST = BOTH;
+@IntDef({
+    BrowserControlsState.SHOWN, BrowserControlsState.HIDDEN, BrowserControlsState.BOTH,
+    BrowserControlsState.LAST
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface BrowserControlsState {
+  int SHOWN = 1;
+  int HIDDEN = 2;
+  int BOTH = 3;
+  int LAST = BOTH;
 }

@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.ntp.snippets;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
 
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.PeriodicTask;
@@ -52,16 +53,15 @@ public class SnippetsLauncher {
 
     /**
      * Create a SnippetsLauncher object, which is owned by C++.
-     * @param context The app context.
      */
     @VisibleForTesting
     @CalledByNative
-    public static SnippetsLauncher create(Context context) {
+    public static SnippetsLauncher create() {
         if (sInstance != null) {
             throw new IllegalStateException("Already instantiated");
         }
 
-        sInstance = new SnippetsLauncher(context);
+        sInstance = new SnippetsLauncher();
         return sInstance;
     }
 
@@ -84,19 +84,19 @@ public class SnippetsLauncher {
         return sInstance != null;
     }
 
-    protected SnippetsLauncher(Context context) {
-        checkGCM(context);
-        mScheduler = GcmNetworkManager.getInstance(context);
+    protected SnippetsLauncher() {
+        checkGCM();
+        mScheduler = GcmNetworkManager.getInstance(ContextUtils.getApplicationContext());
     }
 
-    private boolean canUseGooglePlayServices(Context context) {
+    private boolean canUseGooglePlayServices() {
         return ExternalAuthUtils.getInstance().canUseGooglePlayServices(
-                context, new UserRecoverableErrorHandler.Silent());
+                ContextUtils.getApplicationContext(), new UserRecoverableErrorHandler.Silent());
     }
 
-    private void checkGCM(Context context) {
+    private void checkGCM() {
         // Check to see if Play Services is up to date, and disable GCM if not.
-        if (!canUseGooglePlayServices(context)) {
+        if (!canUseGooglePlayServices()) {
             mGCMEnabled = false;
             Log.i(TAG, "Disabling SnippetsLauncher because Play Services is not up to date.");
         }
@@ -166,6 +166,14 @@ public class SnippetsLauncher {
         if (!mGCMEnabled) return false;
         Log.i(TAG, "Unscheduling");
         return schedule(0, 0);
+    }
+
+    @CalledByNative
+    public boolean isOnUnmeteredConnection() {
+        Context context = ContextUtils.getApplicationContext();
+        ConnectivityManager manager =
+                (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        return !manager.isActiveNetworkMetered();
     }
 
     public static boolean shouldRescheduleTasksOnUpgrade() {

@@ -15,10 +15,8 @@ public interface ChildProcessConstants {
     // Key in the binding Intent's Bundle for the ChromiumLinkerParams.
     public static final String EXTRA_LINKER_PARAMS =
             "com.google.android.apps.chrome.extra.linker_params";
-
-    // Key in the binding Intent's Bundle for the type of process the child is.
-    public static final String EXTRA_LIBRARY_PROCESS_TYPE =
-            "com.google.android.apps.chrome.extra.library_process_type";
+    public static final String EXTRA_BIND_TO_CALLER =
+            "com.google.android.apps.chrome.extra.bind_to_caller";
 
     // Below are the names for the items placed in the Bundle passed in the
     // IChildProcessService.setupConnection call, once the connection has been established.
@@ -36,6 +34,4 @@ public interface ChildProcessConstants {
     // Key for the CPU features mask.
     public static final String EXTRA_CPU_FEATURES =
             "com.google.android.apps.chrome.extra.cpu_features";
-    public static final String EXTRA_BIND_TO_CALLER =
-            "com.google.android.apps.chrome.extra.bind_to_caller";
 }

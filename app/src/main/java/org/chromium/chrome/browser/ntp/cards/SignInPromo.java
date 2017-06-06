@@ -22,6 +22,7 @@ import org.chromium.chrome.browser.signin.SigninManager;
 import org.chromium.chrome.browser.signin.SigninManager.SignInAllowedObserver;
 import org.chromium.chrome.browser.signin.SigninManager.SignInStateObserver;
 import org.chromium.chrome.browser.suggestions.DestructionObserver;
+import org.chromium.chrome.browser.suggestions.SuggestionsRecyclerView;
 import org.chromium.chrome.browser.suggestions.SuggestionsUiDelegate;
 import org.chromium.chrome.browser.widget.displaystyle.UiConfig;
 
@@ -179,7 +180,7 @@ public class SignInPromo extends OptionalLeaf
      * View Holder for {@link SignInPromo}.
      */
     public static class ViewHolder extends StatusCardViewHolder {
-        public ViewHolder(NewTabPageRecyclerView parent, ContextMenuManager contextMenuManager,
+        public ViewHolder(SuggestionsRecyclerView parent, ContextMenuManager contextMenuManager,
                 UiConfig config) {
             super(parent, contextMenuManager, config);
             getParams().topMargin = parent.getResources().getDimensionPixelSize(

@@ -609,7 +609,7 @@ public class OMADownloadHandler {
         // Don't show complete notification until that happens.
         DownloadItem item = new DownloadItem(true, newInfo);
         item.setSystemDownloadId(downloadId);
-        DownloadManagerService.getDownloadManagerService(mContext).enqueueDownloadManagerRequest(
+        DownloadManagerService.getDownloadManagerService().enqueueDownloadManagerRequest(
                 item, omaInfo.isValueEmpty(OMA_INSTALL_NOTIFY_URI));
         mPendingOMADownloads.put(downloadId, omaInfo);
     }

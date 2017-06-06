@@ -15,18 +15,18 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class AndroidResourceType {
-  @IntDef({
-      STATIC, DYNAMIC, DYNAMIC_BITMAP, SYSTEM, CRUSHED_SPRITE, COUNT, FIRST, LAST
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface AndroidResourceTypeEnum {}
-  public static final int STATIC = 0;
-  public static final int DYNAMIC = 1;
-  public static final int DYNAMIC_BITMAP = 2;
-  public static final int SYSTEM = 3;
-  public static final int CRUSHED_SPRITE = 4;
-  public static final int COUNT = 5;
-  public static final int FIRST = 0;
-  public static final int LAST = 4;
+@IntDef({
+    AndroidResourceType.STATIC, AndroidResourceType.DYNAMIC, AndroidResourceType.DYNAMIC_BITMAP,
+    AndroidResourceType.SYSTEM, AndroidResourceType.COUNT, AndroidResourceType.FIRST,
+    AndroidResourceType.LAST
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface AndroidResourceType {
+  int STATIC = 0;
+  int DYNAMIC = 1;
+  int DYNAMIC_BITMAP = 2;
+  int SYSTEM = 3;
+  int COUNT = 4;
+  int FIRST = 0;
+  int LAST = 3;
 }

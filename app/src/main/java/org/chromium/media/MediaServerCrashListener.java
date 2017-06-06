@@ -12,7 +12,7 @@ import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.annotations.MainDex;
-import org.chromium.content.R;
+import org.chromium.chrome.R;
 
 /**
  * Class for listening to Android MediaServer crashes to throttle media decoding

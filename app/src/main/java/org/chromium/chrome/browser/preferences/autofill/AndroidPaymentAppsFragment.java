@@ -11,7 +11,6 @@ import android.util.Pair;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.payments.AndroidPaymentAppFactory;
-import org.chromium.chrome.browser.payments.PaymentPreferencesUtil;
 import org.chromium.chrome.browser.preferences.TextMessagePreference;
 
 import java.util.Map;
@@ -46,9 +45,6 @@ public class AndroidPaymentAppsFragment extends PreferenceFragment {
             pref = new AndroidPaymentAppPreference(getActivity());
             pref.setTitle(app.getValue().first);
             pref.setIcon(app.getValue().second);
-            pref.setDefaultValue(true);
-            pref.setKey(
-                    PaymentPreferencesUtil.getAndroidPaymentAppEnabledPreferenceKey(app.getKey()));
             getPreferenceScreen().addPreference(pref);
         }
         // Add a divider line at the bottom of the last preference to separate it from below
@@ -56,7 +52,7 @@ public class AndroidPaymentAppsFragment extends PreferenceFragment {
         if (pref != null) pref.setDrawDivider(true);
 
         TextMessagePreference textPreference = new TextMessagePreference(getActivity(), null);
-        textPreference.setTitle(getActivity().getString(R.string.payment_apps_control_message));
+        textPreference.setTitle(getActivity().getString(R.string.payment_apps_usage_message));
         getPreferenceScreen().addPreference(textPreference);
     }
 }

@@ -32,6 +32,7 @@ class RandomizedInvalidationClientNameGenerator implements InvalidationClientNam
      * However, as bad as it is, this ID is better than a hard-coded default or none at all.  See
      * the class description for more details.
      */
+    @Override
     public byte[] generateInvalidatorClientName() {
         byte[] randomBytes = new byte[8];
         RANDOM.nextBytes(randomBytes);

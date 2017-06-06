@@ -15,18 +15,17 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class LocationSettingsDialogContext {
-  @IntDef({
-      DEFAULT, SEARCH
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface LocationSettingsDialogContextEnum {}
+@IntDef({
+    LocationSettingsDialogContext.DEFAULT, LocationSettingsDialogContext.SEARCH
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface LocationSettingsDialogContext {
   /**
    * Default context.
    */
-  public static final int DEFAULT = 1;
+  int DEFAULT = 1;
   /**
    * Prompt triggered in the context of a search.
    */
-  public static final int SEARCH = 2;
+  int SEARCH = 2;
 }

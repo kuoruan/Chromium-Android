@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.physicalweb;
 
+import android.content.Intent;
 import android.os.Build;
 
 import org.chromium.chrome.browser.ChromeActivity;
@@ -15,10 +16,31 @@ import org.chromium.chrome.browser.share.ShareActivity;
 public class PhysicalWebShareActivity extends ShareActivity {
     @Override
     protected void handleShareAction(ChromeActivity triggeringActivity) {
-        // TODO(iankc): implement this.
+        String url = triggeringActivity.getActivityTab().getUrl();
+
+        if (!PhysicalWeb.sharingIsOptedIn()) {
+            // This shows an interstitial for the user to opt-in for sending URL to Google.
+            Intent intent = new Intent(this, PhysicalWebShareEntryActivity.class);
+            intent.putExtra(PhysicalWebShareEntryActivity.SHARING_ENTRY_URL, url);
+            triggeringActivity.startActivity(intent);
+            return;
+        }
+
+        PhysicalWebBroadcastService.startBroadcastService(url);
     }
 
+    /**
+     * Returns whether we should show this sharing option in the share sheet.
+     * Pre-conditions for Physical Web Sharing to be enabled:
+     *      Device has hardware BLE advertising capabilities.
+     *      Device had Bluetooth on.
+     *      Device is Marshmallow or above.
+     *      Device has sharing feature enabled.
+     * @return {@code true} if the feature should be enabled.
+     */
     public static boolean featureIsAvailable() {
-        return PhysicalWeb.sharingIsEnabled() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false;
+        return PhysicalWeb.hasBleAdvertiseCapability() && PhysicalWeb.bluetoothIsEnabled()
+                && PhysicalWeb.sharingIsEnabled();
     }
 }

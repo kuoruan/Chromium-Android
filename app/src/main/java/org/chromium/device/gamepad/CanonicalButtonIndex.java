@@ -15,30 +15,34 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class CanonicalButtonIndex {
-  @IntDef({
-      PRIMARY, SECONDARY, TERTIARY, QUATERNARY, LEFT_SHOULDER, RIGHT_SHOULDER, LEFT_TRIGGER,
-      RIGHT_TRIGGER, BACK_SELECT, START, LEFT_THUMBSTICK, RIGHT_THUMBSTICK, DPAD_UP, DPAD_DOWN,
-      DPAD_LEFT, DPAD_RIGHT, META, COUNT
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface CanonicalButtonIndexEnum {}
-  public static final int PRIMARY = 0;
-  public static final int SECONDARY = 1;
-  public static final int TERTIARY = 2;
-  public static final int QUATERNARY = 3;
-  public static final int LEFT_SHOULDER = 4;
-  public static final int RIGHT_SHOULDER = 5;
-  public static final int LEFT_TRIGGER = 6;
-  public static final int RIGHT_TRIGGER = 7;
-  public static final int BACK_SELECT = 8;
-  public static final int START = 9;
-  public static final int LEFT_THUMBSTICK = 10;
-  public static final int RIGHT_THUMBSTICK = 11;
-  public static final int DPAD_UP = 12;
-  public static final int DPAD_DOWN = 13;
-  public static final int DPAD_LEFT = 14;
-  public static final int DPAD_RIGHT = 15;
-  public static final int META = 16;
-  public static final int COUNT = 17;
+@IntDef({
+    CanonicalButtonIndex.PRIMARY, CanonicalButtonIndex.SECONDARY, CanonicalButtonIndex.TERTIARY,
+    CanonicalButtonIndex.QUATERNARY, CanonicalButtonIndex.LEFT_SHOULDER,
+    CanonicalButtonIndex.RIGHT_SHOULDER, CanonicalButtonIndex.LEFT_TRIGGER,
+    CanonicalButtonIndex.RIGHT_TRIGGER, CanonicalButtonIndex.BACK_SELECT,
+    CanonicalButtonIndex.START, CanonicalButtonIndex.LEFT_THUMBSTICK,
+    CanonicalButtonIndex.RIGHT_THUMBSTICK, CanonicalButtonIndex.DPAD_UP,
+    CanonicalButtonIndex.DPAD_DOWN, CanonicalButtonIndex.DPAD_LEFT, CanonicalButtonIndex.DPAD_RIGHT,
+    CanonicalButtonIndex.META, CanonicalButtonIndex.COUNT
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface CanonicalButtonIndex {
+  int PRIMARY = 0;
+  int SECONDARY = 1;
+  int TERTIARY = 2;
+  int QUATERNARY = 3;
+  int LEFT_SHOULDER = 4;
+  int RIGHT_SHOULDER = 5;
+  int LEFT_TRIGGER = 6;
+  int RIGHT_TRIGGER = 7;
+  int BACK_SELECT = 8;
+  int START = 9;
+  int LEFT_THUMBSTICK = 10;
+  int RIGHT_THUMBSTICK = 11;
+  int DPAD_UP = 12;
+  int DPAD_DOWN = 13;
+  int DPAD_LEFT = 14;
+  int DPAD_RIGHT = 15;
+  int META = 16;
+  int COUNT = 17;
 }

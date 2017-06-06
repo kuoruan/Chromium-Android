@@ -15,37 +15,42 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class SigninAccessPoint {
-  @IntDef({
-      START_PAGE, NTP_LINK, MENU, SETTINGS, SUPERVISED_USER, EXTENSION_INSTALL_BUBBLE, EXTENSIONS,
-      APPS_PAGE_LINK, BOOKMARK_BUBBLE, BOOKMARK_MANAGER, AVATAR_BUBBLE_SIGN_IN, USER_MANAGER,
-      DEVICES_PAGE, CLOUD_PRINT, CONTENT_AREA, SIGNIN_PROMO, RECENT_TABS, UNKNOWN, PASSWORD_BUBBLE,
-      AUTOFILL_DROPDOWN, NTP_CONTENT_SUGGESTIONS, RESIGNIN_INFOBAR, TAB_SWITCHER, MAX
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface SigninAccessPointEnum {}
-  public static final int START_PAGE = 0;
-  public static final int NTP_LINK = 1;
-  public static final int MENU = 2;
-  public static final int SETTINGS = 3;
-  public static final int SUPERVISED_USER = 4;
-  public static final int EXTENSION_INSTALL_BUBBLE = 5;
-  public static final int EXTENSIONS = 6;
-  public static final int APPS_PAGE_LINK = 7;
-  public static final int BOOKMARK_BUBBLE = 8;
-  public static final int BOOKMARK_MANAGER = 9;
-  public static final int AVATAR_BUBBLE_SIGN_IN = 10;
-  public static final int USER_MANAGER = 11;
-  public static final int DEVICES_PAGE = 12;
-  public static final int CLOUD_PRINT = 13;
-  public static final int CONTENT_AREA = 14;
-  public static final int SIGNIN_PROMO = 15;
-  public static final int RECENT_TABS = 16;
-  public static final int UNKNOWN = 17;
-  public static final int PASSWORD_BUBBLE = 18;
-  public static final int AUTOFILL_DROPDOWN = 19;
-  public static final int NTP_CONTENT_SUGGESTIONS = 20;
-  public static final int RESIGNIN_INFOBAR = 21;
-  public static final int TAB_SWITCHER = 22;
-  public static final int MAX = 23;
+@IntDef({
+    SigninAccessPoint.START_PAGE, SigninAccessPoint.NTP_LINK, SigninAccessPoint.MENU,
+    SigninAccessPoint.SETTINGS, SigninAccessPoint.SUPERVISED_USER,
+    SigninAccessPoint.EXTENSION_INSTALL_BUBBLE, SigninAccessPoint.EXTENSIONS,
+    SigninAccessPoint.APPS_PAGE_LINK, SigninAccessPoint.BOOKMARK_BUBBLE,
+    SigninAccessPoint.BOOKMARK_MANAGER, SigninAccessPoint.AVATAR_BUBBLE_SIGN_IN,
+    SigninAccessPoint.USER_MANAGER, SigninAccessPoint.DEVICES_PAGE, SigninAccessPoint.CLOUD_PRINT,
+    SigninAccessPoint.CONTENT_AREA, SigninAccessPoint.SIGNIN_PROMO, SigninAccessPoint.RECENT_TABS,
+    SigninAccessPoint.UNKNOWN, SigninAccessPoint.PASSWORD_BUBBLE,
+    SigninAccessPoint.AUTOFILL_DROPDOWN, SigninAccessPoint.NTP_CONTENT_SUGGESTIONS,
+    SigninAccessPoint.RESIGNIN_INFOBAR, SigninAccessPoint.TAB_SWITCHER, SigninAccessPoint.MAX
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface SigninAccessPoint {
+  int START_PAGE = 0;
+  int NTP_LINK = 1;
+  int MENU = 2;
+  int SETTINGS = 3;
+  int SUPERVISED_USER = 4;
+  int EXTENSION_INSTALL_BUBBLE = 5;
+  int EXTENSIONS = 6;
+  int APPS_PAGE_LINK = 7;
+  int BOOKMARK_BUBBLE = 8;
+  int BOOKMARK_MANAGER = 9;
+  int AVATAR_BUBBLE_SIGN_IN = 10;
+  int USER_MANAGER = 11;
+  int DEVICES_PAGE = 12;
+  int CLOUD_PRINT = 13;
+  int CONTENT_AREA = 14;
+  int SIGNIN_PROMO = 15;
+  int RECENT_TABS = 16;
+  int UNKNOWN = 17;
+  int PASSWORD_BUBBLE = 18;
+  int AUTOFILL_DROPDOWN = 19;
+  int NTP_CONTENT_SUGGESTIONS = 20;
+  int RESIGNIN_INFOBAR = 21;
+  int TAB_SWITCHER = 22;
+  int MAX = 23;
 }

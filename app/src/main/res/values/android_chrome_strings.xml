@@ -4,10 +4,12 @@
 <string name="ok_got_it">"OK, got it"</string>
 <string name="cancel">"Cancel"</string>
 <string name="save">"Save"</string>
+<string name="details_link">"Details"</string>
 <string name="done">"Done"</string>
 <string name="delete">"Delete"</string>
 <string name="remove">"Remove"</string>
 <string name="reset">"Reset"</string>
+<string name="choose">"Choose"</string>
 <string name="title">"Title"</string>
 <string name="text_on">"On"</string>
 <string name="text_off">"Off"</string>
@@ -29,6 +31,7 @@
 <string name="search">"Search"</string>
 <string name="copy_link">"Copy link"</string>
 <string name="copied">"Copied"</string>
+<string name="retry">"Retry"</string>
 <string name="preferences">"Settings"</string>
 <string name="menu_help">"Help &amp; feedback"</string>
 <string name="managed_by_your_administrator">"Managed by your administrator"</string>
@@ -38,6 +41,9 @@
 <string name="prefs_section_advanced">"Advanced"</string>
 <string name="enter_vr">"Enter VR"</string>
 <string name="notification_category_group_general">"General"</string>
+<string name="notification_category_incognito">"Incognito"</string>
+<string name="notification_category_media">"Media"</string>
+<string name="notification_category_downloads">"Downloads"</string>
 <string name="notification_category_browser">"Browser"</string>
 <string name="notification_category_sites">"Sites"</string>
 <string name="sign_in_to_chrome">"Sign in to Chrome"</string>
@@ -55,7 +61,7 @@
 <string name="autofill_profiles_title">"Addresses"</string>
 <string name="payment_apps_title">"Payment apps"</string>
 <string name="payment_no_apps_summary">"No supported apps installed"</string>
-<string name="payment_apps_control_message">"On some websites, you can pay with supported payment apps. Choose which apps to use in Chrome."</string>
+<string name="payment_apps_usage_message">"On some websites, you can pay with above supported payment apps on your device."</string>
 <string name="autofill_credit_cards_title">"Credit cards"</string>
 <string name="autofill_create_profile">"Add address"</string>
 <string name="autofill_edit_profile">"Edit address"</string>
@@ -69,6 +75,22 @@
 <string name="autofill_credit_card_editor_expiration_date">"Expiration date"</string>
 <string name="autofill_credit_card_editor_billing_address">"Billing address"</string>
 <string name="autofill_describe_local_copy">"Copied to Chrome"</string>
+<plurals name="payment_request_payment_methods_preview">
+  <item quantity="one">"%1$s\u2026 and %2$s more"</item>
+  <item quantity="other">"%1$s\u2026 and %2$s more"</item>
+</plurals>
+<plurals name="payment_request_shipping_addresses_preview">
+  <item quantity="one">"%1$s\u2026 and %2$s more"</item>
+  <item quantity="other">"%1$s\u2026 and %2$s more"</item>
+</plurals>
+<plurals name="payment_request_shipping_options_preview">
+  <item quantity="one">"%1$s\u2026 and %2$s more"</item>
+  <item quantity="other">"%1$s\u2026 and %2$s more"</item>
+</plurals>
+<plurals name="payment_request_contacts_preview">
+  <item quantity="one">"%1$s\u2026 and %2$s more"</item>
+  <item quantity="other">"%1$s\u2026 and %2$s more"</item>
+</plurals>
 <string name="autofill_wallet_management_link_text">"Edit"</string>
 <string name="autofill_manage_wallet_cards_url">"https://payments.google.com/#paymentMethods"</string>
 <string name="autofill_manage_wallet_addresses_url">"https://payments.google.com/#paymentMethods"</string>
@@ -99,6 +121,8 @@
 <string name="navigation_error_summary">"Show suggestions when a web address does not resolve or a connection cannot be made"</string>
 <string name="search_suggestions_title">"Search and URL suggestions"</string>
 <string name="search_suggestions_summary">"Use a prediction service to show related queries and popular websites as you type in the address bar"</string>
+<string name="search_site_suggestions_title">"Search and site suggestions"</string>
+<string name="search_site_suggestions_summary">"Use prediction services to suggest search terms and websites"</string>
 <string name="safe_browsing_extended_reporting_title">"Security incidents"</string>
 <string name="safe_browsing_extended_reporting_summary">"Automatically report details of possible security incidents to Google"</string>
 <string name="safe_browsing_scout_reporting_title">"Security reports"</string>
@@ -133,6 +157,11 @@ Your Google account may have other forms of browsing history like searches and a
 <string name="clear_history_title">"Browsing history"</string>
 <string name="clear_cookies_and_site_data_title">"Cookies and site data"</string>
 <string name="clear_cookies_and_site_data_summary">"This will sign you out of most websites."</string>
+<string name="clear_cookies_and_site_data_summary_basic">"Signs you out of most sites."</string>
+<string name="clear_cookies_and_site_data_signed_in_summary_basic">"Signs you out of most sites. You won\'t be signed out of you Google Account."</string>
+<string name="clear_browsing_history_summary">"Clears history and address bar suggestions."</string>
+<string name="clear_browsing_history_summary_signed_in">"Clears history and address bar suggestions. View other activity from your Google Account at &lt;link&gt;myactivity.google.com&lt;/link&gt;."</string>
+<string name="clear_browsing_history_summary_synced">"Clears history from all signed-in devices. View other activity from your Google Account at &lt;link&gt;myactivity.google.com&lt;/link&gt;."</string>
 <string name="clear_passwords_title">"Saved passwords"</string>
 <string name="clear_form_data_title">"Autofill form data"</string>
 <string name="clear_browsing_data_progress_title">"Clearing browsing data"</string>
@@ -144,6 +173,12 @@ Your Google account may have other forms of browsing history like searches and a
 <string name="clear_browsing_data_period_week">"past week"</string>
 <string name="clear_browsing_data_period_four_weeks">"last 4 weeks"</string>
 <string name="clear_browsing_data_period_everything">"beginning of time"</string>
+<string name="clear_browsing_data_tab_period_title">"Time range"</string>
+<string name="clear_browsing_data_tab_period_hour">"Last hour"</string>
+<string name="clear_browsing_data_tab_period_24_hours">"Last 24 hours"</string>
+<string name="clear_browsing_data_tab_period_7_days">"Last 7 days"</string>
+<string name="clear_browsing_data_tab_period_four_weeks">"Last 4 weeks"</string>
+<string name="clear_browsing_data_tab_period_everything">"All time"</string>
 <string name="clear_browsing_data_important_dialog_text">"This will clear data for all sites, including:"</string>
 <string name="clear_browsing_data_important_dialog_button">"Clear"</string>
 <string name="open_clear_browsing_data_dialog_button">"Clear browsing data…"</string>
@@ -154,6 +189,11 @@ Your Google account may have other forms of browsing history like searches and a
 <string name="android_history_blocked_site">"Blocked site"</string>
 <string name="usage_and_crash_reports_title">"Usage and crash reports"</string>
 <string name="usage_and_crash_reports_description">"Automatically send usage statistics and crash reports to Google"</string>
+<string name="prefs_suggestions">"Suggestions"</string>
+<string name="suggestions_feature_switch_title">"Suggestions"</string>
+<string name="suggestions_feature_switch_on_summary">"Use Google servers to provide browsing suggestions."</string>
+<string name="suggestions_caveats_description">"When this feature is turned on, Chrome will use Google servers to provide browsing suggestions, e.g. when you open a new tab. This include popular websites, trending articles as well as personalized suggestions."</string>
+<string name="suggestions_notifications_switch_title">"Notifications"</string>
 <string name="prefs_accessibility">"Accessibility"</string>
 <string name="font_size">"Text scaling"</string>
 <string name="font_size_preview_text">"Drag the slider until you can read this comfortably. Text should look at least this big after double-tapping on a paragraph."</string>
@@ -168,6 +208,7 @@ Your Google account may have other forms of browsing history like searches and a
 <string name="javascript_permission_title">"JavaScript"</string>
 <string name="media_permission_title">"Media"</string>
 <string name="popup_permission_title">"Pop-ups"</string>
+<string name="subresource_filter_permission_title">"Subresource Filter"</string>
 <string name="push_notifications_permission_title">"Notifications"</string>
 <string name="enable_notifications_vibrate_title">"Vibrate"</string>
 <string name="enable_notifications_vibrate_summary">"Notifications may vibrate the device"</string>
@@ -245,14 +286,24 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="website_settings_revoke_device_permission">"Revoke device permission"</string>
 <string name="website_settings_usb_no_devices">"No USB devices here"</string>
 <string name="data_reduction_title">"Data Saver"</string>
+<string name="data_reduction_saved_label">"%1$s saved"</string>
+<string name="data_reduction_date_label">"since %1$s"</string>
 <string name="data_reduction_description">"When this feature is turned on, Chrome will use Google servers to compress pages you visit before downloading them. Pages accessed using private connections (HTTPS) or in Incognito tabs will not be optimized or seen by Google."</string>
 <string name="data_reduction_menu_item_summary">"%1$s data savings"</string>
+<string name="data_reduction_savings_label">"Data Saved:"</string>
+<string name="data_reduction_usage_label">"Data Used:"</string>
+<string name="data_reduction_proxy_unreachable_warn">"Chrome is unable to reach Google servers for data compression. Your data savings may be limited."</string>
+<string name="data_reduction_data_usage_breakdown_title">"Data Usage Breakdown"</string>
+<string name="data_reduction_breakdown_site_title">"Site"</string>
+<string name="data_reduction_breakdown_used_title">"Used"</string>
+<string name="data_reduction_breakdown_saved_title">"Saved"</string>
+<string name="data_reduction_breakdown_remaining_sites_label">"Remaining sites (%1$d)"</string>
+<string name="data_reduction_usage_reset_statistics_button">"Reset Statistics"</string>
+<string name="safe_browsing_description">"Chrome’s Safe Browsing system will also be used to detect malicious pages and protect you from phishing, malware, and harmful downloads."</string>
+<string name="data_reduction_caveats_description">"This feature may interfere with access to premium data services provided by your carrier."</string>
 <string name="data_reduction_stats_title">"Data savings"</string>
 <string name="data_reduction_original_size_label">"Original size"</string>
 <string name="data_reduction_compressed_size_label">"After compression"</string>
-<string name="data_reduction_proxy_unreachable_warn">"Chrome is unable to reach Google servers for data compression. Your data savings may be limited."</string>
-<string name="safe_browsing_description">"Chrome’s Safe Browsing system will also be used to detect malicious pages and protect you from phishing, malware, and harmful downloads."</string>
-<string name="data_reduction_caveats_description">"This feature may interfere with access to premium data services provided by your carrier."</string>
 <string name="data_reduction_promo_title">"Save data and browse faster"</string>
 <string name="data_reduction_promo_summary">"Use up to 60% less data and speed up the web. Google servers will optimize the pages you visit."</string>
 <string name="data_reduction_enable_button">"Turn on Data Saver"</string>
@@ -304,6 +355,9 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="signout_managed_account_message">"You are signing out of an account managed by %1$s. This will delete the Chrome data stored on this device, but the data will remain in your Google Account."</string>
 <string name="signout_dialog_positive_button">"Sign out"</string>
 <string name="sign_in_button">"Sign in"</string>
+<string name="sign_in_getting_account_management_policy">"Contacting Google…this may take a minute"</string>
+<string name="sign_in_timeout_title">"Can\'t sign in"</string>
+<string name="sign_in_timeout_message">"Google took too long to respond"</string>
 <string name="sign_out_managed_account">"Sign out of managed account"</string>
 <string name="sign_in_managed_account">"Sign in to managed account"</string>
 <string name="sign_in_managed_account_description">"You are signing in with an account managed by %1$s and giving its administrator control over your Chrome data. Your data will become permanently tied to this account. Signing out of Chrome will delete your data from this device, but it will remain stored in your Google Account."</string>
@@ -369,6 +423,7 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="bluetooth_need_location_services_on">"Chrome needs location access to scan for devices. Location access is &lt;services_link&gt;turned off for this device&lt;/services_link&gt;."</string>
 <string name="bluetooth_need_location_permission_and_services_on">"Chrome needs location access to scan for devices. &lt;permission_link&gt;Update permissions&lt;/permission_link&gt;. Location access is also &lt;services_link&gt;turned off for this device&lt;/services_link&gt;."</string>
 <string name="bluetooth_need_location_permission_help">"&lt;link&gt;Get help&lt;/link&gt;"</string>
+<string name="bluetooth_device_connected">"Connected Device"</string>
 <string name="sync_error_card_title">"Sync isn\'t working"</string>
 <string name="hint_android_sync_disabled">"Open Android settings and re-enable Android system sync to start Chrome sync"</string>
 <string name="hint_sync_auth_error">"Sign in again to start sync"</string>
@@ -394,6 +449,7 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="infobar_close">"Close"</string>
 <string name="bottom_bar_screen_position">"Options available near bottom of the screen"</string>
 <string name="duplicate_download_infobar_text">"Do you want to download ^1 again?"</string>
+<string name="duplicate_download_request_infobar_text">"Do you want to start downloading ^1 again?"</string>
 <string name="duplicate_download_infobar_download_button">"Download"</string>
 <string name="permission_prompt_persist_text">"Remember my decision"</string>
 <string name="translate_infobar_text">"This page is in ^1. Translate it to ^2?"</string>
@@ -468,12 +524,10 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="menu_add_to_homescreen">"Add to Home screen"</string>
 <string name="menu_open_webapk">"Open %1$s"</string>
 <string name="open_webapk_failed">"Could not launch app"</string>
-<string name="menu_add_to_homescreen_add">"Add shortcut"</string>
 <string name="menu_add_to_homescreen_install">"Install web app"</string>
 <string name="app_banner_add">"Add"</string>
 <string name="app_banner_install">"Install"</string>
 <string name="added_to_homescreen">"%1$s was added to your Home screen"</string>
-<string name="fail_to_install_webapk">"Unable to add"</string>
 <string name="webapk_install_in_progress">"Still adding previous site"</string>
 <string name="page_info_site_settings_button">"Site Settings"</string>
 <string name="page_info_instant_app_button">"Open Instant App"</string>
@@ -483,7 +537,6 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="page_info_permission_blocked">"Blocked"</string>
 <string name="page_info_android_permission_blocked">"Turned off in Android Settings"</string>
 <string name="page_info_android_location_blocked">"Turned off for this device"</string>
-<string name="page_info_details_link">"Details"</string>
 <string name="page_info_connection_offline">"You are viewing an offline copy of this page from %1$s"</string>
 <string name="page_info_domain_hidden">"This content is from %1$s, delivered by Google."</string>
 <string name="page_info_open_online_button">"Open Online"</string>
@@ -580,14 +633,16 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="signin_account_choice_description">"Sign in with your Google Account to get your bookmarks, history, passwords, and other settings on all your devices."</string>
 <string name="signin_accept">"OK, got it"</string>
 <string name="signin_add_account">"Add account"</string>
-<string name="signin_open_add_google_account_page_failed">"Add a Google Account from the Accounts page in your device\'s Settings app."</string>
+<string name="signin_open_add_google_account_page_failed">"Add a Google Account from the Accounts page in your device’s Settings app."</string>
 <string name="signin_open_settings_accounts">"Open settings"</string>
 <string name="signin_hi_name">"Hi, %1$s"</string>
 <string name="signin_signed_in_settings_description_child_account">"You and your parents can control how this works in &lt;LINK1&gt;Settings&lt;/LINK1&gt;"</string>
 <string name="signin_signed_in_settings_description">"Control how this works in &lt;LINK1&gt;Settings&lt;/LINK1&gt;"</string>
 <string name="signin_gms_updating">"Waiting for Google Play Services to finish updating"</string>
-<string name="external_app_leave_incognito_warning">"Leaving incognito mode if this link is opened in an external application. Continue?"</string>
-<string name="external_app_leave_incognito_warning_title">"Warning"</string>
+<string name="external_app_leave_incognito_warning">"This site is about to share information with an app outside of incognito mode."</string>
+<string name="external_app_leave_incognito_warning_title">"Leave incognito mode?"</string>
+<string name="external_app_leave_incognito_stay">"Stay"</string>
+<string name="external_app_leave_incognito_leave">"Leave"</string>
 <string name="external_app_restricted_access_error">"Chrome does not have access to the requested resource."</string>
 <string name="cast_casting_video">"Casting to %1$s"</string>
 <string name="cast_error_playing_video">"Cannot play video on %1$s."</string>
@@ -630,10 +685,9 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="remove_all">"Remove all"</string>
 <string name="accessibility_ntp_offline_badge">"Available offline"</string>
 <string name="ntp_learn_more_about_suggested_content">"&lt;link&gt;Learn more&lt;/link&gt; about suggested content"</string>
-<string name="ntp_all_dismissed_title_text">"That\'s all for now"</string>
-<string name="ntp_all_dismissed_body_text_morning">"More articles will appear soon. Enjoy your morning."</string>
-<string name="ntp_all_dismissed_body_text_afternoon">"More articles will appear soon. Enjoy your afternoon."</string>
-<string name="ntp_all_dismissed_body_text_evening">"More articles will appear soon. Enjoy your evening."</string>
+<string name="ntp_all_dismissed_body_text_morning">"More articles will appear soon. Enjoy your morning!"</string>
+<string name="ntp_all_dismissed_body_text_afternoon">"More articles will appear soon. Enjoy your afternoon!"</string>
+<string name="ntp_all_dismissed_body_text_evening">"More articles will appear soon. Enjoy your evening!"</string>
 <string name="ntp_all_dismissed_refresh">"Refresh"</string>
 <string name="open_tabs">"Open tabs"</string>
 <string name="button_new_tab">"New tab"</string>
@@ -673,7 +727,7 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="bookmark_action_bar_move">"Move bookmarks"</string>
 <string name="bookmark_action_bar_delete">"Delete bookmarks"</string>
 <string name="bookmark_action_bar_close">"Close dialog"</string>
-<string name="bookmark_action_bar_search">"Search bookmarks"</string>
+<string name="bookmark_action_bar_search">"Search your bookmarks"</string>
 <string name="bookmark_no_result">"No bookmarks found"</string>
 <string name="edit_bookmark">"Edit bookmark"</string>
 <string name="add_folder">"Add folder"</string>
@@ -793,7 +847,7 @@ However, you aren’t invisible. Going incognito doesn’t hide your browsing fr
 <string name="storage_management_all_storage_description">"Total data used by Chrome, including accounts, bookmarks, and saved settings"</string>
 <string name="storage_management_clear_all_data_button">"Clear All Data"</string>
 <string name="storage_management_reset_app_dialog_title">"Delete app data?"</string>
-<string name="storage_management_reset_app_dialog_text">"All Chrome\'s app data will be deleted permanently. This includes all files, settings, accounts, databases, etc."</string>
+<string name="storage_management_reset_app_dialog_text">"All Chrome’s app data will be deleted permanently. This includes all files, settings, accounts, databases, etc."</string>
 <string name="storage_clear_button_title">"Clear Site Storage…"</string>
 <string name="storage_clear_dialog_text">"This will clear all %1$s of website storage."</string>
 <string name="storage_clear_dialog_clear_storage_option">"Clear"</string>
@@ -803,13 +857,16 @@ However, you aren’t invisible. Going incognito doesn’t hide your browsing fr
 <string name="physical_web_pref_description">"Discover web pages sent by nearby objects. Chrome gathers web pages associated with objects around you, sends them anonymously to a Google service to find the ones most useful to you, then displays them.
 
 You must have Bluetooth and Location turned on in order to use the Physical Web."</string>
-<string name="physical_web_launch_button">"See what\'s nearby"</string>
+<string name="physical_web_launch_button">"See what’s nearby"</string>
 <string name="physical_web_share_activity_title">"Physical Web"</string>
+<string name="physical_web_share_entry_title">"Physical Web Sharing"</string>
+<string name="physical_web_share_entry_message">"This service needs to anonymously send this website address to Google servers for verification."</string>
+<string name="physical_web_broadcast_notification">"Website is broadcasting"</string>
+<string name="physical_web_stop_broadcast">"Stop"</string>
 <string name="usb_chooser_dialog_prompt">"%1$s wants to connect"</string>
 <string name="usb_chooser_dialog_no_devices_found_prompt">"No devices found"</string>
 <string name="usb_chooser_dialog_connect_button_text">"Connect"</string>
 <string name="usb_chooser_dialog_footnote_text">"&lt;link&gt;Get help&lt;/link&gt;"</string>
-<string name="tab_switcher_callout_header">"Quickly switch tabs"</string>
 <string name="tab_switcher_callout_body">"Tap this button for quick access to your tabs."</string>
 <string name="search_with_sogou">"Search with Sogou"</string>
 <string name="sogou_explanation">"Chrome can use &lt;b&gt;Sogou&lt;/b&gt; for search in China. You can change this in &lt;link&gt;Settings&lt;/link&gt;."</string>
@@ -847,4 +904,10 @@ You must have Bluetooth and Location turned on in order to use the Physical Web.
 <string name="vr_services_check_infobar_update_text">"To view virtual reality content, update Google VR Services"</string>
 <string name="vr_services_check_infobar_install_button">"Install"</string>
 <string name="vr_services_check_infobar_update_button">"Update"</string>
+<string name="contextmenu_image_title">"IMAGE"</string>
+<string name="contextmenu_link_title">"LINK"</string>
+<string name="contextmenu_video_title">"VIDEO"</string>
+<string name="search_widget_default">"Search"</string>
+<string name="search_with_product">"Search with %1$s"</string>
+<string name="disabled_incognito_launcher_shortcut_message">"Remove and recreate this shortcut"</string>
 </resources>

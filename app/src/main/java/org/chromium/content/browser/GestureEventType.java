@@ -15,30 +15,33 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class GestureEventType {
-  @IntDef({
-      SHOW_PRESS, DOUBLE_TAP, SINGLE_TAP_UP, SINGLE_TAP_CONFIRMED, SINGLE_TAP_UNCONFIRMED,
-      LONG_PRESS, SCROLL_START, SCROLL_BY, SCROLL_END, FLING_START, FLING_CANCEL, FLING_END,
-      PINCH_BEGIN, PINCH_BY, PINCH_END, TAP_CANCEL, LONG_TAP, TAP_DOWN
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface GestureEventTypeEnum {}
-  public static final int SHOW_PRESS = 0;
-  public static final int DOUBLE_TAP = 1;
-  public static final int SINGLE_TAP_UP = 2;
-  public static final int SINGLE_TAP_CONFIRMED = 3;
-  public static final int SINGLE_TAP_UNCONFIRMED = 4;
-  public static final int LONG_PRESS = 5;
-  public static final int SCROLL_START = 6;
-  public static final int SCROLL_BY = 7;
-  public static final int SCROLL_END = 8;
-  public static final int FLING_START = 9;
-  public static final int FLING_CANCEL = 10;
-  public static final int FLING_END = 11;
-  public static final int PINCH_BEGIN = 12;
-  public static final int PINCH_BY = 13;
-  public static final int PINCH_END = 14;
-  public static final int TAP_CANCEL = 15;
-  public static final int LONG_TAP = 16;
-  public static final int TAP_DOWN = 17;
+@IntDef({
+    GestureEventType.SHOW_PRESS, GestureEventType.DOUBLE_TAP, GestureEventType.SINGLE_TAP_UP,
+    GestureEventType.SINGLE_TAP_CONFIRMED, GestureEventType.SINGLE_TAP_UNCONFIRMED,
+    GestureEventType.LONG_PRESS, GestureEventType.SCROLL_START, GestureEventType.SCROLL_BY,
+    GestureEventType.SCROLL_END, GestureEventType.FLING_START, GestureEventType.FLING_CANCEL,
+    GestureEventType.FLING_END, GestureEventType.PINCH_BEGIN, GestureEventType.PINCH_BY,
+    GestureEventType.PINCH_END, GestureEventType.TAP_CANCEL, GestureEventType.LONG_TAP,
+    GestureEventType.TAP_DOWN
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface GestureEventType {
+  int SHOW_PRESS = 0;
+  int DOUBLE_TAP = 1;
+  int SINGLE_TAP_UP = 2;
+  int SINGLE_TAP_CONFIRMED = 3;
+  int SINGLE_TAP_UNCONFIRMED = 4;
+  int LONG_PRESS = 5;
+  int SCROLL_START = 6;
+  int SCROLL_BY = 7;
+  int SCROLL_END = 8;
+  int FLING_START = 9;
+  int FLING_CANCEL = 10;
+  int FLING_END = 11;
+  int PINCH_BEGIN = 12;
+  int PINCH_BY = 13;
+  int PINCH_END = 14;
+  int TAP_CANCEL = 15;
+  int LONG_TAP = 16;
+  int TAP_DOWN = 17;
 }

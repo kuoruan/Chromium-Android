@@ -9,7 +9,4 @@
     android:layout_height="match_parent"
     android:paddingTop="@dimen/tab_strip_height" >
 
-    <include
-        android:id="@+id/new_tab_page_recycler_view"
-        layout="@layout/new_tab_page_recycler_view" />
 </org.chromium.chrome.browser.ntp.NewTabPageView>

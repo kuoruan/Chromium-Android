@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.media.router;
 
-import android.content.Context;
 import android.support.v7.app.MediaRouteChooserDialogFragment;
 import android.support.v7.app.MediaRouteControllerDialogFragment;
 
@@ -24,19 +23,16 @@ public class ChromeMediaRouterDialogController implements MediaRouteDialogDelega
             "android.support.v7.mediarouter:MediaRouteControllerDialogFragment";
 
     private final long mNativeDialogController;
-    private final Context mApplicationContext;
     private MediaRouteDialogManager mDialogManager;
 
     /**
      * Returns a new initialized {@link ChromeMediaRouterDialogController}.
      * @param nativeDialogController the handle of the native object.
-     * @param context the application context.
      * @return a new dialog controller to use from the native side.
      */
     @CalledByNative
-    public static ChromeMediaRouterDialogController create(
-            long nativeDialogController, Context context) {
-        return new ChromeMediaRouterDialogController(nativeDialogController, context);
+    public static ChromeMediaRouterDialogController create(long nativeDialogController) {
+        return new ChromeMediaRouterDialogController(nativeDialogController);
     }
 
     /**
@@ -48,9 +44,12 @@ public class ChromeMediaRouterDialogController implements MediaRouteDialogDelega
         if (isShowingDialog()) return;
 
         MediaSource source = MediaSource.from(sourceUrn);
-        if (source == null) return;
+        if (source == null) {
+            nativeOnMediaSourceNotSupported(mNativeDialogController);
+            return;
+        }
 
-        mDialogManager = new MediaRouteChooserDialogManager(source, mApplicationContext, this);
+        mDialogManager = new MediaRouteChooserDialogManager(source, this);
         mDialogManager.openDialog();
     }
 
@@ -64,10 +63,12 @@ public class ChromeMediaRouterDialogController implements MediaRouteDialogDelega
         if (isShowingDialog()) return;
 
         MediaSource source = MediaSource.from(sourceUrn);
-        if (source == null) return;
+        if (source == null) {
+            nativeOnMediaSourceNotSupported(mNativeDialogController);
+            return;
+        }
 
-        mDialogManager = new MediaRouteControllerDialogManager(
-                source, mediaRouteId, mApplicationContext, this);
+        mDialogManager = new MediaRouteControllerDialogManager(source, mediaRouteId, this);
         mDialogManager.openDialog();
     }
 
@@ -114,13 +115,13 @@ public class ChromeMediaRouterDialogController implements MediaRouteDialogDelega
         nativeOnDialogCancelled(mNativeDialogController);
     }
 
-    private ChromeMediaRouterDialogController(long nativeDialogController, Context context) {
+    private ChromeMediaRouterDialogController(long nativeDialogController) {
         mNativeDialogController = nativeDialogController;
-        mApplicationContext = context;
     }
 
     native void nativeOnDialogCancelled(long nativeMediaRouterDialogControllerAndroid);
     native void nativeOnSinkSelected(
             long nativeMediaRouterDialogControllerAndroid, String sinkId);
     native void nativeOnRouteClosed(long nativeMediaRouterDialogControllerAndroid, String routeId);
+    native void nativeOnMediaSourceNotSupported(long nativeMediaRouterDialogControllerAndroid);
 }

@@ -63,11 +63,13 @@ public class NfcTagHandler {
             mNdef = ndef;
         }
 
+        @Override
         public void write(NdefMessage message)
                 throws IOException, TagLostException, FormatException {
             mNdef.writeNdefMessage(message);
         }
 
+        @Override
         public NdefMessage read() throws IOException, TagLostException, FormatException {
             return mNdef.getNdefMessage();
         }
@@ -84,11 +86,13 @@ public class NfcTagHandler {
             mNdefFormattable = ndefFormattable;
         }
 
+        @Override
         public void write(NdefMessage message)
                 throws IOException, TagLostException, FormatException {
             mNdefFormattable.format(message);
         }
 
+        @Override
         public NdefMessage read() throws IOException, TagLostException, FormatException {
             return NfcTypeConverter.emptyNdefMessage();
         }

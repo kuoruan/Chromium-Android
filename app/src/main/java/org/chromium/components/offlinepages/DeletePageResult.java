@@ -15,24 +15,24 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class DeletePageResult {
-  @IntDef({
-      SUCCESS, CANCELLED, STORE_FAILURE, DEVICE_FAILURE, NOT_FOUND, RESULT_COUNT
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface DeletePageResultEnum {}
-  public static final int SUCCESS = 0;
-  public static final int CANCELLED = 1;
-  public static final int STORE_FAILURE = 2;
-  public static final int DEVICE_FAILURE = 3;
+@IntDef({
+    DeletePageResult.SUCCESS, DeletePageResult.CANCELLED, DeletePageResult.STORE_FAILURE,
+    DeletePageResult.DEVICE_FAILURE, DeletePageResult.NOT_FOUND, DeletePageResult.RESULT_COUNT
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface DeletePageResult {
+  int SUCCESS = 0;
+  int CANCELLED = 1;
+  int STORE_FAILURE = 2;
+  int DEVICE_FAILURE = 3;
   /**
    * Deprecated. Deleting pages which are not in metadata store would be returing |SUCCESS|. Should
    * not be used anymore.
    */
-  public static final int NOT_FOUND = 4;
+  int NOT_FOUND = 4;
   /**
    * NOTE: always keep this entry at the end. Add new result types only immediately above this line.
    * Make sure to update the corresponding histogram enum accordingly.
    */
-  public static final int RESULT_COUNT = 5;
+  int RESULT_COUNT = 5;
 }

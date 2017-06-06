@@ -25,4 +25,10 @@ public interface AutofillDelegate {
      * @param listIndex The index of the suggestion to delete.
      */
     public void deleteSuggestion(int listIndex);
+
+    /**
+     * Informs the controller the AutofillPopup received a
+     * {@code TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED} accessibility event.
+     */
+    public void accessibilityFocusCleared();
 }

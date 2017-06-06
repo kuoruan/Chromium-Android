@@ -58,11 +58,10 @@ final class ChromeBluetoothRemoteGattCharacteristic {
         mChromeDevice.mWrapperToChromeCharacteristicsMap.remove(mCharacteristic);
     }
 
-    void onCharacteristicChanged() {
+    void onCharacteristicChanged(byte[] value) {
         Log.i(TAG, "onCharacteristicChanged");
         if (mNativeBluetoothRemoteGattCharacteristicAndroid != 0) {
-            nativeOnChanged(
-                    mNativeBluetoothRemoteGattCharacteristicAndroid, mCharacteristic.getValue());
+            nativeOnChanged(mNativeBluetoothRemoteGattCharacteristicAndroid, value);
         }
     }
 

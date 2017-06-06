@@ -15,62 +15,70 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class WebInputEventModifier {
-  @IntDef({
-      ShiftKey, ControlKey, AltKey, MetaKey, IsKeyPad, IsAutoRepeat, LeftButtonDown,
-      MiddleButtonDown, RightButtonDown, CapsLockOn, NumLockOn, IsLeft, IsRight,
-      IsTouchAccessibility, IsComposing, AltGrKey, FnKey, SymbolKey, ScrollLockOn,
-      IsCompatibilityEventForTouch, KeyModifiers, NoModifiers
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface WebInputEventModifierEnum {}
+@IntDef({
+    WebInputEventModifier.kShiftKey, WebInputEventModifier.kControlKey,
+    WebInputEventModifier.kAltKey, WebInputEventModifier.kMetaKey, WebInputEventModifier.kIsKeyPad,
+    WebInputEventModifier.kIsAutoRepeat, WebInputEventModifier.kLeftButtonDown,
+    WebInputEventModifier.kMiddleButtonDown, WebInputEventModifier.kRightButtonDown,
+    WebInputEventModifier.kCapsLockOn, WebInputEventModifier.kNumLockOn,
+    WebInputEventModifier.kIsLeft, WebInputEventModifier.kIsRight,
+    WebInputEventModifier.kIsTouchAccessibility, WebInputEventModifier.kIsComposing,
+    WebInputEventModifier.kAltGrKey, WebInputEventModifier.kFnKey, WebInputEventModifier.kSymbolKey,
+    WebInputEventModifier.kScrollLockOn, WebInputEventModifier.kIsCompatibilityEventForTouch,
+    WebInputEventModifier.kBackButtonDown, WebInputEventModifier.kForwardButtonDown,
+    WebInputEventModifier.kKeyModifiers, WebInputEventModifier.kNoModifiers
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface WebInputEventModifier {
   /**
    * modifiers for all events:
    */
-  public static final int ShiftKey = 1 << 0;
-  public static final int ControlKey = 1 << 1;
-  public static final int AltKey = 1 << 2;
-  public static final int MetaKey = 1 << 3;
+  int kShiftKey = 1 << 0;
+  int kControlKey = 1 << 1;
+  int kAltKey = 1 << 2;
+  int kMetaKey = 1 << 3;
   /**
    * modifiers for keyboard events:
    */
-  public static final int IsKeyPad = 1 << 4;
-  public static final int IsAutoRepeat = 1 << 5;
+  int kIsKeyPad = 1 << 4;
+  int kIsAutoRepeat = 1 << 5;
   /**
    * modifiers for mouse events:
    */
-  public static final int LeftButtonDown = 1 << 6;
-  public static final int MiddleButtonDown = 1 << 7;
-  public static final int RightButtonDown = 1 << 8;
+  int kLeftButtonDown = 1 << 6;
+  int kMiddleButtonDown = 1 << 7;
+  int kRightButtonDown = 1 << 8;
   /**
    * Toggle modifers for all events.
    */
-  public static final int CapsLockOn = 1 << 9;
-  public static final int NumLockOn = 1 << 10;
-  public static final int IsLeft = 1 << 11;
-  public static final int IsRight = 1 << 12;
+  int kCapsLockOn = 1 << 9;
+  int kNumLockOn = 1 << 10;
+  int kIsLeft = 1 << 11;
+  int kIsRight = 1 << 12;
   /**
    * Indicates that an event was generated on the touch screen while touch accessibility is enabled,
    * so the event should be handled by accessibility code first before normal input event
    * processing.
    */
-  public static final int IsTouchAccessibility = 1 << 13;
-  public static final int IsComposing = 1 << 14;
-  public static final int AltGrKey = 1 << 15;
-  public static final int FnKey = 1 << 16;
-  public static final int SymbolKey = 1 << 17;
-  public static final int ScrollLockOn = 1 << 18;
+  int kIsTouchAccessibility = 1 << 13;
+  int kIsComposing = 1 << 14;
+  int kAltGrKey = 1 << 15;
+  int kFnKey = 1 << 16;
+  int kSymbolKey = 1 << 17;
+  int kScrollLockOn = 1 << 18;
   /**
    * Whether this is a compatibility event generated due to a native touch event. Mouse events
    * generated from touch events will set this.
    */
-  public static final int IsCompatibilityEventForTouch = 1 << 19;
+  int kIsCompatibilityEventForTouch = 1 << 19;
+  int kBackButtonDown = 1 << 20;
+  int kForwardButtonDown = 1 << 21;
   /**
    * The set of non-stateful modifiers that specifically change the interpretation of the key being
    * pressed. For example; IsLeft, IsRight, IsComposing don't change the meaning of the key being
    * pressed. NumLockOn, ScrollLockOn, CapsLockOn are stateful and don't indicate explicit depressed
    * state.
    */
-  public static final int KeyModifiers = SymbolKey | FnKey | AltGrKey | MetaKey | AltKey | ControlKey | ShiftKey;
-  public static final int NoModifiers = 0;
+  int kKeyModifiers = kSymbolKey | kFnKey | kAltGrKey | kMetaKey | kAltKey | kControlKey | kShiftKey;
+  int kNoModifiers = 0;
 }

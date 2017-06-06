@@ -225,6 +225,8 @@
             style="@style/ButtonCompatBorderless"
             android:layout_width="wrap_content"
             android:layout_height="36dp"
+            android:paddingStart="@dimen/fre_button_padding"
+            android:paddingEnd="@dimen/fre_button_padding"
             android:text="@string/fre_skip_text"
             android:textAllCaps="true"
             android:textColor="@color/light_active_color"
@@ -246,6 +248,8 @@
                 android:id="@+id/positive_button"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
+                android:paddingStart="@dimen/fre_button_padding"
+                android:paddingEnd="@dimen/fre_button_padding"
                 android:text="@string/choose_account_sign_in"
                 android:textAllCaps="true"
                 android:textColor="@android:color/white"
@@ -265,7 +269,7 @@
                 android:drawableEnd="@drawable/down_arrow"
                 android:drawablePadding="8dp"
                 android:visibility="gone"/>
-            </FrameLayout>
+        </FrameLayout>
 
         <View
             android:id="@+id/positive_button_end_padding"

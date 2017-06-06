@@ -91,7 +91,7 @@ public class BookmarkUtils {
                     createSnackbarControllerForEditButton(activity, bookmarkId);
             if (getLastUsedParent(activity) == null) {
                 if (fromCustomTab) {
-                    String packageLabel = BuildInfo.getPackageLabel(activity);
+                    String packageLabel = BuildInfo.getPackageLabel();
                     snackbar = Snackbar.make(
                             activity.getString(R.string.bookmark_page_saved, packageLabel),
                             snackbarController, Snackbar.TYPE_ACTION, Snackbar.UMA_BOOKMARK_ADDED);

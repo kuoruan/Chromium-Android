@@ -10,6 +10,7 @@ import android.support.annotation.IntDef;
 
 import org.chromium.base.ActivityState;
 import org.chromium.base.ApplicationStatus;
+import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.browser.ChromeActivity;
@@ -34,27 +35,25 @@ public class MainIntentBehaviorMetrics implements ApplicationStatus.ActivityStat
     private static final long BACKGROUND_TIME_6_HOUR_MS = 21600000;
     private static final long BACKGROUND_TIME_1_HOUR_MS = 3600000;
 
-    private static final long TIMEOUT_DURATION_MS = 10000;
+    static final long TIMEOUT_DURATION_MS = 10000;
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({
-        CONTINUATION,
-        FOCUS_OMNIBOX,
-        SWITCH_TABS,
-        NTP_CREATED,
-        BACKGROUNDED
-    })
-    private @interface MainIntentActionType {}
-    private static final int CONTINUATION = 0;
-    private static final int FOCUS_OMNIBOX = 1;
-    private static final int SWITCH_TABS = 2;
-    private static final int NTP_CREATED = 3;
-    private static final int BACKGROUNDED = 4;
+    @IntDef({CONTINUATION, FOCUS_OMNIBOX, SWITCH_TABS, NTP_CREATED, BACKGROUNDED})
+    @interface MainIntentActionType {}
+    static final int CONTINUATION = 0;
+    static final int FOCUS_OMNIBOX = 1;
+    static final int SWITCH_TABS = 2;
+    static final int NTP_CREATED = 3;
+    static final int BACKGROUNDED = 4;
 
     // Min and max values (in minutes) for the buckets in the duration histograms.
     private static final int DURATION_HISTOGRAM_MIN = 5;
     private static final int DURATION_HISTOGRAM_MAX = 48 * 60;
     private static final int DURATION_HISTOGRAM_BUCKET_COUNT = 50;
+
+    @MainIntentActionType
+    private static Integer sLastMainIntentBehavior;
+    private static long sTimeoutDurationMs = TIMEOUT_DURATION_MS;
 
     private final ChromeActivity mActivity;
     private final Handler mHandler;
@@ -63,7 +62,7 @@ public class MainIntentBehaviorMetrics implements ApplicationStatus.ActivityStat
     private boolean mPendingActionRecordForMainIntent;
     private long mBackgroundDurationMs;
     private TabModelSelectorTabModelObserver mTabModelObserver;
-    private boolean mIgnorePendingAddTab;
+    private boolean mIgnoreEvents;
 
     /**
      * Constructs a metrics handler for ACTION_MAIN intents received for the specified activity.
@@ -84,7 +83,10 @@ public class MainIntentBehaviorMetrics implements ApplicationStatus.ActivityStat
      *
      * This must only be called after the native libraries have been initialized.
      */
+    @SuppressFBWarnings("ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD")
     public void onMainIntentWithNative(long backgroundDurationMs) {
+        sLastMainIntentBehavior = null;
+
         RecordUserAction.record("MobileStartup.MainIntentReceived");
 
         if (backgroundDurationMs >= BACKGROUND_TIME_24_HOUR_MS) {
@@ -103,16 +105,12 @@ public class MainIntentBehaviorMetrics implements ApplicationStatus.ActivityStat
         ApplicationStatus.registerStateListenerForActivity(this, mActivity);
         mPendingActionRecordForMainIntent = true;
 
-        mHandler.postDelayed(mTimeoutRunnable , TIMEOUT_DURATION_MS);
+        mHandler.postDelayed(mTimeoutRunnable, sTimeoutDurationMs);
 
         mTabModelObserver = new TabModelSelectorTabModelObserver(
                 mActivity.getTabModelSelector()) {
             @Override
             public void didAddTab(Tab tab, TabLaunchType type) {
-                if (mIgnorePendingAddTab) {
-                    mIgnorePendingAddTab = false;
-                    return;
-                }
                 if (TabLaunchType.FROM_RESTORE.equals(type)) return;
                 if (NewTabPage.isNTPUrl(tab.getUrl())) recordUserBehavior(NTP_CREATED);
             }
@@ -125,11 +123,12 @@ public class MainIntentBehaviorMetrics implements ApplicationStatus.ActivityStat
     }
 
     /**
-     * Signal that the next tab addition should be ignored as a signal of MAIN intent behavior.
+     * Signal that any events should be ignored as a signal of MAIN intent behavior.
+     *
+     * @param shouldIgnore Whether events should be ignored.
      */
-    public void ignorePendingAddTab() {
-        if (!mPendingActionRecordForMainIntent) return;
-        mIgnorePendingAddTab = true;
+    public void setIgnoreEvents(boolean shouldIgnore) {
+        mIgnoreEvents = shouldIgnore;
     }
 
     /**
@@ -144,6 +143,29 @@ public class MainIntentBehaviorMetrics implements ApplicationStatus.ActivityStat
         if (newState == ActivityState.STOPPED || newState == ActivityState.DESTROYED) {
             recordUserBehavior(BACKGROUNDED);
         }
+    }
+
+    /**
+     * @return The last main intent behavior recorded, which can be null if no MAIN intent has been
+     *         received or if the event has not yet occurred.
+     */
+    @MainIntentActionType
+    public static Integer getLastMainIntentBehaviorForTesting() {
+        return sLastMainIntentBehavior;
+    }
+
+    /**
+     * Allows test to override the timeout duration.
+     */
+    public static void setTimeoutDurationMsForTesting(long duration) {
+        sTimeoutDurationMs = duration;
+    }
+
+    /**
+     * @return Whether we are pending action for a received main intent.
+     */
+    public boolean getPendingActionRecordForMainIntent() {
+        return mPendingActionRecordForMainIntent;
     }
 
     private String getHistogramNameForBehavior(@MainIntentActionType int behavior) {
@@ -164,9 +186,10 @@ public class MainIntentBehaviorMetrics implements ApplicationStatus.ActivityStat
     }
 
     private void recordUserBehavior(@MainIntentActionType int behavior) {
-        if (!mPendingActionRecordForMainIntent) return;
+        if (!mPendingActionRecordForMainIntent || mIgnoreEvents) return;
         mPendingActionRecordForMainIntent = false;
 
+        sLastMainIntentBehavior = behavior;
         String histogramName = getHistogramNameForBehavior(behavior);
         if (histogramName != null) {
             RecordHistogram.recordCustomCountHistogram(

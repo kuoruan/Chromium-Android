@@ -4,11 +4,13 @@
 
 package org.chromium.chrome.browser.upgrade;
 
-import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
+import android.os.AsyncTask;
+
+import org.chromium.base.BuildInfo;
+import org.chromium.chrome.browser.notifications.ChannelsUpdater;
 
 /**
  * Triggered when Chrome's package is replaced (e.g. when it is upgraded).
@@ -24,12 +26,27 @@ import android.os.Build;
  * - This class immediately cullable by Android as soon as {@link #onReceive} returns. To kick off
  *   longer tasks, you must start a Service.
  */
-// TODO(crbug.com/635567): Fix this properly.
-@SuppressLint("UnsafeProtectedBroadcastReceiver")
 public final class PackageReplacedBroadcastReceiver extends BroadcastReceiver {
     @Override
-    public void onReceive(Context context, Intent intent) {
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N) return;
+    public void onReceive(final Context context, Intent intent) {
+        if (!Intent.ACTION_MY_PACKAGE_REPLACED.equals(intent.getAction())) return;
+        updateChannelsIfNecessary();
+        if (BuildInfo.isAtLeastO()) return;
         UpgradeIntentService.startMigrationIfNecessary(context);
+    }
+
+    private void updateChannelsIfNecessary() {
+        if (!ChannelsUpdater.getInstance().shouldUpdateChannels()) return;
+
+        final PendingResult result = goAsync();
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                ChannelsUpdater.getInstance().updateChannels();
+                result.finish();
+                return null;
+            }
+        }
+                .executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
     }
 }

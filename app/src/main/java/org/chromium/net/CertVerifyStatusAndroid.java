@@ -15,39 +15,41 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class CertVerifyStatusAndroid {
-  @IntDef({
-      OK, FAILED, NO_TRUSTED_ROOT, EXPIRED, NOT_YET_VALID, UNABLE_TO_PARSE, INCORRECT_KEY_USAGE
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface CertVerifyStatusAndroidEnum {}
+@IntDef({
+    CertVerifyStatusAndroid.OK, CertVerifyStatusAndroid.FAILED,
+    CertVerifyStatusAndroid.NO_TRUSTED_ROOT, CertVerifyStatusAndroid.EXPIRED,
+    CertVerifyStatusAndroid.NOT_YET_VALID, CertVerifyStatusAndroid.UNABLE_TO_PARSE,
+    CertVerifyStatusAndroid.INCORRECT_KEY_USAGE
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface CertVerifyStatusAndroid {
   /**
    * Certificate is trusted.
    */
-  public static final int OK = 0;
+  int OK = 0;
   /**
    * Certificate verification could not be conducted.
    */
-  public static final int FAILED = -1;
+  int FAILED = -1;
   /**
    * Certificate is not trusted due to non-trusted root of the certificate chain.
    */
-  public static final int NO_TRUSTED_ROOT = -2;
+  int NO_TRUSTED_ROOT = -2;
   /**
    * Certificate is not trusted because it has expired.
    */
-  public static final int EXPIRED = -3;
+  int EXPIRED = -3;
   /**
    * Certificate is not trusted because it is not valid yet.
    */
-  public static final int NOT_YET_VALID = -4;
+  int NOT_YET_VALID = -4;
   /**
    * Certificate is not trusted because it could not be parsed.
    */
-  public static final int UNABLE_TO_PARSE = -5;
+  int UNABLE_TO_PARSE = -5;
   /**
    * Certificate is not trusted because it has an extendedKeyUsage field, but its value is not
    * correct for a web server.
    */
-  public static final int INCORRECT_KEY_USAGE = -6;
+  int INCORRECT_KEY_USAGE = -6;
 }

@@ -23,14 +23,12 @@ public final class CardsVariationParameters {
     private static final String TAG = "CardsVariationParams";
 
     // Also defined in ntp_snippets_constants.cc
-    private static final String FIELD_TRIAL_NAME_MAIN = "NTPSnippets";
     private static final String FIELD_TRIAL_NAME_VISIBILITY = "NTPSnippetsVisibility";
 
     private static final String PARAM_FAVICON_SERVICE_NAME = "favicons_fetch_from_service";
     private static final String PARAM_FIRST_CARD_OFFSET = "first_card_offset";
     private static final String PARAM_FIRST_CARD_ANIMATION_MAX_RUNS =
             "first_card_animation_max_runs";
-    private static final String PARAM_SCROLL_BELOW_THE_FOLD = "scroll_below_the_fold";
     private static final String PARAM_IGNORE_UPDATES_FOR_EXISTING_SUGGESTIONS =
             "ignore_updates_for_existing_suggestions";
 
@@ -38,10 +36,13 @@ public final class CardsVariationParameters {
 
     private static final int FIRST_CARD_ANIMATION_DEFAULT_VALUE = 7;
 
+    // TODO(sfiera): replace with feature-specific field trials, as has been done in C++.
+    private static final String FIELD_TRIAL_NAME_MAIN = "NTPSnippets";
+
     private CardsVariationParameters() {}
 
     // TODO(jkrcal): Do a proper general fix in VariationsAssociatedData in the spirit of
-    // @EnableFeatures and ChromeFeatureList.
+    // @Features and ChromeFeatureList.
     /**
      * Sets the parameter values to use in JUnit tests, since native calls are not available there.
      */
@@ -64,14 +65,6 @@ public final class CardsVariationParameters {
     public static int getFirstCardAnimationMaxRuns() {
         return getIntValue(FIELD_TRIAL_NAME_VISIBILITY, PARAM_FIRST_CARD_ANIMATION_MAX_RUNS,
                 FIRST_CARD_ANIMATION_DEFAULT_VALUE);
-    }
-
-    /**
-     * @return Whether the NTP should initially be scrolled below the fold.
-     */
-    public static boolean isScrollBelowTheFoldEnabled() {
-        return Boolean.parseBoolean(getParamValue(FIELD_TRIAL_NAME_VISIBILITY,
-                PARAM_SCROLL_BELOW_THE_FOLD));
     }
 
     /**

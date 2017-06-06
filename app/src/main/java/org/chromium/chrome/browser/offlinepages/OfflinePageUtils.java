@@ -6,13 +6,8 @@ package org.chromium.chrome.browser.offlinepages;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.BatteryManager;
 import android.os.Environment;
 
 import org.chromium.base.ActivityState;
@@ -164,12 +159,10 @@ public class OfflinePageUtils {
         WebContents webContents = tab.getWebContents();
         ClientId clientId = ClientId.createClientIdForBookmarkId(bookmarkId);
 
-        // TODO(fgorski): Ensure that request is queued if the model is not loaded.
         offlinePageBridge.savePage(webContents, clientId, new OfflinePageBridge.SavePageCallback() {
             @Override
             public void onSavePageDone(int savePageResult, String url, long offlineId) {
-                // TODO(fgorski): Decide if we need to do anything with result.
-                // Perhaps some UMA reporting, but that can really happen someplace else.
+                // Result of the call is ignored.
             }
         });
     }
@@ -281,41 +274,11 @@ public class OfflinePageUtils {
     }
 
     /**
-     * Returns a class encapsulating the current power, battery, and network conditions.
-     */
-    public static DeviceConditions getDeviceConditions(Context context) {
-        return getInstance().getDeviceConditionsImpl(context);
-    }
-
-    /**
-     * Return true if the device is plugged into wall power.
-     */
-    public static boolean getPowerConditions(Context context) {
-        // TODO(petewil): refactor to get power, network, and battery directly from both here and
-        // getDeviceConditionsImpl instead of always making a DeviceConditions object.
-        return getInstance().getDeviceConditionsImpl(context).isPowerConnected();
-    }
-
-    /**
-     * Get the percentage of battery remaining
-     */
-    public static int getBatteryConditions(Context context) {
-        return getInstance().getDeviceConditionsImpl(context).getBatteryPercentage();
-    }
-
-    /**
-     * Returns an enum representing the type of the network connection.
-     */
-    public static int getNetworkConditions(Context context) {
-        return getInstance().getDeviceConditionsImpl(context).getNetConnectionType();
-    }
-
-    /**
      * Records UMA data when the Offline Pages Background Load service awakens.
      * @param context android context
      */
     public static void recordWakeupUMA(Context context, long taskScheduledTimeMillis) {
-        DeviceConditions deviceConditions = getDeviceConditions(context);
+        DeviceConditions deviceConditions = DeviceConditions.getCurrentConditions(context);
         if (deviceConditions == null) return;
 
         // Report charging state.
@@ -679,71 +642,8 @@ public class OfflinePageUtils {
         tab.loadUrl(params);
     }
 
-    private static boolean isPowerConnected(Intent batteryStatus) {
-        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-        boolean isConnected = (status == BatteryManager.BATTERY_STATUS_CHARGING
-                || status == BatteryManager.BATTERY_STATUS_FULL);
-        Log.d(TAG, "Power connected is " + isConnected);
-        return isConnected;
-    }
-
-    private static int batteryPercentage(Intent batteryStatus) {
-        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-        if (scale == 0) return 0;
-
-        int percentage = Math.round(100 * level / (float) scale);
-        Log.d(TAG, "Battery Percentage is " + percentage);
-        return percentage;
-    }
-
     protected OfflinePageBridge getOfflinePageBridge(Profile profile) {
         return OfflinePageBridge.getForProfile(profile);
-    }
-
-    /** Returns the current device conditions. May be overridden for testing. */
-    protected DeviceConditions getDeviceConditionsImpl(Context context) {
-        IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        // Note this is a sticky intent, so we aren't really registering a receiver, just getting
-        // the sticky intent.  That means that we don't need to unregister the filter later.
-        Intent batteryStatus = context.registerReceiver(null, filter);
-        if (batteryStatus == null) return null;
-
-        // Get the connection type from chromium's internal object.
-        int connectionType = NetworkChangeNotifier.getInstance().getCurrentConnectionType();
-
-        // Sometimes the NetworkConnectionNotifier lags the actual connection type, especially when
-        // the GCM NM wakes us from doze state.  If we are really connected, report the connection
-        // type from android.
-        if (connectionType == ConnectionType.CONNECTION_NONE) {
-            // Get the connection type from android in case chromium's type is not yet set.
-            ConnectivityManager cm =
-                    (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-            boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-            if (isConnected) {
-                connectionType = convertAndroidNetworkTypeToConnectionType(activeNetwork.getType());
-            }
-        }
-
-        return new DeviceConditions(
-                isPowerConnected(batteryStatus), batteryPercentage(batteryStatus), connectionType);
-    }
-
-    /** Returns the NCN network type corresponding to the connectivity manager network type */
-    protected int convertAndroidNetworkTypeToConnectionType(int connectivityManagerNetworkType) {
-        if (connectivityManagerNetworkType == ConnectivityManager.TYPE_WIFI) {
-            return ConnectionType.CONNECTION_WIFI;
-        }
-        // for mobile, we don't know if it is 2G, 3G, or 4G, default to worst case of 2G.
-        if (connectivityManagerNetworkType == ConnectivityManager.TYPE_MOBILE) {
-            return ConnectionType.CONNECTION_2G;
-        }
-        if (connectivityManagerNetworkType == ConnectivityManager.TYPE_BLUETOOTH) {
-            return ConnectionType.CONNECTION_BLUETOOTH;
-        }
-        // Since NetworkConnectivityManager doesn't understand the other types, call them UNKNOWN.
-        return ConnectionType.CONNECTION_UNKNOWN;
     }
 
     /**

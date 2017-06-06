@@ -69,6 +69,7 @@ public class LegacyPastePopupMenu implements OnClickListener, PastePopupMenu {
 
     @Override
     public void show(int x, int y) {
+        hide();
         updateContent();
         positionAt(x, y);
     }
@@ -79,18 +80,13 @@ public class LegacyPastePopupMenu implements OnClickListener, PastePopupMenu {
     }
 
     @Override
-    public boolean isShowing() {
-        return mContainer.isShowing();
-    }
-
-    @Override
     public void onClick(View v) {
         paste();
         hide();
     }
 
     private void positionAt(int x, int y) {
-        if (mRawPositionX == x && mRawPositionY == y && isShowing()) return;
+        if (mRawPositionX == x && mRawPositionY == y) return;
         mRawPositionX = x;
         mRawPositionY = y;
 
@@ -130,11 +126,7 @@ public class LegacyPastePopupMenu implements OnClickListener, PastePopupMenu {
         positionX += coords[0];
         positionY += coords[1];
 
-        if (!isShowing()) {
-            mContainer.showAtLocation(mParent, Gravity.NO_GRAVITY, positionX, positionY);
-        } else {
-            mContainer.update(positionX, positionY, -1, -1);
-        }
+        mContainer.showAtLocation(mParent, Gravity.NO_GRAVITY, positionX, positionY);
     }
 
     private void updateContent() {

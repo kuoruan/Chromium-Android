@@ -380,7 +380,7 @@ public class RecentTabsManager implements AndroidSyncSettingsObserver, SignInSta
     }
 
     public boolean isSignedIn() {
-        return ChromeSigninController.get(mContext).isSignedIn();
+        return ChromeSigninController.get().isSignedIn();
     }
 
     @VisibleForTesting

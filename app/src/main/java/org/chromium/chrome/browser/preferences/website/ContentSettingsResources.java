@@ -148,6 +148,12 @@ public class ContentSettingsResources {
                                  org.chromium.chrome.R.string.protected_content,
                                  org.chromium.chrome.R.string.protected_content,
                                  ContentSetting.ASK, ContentSetting.BLOCK, 0, 0));
+            // TODO(csharrison): Swap out the placeholder icon once it is ready.
+            localMap.put(ContentSettingsType.CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER,
+                    new ResourceItem(R.drawable.permission_popups,
+                            R.string.subresource_filter_permission_title,
+                            R.string.subresource_filter_permission_title, ContentSetting.ALLOW,
+                            ContentSetting.BLOCK, 0, 0));
             localMap.put(ContentSettingsType.CONTENT_SETTINGS_TYPE_USB_CHOOSER_DATA,
                     new ResourceItem(R.drawable.settings_usb, 0, 0, ContentSetting.ASK,
                                  ContentSetting.BLOCK, 0, 0));

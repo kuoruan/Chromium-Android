@@ -10,7 +10,6 @@ import android.content.Context;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.view.MotionEvent;
-import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
 
@@ -22,8 +21,8 @@ import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animation;
 import org.chromium.chrome.browser.compositor.layouts.components.LayoutTab;
 import org.chromium.chrome.browser.compositor.layouts.components.VirtualView;
 import org.chromium.chrome.browser.compositor.layouts.content.TabContentManager;
-import org.chromium.chrome.browser.compositor.layouts.eventfilter.EdgeSwipeEventFilter.ScrollDirection;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.EventFilter;
+import org.chromium.chrome.browser.compositor.layouts.eventfilter.ScrollDirection;
 import org.chromium.chrome.browser.compositor.overlays.SceneOverlay;
 import org.chromium.chrome.browser.compositor.scene_layer.SceneLayer;
 import org.chromium.chrome.browser.compositor.scene_layer.SceneOverlayLayer;
@@ -100,7 +99,6 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
     // Helpers
     private final LayoutUpdateHost mUpdateHost;
     protected final LayoutRenderHost mRenderHost;
-    private EventFilter mEventFilter;
 
     /** The tabs currently being rendered as part of this layout. The tabs are
      * drawn using the same ordering as this array. */
@@ -121,14 +119,11 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
      * @param context      The current Android's context.
      * @param updateHost   The parent {@link LayoutUpdateHost}.
      * @param renderHost   The parent {@link LayoutRenderHost}.
-     * @param eventFilter  The {@link EventFilter} this {@link Layout} is listening to.
      */
-    public Layout(Context context, LayoutUpdateHost updateHost, LayoutRenderHost renderHost,
-            EventFilter eventFilter) {
+    public Layout(Context context, LayoutUpdateHost updateHost, LayoutRenderHost renderHost) {
         mContext = context;
         mUpdateHost = updateHost;
         mRenderHost = renderHost;
-        mEventFilter = eventFilter;
 
         // Invalid sizes
         mWidthDp = -1;
@@ -169,20 +164,6 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
      */
     public boolean isActive() {
         return mUpdateHost.isActiveLayout(this);
-    }
-
-    /**
-     * @return A {@link View} that should be the one the user can interact with.  This can be
-     *         {@code null} if there is no {@link View} representing {@link Tab} content that should
-     *         be interacted with at this time.
-     */
-    public View getViewForInteraction() {
-        if (!shouldDisplayContentOverlay()) return null;
-
-        Tab tab = mTabModelSelector.getCurrentTab();
-        if (tab == null) return null;
-
-        return tab.getView();
     }
 
     /**
@@ -375,11 +356,19 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
     }
 
     /**
-     * Informs this cache of the relevant {@link Tab} {@code id}s that will be used in the
-     * near future.
+     * Informs this cache of the visible {@link Tab} {@code id}s, as well as the
+     * primary screen-filling tab.
      */
-    protected void updateCacheVisibleIds(List<Integer> priority) {
-        if (mTabContentManager != null) mTabContentManager.updateVisibleIds(priority);
+    protected void updateCacheVisibleIdsAndPrimary(List<Integer> visible, int primaryTabId) {
+        if (mTabContentManager != null) mTabContentManager.updateVisibleIds(visible, primaryTabId);
+    }
+
+    /**
+     * Informs this cache of the visible {@link Tab} {@code id}s, in cases where there
+     * is no primary screen-filling tab.
+     */
+    protected void updateCacheVisibleIds(List<Integer> visible) {
+        if (mTabContentManager != null) mTabContentManager.updateVisibleIds(visible, -1);
     }
 
     /**
@@ -585,69 +574,6 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
         }
         return false;
     }
-
-    /**
-     * Called on touch drag event.
-     * @param time      The current time of the app in ms.
-     * @param x         The y coordinate of the end of the drag event.
-     * @param y         The y coordinate of the end of the drag event.
-     * @param deltaX    The number of pixels dragged in the x direction.
-     * @param deltaY    The number of pixels dragged in the y direction.
-     */
-    public void drag(long time, float x, float y, float deltaX, float deltaY) { }
-
-    /**
-     * Called on touch fling event. This is called before the onUpOrCancel event.
-     *
-     * @param time      The current time of the app in ms.
-     * @param x         The y coordinate of the start of the fling event.
-     * @param y         The y coordinate of the start of the fling event.
-     * @param velocityX The amount of velocity in the x direction.
-     * @param velocityY The amount of velocity in the y direction.
-     */
-    public void fling(long time, float x, float y, float velocityX, float velocityY) { }
-
-    /**
-     * Called on onDown event.
-     *
-     * @param time      The time stamp in millisecond of the event.
-     * @param x         The x position of the event.
-     * @param y         The y position of the event.
-     */
-    public void onDown(long time, float x, float y) { }
-
-    /**
-     * Called on long press touch event.
-     * @param time The current time of the app in ms.
-     * @param x    The x coordinate of the position of the press event.
-     * @param y    The y coordinate of the position of the press event.
-     */
-    public void onLongPress(long time, float x, float y) { }
-
-    /**
-     * Called on click. This is called before the onUpOrCancel event.
-     * @param time The current time of the app in ms.
-     * @param x    The x coordinate of the position of the click.
-     * @param y    The y coordinate of the position of the click.
-     */
-    public void click(long time, float x, float y) { }
-
-    /**
-     * Called on up or cancel touch events. This is called after the click and fling event if any.
-     * @param time The current time of the app in ms.
-     */
-    public void onUpOrCancel(long time) { }
-
-    /**
-     * Called when at least 2 touch events are detected.
-     * @param time       The current time of the app in ms.
-     * @param x0         The x coordinate of the first touch event.
-     * @param y0         The y coordinate of the first touch event.
-     * @param x1         The x coordinate of the second touch event.
-     * @param y1         The y coordinate of the second touch event.
-     * @param firstEvent The pinch is the first of a sequence of pinch events.
-     */
-    public void onPinch(long time, float x0, float y0, float x1, float y1, boolean firstEvent) { }
 
     /**
      * Called by the LayoutManager when an animation should be killed.
@@ -1053,15 +979,6 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
     }
 
     /**
-     * Setting this will only take effect the next time this layout is shown.  If it is currently
-     * showing the original filter will still be used.
-     * @param filter
-     */
-    public void setEventFilter(EventFilter filter) {
-        mEventFilter = filter;
-    }
-
-    /**
      * @param e                 The {@link MotionEvent} to consider.
      * @param offsets           The current touch offsets that should be applied to the
      *                          {@link EventFilter}s.
@@ -1079,9 +996,14 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
             if (eventFilter.onInterceptTouchEvent(e, isKeyboardShowing)) return eventFilter;
         }
 
-        if (mEventFilter != null) {
-            if (offsets != null) mEventFilter.setCurrentMotionEventOffsets(offsets.x, offsets.y);
-            if (mEventFilter.onInterceptTouchEvent(e, isKeyboardShowing)) return mEventFilter;
+        EventFilter layoutEventFilter = getEventFilter();
+        if (layoutEventFilter != null) {
+            if (offsets != null) {
+                layoutEventFilter.setCurrentMotionEventOffsets(offsets.x, offsets.y);
+            }
+            if (layoutEventFilter.onInterceptTouchEvent(e, isKeyboardShowing)) {
+                return layoutEventFilter;
+            }
         }
         return null;
     }
@@ -1142,11 +1064,9 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
     }
 
     /**
-     * @return Whether the tabstrip's event filter is enabled.
+     * @return The EventFilter to use for processing events for this Layout.
      */
-    public boolean isTabStripEventFilterEnabled() {
-        return true;
-    }
+    protected abstract EventFilter getEventFilter();
 
     /**
      * Get an instance of {@link SceneLayer}. Any class inheriting {@link Layout}

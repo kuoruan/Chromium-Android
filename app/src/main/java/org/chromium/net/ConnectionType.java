@@ -15,23 +15,24 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ConnectionType {
-  @IntDef({
-      CONNECTION_UNKNOWN, CONNECTION_ETHERNET, CONNECTION_WIFI, CONNECTION_2G, CONNECTION_3G,
-      CONNECTION_4G, CONNECTION_NONE, CONNECTION_BLUETOOTH, CONNECTION_LAST
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ConnectionTypeEnum {}
-  public static final int CONNECTION_UNKNOWN = 0;
+@IntDef({
+    ConnectionType.CONNECTION_UNKNOWN, ConnectionType.CONNECTION_ETHERNET,
+    ConnectionType.CONNECTION_WIFI, ConnectionType.CONNECTION_2G, ConnectionType.CONNECTION_3G,
+    ConnectionType.CONNECTION_4G, ConnectionType.CONNECTION_NONE,
+    ConnectionType.CONNECTION_BLUETOOTH, ConnectionType.CONNECTION_LAST
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ConnectionType {
+  int CONNECTION_UNKNOWN = 0;
   /**
    * Also used as a default value.
    */
-  public static final int CONNECTION_ETHERNET = 1;
-  public static final int CONNECTION_WIFI = 2;
-  public static final int CONNECTION_2G = 3;
-  public static final int CONNECTION_3G = 4;
-  public static final int CONNECTION_4G = 5;
-  public static final int CONNECTION_NONE = 6;
-  public static final int CONNECTION_BLUETOOTH = 7;
-  public static final int CONNECTION_LAST = CONNECTION_BLUETOOTH;
+  int CONNECTION_ETHERNET = 1;
+  int CONNECTION_WIFI = 2;
+  int CONNECTION_2G = 3;
+  int CONNECTION_3G = 4;
+  int CONNECTION_4G = 5;
+  int CONNECTION_NONE = 6;
+  int CONNECTION_BLUETOOTH = 7;
+  int CONNECTION_LAST = CONNECTION_BLUETOOTH;
 }

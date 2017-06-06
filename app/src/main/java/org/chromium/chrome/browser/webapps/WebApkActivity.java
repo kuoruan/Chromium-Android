@@ -5,10 +5,12 @@
 package org.chromium.chrome.browser.webapps;
 
 import android.content.Intent;
+import android.os.Bundle;
+import android.os.SystemClock;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.base.library_loader.LibraryProcessType;
-import org.chromium.chrome.browser.ShortcutHelper;
+import org.chromium.base.process_launcher.ChildProcessCreationParams;
 import org.chromium.chrome.browser.externalnav.ExternalNavigationParams;
 import org.chromium.chrome.browser.metrics.WebApkUma;
 import org.chromium.chrome.browser.tab.BrowserControlsVisibilityDelegate;
@@ -17,9 +19,6 @@ import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tab.TabDelegateFactory;
 import org.chromium.chrome.browser.tab.TabRedirectHandler;
 import org.chromium.components.navigation_interception.NavigationParams;
-import org.chromium.content.browser.ChildProcessCreationParams;
-import org.chromium.content_public.browser.LoadUrlParams;
-import org.chromium.ui.base.PageTransition;
 import org.chromium.webapk.lib.client.WebApkServiceConnectionManager;
 
 /**
@@ -36,30 +35,18 @@ public class WebApkActivity extends WebappActivity {
     private final ChildProcessCreationParams mDefaultParams =
             ChildProcessCreationParams.getDefault();
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        // We could bring a WebAPK hosted WebappActivity to foreground and navigate it to a
-        // different URL. For example, WebAPK "foo" is launched and navigates to
-        // "www.foo.com/foo". In Chrome, user clicks a link "www.foo.com/bar" in Google search
-        // results. After clicking the link, WebAPK "foo" is brought to foreground, and
-        // loads the page of "www.foo.com/bar" at the same time.
-        // The extra {@link ShortcutHelper.EXTRA_URL} provides the URL that the WebAPK will
-        // navigate to.
-        String overrideUrl = intent.getStringExtra(ShortcutHelper.EXTRA_URL);
-        if (overrideUrl != null && isInitialized()
-                && !overrideUrl.equals(getActivityTab().getUrl())) {
-            getActivityTab().loadUrl(
-                    new LoadUrlParams(overrideUrl, PageTransition.AUTO_TOPLEVEL));
-        }
-        if (isInitialized()) {
-            getActivityTab().setWebappManifestScope(mWebappInfo.scopeUri().toString());
-        }
-    }
+    /** The start time that the activity becomes focused. */
+    private long mStartTime;
 
     @Override
     protected WebappInfo createWebappInfo(Intent intent) {
         return (intent == null) ? WebApkInfo.createEmpty() : WebApkInfo.create(intent);
+    }
+
+    @Override
+    protected void initializeUI(Bundle savedInstance) {
+        super.initializeUI(savedInstance);
+        getActivityTab().setWebappManifestScope(mWebappInfo.scopeUri().toString());
     }
 
     @Override
@@ -101,7 +88,6 @@ public class WebApkActivity extends WebappActivity {
     public void finishNativeInitialization() {
         super.finishNativeInitialization();
         if (!isInitialized()) return;
-        getActivityTab().setWebappManifestScope(mWebappInfo.scopeUri().toString());
         mCanLaunchRendererInWebApkProcess = ChromeWebApkHost.canLaunchRendererInWebApkProcess();
     }
 
@@ -139,12 +125,14 @@ public class WebApkActivity extends WebappActivity {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        mStartTime = SystemClock.elapsedRealtime();
+    }
+
+    @Override
     protected void onDeferredStartupWithStorage(WebappDataStorage storage) {
         super.onDeferredStartupWithStorage(storage);
-
-        // Initialize the time of the last is-update-needed check with the registration time. This
-        // prevents checking for updates on the first run.
-        storage.updateTimeOfLastCheckForUpdatedWebManifest();
 
         mUpdateManager = new WebApkUpdateManager(WebApkActivity.this, storage);
         mUpdateManager.updateIfNeeded(getActivityTab(),
@@ -162,6 +150,10 @@ public class WebApkActivity extends WebappActivity {
                 mWebappInfo.id(), new WebappRegistry.FetchWebappDataStorageCallback() {
                     @Override
                     public void onWebappDataStorageRetrieved(WebappDataStorage storage) {
+                        // Initialize the time of the last is-update-needed check with the
+                        // registration time. This prevents checking for updates on the first run.
+                        storage.updateTimeOfLastCheckForUpdatedWebManifest();
+
                         onDeferredStartupWithStorage(storage);
                     }
                 });
@@ -171,6 +163,12 @@ public class WebApkActivity extends WebappActivity {
     public void onPause() {
         super.onPause();
         initializeChildProcessCreationParams(false);
+    }
+
+    @Override
+    public void onPauseWithNative() {
+        WebApkUma.recordWebApkSessionDuration(SystemClock.elapsedRealtime() - mStartTime);
+        super.onPauseWithNative();
     }
 
     /**

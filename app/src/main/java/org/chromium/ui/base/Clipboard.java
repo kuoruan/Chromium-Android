@@ -5,21 +5,30 @@
 package org.chromium.ui.base;
 
 import android.content.ClipData;
+import android.content.ClipDescription;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.text.Html;
+import android.text.Spanned;
+import android.text.style.CharacterStyle;
+import android.text.style.ParagraphStyle;
+import android.text.style.UpdateAppearance;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.annotations.SuppressFBWarnings;
+import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.ui.R;
 import org.chromium.ui.widget.Toast;
 
 /**
- * Simple proxy that provides C++ code with an access pathway to the Android
- * clipboard.
+ * Simple proxy that provides C++ code with an access pathway to the Android clipboard.
  */
 @JNINamespace("ui")
-public class Clipboard {
+public class Clipboard implements ClipboardManager.OnPrimaryClipChangedListener {
+    private static Clipboard sInstance;
+
     // Necessary for coercing clipboard contents to text if they require
     // access to network resources, etceteras (e.g., URI in clipboard)
     private final Context mContext;
@@ -27,25 +36,22 @@ public class Clipboard {
     private final ClipboardManager mClipboardManager;
 
     /**
-     * Use the factory constructor instead.
-     *
-     * @param context for accessing the clipboard
-     */
-    public Clipboard(final Context context) {
-        mContext = context;
-        mClipboardManager = (ClipboardManager)
-                context.getSystemService(Context.CLIPBOARD_SERVICE);
-    }
-
-    /**
-     * Returns a new Clipboard object bound to the specified context.
-     *
-     * @param context for accessing the clipboard
-     * @return the new object
+     * Get the singleton Clipboard instance (creating it if needed).
      */
     @CalledByNative
-    private static Clipboard create(final Context context) {
-        return new Clipboard(context);
+    public static Clipboard getInstance() {
+        if (sInstance == null) {
+            sInstance = new Clipboard();
+        }
+        return sInstance;
+    }
+
+    private Clipboard() {
+        mContext = ContextUtils.getApplicationContext();
+        mClipboardManager =
+                (ClipboardManager) ContextUtils.getApplicationContext().getSystemService(
+                        Context.CLIPBOARD_SERVICE);
+        mClipboardManager.addPrimaryClipChangedListener(this);
     }
 
     /**
@@ -66,7 +72,7 @@ public class Clipboard {
      */
     @SuppressWarnings("javadoc")
     @CalledByNative
-    private String getCoercedText() {
+    public String getCoercedText() {
         // getPrimaryClip() has been observed to throw unexpected exceptions for some devices (see
         // crbug.com/654802 and b/31501780)
         try {
@@ -79,6 +85,18 @@ public class Clipboard {
         }
     }
 
+    // TODO(ctzsm): Remove this method after Android API is updated
+    private boolean hasStyleSpan(Spanned spanned) {
+        Class<?>[] styleClasses = {
+                CharacterStyle.class, ParagraphStyle.class, UpdateAppearance.class};
+        for (Class<?> clazz : styleClasses) {
+            if (spanned.nextSpanTransition(-1, spanned.length(), clazz) < spanned.length()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Gets the HTML text of top item on the primary clip on the Android clipboard.
      *
@@ -86,14 +104,26 @@ public class Clipboard {
      *         text or no entries on the primary clip.
      */
     @CalledByNative
-    private String getHTMLText() {
+    public String getHTMLText() {
         // getPrimaryClip() has been observed to throw unexpected exceptions for some devices (see
         // crbug/654802 and b/31501780)
         try {
-            return mClipboardManager.getPrimaryClip().getItemAt(0).getHtmlText();
+            ClipData clipData = mClipboardManager.getPrimaryClip();
+            ClipDescription description = clipData.getDescription();
+            if (description.hasMimeType(ClipDescription.MIMETYPE_TEXT_HTML)) {
+                return clipData.getItemAt(0).getHtmlText();
+            }
+
+            if (description.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)) {
+                Spanned spanned = (Spanned) clipData.getItemAt(0).getText();
+                if (hasStyleSpan(spanned)) {
+                    return Html.toHtml(spanned);
+                }
+            }
         } catch (Exception e) {
             return null;
         }
+        return null;
     }
 
     /**
@@ -132,7 +162,7 @@ public class Clipboard {
         setPrimaryClipNoException(ClipData.newPlainText(null, null));
     }
 
-    private void setPrimaryClipNoException(ClipData clip) {
+    public void setPrimaryClipNoException(ClipData clip) {
         try {
             mClipboardManager.setPrimaryClip(clip);
         } catch (Exception ex) {
@@ -141,4 +171,19 @@ public class Clipboard {
             Toast.makeText(mContext, text, Toast.LENGTH_SHORT).show();
         }
     }
+
+    /**
+     * Tells the C++ Clipboard that the clipboard has changed.
+     *
+     * Implements OnPrimaryClipChangedListener to listen for clipboard updates.
+     */
+    @Override
+    public void onPrimaryClipChanged() {
+        RecordUserAction.record("MobileClipboardChanged");
+        long nativeClipboardAndroid = nativeInit();
+        if (nativeClipboardAndroid != 0) nativeOnPrimaryClipChanged(nativeClipboardAndroid);
+    }
+
+    private native long nativeInit();
+    private native void nativeOnPrimaryClipChanged(long nativeClipboardAndroid);
 }

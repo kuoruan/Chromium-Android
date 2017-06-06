@@ -107,7 +107,7 @@ public abstract class SelectableItemView<E> extends FrameLayout implements Check
     public final void onClick(View view) {
         assert view == this;
 
-        if (mSelectionDelegate.isSelectionEnabled()) {
+        if (isSelectionModeActive()) {
             onLongClick(view);
         }  else {
             onClick();
@@ -118,9 +118,25 @@ public abstract class SelectableItemView<E> extends FrameLayout implements Check
     @Override
     public boolean onLongClick(View view) {
         assert view == this;
-        boolean checked = mSelectionDelegate.toggleSelectionForItem(mItem);
+        boolean checked = toggleSelectionForItem(mItem);
         setChecked(checked);
         return true;
+    }
+
+    /**
+     * @return Whether we are currently in selection mode.
+     */
+    protected boolean isSelectionModeActive() {
+        return mSelectionDelegate.isSelectionEnabled();
+    }
+
+    /**
+     * Toggles the selection state for a given item.
+     * @param item The given item.
+     * @return Whether the item was in selected state after the toggle.
+     */
+    protected boolean toggleSelectionForItem(E item) {
+        return mSelectionDelegate.toggleSelectionForItem(item);
     }
 
     // Checkable implementations.

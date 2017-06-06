@@ -43,7 +43,7 @@ public abstract class TabPersister {
             TabState.saveState(getTabStateFile(tabId, encrypted), state, encrypted);
             return true;
         } catch (OutOfMemoryError e) {
-            Log.w(TAG, "Out of memory error while attempting to save tab state.  Erasing.");
+            Log.e(TAG, "Out of memory error while attempting to save tab state.  Erasing.");
             deleteTabState(tabId, encrypted);
         }
 

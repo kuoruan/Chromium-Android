@@ -3,40 +3,53 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
-<RelativeLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:chrome="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:focusable="true"
     android:focusableInTouchMode="true"
-    android:background="@color/ntp_bg" >
+    android:background="@android:color/white" >
 
     <org.chromium.chrome.browser.widget.TintedImageButton
         android:id="@+id/close_button"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
+        android:layout_gravity="top|start"
         android:src="@drawable/btn_close"
         android:scaleType="center"
         android:background="@android:color/transparent"
         chrome:tint="@color/dark_mode_tint" />
 
-    <View
-        android:id="@+id/centered_view"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="30dp"
-        android:layout_centerInParent="true" />
+        android:layout_height="match_parent"
+        android:orientation="vertical" >
 
-    <org.chromium.chrome.browser.ntp.LogoView
-        android:id="@+id/search_provider_logo"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/ntp_logo_height"
-        android:padding="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_above="@id/centered_view" />
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.5" >
 
-</RelativeLayout>
+            <org.chromium.chrome.browser.ntp.LogoView
+                android:id="@+id/search_provider_logo"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ntp_logo_height"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_gravity="center" />
+
+        </FrameLayout>
+
+        <!-- This extra empty frame layout is used to ensure the FrameLayout above
+             is half of the parent view's height.  -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.5"
+            android:background="@android:color/white" />
+
+    </LinearLayout>
+
+</FrameLayout>

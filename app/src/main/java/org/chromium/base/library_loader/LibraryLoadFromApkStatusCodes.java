@@ -15,41 +15,43 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class LibraryLoadFromApkStatusCodes {
-  @IntDef({
-      UNKNOWN, NOT_SUPPORTED_OBSOLETE, SUPPORTED_OBSOLETE, SUCCESSFUL, USED_UNPACK_LIBRARY_FALLBACK,
-      USED_NO_MAP_EXEC_SUPPORT_FALLBACK_OBSOLETE, MAX
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface LibraryLoadFromApkStatusCodesEnum {}
+@IntDef({
+    LibraryLoadFromApkStatusCodes.UNKNOWN, LibraryLoadFromApkStatusCodes.NOT_SUPPORTED_OBSOLETE,
+    LibraryLoadFromApkStatusCodes.SUPPORTED_OBSOLETE, LibraryLoadFromApkStatusCodes.SUCCESSFUL,
+    LibraryLoadFromApkStatusCodes.USED_UNPACK_LIBRARY_FALLBACK,
+    LibraryLoadFromApkStatusCodes.USED_NO_MAP_EXEC_SUPPORT_FALLBACK_OBSOLETE,
+    LibraryLoadFromApkStatusCodes.MAX
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface LibraryLoadFromApkStatusCodes {
   /**
    * The loader was unable to determine whether the functionality is supported.
    */
-  public static final int UNKNOWN = 0;
+  int UNKNOWN = 0;
   /**
    * The device does not support loading a library directly from the APK file (obsolete).
    */
-  public static final int NOT_SUPPORTED_OBSOLETE = 1;
+  int NOT_SUPPORTED_OBSOLETE = 1;
   /**
    * The device supports loading a library directly from the APK file. (obsolete).
    */
-  public static final int SUPPORTED_OBSOLETE = 2;
+  int SUPPORTED_OBSOLETE = 2;
   /**
    * The Chromium library was successfully loaded directly from the APK file.
    */
-  public static final int SUCCESSFUL = 3;
+  int SUCCESSFUL = 3;
   /**
    * The Chromium library was successfully loaded using the unpack library fallback because it was
    * compressed or not page aligned in the APK file.
    */
-  public static final int USED_UNPACK_LIBRARY_FALLBACK = 4;
+  int USED_UNPACK_LIBRARY_FALLBACK = 4;
   /**
    * The Chromium library was successfully loaded using the no map executable support fallback
    * (obsolete).
    */
-  public static final int USED_NO_MAP_EXEC_SUPPORT_FALLBACK_OBSOLETE = 5;
+  int USED_NO_MAP_EXEC_SUPPORT_FALLBACK_OBSOLETE = 5;
   /**
    * End sentinel.
    */
-  public static final int MAX = 6;
+  int MAX = 6;
 }

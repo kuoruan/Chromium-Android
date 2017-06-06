@@ -15,14 +15,14 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class TouchHandleOrientation {
-  @IntDef({
-      LEFT, CENTER, RIGHT, UNDEFINED
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface TouchHandleOrientationEnum {}
-  public static final int LEFT = 0;
-  public static final int CENTER = 1;
-  public static final int RIGHT = 2;
-  public static final int UNDEFINED = 3;
+@IntDef({
+    TouchHandleOrientation.LEFT, TouchHandleOrientation.CENTER, TouchHandleOrientation.RIGHT,
+    TouchHandleOrientation.UNDEFINED
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface TouchHandleOrientation {
+  int LEFT = 0;
+  int CENTER = 1;
+  int RIGHT = 2;
+  int UNDEFINED = 3;
 }

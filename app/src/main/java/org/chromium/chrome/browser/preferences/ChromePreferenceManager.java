@@ -45,6 +45,7 @@ public class ChromePreferenceManager {
     private static final String HERB_FLAVOR_KEY = "herb_flavor";
     private static final String WEBAPK_COMMAND_LINE_KEY = "webapk.command_line_enabled";
     private static final String WEBAPK_RUNTIME_KEY = "webapk.runtime_enabled";
+    private static final String WEBAPK_ANY_PACKAGE_KEY = "webapk.any_package_name";
     private static final String CHROME_HOME_ENABLED_KEY = "chrome_home_enabled";
 
     private static final String CHROME_DEFAULT_BROWSER = "applink.chrome_default_browser";
@@ -349,6 +350,16 @@ public class ChromePreferenceManager {
     /** Writes the cached value for the webapk feature is enabled. */
     public void setCachedWebApkRuntimeEnabled(boolean isEnabled) {
         writeBoolean(WEBAPK_RUNTIME_KEY, isEnabled);
+    }
+
+    /** Checks the cached value for the webapk any package name feature. */
+    public boolean getCachedWebApkAnyPackageName() {
+        return mSharedPreferences.getBoolean(WEBAPK_ANY_PACKAGE_KEY, false);
+    }
+
+    /** Writes the cached value for the webapk any package name feature is enabled. */
+    public void setCachedWebApkAnyPackageNameEnabled(boolean isEnabled) {
+        writeBoolean(WEBAPK_ANY_PACKAGE_KEY, isEnabled);
     }
 
     public boolean getCachedChromeDefaultBrowser() {

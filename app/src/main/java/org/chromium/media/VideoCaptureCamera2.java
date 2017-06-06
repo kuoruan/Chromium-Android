@@ -43,7 +43,7 @@ import java.util.List;
  * and their capabilities, using android.hardware.camera2.CameraManager.
  **/
 @JNINamespace("media")
-@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+@TargetApi(Build.VERSION_CODES.M)
 public class VideoCaptureCamera2 extends VideoCapture {
     // Inner class to extend a CameraDevice state change listener.
     private class CrStateListener extends CameraDevice.StateCallback {
@@ -278,6 +278,7 @@ public class VideoCaptureCamera2 extends VideoCapture {
     private int mIso;
     private boolean mRedEyeReduction;
     private int mFillLightMode = AndroidFillLightMode.OFF;
+    private boolean mTorch;
 
     // Service function to grab CameraCharacteristics and handle exceptions.
     private static CameraCharacteristics getCameraCharacteristics(Context appContext, int id) {
@@ -371,12 +372,23 @@ public class VideoCaptureCamera2 extends VideoCapture {
             // https://crbug.com/518807.
         }
 
-        // |mExposureMode| and |mFillLightMode| interact to configure the AE and Flash modes. In a
-        // nutshell, FLASH_MODE is only effective if the auto-exposure is ON/OFF, otherwise the
-        // auto-exposure related flash control (ON_{AUTO,ALWAYS}_FLASH{_REDEYE) takes priority.
+        // |mExposureMode|, |mFillLightMode| and |mTorch| interact to configure the AE and Flash
+        // modes. In a nutshell, FLASH_MODE is only effective if the auto-exposure is ON/OFF,
+        // otherwise the auto-exposure related flash control (ON_{AUTO,ALWAYS}_FLASH{_REDEYE) takes
+        // priority.  |mTorch| mode overrides any previous |mFillLightMode| flash control.
         if (mExposureMode == AndroidMeteringMode.NONE
                 || mExposureMode == AndroidMeteringMode.FIXED) {
             requestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_OFF);
+
+            // We need to configure by hand the exposure time when AE mode is off.  Set it to the
+            // middle of the allowed range. Further tuning will be done via |mIso|.
+            final CameraCharacteristics cameraCharacteristics =
+                    getCameraCharacteristics(mContext, mId);
+            Range<Long> range = cameraCharacteristics.get(
+                    CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
+            requestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME,
+                    range.getLower() + (range.getUpper() + range.getLower()) / 2 /* nanoseconds*/);
+
         } else {
             requestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
             requestBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, mAeFpsRange);
@@ -396,14 +408,10 @@ public class VideoCaptureCamera2 extends VideoCapture {
                 requestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
                         CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
                 break;
-            case AndroidFillLightMode.TORCH:
-                requestBuilder.set(
-                        CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
-                requestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_TORCH);
-                break;
-            case AndroidFillLightMode.NONE:
-                // NONE is only used for getting capabilities, to signify "no flash unit". Ignore.
+            default:
         }
+        if (mTorch) requestBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_TORCH);
+
         requestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, mExposureCompensation);
 
         // White Balance mode AndroidMeteringMode.SINGLE_SHOT is not supported.
@@ -701,6 +709,7 @@ public class VideoCaptureCamera2 extends VideoCapture {
         return true;
     }
 
+    @Override
     public PhotoCapabilities getPhotoCapabilities() {
         final CameraCharacteristics cameraCharacteristics = getCameraCharacteristics(mContext, mId);
         PhotoCapabilities.Builder builder = new PhotoCapabilities.Builder();
@@ -742,9 +751,31 @@ public class VideoCaptureCamera2 extends VideoCapture {
         builder.setMinZoom(1.0).setMaxZoom(mMaxZoom);
         builder.setCurrentZoom(currentZoom).setStepZoom(0.1);
 
-        final int focusMode = mPreviewRequest.get(CaptureRequest.CONTROL_AF_MODE);
         // Classify the Focus capabilities. In CONTINUOUS and SINGLE_SHOT, we can call
         // autoFocus(AutoFocusCallback) to configure region(s) to focus onto.
+        final int[] jniFocusModes =
+                cameraCharacteristics.get(CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES);
+        ArrayList<Integer> focusModes = new ArrayList<Integer>(3);
+        for (int mode : jniFocusModes) {
+            if (mode == CameraMetadata.CONTROL_AF_MODE_OFF) {
+                focusModes.add(Integer.valueOf(AndroidMeteringMode.FIXED));
+            } else if (mode == CameraMetadata.CONTROL_AF_MODE_AUTO
+                    || mode == CameraMetadata.CONTROL_AF_MODE_MACRO) {
+                // CONTROL_AF_MODE_{AUTO,MACRO} do not imply continuously focusing.
+                if (!focusModes.contains(Integer.valueOf(AndroidMeteringMode.SINGLE_SHOT))) {
+                    focusModes.add(Integer.valueOf(AndroidMeteringMode.SINGLE_SHOT));
+                }
+            } else if (mode == CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_VIDEO
+                    || mode == CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_PICTURE
+                    || mode == CameraMetadata.CONTROL_AF_MODE_EDOF) {
+                if (!focusModes.contains(Integer.valueOf(AndroidMeteringMode.CONTINUOUS))) {
+                    focusModes.add(Integer.valueOf(AndroidMeteringMode.CONTINUOUS));
+                }
+            }
+        }
+        builder.setFocusModes(integerArrayListToArray(focusModes));
+
+        final int focusMode = mPreviewRequest.get(CaptureRequest.CONTROL_AF_MODE);
         int jniFocusMode = AndroidMeteringMode.NONE;
         if (focusMode == CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_VIDEO
                 || focusMode == CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_PICTURE) {
@@ -758,6 +789,30 @@ public class VideoCaptureCamera2 extends VideoCapture {
             assert jniFocusMode == CameraMetadata.CONTROL_AF_MODE_EDOF;
         }
         builder.setFocusMode(jniFocusMode);
+
+        // Auto Exposure is the usual capability and state, unless AE is not available at all, which
+        // is signalled by an empty CONTROL_AE_AVAILABLE_MODES list. Exposure Compensation can also
+        // support or be locked, this is equivalent to AndroidMeteringMode.FIXED.
+        final int[] jniExposureModes =
+                cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_MODES);
+        ArrayList<Integer> exposureModes = new ArrayList<Integer>(1);
+        for (int mode : jniExposureModes) {
+            if (mode == CameraMetadata.CONTROL_AE_MODE_ON
+                    || mode == CameraMetadata.CONTROL_AE_MODE_ON_AUTO_FLASH
+                    || mode == CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH
+                    || mode == CameraMetadata.CONTROL_AE_MODE_ON_AUTO_FLASH_REDEYE) {
+                exposureModes.add(Integer.valueOf(AndroidMeteringMode.CONTINUOUS));
+                break;
+            }
+        }
+        try {
+            if (cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_LOCK_AVAILABLE)) {
+                exposureModes.add(Integer.valueOf(AndroidMeteringMode.FIXED));
+            }
+        } catch (NoSuchFieldError e) {
+            // Ignore this exception, it means CONTROL_AE_LOCK_AVAILABLE is not known.
+        }
+        builder.setExposureModes(integerArrayListToArray(exposureModes));
 
         int jniExposureMode = AndroidMeteringMode.CONTINUOUS;
         if (mPreviewRequest.get(CaptureRequest.CONTROL_AE_MODE)
@@ -780,6 +835,24 @@ public class VideoCaptureCamera2 extends VideoCapture {
         builder.setCurrentExposureCompensation(
                 mPreviewRequest.get(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION) * step);
 
+        final int[] jniWhiteBalanceMode =
+                cameraCharacteristics.get(CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES);
+        ArrayList<Integer> whiteBalanceModes = new ArrayList<Integer>(1);
+        for (int mode : jniWhiteBalanceMode) {
+            if (mode == CameraMetadata.CONTROL_AWB_MODE_AUTO) {
+                whiteBalanceModes.add(Integer.valueOf(AndroidMeteringMode.CONTINUOUS));
+                break;
+            }
+        }
+        try {
+            if (cameraCharacteristics.get(CameraCharacteristics.CONTROL_AWB_LOCK_AVAILABLE)) {
+                whiteBalanceModes.add(Integer.valueOf(AndroidMeteringMode.FIXED));
+            }
+        } catch (NoSuchFieldError e) {
+            // Ignore this exception, it means CONTROL_AWB_LOCK_AVAILABLE is not known.
+        }
+        builder.setWhiteBalanceModes(integerArrayListToArray(whiteBalanceModes));
+
         final int whiteBalanceMode = mPreviewRequest.get(CaptureRequest.CONTROL_AWB_MODE);
         if (whiteBalanceMode == CameraMetadata.CONTROL_AWB_MODE_OFF) {
             builder.setWhiteBalanceMode(AndroidMeteringMode.NONE);
@@ -798,34 +871,30 @@ public class VideoCaptureCamera2 extends VideoCapture {
         builder.setStepColorTemperature(1);
 
         if (!cameraCharacteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
-            builder.setFillLightMode(AndroidFillLightMode.NONE);
+            builder.setSupportsTorch(false);
+            builder.setRedEyeReduction(false);
         } else {
-            // CONTROL_AE_MODE overrides FLASH_MODE control unless it's in ON or OFF states.
-            switch (mPreviewRequest.get(CaptureRequest.CONTROL_AE_MODE)) {
-                case CameraMetadata.CONTROL_AE_MODE_ON_AUTO_FLASH_REDEYE:
-                    builder.setRedEyeReduction(true);
-                    builder.setFillLightMode(AndroidFillLightMode.AUTO);
-                    break;
-                case CameraMetadata.CONTROL_AE_MODE_ON_AUTO_FLASH:
-                    builder.setFillLightMode(AndroidFillLightMode.AUTO);
-                    break;
-                case CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH:
-                    builder.setFillLightMode(AndroidFillLightMode.FLASH);
-                    break;
-                case CameraMetadata.CONTROL_AE_MODE_OFF:
-                case CameraMetadata.CONTROL_AE_MODE_ON:
-                    final Integer flashMode = mPreviewRequest.get(CaptureRequest.FLASH_MODE);
-                    if (flashMode == CameraMetadata.FLASH_MODE_OFF) {
-                        builder.setFillLightMode(AndroidFillLightMode.OFF);
-                    } else if (flashMode == CameraMetadata.FLASH_MODE_SINGLE) {
-                        builder.setFillLightMode(AndroidFillLightMode.FLASH);
-                    } else if (flashMode == CameraMetadata.FLASH_MODE_TORCH) {
-                        builder.setFillLightMode(AndroidFillLightMode.TORCH);
-                    }
-                    break;
-                default:
-                    builder.setFillLightMode(AndroidFillLightMode.NONE);
+            // There's no way to query if torch and/or red eye reduction modes are available using
+            // Camera2 API but since there's a Flash unit, we assume so.
+            builder.setSupportsTorch(true);
+            builder.setTorch(mPreviewRequest.get(CaptureRequest.FLASH_MODE)
+                    == CameraMetadata.FLASH_MODE_TORCH);
+
+            builder.setRedEyeReduction(true);
+
+            final int[] flashModes =
+                    cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_MODES);
+            ArrayList<Integer> modes = new ArrayList<Integer>(0);
+            for (int flashMode : flashModes) {
+                if (flashMode == CameraMetadata.FLASH_MODE_OFF) {
+                    modes.add(Integer.valueOf(AndroidFillLightMode.OFF));
+                } else if (flashMode == CameraMetadata.CONTROL_AE_MODE_ON_AUTO_FLASH) {
+                    modes.add(Integer.valueOf(AndroidFillLightMode.AUTO));
+                } else if (flashMode == CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH) {
+                    modes.add(Integer.valueOf(AndroidFillLightMode.FLASH));
+                }
             }
+            builder.setFillLightModes(integerArrayListToArray(modes));
         }
 
         return builder.build();
@@ -836,7 +905,7 @@ public class VideoCaptureCamera2 extends VideoCapture {
             double height, float[] pointsOfInterest2D, boolean hasExposureCompensation,
             double exposureCompensation, int whiteBalanceMode, double iso,
             boolean hasRedEyeReduction, boolean redEyeReduction, int fillLightMode,
-            double colorTemperature) {
+            boolean hasTorch, boolean torch, double colorTemperature) {
         final CameraCharacteristics cameraCharacteristics = getCameraCharacteristics(mContext, mId);
         final Rect canvas =
                 cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
@@ -873,7 +942,7 @@ public class VideoCaptureCamera2 extends VideoCapture {
                 || cameraCharacteristics.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AE) > 0
                 || cameraCharacteristics.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AWB) > 0;
         if (pointsOfInterestSupported && pointsOfInterest2D.length > 0) {
-            assert pointsOfInterest2D.length == 1 : "Only 1 point of interest supported";
+            assert pointsOfInterest2D.length == 2 : "Only 1 point of interest supported";
             assert pointsOfInterest2D[0] <= 1.0 && pointsOfInterest2D[0] >= 0.0;
             assert pointsOfInterest2D[1] <= 1.0 && pointsOfInterest2D[1] >= 0.0;
             // Calculate a Rect of 1/8 the |visibleRect| dimensions, and center it w.r.t. |canvas|.
@@ -905,7 +974,10 @@ public class VideoCaptureCamera2 extends VideoCapture {
         if (mWhiteBalanceMode == AndroidMeteringMode.FIXED && colorTemperature > 0) {
             mColorTemperature = (int) Math.round(colorTemperature);
         }
+
+        if (hasRedEyeReduction) mRedEyeReduction = redEyeReduction;
         if (fillLightMode != AndroidFillLightMode.NOT_SET) mFillLightMode = fillLightMode;
+        if (hasTorch) mTorch = torch;
 
         final Handler mainHandler = new Handler(mContext.getMainLooper());
         mainHandler.removeCallbacks(mRestartCapture);

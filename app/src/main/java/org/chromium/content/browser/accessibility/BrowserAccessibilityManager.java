@@ -35,8 +35,6 @@ import java.util.Locale;
  */
 @JNINamespace("content")
 public class BrowserAccessibilityManager {
-    private static final String TAG = "BrowserAccessibilityManager";
-
     // Constants from AccessibilityNodeInfo defined in the K SDK.
     private static final int ACTION_COLLAPSE = 0x00080000;
     private static final int ACTION_EXPAND = 0x00040000;
@@ -75,6 +73,7 @@ public class BrowserAccessibilityManager {
     private int mSelectionEndIndex;
     protected int mAccessibilityFocusId;
     private Runnable mSendWindowContentChangedRunnable;
+    private View mAutofillPopupView;
 
     /**
      * Create a BrowserAccessibilityManager object, which is owned by the C++
@@ -162,7 +161,6 @@ public class BrowserAccessibilityManager {
         if (!mAccessibilityManager.isEnabled() || mNativeObj == 0) {
             return null;
         }
-
         int rootId = nativeGetRootId(mNativeObj);
 
         if (virtualViewId == View.NO_ID) {
@@ -221,7 +219,6 @@ public class BrowserAccessibilityManager {
         switch (action) {
             case AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS:
                 if (!moveAccessibilityFocusToId(virtualViewId)) return true;
-
                 if (!mIsHovering) {
                     nativeScrollToMakeNodeVisible(
                             mNativeObj, mAccessibilityFocusId);
@@ -357,6 +354,30 @@ public class BrowserAccessibilityManager {
         return false;
     }
 
+    public void onAutofillPopupDisplayed(View autofillPopupView) {
+        if (mAccessibilityManager.isEnabled() && mNativeObj != 0) {
+            mAutofillPopupView = autofillPopupView;
+            nativeOnAutofillPopupDisplayed(mNativeObj);
+        }
+    }
+
+    public void onAutofillPopupDismissed() {
+        if (mAccessibilityManager.isEnabled() && mNativeObj != 0) {
+            nativeOnAutofillPopupDismissed(mNativeObj);
+            mAutofillPopupView = null;
+        }
+    }
+
+    public void onAutofillPopupAccessibilityFocusCleared() {
+        if (mAccessibilityManager.isEnabled() && mNativeObj != 0) {
+            int id = nativeGetIdForElementAfterElementHostingAutofillPopup(mNativeObj);
+            if (id == 0) return;
+
+            moveAccessibilityFocusToId(id);
+            nativeScrollToMakeNodeVisible(mNativeObj, mAccessibilityFocusId);
+        }
+    }
+
     /**
      * @see View#onHoverEvent(MotionEvent)
      */
@@ -420,8 +441,7 @@ public class BrowserAccessibilityManager {
         if (id == 0) return false;
 
         moveAccessibilityFocusToId(id);
-        nativeScrollToMakeNodeVisible(
-                mNativeObj, mAccessibilityFocusId);
+        nativeScrollToMakeNodeVisible(mNativeObj, mAccessibilityFocusId);
         return true;
     }
 
@@ -543,6 +563,8 @@ public class BrowserAccessibilityManager {
         // for the whole subtree of the root.
         if (mAccessibilityFocusId == mCurrentRootId) {
             nativeSetAccessibilityFocus(mNativeObj, -1);
+        } else if (nativeIsAutofillPopupNode(mNativeObj, mAccessibilityFocusId)) {
+            mAutofillPopupView.requestFocus();
         } else {
             nativeSetAccessibilityFocus(mNativeObj, mAccessibilityFocusId);
         }
@@ -561,7 +583,6 @@ public class BrowserAccessibilityManager {
                     AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED);
             mAccessibilityFocusId = View.NO_ID;
         }
-
         moveAccessibilityFocusToId(newAccessibilityFocusId);
     }
 
@@ -1162,8 +1183,16 @@ public class BrowserAccessibilityManager {
                         Settings.Secure.ACCESSIBILITY_SPEAK_PASSWORD, 0) == 1);
     }
 
+    private native void nativeOnAutofillPopupDisplayed(
+            long nativeBrowserAccessibilityManagerAndroid);
+    private native void nativeOnAutofillPopupDismissed(
+            long nativeBrowserAccessibilityManagerAndroid);
+    private native int nativeGetIdForElementAfterElementHostingAutofillPopup(
+            long nativeBrowserAccessibilityManagerAndroid);
     private native int nativeGetRootId(long nativeBrowserAccessibilityManagerAndroid);
     private native boolean nativeIsNodeValid(long nativeBrowserAccessibilityManagerAndroid, int id);
+    private native boolean nativeIsAutofillPopupNode(
+            long nativeBrowserAccessibilityManagerAndroid, int id);
     private native boolean nativeIsEditableText(
             long nativeBrowserAccessibilityManagerAndroid, int id);
     private native boolean nativeIsFocused(

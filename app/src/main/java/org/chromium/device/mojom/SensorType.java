@@ -33,7 +33,9 @@ public final class SensorType {
 
     public static final int PRESSURE = MAGNETOMETER + 1;
 
-    public static final int LAST = (int) (SensorType.PRESSURE);
+    public static final int ABSOLUTE_ORIENTATION = PRESSURE + 1;
+
+    public static final int LAST = (int) (SensorType.ABSOLUTE_ORIENTATION);
 
 
     private static final boolean IS_EXTENSIBLE = false;
@@ -47,6 +49,7 @@ public final class SensorType {
             case 5:
             case 6:
             case 7:
+            case 8:
                 return true;
         }
         return false;

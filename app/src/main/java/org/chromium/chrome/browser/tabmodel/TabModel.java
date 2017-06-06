@@ -59,6 +59,11 @@ public interface TabModel extends TabList {
 
         /** Opened from a launcher shortcut. */
         FROM_LAUNCHER_SHORTCUT,
+
+        /**
+         * The tab is initially detached.
+         */
+        FROM_DETACHED,
     }
 
     /**

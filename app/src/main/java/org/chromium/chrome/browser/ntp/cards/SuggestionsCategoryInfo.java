@@ -8,8 +8,9 @@ import org.chromium.base.Log;
 import org.chromium.chrome.browser.ntp.ContextMenuManager;
 import org.chromium.chrome.browser.ntp.ContextMenuManager.ContextMenuItemId;
 import org.chromium.chrome.browser.ntp.snippets.CategoryInt;
-import org.chromium.chrome.browser.ntp.snippets.ContentSuggestionsCardLayout.ContentSuggestionsCardLayoutEnum;
+import org.chromium.chrome.browser.ntp.snippets.ContentSuggestionsCardLayout;
 import org.chromium.chrome.browser.ntp.snippets.KnownCategories;
+import org.chromium.chrome.browser.suggestions.ContentSuggestionsAdditionalAction;
 import org.chromium.chrome.browser.suggestions.SuggestionsNavigationDelegate;
 
 import javax.annotation.Nullable;
@@ -35,23 +36,16 @@ public class SuggestionsCategoryInfo {
     /**
      * Layout of the cards to be used to display suggestions in this category.
      */
-    @ContentSuggestionsCardLayoutEnum
+    @ContentSuggestionsCardLayout
     private final int mCardLayout;
 
     /**
-     * Whether the category supports a "Fetch" action, that triggers fetching more suggestions for
-     * the category.
+     * The type of additional action supported by the category, or
+     * {@link ContentSuggestionsAdditionalAction#NONE} if no such action is supported.
      * @see ActionItem
      */
-    private final boolean mHasFetchAction;
-
-    /**
-     * Whether the category supports a "ViewAll" action, that triggers displaying all the content
-     * related to the current categories.
-     * @see ActionItem
-     * @see #performViewAllAction(SuggestionsNavigationDelegate)
-     */
-    private final boolean mHasViewAllAction;
+    @ContentSuggestionsAdditionalAction
+    private final int mAdditionalAction;
 
     /** Whether this category should be shown if it offers no suggestions. */
     private final boolean mShowIfEmpty;
@@ -62,13 +56,13 @@ public class SuggestionsCategoryInfo {
     private final String mNoSuggestionsMessage;
 
     public SuggestionsCategoryInfo(@CategoryInt int category, String title,
-            @ContentSuggestionsCardLayoutEnum int cardLayout, boolean hasFetchAction,
-            boolean hasViewAllAction, boolean showIfEmpty, String noSuggestionsMessage) {
+            @ContentSuggestionsCardLayout int cardLayout,
+            @ContentSuggestionsAdditionalAction int additionalAction, boolean showIfEmpty,
+            String noSuggestionsMessage) {
         mCategory = category;
         mTitle = title;
         mCardLayout = cardLayout;
-        mHasFetchAction = hasFetchAction;
-        mHasViewAllAction = hasViewAllAction;
+        mAdditionalAction = additionalAction;
         mShowIfEmpty = showIfEmpty;
         mNoSuggestionsMessage = noSuggestionsMessage;
     }
@@ -82,17 +76,14 @@ public class SuggestionsCategoryInfo {
         return mCategory;
     }
 
-    @ContentSuggestionsCardLayoutEnum
+    @ContentSuggestionsCardLayout
     public int getCardLayout() {
         return mCardLayout;
     }
 
-    public boolean hasFetchAction() {
-        return mHasFetchAction;
-    }
-
-    public boolean hasViewAllAction() {
-        return mHasViewAllAction;
+    @ContentSuggestionsAdditionalAction
+    public int getAdditionalAction() {
+        return mAdditionalAction;
     }
 
     public boolean showIfEmpty() {

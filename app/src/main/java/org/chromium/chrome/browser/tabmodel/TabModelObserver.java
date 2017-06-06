@@ -92,9 +92,9 @@ public interface TabModelObserver {
     /**
      * Called when "all tabs" are pending closure.
      *
-     * @param tabIds The list of tabs IDs that are pending closure.
+     * @param tabs The tabs that are pending closure.
      */
-    void allTabsPendingClosure(List<Integer> tabIds);
+    void allTabsPendingClosure(List<Tab> tabs);
 
     /**
      * Called when an "all tabs" closure has been committed and can't be undone anymore.

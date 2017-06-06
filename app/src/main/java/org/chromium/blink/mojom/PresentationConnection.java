@@ -26,7 +26,7 @@ public interface PresentationConnection extends org.chromium.mojo.bindings.Inter
 
 
     void onMessage(
-ConnectionMessage message, 
+PresentationConnectionMessage message, 
 OnMessageResponse callback);
 
     interface OnMessageResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Boolean> { }

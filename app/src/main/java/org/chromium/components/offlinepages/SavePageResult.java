@@ -15,29 +15,39 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class SavePageResult {
-  @IntDef({
-      SUCCESS, CANCELLED, DEVICE_FULL, CONTENT_UNAVAILABLE, ARCHIVE_CREATION_FAILED, STORE_FAILURE,
-      ALREADY_EXISTS, SKIPPED, SECURITY_CERTIFICATE_ERROR, RESULT_COUNT
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface SavePageResultEnum {}
-  public static final int SUCCESS = 0;
-  public static final int CANCELLED = 1;
-  public static final int DEVICE_FULL = 2;
-  public static final int CONTENT_UNAVAILABLE = 3;
-  public static final int ARCHIVE_CREATION_FAILED = 4;
-  public static final int STORE_FAILURE = 5;
-  public static final int ALREADY_EXISTS = 6;
+@IntDef({
+    SavePageResult.SUCCESS, SavePageResult.CANCELLED, SavePageResult.DEVICE_FULL,
+    SavePageResult.CONTENT_UNAVAILABLE, SavePageResult.ARCHIVE_CREATION_FAILED,
+    SavePageResult.STORE_FAILURE, SavePageResult.ALREADY_EXISTS, SavePageResult.SKIPPED,
+    SavePageResult.SECURITY_CERTIFICATE_ERROR, SavePageResult.ERROR_PAGE,
+    SavePageResult.INTERSTITIAL_PAGE, SavePageResult.RESULT_COUNT
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface SavePageResult {
+  int SUCCESS = 0;
+  int CANCELLED = 1;
+  int DEVICE_FULL = 2;
+  int CONTENT_UNAVAILABLE = 3;
+  int ARCHIVE_CREATION_FAILED = 4;
+  int STORE_FAILURE = 5;
+  int ALREADY_EXISTS = 6;
   /**
    * Certain pages, i.e. file URL or NTP, will not be saved because these are already locally
    * accessible.
    */
-  public static final int SKIPPED = 7;
-  public static final int SECURITY_CERTIFICATE_ERROR = 8;
+  int SKIPPED = 7;
+  int SECURITY_CERTIFICATE_ERROR = 8;
+  /**
+   * Returned when we detect trying to save a chrome error page.
+   */
+  int ERROR_PAGE = 9;
+  /**
+   * Returned when we detect trying to save a chrome interstitial page.
+   */
+  int INTERSTITIAL_PAGE = 10;
   /**
    * NOTE: always keep this entry at the end. Add new result types only immediately above this line.
    * Make sure to update the corresponding histogram enum accordingly.
    */
-  public static final int RESULT_COUNT = 9;
+  int RESULT_COUNT = 11;
 }

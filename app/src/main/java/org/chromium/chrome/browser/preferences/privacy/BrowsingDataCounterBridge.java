@@ -29,11 +29,13 @@ public class BrowsingDataCounterBridge {
      * Initializes BrowsingDataCounterBridge.
      * @param callback A callback to call with the result when the counter finishes.
      * @param dataType The browsing data type to be counted (from the shared enum
-     *      {@link org.chromium.chrome.browser.browsing_data.BrowsingDataType}).
+     * @param prefType The type of preference that should be handled (Default, Basic or Advanced
+     *     from {@link org.chromium.chrome.browser.browsing_data.ClearBrowsingDataTab}).
      */
-    public BrowsingDataCounterBridge(BrowsingDataCounterCallback callback, int dataType) {
+    public BrowsingDataCounterBridge(
+            BrowsingDataCounterCallback callback, int dataType, int prefType) {
         mCallback = callback;
-        mNativeBrowsingDataCounterBridge = nativeInit(dataType);
+        mNativeBrowsingDataCounterBridge = nativeInit(dataType, prefType);
     }
 
     /**
@@ -51,6 +53,6 @@ public class BrowsingDataCounterBridge {
         mCallback.onCounterFinished(result);
     }
 
-    private native long nativeInit(int dataType);
+    private native long nativeInit(int dataType, int prefType);
     private native void nativeDestroy(long nativeBrowsingDataCounterBridge);
 }

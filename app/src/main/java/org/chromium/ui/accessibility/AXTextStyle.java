@@ -15,33 +15,35 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class AXTextStyle {
-  @IntDef({
-      text_style_bold, text_style_italic, text_style_bold_italic, text_style_underline,
-      text_style_bold_underline, text_style_italic_underline, text_style_bold_italic_underline,
-      text_style_line_through, text_style_bold_line_through, text_style_italic_line_through,
-      text_style_bold_italic_line_through, text_style_underline_line_through,
-      text_style_bold_underline_line_through, text_style_italic_underline_line_through,
-      text_style_bold_italic_underline_line_through
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface AXTextStyleEnum {}
+@IntDef({
+    AXTextStyle.text_style_bold, AXTextStyle.text_style_italic, AXTextStyle.text_style_bold_italic,
+    AXTextStyle.text_style_underline, AXTextStyle.text_style_bold_underline,
+    AXTextStyle.text_style_italic_underline, AXTextStyle.text_style_bold_italic_underline,
+    AXTextStyle.text_style_line_through, AXTextStyle.text_style_bold_line_through,
+    AXTextStyle.text_style_italic_line_through, AXTextStyle.text_style_bold_italic_line_through,
+    AXTextStyle.text_style_underline_line_through,
+    AXTextStyle.text_style_bold_underline_line_through,
+    AXTextStyle.text_style_italic_underline_line_through,
+    AXTextStyle.text_style_bold_italic_underline_line_through
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface AXTextStyle {
   /**
    * Assignments are ignored by the parser, but are kept here for clarity.
    */
-  public static final int text_style_bold = 1;
-  public static final int text_style_italic = 2;
-  public static final int text_style_bold_italic = 3;
-  public static final int text_style_underline = 4;
-  public static final int text_style_bold_underline = 5;
-  public static final int text_style_italic_underline = 6;
-  public static final int text_style_bold_italic_underline = 7;
-  public static final int text_style_line_through = 8;
-  public static final int text_style_bold_line_through = 9;
-  public static final int text_style_italic_line_through = 10;
-  public static final int text_style_bold_italic_line_through = 11;
-  public static final int text_style_underline_line_through = 12;
-  public static final int text_style_bold_underline_line_through = 13;
-  public static final int text_style_italic_underline_line_through = 14;
-  public static final int text_style_bold_italic_underline_line_through = 15;
+  int text_style_bold = 1;
+  int text_style_italic = 2;
+  int text_style_bold_italic = 3;
+  int text_style_underline = 4;
+  int text_style_bold_underline = 5;
+  int text_style_italic_underline = 6;
+  int text_style_bold_italic_underline = 7;
+  int text_style_line_through = 8;
+  int text_style_bold_line_through = 9;
+  int text_style_italic_line_through = 10;
+  int text_style_bold_italic_line_through = 11;
+  int text_style_underline_line_through = 12;
+  int text_style_bold_underline_line_through = 13;
+  int text_style_italic_underline_line_through = 14;
+  int text_style_bold_italic_underline_line_through = 15;
 }

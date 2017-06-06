@@ -12,7 +12,6 @@ import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.DeadObjectException;
 import android.os.IBinder;
 import android.os.RemoteException;
 
@@ -20,11 +19,14 @@ import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.TraceEvent;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.content.common.FileDescriptorInfo;
-import org.chromium.content.common.IChildProcessCallback;
-import org.chromium.content.common.IChildProcessService;
+import org.chromium.base.process_launcher.ChildProcessCreationParams;
+import org.chromium.base.process_launcher.FileDescriptorInfo;
+import org.chromium.base.process_launcher.ICallbackInt;
+import org.chromium.base.process_launcher.IChildProcessService;
 
 import java.io.IOException;
+
+import javax.annotation.Nullable;
 
 /**
  * Manages a connection between the browser activity and a child service.
@@ -89,15 +91,13 @@ public class ChildProcessConnectionImpl implements ChildProcessConnection {
     private static class ConnectionParams {
         final String[] mCommandLine;
         final FileDescriptorInfo[] mFilesToBeMapped;
-        final IChildProcessCallback mCallback;
-        final Bundle mSharedRelros;
+        final IBinder mCallback;
 
-        ConnectionParams(String[] commandLine, FileDescriptorInfo[] filesToBeMapped,
-                IChildProcessCallback callback, Bundle sharedRelros) {
+        ConnectionParams(
+                String[] commandLine, FileDescriptorInfo[] filesToBeMapped, IBinder callback) {
             mCommandLine = commandLine;
             mFilesToBeMapped = filesToBeMapped;
             mCallback = callback;
-            mSharedRelros = sharedRelros;
         }
     }
 
@@ -351,12 +351,8 @@ public class ChildProcessConnectionImpl implements ChildProcessConnection {
     }
 
     @Override
-    public void setupConnection(
-            String[] commandLine,
-            FileDescriptorInfo[] filesToBeMapped,
-            IChildProcessCallback processCallback,
-            ConnectionCallback connectionCallback,
-            Bundle sharedRelros) {
+    public void setupConnection(String[] commandLine, FileDescriptorInfo[] filesToBeMapped,
+            @Nullable IBinder callback, ConnectionCallback connectionCallback) {
         synchronized (mLock) {
             assert mConnectionParams == null;
             if (mServiceDisconnected) {
@@ -367,8 +363,7 @@ public class ChildProcessConnectionImpl implements ChildProcessConnection {
             try {
                 TraceEvent.begin("ChildProcessConnectionImpl.setupConnection");
                 mConnectionCallback = connectionCallback;
-                mConnectionParams = new ConnectionParams(
-                        commandLine, filesToBeMapped, processCallback, sharedRelros);
+                mConnectionParams = new ConnectionParams(commandLine, filesToBeMapped, callback);
                 // Run the setup if the service is already connected. If not,
                 // doConnectionSetupLocked() will be called from onServiceConnected().
                 if (mServiceConnectComplete) {
@@ -395,6 +390,18 @@ public class ChildProcessConnectionImpl implements ChildProcessConnection {
         }
     }
 
+    private void onSetupConnectionResult(int pid) {
+        synchronized (mLock) {
+            mPid = pid;
+            assert mPid != 0 : "Child service claims to be run by a process of pid=0.";
+
+            if (mConnectionCallback != null) {
+                mConnectionCallback.onConnected(mPid);
+            }
+            mConnectionCallback = null;
+        }
+    }
+
     /**
      * Called after the connection parameters have been set (in setupConnection()) *and* a
      * connection has been established (as signaled by onServiceConnected()). These two events can
@@ -406,29 +413,33 @@ public class ChildProcessConnectionImpl implements ChildProcessConnection {
             assert mServiceConnectComplete && mService != null;
             assert mConnectionParams != null;
 
-            Bundle bundle =
-                    ChildProcessLauncher.createsServiceBundle(mConnectionParams.mCommandLine,
-                            mConnectionParams.mFilesToBeMapped, mConnectionParams.mSharedRelros);
+            Bundle bundle = ChildProcessLauncher.createsServiceBundle(
+                    mConnectionParams.mCommandLine, mConnectionParams.mFilesToBeMapped);
+            ICallbackInt pidCallback = new ICallbackInt.Stub() {
+                @Override
+                public void call(final int pid) {
+                    LauncherThread.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            onSetupConnectionResult(pid);
+                        }
+                    });
+                }
+            };
             try {
-                mPid = mService.setupConnection(bundle, mConnectionParams.mCallback);
-                assert mPid != 0 : "Child service claims to be run by a process of pid=0.";
-            } catch (android.os.RemoteException re) {
+                mService.setupConnection(bundle, pidCallback, mConnectionParams.mCallback);
+            } catch (RemoteException re) {
                 Log.e(TAG, "Failed to setup connection.", re);
             }
             // We proactively close the FDs rather than wait for GC & finalizer.
             try {
                 for (FileDescriptorInfo fileInfo : mConnectionParams.mFilesToBeMapped) {
-                    fileInfo.mFd.close();
+                    fileInfo.fd.close();
                 }
             } catch (IOException ioe) {
                 Log.w(TAG, "Failed to close FD.", ioe);
             }
             mConnectionParams = null;
-
-            if (mConnectionCallback != null) {
-                mConnectionCallback.onConnected(mPid);
-            }
-            mConnectionCallback = null;
         } finally {
             TraceEvent.end("ChildProcessConnectionImpl.doConnectionSetupLocked");
         }
@@ -547,13 +558,8 @@ public class ChildProcessConnectionImpl implements ChildProcessConnection {
     }
 
     @VisibleForTesting
-    public boolean crashServiceForTesting() throws RemoteException {
-        try {
-            mService.crashIntentionallyForTesting();
-        } catch (DeadObjectException e) {
-            return true;
-        }
-        return false;
+    public void crashServiceForTesting() throws RemoteException {
+        mService.crashIntentionallyForTesting();
     }
 
     @VisibleForTesting

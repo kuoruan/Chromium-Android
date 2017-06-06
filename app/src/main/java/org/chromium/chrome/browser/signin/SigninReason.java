@@ -15,16 +15,17 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class SigninReason {
-  @IntDef({
-      SIGNIN_PRIMARY_ACCOUNT, ADD_SECONDARY_ACCOUNT, REAUTHENTICATION, UNLOCK, UNKNOWN_REASON, MAX
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface SigninReasonEnum {}
-  public static final int SIGNIN_PRIMARY_ACCOUNT = 0;
-  public static final int ADD_SECONDARY_ACCOUNT = 1;
-  public static final int REAUTHENTICATION = 2;
-  public static final int UNLOCK = 3;
-  public static final int UNKNOWN_REASON = 4;
-  public static final int MAX = 5;
+@IntDef({
+    SigninReason.SIGNIN_PRIMARY_ACCOUNT, SigninReason.ADD_SECONDARY_ACCOUNT,
+    SigninReason.REAUTHENTICATION, SigninReason.UNLOCK, SigninReason.UNKNOWN_REASON,
+    SigninReason.MAX
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface SigninReason {
+  int SIGNIN_PRIMARY_ACCOUNT = 0;
+  int ADD_SECONDARY_ACCOUNT = 1;
+  int REAUTHENTICATION = 2;
+  int UNLOCK = 3;
+  int UNKNOWN_REASON = 4;
+  int MAX = 5;
 }

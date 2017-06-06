@@ -276,7 +276,7 @@ ShareResponse callback) {
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public String error;
+        public int error;
     
         private ShareServiceShareResponseParams(int version) {
             super(STRUCT_SIZE, version);
@@ -315,7 +315,8 @@ ShareResponse callback) {
                 result = new ShareServiceShareResponseParams(mainDataHeader.elementsOrVersion);
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
-                    result.error = decoder0.readString(8, true);
+                    result.error = decoder0.readInt(8);
+                        ShareError.validate(result.error);
                 }
             } finally {
                 decoder0.decreaseStackDepth();
@@ -328,7 +329,7 @@ ShareResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(error, 8, true);
+            encoder0.encode(error, 8);
         }
     
         /**
@@ -343,7 +344,7 @@ ShareResponse callback) {
             if (getClass() != object.getClass())
                 return false;
             ShareServiceShareResponseParams other = (ShareServiceShareResponseParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.error, other.error))
+            if (this.error!= other.error)
                 return false;
             return true;
         }
@@ -405,7 +406,7 @@ ShareResponse callback) {
         }
 
         @Override
-        public void call(String error) {
+        public void call(Integer error) {
             ShareServiceShareResponseParams _response = new ShareServiceShareResponseParams();
 
             _response.error = error;

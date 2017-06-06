@@ -53,6 +53,9 @@ public class BookmarkItemRow extends BookmarkRow implements LargeIconCallback {
             case BookmarkUIState.STATE_FOLDER:
                 launchLocation = BookmarkLaunchLocation.FOLDER;
                 break;
+            case BookmarkUIState.STATE_SEARCHING:
+                launchLocation = BookmarkLaunchLocation.SEARCH;
+                break;
             case BookmarkUIState.STATE_LOADING:
                 assert false :
                         "The main content shouldn't be inflated if it's still loading";

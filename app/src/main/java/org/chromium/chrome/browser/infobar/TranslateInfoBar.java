@@ -17,13 +17,11 @@ import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.R;
 import org.chromium.ui.base.DeviceFormFactor;
 
-import java.util.ArrayList;
-
 /**
  * Java version of the translate infobar
  */
 public class TranslateInfoBar extends InfoBar implements SubPanelListener {
-    // Needs to be kept in sync with the Type enum in translate_infobar_delegate.h.
+    // Needs to be kept in sync with the TranslateStep enum in translate_step.h.
     public static final int BEFORE_TRANSLATE_INFOBAR = 0;
     public static final int TRANSLATING_INFOBAR = 1;
     public static final int AFTER_TRANSLATE_INFOBAR = 2;
@@ -46,25 +44,19 @@ public class TranslateInfoBar extends InfoBar implements SubPanelListener {
 
     @CalledByNative
     private static InfoBar show(int translateBarType, String sourceLanguageCode,
-            String targetLanguageCode, boolean autoTranslatePair, boolean showNeverInfobar,
+            String targetLanguageCode, boolean alwaysTranslate, boolean showNeverInfobar,
             boolean triggeredFromMenu, String[] languages, String[] codes) {
         return new TranslateInfoBar(translateBarType, sourceLanguageCode, targetLanguageCode,
-                autoTranslatePair, showNeverInfobar, triggeredFromMenu, languages, codes);
+                alwaysTranslate, showNeverInfobar, triggeredFromMenu, languages, codes);
     }
 
     private TranslateInfoBar(int infoBarType, String sourceLanguageCode, String targetLanguageCode,
-            boolean autoTranslatePair, boolean shouldShowNeverBar, boolean triggeredFromMenu,
+            boolean alwaysTranslate, boolean shouldShowNeverBar, boolean triggeredFromMenu,
             String[] languages, String[] codes) {
         super(R.drawable.infobar_translate, null, null);
 
-        assert languages.length == codes.length;
-        ArrayList<TranslateOptions.TranslateLanguagePair> languageList =
-                new ArrayList<TranslateOptions.TranslateLanguagePair>();
-        for (int i = 0; i < languages.length; ++i) {
-            languageList.add(new TranslateOptions.TranslateLanguagePair(codes[i], languages[i]));
-        }
-        mOptions = new TranslateOptions(sourceLanguageCode, targetLanguageCode, languageList,
-                autoTranslatePair, triggeredFromMenu);
+        mOptions = TranslateOptions.create(sourceLanguageCode, targetLanguageCode, languages, codes,
+                alwaysTranslate, triggeredFromMenu);
         mInfoBarType = infoBarType;
         mShouldShowNeverBar = shouldShowNeverBar;
         mOptionsPanelViewType = NO_PANEL;

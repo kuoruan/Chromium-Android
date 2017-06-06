@@ -14,7 +14,6 @@ import org.chromium.base.VisibleForTesting;
  * propagate events from an {@link EventFilterHost} view.
  */
 public abstract class EventFilter {
-    protected final EventFilterHost mHost;
     protected final float mPxToDp;
     private boolean mSimulateIntercepting;
 
@@ -25,23 +24,16 @@ public abstract class EventFilter {
     /**
      * Creates a {@link EventFilter}.
      * @param context A {@link Context} instance.
-     * @param host    The host of this EventFilter.
      */
-    public EventFilter(Context context, EventFilterHost host) {
-        this(context, host, true);
+    public EventFilter(Context context) {
+        this(context, true);
     }
 
     /**
      * Creates a {@link EventFilter}.
-     * @param host The host of this EventFilter.
-     * @param autoOffset Whether or not to automatically offset touch events.  EventFilters that
-     *                   call {@link EventFilterHost#propagateEvent(MotionEvent)} will want to set
-     *                   this to {@code false} and use {@link #mCurrentTouchOffsetX} and
-     *                   {@link #mCurrentTouchOffsetY} internally.  This is so that propagated
-     *                   events aren't translated, as the host view needs the original event data.
+     * @param autoOffset Whether or not to automatically offset touch events.
      */
-    public EventFilter(Context context, EventFilterHost host, boolean autoOffset) {
-        mHost = host;
+    public EventFilter(Context context, boolean autoOffset) {
         mPxToDp = 1.0f / context.getResources().getDisplayMetrics().density;
         mAutoOffset = autoOffset;
     }

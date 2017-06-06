@@ -28,7 +28,7 @@
     <style name="PreferenceCategoryTextStyle">
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textColor">@color/pref_accent_color</item>
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">12sp</item>
     </style>
     <style name="PreferenceTitle">
         <item name="android:ellipsize">end</item>

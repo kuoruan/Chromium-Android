@@ -101,7 +101,7 @@ public class FileUtils {
         try {
             // Try to obtain a content:// URI, which is preferred to a file:// URI so that
             // receiving apps don't attempt to determine the file's mime type (which often fails).
-            uri = ContentUriUtils.getContentUriFromFile(ContextUtils.getApplicationContext(), file);
+            uri = ContentUriUtils.getContentUriFromFile(file);
         } catch (IllegalArgumentException e) {
             Log.e(TAG, "Could not create content uri: " + e);
         }

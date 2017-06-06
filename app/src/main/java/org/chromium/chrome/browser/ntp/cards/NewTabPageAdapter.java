@@ -19,6 +19,7 @@ import org.chromium.chrome.browser.ntp.snippets.SectionHeaderViewHolder;
 import org.chromium.chrome.browser.ntp.snippets.SnippetArticle;
 import org.chromium.chrome.browser.ntp.snippets.SnippetArticleViewHolder;
 import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
+import org.chromium.chrome.browser.suggestions.SuggestionsRecyclerView;
 import org.chromium.chrome.browser.suggestions.SuggestionsUiDelegate;
 import org.chromium.chrome.browser.suggestions.TileGrid;
 import org.chromium.chrome.browser.suggestions.TileGroup;
@@ -40,7 +41,7 @@ public class NewTabPageAdapter extends Adapter<NewTabPageViewHolder> implements 
     @Nullable
     private final View mAboveTheFoldView;
     private final UiConfig mUiConfig;
-    private NewTabPageRecyclerView mRecyclerView;
+    private SuggestionsRecyclerView mRecyclerView;
 
     private final InnerNode mRoot;
 
@@ -255,9 +256,9 @@ public class NewTabPageAdapter extends Adapter<NewTabPageViewHolder> implements 
         assert mRecyclerView == null;
 
         // FindBugs chokes on the cast below when not checked, raising BC_UNCONFIRMED_CAST
-        assert recyclerView instanceof NewTabPageRecyclerView;
+        assert recyclerView instanceof SuggestionsRecyclerView;
 
-        mRecyclerView = (NewTabPageRecyclerView) recyclerView;
+        mRecyclerView = (SuggestionsRecyclerView) recyclerView;
     }
 
     /**

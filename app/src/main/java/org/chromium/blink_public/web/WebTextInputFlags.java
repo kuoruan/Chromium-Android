@@ -15,23 +15,24 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class WebTextInputFlags {
-  @IntDef({
-      None, AutocompleteOn, AutocompleteOff, AutocorrectOn, AutocorrectOff, SpellcheckOn,
-      SpellcheckOff, AutocapitalizeNone, AutocapitalizeCharacters, AutocapitalizeWords,
-      AutocapitalizeSentences
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface WebTextInputFlagsEnum {}
-  public static final int None = 0;
-  public static final int AutocompleteOn = 1 << 0;
-  public static final int AutocompleteOff = 1 << 1;
-  public static final int AutocorrectOn = 1 << 2;
-  public static final int AutocorrectOff = 1 << 3;
-  public static final int SpellcheckOn = 1 << 4;
-  public static final int SpellcheckOff = 1 << 5;
-  public static final int AutocapitalizeNone = 1 << 6;
-  public static final int AutocapitalizeCharacters = 1 << 7;
-  public static final int AutocapitalizeWords = 1 << 8;
-  public static final int AutocapitalizeSentences = 1 << 9;
+@IntDef({
+    WebTextInputFlags.kNone, WebTextInputFlags.kAutocompleteOn, WebTextInputFlags.kAutocompleteOff,
+    WebTextInputFlags.kAutocorrectOn, WebTextInputFlags.kAutocorrectOff,
+    WebTextInputFlags.kSpellcheckOn, WebTextInputFlags.kSpellcheckOff,
+    WebTextInputFlags.kAutocapitalizeNone, WebTextInputFlags.kAutocapitalizeCharacters,
+    WebTextInputFlags.kAutocapitalizeWords, WebTextInputFlags.kAutocapitalizeSentences
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface WebTextInputFlags {
+  int kNone = 0;
+  int kAutocompleteOn = 1 << 0;
+  int kAutocompleteOff = 1 << 1;
+  int kAutocorrectOn = 1 << 2;
+  int kAutocorrectOff = 1 << 3;
+  int kSpellcheckOn = 1 << 4;
+  int kSpellcheckOff = 1 << 5;
+  int kAutocapitalizeNone = 1 << 6;
+  int kAutocapitalizeCharacters = 1 << 7;
+  int kAutocapitalizeWords = 1 << 8;
+  int kAutocapitalizeSentences = 1 << 9;
 }

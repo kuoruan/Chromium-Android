@@ -62,7 +62,7 @@ public class BrowserStartupController {
     private static BrowserStartupController sInstance;
 
     private static boolean sBrowserMayStartAsynchronously;
-    private static boolean sShouldStartGpuProcessOnBrowserStartup = true;
+    private static boolean sShouldStartGpuProcessOnBrowserStartup;
 
     private static void setAsynchronousStartup(boolean enable) {
         sBrowserMayStartAsynchronously = enable;

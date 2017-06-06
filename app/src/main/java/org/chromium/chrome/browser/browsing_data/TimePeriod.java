@@ -15,16 +15,16 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class TimePeriod {
-  @IntDef({
-      LAST_HOUR, LAST_DAY, LAST_WEEK, FOUR_WEEKS, ALL_TIME, TIME_PERIOD_LAST
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface TimePeriodEnum {}
-  public static final int LAST_HOUR = 0;
-  public static final int LAST_DAY = 1;
-  public static final int LAST_WEEK = 2;
-  public static final int FOUR_WEEKS = 3;
-  public static final int ALL_TIME = 4;
-  public static final int TIME_PERIOD_LAST = 4;
+@IntDef({
+    TimePeriod.LAST_HOUR, TimePeriod.LAST_DAY, TimePeriod.LAST_WEEK, TimePeriod.FOUR_WEEKS,
+    TimePeriod.ALL_TIME, TimePeriod.TIME_PERIOD_LAST
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface TimePeriod {
+  int LAST_HOUR = 0;
+  int LAST_DAY = 1;
+  int LAST_WEEK = 2;
+  int FOUR_WEEKS = 3;
+  int ALL_TIME = 4;
+  int TIME_PERIOD_LAST = 4;
 }

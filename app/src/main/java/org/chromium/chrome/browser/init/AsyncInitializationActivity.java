@@ -16,8 +16,10 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Display;
+import android.view.Menu;
 import android.view.Surface;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -37,7 +39,9 @@ import org.chromium.chrome.browser.metrics.MemoryUma;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.tabmodel.DocumentModeAssassin;
 import org.chromium.chrome.browser.upgrade.UpgradeActivity;
+import org.chromium.ui.base.ActivityWindowAndroid;
 import org.chromium.ui.base.DeviceFormFactor;
+import org.chromium.ui.base.WindowAndroid;
 
 import java.lang.reflect.Field;
 
@@ -46,19 +50,21 @@ import java.lang.reflect.Field;
  */
 public abstract class AsyncInitializationActivity extends AppCompatActivity implements
         ChromeActivityNativeDelegate, BrowserParts {
-
     protected final Handler mHandler;
 
-    // Time at which onCreate is called. This is realtime, counted in ms since device boot.
+    private final NativeInitializationController mNativeInitializationController =
+            new NativeInitializationController(this);
+
+    /** Time at which onCreate is called. This is realtime, counted in ms since device boot. */
     private long mOnCreateTimestampMs;
 
-    // Time at which onCreate is called. This is uptime, to be sent to native code.
+    /** Time at which onCreate is called. This is uptime, to be sent to native code. */
     private long mOnCreateTimestampUptimeMs;
+
+    private ActivityWindowAndroid mWindowAndroid;
     private Bundle mSavedInstanceState;
     private int mCurrentOrientation = Surface.ROTATION_0;
     private boolean mDestroyed;
-    private final NativeInitializationController mNativeInitializationController =
-            new NativeInitializationController(this);
     private MemoryUma mMemoryUma;
     private long mLastUserInteractionTime;
     private boolean mIsTablet;
@@ -76,6 +82,12 @@ public abstract class AsyncInitializationActivity extends AppCompatActivity impl
     @Override
     protected void onDestroy() {
         mDestroyed = true;
+
+        if (mWindowAndroid != null) {
+            mWindowAndroid.destroy();
+            mWindowAndroid = null;
+        }
+
         super.onDestroy();
     }
 
@@ -115,14 +127,16 @@ public abstract class AsyncInitializationActivity extends AppCompatActivity impl
     @Override
     public final void setContentViewAndLoadLibrary() {
         // Unless it was called before (due to delaying all browser startup on purpose),
-        // setContentView inflating the decorView and the basic UI hierarhcy as stubs.
-        // This is done here before kicking long running I/O because inflation includes accessing
-        // resource files(xmls etc) even if we are inflating views defined by the framework. If this
+        // {@link #setContentView} inflates the decorView and the basic UI hierarchy as stubs.
+        // This is done here before kicking long running I/O because inflation accesses resource
+        // files (XML, etc) even if we are inflating views defined by the framework. If this
         // operation gets blocked because other long running I/O are running, we delay onCreate(),
         // onStart() and first draw consequently.
 
-        if (!shouldDelayBrowserStartup()) setContentView();
-        if (mLaunchBehindWorkaround != null) mLaunchBehindWorkaround.onSetContentView();
+        if (!shouldDelayBrowserStartup()) {
+            setContentView();
+            if (mLaunchBehindWorkaround != null) mLaunchBehindWorkaround.onSetContentView();
+        }
 
         // Kick off long running IO tasks that can be done in parallel.
         mNativeInitializationController.startBackgroundTasks(shouldAllocateChildConnection());
@@ -243,14 +257,27 @@ public abstract class AsyncInitializationActivity extends AppCompatActivity impl
         mOnCreateTimestampUptimeMs = SystemClock.uptimeMillis();
         mSavedInstanceState = savedInstanceState;
 
+        mWindowAndroid = createWindowAndroid();
+        if (mWindowAndroid != null) {
+            getWindowAndroid().restoreInstanceState(getSavedInstanceState());
+        }
+
         if (shouldDelayBrowserStartup()) {
-            // Handle on UI inflation here if the browser startup is going to be delayed, since
-            // we still need to initialize UI.
+            // Even if the browser startup is being delayed, the UI still has to be inflated.
             setContentView();
+            if (mLaunchBehindWorkaround != null) mLaunchBehindWorkaround.onSetContentView();
         } else {
             ChromeBrowserInitializer.getInstance(
                     getApplicationContext()).handlePreNativeStartup(this);
         }
+    }
+
+    /**
+     * Creates an {@link ActivityWindowAndroid} to delegate calls to, if the Activity requires it.
+     */
+    @Nullable
+    protected ActivityWindowAndroid createWindowAndroid() {
+        return null;
     }
 
     /**
@@ -377,8 +404,11 @@ public abstract class AsyncInitializationActivity extends AppCompatActivity impl
     }
 
     @Override
-    public boolean shouldStartGpuProcess() {
-        return true;
+    public abstract boolean shouldStartGpuProcess();
+
+    @Override
+    public void onContextMenuClosed(Menu menu) {
+        if (mWindowAndroid != null) mWindowAndroid.onContextMenuClosed();
     }
 
     @Override
@@ -399,9 +429,42 @@ public abstract class AsyncInitializationActivity extends AppCompatActivity impl
         return getIntent();
     }
 
+    /**
+     * @return A {@link ActivityWindowAndroid} instance.  May be null if one was not created.
+     */
+    @Nullable
+    public ActivityWindowAndroid getWindowAndroid() {
+        return mWindowAndroid;
+    }
+
+    /**
+     * This will handle passing {@link Intent} results back to the {@link WindowAndroid}.  It will
+     * return whether or not the {@link WindowAndroid} has consumed the event or not.
+     */
     @Override
-    public boolean onActivityResultWithNative(int requestCode, int resultCode, Intent data) {
-        return false;
+    public boolean onActivityResultWithNative(int requestCode, int resultCode, Intent intent) {
+        if (mWindowAndroid != null) {
+            return mWindowAndroid.onActivityResult(requestCode, resultCode, intent);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(
+            int requestCode, String[] permissions, int[] grantResults) {
+        if (mWindowAndroid != null) {
+            if (mWindowAndroid.onRequestPermissionsResult(requestCode, permissions, grantResults)) {
+                return;
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (mWindowAndroid != null) mWindowAndroid.saveInstanceState(outState);
     }
 
     @Override

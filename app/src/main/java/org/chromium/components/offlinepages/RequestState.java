@@ -15,13 +15,12 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class RequestState {
-  @IntDef({
-      AVAILABLE, PAUSED, OFFLINING
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface RequestStateEnum {}
-  public static final int AVAILABLE = 0;
-  public static final int PAUSED = 1;
-  public static final int OFFLINING = 2;
+@IntDef({
+    RequestState.AVAILABLE, RequestState.PAUSED, RequestState.OFFLINING
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface RequestState {
+  int AVAILABLE = 0;
+  int PAUSED = 1;
+  int OFFLINING = 2;
 }

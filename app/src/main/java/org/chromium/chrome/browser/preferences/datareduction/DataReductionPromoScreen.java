@@ -5,34 +5,21 @@
 package org.chromium.chrome.browser.preferences.datareduction;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.os.Build;
-import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.LinearLayout.LayoutParams;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
+import org.chromium.chrome.browser.widget.PromoDialog;
 import org.chromium.ui.widget.Toast;
 
 /**
  * The promo screen encouraging users to enable Data Saver.
  */
-public class DataReductionPromoScreen extends Dialog implements View.OnClickListener,
-        DialogInterface.OnDismissListener {
+public class DataReductionPromoScreen extends PromoDialog {
     private int mState;
-
-    private static View getContentView(Context context) {
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService(
-                Context.LAYOUT_INFLATER_SERVICE);
-        return inflater.inflate(R.layout.data_reduction_promo_screen, null);
-    }
 
     /**
      * Launch the data reduction promo, if it needs to be displayed.
@@ -58,53 +45,30 @@ public class DataReductionPromoScreen extends Dialog implements View.OnClickList
      * @param context An Android context.
      */
     public DataReductionPromoScreen(Context context) {
-        super(context, R.style.DataReductionPromoScreenDialog);
-        setContentView(getContentView(context), new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-
-        // Remove the shadow from the enable button.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Button enableButton = (Button) findViewById(R.id.enable_button);
-            enableButton.setStateListAnimator(null);
-        }
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        // Keep the window full screen otherwise the flip animation will frame-skip.
-        getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-
-        addListenerOnButton();
-
+        super(context);
         mState = DataReductionProxyUma.ACTION_DISMISSED;
     }
 
-    private void addListenerOnButton() {
-        int [] interactiveViewIds = new int[] {
-            R.id.no_thanks_button,
-            R.id.enable_button,
-            R.id.close_button
-        };
-
-        for (int interactiveViewId : interactiveViewIds) {
-            findViewById(interactiveViewId).setOnClickListener(this);
-        }
+    @Override
+    protected DialogParams getDialogParams() {
+        PromoDialog.DialogParams params = new PromoDialog.DialogParams();
+        params.drawableResource = R.drawable.data_reduction_illustration;
+        params.headerStringResource = R.string.data_reduction_promo_title;
+        params.subheaderStringResource = R.string.data_reduction_promo_summary;
+        params.primaryButtonStringResource = R.string.data_reduction_enable_button;
+        params.secondaryButtonStringResource = R.string.no_thanks;
+        return params;
     }
-
 
     @Override
     public void onClick(View v) {
         int id = v.getId();
 
-        if (id == R.id.no_thanks_button) {
-            handleCloseButtonPressed();
-        } else if (id == R.id.enable_button) {
+        if (id == R.id.button_secondary) {
+            dismiss();
+        } else if (id == R.id.button_primary) {
             mState = DataReductionProxyUma.ACTION_ENABLED;
             handleEnableButtonPressed();
-        } else if (id == R.id.close_button) {
-            handleCloseButtonPressed();
         } else {
             assert false : "Unhandled onClick event";
         }
@@ -121,10 +85,6 @@ public class DataReductionPromoScreen extends Dialog implements View.OnClickList
         dismiss();
         Toast.makeText(getContext(), getContext().getString(R.string.data_reduction_enabled_toast),
                 Toast.LENGTH_LONG).show();
-    }
-
-    private void handleCloseButtonPressed() {
-        dismiss();
     }
 
     @Override

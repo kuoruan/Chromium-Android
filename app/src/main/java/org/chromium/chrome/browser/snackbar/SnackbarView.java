@@ -12,6 +12,7 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
+import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.SurfaceView;
 import android.view.View;
@@ -46,6 +47,7 @@ class SnackbarView {
     private ViewGroup mOriginalParent;
     private ViewGroup mParent;
     private Snackbar mSnackbar;
+    private boolean mAnimateOverWebContent;
 
     // Variables used to calculate the virtual keyboard's height.
     private Rect mCurrentVisibleRect = new Rect();
@@ -65,11 +67,21 @@ class SnackbarView {
      * @param listener An {@link OnClickListener} that will be called when the action button is
      *                 clicked.
      * @param snackbar The snackbar to be displayed.
+     * @param parentView The ViewGroup used to display this snackbar. If this is null, this class
+     *                   will determine where to attach the snackbar.
      */
-    SnackbarView(Activity activity, OnClickListener listener, Snackbar snackbar) {
+    SnackbarView(Activity activity, OnClickListener listener, Snackbar snackbar,
+            @Nullable ViewGroup parentView) {
         mActivity = activity;
         mIsTablet = DeviceFormFactor.isTablet(activity);
-        mOriginalParent = findParentView(activity);
+
+        if (parentView == null) {
+            mOriginalParent = findParentView(activity);
+            if (activity instanceof ChromeActivity) mAnimateOverWebContent = true;
+        } else {
+            mOriginalParent = parentView;
+        }
+
         mParent = mOriginalParent;
         mView = (ViewGroup) LayoutInflater.from(activity).inflate(
                 R.layout.snackbar, mParent, false);
@@ -248,7 +260,7 @@ class SnackbarView {
      * in the normal way.
      */
     private void startAnimatorOnSurfaceView(Animator animator) {
-        if (mActivity instanceof ChromeActivity) {
+        if (mAnimateOverWebContent) {
             ((ChromeActivity) mActivity).getWindowAndroid().startAnimationOverContent(animator);
         } else {
             animator.start();

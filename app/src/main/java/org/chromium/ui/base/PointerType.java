@@ -15,15 +15,14 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class PointerType {
-  @IntDef({
-      NONE, FIRST, COARSE, FINE, LAST
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface PointerTypeEnum {}
-  public static final int NONE = 1 << 0;
-  public static final int FIRST = NONE;
-  public static final int COARSE = 1 << 1;
-  public static final int FINE = 1 << 2;
-  public static final int LAST = FINE;
+@IntDef({
+    PointerType.NONE, PointerType.FIRST, PointerType.COARSE, PointerType.FINE, PointerType.LAST
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface PointerType {
+  int NONE = 1 << 0;
+  int FIRST = NONE;
+  int COARSE = 1 << 1;
+  int FINE = 1 << 2;
+  int LAST = FINE;
 }

@@ -35,6 +35,7 @@ import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.document.ActivityDelegate;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.content_public.browser.LoadUrlParams;
+import org.chromium.content_public.common.ContentUrlConstants;
 import org.chromium.content_public.common.Referrer;
 import org.chromium.ui.base.PageTransition;
 
@@ -695,12 +696,12 @@ public class IntentHandler {
                 String lowerCaseScheme = scheme.toLowerCase(Locale.US);
                 if (UrlConstants.CHROME_SCHEME.equals(lowerCaseScheme)
                         || UrlConstants.CHROME_NATIVE_SCHEME.equals(lowerCaseScheme)
-                        || UrlConstants.ABOUT_SCHEME.equals(lowerCaseScheme)) {
+                        || ContentUrlConstants.ABOUT_SCHEME.equals(lowerCaseScheme)) {
                     // Allow certain "safe" internal URLs to be launched by external
                     // applications.
                     String lowerCaseUrl = url.toLowerCase(Locale.US);
-                    if (UrlConstants.ABOUT_BLANK_DISPLAY_URL.equals(lowerCaseUrl)
-                            || UrlConstants.ABOUT_BLANK_URL.equals(lowerCaseUrl)) {
+                    if (ContentUrlConstants.ABOUT_BLANK_DISPLAY_URL.equals(lowerCaseUrl)
+                            || ContentUrlConstants.ABOUT_BLANK_URL.equals(lowerCaseUrl)) {
                         return false;
                     }
 
@@ -780,7 +781,6 @@ public class IntentHandler {
             return true;
         }
         if (ExternalAuthUtils.getInstance().isGoogleSigned(
-                    ContextUtils.getApplicationContext(),
                     ApiCompatibilityUtils.getCreatorPackage(token))) {
             return true;
         }

@@ -89,7 +89,7 @@ public class FeatureUtilities {
     @VisibleForTesting
     static boolean hasGoogleAccountAuthenticator(Context context) {
         if (sHasGoogleAccountAuthenticator == null) {
-            AccountManagerHelper accountHelper = AccountManagerHelper.get(context);
+            AccountManagerHelper accountHelper = AccountManagerHelper.get();
             sHasGoogleAccountAuthenticator = accountHelper.hasGoogleAccountAuthenticator();
         }
         return sHasGoogleAccountAuthenticator;
@@ -97,7 +97,7 @@ public class FeatureUtilities {
 
     @VisibleForTesting
     static boolean hasGoogleAccounts(Context context) {
-        return AccountManagerHelper.get(context).hasGoogleAccounts();
+        return AccountManagerHelper.get().hasGoogleAccounts();
     }
 
     @SuppressLint("InlinedApi")

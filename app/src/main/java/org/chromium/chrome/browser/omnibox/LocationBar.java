@@ -17,7 +17,7 @@ import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.toolbar.Toolbar;
 import org.chromium.chrome.browser.toolbar.ToolbarActionModeCallback;
 import org.chromium.chrome.browser.toolbar.ToolbarDataProvider;
-import org.chromium.chrome.browser.widget.BottomSheet;
+import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
 import org.chromium.ui.base.WindowAndroid;
 
 /**

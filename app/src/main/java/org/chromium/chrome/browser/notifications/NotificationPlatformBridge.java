@@ -582,6 +582,8 @@ public class NotificationPlatformBridge {
         String platformTag = makePlatformTag(notificationId, origin, tag);
         if (webApkPackage.isEmpty()) {
             mNotificationManager.notify(platformTag, PLATFORM_ID, notificationBuilder.build());
+            NotificationUmaTracker.getInstance().onNotificationShown(
+                    NotificationUmaTracker.SITES, ChannelDefinitions.CHANNEL_ID_SITES);
         } else {
             WebApkNotificationClient.notifyNotification(
                     webApkPackage, notificationBuilder, platformTag, PLATFORM_ID);

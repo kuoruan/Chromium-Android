@@ -13,6 +13,7 @@ import android.graphics.drawable.Drawable;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.ui.resources.Resource;
+import org.chromium.ui.resources.ResourceFactory;
 
 /**
  * A representation of a static resource and all related information for drawing it.  In general
@@ -35,6 +36,11 @@ public class StaticResource implements Resource {
     }
 
     @Override
+    public NinePatchData getNinePatchData() {
+        return mNinePatchData;
+    }
+
+    @Override
     public Bitmap getBitmap() {
         return mBitmap;
     }
@@ -45,13 +51,8 @@ public class StaticResource implements Resource {
     }
 
     @Override
-    public Rect getPadding() {
-        return mNinePatchData != null ? mNinePatchData.getPadding() : mBitmapSize;
-    }
-
-    @Override
-    public Rect getAperture() {
-        return mNinePatchData != null ? mNinePatchData.getAperture() : mBitmapSize;
+    public long createNativeResource() {
+        return ResourceFactory.createBitmapResource(mNinePatchData);
     }
 
     /**

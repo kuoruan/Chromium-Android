@@ -20,9 +20,11 @@ import android.widget.RemoteViews;
  */
 public class NotificationBuilder implements ChromeNotificationBuilder {
     protected final Notification.Builder mBuilder;
+    private final Context mContext;
 
     public NotificationBuilder(Context context) {
-        mBuilder = new Notification.Builder(context);
+        mContext = context;
+        mBuilder = new Notification.Builder(mContext);
     }
 
     @Override
@@ -124,8 +126,16 @@ public class NotificationBuilder implements ChromeNotificationBuilder {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public ChromeNotificationBuilder addAction(int icon, CharSequence title, PendingIntent intent) {
-        mBuilder.addAction(icon, title, intent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            mBuilder.addAction(
+                    new Notification.Action
+                            .Builder(Icon.createWithResource(mContext, icon), title, intent)
+                            .build());
+        } else {
+            mBuilder.addAction(icon, title, intent);
+        }
         return this;
     }
 
@@ -162,6 +172,7 @@ public class NotificationBuilder implements ChromeNotificationBuilder {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public ChromeNotificationBuilder setContentInfo(String info) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
             mBuilder.setContentInfo(info);
@@ -210,6 +221,7 @@ public class NotificationBuilder implements ChromeNotificationBuilder {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public ChromeNotificationBuilder setContent(RemoteViews views) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             mBuilder.setCustomContentView(views);
@@ -244,6 +256,7 @@ public class NotificationBuilder implements ChromeNotificationBuilder {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public Notification buildWithBigContentView(RemoteViews view) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             return mBuilder.setCustomBigContentView(view).build();
@@ -256,7 +269,8 @@ public class NotificationBuilder implements ChromeNotificationBuilder {
 
     @Override
     public Notification buildWithBigTextStyle(String bigText) {
-        Notification.BigTextStyle bigTextStyle = new Notification.BigTextStyle(mBuilder);
+        Notification.BigTextStyle bigTextStyle = new Notification.BigTextStyle();
+        bigTextStyle.setBuilder(mBuilder);
         bigTextStyle.bigText(bigText);
         return bigTextStyle.build();
     }

@@ -4,6 +4,9 @@
 
 package org.chromium.device.gamepad;
 
+import android.annotation.TargetApi;
+import android.os.Build;
+import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
@@ -26,7 +29,38 @@ abstract class GamepadMappings {
     @VisibleForTesting
     static final String AMAZON_FIRE_DEVICE_NAME = "Amazon Fire Game Controller";
 
-    public static GamepadMappings getMappings(String deviceName, int[] axes) {
+    @VisibleForTesting
+    static final int PS_DUALSHOCK_4_VENDOR_ID = 1356;
+    @VisibleForTesting
+    static final int PS_DUALSHOCK_4_PRODUCT_ID = 1476;
+    @VisibleForTesting
+    static final int PS_DUALSHOCK_4_SLIM_PRODUCT_ID = 2508;
+
+    public static GamepadMappings getMappings(InputDevice device, int[] axes) {
+        GamepadMappings mappings = null;
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            mappings = getMappings(device.getProductId(), device.getVendorId());
+        }
+        if (mappings == null) mappings = getMappings(device.getName());
+        if (mappings == null) mappings = new UnknownGamepadMappings(axes);
+        return mappings;
+    }
+
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    @VisibleForTesting
+    static GamepadMappings getMappings(int productId, int vendorId) {
+        // Device name of a PS4 gamepad is "Wireless Controller". This is not reliably unique
+        // so we better go by the product and vendor ids.
+        if (vendorId == PS_DUALSHOCK_4_VENDOR_ID
+                && (productId == PS_DUALSHOCK_4_PRODUCT_ID
+                           || productId == PS_DUALSHOCK_4_SLIM_PRODUCT_ID)) {
+            return new PS4GamepadMappings();
+        }
+        return null;
+    }
+
+    @VisibleForTesting
+    static GamepadMappings getMappings(String deviceName) {
         if (deviceName.startsWith(NVIDIA_SHIELD_DEVICE_NAME_PREFIX)
                 || deviceName.equals(MICROSOFT_XBOX_PAD_DEVICE_NAME)) {
             return new XboxCompatibleGamepadMappings();
@@ -37,7 +71,11 @@ abstract class GamepadMappings {
         } else if (deviceName.equals(AMAZON_FIRE_DEVICE_NAME)) {
             return new AmazonFireGamepadMappings();
         }
+        return null;
+    }
 
+    @VisibleForTesting
+    static GamepadMappings getUnknownGamepadMappings(int[] axes) {
         return new UnknownGamepadMappings(axes);
     }
 
@@ -238,6 +276,46 @@ abstract class GamepadMappings {
             mapCommonDpadButtons(mappedButtons, rawButtons);
             mapCommonStartSelectMetaButtons(mappedButtons, rawButtons);
             mapTriggerAxesToBottomShoulder(mappedButtons, rawAxes);
+
+            mapXYAxes(mappedAxes, rawAxes);
+            mapZAndRZAxesToRightStick(mappedAxes, rawAxes);
+        }
+    }
+
+    static class PS4GamepadMappings extends GamepadMappings {
+        // Scale input from [-1, 1] to [0, 1] uniformly.
+        private static float scaleRxRy(float input) {
+            return 1.f - ((1.f - input) / 2.f);
+        }
+
+        /**
+         * Method for mapping PS4 gamepad axis and button values
+         * to standard gamepad button and axes values.
+         */
+        @Override
+        public void mapToStandardGamepad(
+                float[] mappedAxes, float[] mappedButtons, float[] rawAxes, float[] rawButtons) {
+            float a = rawButtons[KeyEvent.KEYCODE_BUTTON_A];
+            float b = rawButtons[KeyEvent.KEYCODE_BUTTON_B];
+            float c = rawButtons[KeyEvent.KEYCODE_BUTTON_C];
+            float x = rawButtons[KeyEvent.KEYCODE_BUTTON_X];
+            mappedButtons[CanonicalButtonIndex.PRIMARY] = b;
+            mappedButtons[CanonicalButtonIndex.SECONDARY] = c;
+            mappedButtons[CanonicalButtonIndex.TERTIARY] = a;
+            mappedButtons[CanonicalButtonIndex.QUATERNARY] = x;
+
+            float y = rawButtons[KeyEvent.KEYCODE_BUTTON_Y];
+            float z = rawButtons[KeyEvent.KEYCODE_BUTTON_Z];
+            mappedButtons[CanonicalButtonIndex.LEFT_SHOULDER] = y;
+            mappedButtons[CanonicalButtonIndex.RIGHT_SHOULDER] = z;
+
+            float rx = rawAxes[MotionEvent.AXIS_RX];
+            float ry = rawAxes[MotionEvent.AXIS_RY];
+            mappedButtons[CanonicalButtonIndex.LEFT_TRIGGER] = scaleRxRy(rx);
+            mappedButtons[CanonicalButtonIndex.RIGHT_TRIGGER] = scaleRxRy(ry);
+
+            mapHatAxisToDpadButtons(mappedButtons, rawAxes);
+            mapCommonStartSelectMetaButtons(mappedButtons, rawButtons);
 
             mapXYAxes(mappedAxes, rawAxes);
             mapZAndRZAxesToRightStick(mappedAxes, rawAxes);

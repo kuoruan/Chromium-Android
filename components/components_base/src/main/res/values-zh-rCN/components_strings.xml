@@ -42,18 +42,26 @@
 <string name="sad_tab_reload_restart_browser">"重新启动 Chromium"</string>
 <string name="sad_tab_reload_restart_device">"重启您的设备"</string>
 <string name="sad_tab_uma_optin">"将使用情况统计信息和崩溃报告自动发送给 Google"</string>
-<string name="new_tab_otr_title">"您已进入隐身模式"</string>
-<string name="new_tab_otr_subtitle">"现在您可以进行私密浏览，这样一来，使用此设备的其他用户将不会看到您的活动。"</string>
-<string name="new_tab_otr_disclaimer">"书签和下载的文件将会保留下来。"</string>
-<string name="new_tab_otr_not_saved_bullet_points">"系统|不会保存|以下信息：#您的浏览记录#您的搜索记录#Cookie 数据"</string>
-<string name="new_tab_otr_visible">"以下各方|可能仍会看到|您的活动：#您访问的网站#您的雇主#您的互联网服务提供商"</string>
+<string name="new_tab_otr_title">"You’ve gone incognito"</string>
+<string name="new_tab_otr_subtitle">"Now you can browse privately, and other people who use this device won’t see your activity. However, downloads and bookmarks will be saved."</string>
+<string name="new_tab_otr_not_saved">"Chrome &lt;em&gt;won’t save&lt;/em&gt; the following information:
+        &lt;ul&gt;
+          &lt;li&gt;Your browsing history
+          &lt;li&gt;Cookies and site data
+        &lt;/ul&gt;"</string>
+<string name="new_tab_otr_visible">"Your activity &lt;em&gt;might still be visible&lt;/em&gt; to:
+        &lt;ul&gt;
+          &lt;li&gt;Websites you visit
+          &lt;li&gt;Your employer or school
+          &lt;li&gt;Your internet service provider
+        &lt;/ul&gt;"</string>
 <string name="snippets_disabled_signed_out_instructions">"要获取 Google 推荐的个性化内容，请登录 Chrome。"</string>
 <string name="snippets_disabled_generic_prompt">"获取个性化内容"</string>
-<string name="ntp_status_card_title_no_suggestions">"暂无新内容"</string>
+<string name="ntp_title_no_suggestions">"暂无新内容"</string>
 <string name="payments_name_field_in_contact_details">"名称"</string>
 <string name="payments_save_card_to_device_checkbox">"将此卡的信息保存到该设备"</string>
 <string name="payments_accepted_cards_label">"接受的信用卡"</string>
-<string name="payments_method_of_payment_label">"付款"</string>
+<string name="payments_method_of_payment_label">"付款方式"</string>
 <string name="payments_contact_details_label">"联系信息"</string>
 <string name="payments_add_contact_details_label">"添加联系信息"</string>
 <string name="payments_edit_contact_details_label">"修改联系信息"</string>
@@ -63,10 +71,10 @@
 <string name="payments_add_valid_card_number">"添加有效的卡号"</string>
 <string name="payments_add_more_information">"添加更多信息"</string>
 <string name="payments_edit_card">"修改支付卡"</string>
-<string name="payments_credit_card_expiration_date_abbr">"过期时间：%2$s 年 %1$s 月"</string>
+<string name="payments_credit_card_expiration_date_abbr">"失效日期：%2$s 年 %1$s 月"</string>
 <string name="payments_add_phone_number">"添加电话号码
 "</string>
-<string name="payments_add_recipient">"添加收件人"</string>
+<string name="payments_add_recipient">"添加名称"</string>
 <string name="payments_add_valid_address">"添加有效地址"</string>
 <string name="payments_add_email">"添加电子邮件地址"</string>
 <string name="payments_add_name">"添加名称"</string>
@@ -81,42 +89,43 @@
 <string name="payments_add_address">"添加地址"</string>
 <string name="payments_checking_option">"正在检查"</string>
 <string name="payments_updated_label">"已更新"</string>
-<string name="payments_card_and_address_settings">"您可以在&lt;link&gt;设置&lt;/link&gt;中管理信用卡和地址信息。"</string>
-<string name="payments_card_and_address_settings_signed_in">"信用卡和地址选项均来自您的 Google 帐号 (%1$s) 和 Chrome。您可以在&lt;link&gt;设置&lt;/link&gt;中管理这些选项。"</string>
-<string name="payments_card_and_address_settings_signed_out">"信用卡和地址选项均来自 Chrome。您可以在&lt;link&gt;设置&lt;/link&gt;中管理这些选项。"</string>
-<string name="payments_required_field_message">"*表示必填字段"</string>
+<string name="payments_card_and_address_settings">"您可以在BEGIN_LINK设置END_LINK中管理信用卡和地址信息。"</string>
+<string name="payments_card_and_address_settings_signed_in">"信用卡选项和地址选项均来自 Chrome 和您的 Google 帐号 (%1$s)。您可在BEGIN_LINK设置END_LINK中管理这些选项。"</string>
+<string name="payments_card_and_address_settings_signed_out">"信用卡选项和地址选项均来自 Chrome。您可在BEGIN_LINK设置END_LINK中管理这些选项。"</string>
+<string name="payments_required_field_message">"标有“*”的字段均是必填字段"</string>
 <string name="payments_field_required_validation_message">"必填字段"</string>
-<string name="payments_phone_invalid_validation_message">"电话号码无效"</string>
-<string name="payments_email_invalid_validation_message">"电子邮件地址无效"</string>
-<string name="payments_card_number_invalid_validation_message">"卡号无效"</string>
-<string name="payments_card_expiration_invalid_validation_message">"过期日期无效"</string>
+<string name="payments_phone_invalid_validation_message">"请输入有效的电话号码"</string>
+<string name="payments_email_invalid_validation_message">"请输入有效的电子邮件地址"</string>
+<string name="payments_card_number_invalid_validation_message">"请输入有效的信用卡号"</string>
+<string name="payments_card_expiration_invalid_validation_message">"请输入有效的失效日期"</string>
 <string name="payments_billing_address_required">"账单邮寄地址是必填项"</string>
-<string name="payments_name_on_card_required">"持卡人姓名是必填项"</string>
+<string name="payments_name_on_card_required">"必须输入持卡人姓名"</string>
 <string name="payments_more_information_required">"必须提供更多信息"</string>
 <string name="payments_phone_number_required">"必须提供电话号码"</string>
-<string name="payments_recipient_required">"收件人是必填项"</string>
-<string name="payments_invalid_address">"地址无效"</string>
+<string name="payments_recipient_required">"需要提供名称"</string>
+<string name="payments_invalid_address">"请输入有效的送货地址"</string>
 <string name="payments_email_required">"需要提供电子邮件地址"</string>
 <string name="payments_name_required">"需要提供名称"</string>
 <string name="payments_shipping_summary_label">"送货地址"</string>
 <string name="payments_shipping_address_label">"送货地址"</string>
 <string name="payments_shipping_option_label">"送货方式"</string>
-<string name="payments_select_shipping_address_for_shipping_methods">"选择送货地址后才能查看送货方式和要求。"</string>
-<string name="payments_unsupported_shipping_address">"不支持此送货地址。请选择一个不同的地址。"</string>
-<string name="payments_unsupported_shipping_option">"该送货选项不可用。请另选一个选项。"</string>
+<string name="payments_select_shipping_address_for_shipping_methods">"要查看送货方式和要求，请选择相应地址"</string>
+<string name="payments_unsupported_shipping_address">"无法向此地址送货。请另选一个地址。"</string>
+<string name="payments_unsupported_shipping_option">"该送货方式不可用。请另选一种方式。"</string>
 <string name="payments_delivery_summary_label">"递送"</string>
 <string name="payments_delivery_address_label">"递送地址"</string>
-<string name="payments_delivery_option_label">"递送选项"</string>
-<string name="payments_select_delivery_address_for_delivery_methods">"选择递送地址后才能查看递送方式和要求。"</string>
-<string name="payments_unsupported_delivery_address">"不支持此递送地址。请选择一个不同的地址。"</string>
-<string name="payments_unsupported_delivery_option">"该递送选项不可用。请另选一个选项。"</string>
+<string name="payments_delivery_option_label">"递送方式"</string>
+<string name="payments_select_delivery_address_for_delivery_methods">"要查看递送方式和要求，请选择相应地址"</string>
+<string name="payments_unsupported_delivery_address">"无法递送到此地址。请另选一个地址。"</string>
+<string name="payments_unsupported_delivery_option">"该递送方式不可用。请另选一种方式。"</string>
 <string name="payments_pickup_summary_label">"取货"</string>
 <string name="payments_pickup_address_label">"取货地址"</string>
-<string name="payments_pickup_option_label">"取货选项"</string>
-<string name="payments_select_pickup_address_for_pickup_methods">"选择取货地址后才能查看取货方式和要求。"</string>
-<string name="payments_unsupported_pickup_address">"不支持此取货地址。请选择一个不同的地址。"</string>
-<string name="payments_unsupported_pickup_option">"该取货选项不可用。请另选一个选项。"</string>
-<string name="payments_android_app_error">"无法启动付款应用。"</string>
+<string name="payments_pickup_option_label">"取货方式"</string>
+<string name="payments_select_pickup_address_for_pickup_methods">"要查看取货方式和要求，请选择相应地址"</string>
+<string name="payments_unsupported_pickup_address">"无法从此地址取货。请另选一个地址。"</string>
+<string name="payments_unsupported_pickup_option">"该取货方式不可用。请另选一种方式。"</string>
+<string name="payments_android_app_error">"无法打开付款应用"</string>
+<string name="external_payment_app_leave_incognito_warning">"将要退出隐身模式，以便通过外部应用付款。是否继续？"</string>
 <string name="color_picker_button_more">"更多"</string>
 <string name="color_picker_hue">"色调"</string>
 <string name="color_picker_saturation">"饱和度"</string>

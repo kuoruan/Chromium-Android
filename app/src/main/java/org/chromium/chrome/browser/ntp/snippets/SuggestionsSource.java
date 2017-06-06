@@ -8,7 +8,6 @@ import android.graphics.Bitmap;
 
 import org.chromium.base.Callback;
 import org.chromium.chrome.browser.ntp.cards.SuggestionsCategoryInfo;
-import org.chromium.chrome.browser.ntp.snippets.CategoryStatus.CategoryStatusEnum;
 
 import java.util.List;
 
@@ -27,7 +26,7 @@ public interface SuggestionsSource {
         void onMoreSuggestions(@CategoryInt int category, List<SnippetArticle> suggestions);
 
         /** Called when a category changed its status. */
-        void onCategoryStatusChanged(@CategoryInt int category, @CategoryStatusEnum int newStatus);
+        void onCategoryStatusChanged(@CategoryInt int category, @CategoryStatus int newStatus);
 
         /**
          * Called when a suggestion is invalidated, which means it needs to be removed from the UI
@@ -54,7 +53,7 @@ public interface SuggestionsSource {
     /**
      * Gets the status of a category, possibly indicating the reason why it is disabled.
      */
-    @CategoryStatusEnum
+    @CategoryStatus
     int getCategoryStatus(int category);
 
     /**
@@ -74,6 +73,20 @@ public interface SuggestionsSource {
      * is available. The callback is never called synchronously.
      */
     void fetchSuggestionImage(SnippetArticle suggestion, Callback<Bitmap> callback);
+
+    /**
+     * Fetches the favicon for a content suggestion. A null Bitmap is returned if no good favicon is
+     * available. The callback is never called synchronously.
+     * @param suggestion The suggestion which the favicon should represent.
+     * @param minimumSizePx Minimal required size, if only a smaller favicon is available, a null
+     * Bitmap is returned.
+     * @param desiredSizePx If set to 0, it denotes that the favicon should be returned in its
+     * original size (as in favicon cache) without being resized. If not 0, it must be larger or
+     * equal to the minimum size and the favicon will be returned resized to this size.
+     * @param callback The callback that receives the favicon image.
+     */
+    void fetchSuggestionFavicon(SnippetArticle suggestion, int minimumSizePx, int desiredSizePx,
+            Callback<Bitmap> callback);
 
     /**
      * Fetches new suggestions.
@@ -101,4 +114,11 @@ public interface SuggestionsSource {
      * Sets the recipient for update events from the source.
      */
     void setObserver(Observer observer);
+
+    /**
+     * Notifies the scheduler to adjust the plan due to a newly opened NTP.
+     */
+    // TODO(710268): This shouldn't have "NTP" in its name, as it's not specific to the NTP anymore.
+    // Maybe split this off into a new interface for the scheduler?
+    void onNtpInitialized();
 }

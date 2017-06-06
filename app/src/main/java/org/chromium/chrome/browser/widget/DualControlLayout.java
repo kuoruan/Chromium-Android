@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
+import android.support.annotation.IntDef;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
@@ -17,6 +18,9 @@ import android.widget.Button;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.ui.widget.ButtonCompat;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * Automatically lays out one or two Views, placing them on the same row if possible and stacking
@@ -41,9 +45,14 @@ import org.chromium.ui.widget.ButtonCompat;
  * -----------------------------
  */
 public final class DualControlLayout extends ViewGroup {
+    // When changing these values, you need to update ui/android/java/res/values/attrs.xml
     public static final int ALIGN_START = 0;
     public static final int ALIGN_END = 1;
     public static final int ALIGN_APART = 2;
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({ALIGN_START, ALIGN_END, ALIGN_APART})
+    public @interface DualControlLayoutAlignment {}
 
     /**
      * Creates a standardized Button that can be used for DualControlLayouts showing buttons.
@@ -77,7 +86,11 @@ public final class DualControlLayout extends ViewGroup {
 
     private final int mHorizontalMarginBetweenViews;
 
+    /** Define how the controls will be laid out. */
+    @DualControlLayoutAlignment
     private int mAlignment = ALIGN_START;
+
+    /** Margin between the controls when they're stacked.  By default, there is no margin. */
     private int mStackedMargin;
 
     private boolean mIsStacked;
@@ -105,15 +118,24 @@ public final class DualControlLayout extends ViewGroup {
      *
      * @param alignment One of ALIGN_START, ALIGN_APART, ALIGN_END.
      */
-    public void setAlignment(int alignment) {
+    public void setAlignment(@DualControlLayoutAlignment int alignment) {
         mAlignment = alignment;
     }
 
-    /**
-     * Sets the margin between the controls when they're stacked.  By default, there is no margin.
-     */
+    /** See {@link #mAlignment}. */
+    @DualControlLayoutAlignment
+    public int getAlignment() {
+        return mAlignment;
+    }
+
+    /** See {@link #mStackedMargin}. */
     public void setStackedMargin(int stackedMargin) {
         mStackedMargin = stackedMargin;
+    }
+
+    /** See {@link #mStackedMargin}. */
+    public int getStackedMargin() {
+        return mStackedMargin;
     }
 
     @Override
@@ -262,5 +284,12 @@ public final class DualControlLayout extends ViewGroup {
         if (!TextUtils.isEmpty(primaryButtonText) && !TextUtils.isEmpty(secondaryButtonText)) {
             addView(createButtonForLayout(getContext(), false, secondaryButtonText, null));
         }
+
+        // Set the alignment.
+        if (a.hasValue(R.styleable.DualControlLayout_buttonAlignment)) {
+            setAlignment(a.getInt(R.styleable.DualControlLayout_buttonAlignment, ALIGN_START));
+        }
+
+        a.recycle();
     }
 }

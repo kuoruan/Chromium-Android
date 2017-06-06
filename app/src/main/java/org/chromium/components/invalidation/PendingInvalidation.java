@@ -93,6 +93,26 @@ public class PendingInvalidation {
      */
     @Nullable
     public static Bundle decodeToBundle(String encoded) {
+        Invalidation invalidation = decodeToInvalidation(encoded);
+        if (invalidation == null) return null;
+        return createBundle(invalidation.objectId, invalidation.objectSource,
+                invalidation.version != null ? invalidation.version : 0L, invalidation.payload);
+    }
+
+    /**
+     * Decode the invalidation encoded as a String into a PendingInvalidation.
+     * Return value is {@code null} if the string could not be parsed or is an invalidation for all.
+     */
+    @Nullable
+    public static PendingInvalidation decodeToPendingInvalidation(String encoded) {
+        Invalidation invalidation = decodeToInvalidation(encoded);
+        if (invalidation == null) return null;
+        return new PendingInvalidation(invalidation.objectId, invalidation.objectSource,
+                invalidation.version, invalidation.payload);
+    }
+
+    @Nullable
+    private static Invalidation decodeToInvalidation(String encoded) {
         assert encoded != null;
         byte[] decoded = Base64.decode(encoded, Base64.DEFAULT);
         Invalidation invalidation;
@@ -104,8 +124,7 @@ public class PendingInvalidation {
         }
         assert invalidation != null;
         if (invalidation.objectSource == null || invalidation.objectSource == 0) return null;
-        return createBundle(invalidation.objectId, invalidation.objectSource,
-                invalidation.version != null ? invalidation.version : 0L, invalidation.payload);
+        return invalidation;
     }
 
     public String toDebugString() {

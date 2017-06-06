@@ -11,6 +11,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkItem;
 import org.chromium.components.bookmarks.BookmarkId;
 
 import java.util.ArrayList;
@@ -296,7 +297,15 @@ class BookmarkDrawerListViewAdapter extends BaseAdapter {
 
         switch (item.mType) {
             case TYPE_FOLDER:
-                title = mDelegate.getModel().getBookmarkById(item.mFolderId).getTitle();
+                BookmarkItem folder = mDelegate.getModel().getBookmarkById(item.mFolderId);
+                // The folder shouldn't be null but there was one crash report for an NPE when
+                // trying to retrieve the BookmarkItem title. See crbug.com/709164.
+                if (folder != null) {
+                    title = folder.getTitle();
+                } else {
+                    title = "";
+                }
+
                 if (mManagedAndPartnerFolderIds != null
                         && mManagedAndPartnerFolderIds.contains(item.mFolderId)) {
                     iconDrawableId = R.drawable.bookmark_managed;

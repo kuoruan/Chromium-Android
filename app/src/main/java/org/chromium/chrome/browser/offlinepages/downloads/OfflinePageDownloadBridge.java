@@ -22,6 +22,7 @@ import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
 import org.chromium.chrome.browser.tabmodel.document.AsyncTabCreationParams;
 import org.chromium.chrome.browser.tabmodel.document.TabDelegate;
+import org.chromium.components.offline_items_collection.ContentId;
 import org.chromium.content_public.browser.LoadUrlParams;
 
 import java.util.ArrayList;
@@ -76,7 +77,10 @@ public class OfflinePageDownloadBridge implements DownloadServiceDelegate, Offli
     }
 
     public OfflinePageDownloadBridge(Profile profile) {
-        mNativeOfflinePageDownloadBridge = sIsTesting ? 0L : nativeInit(profile);
+        // If |profile| is incognito profile, switch to the regular one since
+        // downloads are shared between them.
+        mNativeOfflinePageDownloadBridge =
+                sIsTesting ? 0L : nativeInit(profile.getOriginalProfile());
     }
 
     /** Destroys the native portion of the bridge. */
@@ -129,23 +133,21 @@ public class OfflinePageDownloadBridge implements DownloadServiceDelegate, Offli
     }
 
     @Override
-    public void cancelDownload(String downloadGuid, boolean isOffTheRecord) {
-        cancelDownload(downloadGuid);
+    public void cancelDownload(ContentId id, boolean isOffTheRecord) {
+        cancelDownload(id.id);
     }
 
     @Override
-    public void pauseDownload(String downloadGuid, boolean isOffTheRecord) {
-        pauseDownload(downloadGuid);
+    public void pauseDownload(ContentId id, boolean isOffTheRecord) {
+        pauseDownload(id.id);
     }
 
     @Override
-    public void resumeDownload(DownloadItem item, boolean hasUserGesture) {
+    public void resumeDownload(ContentId id, DownloadItem item, boolean hasUserGesture) {
         // If the resumption was an user action then we have to resume the specific download item.
         // Otherwise it can only be called when Chrome starts and we would like to resume all
         // pending requests.
-        // TODO(romax): it's based on the assumption that if this method is called with
-        // |hasUserGesture| == false then we're trying to resume all pending requests. This
-        // assumption may change.
+        // We assume that |hasUserGesture| == false means resume all pending requests.
         if (hasUserGesture) {
             resumeDownload(item.getId());
         } else {
@@ -230,16 +232,16 @@ public class OfflinePageDownloadBridge implements DownloadServiceDelegate, Offli
 
     /**
      * Waits for the download items to get loaded and opens the offline page identified by the GUID.
-     * @param GUID of the item to open.
+     * @param id The {@link ContentId} of the page to open.
      */
-    public static void openDownloadedPage(final String guid) {
+    public static void openDownloadedPage(final ContentId id) {
         final OfflinePageDownloadBridge bridge =
                 new OfflinePageDownloadBridge(Profile.getLastUsedProfile());
         bridge.addObserver(
                 new Observer() {
                     @Override
                     public void onItemsLoaded() {
-                        bridge.openItem(guid, getComponentName());
+                        bridge.openItem(id.id, getComponentName());
                         bridge.destroyServiceDelegate();
                     }
                 });

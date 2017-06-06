@@ -33,7 +33,7 @@ public class AboutChromePreferences extends PreferenceFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getActivity().setTitle(R.string.prefs_about_chrome);
-        addPreferencesFromResource(R.xml.about_chrome_preferences);
+        PreferenceUtils.addPreferencesFromResource(this, R.xml.about_chrome_preferences);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
             ChromeBasePreference deprecationWarning = new ChromeBasePreference(

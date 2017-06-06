@@ -56,6 +56,9 @@ public class UiUtils {
     /** A delegate that allows disabling keyboard visibility detection. */
     private static KeyboardShowingDelegate sKeyboardShowingDelegate;
 
+    /** A delegate for the photo picker. */
+    private static PhotoPickerDelegate sPhotoPickerDelegate;
+
     /**
      * A delegate that can be implemented to override whether or not keyboard detection will be
      * used.
@@ -69,6 +72,59 @@ public class UiUtils {
          */
         boolean disableKeyboardCheck(Context context, View view);
     }
+
+    /**
+     * A delegate interface for the photo picker.
+     */
+    public interface PhotoPickerDelegate {
+        /**
+         * Called to display the photo picker.
+         * @param context  The context to use.
+         * @param listener The listener that will be notified of the action the user took in the
+         *                 picker.
+         * @param allowMultiple Whether the dialog should allow multiple images to be selected.
+         */
+        void showPhotoPicker(Context context, PhotoPickerListener listener, boolean allowMultiple);
+
+        /**
+         * Called when the photo picker dialog should be dismissed.
+         */
+        void dismissPhotoPicker();
+    }
+
+    // PhotoPickerDelegate:
+
+    /**
+     * Allows setting a delegate to override the default Android stock photo picker.
+     * @param delegate A {@link PhotoPickerDelegate} instance.
+     */
+    public static void setPhotoPickerDelegate(PhotoPickerDelegate delegate) {
+        sPhotoPickerDelegate = delegate;
+    }
+
+    /**
+     * Called to display the photo picker.
+     * @param context  The context to use.
+     * @param listener The listener that will be notified of the action the user took in the
+     *                 picker.
+     * @param allowMultiple Whether the dialog should allow multiple images to be selected.
+     */
+    public static boolean showPhotoPicker(
+            Context context, PhotoPickerListener listener, boolean allowMultiple) {
+        if (sPhotoPickerDelegate == null) return false;
+        sPhotoPickerDelegate.showPhotoPicker(context, listener, allowMultiple);
+        return true;
+    }
+
+    /**
+     * Called when the photo picker dialog should be dismissed.
+     */
+    public static void dismissPhotoPicker() {
+        if (sPhotoPickerDelegate == null) return;
+        sPhotoPickerDelegate.dismissPhotoPicker();
+    }
+
+    // KeyboardShowingDelegate:
 
     /**
      * Allows setting a delegate to override the default software keyboard visibility detection.

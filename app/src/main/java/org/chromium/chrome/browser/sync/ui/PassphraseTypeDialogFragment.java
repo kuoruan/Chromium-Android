@@ -195,7 +195,7 @@ public class PassphraseTypeDialogFragment extends DialogFragment implements
                         Uri syncDashboardUrl = Uri.parse(
                                 context.getText(R.string.sync_dashboard_url).toString());
                         Intent intent = new Intent(Intent.ACTION_VIEW, syncDashboardUrl);
-                        intent.setPackage(BuildInfo.getPackageName(context));
+                        intent.setPackage(BuildInfo.getPackageName());
                         IntentUtils.safePutBinderExtra(
                                 intent, CustomTabsIntent.EXTRA_SESSION, null);
                         context.startActivity(intent);

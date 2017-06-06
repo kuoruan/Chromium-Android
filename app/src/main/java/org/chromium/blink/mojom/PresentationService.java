@@ -45,24 +45,24 @@ org.chromium.url.mojom.Url availabilityUrl);
 
 
 
-    void startSession(
+    void startPresentation(
 org.chromium.url.mojom.Url[] presentationUrls, 
-StartSessionResponse callback);
+StartPresentationResponse callback);
 
-    interface StartSessionResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<PresentationSessionInfo, PresentationError> { }
+    interface StartPresentationResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<PresentationInfo, PresentationError> { }
 
 
 
-    void joinSession(
+    void reconnectPresentation(
 org.chromium.url.mojom.Url[] presentationUrls, String presentationId, 
-JoinSessionResponse callback);
+ReconnectPresentationResponse callback);
 
-    interface JoinSessionResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<PresentationSessionInfo, PresentationError> { }
+    interface ReconnectPresentationResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<PresentationInfo, PresentationError> { }
 
 
 
     void setPresentationConnection(
-PresentationSessionInfo sessionInfo, PresentationConnection controllerConnectionPtr, org.chromium.mojo.bindings.InterfaceRequest<PresentationConnection> receiverConnectionRequest);
+PresentationInfo presentationInfo, PresentationConnection controllerConnectionPtr, org.chromium.mojo.bindings.InterfaceRequest<PresentationConnection> receiverConnectionRequest);
 
 
 
@@ -77,7 +77,7 @@ org.chromium.url.mojom.Url presentationUrl, String presentationId);
 
 
     void listenForConnectionMessages(
-PresentationSessionInfo sessionInfo);
+PresentationInfo presentationInfo);
 
 
 }

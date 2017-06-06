@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.crash;
 
-import android.content.Context;
 import android.os.AsyncTask;
 import android.os.FileObserver;
 
@@ -43,9 +42,8 @@ public class MinidumpDirectoryObserver extends FileObserver {
         if (path != null && CrashFileManager.isMinidumpMIMEFirstTry(path)) {
             // Note that the logcat extraction might fail. This is ok; in that case, the minidump
             // will be found and uploaded upon the next browser launch.
-            Context context = ContextUtils.getApplicationContext();
             File minidump = mFileManager.getCrashFile(path);
-            AsyncTask.THREAD_POOL_EXECUTOR.execute(new LogcatExtractionRunnable(context, minidump));
+            AsyncTask.THREAD_POOL_EXECUTOR.execute(new LogcatExtractionRunnable(minidump));
         }
     }
 }

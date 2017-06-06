@@ -13,17 +13,15 @@ import org.chromium.chrome.browser.compositor.bottombar.OverlayPanelAnimation;
 import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation;
 
 /**
- * Controls the image shown in the Bar. Owns the {@link ContextualSearchIconSpriteControl} and
- * details about the thumbnail, and handles animating between the two.
+ * Controls the image shown in the Bar. Owns animating between the search provider icon and
+ * custom image (either a thumbnail or quick action icon) for the current query.
  */
 public class ContextualSearchImageControl
         implements ChromeAnimation.Animatable<ContextualSearchImageControl.AnimationType> {
     /**
       * Animation properties.
       */
-    protected enum AnimationType {
-        STATIC_IMAGE_VISIBILITY
-    }
+    protected enum AnimationType { CUSTOM_IMAGE_VISIBILITY }
 
     /** The current context. */
     private final Context mContext;
@@ -48,34 +46,8 @@ public class ContextualSearchImageControl
         mExpandedPercentage = percentage;
 
         if (mQuickActionIconVisible || mThumbnailVisible) {
-
-            mStaticImageVisibilityPercentage = 1.f - percentage;
-            getIconSpriteControl().setIsVisible(mStaticImageVisibilityPercentage < 1.f);
+            mCustomImageVisibilityPercentage = 1.f - percentage;
         }
-    }
-
-    // ============================================================================================
-    // Search Provider Icon Sprite
-    // ============================================================================================
-
-    private ContextualSearchIconSpriteControl mIconSpriteControl;
-
-    /**
-     * @return The {@link ContextualSearchIconSpriteControl} for the panel.
-     */
-    public ContextualSearchIconSpriteControl getIconSpriteControl() {
-        if (mIconSpriteControl == null) {
-            mIconSpriteControl =
-                    new ContextualSearchIconSpriteControl(mOverlayPanelAnimation, mContext);
-        }
-        return mIconSpriteControl;
-    }
-
-    /**
-     * @param shouldAnimateIconSprite Whether the search provider icon sprite should be animated.
-     */
-    public void setShouldAnimateIconSprite(boolean shouldAnimateIconSprite) {
-        getIconSpriteControl().setShouldAnimateAppearance(shouldAnimateIconSprite);
     }
 
     // ============================================================================================
@@ -98,7 +70,7 @@ public class ContextualSearchImageControl
     public void setQuickActionIconResourceId(int resId) {
         mQuickActionIconResourceId = resId;
         mQuickActionIconVisible = true;
-        animateStaticImageVisibility(true);
+        animateCustomImageVisibility(true);
     }
 
     /**
@@ -164,115 +136,107 @@ public class ContextualSearchImageControl
         mThumbnailVisible = success && !TextUtils.isEmpty(mThumbnailUrl);
         if (!mThumbnailVisible) return;
 
-        // TODO(twellington): if the icon sprite is animating wait to start the thumbnail visibility
-        //                    animation.
-        animateStaticImageVisibility(true);
+        animateCustomImageVisibility(true);
     }
 
     // ============================================================================================
-    // Static Image -- either a thumbnail or quick action icon
+    // Custom image -- either a thumbnail or quick action icon
     // ============================================================================================
 
-    /**
-     * The height and width of the static image.
-     */
-    private int mStaticImageSize;
+    /** The height and width of the image displayed at the start of the bar in px. */
+    private int mBarImageSize;
 
     /**
-     * The static image visibility percentage, which dictates how and where to draw the static
-     * image. The static image is not visible at all at 0.f and completely visible at 1.f.
+     * The custom image visibility percentage, which dictates how and where to draw the custom
+     * image. The custom image is not visible at all at 0.f and completely visible at 1.f.
      */
-    private float mStaticImageVisibilityPercentage;
+    private float mCustomImageVisibilityPercentage;
 
     /**
-     * Hides the static image if it is visible and makes the icon sprite visible. Also resets the
-     * thumbnail URL and quick action icon resource id.
+     * Hides the custom image if it is visible. Also resets the thumbnail URL and quick action icon
+     * resource id.
      * @param animate Whether hiding the thumbnail should be animated.
      */
-    public void hideStaticImage(boolean animate) {
-        getIconSpriteControl().setIsVisible(true);
+    public void hideCustomImage(boolean animate) {
         if ((mThumbnailVisible || mQuickActionIconVisible) && animate) {
-            animateStaticImageVisibility(false);
+            animateCustomImageVisibility(false);
         } else {
-            mOverlayPanelAnimation.cancelAnimation(this, AnimationType.STATIC_IMAGE_VISIBILITY);
-            onStaticImageHidden();
+            mOverlayPanelAnimation.cancelAnimation(this, AnimationType.CUSTOM_IMAGE_VISIBILITY);
+            onCustomImageHidden();
         }
     }
 
     /**
-     * @return The height and width of the static image in px.
+     * @return The height and width of the image displayed at the start of the bar in px.
      */
-    public int getStaticImageSize() {
-        if (mStaticImageSize == 0) {
-            mStaticImageSize = mContext.getResources().getDimensionPixelSize(
-                    R.dimen.contextual_search_static_image_size);
+    public int getBarImageSize() {
+        if (mBarImageSize == 0) {
+            mBarImageSize = mContext.getResources().getDimensionPixelSize(
+                    R.dimen.contextual_search_bar_image_size);
         }
-        return mStaticImageSize;
+        return mBarImageSize;
     }
 
     /**
-     * @return The static image visibility percentage, which dictates how and where to draw the
-     *         static image. The static image is not visible at all at 0.f and completely visible at
-     *         1.f. The static image may be either a thumbnail or quick action icon.
+     * @return The custom image visibility percentage, which dictates how and where to draw the
+     *         custom image. The custom image is not visible at all at 0.f and completely visible at
+     *         1.f. The custom image may be either a thumbnail or quick action icon.
      */
-    public float getStaticImageVisibilityPercentage() {
-        return mStaticImageVisibilityPercentage;
+    public float getCustomImageVisibilityPercentage() {
+        return mCustomImageVisibilityPercentage;
     }
 
     /**
-     * Called when the static image finishes hiding to reset thumbnail and quick action icon values.
+     * Called when the custom image finishes hiding to reset thumbnail and quick action icon values.
      */
-    private void onStaticImageHidden() {
+    private void onCustomImageHidden() {
         mQuickActionIconResourceId = 0;
         mQuickActionIconVisible = false;
 
         mThumbnailUrl = "";
         mThumbnailVisible = false;
-        getIconSpriteControl().setIsVisible(true);
-        mStaticImageVisibilityPercentage = 0.f;
+        mCustomImageVisibilityPercentage = 0.f;
     }
 
     // ============================================================================================
     // Thumbnail Animation
     // ============================================================================================
 
-    private Interpolator mStaticImageVisibilityInterpolator;
+    private Interpolator mCustomImageVisibilityInterpolator;
 
-    private void animateStaticImageVisibility(boolean visible) {
+    private void animateCustomImageVisibility(boolean visible) {
         // If the panel is expanded then #onUpdateFromPeekToExpand() is responsible for setting
-        // mStaticImageVisibility and the static image appearance should not be animated.
+        // mCustomImageVisibility and the custom image appearance should not be animated.
         if (visible && mExpandedPercentage > 0.f) return;
 
-        if (mStaticImageVisibilityInterpolator == null) {
-            mStaticImageVisibilityInterpolator =
+        if (mCustomImageVisibilityInterpolator == null) {
+            mCustomImageVisibilityInterpolator =
                     PathInterpolatorCompat.create(0.4f, 0.f, 0.6f, 1.f);
         }
 
-        mOverlayPanelAnimation.cancelAnimation(this, AnimationType.STATIC_IMAGE_VISIBILITY);
+        mOverlayPanelAnimation.cancelAnimation(this, AnimationType.CUSTOM_IMAGE_VISIBILITY);
 
         float endValue = visible ? 1.f : 0.f;
-        mOverlayPanelAnimation.addToAnimation(this, AnimationType.STATIC_IMAGE_VISIBILITY,
-                mStaticImageVisibilityPercentage, endValue,
+        mOverlayPanelAnimation.addToAnimation(this, AnimationType.CUSTOM_IMAGE_VISIBILITY,
+                mCustomImageVisibilityPercentage, endValue,
                 OverlayPanelAnimation.BASE_ANIMATION_DURATION_MS, 0, false,
-                mStaticImageVisibilityInterpolator);
+                mCustomImageVisibilityInterpolator);
     }
 
     @Override
     public void setProperty(AnimationType prop, float val) {
-        if (prop == AnimationType.STATIC_IMAGE_VISIBILITY) {
+        if (prop == AnimationType.CUSTOM_IMAGE_VISIBILITY) {
             // If the panel is expanded, #onUpdateFromPeekedToExpanded() is responsible for setting
-            // mStaticImageVisiblityPercentage.
-            if (mExpandedPercentage == 0.f) mStaticImageVisibilityPercentage = val;
+            // mCustomImageVisiblityPercentage.
+            if (mExpandedPercentage == 0.f) mCustomImageVisibilityPercentage = val;
         }
     }
 
     @Override
     public void onPropertyAnimationFinished(AnimationType prop) {
-        if (prop == AnimationType.STATIC_IMAGE_VISIBILITY) {
-            if (mStaticImageVisibilityPercentage == 0.f) {
-                onStaticImageHidden();
-            } else if (mStaticImageVisibilityPercentage == 1.f) {
-                getIconSpriteControl().setIsVisible(false);
+        if (prop == AnimationType.CUSTOM_IMAGE_VISIBILITY) {
+            if (mCustomImageVisibilityPercentage == 0.f) {
+                onCustomImageHidden();
             }
         }
     }

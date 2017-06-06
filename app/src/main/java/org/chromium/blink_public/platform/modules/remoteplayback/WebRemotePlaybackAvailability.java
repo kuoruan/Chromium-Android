@@ -15,33 +15,35 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class WebRemotePlaybackAvailability {
-  @IntDef({
-      Unknown, SourceNotSupported, DeviceNotAvailable, SourceNotCompatible, DeviceAvailable, Last
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface WebRemotePlaybackAvailabilityEnum {}
+@IntDef({
+    WebRemotePlaybackAvailability.kUnknown, WebRemotePlaybackAvailability.kSourceNotSupported,
+    WebRemotePlaybackAvailability.kDeviceNotAvailable,
+    WebRemotePlaybackAvailability.kSourceNotCompatible,
+    WebRemotePlaybackAvailability.kDeviceAvailable, WebRemotePlaybackAvailability.kLast
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface WebRemotePlaybackAvailability {
   /**
    * The availability is unknown.
    */
-  public static final int Unknown = 0;
+  int kUnknown = 0;
   /**
    * The media source is not supported by the browser - device availability monitoring is
    * unnecessary.
    */
-  public static final int SourceNotSupported = 1;
+  int kSourceNotSupported = 1;
   /**
    * The media source is compatible with some supported device types but no devices were found.
    */
-  public static final int DeviceNotAvailable = 2;
+  int kDeviceNotAvailable = 2;
   /**
    * There're available devices but the current media source is not compatible with any of those.
    */
-  public static final int SourceNotCompatible = 3;
+  int kSourceNotCompatible = 3;
   /**
    * There're available remote playback devices and the media source is compatible with at least one
    * of them.
    */
-  public static final int DeviceAvailable = 4;
-  public static final int Last = 4;
+  int kDeviceAvailable = 4;
+  int kLast = 4;
 }

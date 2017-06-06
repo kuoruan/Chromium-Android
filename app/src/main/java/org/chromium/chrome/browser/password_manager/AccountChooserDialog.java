@@ -194,6 +194,7 @@ public class AccountChooserDialog
                         .setCustomTitle(titleView)
                         .setNegativeButton(R.string.cancel, this)
                         .setAdapter(mAdapter, new DialogInterface.OnClickListener() {
+                            @Override
                             public void onClick(DialogInterface dialog, int item) {
                                 mCredential = mCredentials[item];
                             }

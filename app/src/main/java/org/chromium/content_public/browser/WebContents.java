@@ -8,7 +8,10 @@ import android.os.Handler;
 import android.os.Parcelable;
 
 import org.chromium.base.VisibleForTesting;
+import org.chromium.content.browser.RenderCoordinates;
 import org.chromium.ui.OverscrollRefreshHandler;
+import org.chromium.ui.base.EventForwarder;
+import org.chromium.ui.base.WindowAndroid;
 
 /**
  * The WebContents Java wrapper to allow communicating with the native WebContents object.
@@ -36,6 +39,11 @@ import org.chromium.ui.OverscrollRefreshHandler;
  */
 public interface WebContents extends Parcelable {
     /**
+     * @return The top level WindowAndroid associated with this WebContents.  This can be null.
+     */
+    WindowAndroid getTopLevelNativeWindow();
+
+    /**
      * Deletes the Web Contents object.
      */
     void destroy();
@@ -49,6 +57,11 @@ public interface WebContents extends Parcelable {
      * @return The navigation controller associated with this WebContents.
      */
     NavigationController getNavigationController();
+
+    /**
+     * @return  The main frame associated with this WebContents.
+     */
+    RenderFrameHost getMainFrame();
 
     /**
      * @return The title for the current visible page.
@@ -76,31 +89,37 @@ public interface WebContents extends Parcelable {
      */
     void stop();
 
+    // TODO (amaralp): Only used in content. Should be moved out of public interface.
     /**
      * Cut the selected content.
      */
     void cut();
 
+    // TODO (amaralp): Only used in content. Should be moved out of public interface.
     /**
      * Copy the selected content.
      */
     void copy();
 
+    // TODO (amaralp): Only used in content. Should be moved out of public interface.
     /**
      * Paste content from the clipboard.
      */
     void paste();
 
+    // TODO (amaralp): Only used in content. Should be moved out of public interface.
     /**
      * Replace the selected text with the {@code word}.
      */
     void replace(String word);
 
+    // TODO (amaralp): Only used in content. Should be moved out of public interface.
     /**
      * Select all content.
      */
     void selectAll();
 
+    // TODO (amaralp): Only used in content. Should be moved out of public interface.
     /**
      * Collapse the selection to the end of selection range.
      */
@@ -116,10 +135,17 @@ public interface WebContents extends Parcelable {
      */
     void onShow();
 
+    // TODO (amaralp): Only used in content. Should be moved out of public interface.
     /**
      * Removes handles used in text selection.
      */
     void dismissTextHandles();
+
+    // TODO (amaralp): Only used in content. Should be moved out of public interface.
+    /**
+     * Shows paste popup menu at point
+     */
+    void showContextMenuAtPoint(int x, int y);
 
     /**
      * Suspends all media players for this WebContents.  Note: There may still
@@ -299,7 +325,8 @@ public interface WebContents extends Parcelable {
      * Initiate extraction of text, HTML, and other information for clipping puposes (smart clip)
      * from the rectangle area defined by starting positions (x and y), and width and height.
      */
-    void requestSmartClipExtract(int x, int y, int width, int height);
+    void requestSmartClipExtract(
+            int x, int y, int width, int height, RenderCoordinates coordinateSpace);
 
     /**
      * Register a handler to handle smart clip data once extraction is done.
@@ -313,6 +340,12 @@ public interface WebContents extends Parcelable {
      *                 cannot be null.
      */
     void requestAccessibilitySnapshot(AccessibilitySnapshotCallback callback);
+
+    /**
+     * Returns {@link EventForwarder} which is used to forward input/view events
+     * to native content layer.
+     */
+    EventForwarder getEventForwarder();
 
     /**
      * Add an observer to the WebContents

@@ -15,16 +15,16 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class OrientationSensorType {
-  @IntDef({
-      NOT_AVAILABLE, ROTATION_VECTOR, ACCELEROMETER_MAGNETIC, GAME_ROTATION_VECTOR,
-      ORIENTATION_SENSOR_MAX
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface OrientationSensorTypeEnum {}
-  public static final int NOT_AVAILABLE = 0;
-  public static final int ROTATION_VECTOR = 1;
-  public static final int ACCELEROMETER_MAGNETIC = 2;
-  public static final int GAME_ROTATION_VECTOR = 3;
-  public static final int ORIENTATION_SENSOR_MAX = 4;
+@IntDef({
+    OrientationSensorType.NOT_AVAILABLE, OrientationSensorType.ROTATION_VECTOR,
+    OrientationSensorType.ACCELEROMETER_MAGNETIC, OrientationSensorType.GAME_ROTATION_VECTOR,
+    OrientationSensorType.ORIENTATION_SENSOR_MAX
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface OrientationSensorType {
+  int NOT_AVAILABLE = 0;
+  int ROTATION_VECTOR = 1;
+  int ACCELEROMETER_MAGNETIC = 2;
+  int GAME_ROTATION_VECTOR = 3;
+  int ORIENTATION_SENSOR_MAX = 4;
 }

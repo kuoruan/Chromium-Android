@@ -10,8 +10,9 @@ import android.content.Context;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.AppHooks;
+import org.chromium.chrome.browser.notifications.ChannelDefinitions;
 import org.chromium.chrome.browser.notifications.ChromeNotificationBuilder;
+import org.chromium.chrome.browser.notifications.NotificationBuilderFactory;
 import org.chromium.chrome.browser.notifications.NotificationConstants;
 import org.chromium.chrome.browser.notifications.NotificationUmaTracker;
 
@@ -32,12 +33,9 @@ public class IncognitoNotificationManager {
         String title = context.getResources().getString(R.string.app_name);
 
         ChromeNotificationBuilder builder =
-                AppHooks.get()
-                        .createChromeNotificationBuilder(true /* preferCompat */,
-                                NotificationConstants.CATEGORY_ID_BROWSER,
-                                context.getString(R.string.notification_category_browser),
-                                NotificationConstants.CATEGORY_GROUP_ID_GENERAL,
-                                context.getString(R.string.notification_category_group_general))
+                NotificationBuilderFactory
+                        .createChromeNotificationBuilder(
+                                true /* preferCompat */, ChannelDefinitions.CHANNEL_ID_INCOGNITO)
                         .setContentTitle(title)
                         .setContentIntent(
                                 IncognitoNotificationService.getRemoveAllIncognitoTabsIntent(
@@ -53,7 +51,7 @@ public class IncognitoNotificationManager {
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         nm.notify(INCOGNITO_TABS_OPEN_TAG, INCOGNITO_TABS_OPEN_ID, builder.build());
         NotificationUmaTracker.getInstance().onNotificationShown(
-                NotificationUmaTracker.CLOSE_INCOGNITO);
+                NotificationUmaTracker.CLOSE_INCOGNITO, ChannelDefinitions.CHANNEL_ID_INCOGNITO);
     }
 
     /**

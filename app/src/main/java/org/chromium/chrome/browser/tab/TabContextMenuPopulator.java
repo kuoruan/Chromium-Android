@@ -5,12 +5,16 @@
 package org.chromium.chrome.browser.tab;
 
 import android.content.Context;
+import android.util.Pair;
 import android.view.ContextMenu;
 
 import org.chromium.base.ObserverList.RewindableIterator;
 import org.chromium.chrome.browser.contextmenu.ContextMenuHelper;
+import org.chromium.chrome.browser.contextmenu.ContextMenuItem;
 import org.chromium.chrome.browser.contextmenu.ContextMenuParams;
 import org.chromium.chrome.browser.contextmenu.ContextMenuPopulator;
+
+import java.util.List;
 
 /**
  * A simple wrapper around a {@link ContextMenuPopulator} to handle observer notification.
@@ -36,12 +40,15 @@ public class TabContextMenuPopulator implements ContextMenuPopulator {
     }
 
     @Override
-    public void buildContextMenu(ContextMenu menu, Context context, ContextMenuParams params) {
-        mPopulator.buildContextMenu(menu, context, params);
+    public List<Pair<Integer, List<ContextMenuItem>>> buildContextMenu(
+            ContextMenu menu, Context context, ContextMenuParams params) {
+        List<Pair<Integer, List<ContextMenuItem>>> itemGroups =
+                mPopulator.buildContextMenu(menu, context, params);
         RewindableIterator<TabObserver> observers = mTab.getTabObservers();
         while (observers.hasNext()) {
             observers.next().onContextMenuShown(mTab, menu);
         }
+        return itemGroups;
     }
 
     @Override

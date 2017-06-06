@@ -15,15 +15,15 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class LanguageOption {
-  @IntDef({
-      DEFAULT, MIN, ADD, INSTALL, MAX
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface LanguageOptionEnum {}
-  public static final int DEFAULT = 0;
-  public static final int MIN = DEFAULT;
-  public static final int ADD = 1;
-  public static final int INSTALL = 2;
-  public static final int MAX = INSTALL;
+@IntDef({
+    LanguageOption.DEFAULT, LanguageOption.MIN, LanguageOption.ADD, LanguageOption.INSTALL,
+    LanguageOption.MAX
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface LanguageOption {
+  int DEFAULT = 0;
+  int MIN = DEFAULT;
+  int ADD = 1;
+  int INSTALL = 2;
+  int MAX = INSTALL;
 }

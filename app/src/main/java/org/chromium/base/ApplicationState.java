@@ -15,16 +15,16 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ApplicationState {
-  @IntDef({
-      UNKNOWN, HAS_RUNNING_ACTIVITIES, HAS_PAUSED_ACTIVITIES, HAS_STOPPED_ACTIVITIES,
-      HAS_DESTROYED_ACTIVITIES
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ApplicationStateEnum {}
-  public static final int UNKNOWN = 0;
-  public static final int HAS_RUNNING_ACTIVITIES = 1;
-  public static final int HAS_PAUSED_ACTIVITIES = 2;
-  public static final int HAS_STOPPED_ACTIVITIES = 3;
-  public static final int HAS_DESTROYED_ACTIVITIES = 4;
+@IntDef({
+    ApplicationState.UNKNOWN, ApplicationState.HAS_RUNNING_ACTIVITIES,
+    ApplicationState.HAS_PAUSED_ACTIVITIES, ApplicationState.HAS_STOPPED_ACTIVITIES,
+    ApplicationState.HAS_DESTROYED_ACTIVITIES
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ApplicationState {
+  int UNKNOWN = 0;
+  int HAS_RUNNING_ACTIVITIES = 1;
+  int HAS_PAUSED_ACTIVITIES = 2;
+  int HAS_STOPPED_ACTIVITIES = 3;
+  int HAS_DESTROYED_ACTIVITIES = 4;
 }

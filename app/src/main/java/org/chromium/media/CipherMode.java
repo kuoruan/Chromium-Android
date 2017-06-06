@@ -15,14 +15,13 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class CipherMode {
-  @IntDef({
-      UNENCRYPTED, AES_CTR, AES_CBC, MAX
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface CipherModeEnum {}
-  public static final int UNENCRYPTED = 0;
-  public static final int AES_CTR = 1;
-  public static final int AES_CBC = 2;
-  public static final int MAX = 2;
+@IntDef({
+    CipherMode.UNENCRYPTED, CipherMode.AES_CTR, CipherMode.AES_CBC, CipherMode.MAX
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface CipherMode {
+  int UNENCRYPTED = 0;
+  int AES_CTR = 1;
+  int AES_CBC = 2;
+  int MAX = 2;
 }

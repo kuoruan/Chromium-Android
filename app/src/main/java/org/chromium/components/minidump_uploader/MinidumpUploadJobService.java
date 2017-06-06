@@ -12,6 +12,7 @@ import android.content.Context;
 import android.os.Build;
 import android.os.PersistableBundle;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 
 /**
@@ -40,17 +41,17 @@ public abstract class MinidumpUploadJobService extends JobService {
 
     /**
      * Schedules uploading of all pending minidumps.
-     * @param context The application context, in which to schedule the crash report uploads.
      * @param jobInfoBuilder A job info builder that has been initialized with any embedder-specific
      *     requriements. This builder will be extended to include shared requirements, and then used
      *     to build an upload job for scheduling.
      */
-    public static void scheduleUpload(Context context, JobInfo.Builder jobInfoBuilder) {
+    public static void scheduleUpload(JobInfo.Builder jobInfoBuilder) {
         Log.i(TAG, "Scheduling upload of all pending minidumps.");
         JobScheduler scheduler =
-                (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+                (JobScheduler) ContextUtils.getApplicationContext().getSystemService(
+                        Context.JOB_SCHEDULER_SERVICE);
         JobInfo uploadJob =
-                jobInfoBuilder
+                jobInfoBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                         .setBackoffCriteria(JOB_INITIAL_BACKOFF_TIME_IN_MS, JOB_BACKOFF_POLICY)
                         .build();
         int result = scheduler.schedule(uploadJob);

@@ -36,8 +36,7 @@ public class ChromeGoogleApiClientImpl implements ChromeGoogleApiClient {
             boolean requireFirstPartyBuild) {
         mApplicationContext = context.getApplicationContext();
         mClient = client;
-        if (requireFirstPartyBuild
-                && !ExternalAuthUtils.getInstance().isChromeGoogleSigned(mApplicationContext)) {
+        if (requireFirstPartyBuild && !ExternalAuthUtils.getInstance().isChromeGoogleSigned()) {
             throw new IllegalStateException("GoogleApiClient requires first-party build");
         }
     }

@@ -50,7 +50,7 @@
         <FrameLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/menu_button_wrapper" >
+            android:id="@+id/menu_button_wrapper">
 
             <org.chromium.chrome.browser.widget.TintedImageButton
                 android:id="@+id/menu_button"

@@ -179,26 +179,26 @@ public class TabWebContentsObserver extends WebContentsObserver {
 
     @Override
     public void didStartNavigation(
-            String url, boolean isInMainFrame, boolean isSamePage, boolean isErrorPage) {
-        if (isInMainFrame && !isSamePage) {
+            String url, boolean isInMainFrame, boolean isSameDocument, boolean isErrorPage) {
+        if (isInMainFrame && !isSameDocument) {
             mTab.didStartPageLoad(url, isErrorPage);
         }
 
         RewindableIterator<TabObserver> observers = mTab.getTabObservers();
         while (observers.hasNext()) {
             observers.next().onDidStartNavigation(
-                    mTab, url, isInMainFrame, isSamePage, isErrorPage);
+                    mTab, url, isInMainFrame, isSameDocument, isErrorPage);
         }
     }
 
     @Override
     public void didFinishNavigation(String url, boolean isInMainFrame, boolean isErrorPage,
-            boolean hasCommitted, boolean isSamePage, boolean isFragmentNavigation,
+            boolean hasCommitted, boolean isSameDocument, boolean isFragmentNavigation,
             Integer pageTransition, int errorCode, String errorDescription, int httpStatusCode) {
         RewindableIterator<TabObserver> observers = mTab.getTabObservers();
         while (observers.hasNext()) {
             observers.next().onDidFinishNavigation(mTab, url, isInMainFrame, isErrorPage,
-                    hasCommitted, isSamePage, isFragmentNavigation, pageTransition, errorCode,
+                    hasCommitted, isSameDocument, isFragmentNavigation, pageTransition, errorCode,
                     httpStatusCode);
         }
 
@@ -239,7 +239,7 @@ public class TabWebContentsObserver extends WebContentsObserver {
         }
 
         FullscreenManager fullscreenManager = mTab.getFullscreenManager();
-        if (isInMainFrame && !isSamePage && fullscreenManager != null) {
+        if (isInMainFrame && !isSameDocument && fullscreenManager != null) {
             fullscreenManager.setPersistentFullscreenMode(false);
         }
 

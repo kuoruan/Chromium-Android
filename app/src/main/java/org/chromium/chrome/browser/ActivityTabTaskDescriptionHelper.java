@@ -90,10 +90,10 @@ public class ActivityTabTaskDescriptionHelper {
 
             @Override
             public void onDidFinishNavigation(Tab tab, String url, boolean isInMainFrame,
-                    boolean isErrorPage, boolean hasCommitted, boolean isSamePage,
+                    boolean isErrorPage, boolean hasCommitted, boolean isSameDocument,
                     boolean isFragmentNavigation, Integer pageTransition, int errorCode,
                     int httpStatusCode) {
-                if (hasCommitted && isInMainFrame && !isSamePage) {
+                if (hasCommitted && isInMainFrame && !isSameDocument) {
                     mLargestFavicon = null;
                     updateTaskDescription();
                 }
@@ -162,7 +162,7 @@ public class ActivityTabTaskDescriptionHelper {
             }
 
             @Override
-            public void allTabsPendingClosure(List<Integer> tabIds) {
+            public void allTabsPendingClosure(List<Tab> tabs) {
                 refreshSelectedTab();
             }
         };

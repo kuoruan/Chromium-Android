@@ -37,9 +37,10 @@ public class WebappDelegateFactory extends FullScreenDelegateFactory {
             // compatibility we relaunch it the hard way.
             String startUrl = mActivity.getWebappInfo().uri().toString();
 
-            if (!TextUtils.isEmpty(mActivity.getWebappInfo().webApkPackageName())) {
+            String webApkPackageName = mActivity.getWebappInfo().webApkPackageName();
+            if (!TextUtils.isEmpty(webApkPackageName)) {
                 Intent intent = WebApkNavigationClient.createLaunchWebApkIntent(
-                        mActivity.getWebappInfo().webApkPackageName(), startUrl);
+                        webApkPackageName, startUrl, false /* forceNavigation */);
                 IntentUtils.safeStartActivity(ContextUtils.getApplicationContext(), intent);
                 return;
             }

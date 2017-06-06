@@ -36,5 +36,4 @@
         android:contentDescription="@string/accessibility_toolbar_btn_delete_url"
         android:visibility="invisible"
         chrome:tint="@color/dark_mode_tint" />
-
 </LinearLayout>

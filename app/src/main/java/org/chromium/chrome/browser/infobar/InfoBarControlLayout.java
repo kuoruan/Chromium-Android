@@ -12,10 +12,11 @@ import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.RatingBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -24,6 +25,8 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.widget.DualControlLayout;
+
+import java.util.List;
 
 /**
  * Lays out a group of controls (e.g. switches, spinners, or additional text) for InfoBars that need
@@ -153,7 +156,7 @@ public final class InfoBarControlLayout extends ViewGroup {
     /**
      * Do not call this method directly; use {@link InfoBarLayout#addControlLayout()}.
      */
-    InfoBarControlLayout(Context context) {
+    public InfoBarControlLayout(Context context) {
         super(context);
 
         Resources resources = context.getResources();
@@ -165,9 +168,6 @@ public final class InfoBarControlLayout extends ViewGroup {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        assert getLayoutParams().height == LayoutParams.WRAP_CONTENT
-                : "Height of this layout cannot be constrained.";
-
         int fullWidth = MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.UNSPECIFIED
                 ? Integer.MAX_VALUE : MeasureSpec.getSize(widthMeasureSpec);
         int columnWidth = Math.max(0, (fullWidth - mMarginBetweenColumns) / 2);
@@ -350,6 +350,41 @@ public final class InfoBarControlLayout extends ViewGroup {
         switchView.setChecked(isChecked);
 
         return switchLayout;
+    }
+
+    /**
+     * Creates a set of standard radio buttons and adds it to the layout.
+     *
+     * -------------------------------------------------
+     * | O | MESSAGE #1                                |
+     * | O | MESSAGE #N                                |
+     * -------------------------------------------------
+     *
+     * @param messages      Messages to display for the options.
+     * @param selectedIndex Which index to mark as being selected.
+     */
+    public RadioGroup addRadioButtons(List<CharSequence> messages, int selectedIndex) {
+        ControlLayoutParams params = new ControlLayoutParams();
+        params.mMustBeFullWidth = true;
+
+        RadioGroup radioLayout = new RadioGroup(getContext());
+        addView(radioLayout, params);
+
+        for (int i = 0; i < messages.size(); i++) {
+            RadioButton button =
+                    (RadioButton) LayoutInflater.from(getContext())
+                            .inflate(R.layout.infobar_control_radio, radioLayout, false);
+            button.setText(messages.get(i));
+            button.setChecked(i == selectedIndex);
+            radioLayout.addView(button);
+
+            // Add margins between each of the radio buttons.
+            if (i < messages.size() - 1) {
+                ((MarginLayoutParams) button.getLayoutParams()).bottomMargin = mMarginBetweenRows;
+            }
+        }
+
+        return radioLayout;
     }
 
     /**

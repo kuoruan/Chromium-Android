@@ -4,10 +4,10 @@
 
 package org.chromium.chrome.browser;
 
-import android.content.Context;
 import android.content.pm.PackageManager;
 
 import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 
 /**
@@ -57,9 +57,11 @@ public class DevToolsServer {
             long devToolsServer, boolean enabled, boolean allowDebugPermission);
 
     @CalledByNative
-    private static boolean checkDebugPermission(Context context, int pid, int uid) {
-        String debugPermissionName = context.getPackageName() + DEBUG_PERMISSION_SIFFIX;
-        return ApiCompatibilityUtils.checkPermission(context, debugPermissionName, pid, uid)
+    private static boolean checkDebugPermission(int pid, int uid) {
+        String debugPermissionName =
+                ContextUtils.getApplicationContext().getPackageName() + DEBUG_PERMISSION_SIFFIX;
+        return ApiCompatibilityUtils.checkPermission(
+                       ContextUtils.getApplicationContext(), debugPermissionName, pid, uid)
                 == PackageManager.PERMISSION_GRANTED;
     }
 }

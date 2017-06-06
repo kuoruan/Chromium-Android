@@ -5,13 +5,17 @@
 package org.chromium.chrome.browser.vr_shell;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.PendingIntent;
-import android.content.ComponentName;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.os.StrictMode;
 import android.os.SystemClock;
@@ -36,18 +40,16 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ChromeTabbedActivity;
-import org.chromium.chrome.browser.UrlConstants;
+import org.chromium.chrome.browser.customtabs.CustomTabActivity;
 import org.chromium.chrome.browser.infobar.InfoBarIdentifier;
 import org.chromium.chrome.browser.infobar.SimpleConfirmInfoBarBuilder;
-import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.tab.Tab;
-import org.chromium.chrome.browser.tabmodel.TabModel;
-import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
-import org.chromium.chrome.browser.tabmodel.TabModelUtils;
+import org.chromium.chrome.browser.webapps.WebappActivity;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
@@ -61,30 +63,32 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
     // Pseudo-random number to avoid request id collisions.
     public static final int EXIT_VR_RESULT = 721251;
 
-    public static final int ENTER_VR_NOT_NECESSARY = 0;
-    public static final int ENTER_VR_CANCELLED = 1;
-    public static final int ENTER_VR_REQUESTED = 2;
-    public static final int ENTER_VR_SUCCEEDED = 3;
+    private static final int ENTER_VR_NOT_NECESSARY = 0;
+    private static final int ENTER_VR_CANCELLED = 1;
+    private static final int ENTER_VR_REQUESTED = 2;
+    private static final int ENTER_VR_SUCCEEDED = 3;
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({ENTER_VR_NOT_NECESSARY, ENTER_VR_CANCELLED, ENTER_VR_REQUESTED, ENTER_VR_SUCCEEDED})
-    public @interface EnterVRResult {}
+    private @interface EnterVRResult {}
 
-    public static final int VR_NOT_AVAILABLE = 0;
-    public static final int VR_CARDBOARD = 1;
-    public static final int VR_DAYDREAM = 2; // Supports both Cardboard and Daydream viewer.
+    private static final int VR_NOT_AVAILABLE = 0;
+    private static final int VR_CARDBOARD = 1;
+    private static final int VR_DAYDREAM = 2; // Supports both Cardboard and Daydream viewer.
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({VR_NOT_AVAILABLE, VR_CARDBOARD, VR_DAYDREAM})
-    public @interface VrSupportLevel {}
+    private @interface VrSupportLevel {}
 
     // TODO(bshe): These should be replaced by string provided by NDK. Currently, it only available
     // in SDK and we don't want add dependency to SDK just to get these strings.
     private static final String DAYDREAM_CATEGORY = "com.google.intent.category.DAYDREAM";
     private static final String CARDBOARD_CATEGORY = "com.google.intent.category.CARDBOARD";
 
-    private static final String VR_ACTIVITY_ALIAS =
-            "org.chromium.chrome.browser.VRChromeTabbedActivity";
+    // Linter and formatter disagree on how the line below should be formatted.
+    /* package */
+    static final String VR_ENTRY_RESULT_ACTION =
+            "org.chromium.chrome.browser.vr_shell.VrEntryResult";
 
     private static final long REENTER_VR_TIMEOUT_MS = 1000;
 
@@ -93,9 +97,14 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
             | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN
             | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
 
-    private static VrShellDelegate sInstance;
+    private static final String VR_CORE_MARKET_URI =
+            "market://details?id=" + VrCoreVersionChecker.VR_CORE_PACKAGE_ID;
 
-    private final ChromeActivity mActivity;
+    private static VrShellDelegate sInstance;
+    private static VrBroadcastReceiver sVrBroadcastReceiver;
+    private static boolean sRegisteredDaydreamHook = false;
+
+    private ChromeActivity mActivity;
 
     @VrSupportLevel
     private int mVrSupportLevel;
@@ -108,15 +117,56 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
     private TabModelSelector mTabModelSelector;
 
     private boolean mInVr;
-    private boolean mEnteringVr;
+
+    // Whether or not the VR Device ON flow succeeded. If this is true it means the user has a VR
+    // headset on, but we haven't switched into VR mode yet.
+    // See further documentation here: https://developers.google.com/vr/daydream/guides/vr-entry
+    private boolean mDonSucceeded;
     private boolean mPaused;
     private int mRestoreSystemUiVisibilityFlag = -1;
     private Integer mRestoreOrientation = null;
     private long mNativeVrShellDelegate;
-    private boolean mRequestedWebVR;
-    private long mLastVRExit;
+    private boolean mRequestedWebVr;
+    private long mLastVrExit;
     private boolean mListeningForWebVrActivate;
     private boolean mListeningForWebVrActivateBeforePause;
+
+    private static final class VrBroadcastReceiver extends BroadcastReceiver {
+        private final WeakReference<ChromeActivity> mTargetActivity;
+
+        public VrBroadcastReceiver(ChromeActivity activity) {
+            mTargetActivity = new WeakReference<ChromeActivity>(activity);
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            ChromeActivity activity = mTargetActivity.get();
+            if (activity == null) return;
+            getInstance(activity).mDonSucceeded = true;
+            if (sInstance.mPaused) {
+                ((ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE))
+                        .moveTaskToFront(activity.getTaskId(), 0);
+            } else {
+                // If a WebVR app calls requestPresent in response to the displayactivate event
+                // after the DON flow completes, the DON flow is skipped, meaning our app won't be
+                // paused when daydream fires our BroadcastReceiver, so onResume won't be called.
+                sInstance.handleDonFlowSuccess();
+            }
+        }
+
+        /**
+         * Unregisters this {@link BroadcastReceiver} from the activity it's registered to.
+         */
+        public void unregister() {
+            ChromeActivity activity = mTargetActivity.get();
+            if (activity == null) return;
+            try {
+                activity.unregisterReceiver(VrBroadcastReceiver.this);
+            } catch (IllegalArgumentException e) {
+                // Ignore this. This means our receiver was already unregistered somehow.
+            }
+        }
+    }
 
     /**
      * Called when the native library is first available.
@@ -137,7 +187,7 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
     /**
      * Whether or not we are currently in VR.
      */
-    public static boolean isInVR() {
+    public static boolean isInVr() {
         if (sInstance == null) return false;
         return sInstance.mInVr;
     }
@@ -154,24 +204,13 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
     /**
      * Enters VR on the current tab if possible.
      */
-    public static void enterVRIfNecessary() {
+    public static void enterVrIfNecessary() {
         boolean created_delegate = sInstance == null;
         VrShellDelegate instance = getInstance();
         if (instance == null) return;
-        if (instance.enterVRInternal() == ENTER_VR_CANCELLED && created_delegate) {
+        if (instance.enterVrInternal() == ENTER_VR_CANCELLED && created_delegate) {
             instance.destroy();
         }
-    }
-
-    /**
-     * Handles a VR intent, entering VR in the process.
-     */
-    public static void enterVRFromIntent(Intent intent) {
-        assert isDaydreamVrIntent(intent);
-        boolean created_delegate = sInstance == null;
-        VrShellDelegate instance = getInstance();
-        if (instance == null) return;
-        if (!instance.enterVRFromIntent() && created_delegate) instance.destroy();
     }
 
     /**
@@ -185,9 +224,9 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
     /**
      * Handles the result of the exit VR flow (DOFF).
      */
-    public static void onExitVRResult(int resultCode) {
+    public static void onExitVrResult(int resultCode) {
         if (sInstance == null) return;
-        sInstance.onExitVRResult(resultCode == Activity.RESULT_OK);
+        sInstance.onExitVrResult(resultCode == Activity.RESULT_OK);
     }
 
     /**
@@ -209,25 +248,50 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
      * If VR Shell is enabled, and the activity is supported, register with the Daydream
      * platform that this app would like to be launched in VR when the device enters VR.
      */
-    public static void maybeRegisterVREntryHook(Activity activity) {
+    public static void maybeRegisterVrEntryHook(final ChromeActivity activity) {
+        // Daydream is not supported on pre-N devices.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return;
         if (sInstance != null) return; // Will be handled in onResume.
-        if (!(activity instanceof ChromeTabbedActivity)) return;
-        VrClassesWrapper wrapper = createVrClassesWrapper();
-        if (wrapper == null) return;
-        VrDaydreamApi api = wrapper.createVrDaydreamApi(activity);
-        if (api == null) return;
-        int vrSupportLevel = getVrSupportLevel(api, wrapper.createVrCoreVersionChecker(), null);
-        if (isVrShellEnabled(vrSupportLevel)) registerDaydreamIntent(api, activity);
+        if (!activitySupportsVrBrowsing(activity)) return;
+
+        // Reading VR support level and version can be slow, so do it asynchronously.
+        new AsyncTask<Void, Void, VrDaydreamApi>() {
+            @Override
+            protected VrDaydreamApi doInBackground(Void... params) {
+                VrClassesWrapper wrapper = getVrClassesWrapper();
+                if (wrapper == null) return null;
+                VrDaydreamApi api = wrapper.createVrDaydreamApi(activity);
+                if (api == null) return null;
+                int vrSupportLevel =
+                        getVrSupportLevel(api, wrapper.createVrCoreVersionChecker(), null);
+                if (!isVrShellEnabled(vrSupportLevel)) return null;
+                return api;
+            }
+
+            @Override
+            protected void onPostExecute(VrDaydreamApi api) {
+                // Registering the daydream intent has to be done on the UI thread. Note that this
+                // call is slow (~10ms at time of writing).
+                if (api != null
+                        && ApplicationStatus.getStateForActivity(activity)
+                                == ActivityState.RESUMED) {
+                    registerDaydreamIntent(api, activity);
+                }
+            }
+        }
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     /**
      * When the app is pausing we need to unregister with the Daydream platform to prevent this app
      * from being launched from the background when the device enters VR.
      */
-    public static void maybeUnregisterVREntryHook(Activity activity) {
+    public static void maybeUnregisterVrEntryHook(ChromeActivity activity) {
+        // Daydream is not supported on pre-N devices.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return;
         if (sInstance != null) return; // Will be handled in onPause.
-        if (!(activity instanceof ChromeTabbedActivity)) return;
-        VrClassesWrapper wrapper = createVrClassesWrapper();
+        if (!sRegisteredDaydreamHook) return;
+        VrClassesWrapper wrapper = getVrClassesWrapper();
         if (wrapper == null) return;
         VrDaydreamApi api = wrapper.createVrDaydreamApi(activity);
         if (api == null) return;
@@ -237,15 +301,28 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
     @CalledByNative
     private static VrShellDelegate getInstance() {
         Activity activity = ApplicationStatus.getLastTrackedFocusedActivity();
-        if (sInstance != null && activity instanceof ChromeTabbedActivity) return sInstance;
+        if (!(activity instanceof ChromeActivity)) return null;
+        return getInstance((ChromeActivity) activity);
+    }
+
+    private static VrShellDelegate getInstance(ChromeActivity activity) {
         if (!LibraryLoader.isInitialized()) return null;
-        // Note that we only support ChromeTabbedActivity for now.
-        if (activity == null || !(activity instanceof ChromeTabbedActivity)) return null;
+        if (activity == null || !activitySupportsPresentation(activity)) return null;
+        if (sInstance != null) return sInstance;
         VrClassesWrapper wrapper = getVrClassesWrapper();
         if (wrapper == null) return null;
-        sInstance = new VrShellDelegate((ChromeActivity) activity, wrapper);
+        sInstance = new VrShellDelegate(activity, wrapper);
 
         return sInstance;
+    }
+
+    private static boolean activitySupportsPresentation(Activity activity) {
+        return activity instanceof ChromeTabbedActivity || activity instanceof CustomTabActivity
+                || activity instanceof WebappActivity;
+    }
+
+    private static boolean activitySupportsVrBrowsing(Activity activity) {
+        return activity instanceof ChromeTabbedActivity;
     }
 
     /**
@@ -274,25 +351,35 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
         }
     }
 
-    private static PendingIntent getEnterVRPendingIntent(
-            VrDaydreamApi dayreamApi, Activity activity) {
-        return PendingIntent.getActivity(activity, 0,
-                dayreamApi.createVrIntent(new ComponentName(activity, VR_ACTIVITY_ALIAS)),
-                PendingIntent.FLAG_ONE_SHOT);
+    private static PendingIntent getEnterVrPendingIntent(ChromeActivity activity) {
+        if (sVrBroadcastReceiver != null) sVrBroadcastReceiver.unregister();
+        IntentFilter filter = new IntentFilter(VR_ENTRY_RESULT_ACTION);
+        sVrBroadcastReceiver = new VrBroadcastReceiver(activity);
+        activity.registerReceiver(sVrBroadcastReceiver, filter);
+
+        Intent vrIntent = new Intent(VR_ENTRY_RESULT_ACTION);
+        vrIntent.setPackage(activity.getPackageName());
+        return PendingIntent.getBroadcast(activity, 0, vrIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT);
     }
 
     /**
      * Registers the Intent to fire after phone inserted into a headset.
      */
-    private static void registerDaydreamIntent(VrDaydreamApi dayreamApi, Activity activity) {
-        dayreamApi.registerDaydreamIntent(getEnterVRPendingIntent(dayreamApi, activity));
+    private static void registerDaydreamIntent(
+            final VrDaydreamApi daydreamApi, final ChromeActivity activity) {
+        if (sRegisteredDaydreamHook) return;
+        if (!daydreamApi.registerDaydreamIntent(getEnterVrPendingIntent(activity))) return;
+        sRegisteredDaydreamHook = true;
     }
 
     /**
      * Unregisters the Intent which registered by this context if any.
      */
-    private static void unregisterDaydreamIntent(VrDaydreamApi dayreamApi) {
-        dayreamApi.unregisterDaydreamIntent();
+    private static void unregisterDaydreamIntent(VrDaydreamApi daydreamApi) {
+        if (!sRegisteredDaydreamHook) return;
+        daydreamApi.unregisterDaydreamIntent();
+        sRegisteredDaydreamHook = false;
     }
 
     /**
@@ -308,6 +395,8 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
     private VrShellDelegate(ChromeActivity activity, VrClassesWrapper wrapper) {
         mActivity = activity;
         mVrClassesWrapper = wrapper;
+        // If an activity isn't resumed at the point, it must have been paused.
+        mPaused = ApplicationStatus.getStateForActivity(activity) != ActivityState.RESUMED;
         updateVrSupportLevel();
         mNativeVrShellDelegate = nativeInit();
         Choreographer choreographer = Choreographer.getInstance();
@@ -322,20 +411,25 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
                         mNativeVrShellDelegate, frameTimeNanos, 1.0d / display.getRefreshRate());
             }
         });
-        ApplicationStatus.registerStateListenerForActivity(this, activity);
+        ApplicationStatus.registerStateListenerForAllActivities(this);
     }
 
     @Override
     public void onActivityStateChange(Activity activity, int newState) {
         switch (newState) {
             case ActivityState.DESTROYED:
-                destroy();
+                if (activity == mActivity) destroy();
                 break;
             case ActivityState.PAUSED:
-                pauseVR();
+                if (activity == mActivity) pauseVr();
+                // Other activities should only pause while we're paused due to Android lifecycle.
+                assert mPaused;
                 break;
             case ActivityState.RESUMED:
-                resumeVR();
+                assert !mInVr;
+                if (!activitySupportsPresentation(activity)) return;
+                mActivity = (ChromeActivity) activity;
+                resumeVr();
                 break;
             default:
                 break;
@@ -362,46 +456,41 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
                 mVrDaydreamApi, mVrCoreVersionChecker, mActivity.getActivityTab());
     }
 
-    /**
-     * Handle a VR intent, entering VR in the process unless we're unable to.
-     */
-    private boolean enterVRFromIntent() {
-        // Vr Intent is only used on Daydream devices.
-        if (mVrSupportLevel != VR_DAYDREAM) return false;
-        if (mNativeVrShellDelegate == 0) return false;
-        if (mListeningForWebVrActivateBeforePause && !mRequestedWebVR) {
-            nativeDisplayActivate(mNativeVrShellDelegate);
-            return false;
+    private void maybeSetPresentResult(boolean result) {
+        if (mNativeVrShellDelegate != 0 && mRequestedWebVr) {
+            nativeSetPresentResult(mNativeVrShellDelegate, result);
         }
+        mRequestedWebVr = false;
+    }
+
+    /**
+     * Handle a successful VR DON flow, entering VR in the process unless we're unable to.
+     * @return False if VR entry failed.
+     */
+    private boolean enterVrAfterDon() {
+        if (mNativeVrShellDelegate == 0) return false;
+        if (mListeningForWebVrActivateBeforePause && !mRequestedWebVr) {
+            nativeDisplayActivate(mNativeVrShellDelegate);
+            return true;
+        }
+
         // Normally, if the active page doesn't have a vrdisplayactivate listener, and WebVR was not
-        // presenting and VrShell was not enabled, we shouldn't enter VR and Daydream Homescreen
-        // should show after DON flow. But due to a failure in unregisterDaydreamIntent, we still
-        // try to enterVR. Here we detect this case and force switch to Daydream Homescreen.
-        if (!mListeningForWebVrActivateBeforePause && !mRequestedWebVR
-                && !isVrShellEnabled(mVrSupportLevel)) {
-            mVrDaydreamApi.launchVrHomescreen();
+        // presenting and VrShell was not enabled, the Daydream Homescreen should show after the DON
+        // flow. However, due to a failure in unregisterDaydreamIntent, we still try to enterVR, so
+        // detect this case and fail to enter VR.
+        if (!mListeningForWebVrActivateBeforePause && !mRequestedWebVr
+                && !canEnterVr(mActivity.getActivityTab())) {
             return false;
         }
 
-        if (mInVr) {
-            setEnterVRResult(true);
-            return false;
-        }
-        if (!canEnterVR(mActivity.getActivityTab())) {
-            setEnterVRResult(false);
-            return false;
-        }
-        if (mPaused) {
-            // We can't enter VR before the application resumes, or we encounter bizarre crashes
-            // related to gpu surfaces. Set this flag to enter VR on the next resume.
-            mEnteringVr = true;
-        } else {
-            enterVR();
-        }
+        enterVr();
         return true;
     }
 
-    private void enterVR() {
+    private void enterVr() {
+        // We can't enter VR before the application resumes, or we encounter bizarre crashes
+        // related to gpu surfaces.
+        assert !mPaused;
         if (mNativeVrShellDelegate == 0) return;
         if (mInVr) return;
         if (!isWindowModeCorrectForVr()) {
@@ -409,15 +498,14 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
             new Handler().post(new Runnable() {
                 @Override
                 public void run() {
-                    enterVR();
+                    enterVr();
                 }
             });
             return;
         }
-        mEnteringVr = false;
         if (!createVrShell()) {
-            restoreWindowMode();
-            setEnterVRResult(false);
+            maybeSetPresentResult(false);
+            mVrDaydreamApi.launchVrHomescreen();
             return;
         }
         mVrClassesWrapper.setVrModeEnabled(mActivity, true);
@@ -426,12 +514,14 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
         mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         addVrViews();
-        mVrShell.initializeNative(mActivity.getActivityTab(), mRequestedWebVR);
+        mVrShell.initializeNative(mActivity.getActivityTab(), mRequestedWebVr);
+        mVrShell.setWebVrModeEnabled(mRequestedWebVr);
+
         // onResume needs to be called on GvrLayout after initialization to make sure DON flow work
         // properly.
         mVrShell.resume();
 
-        setEnterVRResult(true);
+        maybeSetPresentResult(true);
         mVrShell.getContainer().setOnSystemUiVisibilityChangeListener(this);
     }
 
@@ -445,7 +535,9 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
     private boolean isWindowModeCorrectForVr() {
         int flags = mActivity.getWindow().getDecorView().getSystemUiVisibility();
         int orientation = mActivity.getResources().getConfiguration().orientation;
-        return flags == VR_SYSTEM_UI_FLAGS && orientation == Configuration.ORIENTATION_LANDSCAPE;
+        // Mask the flags to only those that we care about.
+        return (flags & VR_SYSTEM_UI_FLAGS) == VR_SYSTEM_UI_FLAGS
+                && orientation == Configuration.ORIENTATION_LANDSCAPE;
     }
 
     private void setWindowModeForVr(int requestedOrientation) {
@@ -462,24 +554,14 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
         clearVrModeWindowFlags();
     }
 
-    private void setEnterVRResult(boolean success) {
-        if (mRequestedWebVR && mNativeVrShellDelegate != 0) {
-            nativeSetPresentResult(mNativeVrShellDelegate, success);
-        }
-        if (!success && !mVrDaydreamApi.exitFromVr(EXIT_VR_RESULT, new Intent())) {
-            mVrClassesWrapper.setVrModeEnabled(mActivity, false);
-        }
-        mRequestedWebVR = false;
-    }
-
-    /* package */ boolean canEnterVR(Tab tab) {
+    /* package */ boolean canEnterVr(Tab tab) {
         if (!LibraryLoader.isInitialized()) {
             return false;
         }
         if (mVrSupportLevel == VR_NOT_AVAILABLE || mNativeVrShellDelegate == 0) return false;
         // If vr shell is not enabled and this is not a web vr request, then return false.
         if (!isVrShellEnabled(mVrSupportLevel)
-                && !(mRequestedWebVR || mListeningForWebVrActivate)) {
+                && !(mRequestedWebVr || mListeningForWebVrActivate)) {
             return false;
         }
         // TODO(mthiesse): When we have VR UI for opening new tabs, etc., allow VR Shell to be
@@ -491,40 +573,24 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
         if (tab.isShowingSadTab()) {
             return false;
         }
-        // crbug.com/667781
-        if (MultiWindowUtils.getInstance().isInMultiWindowMode(mActivity)) {
-            return false;
-        }
         return true;
     }
 
     @CalledByNative
     private void presentRequested() {
-        // TODO(mthiesse): There's a GVR bug where they're not calling us back with the intent we
-        // ask them to when we call DaydreamApi#launchInVr. As a temporary hack, remember locally
-        // that we want to enter webVR.
-        mRequestedWebVR = true;
-        switch (enterVRInternal()) {
+        mRequestedWebVr = true;
+        switch (enterVrInternal()) {
             case ENTER_VR_NOT_NECESSARY:
                 mVrShell.setWebVrModeEnabled(true);
-                if (mNativeVrShellDelegate != 0) {
-                    nativeSetPresentResult(mNativeVrShellDelegate, true);
-                }
-                mRequestedWebVR = false;
+                maybeSetPresentResult(true);
                 break;
             case ENTER_VR_CANCELLED:
-                if (mNativeVrShellDelegate != 0) {
-                    nativeSetPresentResult(mNativeVrShellDelegate, false);
-                }
-                mRequestedWebVR = false;
+                maybeSetPresentResult(false);
                 break;
             case ENTER_VR_REQUESTED:
                 break;
             case ENTER_VR_SUCCEEDED:
-                if (mNativeVrShellDelegate != 0) {
-                    nativeSetPresentResult(mNativeVrShellDelegate, true);
-                }
-                mRequestedWebVR = false;
+                maybeSetPresentResult(true);
                 break;
             default:
                 Log.e(TAG, "Unexpected enum.");
@@ -535,23 +601,23 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
      * Enters VR Shell if necessary, displaying browser UI and tab contents in VR.
      */
     @EnterVRResult
-    private int enterVRInternal() {
+    private int enterVrInternal() {
         // Update VR support level as it can change at runtime
         updateVrSupportLevel();
         if (mVrSupportLevel == VR_NOT_AVAILABLE) return ENTER_VR_CANCELLED;
         if (mInVr) return ENTER_VR_NOT_NECESSARY;
-        if (!canEnterVR(mActivity.getActivityTab())) return ENTER_VR_CANCELLED;
+        if (!canEnterVr(mActivity.getActivityTab())) return ENTER_VR_CANCELLED;
 
         if (mVrSupportLevel == VR_CARDBOARD || !mVrDaydreamApi.isDaydreamCurrentViewer()) {
             // Avoid using launchInVr which would trigger DON flow regardless current viewer type
             // due to the lack of support for unexported activities.
-            enterVR();
+            enterVr();
         } else {
             // LANDSCAPE orientation is needed before we can safely enter VR. DON can make sure that
             // the device is at LANDSCAPE orientation once it is finished. So here we use SENSOR to
             // avoid forcing LANDSCAPE orientation in order to have a smoother transition.
             setWindowModeForVr(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
-            if (!mVrDaydreamApi.launchInVr(getEnterVRPendingIntent(mVrDaydreamApi, mActivity))) {
+            if (!mVrDaydreamApi.launchInVr(getEnterVrPendingIntent(mActivity))) {
                 restoreWindowMode();
                 return ENTER_VR_CANCELLED;
             }
@@ -560,40 +626,21 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
     }
 
     @CalledByNative
-    private boolean exitWebVR() {
+    private boolean exitWebVRPresent() {
         if (!mInVr) return false;
         mVrShell.setWebVrModeEnabled(false);
-        if (mVrSupportLevel == VR_CARDBOARD) {
-            // Transition screen is not available for Cardboard only (non-Daydream) devices.
-            // TODO(bshe): Fix this once b/33490788 is fixed.
-            shutdownVR(false /* isPausing */, false /* showTransition */);
-        } else {
-            // TODO(bajones): Once VR Shell can be invoked outside of WebVR this
-            // should no longer exit the shell outright. Need a way to determine
-            // how VrShell was created.
-            shutdownVR(
-                    false /* isPausing */, !isVrShellEnabled(mVrSupportLevel) /* showTransition */);
+        if (!isVrShellEnabled(mVrSupportLevel)) {
+            shutdownVr(false /* isPausing */, true /* showTransition */);
         }
         return true;
     }
 
-    private void resumeVR() {
+    private void resumeVr() {
         mPaused = false;
-        if (mVrSupportLevel == VR_NOT_AVAILABLE) return;
-        if (mVrSupportLevel == VR_DAYDREAM
-                && (isVrShellEnabled(mVrSupportLevel) || mListeningForWebVrActivateBeforePause)) {
-            registerDaydreamIntent(mVrDaydreamApi, mActivity);
-        }
 
-        if (mEnteringVr) {
-            enterVR();
-        } else if (mRequestedWebVR) {
-            // If this is still set, it means the user backed out of the DON flow, and we won't be
-            // receiving an intent from daydream.
-            if (mNativeVrShellDelegate != 0) nativeSetPresentResult(mNativeVrShellDelegate, false);
-            restoreWindowMode();
-            mRequestedWebVR = false;
-        }
+        // TODO(mthiesse): If we ever support staying in VR while paused, make sure to call resume
+        // on VrShell.
+        assert !mInVr;
 
         StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
         try {
@@ -602,58 +649,74 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
             StrictMode.setThreadPolicy(oldPolicy);
         }
 
-        if (mInVr) {
-            setupVrModeWindowFlags();
-            oldPolicy = StrictMode.allowThreadDiskWrites();
-            try {
-                mVrShell.resume();
-            } catch (IllegalArgumentException e) {
-                Log.e(TAG, "Unable to resume VrShell", e);
-            } finally {
-                StrictMode.setThreadPolicy(oldPolicy);
-            }
-        } else if (mVrSupportLevel == VR_DAYDREAM && mVrDaydreamApi.isDaydreamCurrentViewer()
-                && mLastVRExit + REENTER_VR_TIMEOUT_MS > SystemClock.uptimeMillis()) {
-            enterVRInternal();
+        if (mVrSupportLevel != VR_DAYDREAM) return;
+        if (isVrShellEnabled(mVrSupportLevel) && activitySupportsVrBrowsing(mActivity)) {
+            // registerDaydreamIntent is slow, so run it after resuming.
+            new Handler().post(new Runnable() {
+                @Override
+                public void run() {
+                    if (!mPaused) registerDaydreamIntent(mVrDaydreamApi, mActivity);
+                }
+            });
+        }
+
+        if (mVrDaydreamApi.isDaydreamCurrentViewer()
+                && mLastVrExit + REENTER_VR_TIMEOUT_MS > SystemClock.uptimeMillis()) {
+            mDonSucceeded = true;
+        }
+
+        if (mDonSucceeded) {
+            handleDonFlowSuccess();
+        } else if (mRestoreOrientation != null) {
+            // This means the user backed out of the DON flow, and we won't be entering VR.
+            maybeSetPresentResult(false);
+            restoreWindowMode();
         }
     }
 
-    private void pauseVR() {
+    private void handleDonFlowSuccess() {
+        mDonSucceeded = false;
+        // If we fail to enter VR when we should have entered VR, return to the home screen.
+        if (!enterVrAfterDon()) {
+            maybeSetPresentResult(false);
+            mVrDaydreamApi.launchVrHomescreen();
+        }
+    }
+
+    private void pauseVr() {
         mPaused = true;
+        unregisterDaydreamIntent(mVrDaydreamApi);
         if (mVrSupportLevel == VR_NOT_AVAILABLE) return;
 
-        if (mVrSupportLevel == VR_DAYDREAM) {
-            unregisterDaydreamIntent(mVrDaydreamApi);
+        // When the active web page has a vrdisplayactivate event handler,
+        // mListeningForWebVrActivate should be set to true, which means a vrdisplayactive event
+        // should be fired once DON flow finished. However, DON flow will pause our activity,
+        // which makes the active page becomes invisible. And the event fires before the active
+        // page becomes visible again after DON finished. So here we remember the value of
+        // mListeningForWebVrActivity before pause and use this value to decide if
+        // vrdisplayactivate event should be dispatched in enterVRFromIntent.
+        mListeningForWebVrActivateBeforePause = mListeningForWebVrActivate;
 
-            // When the active web page has a vrdisplayactivate event handler,
-            // mListeningForWebVrActivate should be set to true, which means a vrdisplayactive event
-            // should be fired once DON flow finished. However, DON flow will pause our activity,
-            // which makes the active page becomes invisible. And the event fires before the active
-            // page becomes visible again after DON finished. So here we remember the value of
-            // mListeningForWebVrActivity before pause and use this value to decide if
-            // vrdisplayactivate event should be dispatched in enterVRFromIntent.
-            mListeningForWebVrActivateBeforePause = mListeningForWebVrActivate;
-        }
         if (mNativeVrShellDelegate != 0) nativeOnPause(mNativeVrShellDelegate);
 
         // TODO(mthiesse): When VR Shell lives in its own activity, and integrates with Daydream
         // home, pause instead of exiting VR here. For now, because VR Apps shouldn't show up in the
         // non-VR recents, and we don't want ChromeTabbedActivity disappearing, exit VR.
-        shutdownVR(true /* isPausing */, false /* showTransition */);
+        shutdownVr(true /* isPausing */, false /* showTransition */);
     }
 
     private boolean onBackPressedInternal() {
         if (mVrSupportLevel == VR_NOT_AVAILABLE) return false;
         if (!mInVr) return false;
-        shutdownVR(false /* isPausing */, false /* showTransition */);
+        shutdownVr(false /* isPausing */, false /* showTransition */);
         return true;
     }
 
-    private void onExitVRResult(boolean success) {
+    private void onExitVrResult(boolean success) {
         assert mVrSupportLevel != VR_NOT_AVAILABLE;
         // For now, we don't handle re-entering VR when exit fails, so keep trying to exit.
-        if (!success && sInstance.mVrDaydreamApi.exitFromVr(EXIT_VR_RESULT, new Intent())) return;
-        sInstance.mVrClassesWrapper.setVrModeEnabled(sInstance.mActivity, false);
+        if (!success && mVrDaydreamApi.exitFromVr(EXIT_VR_RESULT, new Intent())) return;
+        mVrClassesWrapper.setVrModeEnabled(mActivity, false);
     }
 
     @CalledByNative
@@ -680,7 +743,7 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
         // mListeningForWebVrActivate for them.
         if (mVrSupportLevel != VR_DAYDREAM) return;
         mListeningForWebVrActivate = listening;
-        if (listening) {
+        if (listening && !mPaused) {
             registerDaydreamIntent(mVrDaydreamApi, mActivity);
         } else {
             unregisterDaydreamIntent(mVrDaydreamApi);
@@ -690,10 +753,12 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
     /**
      * Exits VR Shell, performing all necessary cleanup.
      */
-    /* package */ void shutdownVR(boolean isPausing, boolean showTransition) {
+    /* package */ void shutdownVr(boolean isPausing, boolean showTransition) {
         if (!mInVr) return;
         mInVr = false;
-        mRequestedWebVR = false;
+        mRequestedWebVr = false;
+        // Transition screen is not available for Cardboard only (non-Daydream) devices.
+        // TODO(bshe): Fix this once b/33490788 is fixed.
         boolean transition = mVrSupportLevel == VR_DAYDREAM && showTransition;
         if (!isPausing) {
             if (!transition || !mVrDaydreamApi.exitFromVr(EXIT_VR_RESULT, new Intent())) {
@@ -701,7 +766,7 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
             }
         } else {
             mVrClassesWrapper.setVrModeEnabled(mActivity, false);
-            mLastVRExit = SystemClock.uptimeMillis();
+            mLastVrExit = SystemClock.uptimeMillis();
         }
         restoreWindowMode();
         mVrShell.pause();
@@ -741,29 +806,34 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
             return;
         }
 
-        SimpleConfirmInfoBarBuilder.create(tab,
-                new SimpleConfirmInfoBarBuilder.Listener() {
-                    @Override
-                    public void onInfoBarDismissed() {}
+        SimpleConfirmInfoBarBuilder.Listener listener = new SimpleConfirmInfoBarBuilder.Listener() {
+            @Override
+            public void onInfoBarDismissed() {}
 
-                    @Override
-                    public boolean onInfoBarButtonClicked(boolean isPrimary) {
-                        activity.startActivity(new Intent(Intent.ACTION_VIEW,
-                                Uri.parse("market://details?id="
-                                        + VrCoreVersionChecker.VR_CORE_PACKAGE_ID)));
-                        return false;
-                    }
-                },
+            @Override
+            public boolean onInfoBarButtonClicked(boolean isPrimary) {
+                activity.startActivity(
+                        new Intent(Intent.ACTION_VIEW, Uri.parse(VR_CORE_MARKET_URI)));
+                return false;
+            }
+        };
+        SimpleConfirmInfoBarBuilder.create(tab, listener,
                 InfoBarIdentifier.VR_SERVICES_UPGRADE_ANDROID, R.drawable.vr_services, infobarText,
                 buttonText, null, true);
     }
 
     private boolean createVrShell() {
+        assert mVrShell == null;
         if (mVrClassesWrapper == null) return false;
         if (mActivity.getCompositorViewHolder() == null) return false;
-        mTabModelSelector = mActivity.getCompositorViewHolder().detachForVR();
+        mTabModelSelector = mActivity.getCompositorViewHolder().detachForVr();
         if (mTabModelSelector == null) return false;
-        mVrShell = mVrClassesWrapper.createVrShell(mActivity, this, mTabModelSelector);
+        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
+        try {
+            mVrShell = mVrClassesWrapper.createVrShell(mActivity, this, mTabModelSelector);
+        } finally {
+            StrictMode.setThreadPolicy(oldPolicy);
+        }
         return mVrShell != null;
     }
 
@@ -773,11 +843,11 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
         decor.addView(mVrShell.getContainer(), params);
-        mActivity.onEnterVR();
+        mActivity.onEnterVr();
     }
 
     private void removeVrViews() {
-        mActivity.onExitVR();
+        mActivity.onExitVr();
         FrameLayout decor = (FrameLayout) mActivity.getWindow().getDecorView();
         decor.removeView(mVrShell.getContainer());
     }
@@ -808,7 +878,8 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
             mVrShell.getContainer().setOnSystemUiVisibilityChangeListener(null);
             mVrShell.teardown();
             mVrShell = null;
-            mActivity.getCompositorViewHolder().onExitVR(mTabModelSelector);
+            mActivity.getCompositorViewHolder().onExitVr(mTabModelSelector);
+            mTabModelSelector = null;
         }
     }
 
@@ -821,6 +892,22 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
     }
 
     /**
+     * @return The VrShell for the VrShellDelegate instance
+     */
+    @VisibleForTesting
+    public static VrShell getVrShellForTesting() {
+        return sInstance == null ? null : sInstance.mVrShell;
+    }
+
+    /**
+     * @param versionChecker The VrCoreVersionChecker object this delegate will use
+     */
+    @VisibleForTesting
+    public void overrideVrCoreVersionCheckerForTesting(VrCoreVersionChecker versionChecker) {
+        mVrCoreVersionChecker = versionChecker;
+    }
+
+    /**
      * @return Pointer to the native VrShellDelegate object.
      */
     @CalledByNative
@@ -828,27 +915,9 @@ public class VrShellDelegate implements ApplicationStatus.ActivityStateListener,
         return mNativeVrShellDelegate;
     }
 
-    @CalledByNative
-    private void showTab(int id) {
-        Tab tab = mActivity.getTabModelSelector().getTabById(id);
-        if (tab == null) {
-            return;
-        }
-        int index = mActivity.getTabModelSelector().getModel(tab.isIncognito()).indexOf(tab);
-        if (index == TabModel.INVALID_TAB_INDEX) {
-            return;
-        }
-        TabModelUtils.setIndex(mActivity.getTabModelSelector().getModel(tab.isIncognito()), index);
-    }
-
-    @CalledByNative
-    private void openNewTab(boolean incognito) {
-        mActivity.getTabCreator(incognito).launchUrl(
-                UrlConstants.NTP_URL, TabLaunchType.FROM_CHROME_UI);
-    }
-
     private void destroy() {
         if (sInstance == null) return;
+        shutdownVr(true, false);
         if (mNativeVrShellDelegate != 0) nativeDestroy(mNativeVrShellDelegate);
         mNativeVrShellDelegate = 0;
         ApplicationStatus.unregisterActivityStateListener(this);

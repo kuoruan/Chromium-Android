@@ -33,14 +33,6 @@ OnStartResponse callback);
 
 
 
-    void onConnect(
-ServiceInfo sourceInfo, org.chromium.mojo.bindings.InterfaceRequest<InterfaceProvider> interfaces, 
-OnConnectResponse callback);
-
-    interface OnConnectResponse extends org.chromium.mojo.bindings.Callbacks.Callback0 { }
-
-
-
     void onBindInterface(
 ServiceInfo sourceInfo, String interfaceName, org.chromium.mojo.system.MessagePipeHandle interfacePipe, 
 OnBindInterfaceResponse callback);

@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.media.router.cast;
 
-import android.content.Context;
 import android.content.Intent;
 
 import com.google.android.gms.cast.ApplicationMetadata;
@@ -19,7 +18,6 @@ import com.google.android.gms.common.api.Status;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.media.ui.MediaNotificationInfo;
@@ -107,8 +105,6 @@ public class CastSessionImpl implements MediaNotificationListener, CastSession {
         mMessageChannel = new CastMessagingChannel(this);
         updateNamespaces();
 
-        final Context context = ContextUtils.getApplicationContext();
-
         if (mNamespaces.contains(CastMessageHandler.MEDIA_NAMESPACE)) {
             mMediaPlayer = new RemoteMediaPlayer();
             mMediaPlayer.setOnStatusUpdatedListener(
@@ -128,7 +124,7 @@ public class CastSessionImpl implements MediaNotificationListener, CastSession {
                             } else {
                                 mNotificationBuilder.setActions(MediaNotificationInfo.ACTION_STOP);
                             }
-                            MediaNotificationManager.show(context, mNotificationBuilder.build());
+                            MediaNotificationManager.show(mNotificationBuilder.build());
                         }
                     });
             mMediaPlayer.setOnMetadataUpdatedListener(
@@ -136,7 +132,7 @@ public class CastSessionImpl implements MediaNotificationListener, CastSession {
                         @Override
                         public void onMetadataUpdated() {
                             setNotificationMetadata(mNotificationBuilder);
-                            MediaNotificationManager.show(context, mNotificationBuilder.build());
+                            MediaNotificationManager.show(mNotificationBuilder.build());
                         }
                     });
         }
@@ -160,7 +156,7 @@ public class CastSessionImpl implements MediaNotificationListener, CastSession {
                 .setId(R.id.presentation_notification)
                 .setListener(this);
         setNotificationMetadata(mNotificationBuilder);
-        MediaNotificationManager.show(context, mNotificationBuilder.build());
+        MediaNotificationManager.show(mNotificationBuilder.build());
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////

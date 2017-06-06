@@ -36,7 +36,7 @@ public class HistoryManagerToolbar extends SelectableListToolbar<HistoryItem> {
     public void setManager(HistoryManager manager) {
         mManager = manager;
 
-        if (mManager.isDisplayedInNativePage()) {
+        if (!mManager.isDisplayedInSeparateActivity()) {
             getMenu().removeItem(R.id.close_menu_id);
         }
     }

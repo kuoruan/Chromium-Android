@@ -16,6 +16,7 @@ import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.content.browser.crypto.CipherFactory;
 import org.chromium.content_public.browser.WebContents;
 
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -330,7 +331,7 @@ public class TabState {
                     return;
                 }
             } else {
-                dataOutputStream = new DataOutputStream(fileOutputStream);
+                dataOutputStream = new DataOutputStream(new BufferedOutputStream(fileOutputStream));
             }
             if (encrypted) {
                 dataOutputStream.writeLong(KEY_CHECKER);

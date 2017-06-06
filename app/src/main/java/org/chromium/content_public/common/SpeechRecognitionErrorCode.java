@@ -15,52 +15,55 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class SpeechRecognitionErrorCode {
-  @IntDef({
-      NONE, NO_SPEECH, ABORTED, AUDIO_CAPTURE, NETWORK, NOT_ALLOWED, SERVICE_NOT_ALLOWED,
-      BAD_GRAMMAR, LANGUAGE_NOT_SUPPORTED, NO_MATCH, LAST
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface SpeechRecognitionErrorCodeEnum {}
+@IntDef({
+    SpeechRecognitionErrorCode.NONE, SpeechRecognitionErrorCode.NO_SPEECH,
+    SpeechRecognitionErrorCode.ABORTED, SpeechRecognitionErrorCode.AUDIO_CAPTURE,
+    SpeechRecognitionErrorCode.NETWORK, SpeechRecognitionErrorCode.NOT_ALLOWED,
+    SpeechRecognitionErrorCode.SERVICE_NOT_ALLOWED, SpeechRecognitionErrorCode.BAD_GRAMMAR,
+    SpeechRecognitionErrorCode.LANGUAGE_NOT_SUPPORTED, SpeechRecognitionErrorCode.NO_MATCH,
+    SpeechRecognitionErrorCode.LAST
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface SpeechRecognitionErrorCode {
   /**
    * There was no error.
    */
-  public static final int NONE = 0;
+  int NONE = 0;
   /**
    * No speech heard before timeout.
    */
-  public static final int NO_SPEECH = 1;
+  int NO_SPEECH = 1;
   /**
    * The user or a script aborted speech input.
    */
-  public static final int ABORTED = 2;
+  int ABORTED = 2;
   /**
    * There was an error with recording audio.
    */
-  public static final int AUDIO_CAPTURE = 3;
+  int AUDIO_CAPTURE = 3;
   /**
    * There was a network error.
    */
-  public static final int NETWORK = 4;
+  int NETWORK = 4;
   /**
    * Not allowed for privacy or security reasons.
    */
-  public static final int NOT_ALLOWED = 5;
+  int NOT_ALLOWED = 5;
   /**
    * Speech service is not allowed for privacy or security reasons.
    */
-  public static final int SERVICE_NOT_ALLOWED = 6;
+  int SERVICE_NOT_ALLOWED = 6;
   /**
    * There was an error in the speech recognition grammar.
    */
-  public static final int BAD_GRAMMAR = 7;
+  int BAD_GRAMMAR = 7;
   /**
    * The language was not supported.
    */
-  public static final int LANGUAGE_NOT_SUPPORTED = 8;
+  int LANGUAGE_NOT_SUPPORTED = 8;
   /**
    * Speech was heard, but could not be interpreted.
    */
-  public static final int NO_MATCH = 9;
-  public static final int LAST = 9;
+  int NO_MATCH = 9;
+  int LAST = 9;
 }

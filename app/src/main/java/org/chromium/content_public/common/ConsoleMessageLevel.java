@@ -15,15 +15,15 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ConsoleMessageLevel {
-  @IntDef({
-      VERBOSE, INFO, WARNING, ERROR, LAST
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ConsoleMessageLevelEnum {}
-  public static final int VERBOSE = 0;
-  public static final int INFO = 1;
-  public static final int WARNING = 2;
-  public static final int ERROR = 3;
-  public static final int LAST = 3;
+@IntDef({
+    ConsoleMessageLevel.VERBOSE, ConsoleMessageLevel.INFO, ConsoleMessageLevel.WARNING,
+    ConsoleMessageLevel.ERROR, ConsoleMessageLevel.LAST
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ConsoleMessageLevel {
+  int VERBOSE = 0;
+  int INFO = 1;
+  int WARNING = 2;
+  int ERROR = 3;
+  int LAST = 3;
 }

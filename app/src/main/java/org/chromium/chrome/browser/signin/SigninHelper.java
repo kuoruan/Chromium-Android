@@ -121,9 +121,9 @@ public class SigninHelper {
         mContext = context;
         mProfileSyncService = ProfileSyncService.get();
         mSigninManager = SigninManager.get(mContext);
-        mAccountTrackerService = AccountTrackerService.get(mContext);
+        mAccountTrackerService = AccountTrackerService.get();
         mOAuth2TokenService = OAuth2TokenService.getForProfile(Profile.getLastUsedProfile());
-        mChromeSigninController = ChromeSigninController.get(mContext);
+        mChromeSigninController = ChromeSigninController.get();
     }
 
     public void validateAccountSettings(boolean accountsChanged) {
@@ -144,7 +144,7 @@ public class SigninHelper {
             if (lastSyncAccountName != null && !lastSyncAccountName.isEmpty()) return;
 
             if (!chromePreferenceManager.getSigninPromoShown()
-                    && AccountManagerHelper.get(mContext).getGoogleAccountNames().size() > 0) {
+                    && AccountManagerHelper.get().getGoogleAccountNames().size() > 0) {
                 chromePreferenceManager.setShowSigninPromo(true);
             }
 
@@ -153,8 +153,8 @@ public class SigninHelper {
 
         String renamedAccount = getNewSignedInAccountName(mContext);
         if (accountsChanged && renamedAccount != null) {
-            handleAccountRename(ChromeSigninController.get(mContext).getSignedInAccountName(),
-                    renamedAccount);
+            handleAccountRename(
+                    ChromeSigninController.get().getSignedInAccountName(), renamedAccount);
             return;
         }
 
@@ -174,6 +174,11 @@ public class SigninHelper {
                 protected void onPostExecute(Void result) {
                     String renamedAccount = getNewSignedInAccountName(mContext);
                     if (renamedAccount == null) {
+                        // SigninManager.signOut() uses the same code path as a user-triggered
+                        // signout, which can be prohibited in some cases (e.g. child accounts).
+                        // Here we have to sign out though to ensure account consistency,
+                        // so override the flag.
+                        mSigninManager.prohibitSignout(false);
                         mSigninManager.signOut();
                     } else {
                         validateAccountSettings(true);
@@ -187,7 +192,7 @@ public class SigninHelper {
         if (accountsChanged) {
             // Account details have changed so inform the token service that credentials
             // should now be available.
-            mOAuth2TokenService.validateAccounts(mContext, false);
+            mOAuth2TokenService.validateAccounts(false);
         }
 
         if (mProfileSyncService != null && AndroidSyncSettings.isSyncEnabled(mContext)) {
@@ -250,7 +255,7 @@ public class SigninHelper {
     }
 
     private static boolean accountExists(Context context, Account account) {
-        Account[] accounts = AccountManagerHelper.get(context).getGoogleAccounts();
+        Account[] accounts = AccountManagerHelper.get().getGoogleAccounts();
         for (Account a : accounts) {
             if (a.equals(account)) {
                 return true;
@@ -294,7 +299,7 @@ public class SigninHelper {
                 ACCOUNT_RENAMED_PREFS_KEY, null);
 
         // If there is no pending rename, take the name known to ChromeSigninController.
-        return name == null ? ChromeSigninController.get(context).getSignedInAccountName() : name;
+        return name == null ? ChromeSigninController.get().getSignedInAccountName() : name;
     }
 
     public static void updateAccountRenameData(Context context) {

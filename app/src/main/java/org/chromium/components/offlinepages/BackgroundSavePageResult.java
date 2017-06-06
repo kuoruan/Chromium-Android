@@ -15,24 +15,26 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class BackgroundSavePageResult {
-  @IntDef({
-      SUCCESS, LOADING_FAILURE, LOADING_CANCELED, FOREGROUND_CANCELED, SAVE_FAILED, EXPIRED,
-      RETRY_COUNT_EXCEEDED, START_COUNT_EXCEEDED, REMOVED, STATUS_COUNT
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface BackgroundSavePageResultEnum {}
-  public static final int SUCCESS = 0;
-  public static final int LOADING_FAILURE = 1;
-  public static final int LOADING_CANCELED = 2;
-  public static final int FOREGROUND_CANCELED = 3;
-  public static final int SAVE_FAILED = 4;
-  public static final int EXPIRED = 5;
-  public static final int RETRY_COUNT_EXCEEDED = 6;
-  public static final int START_COUNT_EXCEEDED = 7;
-  public static final int REMOVED = 8;
+@IntDef({
+    BackgroundSavePageResult.SUCCESS, BackgroundSavePageResult.LOADING_FAILURE,
+    BackgroundSavePageResult.LOADING_CANCELED, BackgroundSavePageResult.FOREGROUND_CANCELED,
+    BackgroundSavePageResult.SAVE_FAILED, BackgroundSavePageResult.EXPIRED,
+    BackgroundSavePageResult.RETRY_COUNT_EXCEEDED, BackgroundSavePageResult.START_COUNT_EXCEEDED,
+    BackgroundSavePageResult.REMOVED, BackgroundSavePageResult.STATUS_COUNT
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface BackgroundSavePageResult {
+  int SUCCESS = 0;
+  int LOADING_FAILURE = 1;
+  int LOADING_CANCELED = 2;
+  int FOREGROUND_CANCELED = 3;
+  int SAVE_FAILED = 4;
+  int EXPIRED = 5;
+  int RETRY_COUNT_EXCEEDED = 6;
+  int START_COUNT_EXCEEDED = 7;
+  int REMOVED = 8;
   /**
    * NOTE: insert new values above this line and update histogram enum too.
    */
-  public static final int STATUS_COUNT = 9;
+  int STATUS_COUNT = 9;
 }

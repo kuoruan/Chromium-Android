@@ -15,48 +15,52 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ProfileAccountManagementMetrics {
-  @IntDef({
-      VIEW, ADD_ACCOUNT, GO_INCOGNITO, CLICK_PRIMARY_ACCOUNT, CLICK_SECONDARY_ACCOUNT,
-      TOGGLE_SIGNOUT, SIGNOUT_SIGNOUT, SIGNOUT_CANCEL, DIRECT_ADD_ACCOUNT, NUM_METRICS
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ProfileAccountManagementMetricsEnum {}
+@IntDef({
+    ProfileAccountManagementMetrics.VIEW, ProfileAccountManagementMetrics.ADD_ACCOUNT,
+    ProfileAccountManagementMetrics.GO_INCOGNITO,
+    ProfileAccountManagementMetrics.CLICK_PRIMARY_ACCOUNT,
+    ProfileAccountManagementMetrics.CLICK_SECONDARY_ACCOUNT,
+    ProfileAccountManagementMetrics.TOGGLE_SIGNOUT, ProfileAccountManagementMetrics.SIGNOUT_SIGNOUT,
+    ProfileAccountManagementMetrics.SIGNOUT_CANCEL,
+    ProfileAccountManagementMetrics.DIRECT_ADD_ACCOUNT, ProfileAccountManagementMetrics.NUM_METRICS
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ProfileAccountManagementMetrics {
   /**
    * User arrived at the Account management screen.
    */
-  public static final int VIEW = 0;
+  int VIEW = 0;
   /**
    * User arrived at the Account management screen, and clicked Add account.
    */
-  public static final int ADD_ACCOUNT = 1;
+  int ADD_ACCOUNT = 1;
   /**
    * User arrived at the Account management screen, and clicked Go incognito.
    */
-  public static final int GO_INCOGNITO = 2;
+  int GO_INCOGNITO = 2;
   /**
    * User arrived at the Account management screen, and clicked on primary.
    */
-  public static final int CLICK_PRIMARY_ACCOUNT = 3;
+  int CLICK_PRIMARY_ACCOUNT = 3;
   /**
    * User arrived at the Account management screen, and clicked on secondary.
    */
-  public static final int CLICK_SECONDARY_ACCOUNT = 4;
+  int CLICK_SECONDARY_ACCOUNT = 4;
   /**
    * User arrived at the Account management screen, toggled Chrome signout.
    */
-  public static final int TOGGLE_SIGNOUT = 5;
+  int TOGGLE_SIGNOUT = 5;
   /**
    * User toggled Chrome signout, and clicked Signout.
    */
-  public static final int SIGNOUT_SIGNOUT = 6;
+  int SIGNOUT_SIGNOUT = 6;
   /**
    * User toggled Chrome signout, and clicked Cancel.
    */
-  public static final int SIGNOUT_CANCEL = 7;
+  int SIGNOUT_CANCEL = 7;
   /**
    * User arrived at the android Account management screen directly from some Gaia requests.
    */
-  public static final int DIRECT_ADD_ACCOUNT = 8;
-  public static final int NUM_METRICS = 9;
+  int DIRECT_ADD_ACCOUNT = 8;
+  int NUM_METRICS = 9;
 }

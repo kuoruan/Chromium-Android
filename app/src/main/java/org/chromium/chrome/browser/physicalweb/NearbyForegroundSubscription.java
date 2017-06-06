@@ -4,11 +4,14 @@
 
 package org.chromium.chrome.browser.physicalweb;
 
-import android.content.Context;
+import android.app.Activity;
 
 import com.google.android.gms.nearby.Nearby;
+import com.google.android.gms.nearby.messages.Distance;
+import com.google.android.gms.nearby.messages.Message;
 import com.google.android.gms.nearby.messages.MessageListener;
 
+import org.chromium.base.ThreadUtils;
 
 /**
  * This class represents a connection to Google Play Services that does foreground
@@ -22,12 +25,28 @@ import com.google.android.gms.nearby.messages.MessageListener;
  */
 class NearbyForegroundSubscription extends NearbySubscription {
     private static final String TAG = "PhysicalWeb";
-    private final MessageListener mMessageListener;
+    private static final MessageListener MESSAGE_LISTENER = new MessageListener() {
+        @Override
+        public void onFound(Message message) {}
+
+        @Override
+        public void onDistanceChanged(Message message, final Distance distance) {
+            final String url = PhysicalWebBleClient.getInstance().getUrlFromMessage(message);
+            if (url == null) return;
+
+            ThreadUtils.postOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    UrlManager.getInstance().addUrl(
+                            new UrlInfo(url).setDistance(distance.getMeters()));
+                }
+            });
+        }
+    };
     private boolean mShouldSubscribe;
 
-    NearbyForegroundSubscription(Context context) {
-        super(context);
-        mMessageListener = PhysicalWebBleClient.getInstance().createForegroundMessageListener();
+    NearbyForegroundSubscription(Activity activity) {
+        super(activity);
         mShouldSubscribe = false;
     }
 
@@ -43,7 +62,7 @@ class NearbyForegroundSubscription extends NearbySubscription {
             mShouldSubscribe = true;
             return;
         }
-        Nearby.Messages.subscribe(getGoogleApiClient(), mMessageListener, createSubscribeOptions())
+        Nearby.Messages.subscribe(getGoogleApiClient(), MESSAGE_LISTENER, createSubscribeOptions())
                 .setResultCallback(new SimpleResultCallback("foreground subscribe"));
     }
 
@@ -52,7 +71,7 @@ class NearbyForegroundSubscription extends NearbySubscription {
             mShouldSubscribe = false;
             return;
         }
-        Nearby.Messages.unsubscribe(getGoogleApiClient(), mMessageListener)
+        Nearby.Messages.unsubscribe(getGoogleApiClient(), MESSAGE_LISTENER)
                 .setResultCallback(new SimpleResultCallback("foreground unsubscribe"));
     }
 }

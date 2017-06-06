@@ -17,6 +17,7 @@ import org.chromium.chrome.browser.device.DeviceClassManager;
 import org.chromium.chrome.browser.physicalweb.PhysicalWeb;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.components.minidump_uploader.util.CrashReportingPermissionManager;
+import org.chromium.components.minidump_uploader.util.NetworkPermissionUtil;
 
 /**
  * Reads, writes, and migrates preferences related to network usage and privacy.
@@ -43,18 +44,11 @@ public class PrivacyPreferencesManager implements CrashReportingPermissionManage
     private final Context mContext;
     private final SharedPreferences mSharedPreferences;
 
-    private boolean mCrashUploadingDisabledByCommandLine;
-
     @VisibleForTesting
     PrivacyPreferencesManager(Context context) {
         mContext = context;
         mSharedPreferences = ContextUtils.getAppSharedPreferences();
 
-        // We default the command line flag to disable uploads unless altered on deferred startup
-        // to prevent unwanted uploads at startup. If the command line flag to enable uploading is
-        // turned on, the other conditions (e.g. user/network preferences) for when to upload apply.
-        // This currently applies to only crash reporting and is ignored for metrics reporting.
-        mCrashUploadingDisabledByCommandLine = true;
         migrateUsageAndCrashPreferences();
     }
 
@@ -191,22 +185,11 @@ public class PrivacyPreferencesManager implements CrashReportingPermissionManage
         sharedPreferencesEditor.apply();
     }
 
-    private NetworkInfo getActiveNetworkInfo() {
+    protected boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager =
                 (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-        return connectivityManager.getActiveNetworkInfo();
-    }
-
-    protected boolean isNetworkAvailable() {
-        NetworkInfo networkInfo = getActiveNetworkInfo();
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
         return (networkInfo != null && networkInfo.isConnected());
-    }
-
-    protected boolean isWiFiOrEthernetNetwork() {
-        NetworkInfo networkInfo = getActiveNetworkInfo();
-        return networkInfo != null
-                && (networkInfo.getType() == ConnectivityManager.TYPE_WIFI
-                        || networkInfo.getType() == ConnectivityManager.TYPE_ETHERNET);
     }
 
     protected boolean isMobileNetworkCapable() {
@@ -281,33 +264,9 @@ public class PrivacyPreferencesManager implements CrashReportingPermissionManage
      */
     @Override
     public boolean isNetworkAvailableForCrashUploads() {
-        return isNetworkAvailable() && isWiFiOrEthernetNetwork();
-    }
-
-    /**
-     * Checks whether uploading of crash dumps is permitted, based on the corresponding command line
-     * flag only.
-     * TODO(jchinlee): this is not quite a boolean. Depending on other refactoring, change to enum.
-     *
-     * @return whether uploading of crash dumps is enabled or disabled by a command line flag.
-     */
-    @Override
-    public boolean isCrashUploadDisabledByCommandLine() {
-        return mCrashUploadingDisabledByCommandLine;
-    }
-
-    /**
-     * Checks whether uploading of usage metrics is currently permitted.
-     *
-     * Note that this function intentionally does not check |mCrashUploadingDisabledByCommandLine|.
-     * See http://crbug.com/602703 for more details.
-     *
-     * @return whether uploading usage metrics is currently permitted.
-     */
-    @Override
-    public boolean isMetricsUploadPermitted() {
-        return isNetworkAvailable()
-                && (isUsageAndCrashReportingPermittedByUser() || isUploadEnabledForTests());
+        ConnectivityManager connectivityManager =
+                (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        return NetworkPermissionUtil.isNetworkUnmetered(connectivityManager);
     }
 
     /**
@@ -334,14 +293,11 @@ public class PrivacyPreferencesManager implements CrashReportingPermissionManage
     }
 
     /**
-     * Provides a way to remove disabling crash uploading entirely.
-     * Enable crash uploading based on user's preference when an overriding flag does not exist in
-     * commandline.
-     * Used to differentiate from tests that trigger crashes intentionally, so these crashes are not
-     * uploaded.
+     * @return Whether uploading usage metrics is currently permitted.
      */
-    public void enablePotentialCrashUploading() {
-        mCrashUploadingDisabledByCommandLine = false;
+    public boolean isMetricsUploadPermitted() {
+        return isNetworkAvailable()
+                && (isUsageAndCrashReportingPermittedByUser() || isUploadEnabledForTests());
     }
 
     /**
@@ -351,16 +307,10 @@ public class PrivacyPreferencesManager implements CrashReportingPermissionManage
      * @param enabled A boolean indicating whether to notify on nearby beacons.
      */
     public void setPhysicalWebEnabled(boolean enabled) {
-        int state = enabled ? PHYSICAL_WEB_ON : PHYSICAL_WEB_OFF;
-        boolean isOnboarding = isPhysicalWebOnboarding();
-        mSharedPreferences.edit().putInt(PREF_PHYSICAL_WEB, state).apply();
-        if (enabled) {
-            if (!isOnboarding) {
-                PhysicalWeb.startPhysicalWeb();
-            }
-        } else {
-            PhysicalWeb.stopPhysicalWeb();
-        }
+        mSharedPreferences.edit()
+            .putInt(PREF_PHYSICAL_WEB, enabled ? PHYSICAL_WEB_ON : PHYSICAL_WEB_OFF)
+            .apply();
+        PhysicalWeb.updateScans();
     }
 
     /**

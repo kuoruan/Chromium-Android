@@ -59,6 +59,9 @@ public class SnippetArticle implements OfflinableSuggestion {
     /** Whether the linked article represents an asset download. */
     private boolean mIsAssetDownload;
 
+    /** The GUID of the asset download (only for asset download articles). */
+    private String mAssetDownloadGuid;
+
     /** The path to the asset download (only for asset download articles). */
     private File mAssetDownloadFile;
 
@@ -121,6 +124,11 @@ public class SnippetArticle implements OfflinableSuggestion {
         return true;
     }
 
+    /** @return whether a snippet is a remote suggestion. */
+    public boolean isArticle() {
+        return mCategory == KnownCategories.ARTICLES;
+    }
+
     /** @return whether a snippet is either offline page or asset download. */
     public boolean isDownload() {
         return mCategory == KnownCategories.DOWNLOADS;
@@ -129,6 +137,16 @@ public class SnippetArticle implements OfflinableSuggestion {
     /** @return whether a snippet is asset download. */
     public boolean isAssetDownload() {
         return mIsAssetDownload;
+    }
+
+    /**
+     * @return the GUID of the asset download. May only be called if {@link #mIsAssetDownload} is
+     * {@code true} (which implies that this snippet belongs to the DOWNLOADS category).
+     */
+    public String getAssetDownloadGuid() {
+        assert isDownload();
+        assert mIsAssetDownload;
+        return mAssetDownloadGuid;
     }
 
     /**
@@ -155,9 +173,10 @@ public class SnippetArticle implements OfflinableSuggestion {
      * Marks the article suggestion as an asset download with the given path and mime type. May only
      * be called if this snippet belongs to DOWNLOADS category.
      */
-    public void setAssetDownloadData(String filePath, String mimeType) {
+    public void setAssetDownloadData(String downloadGuid, String filePath, String mimeType) {
         assert isDownload();
         mIsAssetDownload = true;
+        mAssetDownloadGuid = downloadGuid;
         mAssetDownloadFile = new File(filePath);
         mAssetDownloadMimeType = mimeType;
     }

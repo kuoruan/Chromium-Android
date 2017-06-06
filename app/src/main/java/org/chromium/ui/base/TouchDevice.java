@@ -49,10 +49,9 @@ public class TouchDevice {
     }
 
     /**
-     * @return the pointer-types supported by the device, as the union (bitwise OR) of PointerType
-     *         bits in result[0]
-     *         the hover-types supported by the device, as the union (bitwise OR) of HoverType bits
-     *         in result[1].
+     * @return an array of two ints: result[0] represents the pointer-types and result[1] represents
+     *         the hover-types supported by the device, where each int is the union (bitwise OR) of
+     *         corresponding type (PointerType/HoverType) bits.
      */
     @CalledByNative
     private static int[] availablePointerAndHoverTypes(Context context) {
@@ -80,7 +79,7 @@ public class TouchDevice {
                 result[1] |= HoverType.HOVER;
             } else if (hasSource(sources, InputDevice.SOURCE_STYLUS)
                     || hasSource(sources, InputDevice.SOURCE_TOUCHSCREEN)) {
-                result[1] |= HoverType.ON_DEMAND;
+                result[1] |= HoverType.NONE;
             }
 
             // Remaining InputDevice sources: SOURCE_DPAD, SOURCE_GAMEPAD, SOURCE_JOYSTICK,

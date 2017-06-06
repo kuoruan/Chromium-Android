@@ -13,12 +13,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.v4.view.animation.FastOutLinearInInterpolator;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.support.v7.widget.Toolbar.OnMenuItemClickListener;
-import android.telephony.PhoneNumberFormattingTextWatcher;
 import android.text.InputFilter;
 import android.text.Spanned;
 import android.text.TextWatcher;
@@ -28,6 +26,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -40,11 +39,12 @@ import android.widget.TextView;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.autofill.PhoneNumberUtil;
 import org.chromium.chrome.browser.customtabs.CustomTabActivity;
 import org.chromium.chrome.browser.payments.ui.PaymentRequestUI.PaymentRequestObserverForTest;
 import org.chromium.chrome.browser.preferences.autofill.CreditCardNumberFormattingTextWatcher;
 import org.chromium.chrome.browser.widget.AlwaysDismissedDialog;
-import org.chromium.chrome.browser.widget.DualControlLayout;
+import org.chromium.chrome.browser.widget.FadingEdgeScrollView;
 import org.chromium.chrome.browser.widget.FadingShadow;
 import org.chromium.chrome.browser.widget.FadingShadowView;
 import org.chromium.ui.UiUtils;
@@ -151,20 +151,14 @@ public class EditorView extends AlwaysDismissedDialog implements OnClickListener
         };
 
         mCardNumberFormatter = new CreditCardNumberFormattingTextWatcher();
-        new AsyncTask<Void, Void, PhoneNumberFormattingTextWatcher>() {
-            @Override
-            protected PhoneNumberFormattingTextWatcher doInBackground(Void... unused) {
-                return new PhoneNumberFormattingTextWatcher();
-            }
+        mPhoneFormatter = new PhoneNumberUtil.FormatTextWatcher();
+    }
 
-            @Override
-            protected void onPostExecute(PhoneNumberFormattingTextWatcher result) {
-                mPhoneFormatter = result;
-                if (mPhoneInput != null) {
-                    mPhoneInput.addTextChangedListener(mPhoneFormatter);
-                }
-            }
-        }.execute();
+    /** Prevents screenshots of this editor. */
+    public void disableScreenshots() {
+        WindowManager.LayoutParams attributes = getWindow().getAttributes();
+        attributes.flags |= WindowManager.LayoutParams.FLAG_SECURE;
+        getWindow().setAttributes(attributes);
     }
 
     /** Launches the Autofill help page on top of the current Context. */
@@ -211,7 +205,8 @@ public class EditorView extends AlwaysDismissedDialog implements OnClickListener
         // The top shadow is handled by the toolbar, so hide the one used in the field editor.
         FadingEdgeScrollView scrollView =
                 (FadingEdgeScrollView) mLayout.findViewById(R.id.scroll_view);
-        scrollView.setShadowVisibility(false, true);
+        scrollView.setEdgeVisibility(
+                FadingEdgeScrollView.DRAW_NO_EDGE, FadingEdgeScrollView.DRAW_FADING_EDGE);
     }
 
     /**
@@ -311,9 +306,6 @@ public class EditorView extends AlwaysDismissedDialog implements OnClickListener
         Button cancelButton = (Button) mLayout.findViewById(R.id.button_secondary);
         cancelButton.setId(R.id.payments_edit_cancel_button);
         cancelButton.setOnClickListener(this);
-
-        DualControlLayout buttonBar = (DualControlLayout) mLayout.findViewById(R.id.button_bar);
-        buttonBar.setAlignment(DualControlLayout.ALIGN_END);
     }
 
     /**
@@ -344,7 +336,7 @@ public class EditorView extends AlwaysDismissedDialog implements OnClickListener
                 if (nextFieldModel.isFullLine()) useFullLine = true;
             }
 
-            if (useFullLine) {
+            if (useFullLine || isLastField) {
                 addFieldViewToEditor(mDataView, fieldModel);
             } else {
                 // Create a LinearLayout to put it and the next view side by side.

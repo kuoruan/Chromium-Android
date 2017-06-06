@@ -20,6 +20,8 @@ import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.content.browser.AppWebMessagePort;
 import org.chromium.content.browser.MediaSessionImpl;
+import org.chromium.content.browser.RenderCoordinates;
+import org.chromium.content.browser.framehost.RenderFrameHostDelegate;
 import org.chromium.content_public.browser.AccessibilitySnapshotCallback;
 import org.chromium.content_public.browser.AccessibilitySnapshotNode;
 import org.chromium.content_public.browser.ContentBitmapCallback;
@@ -27,11 +29,14 @@ import org.chromium.content_public.browser.ImageDownloadCallback;
 import org.chromium.content_public.browser.JavaScriptCallback;
 import org.chromium.content_public.browser.MessagePort;
 import org.chromium.content_public.browser.NavigationController;
+import org.chromium.content_public.browser.RenderFrameHost;
 import org.chromium.content_public.browser.SmartClipCallback;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.content_public.browser.WebContentsObserver;
 import org.chromium.ui.OverscrollRefreshHandler;
 import org.chromium.ui.accessibility.AXTextStyle;
+import org.chromium.ui.base.EventForwarder;
+import org.chromium.ui.base.WindowAndroid;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,9 +47,9 @@ import java.util.UUID;
  * object.
  */
 @JNINamespace("content")
-//TODO(tedchoc): Remove the package restriction once this class moves to a non-public content
+// TODO(tedchoc): Remove the package restriction once this class moves to a non-public content
 //               package whose visibility will be enforced via DEPS.
-/* package */ class WebContentsImpl implements WebContents {
+/* package */ class WebContentsImpl implements WebContents, RenderFrameHostDelegate {
     private static final String PARCEL_VERSION_KEY = "version";
     private static final String PARCEL_WEBCONTENTS_KEY = "webcontents";
     private static final String PARCEL_PROCESS_GUARD_KEY = "processguard";
@@ -93,6 +98,7 @@ import java.util.UUID;
 
     private long mNativeWebContentsAndroid;
     private NavigationController mNavigationController;
+    private RenderFrameHost mMainFrame;
 
     // Lazily created proxy observer for handling all Java-based WebContentsObservers.
     private WebContentsObserverProxy mObserverProxy;
@@ -101,7 +107,34 @@ import java.util.UUID;
     // the same life time as native MediaSession.
     private MediaSessionImpl mMediaSession;
 
-    private SmartClipCallback mSmartClipCallback;
+    class SmartClipCallbackImpl implements SmartClipCallback {
+        public SmartClipCallbackImpl(final Handler smartClipHandler) {
+            mHandler = smartClipHandler;
+        }
+        public void storeRequestRect(Rect rect) {
+            mRect = rect;
+        }
+
+        @Override
+        public void onSmartClipDataExtracted(String text, String html) {
+            Bundle bundle = new Bundle();
+            bundle.putString("url", getVisibleUrl());
+            bundle.putString("title", getTitle());
+            bundle.putString("text", text);
+            bundle.putString("html", html);
+            bundle.putParcelable("rect", mRect);
+
+            Message msg = Message.obtain(mHandler, 0);
+            msg.setData(bundle);
+            msg.sendToTarget();
+        }
+
+        Rect mRect;
+        final Handler mHandler;
+    }
+    private SmartClipCallbackImpl mSmartClipCallback;
+
+    private EventForwarder mEventForwarder;
 
     private WebContentsImpl(
             long nativeWebContentsAndroid, NavigationController navigationController) {
@@ -148,6 +181,11 @@ import java.util.UUID;
     }
 
     @Override
+    public WindowAndroid getTopLevelNativeWindow() {
+        return nativeGetTopLevelNativeWindow(mNativeWebContentsAndroid);
+    }
+
+    @Override
     public void destroy() {
         if (!ThreadUtils.runningOnUiThread()) {
             throw new IllegalStateException("Attempting to destroy WebContents on non-UI thread");
@@ -163,6 +201,14 @@ import java.util.UUID;
     @Override
     public NavigationController getNavigationController() {
         return mNavigationController;
+    }
+
+    @Override
+    public RenderFrameHost getMainFrame() {
+        if (mMainFrame == null) {
+            mMainFrame = nativeGetMainFrame(mNativeWebContentsAndroid);
+        }
+        return mMainFrame;
     }
 
     @Override
@@ -282,6 +328,7 @@ import java.util.UUID;
                 mNativeWebContentsAndroid, enableHiding, enableShowing, animate);
     }
 
+    @Override
     public void scrollFocusedEditableNodeIntoView() {
         // The native side keeps track of whether the zoom and scroll actually occurred. It is
         // more efficient to do it this way and sometimes fire an unnecessary message rather
@@ -379,10 +426,14 @@ import java.util.UUID;
     }
 
     @Override
-    public void requestSmartClipExtract(int x, int y, int width, int height) {
+    public void requestSmartClipExtract(
+            int x, int y, int width, int height, RenderCoordinates coordinateSpace) {
         if (mSmartClipCallback == null) return;
-        nativeRequestSmartClipExtract(
-                mNativeWebContentsAndroid, mSmartClipCallback, x, y, width, height);
+        mSmartClipCallback.storeRequestRect(new Rect(x, y, x + width, y + height));
+        float dpi = coordinateSpace.getDeviceScaleFactor();
+        y -= coordinateSpace.getContentOffsetYPix();
+        nativeRequestSmartClipExtract(mNativeWebContentsAndroid, mSmartClipCallback,
+                (int) (x / dpi), (int) (y / dpi), (int) (width / dpi), (int) (height / dpi));
     }
 
     @Override
@@ -391,20 +442,7 @@ import java.util.UUID;
             mSmartClipCallback = null;
             return;
         }
-        mSmartClipCallback = new SmartClipCallback() {
-            @Override
-            public void onSmartClipDataExtracted(String text, String html) {
-                Bundle bundle = new Bundle();
-                bundle.putString("url", getVisibleUrl());
-                bundle.putString("title", getTitle());
-                bundle.putString("text", text);
-                bundle.putString("html", html);
-
-                Message msg = Message.obtain(smartClipHandler, 0);
-                msg.setData(bundle);
-                msg.sendToTarget();
-            }
-        };
+        mSmartClipCallback = new SmartClipCallbackImpl(smartClipHandler);
     }
 
     @CalledByNative
@@ -464,6 +502,15 @@ import java.util.UUID;
     }
 
     @Override
+    public EventForwarder getEventForwarder() {
+        assert mNativeWebContentsAndroid != 0;
+        if (mEventForwarder == null) {
+            mEventForwarder = nativeGetOrCreateEventForwarder(mNativeWebContentsAndroid);
+        }
+        return mEventForwarder;
+    }
+
+    @Override
     public void addObserver(WebContentsObserver observer) {
         assert mNativeWebContentsAndroid != 0;
         if (mObserverProxy == null) mObserverProxy = new WebContentsObserverProxy(this);
@@ -516,6 +563,11 @@ import java.util.UUID;
     }
 
     @Override
+    public void showContextMenuAtPoint(int x, int y) {
+        nativeShowContextMenuAtPoint(mNativeWebContentsAndroid, x, y);
+    }
+
+    @Override
     public void setHasPersistentVideo(boolean value) {
         nativeSetHasPersistentVideo(mNativeWebContentsAndroid, value);
     }
@@ -555,6 +607,8 @@ import java.util.UUID;
 
     private static native WebContents nativeFromNativePtr(long webContentsAndroidPtr);
 
+    private native WindowAndroid nativeGetTopLevelNativeWindow(long nativeWebContentsAndroid);
+    private native RenderFrameHost nativeGetMainFrame(long nativeWebContentsAndroid);
     private native String nativeGetTitle(long nativeWebContentsAndroid);
     private native String nativeGetVisibleURL(long nativeWebContentsAndroid);
     private native boolean nativeIsLoading(long nativeWebContentsAndroid);
@@ -611,6 +665,8 @@ import java.util.UUID;
             String url, boolean isFavicon, int maxBitmapSize,
             boolean bypassCache, ImageDownloadCallback callback);
     private native void nativeDismissTextHandles(long nativeWebContentsAndroid);
+    private native void nativeShowContextMenuAtPoint(long nativeWebContentsAndroid, int x, int y);
     private native void nativeSetHasPersistentVideo(long nativeWebContentsAndroid, boolean value);
     private native boolean nativeHasActiveEffectivelyFullscreenVideo(long nativeWebContentsAndroid);
+    private native EventForwarder nativeGetOrCreateEventForwarder(long nativeWebContentsAndroid);
 }

@@ -16,7 +16,7 @@
         <item
             android:id="@+id/search_menu_id"
             android:icon="@drawable/ic_search"
-            android:title="@null"
+            android:title="@string/search"
             android:visible="false"
             chrome:showAsAction="ifRoom"/>
         <item

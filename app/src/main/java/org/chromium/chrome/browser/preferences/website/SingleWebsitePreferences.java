@@ -81,6 +81,8 @@ public class SingleWebsitePreferences extends PreferenceFragment
     public static final String PREF_POPUP_PERMISSION = "popup_permission_list";
     public static final String PREF_PROTECTED_MEDIA_IDENTIFIER_PERMISSION =
             "protected_media_identifier_permission_list";
+    public static final String PREF_SUBRESOURCE_FILTER_PERMISSION =
+            "subresource_filter_permission_list";
 
     // All permissions from the permissions preference category must be listed here.
     // TODO(mvanouwerkerk): Use this array in more places to reduce verbosity.
@@ -96,6 +98,7 @@ public class SingleWebsitePreferences extends PreferenceFragment
             PREF_NOTIFICATIONS_PERMISSION,
             PREF_POPUP_PERMISSION,
             PREF_PROTECTED_MEDIA_IDENTIFIER_PERMISSION,
+            PREF_SUBRESOURCE_FILTER_PERMISSION,
     };
 
     // The website this page is displaying details about.
@@ -192,6 +195,11 @@ public class SingleWebsitePreferences extends PreferenceFragment
         // This loop looks expensive, but the amount of data is likely to be relatively small
         // because most sites have very few permissions.
         for (Website other : websites) {
+            if (merged.getSubresourceFilterException() == null
+                    && other.getSubresourceFilterException() != null
+                    && other.compareByAddressTo(merged) == 0) {
+                merged.setSubresourceFilterException(other.getSubresourceFilterException());
+            }
             if (merged.getGeolocationInfo() == null && other.getGeolocationInfo() != null
                     && permissionInfoIsForTopLevelOrigin(other.getGeolocationInfo(), origin)) {
                 merged.setGeolocationInfo(other.getGeolocationInfo());
@@ -304,6 +312,8 @@ public class SingleWebsitePreferences extends PreferenceFragment
                 setUpListPreference(preference, mSite.getPopupPermission());
             } else if (PREF_PROTECTED_MEDIA_IDENTIFIER_PERMISSION.equals(preference.getKey())) {
                 setUpListPreference(preference, mSite.getProtectedMediaIdentifierPermission());
+            } else if (PREF_SUBRESOURCE_FILTER_PERMISSION.equals(preference.getKey())) {
+                setUpListPreference(preference, mSite.getSubresourceFilterPermission());
             }
 
             if (permissionPreferenceKeys.contains(preference.getKey())) {
@@ -570,6 +580,8 @@ public class SingleWebsitePreferences extends PreferenceFragment
                 return ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS;
             case PREF_PROTECTED_MEDIA_IDENTIFIER_PERMISSION:
                 return ContentSettingsType.CONTENT_SETTINGS_TYPE_PROTECTED_MEDIA_IDENTIFIER;
+            case PREF_SUBRESOURCE_FILTER_PERMISSION:
+                return ContentSettingsType.CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER;
             default:
                 return 0;
         }
@@ -630,6 +642,8 @@ public class SingleWebsitePreferences extends PreferenceFragment
             mSite.setPopupPermission(permission);
         } else if (PREF_PROTECTED_MEDIA_IDENTIFIER_PERMISSION.equals(preference.getKey())) {
             mSite.setProtectedMediaIdentifierPermission(permission);
+        } else if (PREF_SUBRESOURCE_FILTER_PERMISSION.equals(preference.getKey())) {
+            mSite.setSubresourceFilterPermission(permission);
         }
 
         return true;
@@ -701,6 +715,7 @@ public class SingleWebsitePreferences extends PreferenceFragment
         mSite.setNotificationPermission(ContentSetting.DEFAULT);
         mSite.setPopupPermission(ContentSetting.DEFAULT);
         mSite.setProtectedMediaIdentifierPermission(ContentSetting.DEFAULT);
+        mSite.setSubresourceFilterPermission(ContentSetting.DEFAULT);
 
         for (UsbInfo info : mSite.getUsbInfo()) info.revoke();
 

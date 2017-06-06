@@ -16,9 +16,7 @@ import android.view.inputmethod.InputMethodInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.view.inputmethod.InputMethodSubtype;
 
-import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
-import org.chromium.base.FieldTrialList;
 import org.chromium.base.Log;
 import org.chromium.base.PowerMonitor;
 import org.chromium.base.SysUtils;
@@ -34,6 +32,7 @@ import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.media.MediaCaptureNotificationService;
 import org.chromium.chrome.browser.metrics.LaunchMetrics;
 import org.chromium.chrome.browser.metrics.UmaUtils;
+import org.chromium.chrome.browser.notifications.ChannelsUpdater;
 import org.chromium.chrome.browser.ntp.NewTabPage;
 import org.chromium.chrome.browser.offlinepages.OfflinePageUtils;
 import org.chromium.chrome.browser.partnerbookmarks.PartnerBookmarksShim;
@@ -42,7 +41,6 @@ import org.chromium.chrome.browser.partnercustomizations.PartnerBrowserCustomiza
 import org.chromium.chrome.browser.physicalweb.PhysicalWeb;
 import org.chromium.chrome.browser.precache.PrecacheLauncher;
 import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
-import org.chromium.chrome.browser.preferences.privacy.PrivacyPreferencesManager;
 import org.chromium.chrome.browser.share.ShareHelper;
 import org.chromium.chrome.browser.webapps.ChromeWebApkHost;
 import org.chromium.chrome.browser.webapps.WebApkVersionManager;
@@ -87,10 +85,17 @@ public class DeferredStartupHandler {
      * @return The singleton instance of {@link DeferredStartupHandler}.
      */
     public static DeferredStartupHandler getInstance() {
-        return Holder.INSTANCE;
+        return sDeferredStartupHandler == null ? Holder.INSTANCE : sDeferredStartupHandler;
     }
 
-    private DeferredStartupHandler() {
+    @VisibleForTesting
+    public static void setInstanceForTests(DeferredStartupHandler handler) {
+        sDeferredStartupHandler = handler;
+    }
+
+    private static DeferredStartupHandler sDeferredStartupHandler;
+
+    protected DeferredStartupHandler() {
         mAppContext = ContextUtils.getApplicationContext();
         mDeferredTasks = new LinkedList<>();
     }
@@ -196,6 +201,10 @@ public class DeferredStartupHandler {
                 ShareHelper.clearSharedImages();
 
                 OfflinePageUtils.clearSharedOfflineFiles(mAppContext);
+
+                if (ChannelsUpdater.getInstance().shouldUpdateChannels()) {
+                    initChannelsAsync();
+                }
             }
         });
 
@@ -243,6 +252,18 @@ public class DeferredStartupHandler {
         });
 
         ProcessInitializationHandler.getInstance().initializeDeferredStartupTasks();
+    }
+
+    private void initChannelsAsync() {
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                ChannelsUpdater.getInstance().updateChannels();
+                return null;
+            }
+
+        }
+                .executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
     }
 
     private void initAsyncDiskTask() {
@@ -317,27 +338,22 @@ public class DeferredStartupHandler {
              * minidump storage directory.
              */
             private void initCrashReporting() {
-                // Perform cleanup prior to checking whether crash reporting is enabled, so that
-                // users who disable crash reporting are still able to eventually recover disk space
-                // dedicated to storing pending crash reports.
-                CrashFileManager crashFileManager = new CrashFileManager(mAppContext.getCacheDir());
-                crashFileManager.cleanOutAllNonFreshMinidumpFiles();
-
-                // Likewise, there might be pending metrics from previous runs when crash reporting
-                // was enabled.
-                MinidumpUploadService.storeBreakpadUploadStatsInUma(
-                        ChromePreferenceManager.getInstance());
-
-                // Now check whether crash reporting is enabled. If it is, broadcast the appropriate
-                // permission.
-                boolean crashReportingDisabled = CommandLine.getInstance().hasSwitch(
-                        ChromeSwitches.DISABLE_CRASH_DUMP_UPLOAD);
-                if (crashReportingDisabled) return;
-                PrivacyPreferencesManager.getInstance().enablePotentialCrashUploading();
-
                 RecordHistogram.recordLongTimesHistogram("UMA.Debug.EnableCrashUpload.Uptime3",
                         mAsyncTaskStartTime - UmaUtils.getForegroundStartTime(),
                         TimeUnit.MILLISECONDS);
+
+                // Crash reports can be uploaded as part of a background service even while the main
+                // Chrome activity is not running, and hence regular metrics reporting is not
+                // possible. Instead, metrics are temporarily written to prefs; export those prefs
+                // to UMA metrics here.
+                MinidumpUploadService.storeBreakpadUploadStatsInUma(
+                        ChromePreferenceManager.getInstance());
+
+                // Likewise, this is a good time to process and clean up any pending or stale crash
+                // reports left behind by previous runs.
+                CrashFileManager crashFileManager =
+                        new CrashFileManager(ContextUtils.getApplicationContext().getCacheDir());
+                crashFileManager.cleanOutAllNonFreshMinidumpFiles();
 
                 // Finally, uploading any pending crash reports.
                 File[] minidumps = crashFileManager.getAllMinidumpFiles(
@@ -361,7 +377,7 @@ public class DeferredStartupHandler {
                 File mostRecentMinidump = minidumps[0];
                 if (doesCrashMinidumpNeedLogcat(mostRecentMinidump)) {
                     AsyncTask.THREAD_POOL_EXECUTOR.execute(
-                            new LogcatExtractionRunnable(mAppContext, mostRecentMinidump));
+                            new LogcatExtractionRunnable(mostRecentMinidump));
 
                     // The JobScheduler will schedule uploads for all of the available minidumps
                     // once the logcat is attached. But if the JobScheduler API is not being used,
@@ -372,13 +388,13 @@ public class DeferredStartupHandler {
                         List<File> remainingMinidumps =
                                 Arrays.asList(minidumps).subList(1, minidumps.length);
                         for (File minidump : remainingMinidumps) {
-                            MinidumpUploadService.tryUploadCrashDump(mAppContext, minidump);
+                            MinidumpUploadService.tryUploadCrashDump(minidump);
                         }
                     }
                 } else if (MinidumpUploadService.shouldUseJobSchedulerForUploads()) {
-                    MinidumpUploadService.scheduleUploadJob(mAppContext);
+                    MinidumpUploadService.scheduleUploadJob();
                 } else {
-                    MinidumpUploadService.tryUploadAllCrashDumps(mAppContext);
+                    MinidumpUploadService.tryUploadAllCrashDumps();
                 }
             }
 
@@ -410,12 +426,7 @@ public class DeferredStartupHandler {
     private void startModerateBindingManagementIfNeeded() {
         // Moderate binding doesn't apply to low end devices.
         if (SysUtils.isLowEndDevice()) return;
-
-        boolean moderateBindingTillBackgrounded =
-                FieldTrialList.findFullName("ModerateBindingOnBackgroundTabCreation")
-                        .equals("Enabled");
-        ChildProcessLauncher.startModerateBindingManagement(
-                mAppContext, moderateBindingTillBackgrounded);
+        ChildProcessLauncher.startModerateBindingManagement(mAppContext);
     }
 
     /**

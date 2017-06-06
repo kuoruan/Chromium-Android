@@ -57,7 +57,7 @@ public class PassphraseActivity extends FragmentActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        Account account = ChromeSigninController.get(this).getSignedInUser();
+        Account account = ChromeSigninController.get().getSignedInUser();
         if (account == null) {
             finish();
             return;

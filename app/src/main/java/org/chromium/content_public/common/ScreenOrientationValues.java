@@ -15,21 +15,23 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ScreenOrientationValues {
-  @IntDef({
-      DEFAULT, PORTRAIT_PRIMARY, PORTRAIT_SECONDARY, LANDSCAPE_PRIMARY, LANDSCAPE_SECONDARY, ANY,
-      LANDSCAPE, PORTRAIT, NATURAL, LAST
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ScreenOrientationValuesEnum {}
-  public static final int DEFAULT = 0;
-  public static final int PORTRAIT_PRIMARY = 1;
-  public static final int PORTRAIT_SECONDARY = 2;
-  public static final int LANDSCAPE_PRIMARY = 3;
-  public static final int LANDSCAPE_SECONDARY = 4;
-  public static final int ANY = 5;
-  public static final int LANDSCAPE = 6;
-  public static final int PORTRAIT = 7;
-  public static final int NATURAL = 8;
-  public static final int LAST = 8;
+@IntDef({
+    ScreenOrientationValues.DEFAULT, ScreenOrientationValues.PORTRAIT_PRIMARY,
+    ScreenOrientationValues.PORTRAIT_SECONDARY, ScreenOrientationValues.LANDSCAPE_PRIMARY,
+    ScreenOrientationValues.LANDSCAPE_SECONDARY, ScreenOrientationValues.ANY,
+    ScreenOrientationValues.LANDSCAPE, ScreenOrientationValues.PORTRAIT,
+    ScreenOrientationValues.NATURAL, ScreenOrientationValues.LAST
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ScreenOrientationValues {
+  int DEFAULT = 0;
+  int PORTRAIT_PRIMARY = 1;
+  int PORTRAIT_SECONDARY = 2;
+  int LANDSCAPE_PRIMARY = 3;
+  int LANDSCAPE_SECONDARY = 4;
+  int ANY = 5;
+  int LANDSCAPE = 6;
+  int PORTRAIT = 7;
+  int NATURAL = 8;
+  int LAST = 8;
 }

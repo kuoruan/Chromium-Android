@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.historyreport;
 
+import org.chromium.blink.mojom.document_metadata.WebPage;
 import org.chromium.chrome.browser.AppHooks;
 
 /** Base class for reporting entities to App Indexing. */
@@ -23,7 +24,16 @@ public class AppIndexingReporter {
      * Base class does not implement any reporting, and call is a no-op. Child classes should
      * implement this functionality.
      */
-    public void reportEntityJsonLd(String url, String json) {
+    public void reportWebPage(WebPage webpage) {
+        // Overriden by private class. Base class does nothing.
+    }
+
+    /**
+     * Reports view of provided url to on-device index.
+     * Base class does not implement any reporting, and call is a no-op. Child classes should
+     * implement this functionality.
+     */
+    public void reportWebPageView(String url, String title) {
         // Overriden by private class. Base class does nothing.
     }
 

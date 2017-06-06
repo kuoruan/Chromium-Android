@@ -29,9 +29,27 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
- * Responsible for the Crash Report directory. It routinely scans the directory
- * for new Minidump files and takes appropriate actions by either uploading new
- * crash dumps or deleting old ones.
+ * The CrashFileManager is responsible for managing the "Crash Reports" directory containing
+ * minidump files and shepherding them through a state machine represented by the file names. Note
+ * that some of the steps are optional:
+ *  1. foo.dmp is a minidump file, written to the directory by Breakpad.
+ * (2) foo.dmpNNNNN is a minidump file, where NNNNN is the PID (process id) of the crashing
+ *     process. This step is optional -- that is, a minidump could fail to have its PID included in
+ *     the filename.
+ * (3) foo.dmpNNNNN.try0 is a minidump file with recent logcat output attached to it. This step is
+ *     optional -- that is, logcat output might fail to be extracted for the minidump. Notably,
+ *     Webview-generated minidumps do not include logcat output.
+ *  4. foo.dmpNNNNN.tryM for M > 0 is a minidump file that's been attempted to be uploaded to the
+ *     crash server, but for which M upload attempts have failed.
+ *  5. foo.up, foo.upNNNNN, or foo.upNNNNN.tryM are all valid possible names for a successfully
+ *     uploaded file.
+ *  6. foo.skipped, foo.skippedNNNNN, or foo.skippedNNNNN.tryM are all valid possible names for a
+ *     file whose upload was skipped. An upload may be skipped, for example, if the user has not
+ *     consented to uploading crash reports. These files are marked as skipped rather than deleted
+ *     immediately to allow the user to manually initiate an upload.
+ *  7. foo.forced, foo.forcedNNNNN, or foo.forcedNNNNN.tryM are all valid possible names for a file
+ *     that the user has manually requested to upload.
+ *  8. foo.tmp is a temporary file.
  */
 public class CrashFileManager {
     private static final String TAG = "CrashFileManager";

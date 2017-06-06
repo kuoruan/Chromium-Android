@@ -15,12 +15,11 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class MediaCodecDirection {
-  @IntDef({
-      DECODER, ENCODER
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface MediaCodecDirectionEnum {}
-  public static final int DECODER = 0;
-  public static final int ENCODER = 1;
+@IntDef({
+    MediaCodecDirection.DECODER, MediaCodecDirection.ENCODER
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface MediaCodecDirection {
+  int DECODER = 0;
+  int ENCODER = 1;
 }

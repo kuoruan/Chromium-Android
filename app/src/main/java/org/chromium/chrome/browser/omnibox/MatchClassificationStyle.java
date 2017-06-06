@@ -15,14 +15,14 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class MatchClassificationStyle {
-  @IntDef({
-      NONE, URL, MATCH, DIM
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface MatchClassificationStyleEnum {}
-  public static final int NONE = 0;
-  public static final int URL = 1 << 0;
-  public static final int MATCH = 1 << 1;
-  public static final int DIM = 1 << 2;
+@IntDef({
+    MatchClassificationStyle.NONE, MatchClassificationStyle.URL, MatchClassificationStyle.MATCH,
+    MatchClassificationStyle.DIM
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface MatchClassificationStyle {
+  int NONE = 0;
+  int URL = 1 << 0;
+  int MATCH = 1 << 1;
+  int DIM = 1 << 2;
 }

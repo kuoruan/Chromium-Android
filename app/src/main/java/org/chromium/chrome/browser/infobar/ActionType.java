@@ -15,21 +15,21 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ActionType {
-  @IntDef({
-      NONE, OK, CANCEL, TRANSLATE, TRANSLATE_SHOW_ORIGINAL
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ActionTypeEnum {}
-  public static final int NONE = 0;
+@IntDef({
+    ActionType.NONE, ActionType.OK, ActionType.CANCEL, ActionType.TRANSLATE,
+    ActionType.TRANSLATE_SHOW_ORIGINAL
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ActionType {
+  int NONE = 0;
   /**
    * Confirm infobar
    */
-  public static final int OK = 1;
-  public static final int CANCEL = 2;
+  int OK = 1;
+  int CANCEL = 2;
   /**
    * Translate infobar
    */
-  public static final int TRANSLATE = 3;
-  public static final int TRANSLATE_SHOW_ORIGINAL = 4;
+  int TRANSLATE = 3;
+  int TRANSLATE_SHOW_ORIGINAL = 4;
 }

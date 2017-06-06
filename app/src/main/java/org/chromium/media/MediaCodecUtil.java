@@ -68,8 +68,13 @@ class MediaCodecUtil {
     private static class MediaCodecListHelper implements Iterable<MediaCodecInfo> {
         @TargetApi(Build.VERSION_CODES.LOLLIPOP)
         public MediaCodecListHelper() {
-            if (hasNewMediaCodecList()) {
-                mCodecList = new MediaCodecList(MediaCodecList.ALL_CODECS).getCodecInfos();
+            if (supportsNewMediaCodecList()) {
+                try {
+                    mCodecList = new MediaCodecList(MediaCodecList.ALL_CODECS).getCodecInfos();
+                } catch (RuntimeException e) {
+                    // Swallow the exception due to bad Android implementation and pretend
+                    // MediaCodecList is not supported.
+                }
             }
         }
 
@@ -90,8 +95,12 @@ class MediaCodecUtil {
             return MediaCodecList.getCodecInfoAt(index);
         }
 
-        private boolean hasNewMediaCodecList() {
+        private static boolean supportsNewMediaCodecList() {
             return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
+        }
+
+        private boolean hasNewMediaCodecList() {
+            return supportsNewMediaCodecList() && mCodecList != null;
         }
 
         private MediaCodecInfo[] mCodecList;

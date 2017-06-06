@@ -43,11 +43,11 @@ public class ContextualSearchContextControl extends OverlayPanelInflater {
     }
 
     /**
-     * Sets the search context to display in the control.
+     * Sets the details of the search context to display in the control.
      * @param selection The portion of the context that represents the user's selection.
      * @param end The portion of the context after the selection.
      */
-    public void setSearchContext(String selection, String end) {
+    public void setContextDetails(String selection, String end) {
         inflate();
 
         mSelectedText.setText(sanitizeText(selection));

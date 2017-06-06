@@ -17,7 +17,9 @@ import android.util.Log;
 import org.chromium.base.CommandLine;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.ChromeSwitches;
+import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.partnerbookmarks.PartnerBookmarksReader;
 
 import java.util.ArrayList;
@@ -56,6 +58,7 @@ public class PartnerBrowserCustomizations {
     /**
      * @return Whether incognito mode is disabled by the partner.
      */
+    @CalledByNative
     public static boolean isIncognitoDisabled() {
         return sIncognitoModeDisabled;
     }
@@ -97,7 +100,7 @@ public class PartnerBrowserCustomizations {
     @VisibleForTesting
     public static Uri buildQueryUri(String path) {
         return new Uri.Builder()
-                .scheme("content")
+                .scheme(UrlConstants.CONTENT_SCHEME)
                 .authority(sProviderAuthority)
                 .appendPath(path)
                 .build();

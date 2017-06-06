@@ -15,18 +15,18 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class AndroidImageFormat {
-  @IntDef({
-      NV21, YUV_420_888, YV12, UNKNOWN
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface AndroidImageFormatEnum {}
+@IntDef({
+    AndroidImageFormat.NV21, AndroidImageFormat.YUV_420_888, AndroidImageFormat.YV12,
+    AndroidImageFormat.UNKNOWN
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface AndroidImageFormat {
   /**
    * Android graphics ImageFormat mapping, see reference in:
    * http://developer.android.com/reference/android/graphics/ImageFormat.html
    */
-  public static final int NV21 = 17;
-  public static final int YUV_420_888 = 35;
-  public static final int YV12 = 842094169;
-  public static final int UNKNOWN = 0;
+  int NV21 = 17;
+  int YUV_420_888 = 35;
+  int YV12 = 842094169;
+  int UNKNOWN = 0;
 }

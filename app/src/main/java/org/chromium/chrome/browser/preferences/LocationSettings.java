@@ -12,10 +12,9 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.browser.AppHooks;
-import org.chromium.components.location.LocationSettingsDialogContext.LocationSettingsDialogContextEnum;
+import org.chromium.components.location.LocationSettingsDialogContext;
 import org.chromium.components.location.LocationSettingsDialogOutcome;
 import org.chromium.components.location.LocationUtils;
-import org.chromium.content.browser.ContentViewCore;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.base.WindowAndroid;
 
@@ -49,15 +48,21 @@ public class LocationSettings {
     }
 
     @CalledByNative
-    private static boolean canSitesRequestLocationPermission(WebContents webContents) {
-        WindowAndroid windowAndroid = windowFromWebContents(webContents);
+    private static boolean hasAndroidLocationPermission() {
+        return LocationUtils.getInstance().hasAndroidLocationPermission();
+    }
+
+    @CalledByNative
+    private static boolean canPromptForAndroidLocationPermission(WebContents webContents) {
+        WindowAndroid windowAndroid = webContents.getTopLevelNativeWindow();
         if (windowAndroid == null) return false;
 
-        LocationUtils locationUtils = LocationUtils.getInstance();
-        if (!locationUtils.isSystemLocationSettingEnabled()) return false;
+        return windowAndroid.canRequestPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+    }
 
-        return locationUtils.hasAndroidLocationPermission()
-                || windowAndroid.canRequestPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+    @CalledByNative
+    private static boolean isSystemLocationSettingEnabled() {
+        return LocationUtils.getInstance().isSystemLocationSettingEnabled();
     }
 
     @CalledByNative
@@ -67,9 +72,9 @@ public class LocationSettings {
 
     @CalledByNative
     private static void promptToEnableSystemLocationSetting(
-            @LocationSettingsDialogContextEnum int promptContext, WebContents webContents,
+            @LocationSettingsDialogContext int promptContext, WebContents webContents,
             final long nativeCallback) {
-        WindowAndroid window = windowFromWebContents(webContents);
+        WindowAndroid window = webContents.getTopLevelNativeWindow();
         if (window == null) {
             nativeOnLocationSettingsDialogOutcome(
                     nativeCallback, LocationSettingsDialogOutcome.NO_PROMPT);
@@ -102,12 +107,6 @@ public class LocationSettings {
     @VisibleForTesting
     public static void setInstanceForTesting(LocationSettings instance) {
         sInstance = instance;
-    }
-
-    private static WindowAndroid windowFromWebContents(WebContents webContents) {
-        ContentViewCore contentViewCore = ContentViewCore.fromWebContents(webContents);
-        if (contentViewCore == null) return null;
-        return contentViewCore.getWindowAndroid();
     }
 
     private static native void nativeOnLocationSettingsDialogOutcome(long callback, int result);

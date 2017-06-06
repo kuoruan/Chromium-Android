@@ -329,7 +329,8 @@ public abstract class DownloadHistoryItemWrapper extends TimedItem {
                 return;
             }
 
-            if (DownloadUtils.openFile(getFile(), getMimeType(), isOffTheRecord())) {
+            if (DownloadUtils.openFile(getFile(), getMimeType(),
+                        mItem.getDownloadInfo().getDownloadGuid(), isOffTheRecord())) {
                 recordOpenSuccess();
             } else {
                 recordOpenFailure();

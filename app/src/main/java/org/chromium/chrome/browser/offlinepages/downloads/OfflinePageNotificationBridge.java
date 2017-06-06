@@ -4,13 +4,13 @@
 
 package org.chromium.chrome.browser.offlinepages.downloads;
 
-import android.content.Context;
-
+import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.download.DownloadInfo;
 import org.chromium.chrome.browser.download.DownloadManagerService;
 import org.chromium.chrome.browser.download.DownloadNotifier;
+import org.chromium.components.offline_items_collection.LegacyHelpers;
 import org.chromium.ui.widget.Toast;
 
 /**
@@ -19,16 +19,15 @@ import org.chromium.ui.widget.Toast;
  */
 public class OfflinePageNotificationBridge {
     /**
-    * Update download notification to success.
-    * @param context Context to show notifications.
-    * @param guid GUID of a request to download a page related to the notification.
-    * @param url URL of the page to download.
-    * @param displayName Name to be displayed on notification.
-    */
+     * Update download notification to success.
+     *
+     * @param guid        GUID of a request to download a page related to the notification.
+     * @param url         URL of the page to download.
+     * @param displayName Name to be displayed on notification.
+     */
     @CalledByNative
-    public static void notifyDownloadSuccessful(Context context, String guid, String url,
-            String displayName) {
-        DownloadNotifier notifier = getDownloadNotifier(context);
+    public static void notifyDownloadSuccessful(String guid, String url, String displayName) {
+        DownloadNotifier notifier = getDownloadNotifier();
         if (notifier == null) return;
 
         DownloadInfo downloadInfo = new DownloadInfo.Builder()
@@ -44,15 +43,14 @@ public class OfflinePageNotificationBridge {
 
     /**
      * Update download notification to failure.
-     * @param context Context to show notifications.
-     * @param guid GUID of a request to download a page related to the notification.
-     * @param url URL of the page to download.
+     *
+     * @param guid        GUID of a request to download a page related to the notification.
+     * @param url         URL of the page to download.
      * @param displayName Name to be displayed on notification.
      */
     @CalledByNative
-    public static void notifyDownloadFailed(Context context, String guid, String url,
-            String displayName) {
-        DownloadNotifier notifier = getDownloadNotifier(context);
+    public static void notifyDownloadFailed(String guid, String url, String displayName) {
+        DownloadNotifier notifier = getDownloadNotifier();
         if (notifier == null) return;
 
         DownloadInfo downloadInfo = new DownloadInfo.Builder()
@@ -63,16 +61,16 @@ public class OfflinePageNotificationBridge {
 
     /**
      * Called by offline page backend to notify the user of download progress.
-     * @param context Context to show notifications.
-     * @param guid GUID of a request to download a page related to the notification.
-     * @param url URL of the page to download.
-     * @param startTime Time of the request.
+     *
+     * @param guid        GUID of a request to download a page related to the notification.
+     * @param url         URL of the page to download.
+     * @param startTime   Time of the request.
      * @param displayName Name to be displayed on notification.
      */
     @CalledByNative
-    public static void notifyDownloadProgress(Context context, String guid, String url,
-            long startTime, long bytesReceived, String displayName) {
-        DownloadNotifier notifier = getDownloadNotifier(context);
+    public static void notifyDownloadProgress(
+            String guid, String url, long startTime, long bytesReceived, String displayName) {
+        DownloadNotifier notifier = getDownloadNotifier();
         if (notifier == null) return;
 
         int percentage =
@@ -94,13 +92,13 @@ public class OfflinePageNotificationBridge {
 
     /**
      * Update download notification to paused.
-     * @param context Context to show notifications.
-     * @param guid GUID of a request to download a page related to the notification.
+     *
+     * @param guid        GUID of a request to download a page related to the notification.
      * @param displayName Name to be displayed on notification.
      */
     @CalledByNative
-    public static void notifyDownloadPaused(Context context, String guid, String displayName) {
-        DownloadNotifier notifier = getDownloadNotifier(context);
+    public static void notifyDownloadPaused(String guid, String displayName) {
+        DownloadNotifier notifier = getDownloadNotifier();
         if (notifier == null) return;
 
         DownloadInfo downloadInfo = new DownloadInfo.Builder()
@@ -111,13 +109,13 @@ public class OfflinePageNotificationBridge {
 
     /**
      * Update download notification to interrupted.
-     * @param context Context to show notifications.
-     * @param guid GUID of a request to download a page related to the notification.
+     *
+     * @param guid        GUID of a request to download a page related to the notification.
      * @param displayName Name to be displayed on notification.
      */
     @CalledByNative
-    public static void notifyDownloadInterrupted(Context context, String guid, String displayName) {
-        DownloadNotifier notifier = getDownloadNotifier(context);
+    public static void notifyDownloadInterrupted(String guid, String displayName) {
+        DownloadNotifier notifier = getDownloadNotifier();
         if (notifier == null) return;
 
         DownloadInfo downloadInfo = new DownloadInfo.Builder()
@@ -132,27 +130,28 @@ public class OfflinePageNotificationBridge {
 
     /**
      * Update download notification to canceled.
-     * @param context Context to show notifications.
+     *
      * @param guid GUID of a request to download a page related to the notification.
      */
     @CalledByNative
-    public static void notifyDownloadCanceled(Context context, String guid) {
-        DownloadNotifier notifier = getDownloadNotifier(context);
+    public static void notifyDownloadCanceled(String guid) {
+        DownloadNotifier notifier = getDownloadNotifier();
         if (notifier == null) return;
 
-        notifier.notifyDownloadCanceled(guid);
+        notifier.notifyDownloadCanceled(LegacyHelpers.buildLegacyContentId(true, guid));
     }
 
     /**
      * Shows a "Downloading ..." toast for the requested items already scheduled for download.
-     * @param context Context to show toast.
      */
     @CalledByNative
-    public static void showDownloadingToast(Context context) {
-        Toast.makeText(context, R.string.download_started, Toast.LENGTH_SHORT).show();
+    public static void showDownloadingToast() {
+        Toast.makeText(ContextUtils.getApplicationContext(), R.string.download_started,
+                     Toast.LENGTH_SHORT)
+                .show();
     }
 
-    private static DownloadNotifier getDownloadNotifier(Context context) {
-        return DownloadManagerService.getDownloadManagerService(context).getDownloadNotifier();
+    private static DownloadNotifier getDownloadNotifier() {
+        return DownloadManagerService.getDownloadManagerService().getDownloadNotifier();
     }
 }

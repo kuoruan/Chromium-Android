@@ -63,7 +63,7 @@
         android:id="@+id/save_offline_button"
         style="@style/LocationBarButtonTablet"
         android:nextFocusForward="@+id/menu_button"
-        android:src="@drawable/ic_get_app_white_24dp"
+        android:src="@drawable/ic_file_download_white_24dp"
         android:visibility="gone"
         android:contentDescription="@string/download_page" />
 </merge>

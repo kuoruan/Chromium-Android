@@ -59,17 +59,17 @@ public class BackgroundSchedulerBridge {
 
     @CalledByNative
     private static boolean getPowerConditions() {
-        return BackgroundScheduler.getPowerConditions(ContextUtils.getApplicationContext());
+        return DeviceConditions.isPowerConnected(ContextUtils.getApplicationContext());
     }
 
     @CalledByNative
     private static int getBatteryConditions() {
-        return BackgroundScheduler.getBatteryConditions(ContextUtils.getApplicationContext());
+        return DeviceConditions.getBatteryPercentage(ContextUtils.getApplicationContext());
     }
 
     @CalledByNative
     private static int getNetworkConditions() {
-        return BackgroundScheduler.getNetworkConditions(ContextUtils.getApplicationContext());
+        return DeviceConditions.getNetConnectionType(ContextUtils.getApplicationContext());
     }
 
     /**

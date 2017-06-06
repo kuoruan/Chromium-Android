@@ -11,7 +11,7 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 
 /**
- * VariationsSeedBridge is a class which used to pass variations first run seed that was fetched
+ * VariationsSeedBridge is a class which is used to pass variations first run seed that was fetched
  * before the actual Chrome first run to Chromium core. Class provides methods to store the seed
  * in SharedPreferences and to get the seed from there. To store raw seed data class serializes
  * byte[] to Base64 encoded string and decodes this string before passing to C++ side.

@@ -4,37 +4,25 @@
 
 package org.chromium.chrome.browser.ntp.cards;
 
-import android.support.annotation.IntDef;
 import android.view.View;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ntp.ContextMenuManager;
 import org.chromium.chrome.browser.ntp.snippets.CategoryInt;
+import org.chromium.chrome.browser.suggestions.ContentSuggestionsAdditionalAction;
 import org.chromium.chrome.browser.suggestions.SuggestionsRanker;
+import org.chromium.chrome.browser.suggestions.SuggestionsRecyclerView;
 import org.chromium.chrome.browser.suggestions.SuggestionsUiDelegate;
 import org.chromium.chrome.browser.widget.displaystyle.UiConfig;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 
 /**
  * Item that allows the user to perform an action on the NTP.
  */
 public class ActionItem extends OptionalLeaf {
-    @IntDef({ACTION_NONE, ACTION_VIEW_ALL, ACTION_FETCH})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface Action {}
-    public static final int ACTION_NONE = 0;
-    public static final int ACTION_VIEW_ALL = 1;
-    public static final int ACTION_FETCH = 2;
-
     private final SuggestionsCategoryInfo mCategoryInfo;
     private final SuggestionsSection mParentSection;
     private final SuggestionsRanker mSuggestionsRanker;
-
-    @Action
-    private final int mCurrentAction;
 
     private boolean mImpressionTracked;
     private int mPerSectionRank = -1;
@@ -43,8 +31,7 @@ public class ActionItem extends OptionalLeaf {
         mCategoryInfo = section.getCategoryInfo();
         mParentSection = section;
         mSuggestionsRanker = ranker;
-        mCurrentAction = findAppropriateAction();
-        setVisible(mCurrentAction != ACTION_NONE);
+        setVisible(mCategoryInfo.getAdditionalAction() != ContentSuggestionsAdditionalAction.NONE);
     }
 
     @Override
@@ -76,34 +63,27 @@ public class ActionItem extends OptionalLeaf {
     void performAction(SuggestionsUiDelegate uiDelegate) {
         uiDelegate.getMetricsReporter().onMoreButtonClicked(this);
 
-        switch (mCurrentAction) {
-            case ACTION_VIEW_ALL:
+        switch (mCategoryInfo.getAdditionalAction()) {
+            case ContentSuggestionsAdditionalAction.VIEW_ALL:
                 mCategoryInfo.performViewAllAction(uiDelegate.getNavigationDelegate());
                 return;
-            case ACTION_FETCH:
+            case ContentSuggestionsAdditionalAction.FETCH:
                 uiDelegate.getSuggestionsSource().fetchSuggestions(
                         mCategoryInfo.getCategory(), mParentSection.getDisplayedSuggestionIds());
                 mParentSection.onFetchStarted();
                 return;
-            case ACTION_NONE:
+            case ContentSuggestionsAdditionalAction.NONE:
             default:
                 // Should never be reached.
                 assert false;
         }
     }
 
-    @Action
-    private int findAppropriateAction() {
-        if (mCategoryInfo.hasViewAllAction()) return ACTION_VIEW_ALL;
-        if (mCategoryInfo.hasFetchAction()) return ACTION_FETCH;
-        return ACTION_NONE;
-    }
-
     /** ViewHolder associated to {@link ItemViewType#ACTION}. */
     public static class ViewHolder extends CardViewHolder implements ContextMenuManager.Delegate {
         private ActionItem mActionListItem;
 
-        public ViewHolder(final NewTabPageRecyclerView recyclerView,
+        public ViewHolder(final SuggestionsRecyclerView recyclerView,
                 ContextMenuManager contextMenuManager, final SuggestionsUiDelegate uiDelegate,
                 UiConfig uiConfig) {
             super(R.layout.new_tab_page_action_card, recyclerView, uiConfig, contextMenuManager);

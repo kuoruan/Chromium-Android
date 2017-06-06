@@ -4,10 +4,14 @@
 
 package org.chromium.chrome.browser.omnibox;
 
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.text.TextUtils;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,6 +19,16 @@ import java.util.List;
  */
 @VisibleForTesting
 public class OmniboxSuggestion {
+    private static final String KEY_ZERO_SUGGEST_LIST_SIZE = "zero_suggest_list_size";
+    private static final String KEY_PREFIX_ZERO_SUGGEST_URL = "zero_suggest_url";
+    private static final String KEY_PREFIX_ZERO_SUGGEST_DISPLAY_TEST = "zero_suggest_display_text";
+    private static final String KEY_PREFIX_ZERO_SUGGEST_DESCRIPTION = "zero_suggest_description";
+    private static final String KEY_PREFIX_ZERO_SUGGEST_NATIVE_TYPE = "zero_suggest_native_type";
+    private static final String KEY_PREFIX_ZERO_SUGGEST_IS_SEARCH_TYPE = "zero_suggest_is_search";
+    private static final String KEY_PREFIX_ZERO_SUGGEST_ANSWER_TEXT = "zero_suggest_answer_text";
+    private static final String KEY_PREFIX_ZERO_SUGGEST_ANSWER_TYPE = "zero_suggest_answer_type";
+    private static final String KEY_PREFIX_ZERO_SUGGEST_IS_DELETABLE = "zero_suggest_is_deletable";
+    private static final String KEY_PREFIX_ZERO_SUGGEST_IS_STARRED = "zero_suggest_is_starred";
 
     /**
      * Specifies the style of portions of the suggestion text.
@@ -191,5 +205,66 @@ public class OmniboxSuggestion {
                 && answersAreEqual
                 && mIsStarred == suggestion.mIsStarred
                 && mIsDeletable == suggestion.mIsDeletable;
+    }
+
+    /**
+     * Cache the given suggestion list in shared preferences.
+     * @param suggestions Suggestions to be cached.
+     */
+    public static void cacheOmniboxSuggestionListForZeroSuggest(
+            List<OmniboxSuggestion> suggestions) {
+        Editor editor = ContextUtils.getAppSharedPreferences().edit();
+        editor.putInt(KEY_ZERO_SUGGEST_LIST_SIZE, suggestions.size()).apply();
+        for (int i = 0; i < suggestions.size(); i++) {
+            OmniboxSuggestion suggestion = suggestions.get(i);
+            editor.putString(KEY_PREFIX_ZERO_SUGGEST_URL + i, suggestion.getUrl())
+                    .putString(KEY_PREFIX_ZERO_SUGGEST_DISPLAY_TEST + i,
+                            suggestion.getDisplayText())
+                    .putString(KEY_PREFIX_ZERO_SUGGEST_DESCRIPTION + i,
+                            suggestion.getDescription())
+                    .putString(KEY_PREFIX_ZERO_SUGGEST_ANSWER_TEXT + i,
+                            suggestion.getAnswerContents())
+                    .putString(KEY_PREFIX_ZERO_SUGGEST_ANSWER_TYPE + i,
+                            suggestion.getAnswerType())
+                    .putInt(KEY_PREFIX_ZERO_SUGGEST_NATIVE_TYPE + i, suggestion.getType())
+                    .putBoolean(KEY_PREFIX_ZERO_SUGGEST_IS_SEARCH_TYPE + i,
+                            !suggestion.isUrlSuggestion())
+                    .putBoolean(KEY_PREFIX_ZERO_SUGGEST_IS_DELETABLE + i, suggestion.mIsDeletable)
+                    .putBoolean(KEY_PREFIX_ZERO_SUGGEST_IS_STARRED + i, suggestion.mIsStarred)
+                    .apply();
+        }
+    }
+
+    /**
+     * @return The zero suggest result if they have been cached before.
+     */
+    public static List<OmniboxSuggestion> getCachedOmniboxSuggestionsForZeroSuggest() {
+        SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
+        int size = prefs.getInt(KEY_ZERO_SUGGEST_LIST_SIZE, -1);
+        List<OmniboxSuggestion> suggestions = null;
+        if (size > 1) {
+            suggestions = new ArrayList<>(size);
+            List<MatchClassification> classifications = new ArrayList<>();
+            classifications.add(new MatchClassification(0, MatchClassificationStyle.NONE));
+            for (int i = 0; i < size; i++) {
+                String url = prefs.getString(KEY_PREFIX_ZERO_SUGGEST_URL + i, "");
+                String displayText = prefs.getString(KEY_PREFIX_ZERO_SUGGEST_DISPLAY_TEST + i, "");
+                String description = prefs.getString(KEY_PREFIX_ZERO_SUGGEST_DESCRIPTION + i, "");
+                String answerText = prefs.getString(KEY_PREFIX_ZERO_SUGGEST_ANSWER_TEXT + i, "");
+                String answerType = prefs.getString(KEY_PREFIX_ZERO_SUGGEST_ANSWER_TYPE + i, "");
+                int nativeType = prefs.getInt(KEY_PREFIX_ZERO_SUGGEST_NATIVE_TYPE + i, -1);
+                boolean isSearchType =
+                        prefs.getBoolean(KEY_PREFIX_ZERO_SUGGEST_IS_SEARCH_TYPE, true);
+                boolean isStarred = prefs.getBoolean(KEY_PREFIX_ZERO_SUGGEST_IS_STARRED + i, false);
+                boolean isDeletable = prefs.getBoolean(
+                        KEY_PREFIX_ZERO_SUGGEST_IS_DELETABLE + i, false);
+                OmniboxSuggestion suggestion = new OmniboxSuggestion(
+                        nativeType, !isSearchType, 0, 0, displayText,
+                        classifications, description, classifications, answerText,
+                        answerType, "", url, isStarred, isDeletable);
+                suggestions.add(suggestion);
+            }
+        }
+        return suggestions;
     }
 }

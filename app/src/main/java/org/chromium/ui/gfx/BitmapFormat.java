@@ -15,15 +15,15 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class BitmapFormat {
-  @IntDef({
-      NO_CONFIG, ALPHA_8, ARGB_4444, ARGB_8888, RGB_565
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface BitmapFormatEnum {}
-  public static final int NO_CONFIG = 0;
-  public static final int ALPHA_8 = 1;
-  public static final int ARGB_4444 = 2;
-  public static final int ARGB_8888 = 3;
-  public static final int RGB_565 = 4;
+@IntDef({
+    BitmapFormat.NO_CONFIG, BitmapFormat.ALPHA_8, BitmapFormat.ARGB_4444, BitmapFormat.ARGB_8888,
+    BitmapFormat.RGB_565
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface BitmapFormat {
+  int NO_CONFIG = 0;
+  int ALPHA_8 = 1;
+  int ARGB_4444 = 2;
+  int ARGB_8888 = 3;
+  int RGB_565 = 4;
 }

@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser;
 
 import android.app.Activity;
+import android.app.Application;
 import android.content.SharedPreferences;
 import android.provider.Settings;
 import android.text.TextUtils;
@@ -12,6 +13,7 @@ import android.text.TextUtils;
 import org.chromium.base.ApplicationState;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.ApplicationStatus.ApplicationStateListener;
+import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.LocaleUtils;
 import org.chromium.base.ThreadUtils;
@@ -25,6 +27,7 @@ import org.chromium.chrome.browser.metrics.VariationsSession;
 import org.chromium.chrome.browser.notifications.NotificationPlatformBridge;
 import org.chromium.chrome.browser.partnercustomizations.PartnerBrowserCustomizations;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
+import org.chromium.chrome.browser.preferences.privacy.BrowsingDataBridge;
 import org.chromium.chrome.browser.share.ShareHelper;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.util.FeatureUtilities;
@@ -46,7 +49,7 @@ public class ChromeActivitySessionTracker {
     // Used to trigger variation changes (such as seed fetches) upon application foregrounding.
     private VariationsSession mVariationsSession;
 
-    private ChromeApplication mApplication;
+    private Application mApplication;
     private boolean mIsInitialized;
     private boolean mIsStarted;
     private boolean mIsFinishedCachingNativeFlags;
@@ -66,7 +69,17 @@ public class ChromeActivitySessionTracker {
      * @see #getInstance()
      */
     protected ChromeActivitySessionTracker() {
-        mApplication = (ChromeApplication) ContextUtils.getApplicationContext();
+        mApplication = (Application) ContextUtils.getApplicationContext();
+        mVariationsSession = AppHooks.get().createVariationsSession();
+    }
+
+    /**
+     * Asynchronously returns the value of the "restrict" URL param that the variations service
+     * should use for variation seed requests.
+     * @param callback Callback that will be called with the param value when available.
+     */
+    public void getVariationsRestrictModeValue(Callback<String> callback) {
+        mVariationsSession.getRestrictModeValue(mApplication, callback);
     }
 
     /**
@@ -80,7 +93,6 @@ public class ChromeActivitySessionTracker {
         assert !mIsStarted;
 
         ApplicationStatus.registerApplicationStateListener(createApplicationStateListener());
-        mVariationsSession = AppHooks.get().createVariationsSession();
     }
 
     /**
@@ -183,17 +195,16 @@ public class ChromeActivitySessionTracker {
      * {@link #onStart} instead of {@link #initialize}.
      */
     private void updateAcceptLanguages() {
-        PrefServiceBridge instance = PrefServiceBridge.getInstance();
         String localeString = LocaleUtils.getDefaultLocaleListString();
         if (hasLocaleChanged(localeString)) {
-            instance.resetAcceptLanguages(localeString);
+            PrefServiceBridge.getInstance().resetAcceptLanguages(localeString);
             // Clear cache so that accept-languages change can be applied immediately.
             // TODO(changwan): The underlying BrowsingDataRemover::Remove() is an asynchronous call.
             // So cache-clearing may not be effective if URL rendering can happen before
             // OnBrowsingDataRemoverDone() is called, in which case we may have to reload as well.
             // Check if it can happen.
-            instance.clearBrowsingData(
-                    null, new int[]{ BrowsingDataType.CACHE }, TimePeriod.ALL_TIME);
+            BrowsingDataBridge.getInstance().clearBrowsingData(
+                    null, new int[] {BrowsingDataType.CACHE}, TimePeriod.ALL_TIME);
         }
     }
 

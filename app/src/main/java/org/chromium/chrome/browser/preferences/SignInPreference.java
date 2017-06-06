@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.preferences;
 
-import android.accounts.Account;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -26,6 +25,7 @@ import org.chromium.chrome.browser.signin.SigninManager;
 import org.chromium.chrome.browser.signin.SigninManager.SignInAllowedObserver;
 import org.chromium.chrome.browser.sync.ProfileSyncService;
 import org.chromium.chrome.browser.sync.ProfileSyncService.SyncStateChangedListener;
+import org.chromium.chrome.browser.util.ViewUtils;
 import org.chromium.components.signin.ChromeSigninController;
 import org.chromium.components.sync.AndroidSyncSettings;
 
@@ -38,13 +38,13 @@ public class SignInPreference extends Preference
         implements SignInAllowedObserver, ProfileDownloader.Observer,
                    AndroidSyncSettings.AndroidSyncSettingsObserver, SyncStateChangedListener {
     private boolean mViewEnabled;
+    private boolean mShowingPromo;
 
     /**
      * Constructor for inflating from XML.
      */
     public SignInPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
-        setShouldDisableView(false);
         update();
     }
 
@@ -82,88 +82,90 @@ public class SignInPreference extends Preference
      * Updates the title, summary, and image based on the current sign-in state.
      */
     private void update() {
-        String title;
-        String summary;
-        String fragment;
-
-        Account account = ChromeSigninController.get(getContext()).getSignedInUser();
-        if (account == null) {
-            title = getContext().getString(R.string.sign_in_to_chrome);
-            summary = getContext().getString(R.string.sign_in_to_chrome_summary);
-            fragment = null;
-        } else {
-            summary = SyncPreference.getSyncStatusSummary(getContext());
-            fragment = AccountManagementFragment.class.getName();
-            title = AccountManagementFragment.getCachedUserName(account.name);
-            if (title == null) {
-                final Profile profile = Profile.getLastUsedProfile();
-                String cachedName = ProfileDownloader.getCachedFullName(profile);
-                Bitmap cachedBitmap = ProfileDownloader.getCachedAvatar(profile);
-                if (TextUtils.isEmpty(cachedName) || cachedBitmap == null) {
-                    AccountManagementFragment.startFetchingAccountInformation(
-                            getContext(), profile, account.name);
-                }
-                title = TextUtils.isEmpty(cachedName) ? account.name : cachedName;
-            }
-        }
-
-        setTitle(title);
-        setSummary(summary);
-        setFragment(fragment);
-        updateSyncStatusIcon();
-
-        ChromeSigninController signinController = ChromeSigninController.get(getContext());
-        boolean enabled = signinController.isSignedIn()
-                || SigninManager.get(getContext()).isSignInAllowed();
-        if (mViewEnabled != enabled) {
-            mViewEnabled = enabled;
-            notifyChanged();
-        }
-        if (!enabled) setFragment(null);
-
+        String accountName = ChromeSigninController.get().getSignedInAccountName();
         if (SigninManager.get(getContext()).isSigninDisabledByPolicy()) {
-            setIcon(ManagedPreferencesUtils.getManagedByEnterpriseIconId());
+            setupSigninDisabled();
+            mShowingPromo = false;
+        } else if (accountName == null) {
+            setupNotSignedIn();
+
+            if (!mShowingPromo) {
+                // This user action should be recorded when message with sign-in prompt is shown
+                RecordUserAction.record("Signin_Impression_FromSettings");
+            }
+            mShowingPromo = true;
         } else {
-            Resources resources = getContext().getResources();
-            Bitmap bitmap = AccountManagementFragment.getUserPicture(
-                    signinController.getSignedInAccountName(), resources);
-            setIcon(new BitmapDrawable(resources, bitmap));
+            setupSignedIn(accountName);
+            mShowingPromo = false;
         }
 
         setOnPreferenceClickListener(new OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                if (!AccountSigninActivity.startIfAllowed(
-                            getContext(), SigninAccessPoint.SETTINGS)) {
-                    return false;
-                }
-
-                setEnabled(false);
-                return true;
+                return AccountSigninActivity.startIfAllowed(
+                        getContext(), SigninAccessPoint.SETTINGS);
             }
         });
-
-        if (account == null && enabled) {
-            RecordUserAction.record("Signin_Impression_FromSettings");
-        }
     }
 
-    private void updateSyncStatusIcon() {
-        if (SyncPreference.showSyncErrorIcon(getContext())
-                && ChromeSigninController.get(getContext()).isSignedIn()) {
-            setWidgetLayoutResource(R.layout.sync_error_widget);
-        } else {
-            setWidgetLayoutResource(0);
+    private void setupSigninDisabled() {
+        setTitle(R.string.sign_in_to_chrome);
+        setSummary(R.string.sign_in_to_chrome_summary);
+        setFragment(null);
+        setIcon(ManagedPreferencesUtils.getManagedByEnterpriseIconId());
+        setWidgetLayoutResource(0);
+        setViewEnabled(false);
+    }
+
+    private void setupNotSignedIn() {
+        setTitle(R.string.sign_in_to_chrome);
+        setSummary(R.string.sign_in_to_chrome_summary);
+        setFragment(null);
+        setIcon(R.drawable.account_management_no_picture);
+        setWidgetLayoutResource(0);
+        setViewEnabled(true);
+    }
+
+    private void setupSignedIn(String accountName) {
+        String title = AccountManagementFragment.getCachedUserName(accountName);
+        if (title == null) {
+            Profile profile = Profile.getLastUsedProfile();
+            String cachedName = ProfileDownloader.getCachedFullName(profile);
+            Bitmap cachedBitmap = ProfileDownloader.getCachedAvatar(profile);
+            if (TextUtils.isEmpty(cachedName) || cachedBitmap == null) {
+                AccountManagementFragment.startFetchingAccountInformation(
+                        getContext(), profile, accountName);
+            }
+            title = TextUtils.isEmpty(cachedName) ? accountName : cachedName;
         }
+        setTitle(title);
+        setSummary(SyncPreference.getSyncStatusSummary(getContext()));
+        setFragment(AccountManagementFragment.class.getName());
+
+        Resources resources = getContext().getResources();
+        Bitmap bitmap = AccountManagementFragment.getUserPicture(accountName, resources);
+        setIcon(new BitmapDrawable(resources, bitmap));
+
+        setWidgetLayoutResource(
+                SyncPreference.showSyncErrorIcon(getContext()) ? R.layout.sync_error_widget : 0);
+
+        setViewEnabled(true);
+    }
+
+    // This just changes visual representation. Actual enabled flag in preference stays
+    // always true to receive clicks (necessary to show "Managed by administator" toast).
+    private void setViewEnabled(boolean enabled) {
+        if (mViewEnabled == enabled) {
+            return;
+        }
+        mViewEnabled = enabled;
+        notifyChanged();
     }
 
     @Override
     protected void onBindView(View view) {
         super.onBindView(view);
-
-        view.setEnabled(mViewEnabled);
-        view.findViewById(android.R.id.title).setEnabled(mViewEnabled);
-        view.findViewById(android.R.id.summary).setEnabled(mViewEnabled);
+        ViewUtils.setEnabledRecursive(view, mViewEnabled);
     }
 
     // ProfileSyncServiceListener implementation:

@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.payments;
 import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.AutofillProfile;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.NormalizedAddressRequestDelegate;
+import org.chromium.chrome.browser.autofill.PhoneNumberUtil;
 import org.chromium.chrome.browser.payments.ui.PaymentOption;
 import org.chromium.payments.mojom.PaymentResponse;
 
@@ -55,6 +56,12 @@ public class PaymentResponseHelper implements NormalizedAddressRequestDelegate {
             mPaymentResponse.payerName = ((AutofillContact) selectedContact).getPayerName();
             mPaymentResponse.payerPhone = ((AutofillContact) selectedContact).getPayerPhone();
             mPaymentResponse.payerEmail = ((AutofillContact) selectedContact).getPayerEmail();
+
+            // Normalize the phone number only if it's not null since this calls native code.
+            if (mPaymentResponse.payerPhone != null) {
+                mPaymentResponse.payerPhone =
+                        PhoneNumberUtil.formatForResponse(mPaymentResponse.payerPhone);
+            }
         }
 
         // Set up the shipping section of the response.
@@ -122,6 +129,6 @@ public class PaymentResponseHelper implements NormalizedAddressRequestDelegate {
 
     @Override
     public void onCouldNotNormalize(AutofillProfile profile) {
-        onAddressNormalized(null);
+        onAddressNormalized(profile);
     }
 }

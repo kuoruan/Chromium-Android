@@ -820,8 +820,6 @@ class SuggestionView extends ViewGroup {
             }
 
             // Align the text to be pixel perfectly aligned with the text in the url bar.
-            mTextLeft = getSuggestionTextLeftPosition();
-            mTextRight = getSuggestionTextRightPosition();
             boolean isRTL = ApiCompatibilityUtils.isLayoutRtl(this);
             if (DeviceFormFactor.isTablet(getContext())) {
                 int textWidth = isRTL ? mTextRight : (r - l - mTextLeft);
@@ -914,17 +912,20 @@ class SuggestionView extends ViewGroup {
             int width = MeasureSpec.getSize(widthMeasureSpec);
             int height = MeasureSpec.getSize(heightMeasureSpec);
 
+            boolean isRTL = ApiCompatibilityUtils.isLayoutRtl(this);
+            mTextLeft = getSuggestionTextLeftPosition();
+            mTextRight = getSuggestionTextRightPosition();
+
+            int maxWidth = width - (isRTL ? mTextRight : mTextLeft);
             if (mTextLine1.getMeasuredWidth() != width
                     || mTextLine1.getMeasuredHeight() != height) {
-                mTextLine1.measure(
-                        MeasureSpec.makeMeasureSpec(widthMeasureSpec, MeasureSpec.AT_MOST),
+                mTextLine1.measure(MeasureSpec.makeMeasureSpec(maxWidth, MeasureSpec.AT_MOST),
                         MeasureSpec.makeMeasureSpec(mSuggestionHeight, MeasureSpec.AT_MOST));
             }
 
             if (mTextLine2.getMeasuredWidth() != width
                     || mTextLine2.getMeasuredHeight() != height) {
-                mTextLine2.measure(
-                        MeasureSpec.makeMeasureSpec(widthMeasureSpec, MeasureSpec.AT_MOST),
+                mTextLine2.measure(MeasureSpec.makeMeasureSpec(maxWidth, MeasureSpec.AT_MOST),
                         MeasureSpec.makeMeasureSpec(mSuggestionHeight, MeasureSpec.AT_MOST));
             }
             if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.AT_MOST) {

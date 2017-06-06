@@ -4,11 +4,17 @@
 
 package org.chromium.chrome.browser.compositor.layouts;
 
+import android.annotation.TargetApi;
+import android.os.Build;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
+
+import org.chromium.base.ContextUtils;
+import org.chromium.chrome.browser.util.MathUtils;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,9 +37,10 @@ public class ChromeAnimation<T> {
     private static final int FIRST_FRAME_OFFSET_MS = 1000 / 60;
 
     /**
-     * Can be used to slow down created animations for debugging purposes.
+     * Multiplier for animation durations for debugging. Can be set in Developer Options and cached
+     * here.
      */
-    private static final int ANIMATION_MULTIPLIER = 1;
+    private static Float sAnimationMultiplier;
 
     private final AtomicBoolean mFinishCalled = new AtomicBoolean();
     private final ArrayList<Animation<T>> mAnimations = new ArrayList<Animation<T>>();
@@ -247,18 +254,31 @@ public class ChromeAnimation<T> {
          * @param start The starting value of the animation.
          * @param end The ending value of the animation.
          * @param duration The duration of the animation.  This does not include the startTime.
-         *                 The duration must be strictly positive.
          * @param startTime The time at which this animation should start.
          */
         public Animation(T t, float start, float end, long duration,
                 long startTime) {
-            assert duration > 0;
             mAnimatedObject = t;
             mStart = start;
             mEnd = end;
-            mDuration = duration * ANIMATION_MULTIPLIER;
-            mStartDelay = startTime * ANIMATION_MULTIPLIER;
+            float animationMultiplier = getAnimationMultiplier();
+            mDuration = (long) (duration * animationMultiplier);
+            mStartDelay = (long) (startTime * animationMultiplier);
             mCurrentTime = 0;
+        }
+
+        @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
+        private float getAnimationMultiplier() {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) return 1f;
+
+            synchronized (sLock) {
+                if (sAnimationMultiplier == null) {
+                    sAnimationMultiplier = Settings.Global.getFloat(
+                            ContextUtils.getApplicationContext().getContentResolver(),
+                            Settings.Global.ANIMATOR_DURATION_SCALE, 1f);
+                }
+                return sAnimationMultiplier;
+            }
         }
 
         /**
@@ -303,11 +323,14 @@ public class ChromeAnimation<T> {
             }
 
             // Figure out the relative fraction of time we need to animate.
-            long relativeTime = Math.max(0, Math.min(mCurrentTime - mStartDelay,
-                    mDuration));
+            long relativeTime = MathUtils.clamp(mCurrentTime - mStartDelay, 0, mDuration);
 
-            setProperty(mStart + (mEnd - mStart)
-                    * mInterpolator.getInterpolation((float) relativeTime / (float) mDuration));
+            if (mDuration > 0) {
+                setProperty(MathUtils.interpolate(mStart, mEnd,
+                        mInterpolator.getInterpolation((float) relativeTime / (float) mDuration)));
+            } else {
+                setProperty(mEnd);
+            }
         }
 
         /**

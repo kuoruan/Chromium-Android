@@ -196,11 +196,11 @@ public class ContextualSearchBarControl
         // instead. If the panel is fully peeked, call #onUpdateFromPeekToExpanded().
         if (percentage == 1.f) onUpdateFromPeekToExpand(0.f);
 
-        // When the panel is completely closed the caption and static image should be hidden.
+        // When the panel is completely closed the caption and custom image should be hidden.
         if (percentage == 0.f) {
             mQuickActionControl.reset();
             mCaptionControl.hide();
-            getImageControl().hideStaticImage(false);
+            getImageControl().hideCustomImage(false);
         }
     }
 
@@ -221,15 +221,15 @@ public class ContextualSearchBarControl
     }
 
     /**
-     * Sets the search context to display in the control.
+     * Sets the details of the context to display in the control.
      * @param selection The portion of the context that represents the user's selection.
      * @param end The portion of the context after the selection.
      */
-    public void setSearchContext(String selection, String end) {
+    public void setContextDetails(String selection, String end) {
         cancelSearchTermResolutionAnimation();
         hideCaption();
         mQuickActionControl.reset();
-        mContextControl.setSearchContext(selection, end);
+        mContextControl.setContextDetails(selection, end);
         resetSearchBarContextOpacity();
         animateDividerLine(false);
     }

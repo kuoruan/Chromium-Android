@@ -19,7 +19,7 @@ public class HistoryActivity extends SnackbarActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mHistoryManager = new HistoryManager(this, null);
+        mHistoryManager = new HistoryManager(this, true, getSnackbarManager());
         setContentView(mHistoryManager.getView());
     }
 

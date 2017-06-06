@@ -17,9 +17,10 @@ import android.util.SparseIntArray;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.AppHooks;
+import org.chromium.chrome.browser.notifications.ChannelDefinitions;
 import org.chromium.chrome.browser.notifications.ChromeNotificationBuilder;
-import org.chromium.chrome.browser.notifications.NotificationConstants;
+import org.chromium.chrome.browser.notifications.NotificationBuilderFactory;
+import org.chromium.chrome.browser.notifications.NotificationUmaTracker;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tab.TabWebContentsDelegateAndroid;
 
@@ -163,12 +164,9 @@ public class MediaCaptureNotificationService extends Service {
      */
     private void createNotification(int notificationId, int mediaType, String url) {
         ChromeNotificationBuilder builder =
-                AppHooks.get()
-                        .createChromeNotificationBuilder(true /* preferCompat */,
-                                NotificationConstants.CATEGORY_ID_BROWSER,
-                                mContext.getString(R.string.notification_category_browser),
-                                NotificationConstants.CATEGORY_GROUP_ID_GENERAL,
-                                mContext.getString(R.string.notification_category_group_general))
+                NotificationBuilderFactory
+                        .createChromeNotificationBuilder(
+                                true /* preferCompat */, ChannelDefinitions.CHANNEL_ID_MEDIA)
                         .setAutoCancel(false)
                         .setOngoing(true)
                         .setContentTitle(mContext.getString(R.string.app_name))
@@ -203,6 +201,8 @@ public class MediaCaptureNotificationService extends Service {
         mNotificationManager.notify(NOTIFICATION_NAMESPACE, notificationId, notification);
         mNotifications.put(notificationId, mediaType);
         updateSharedPreferencesEntry(notificationId, false);
+        NotificationUmaTracker.getInstance().onNotificationShown(
+                NotificationUmaTracker.MEDIA_CAPTURE, ChannelDefinitions.CHANNEL_ID_MEDIA);
     }
 
     /**

@@ -25,6 +25,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.WindowManager;
 
+import org.chromium.base.BuildInfo;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordUserAction;
@@ -54,7 +55,7 @@ import java.util.List;
  */
 @TargetApi(Build.VERSION_CODES.M)
 public class SelectionPopupController extends ActionModeCallbackHelper {
-    private static final String TAG = "cr.SelectionPopCtlr";  // 20 char limit
+    private static final String TAG = "SelectionPopupCtlr"; // 20 char limit
 
     /**
      * Android Intent size limitations prevent sending over a megabyte of data. Limit
@@ -69,6 +70,14 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
     // selection change response will be asynchronous. 300ms should accomodate
     // most such trailing, async delays.
     private static final int SHOW_DELAY_MS = 300;
+
+    // A large value to force text processing menu items to be at the end of the
+    // context menu. Chosen to be bigger than the order of possible items in the
+    // XML template.
+    // TODO(timav): remove this constant and use show/hide for Assist item instead
+    // of adding and removing it once we switch to Android O SDK. The show/hide method
+    // does not require ordering information.
+    private static final int MENU_ITEM_ORDER_TEXT_PROCESS_START = 100;
 
     private final Context mContext;
     private final WindowAndroid mWindowAndroid;
@@ -86,19 +95,17 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
 
     private View mView;
     private ActionMode mActionMode;
+    private MenuDescriptor mActionMenuDescriptor;
 
     // Bit field for mappings from menu item to a flag indicating it is allowed.
     private int mAllowedMenuItems;
 
     private boolean mHidden;
-    private boolean mPendingInvalidateContentRect;
 
     private boolean mEditable;
     private boolean mIsPasswordType;
     private boolean mIsInsertion;
-
-    // Indicates whether the action mode needs to be redrawn since last invalidation.
-    private boolean mNeedsPrepare;
+    private boolean mCanSelectAllForPastePopup;
 
     private boolean mUnselectAllOnDismiss;
     private String mLastSelectedText;
@@ -112,8 +119,19 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
     private PastePopupMenu mPastePopupMenu;
     private boolean mWasPastePopupShowingOnInsertionDragStart;
 
-    // The client that implements Contextual Search functionality, or null if none exists.
-    private ContextualSearchClient mContextualSearchClient;
+    // The client that processes textual selection, or null if none exists.
+    private SelectionClient mSelectionClient;
+
+    // The classificaton result of the selected text if the selection exists and
+    // ContextSelectionProvider was able to classify it, otherwise null.
+    private ContextSelectionProvider.Result mClassificationResult;
+
+    // The resource ID for Assist menu item.
+    private int mAssistMenuItemId;
+
+    // This variable is set to true when showActionMode() is postponed till classification result
+    // arrives or till the selection is adjusted based on the classification result.
+    private boolean mPendingShowActionMode;
 
     /**
      * Create {@link SelectionPopupController} instance.
@@ -145,6 +163,16 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
                 hideActionModeTemporarily(hideDuration);
             }
         };
+
+        mSelectionClient =
+                ContextSelectionClient.create(new ContextSelectionCallback(), window, webContents);
+
+        // TODO(timav): Use android.R.id.textAssist for the Assist item id once we switch to
+        // Android O SDK and remove |mAssistMenuItemId|.
+        if (BuildInfo.isAtLeastO()) {
+            mAssistMenuItemId =
+                    mContext.getResources().getIdentifier("textAssist", "id", "android");
+        }
     }
 
     /**
@@ -174,9 +202,9 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         return mActionMode != null;
     }
 
-    // True if action mode is not yet initialized or set to no-op mode.
-    private boolean isEmpty() {
-        return mCallback == EMPTY_CALLBACK;
+    // True if action mode is initialized to a working (not a no-op) mode.
+    private boolean isActionModeSupported() {
+        return mCallback != EMPTY_CALLBACK;
     }
 
     @Override
@@ -189,31 +217,37 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
      *
      * <p>Action mode in floating mode is tried first, and then falls back to
      * a normal one.
-     * @return {@code true} if the action mode started successfully or is already on.
+     * <p> If the action mode cannot be created the selection is cleared.
      */
-    public boolean showActionMode() {
-        if (isEmpty()) return false;
+    public void showActionModeOrClearOnFailure() {
+        mPendingShowActionMode = false;
 
-        // Just refreshes the view if it is already showing.
+        if (!isActionModeSupported() || !mHasSelection) return;
+
+        // Just refresh the view if action mode already exists.
         if (isActionModeValid()) {
-            invalidateActionMode();
-            return true;
+            // Try/catch necessary for framework bug, crbug.com/446717.
+            try {
+                mActionMode.invalidate();
+            } catch (NullPointerException e) {
+                Log.w(TAG, "Ignoring NPE from ActionMode.invalidate() as workaround for L", e);
+            }
+            hideActionMode(false);
+            return;
         }
 
-        if (mView.getParent() != null) {
-             // On ICS, startActionMode throws an NPE when getParent() is null.
-            assert mWebContents != null;
-            ActionMode actionMode = supportsFloatingActionMode()
-                    ? startFloatingActionMode()
-                    : mView.startActionMode(mCallback);
-            if (actionMode != null) {
-                // This is to work around an LGE email issue. See crbug.com/651706 for more details.
-                LGEmailActionModeWorkaround.runIfNecessary(mContext, actionMode);
-            }
-            mActionMode = actionMode;
+        assert mWebContents != null;
+        ActionMode actionMode = supportsFloatingActionMode()
+                ? startFloatingActionMode()
+                : mView.startActionMode(mCallback);
+        if (actionMode != null) {
+            // This is to work around an LGE email issue. See crbug.com/651706 for more details.
+            LGEmailActionModeWorkaround.runIfNecessary(mContext, actionMode);
         }
+        mActionMode = actionMode;
         mUnselectAllOnDismiss = true;
-        return isActionModeValid();
+
+        if (!isActionModeValid()) clearSelection();
     }
 
     @TargetApi(Build.VERSION_CODES.M)
@@ -223,23 +257,54 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         return actionMode;
     }
 
-    void showPastePopup(int x, int y) {
+    void createAndShowPastePopup(int x, int y, boolean canSelectAll) {
         if (mView.getParent() == null || mView.getVisibility() != View.VISIBLE) {
             return;
         }
 
         if (!supportsFloatingActionMode() && !canPaste()) return;
+        destroyPastePopup();
+        mCanSelectAllForPastePopup = canSelectAll;
+        PastePopupMenuDelegate delegate = new PastePopupMenuDelegate() {
+            @Override
+            public void paste() {
+                mWebContents.paste();
+                mWebContents.dismissTextHandles();
+            }
 
-        PastePopupMenu pastePopupMenu = getPastePopup();
-        if (pastePopupMenu == null) return;
+            @Override
+            public boolean canPaste() {
+                return SelectionPopupController.this.canPaste();
+            }
 
+            @Override
+            public void selectAll() {
+                SelectionPopupController.this.selectAll();
+            }
+
+            @Override
+            public boolean canSelectAll() {
+                return SelectionPopupController.this.canSelectAll();
+            }
+        };
+        Context windowContext = mWindowAndroid.getContext().get();
+        if (windowContext == null) return;
+        if (supportsFloatingActionMode()) {
+            mPastePopupMenu = new FloatingPastePopupMenu(windowContext, mView, delegate);
+        } else {
+            mPastePopupMenu = new LegacyPastePopupMenu(windowContext, mView, delegate);
+        }
+        showPastePopup(x, y);
+    }
+
+    private void showPastePopup(int x, int y) {
         // Coordinates are in DIP.
         final float deviceScale = mRenderCoordinates.getDeviceScaleFactor();
         final int xPix = (int) (x * deviceScale);
         final int yPix = (int) (y * deviceScale);
         final float browserControlsShownPix = mRenderCoordinates.getContentOffsetYPix();
         try {
-            pastePopupMenu.show(xPix, (int) (yPix + browserControlsShownPix));
+            mPastePopupMenu.show(xPix, (int) (yPix + browserControlsShownPix));
         } catch (WindowManager.BadTokenException e) {
         }
     }
@@ -249,43 +314,16 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
     }
 
-    void hidePastePopup() {
-        if (mPastePopupMenu != null) mPastePopupMenu.hide();
-    }
-
-    private PastePopupMenu getPastePopup() {
-        if (mPastePopupMenu == null) {
-            PastePopupMenuDelegate delegate = new PastePopupMenuDelegate() {
-                @Override
-                public void paste() {
-                    mWebContents.paste();
-                    mWebContents.dismissTextHandles();
-                }
-
-                @Override
-                public boolean canPaste() {
-                    return SelectionPopupController.this.canPaste();
-                }
-            };
-            Context windowContext = mWindowAndroid.getContext().get();
-            if (windowContext == null) return null;
-            if (supportsFloatingActionMode()) {
-                mPastePopupMenu = new FloatingPastePopupMenu(windowContext, mView, delegate);
-            } else {
-                mPastePopupMenu = new LegacyPastePopupMenu(windowContext, mView, delegate);
-            }
-        }
-        return mPastePopupMenu;
-    }
-
     void destroyPastePopup() {
-        hidePastePopup();
-        mPastePopupMenu = null;
+        if (isPastePopupShowing()) {
+            mPastePopupMenu.hide();
+            mPastePopupMenu = null;
+        }
     }
 
     @VisibleForTesting
     public boolean isPastePopupShowing() {
-        return mPastePopupMenu != null && mPastePopupMenu.isShowing();
+        return mPastePopupMenu != null;
     }
 
     // Composition methods for android.view.ActionMode
@@ -295,33 +333,16 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
      */
     @Override
     public void finishActionMode() {
+        mPendingShowActionMode = false;
+        mHidden = false;
+        if (mView != null) mView.removeCallbacks(mRepeatingHideRunnable);
+
         if (isActionModeValid()) {
             mActionMode.finish();
 
             // Should be nulled out in case #onDestroyActionMode() is not invoked in response.
             mActionMode = null;
-        }
-    }
-
-    /**
-     * @see ActionMode#invalidate()
-     * Note that invalidation will also reset visibility state. The caller
-     * should account for this when making subsequent visibility updates.
-     */
-    private void invalidateActionMode() {
-        if (!isActionModeValid()) return;
-        if (mHidden) {
-            assert canHideActionMode();
-            mHidden = false;
-            mView.removeCallbacks(mRepeatingHideRunnable);
-            mPendingInvalidateContentRect = false;
-        }
-
-        // Try/catch necessary for framework bug, crbug.com/446717.
-        try {
-            mActionMode.invalidate();
-        } catch (NullPointerException e) {
-            Log.w(TAG, "Ignoring NPE from ActionMode.invalidate() as workaround for L", e);
+            mActionMenuDescriptor = null;
         }
     }
 
@@ -329,13 +350,8 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
      * @see ActionMode#invalidateContentRect()
      */
     public void invalidateContentRect() {
-        if (supportsFloatingActionMode()) {
-            if (mHidden) {
-                mPendingInvalidateContentRect = true;
-            } else {
-                mPendingInvalidateContentRect = false;
-                if (isActionModeValid()) mActionMode.invalidateContentRect();
-            }
+        if (supportsFloatingActionMode() && isActionModeValid()) {
+            mActionMode.invalidateContentRect();
         }
     }
 
@@ -360,13 +376,9 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         if (mHidden) {
             mRepeatingHideRunnable.run();
         } else {
-            mHidden = false;
             mView.removeCallbacks(mRepeatingHideRunnable);
+            // To show the action mode that is being hidden call hide() again with a short delay.
             hideActionModeTemporarily(SHOW_DELAY_MS);
-            if (mPendingInvalidateContentRect) {
-                mPendingInvalidateContentRect = false;
-                invalidateContentRect();
-            }
         }
     }
 
@@ -406,8 +418,8 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
 
     @Override
     public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-        if (!mNeedsPrepare) return false;
-        menu.clear();
+        menu.removeGroup(R.id.select_action_menu_default_items);
+        menu.removeGroup(R.id.select_action_menu_text_processing_menus);
         createActionMenu(mode, menu);
         return true;
     }
@@ -429,48 +441,79 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
     }
 
     private void createActionMenu(ActionMode mode, Menu menu) {
-        mNeedsPrepare = false;
         initializeMenu(mContext, mode, menu);
 
+        mActionMenuDescriptor = createActionMenuDescriptor();
+        mActionMenuDescriptor.apply(menu);
+
+        if (isInsertion() || isSelectionPassword()) return;
+
+        initializeTextProcessingMenu(menu);
+    }
+
+    private MenuDescriptor createActionMenuDescriptor() {
+        MenuDescriptor descriptor = new MenuDescriptor();
+
+        updateAssistMenuItem(descriptor);
+
         if (!isSelectionEditable() || !canPaste()) {
-            menu.removeItem(R.id.select_action_menu_paste);
+            descriptor.removeItem(R.id.select_action_menu_paste);
         }
 
         if (isInsertion()) {
-            menu.removeItem(R.id.select_action_menu_select_all);
-            menu.removeItem(R.id.select_action_menu_cut);
-            menu.removeItem(R.id.select_action_menu_copy);
-            menu.removeItem(R.id.select_action_menu_share);
-            menu.removeItem(R.id.select_action_menu_web_search);
-            return;
+            descriptor.removeItem(R.id.select_action_menu_select_all);
+            descriptor.removeItem(R.id.select_action_menu_cut);
+            descriptor.removeItem(R.id.select_action_menu_copy);
+            descriptor.removeItem(R.id.select_action_menu_share);
+            descriptor.removeItem(R.id.select_action_menu_web_search);
+            return descriptor;
         }
 
         if (!isSelectionEditable()) {
-            menu.removeItem(R.id.select_action_menu_cut);
+            descriptor.removeItem(R.id.select_action_menu_cut);
         }
 
         if (isSelectionEditable() || !isSelectActionModeAllowed(MENU_ITEM_SHARE)) {
-            menu.removeItem(R.id.select_action_menu_share);
+            descriptor.removeItem(R.id.select_action_menu_share);
         }
 
         if (isSelectionEditable() || isIncognito()
                 || !isSelectActionModeAllowed(MENU_ITEM_WEB_SEARCH)) {
-            menu.removeItem(R.id.select_action_menu_web_search);
+            descriptor.removeItem(R.id.select_action_menu_web_search);
         }
 
         if (isSelectionPassword()) {
-            menu.removeItem(R.id.select_action_menu_copy);
-            menu.removeItem(R.id.select_action_menu_cut);
-            return;
+            descriptor.removeItem(R.id.select_action_menu_copy);
+            descriptor.removeItem(R.id.select_action_menu_cut);
         }
 
-        initializeTextProcessingMenu(menu);
+        return descriptor;
+    }
+
+    private boolean needsActionMenuUpdate() {
+        return !createActionMenuDescriptor().equals(mActionMenuDescriptor);
     }
 
     private boolean canPaste() {
         ClipboardManager clipMgr = (ClipboardManager)
                 mContext.getSystemService(Context.CLIPBOARD_SERVICE);
         return clipMgr.hasPrimaryClip();
+    }
+
+    private void updateAssistMenuItem(MenuDescriptor descriptor) {
+        // There is no Assist functionality before Android O.
+        if (!BuildInfo.isAtLeastO() || mAssistMenuItemId == 0) return;
+
+        // The assist menu item ID has to be equal to android.R.id.textAssist. Until we compile
+        // with Android O SDK where this ID is defined we replace the corresponding inflated
+        // item with an item with the proper ID.
+        // TODO(timav): Use android.R.id.textAssist for the Assist item id once we switch to
+        // Android O SDK and remove |mAssistMenuItemId|.
+
+        if (mClassificationResult != null && mClassificationResult.hasNamedAction()) {
+            descriptor.addItem(R.id.select_action_menu_default_items, mAssistMenuItemId, 1,
+                    mClassificationResult.label, mClassificationResult.icon);
+        }
     }
 
     /**
@@ -488,7 +531,8 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         for (int i = 0; i < supportedActivities.size(); i++) {
             ResolveInfo resolveInfo = supportedActivities.get(i);
             CharSequence label = resolveInfo.loadLabel(mContext.getPackageManager());
-            menu.add(R.id.select_action_menu_text_processing_menus, Menu.NONE, i, label)
+            menu.add(R.id.select_action_menu_text_processing_menus, Menu.NONE,
+                    MENU_ITEM_ORDER_TEXT_PROCESS_START + i, label)
                     .setIntent(createProcessTextIntentForResolveInfo(resolveInfo))
                     .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         }
@@ -514,7 +558,10 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         int id = item.getItemId();
         int groupId = item.getGroupId();
 
-        if (id == R.id.select_action_menu_select_all) {
+        if (BuildInfo.isAtLeastO() && id == mAssistMenuItemId) {
+            doAssistAction();
+            mode.finish();
+        } else if (id == R.id.select_action_menu_select_all) {
             selectAll();
         } else if (id == R.id.select_action_menu_cut) {
             cut();
@@ -544,6 +591,7 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
     @Override
     public void onDestroyActionMode() {
         mActionMode = null;
+        mActionMenuDescriptor = null;
         if (mUnselectAllOnDismiss) {
             mWebContents.dismissTextHandles();
             clearSelection();
@@ -573,11 +621,38 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
     }
 
     /**
+     * Perform an action that depends on the semantics of the selected text.
+     */
+    @VisibleForTesting
+    void doAssistAction() {
+        if (mClassificationResult == null || !mClassificationResult.hasNamedAction()) return;
+
+        assert mClassificationResult.onClickListener != null
+                || mClassificationResult.intent != null;
+
+        if (mClassificationResult.onClickListener != null) {
+            mClassificationResult.onClickListener.onClick(mView);
+            return;
+        }
+
+        if (mClassificationResult.intent != null) {
+            Context context = mWindowAndroid.getContext().get();
+            if (context == null) return;
+
+            context.startActivity(mClassificationResult.intent);
+            return;
+        }
+    }
+
+    /**
      * Perform a select all action.
      */
     @VisibleForTesting
     void selectAll() {
         mWebContents.selectAll();
+        mClassificationResult = null;
+        if (needsActionMenuUpdate()) showActionModeOrClearOnFailure();
+
         // Even though the above statement logged a SelectAll user action, we want to
         // track whether the focus was in an editable field, so log that too.
         if (isSelectionEditable()) {
@@ -702,6 +777,14 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
     }
 
     /**
+     * @return true if the current selection can select all.
+     */
+    @VisibleForTesting
+    public boolean canSelectAll() {
+        return mCanSelectAllForPastePopup;
+    }
+
+    /**
      * @return true if the current selection is for incognito content.
      *         Note: This should remain constant for the callback's lifetime.
      */
@@ -750,7 +833,7 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
 
     void restoreSelectionPopupsIfNecessary() {
         if (mHasSelection && !isActionModeValid()) {
-            if (!showActionMode()) clearSelection();
+            showActionModeOrClearOnFailure();
         }
     }
 
@@ -767,12 +850,22 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
                 mSelectionRect.set(left, top, right, bottom);
                 mHasSelection = true;
                 mUnselectAllOnDismiss = true;
-                if (!showActionMode()) clearSelection();
+                if (mSelectionClient == null || !mSelectionClient.sendsSelectionPopupUpdates()) {
+                    showActionModeOrClearOnFailure();
+                } else {
+                    // Rely on |mSelectionClient| sending a classification request and the request
+                    // always calling onClassified() callback.
+                    mPendingShowActionMode = true;
+                }
                 break;
 
             case SelectionEventType.SELECTION_HANDLES_MOVED:
                 mSelectionRect.set(left, top, right, bottom);
-                invalidateContentRect();
+                if (mPendingShowActionMode) {
+                    showActionModeOrClearOnFailure();
+                } else {
+                    invalidateContentRect();
+                }
                 break;
 
             case SelectionEventType.SELECTION_HANDLES_CLEARED:
@@ -787,12 +880,16 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
                 break;
 
             case SelectionEventType.SELECTION_HANDLE_DRAG_STOPPED:
-                hideActionMode(false);
+                if (mSelectionClient == null || !mSelectionClient.sendsSelectionPopupUpdates()) {
+                    hideActionMode(false);
+                }
+                // Otherwise rely on |mSelectionClient| sending a classification request and the
+                // request always calling onClassified() callback.
                 break;
 
             case SelectionEventType.INSERTION_HANDLE_SHOWN:
                 mSelectionRect.set(left, top, right, bottom);
-                setIsInsertion(true);
+                mIsInsertion = true;
                 break;
 
             case SelectionEventType.INSERTION_HANDLE_MOVED:
@@ -800,33 +897,33 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
                 if (!isScrollInProgress && isPastePopupShowing()) {
                     showPastePopup(xAnchor, yAnchor);
                 } else {
-                    hidePastePopup();
+                    destroyPastePopup();
                 }
                 break;
 
             case SelectionEventType.INSERTION_HANDLE_TAPPED:
                 if (mWasPastePopupShowingOnInsertionDragStart) {
-                    hidePastePopup();
+                    destroyPastePopup();
                 } else {
-                    showPastePopup(xAnchor, yAnchor);
+                    mWebContents.showContextMenuAtPoint(xAnchor, yAnchor);
                 }
                 mWasPastePopupShowingOnInsertionDragStart = false;
                 break;
 
             case SelectionEventType.INSERTION_HANDLE_CLEARED:
-                hidePastePopup();
-                setIsInsertion(false);
+                destroyPastePopup();
+                mIsInsertion = false;
                 mSelectionRect.setEmpty();
                 break;
 
             case SelectionEventType.INSERTION_HANDLE_DRAG_STARTED:
                 mWasPastePopupShowingOnInsertionDragStart = isPastePopupShowing();
-                hidePastePopup();
+                destroyPastePopup();
                 break;
 
             case SelectionEventType.INSERTION_HANDLE_DRAG_STOPPED:
                 if (mWasPastePopupShowingOnInsertionDragStart) {
-                    showPastePopup(xAnchor, yAnchor);
+                    mWebContents.showContextMenuAtPoint(xAnchor, yAnchor);
                 }
                 mWasPastePopupShowingOnInsertionDragStart = false;
                 break;
@@ -835,11 +932,11 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
                 assert false : "Invalid selection event type.";
         }
 
-        if (mContextualSearchClient != null) {
+        if (mSelectionClient != null) {
             final float deviceScale = mRenderCoordinates.getDeviceScaleFactor();
             int xAnchorPix = (int) (xAnchor * deviceScale);
             int yAnchorPix = (int) (yAnchor * deviceScale);
-            mContextualSearchClient.onSelectionEvent(eventType, xAnchorPix, yAnchorPix);
+            mSelectionClient.onSelectionEvent(eventType, xAnchorPix, yAnchorPix);
         }
     }
 
@@ -848,25 +945,31 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
      * end if applicable.
      */
     void clearSelection() {
-        if (mWebContents == null || isEmpty()) return;
+        if (mWebContents == null || !isActionModeSupported()) return;
         mWebContents.collapseSelection();
+        mClassificationResult = null;
     }
 
     void onSelectionChanged(String text) {
         mLastSelectedText = text;
-        if (mContextualSearchClient != null) {
-            mContextualSearchClient.onSelectionChanged(text);
+        if (mSelectionClient != null) {
+            mSelectionClient.onSelectionChanged(text);
         }
     }
 
-    // The client that implements Contextual Search functionality, or null if none exists.
-    void setContextualSearchClient(ContextualSearchClient contextualSearchClient) {
-        mContextualSearchClient = contextualSearchClient;
+    // The client that implements selection augmenting functionality, or null if none exists.
+    void setSelectionClient(SelectionClient selectionClient) {
+        mSelectionClient = selectionClient;
+
+        mClassificationResult = null;
+
+        assert !mPendingShowActionMode;
+        assert !mHidden;
     }
 
     void onShowUnhandledTapUIIfNeeded(int x, int y) {
-        if (mContextualSearchClient != null) {
-            mContextualSearchClient.showUnhandledTapUIIfNeeded(x, y);
+        if (mSelectionClient != null) {
+            mSelectionClient.showUnhandledTapUIIfNeeded(x, y);
         }
     }
 
@@ -881,14 +984,11 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
     }
 
     void updateSelectionState(boolean editable, boolean isPassword) {
-        if (!editable) hidePastePopup();
+        if (!editable) destroyPastePopup();
         if (editable != isSelectionEditable() || isPassword != isSelectionPassword()) {
             mEditable = editable;
             mIsPasswordType = isPassword;
-            if (isActionModeValid()) {
-                mNeedsPrepare = true;
-                mActionMode.invalidate();
-            }
+            if (isActionModeValid()) mActionMode.invalidate();
         }
     }
 
@@ -905,15 +1005,59 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         return mHasSelection ? mLastSelectedText : "";
     }
 
-    private void setIsInsertion(boolean insertion) {
-        if (isActionModeValid() && mIsInsertion != insertion) mNeedsPrepare = true;
-        mIsInsertion = insertion;
-    }
-
     private boolean isShareAvailable() {
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
         return mContext.getPackageManager().queryIntentActivities(intent,
                 PackageManager.MATCH_DEFAULT_ONLY).size() > 0;
     }
+
+    // The callback class that delivers result from a ContextSelectionClient.
+    private class ContextSelectionCallback implements ContextSelectionProvider.ResultCallback {
+        @Override
+        public void onClassified(ContextSelectionProvider.Result result) {
+            // If the selection does not exist any more, discard |result|.
+            if (!mHasSelection) {
+                assert !mHidden;
+                assert mClassificationResult == null;
+                mPendingShowActionMode = false;
+                return;
+            }
+
+            // Do not allow classifier to shorten the selection. If the suggested selection is
+            // smaller than the original we throw away classification result and show the menu.
+            // TODO(amaralp): This was added to fix the SelectAll problem in
+            // http://crbug.com/714106. Once we know the cause of the original selection we can
+            // remove this check.
+            if (result.startAdjust > 0 || result.endAdjust < 0) {
+                mClassificationResult = null;
+                mPendingShowActionMode = false;
+                showActionModeOrClearOnFailure();
+                return;
+            }
+
+            // The classificationresult is a property of the selection. Keep it even the action
+            // mode has been dismissed.
+            mClassificationResult = result;
+
+            // Do not recreate the action mode if it has been cancelled (by ActionMode.finish())
+            // and not recreated after that.
+            if (!mPendingShowActionMode && !isActionModeValid()) {
+                assert !mHidden;
+                return;
+            }
+
+            // Update the selection range if needed.
+            if (!(result.startAdjust == 0 && result.endAdjust == 0)) {
+                // This call causes SELECTION_HANDLES_MOVED event.
+                mWebContents.adjustSelectionByCharacterOffset(result.startAdjust, result.endAdjust);
+
+                // Remain pending until SELECTION_HANDLES_MOVED arrives.
+                if (mPendingShowActionMode) return;
+            }
+
+            // Rely on this method to clear |mHidden| and unhide the action mode.
+            showActionModeOrClearOnFailure();
+        }
+    };
 }

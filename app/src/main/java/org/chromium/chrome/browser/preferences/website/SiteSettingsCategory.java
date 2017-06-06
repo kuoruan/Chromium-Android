@@ -23,6 +23,7 @@ import android.text.style.ForegroundColorSpan;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ContentSettingsType;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.ui.text.SpanApplier;
@@ -46,6 +47,7 @@ public class SiteSettingsCategory {
     public static final String CATEGORY_PROTECTED_MEDIA = "protected_content";
     public static final String CATEGORY_USE_STORAGE = "use_storage";
     public static final String CATEGORY_USB = "usb";
+    public static final String CATEGORY_SUBRESOURCE_FILTER = "subresource_filter";
 
     // The id of this category.
     private String mCategory;
@@ -125,6 +127,10 @@ public class SiteSettingsCategory {
             return new SiteSettingsCategory(CATEGORY_PROTECTED_MEDIA, "",
                     ContentSettingsType.CONTENT_SETTINGS_TYPE_PROTECTED_MEDIA_IDENTIFIER);
         }
+        if (CATEGORY_SUBRESOURCE_FILTER.equals(category) && subresourceFilterCategoryEnabled()) {
+            return new SiteSettingsCategory(CATEGORY_SUBRESOURCE_FILTER, "",
+                    ContentSettingsType.CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER);
+        }
         if (CATEGORY_USE_STORAGE.equals(category)) {
             return new SiteSettingsCategory(CATEGORY_USE_STORAGE, "", -1);
         }
@@ -172,6 +178,9 @@ public class SiteSettingsCategory {
         if (contentSettingsType
                 == ContentSettingsType.CONTENT_SETTINGS_TYPE_PROTECTED_MEDIA_IDENTIFIER) {
             return fromString(CATEGORY_PROTECTED_MEDIA);
+        }
+        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER) {
+            return fromString(CATEGORY_SUBRESOURCE_FILTER);
         }
         if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_USB_CHOOSER_DATA) {
             return fromString(CATEGORY_USB);
@@ -275,10 +284,24 @@ public class SiteSettingsCategory {
     }
 
     /**
+     * Returns whether this category is the Subresource Filter category.
+     */
+    public boolean showSubresourceFilterSites() {
+        return mContentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER;
+    }
+
+    /**
      * Returns whether this category is the USB category.
      */
     public boolean showUsbDevices() {
         return mContentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_USB_CHOOSER_DATA;
+    }
+
+    /**
+     * Returns whether the Subresource Filter category is enabled via an experiment flag.
+     */
+    public static boolean subresourceFilterCategoryEnabled() {
+        return ChromeFeatureList.isEnabled("SubresourceFilterExperimentalUI");
     }
 
     /**

@@ -24,4 +24,9 @@ interface BookmarkUIObserver extends SelectionObserver<BookmarkId> {
      * @see BookmarkDelegate#openFolder(BookmarkId)
      */
     void onFolderStateSet(BookmarkId folder);
+
+    /**
+     * Called when the UI state is set to {@link BookmarkUIState#STATE_SEARCHING}.
+     */
+    void onSearchStateSet();
 }

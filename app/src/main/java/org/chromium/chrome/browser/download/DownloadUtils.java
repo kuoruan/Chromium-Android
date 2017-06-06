@@ -39,7 +39,7 @@ import org.chromium.chrome.browser.download.ui.BackendProvider;
 import org.chromium.chrome.browser.download.ui.BackendProvider.DownloadDelegate;
 import org.chromium.chrome.browser.download.ui.DownloadFilter;
 import org.chromium.chrome.browser.download.ui.DownloadHistoryItemWrapper;
-import org.chromium.chrome.browser.offlinepages.ClientId;
+import org.chromium.chrome.browser.offlinepages.DownloadUiActionFlags;
 import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
 import org.chromium.chrome.browser.offlinepages.downloads.OfflinePageDownloadBridge;
 import org.chromium.chrome.browser.tab.Tab;
@@ -56,6 +56,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -203,10 +205,9 @@ public class DownloadUtils {
         if (tab.isShowingErrorPage()) {
             // The download needs to be scheduled to happen at later time due to current network
             // error.
-            ClientId clientId = ClientId.createGuidClientIdForNamespace(
-                    OfflinePageBridge.ASYNC_NAMESPACE);
             final OfflinePageBridge bridge = OfflinePageBridge.getForProfile(tab.getProfile());
-            bridge.savePageLater(tab.getUrl(), clientId, true /* userRequested */);
+            bridge.scheduleDownload(tab.getWebContents(), OfflinePageBridge.ASYNC_NAMESPACE,
+                    tab.getUrl(), DownloadUiActionFlags.PROMPT_DUPLICATE);
         } else {
             // Otherwise, the download can be started immediately.
             final OfflinePageDownloadBridge bridge =
@@ -436,8 +437,7 @@ public class DownloadUtils {
         intent.setData(contentUri);
         intent.putExtra(CustomTabIntentDataProvider.EXTRA_IS_MEDIA_VIEWER, true);
         intent.putExtra(CustomTabIntentDataProvider.EXTRA_MEDIA_VIEWER_URL, fileUri.toString());
-        intent.putExtra(CustomTabIntentDataProvider.EXTRA_ENABLE_EMBEDDED_MEDIA_EXPERIENCE,
-                isMimeTypeVideo(mimeType));
+        intent.putExtra(CustomTabIntentDataProvider.EXTRA_ENABLE_EMBEDDED_MEDIA_EXPERIENCE, true);
         intent.putExtra(
                 CustomTabIntentDataProvider.EXTRA_INITIAL_BACKGROUND_COLOR, mediaColor);
         intent.putExtra(
@@ -474,12 +474,14 @@ public class DownloadUtils {
      * Opens a file in Chrome or in another app if appropriate.
      * @param file path to the file to open.
      * @param mimeType mime type of the file.
+     * @param downloadGuid The associated download GUID.
      * @param isOffTheRecord whether we are in an off the record context.
      * @return whether the file could successfully be opened.
      */
-    public static boolean openFile(File file, String mimeType, boolean isOffTheRecord) {
+    public static boolean openFile(
+            File file, String mimeType, String downloadGuid, boolean isOffTheRecord) {
         Context context = ContextUtils.getApplicationContext();
-        DownloadManagerService service = DownloadManagerService.getDownloadManagerService(context);
+        DownloadManagerService service = DownloadManagerService.getDownloadManagerService();
 
         // Check if Chrome should open the file itself.
         if (service.isDownloadOpenableInBrowser(isOffTheRecord, mimeType)) {
@@ -492,6 +494,7 @@ public class DownloadUtils {
             Intent intent =
                     getMediaViewerIntentForDownloadItem(fileUri, contentUri, normalizedMimeType);
             IntentHandler.startActivityForTrustedIntent(intent);
+            service.updateLastAccessTime(downloadGuid, isOffTheRecord);
             return true;
         }
 
@@ -503,6 +506,7 @@ public class DownloadUtils {
             StrictMode.setThreadPolicy(oldPolicy);
             Intent viewIntent = createViewIntentForDownloadItem(uri, mimeType);
             context.startActivity(viewIntent);
+            service.updateLastAccessTime(downloadGuid, isOffTheRecord);
             return true;
         } catch (ActivityNotFoundException e) {
             // Can't launch the Intent.
@@ -570,7 +574,8 @@ public class DownloadUtils {
         }
 
         DownloadSharedPreferenceHelper helper = DownloadSharedPreferenceHelper.getInstance();
-        DownloadSharedPreferenceEntry entry = helper.getDownloadSharedPreferenceEntry(item.getId());
+        DownloadSharedPreferenceEntry entry =
+                helper.getDownloadSharedPreferenceEntry(item.getContentId());
         boolean isDownloadPending =
                 entry != null && state == DownloadState.INTERRUPTED && entry.isAutoResumable;
 
@@ -606,7 +611,8 @@ public class DownloadUtils {
      */
     public static boolean isDownloadPaused(DownloadItem item) {
         DownloadSharedPreferenceHelper helper = DownloadSharedPreferenceHelper.getInstance();
-        DownloadSharedPreferenceEntry entry = helper.getDownloadSharedPreferenceEntry(item.getId());
+        DownloadSharedPreferenceEntry entry =
+                helper.getDownloadSharedPreferenceEntry(item.getContentId());
 
         if (entry != null) {
             // The Java downloads backend knows more about the download than the native backend.
@@ -739,5 +745,26 @@ public class DownloadUtils {
         if (pieces.length != 2) return false;
 
         return MIME_TYPE_VIDEO.equals(pieces[0]);
+    }
+
+    /**
+     * Given two timestamps, calculates if both occur on the same date.
+     * @return True if they belong in the same day. False otherwise.
+     */
+    public static boolean isSameDay(long timestamp1, long timestamp2) {
+        return getDateAtMidnight(timestamp1).equals(getDateAtMidnight(timestamp2));
+    }
+
+    /**
+     * Calculates the {@link Date} for midnight of the date represented by the |timestamp|.
+     */
+    public static Date getDateAtMidnight(long timestamp) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(timestamp);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
     }
 }

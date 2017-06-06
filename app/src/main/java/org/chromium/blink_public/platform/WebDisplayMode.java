@@ -15,16 +15,16 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class WebDisplayMode {
-  @IntDef({
-      Undefined, Browser, MinimalUi, Standalone, Fullscreen, Last
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface WebDisplayModeEnum {}
-  public static final int Undefined = 0;
-  public static final int Browser = 1;
-  public static final int MinimalUi = 2;
-  public static final int Standalone = 3;
-  public static final int Fullscreen = 4;
-  public static final int Last = 4;
+@IntDef({
+    WebDisplayMode.kUndefined, WebDisplayMode.kBrowser, WebDisplayMode.kMinimalUi,
+    WebDisplayMode.kStandalone, WebDisplayMode.kFullscreen, WebDisplayMode.kLast
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface WebDisplayMode {
+  int kUndefined = 0;
+  int kBrowser = 1;
+  int kMinimalUi = 2;
+  int kStandalone = 3;
+  int kFullscreen = 4;
+  int kLast = 4;
 }

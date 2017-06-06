@@ -63,7 +63,7 @@ public class BackgroundOfflinerTask {
             Bundle taskExtras, Callback<Boolean> callback) {
         TriggerConditions triggerConditions =
                 TaskExtrasPacker.unpackTriggerConditionsFromBundle(taskExtras);
-        DeviceConditions currentConditions = OfflinePageUtils.getDeviceConditions(context);
+        DeviceConditions currentConditions = DeviceConditions.getCurrentConditions(context);
         if (!currentConditions.isPowerConnected()
                 && currentConditions.getBatteryPercentage()
                         < triggerConditions.getMinimumBatteryPercentage()) {

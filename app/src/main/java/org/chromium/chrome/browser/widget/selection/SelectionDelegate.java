@@ -16,6 +16,8 @@ import java.util.Set;
  * @param <E> The type of the selectable items this delegate interacts with.
  */
 public class SelectionDelegate<E> {
+    // True if the SelectionDelegate should only support a single item being selected at a time.
+    private boolean mIsSingleSelection;
 
     /**
      * Observer interface to be notified of selection changes.
@@ -26,11 +28,18 @@ public class SelectionDelegate<E> {
          * @param selectedItems The list of currently selected items. An empty list indicates there
          *                      is no selection.
          */
-        public void onSelectionStateChange(List<E> selectedItems);
+        void onSelectionStateChange(List<E> selectedItems);
     }
 
     private Set<E> mSelectedItems = new HashSet<>();
     private ObserverList<SelectionObserver<E>> mObservers = new ObserverList<>();
+
+    /**
+     * Sets the mode of this SelectionDelegate to single-selection.
+     */
+    public void setSingleSelectionMode() {
+        mIsSingleSelection = true;
+    }
 
     /**
      * Toggles the selected state for the given item.
@@ -38,8 +47,12 @@ public class SelectionDelegate<E> {
      * @return Whether the item is selected.
      */
     public boolean toggleSelectionForItem(E item) {
-        if (mSelectedItems.contains(item)) mSelectedItems.remove(item);
-        else mSelectedItems.add(item);
+        if (mSelectedItems.contains(item)) {
+            mSelectedItems.remove(item);
+        } else {
+            if (mIsSingleSelection) mSelectedItems.clear();
+            mSelectedItems.add(item);
+        }
 
         notifyObservers();
 
@@ -99,5 +112,4 @@ public class SelectionDelegate<E> {
             observer.onSelectionStateChange(selectedItems);
         }
     }
-
 }

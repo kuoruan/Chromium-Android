@@ -19,35 +19,16 @@ import android.widget.ScrollView;
 
 import org.chromium.base.Log;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.ntp.ContextMenuManager.TouchDisableableView;
 import org.chromium.chrome.browser.widget.FadingShadow;
 
 /**
  * Simple wrapper on top of a ScrollView that will acquire focus when tapped.  Ensures the
  * New Tab page receives focus when clicked. This is only used in the Incognito NTP.
  */
-public class NewTabPageScrollView extends ScrollView implements TouchDisableableView {
+public class NewTabPageScrollView extends ScrollView {
     private static final String TAG = "NewTabPageScrollView";
 
-    /** Whether the ScrollView and its children should react to touch events. */
-    private boolean mTouchEnabled = true;
-
-    /**
-     * Listener for scroll changes.
-     */
-    public interface OnScrollListener {
-        /**
-         * Triggered when the scroll changes.  See ScrollView#onScrollChanged for more
-         * details.
-         */
-        void onScrollChanged(int l, int t, int oldl, int oldt);
-    }
-
     private GestureDetector mGestureDetector;
-    private OnScrollListener mOnScrollListener;
-
-    private NewTabPageLayout mNewTabPageLayout;
-
     private FadingShadow mFadingShadow;
 
     /**
@@ -80,38 +61,14 @@ public class NewTabPageScrollView extends ScrollView implements TouchDisableable
     }
 
     @Override
-    protected void onFinishInflate() {
-        super.onFinishInflate();
-
-        // Incognito also uses this scroll view but will not have the id so will return null.
-        mNewTabPageLayout = (NewTabPageLayout) findViewById(R.id.ntp_content);
-    }
-
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        if (mNewTabPageLayout != null) {
-            mNewTabPageLayout.setParentViewportHeight(MeasureSpec.getSize(heightMeasureSpec));
-        }
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-    }
-
-    @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         mGestureDetector.onTouchEvent(ev);
-        if (!mTouchEnabled) return true;
         return super.onInterceptTouchEvent(ev);
-    }
-
-    @Override
-    public void setTouchEnabled(boolean enabled) {
-        mTouchEnabled = enabled;
     }
 
     @Override
     @SuppressLint("ClickableViewAccessibility")
     public boolean onTouchEvent(MotionEvent ev) {
-        if (!mTouchEnabled) return false;
-
         // Action down would already have been handled in onInterceptTouchEvent
         if (ev.getActionMasked() != MotionEvent.ACTION_DOWN) {
             mGestureDetector.onTouchEvent(ev);
@@ -131,20 +88,6 @@ public class NewTabPageScrollView extends ScrollView implements TouchDisableable
             }
             throw ex;
         }
-    }
-
-    /**
-     * Sets the listener to be notified of scroll changes.
-     * @param listener The listener to be updated on scroll changes.
-     */
-    public void setOnScrollListener(OnScrollListener listener) {
-        mOnScrollListener = listener;
-    }
-
-    @Override
-    protected void onScrollChanged(int l, int t, int oldl, int oldt) {
-        super.onScrollChanged(l, t, oldl, oldt);
-        if (mOnScrollListener != null) mOnScrollListener.onScrollChanged(l, t, oldl, oldt);
     }
 
     @Override

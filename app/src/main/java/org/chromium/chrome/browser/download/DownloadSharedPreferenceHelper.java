@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.ObserverList;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.components.offline_items_collection.ContentId;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -23,7 +24,7 @@ public class DownloadSharedPreferenceHelper {
     /** Observes modifications to the SharedPreferences for {@link DownloadItem}s. */
     public interface Observer {
         /** Called when a {@link DownloadSharedPreferenceEntry} has been updated. */
-        void onAddOrReplaceDownloadSharedPreferenceEntry(String guid);
+        void onAddOrReplaceDownloadSharedPreferenceEntry(ContentId id);
     }
 
     @VisibleForTesting
@@ -53,17 +54,17 @@ public class DownloadSharedPreferenceHelper {
     }
 
     /**
-     * Helper method to make querying whether or not an entry exists for {@code guid} easier.
-     * @param guid The guid that represents the download entry.
+     * Helper method to make querying whether or not an entry exists for {@code id} easier.
+     * @param id The {@link ContentId} to query for.
      * @return Whether or not that entry currently has metadata.
      */
-    public boolean hasEntry(String guid) {
-        return getDownloadSharedPreferenceEntry(guid) != null;
+    public boolean hasEntry(ContentId id) {
+        return getDownloadSharedPreferenceEntry(id) != null;
     }
 
     /**
-     * Adds a DownloadSharedPreferenceEntry to SharedPrefs. If an entry with the GUID already exists
-     * in SharedPrefs, update it if it has changed.
+     * Adds a DownloadSharedPreferenceEntry to SharedPrefs. If an entry with the same
+     * {@link ContentId} already exists in SharedPrefs, update it if it has changed.
      * @param pendingEntry A DownloadSharedPreferenceEntry to be added.
      */
     public void addOrReplaceSharedPreferenceEntry(DownloadSharedPreferenceEntry pendingEntry) {
@@ -71,7 +72,7 @@ public class DownloadSharedPreferenceHelper {
                 mDownloadSharedPreferenceEntries.iterator();
         while (iterator.hasNext()) {
             DownloadSharedPreferenceEntry entry = iterator.next();
-            if (entry.downloadGuid.equals(pendingEntry.downloadGuid)) {
+            if (entry.id.equals(pendingEntry.id)) {
                 if (entry.equals(pendingEntry)) return;
                 iterator.remove();
                 break;
@@ -81,21 +82,21 @@ public class DownloadSharedPreferenceHelper {
         storeDownloadSharedPreferenceEntries();
 
         for (Observer observer : mObservers) {
-            observer.onAddOrReplaceDownloadSharedPreferenceEntry(pendingEntry.downloadGuid);
+            observer.onAddOrReplaceDownloadSharedPreferenceEntry(pendingEntry.id);
         }
     }
 
     /**
-     * Removes a DownloadSharedPreferenceEntry from SharedPrefs given by the GUID.
-     * @param guid Download GUID to be removed.
+     * Removes a DownloadSharedPreferenceEntry from SharedPrefs given by the {@link ContentId}.
+     * @param id The {@link ContentId} to query for.
      */
-    public void removeSharedPreferenceEntry(String guid) {
+    public void removeSharedPreferenceEntry(ContentId id) {
         Iterator<DownloadSharedPreferenceEntry> iterator =
                 mDownloadSharedPreferenceEntries.iterator();
         boolean found = false;
         while (iterator.hasNext()) {
             DownloadSharedPreferenceEntry entry = iterator.next();
-            if (entry.downloadGuid.equals(guid)) {
+            if (entry.id.equals(id)) {
                 iterator.remove();
                 found = true;
                 break;
@@ -108,7 +109,7 @@ public class DownloadSharedPreferenceHelper {
 
     /**
      * Gets a list of stored SharedPreference entries.
-     * @param a list of DownloadSharedPreferenceEntry stored in SharedPrefs.
+     * return A list of DownloadSharedPreferenceEntry stored in SharedPrefs.
      */
     public List<DownloadSharedPreferenceEntry> getEntries() {
         return mDownloadSharedPreferenceEntries;
@@ -132,13 +133,13 @@ public class DownloadSharedPreferenceHelper {
     }
 
     /**
-     * Gets a DownloadSharedPreferenceEntry that has the given GUID.
-     * @param guid GUID to query.
-     * @return a DownloadSharedPreferenceEntry that has the specified GUID.
+     * Gets a DownloadSharedPreferenceEntry that has the given {@link ContentId}.
+     * @param id The {@link ContentId} to query for.
+     * @return a DownloadSharedPreferenceEntry that has the specified {@link ContentId}.
      */
-    public DownloadSharedPreferenceEntry getDownloadSharedPreferenceEntry(String guid) {
+    public DownloadSharedPreferenceEntry getDownloadSharedPreferenceEntry(ContentId id) {
         for (int i = 0; i < mDownloadSharedPreferenceEntries.size(); ++i) {
-            if (mDownloadSharedPreferenceEntries.get(i).downloadGuid.equals(guid)) {
+            if (mDownloadSharedPreferenceEntries.get(i).id.equals(id)) {
                 return mDownloadSharedPreferenceEntries.get(i);
             }
         }

@@ -26,7 +26,7 @@ public class BookmarkActivity extends SnackbarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mBookmarkManager = new BookmarkManager(this, true);
+        mBookmarkManager = new BookmarkManager(this, true, getSnackbarManager());
         String url = getIntent().getDataString();
         if (TextUtils.isEmpty(url)) url = UrlConstants.BOOKMARKS_URL;
         mBookmarkManager.updateForUrl(url);

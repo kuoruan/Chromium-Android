@@ -107,9 +107,9 @@ public class OfflinePageEvaluationBridge {
     private OutputStreamWriter mLogOutput;
 
     /** Destroys the native portion of the bridge. */
-    public void destory() {
+    public void destroy() {
         if (mNativeOfflinePageEvaluationBridge != 0) {
-            nativeDestory(mNativeOfflinePageEvaluationBridge);
+            nativeDestroy(mNativeOfflinePageEvaluationBridge);
             mNativeOfflinePageEvaluationBridge = 0;
             mIsOfflinePageModelLoaded = false;
         }
@@ -262,7 +262,7 @@ public class OfflinePageEvaluationBridge {
 
     private native long nativeCreateBridgeForProfile(
             Profile profile, boolean useEvaluationScheduler, boolean useBackgroundLoader);
-    private native void nativeDestory(long nativeOfflinePageEvaluationBridge);
+    private native void nativeDestroy(long nativeOfflinePageEvaluationBridge);
 
     private native void nativeGetAllPages(long nativeOfflinePageEvaluationBridge,
             List<OfflinePageItem> offlinePages, final Callback<List<OfflinePageItem>> callback);

@@ -35,12 +35,12 @@ public abstract class WebContentsObserver {
      * Called when the browser process starts a navigation.
      * @param url The validated URL for the loading page.
      * @param isInMainFrame Whether the navigation is for the main frame.
-     * @param isSamePage Whether the main frame navigation did not cause changes to the
+     * @param isSameDocument Whether the main frame navigation did not cause changes to the
      *                   document (for example scrolling to a named anchor or PopState).
      * @param isErrorPage Whether the navigation shows an error page.
      */
     public void didStartNavigation(
-            String url, boolean isInMainFrame, boolean isSamePage, boolean isErrorPage) {}
+            String url, boolean isInMainFrame, boolean isSameDocument, boolean isErrorPage) {}
 
     /**
      * Called when the current navigation is finished. This happens when a navigation is committed,
@@ -51,10 +51,10 @@ public abstract class WebContentsObserver {
      * @param hasCommitted Whether the navigation has committed. This returns true for either
      *                     successful commits or error pages that replace the previous page
      *                     (distinguished by |isErrorPage|), and false for errors that leave the
-     *                     user on the previous page. When false, |isSamePage|,
+     *                     user on the previous page. When false, |isSameDocument|,
      *                     |isFragmentNavigation|, |pageTransition| and |httpStatusCode| will have
      *                     default values.
-     * @param isSamePage Whether the main frame navigation did not cause changes to the
+     * @param isSameDocument Whether the main frame navigation did not cause changes to the
      *                   document (for example scrolling to a named anchor or PopState).
      * @param isFragmentNavigation Whether the navigation was to a different fragment.
      * @param pageTransition The page transition type associated with this navigation.
@@ -63,7 +63,7 @@ public abstract class WebContentsObserver {
      * @param httpStatusCode The HTTP status code of the navigation.
      */
     public void didFinishNavigation(String url, boolean isInMainFrame, boolean isErrorPage,
-            boolean hasCommitted, boolean isSamePage, boolean isFragmentNavigation,
+            boolean hasCommitted, boolean isSameDocument, boolean isFragmentNavigation,
             @Nullable Integer pageTransition, int errorCode, String errorDescription,
             int httpStatusCode) {}
 

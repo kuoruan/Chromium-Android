@@ -20,7 +20,6 @@ import org.chromium.chrome.browser.compositor.bottombar.OverlayPanelContentViewD
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanelManager;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanelManager.PanelPriority;
 import org.chromium.chrome.browser.compositor.layouts.LayoutUpdateHost;
-import org.chromium.chrome.browser.compositor.layouts.eventfilter.EventFilterHost;
 import org.chromium.chrome.browser.compositor.scene_layer.ReaderModeSceneLayer;
 import org.chromium.chrome.browser.compositor.scene_layer.SceneOverlayLayer;
 import org.chromium.chrome.browser.dom_distiller.DomDistillerTabUtils;
@@ -62,14 +61,12 @@ public class ReaderModePanel extends OverlayPanel {
     /**
      * @param context The current Android {@link Context}.
      * @param updateHost The {@link LayoutUpdateHost} used to request updates in the Layout.
-     * @param eventHost The {@link EventFilterHost} for propagating events.
      * @param panelManager The {@link OverlayPanelManager} used to control panel show/hide.
      * @param contentViewDelegate Notifies the activity that a ContentViewCore has been created.
      */
-    public ReaderModePanel(Context context, LayoutUpdateHost updateHost, EventFilterHost eventHost,
-                OverlayPanelManager panelManager,
-                OverlayPanelContentViewDelegate contentViewDelegate) {
-        super(context, updateHost, eventHost, panelManager);
+    public ReaderModePanel(Context context, LayoutUpdateHost updateHost,
+            OverlayPanelManager panelManager, OverlayPanelContentViewDelegate contentViewDelegate) {
+        super(context, updateHost, panelManager);
         mSceneLayer = createNewReaderModeSceneLayer();
         mContentViewDelegate = contentViewDelegate;
     }

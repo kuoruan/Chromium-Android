@@ -5,13 +5,13 @@
 package org.chromium.chrome.browser.payments;
 
 import android.os.Handler;
-import android.telephony.PhoneNumberUtils;
 import android.util.Pair;
 
 import org.chromium.base.Callback;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.AutofillProfile;
+import org.chromium.chrome.browser.autofill.PhoneNumberUtil;
 import org.chromium.chrome.browser.payments.ui.EditorFieldModel;
 import org.chromium.chrome.browser.payments.ui.EditorFieldModel.EditorFieldValidator;
 import org.chromium.chrome.browser.payments.ui.EditorModel;
@@ -305,9 +305,7 @@ public class AddressEditor extends EditorBase<AutofillAddress> {
             mPhoneValidator = new EditorFieldValidator() {
                 @Override
                 public boolean isValid(@Nullable CharSequence value) {
-                    return value != null
-                            && PhoneNumberUtils.isGlobalPhoneNumber(
-                                    PhoneNumberUtils.stripSeparators(value.toString()));
+                    return value != null && PhoneNumberUtil.isValidNumber(value.toString());
                 }
 
                 @Override

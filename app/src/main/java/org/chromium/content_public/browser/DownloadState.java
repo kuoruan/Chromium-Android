@@ -15,30 +15,30 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class DownloadState {
-  @IntDef({
-      IN_PROGRESS, COMPLETE, CANCELLED, INTERRUPTED, MAX_DOWNLOAD_STATE
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface DownloadStateEnum {}
+@IntDef({
+    DownloadState.IN_PROGRESS, DownloadState.COMPLETE, DownloadState.CANCELLED,
+    DownloadState.INTERRUPTED, DownloadState.MAX_DOWNLOAD_STATE
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface DownloadState {
   /**
    * Download is actively progressing.
    */
-  public static final int IN_PROGRESS = 0;
+  int IN_PROGRESS = 0;
   /**
    * Download is completely finished.
    */
-  public static final int COMPLETE = 1;
+  int COMPLETE = 1;
   /**
    * Download has been cancelled.
    */
-  public static final int CANCELLED = 2;
+  int CANCELLED = 2;
   /**
    * This state indicates that the download has been interrupted.
    */
-  public static final int INTERRUPTED = 3;
+  int INTERRUPTED = 3;
   /**
    * Maximum value.
    */
-  public static final int MAX_DOWNLOAD_STATE = 4;
+  int MAX_DOWNLOAD_STATE = 4;
 }

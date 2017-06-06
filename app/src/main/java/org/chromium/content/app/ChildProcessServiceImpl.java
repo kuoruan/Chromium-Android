@@ -30,13 +30,15 @@ import org.chromium.base.annotations.UsedByReflection;
 import org.chromium.base.library_loader.LibraryLoader;
 import org.chromium.base.library_loader.Linker;
 import org.chromium.base.library_loader.ProcessInitException;
+import org.chromium.base.process_launcher.ChildProcessCreationParams;
+import org.chromium.base.process_launcher.FileDescriptorInfo;
+import org.chromium.base.process_launcher.ICallbackInt;
+import org.chromium.base.process_launcher.IChildProcessService;
 import org.chromium.content.browser.ChildProcessConstants;
-import org.chromium.content.browser.ChildProcessCreationParams;
 import org.chromium.content.common.ContentSwitches;
-import org.chromium.content.common.FileDescriptorInfo;
-import org.chromium.content.common.IChildProcessCallback;
-import org.chromium.content.common.IChildProcessService;
+import org.chromium.content.common.IGpuProcessCallback;
 import org.chromium.content.common.SurfaceWrapper;
+import org.chromium.content_public.common.ContentProcessInfo;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
@@ -58,7 +60,7 @@ public class ChildProcessServiceImpl {
 
     // Lock that protects the following members.
     private final Object mBinderLock = new Object();
-    private IChildProcessCallback mCallback;
+    private IGpuProcessCallback mGpuCallback;
     private boolean mBindToCallerCheck;
     // PID of the client of this service, set in bindToCaller(), if mBindToCallerCheck is true.
     private int mBoundCallingPid;
@@ -126,22 +128,20 @@ public class ChildProcessServiceImpl {
         }
 
         @Override
-        public int setupConnection(Bundle args, IChildProcessCallback callback) {
-            int callingPid = Binder.getCallingPid();
+        public void setupConnection(Bundle args, ICallbackInt pidCallback, IBinder gpuCallback)
+                throws RemoteException {
             synchronized (mBinderLock) {
-                if (mBindToCallerCheck && mBoundCallingPid != callingPid) {
-                    if (mBoundCallingPid == 0) {
-                        Log.e(TAG, "Service has not been bound with bindToCaller()");
-                    } else {
-                        Log.e(TAG, "Client pid %d does not match the bound pid %d", callingPid,
-                                mBoundCallingPid);
-                    }
-                    return -1;
+                if (mBindToCallerCheck && mBoundCallingPid == 0) {
+                    Log.e(TAG, "Service has not been bound with bindToCaller()");
+                    pidCallback.call(-1);
+                    return;
                 }
             }
-            mCallback = callback;
+
+            pidCallback.call(Process.myPid());
+            mGpuCallback =
+                    gpuCallback != null ? IGpuProcessCallback.Stub.asInterface(gpuCallback) : null;
             getServiceInfo(args);
-            return Process.myPid();
         }
 
         @Override
@@ -183,6 +183,7 @@ public class ChildProcessServiceImpl {
             throw new RuntimeException("Illegal child process reuse.");
         }
         sContext.set(context);
+        ContentProcessInfo.setInChildProcess(true);
 
         // Initialize the context for the application that owns this ChildProcessServiceImpl object.
         ContextUtils.initApplicationContext(context);
@@ -269,10 +270,10 @@ public class ChildProcessServiceImpl {
                     long[] regionSizes = new long[mFdInfos.length];
                     for (int i = 0; i < mFdInfos.length; i++) {
                         FileDescriptorInfo fdInfo = mFdInfos[i];
-                        fileIds[i] = fdInfo.mId;
-                        fds[i] = fdInfo.mFd.detachFd();
-                        regionOffsets[i] = fdInfo.mOffset;
-                        regionSizes[i] = fdInfo.mSize;
+                        fileIds[i] = fdInfo.id;
+                        fds[i] = fdInfo.fd.detachFd();
+                        regionOffsets[i] = fdInfo.offset;
+                        regionSizes[i] = fdInfo.size;
                     }
                     nativeRegisterFileDescriptors(fileIds, fds, regionOffsets, regionSizes);
                     nativeInitChildProcessImpl(ChildProcessServiceImpl.this, mCpuCount,
@@ -382,7 +383,7 @@ public class ChildProcessServiceImpl {
     @CalledByNative
     private void forwardSurfaceTextureForSurfaceRequest(
             UnguessableToken requestToken, SurfaceTexture surfaceTexture) {
-        if (mCallback == null) {
+        if (mGpuCallback == null) {
             Log.e(TAG, "No callback interface has been provided.");
             return;
         }
@@ -390,7 +391,7 @@ public class ChildProcessServiceImpl {
         Surface surface = new Surface(surfaceTexture);
 
         try {
-            mCallback.forwardSurfaceForSurfaceRequest(requestToken, surface);
+            mGpuCallback.forwardSurfaceForSurfaceRequest(requestToken, surface);
         } catch (RemoteException e) {
             Log.e(TAG, "Unable to call forwardSurfaceForSurfaceRequest: %s", e);
             return;
@@ -402,13 +403,13 @@ public class ChildProcessServiceImpl {
     @SuppressWarnings("unused")
     @CalledByNative
     private Surface getViewSurface(int surfaceId) {
-        if (mCallback == null) {
+        if (mGpuCallback == null) {
             Log.e(TAG, "No callback interface has been provided.");
             return null;
         }
 
         try {
-            SurfaceWrapper wrapper = mCallback.getViewSurface(surfaceId);
+            SurfaceWrapper wrapper = mGpuCallback.getViewSurface(surfaceId);
             return wrapper != null ? wrapper.getSurface() : null;
         } catch (RemoteException e) {
             Log.e(TAG, "Unable to call getViewSurface: %s", e);

@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.datausage;
 
-import android.content.Context;
 import android.text.TextUtils;
 
 import org.chromium.base.ApplicationState;
@@ -88,7 +87,7 @@ public class ExternalDataUseObserver {
     private ControlAppManager mControlAppManager;
 
     @CalledByNative
-    private static ExternalDataUseObserver create(Context context, long nativePtr) {
+    private static ExternalDataUseObserver create(long nativePtr) {
         return AppHooks.get().createExternalDataUseObserver(nativePtr);
     }
 

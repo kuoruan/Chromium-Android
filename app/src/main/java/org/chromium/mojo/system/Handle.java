@@ -4,7 +4,7 @@
 
 package org.chromium.mojo.system;
 
-import org.chromium.mojo.system.Core.WaitResult;
+import org.chromium.mojo.system.Core.HandleSignalsState;
 
 import java.io.Closeable;
 
@@ -25,9 +25,9 @@ public interface Handle extends Closeable {
     public void close();
 
     /**
-     * @see Core#wait(Handle, Core.HandleSignals, long)
+     * @return the last known signaling state of the handle.
      */
-    public WaitResult wait(Core.HandleSignals signals, long deadline);
+    public HandleSignalsState querySignalsState();
 
     /**
      * @return whether the handle is valid. A handle is valid until it has been explicitly closed or

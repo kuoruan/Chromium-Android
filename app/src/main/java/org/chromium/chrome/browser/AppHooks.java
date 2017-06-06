@@ -5,12 +5,12 @@
 package org.chromium.chrome.browser;
 
 import android.app.Notification;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 
 import org.chromium.base.ContextUtils;
+import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.banners.AppDetailsDelegate;
 import org.chromium.chrome.browser.customtabs.CustomTabsConnection;
@@ -28,9 +28,6 @@ import org.chromium.chrome.browser.media.VideoPersister;
 import org.chromium.chrome.browser.metrics.VariationsSession;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.net.qualityprovider.ExternalEstimateProviderAndroid;
-import org.chromium.chrome.browser.notifications.ChromeNotificationBuilder;
-import org.chromium.chrome.browser.notifications.NotificationBuilder;
-import org.chromium.chrome.browser.notifications.NotificationCompatBuilder;
 import org.chromium.chrome.browser.omaha.RequestGenerator;
 import org.chromium.chrome.browser.physicalweb.PhysicalWebBleClient;
 import org.chromium.chrome.browser.policy.PolicyAuditor;
@@ -55,6 +52,14 @@ import org.chromium.policy.CombinedPolicyProvider;
  */
 public abstract class AppHooks {
     private static AppHooksImpl sInstance;
+
+    /**
+     * Sets a mocked instance for testing.
+     */
+    @VisibleForTesting
+    public static void setInstanceForTesting(AppHooksImpl instance) {
+        sInstance = instance;
+    }
 
     @CalledByNative
     public static AppHooks get() {
@@ -82,7 +87,7 @@ public abstract class AppHooks {
      * @return the created {@link AccountManagerDelegate}.
      */
     public AccountManagerDelegate createAccountManagerDelegate() {
-        return new SystemAccountManagerDelegate(ContextUtils.getApplicationContext());
+        return new SystemAccountManagerDelegate();
     }
 
     /**
@@ -107,24 +112,6 @@ public abstract class AppHooks {
      */
     public AuthenticatorNavigationInterceptor createAuthenticatorNavigationInterceptor(Tab tab) {
         return null;
-    }
-
-    /**
-     * Creates either a Notification.Builder or NotificationCompat.Builder under the hood, wrapped
-     * in our own common interface. Should be used for all notifications we create.
-     *
-     * TODO(awdf) Remove this once we've updated to revision 26 of the support library.
-     *
-     * @param preferCompat if a NotificationCompat.Builder is preferred.
-     * @param notificationCategoryGroupId
-     * @param notificationCategoryGroupName
-     */
-    public ChromeNotificationBuilder createChromeNotificationBuilder(boolean preferCompat,
-            String notificationCategoryId, String notificationCategoryName,
-            String notificationCategoryGroupId, String notificationCategoryGroupName) {
-        Context context = ContextUtils.getApplicationContext();
-        return preferCompat ? new NotificationCompatBuilder(context)
-                            : new NotificationBuilder(context);
     }
 
     /** Returns the singleton instance of ChromeShortcutManager */

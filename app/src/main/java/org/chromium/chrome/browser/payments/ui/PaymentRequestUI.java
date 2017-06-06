@@ -25,7 +25,6 @@ import android.support.v4.view.animation.FastOutLinearInInterpolator;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.text.SpannableString;
 import android.text.TextUtils;
-import android.text.TextUtils.TruncateAt;
 import android.text.method.LinkMovementMethod;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -37,19 +36,20 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Callback;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeVersionInfo;
 import org.chromium.chrome.browser.payments.ShippingStrings;
-import org.chromium.chrome.browser.payments.ui.PaymentRequestSection.ExtraTextsSection;
 import org.chromium.chrome.browser.payments.ui.PaymentRequestSection.LineItemBreakdownSection;
 import org.chromium.chrome.browser.payments.ui.PaymentRequestSection.OptionSection;
 import org.chromium.chrome.browser.payments.ui.PaymentRequestSection.SectionSeparator;
+import org.chromium.chrome.browser.payments.ui.PaymentRequestSection.ShippingSummarySection;
 import org.chromium.chrome.browser.widget.AlwaysDismissedDialog;
+import org.chromium.chrome.browser.widget.FadingEdgeScrollView;
 import org.chromium.chrome.browser.widget.animation.AnimatorProperties;
 import org.chromium.chrome.browser.widget.animation.FocusAnimator;
 import org.chromium.components.signin.ChromeSigninController;
@@ -313,7 +313,7 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
     private final Callback<PaymentInformation> mUpdateSectionsCallback;
     private final ShippingStrings mShippingStrings;
 
-    private ScrollView mPaymentContainer;
+    private FadingEdgeScrollView mPaymentContainer;
     private LinearLayout mPaymentContainerLayout;
     private ViewGroup mBottomBar;
     private Button mEditButton;
@@ -322,7 +322,7 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
     private View mSpinnyLayout;
 
     private LineItemBreakdownSection mOrderSummarySection;
-    private ExtraTextsSection mShippingSummarySection;
+    private ShippingSummarySection mShippingSummarySection;
     private OptionSection mShippingAddressSection;
     private OptionSection mShippingOptionSection;
     private OptionSection mContactDetailsSection;
@@ -427,8 +427,8 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
         // requires exploration of how interactions would work when the dialog can be sent back and
         // forth between the peeking and expanded state.
         mFullContainer = new FrameLayout(mContext);
-        mFullContainer.setBackgroundColor(
-                ApiCompatibilityUtils.getColor(mContext.getResources(), R.color.payments_ui_scrim));
+        mFullContainer.setBackgroundColor(ApiCompatibilityUtils.getColor(
+                mContext.getResources(), R.color.modal_dialog_scrim_color));
         FrameLayout.LayoutParams bottomSheetParams = new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         bottomSheetParams.gravity = Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM;
@@ -436,6 +436,11 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
 
         mEditorView = new EditorView(activity, sObserverForTest);
         mCardEditorView = new EditorView(activity, sObserverForTest);
+
+        // Allow screenshots of the credit card number in Canary, Dev, and developer builds.
+        if (ChromeVersionInfo.isBetaBuild() || ChromeVersionInfo.isStableBuild()) {
+            mCardEditorView.disableScreenshots();
+        }
 
         // Set up the dialog.
         mDialog = new AlwaysDismissedDialog(activity, R.style.DialogWhenLarge);
@@ -463,52 +468,22 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
                     updateSection(TYPE_SHIPPING_ADDRESSES, result.getShippingAddresses());
                     updateSection(TYPE_SHIPPING_OPTIONS, result.getShippingOptions());
 
-                    String selectedShippingName = result.getSelectedShippingAddressLabel();
-                    String selectedShippingAddress = result.getSelectedShippingAddressSublabel();
-                    String selectedShippingPhone = result.getSelectedShippingAddressTertiaryLabel();
-                    String selectedShippingOptionLabel = result.getSelectedShippingOptionLabel();
+                    mShippingSummarySection.update(new ShippingSummaryInformation(
+                            result.getShippingAddresses(), result.getShippingOptions()));
 
-                    if (selectedShippingAddress == null || selectedShippingOptionLabel == null) {
-                        // Let the summary display a SELECT/ADD button for the first subsection
-                        // that needs it.
-                        mShippingSummarySection.setSummaryText(null, null);
-                        mShippingSummarySection.setSummaryProperties(null /* leftTruncate */,
-                                false /* leftIsSingleLine */, null /* rightTruncate */,
-                                false /* rightIsSingleLine */);
-
-                        PaymentRequestSection section =
-                                mShippingAddressSection.getEditButtonState() == EDIT_BUTTON_GONE
-                                        ? mShippingOptionSection : mShippingAddressSection;
-                        mShippingSummarySection.setEditButtonState(section.getEditButtonState());
-                    } else {
-                        // Show the shipping name in the summary section.
-                        mShippingSummarySection.setSummaryText(selectedShippingName, null);
-                        mShippingSummarySection.setSummaryProperties(TruncateAt.END,
-                                true /* leftIsSingleLine */, null /* rightTruncate */,
-                                false /* rightIsSingleLine */);
-
-                        // Show the shipping address, phone and option below the summary.
-                        mShippingSummarySection.setExtraTexts(new String[] {selectedShippingAddress,
-                                selectedShippingPhone, selectedShippingOptionLabel});
-                        mShippingSummarySection.setExtraTextsProperties(
-                                new TruncateAt[] {
-                                        TruncateAt.MIDDLE, TruncateAt.END, TruncateAt.END},
-                                new boolean[] {true, true, true});
-                    }
+                    // Let the summary display a CHOOSE/ADD button for the first subsection that
+                    // needs it.
+                    PaymentRequestSection section =
+                            mShippingAddressSection.getEditButtonState() == EDIT_BUTTON_GONE
+                            ? mShippingOptionSection
+                            : mShippingAddressSection;
+                    mShippingSummarySection.setEditButtonState(section.getEditButtonState());
                 }
 
                 if (mRequestContactDetails) {
-                    // Sets the summary of the contact displays in a single line.
-                    mContactDetailsSection.setSummaryProperties(TruncateAt.END,
-                            true /* leftIsSingleLine */, null /* rightTruncate */,
-                            false /* rightIsSingleLine */);
                     updateSection(TYPE_CONTACT_DETAILS, result.getContactDetails());
                 }
 
-                // Sets the summary of the payment method displays in a single line.
-                mPaymentMethodSection.setSummaryProperties(TruncateAt.END,
-                        true /* leftIsSingleLine */, null /* rightTruncate */,
-                        false /* rightIsSingleLine */);
                 updateSection(TYPE_PAYMENT_METHODS, result.getPaymentMethods());
                 updatePayButtonEnabled();
 
@@ -554,13 +529,13 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
 
         // Create all the possible sections.
         mSectionSeparators = new ArrayList<>();
-        mPaymentContainer = (ScrollView) mRequestView.findViewById(R.id.option_container);
+        mPaymentContainer = (FadingEdgeScrollView) mRequestView.findViewById(R.id.option_container);
         mPaymentContainerLayout =
                 (LinearLayout) mRequestView.findViewById(R.id.payment_container_layout);
         mOrderSummarySection = new LineItemBreakdownSection(context,
                 context.getString(R.string.payments_order_summary_label), this,
                 context.getString(R.string.payments_updated_label));
-        mShippingSummarySection = new ExtraTextsSection(
+        mShippingSummarySection = new ShippingSummarySection(
                 context, context.getString(mShippingStrings.getSummaryLabel()), this);
         mShippingAddressSection = new OptionSection(
                 context, context.getString(mShippingStrings.getAddressLabel()), this);
@@ -1004,7 +979,8 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
             }
 
             // New separators appear at the top and bottom of the list.
-            mSectionSeparators.add(new SectionSeparator(mPaymentContainerLayout, 0));
+            mPaymentContainer.setEdgeVisibility(
+                    FadingEdgeScrollView.DRAW_HARD_EDGE, FadingEdgeScrollView.DRAW_FADING_EDGE);
             mSectionSeparators.add(new SectionSeparator(mPaymentContainerLayout, -1));
 
             // Add a link to Autofill settings.
@@ -1023,14 +999,6 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
 
             // Disable all but the first button.
             updateSectionButtons();
-
-            // Sets the summary of the payment method and contact displays in multiple lines.
-            mContactDetailsSection.setSummaryProperties(null /* leftTruncate */,
-                    false /* leftIsSingleLine */, null /* rightTruncate */,
-                    false /* rightIsSingleLine */);
-            mPaymentMethodSection.setSummaryProperties(null /* leftTruncate */,
-                    false /* leftIsSingleLine */, null /* rightTruncate */,
-                    false /* rightIsSingleLine */);
 
             mIsExpandedToFullHeight = true;
         }
@@ -1067,9 +1035,9 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
         String message;
         if (!mShowDataSource) {
             message = mContext.getString(R.string.payments_card_and_address_settings);
-        } else if (ChromeSigninController.get(mContext).isSignedIn()) {
+        } else if (ChromeSigninController.get().isSignedIn()) {
             message = mContext.getString(R.string.payments_card_and_address_settings_signed_in,
-                    ChromeSigninController.get(mContext).getSignedInAccountName());
+                    ChromeSigninController.get().getSignedInAccountName());
         } else {
             message = mContext.getString(R.string.payments_card_and_address_settings_signed_out);
         }
@@ -1080,8 +1048,8 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
                 mClient.onCardAndAddressSettingsClicked();
             }
         };
-        SpannableString spannableMessage =
-                SpanApplier.applySpans(message, new SpanInfo("<link>", "</link>", settingsSpan));
+        SpannableString spannableMessage = SpanApplier.applySpans(
+                message, new SpanInfo("BEGIN_LINK", "END_LINK", settingsSpan));
 
         TextView view = new TextViewWithClickableSpans(mContext);
         view.setText(spannableMessage);
@@ -1228,7 +1196,7 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
             mRequestView.removeOnLayoutChangeListener(this);
 
             Animator scrimFader = ObjectAnimator.ofInt(mFullContainer.getBackground(),
-                    AnimatorProperties.DRAWABLE_ALPHA_PROPERTY, 0, 127);
+                    AnimatorProperties.DRAWABLE_ALPHA_PROPERTY, 0, 255);
             Animator alphaAnimator = ObjectAnimator.ofFloat(mFullContainer, View.ALPHA, 0f, 1f);
 
             AnimatorSet alphaSet = new AnimatorSet();

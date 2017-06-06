@@ -6,8 +6,8 @@ package org.chromium.device.battery;
 
 import android.util.Log;
 
-import org.chromium.device.BatteryMonitor;
-import org.chromium.device.BatteryStatus;
+import org.chromium.device.mojom.BatteryMonitor;
+import org.chromium.device.mojom.BatteryStatus;
 import org.chromium.mojo.system.MojoException;
 
 /**

@@ -24,7 +24,6 @@ import org.chromium.chrome.browser.compositor.layouts.components.VirtualView;
 import org.chromium.chrome.browser.compositor.layouts.content.TabContentManager;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.EdgeSwipeHandler;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.EventFilter;
-import org.chromium.chrome.browser.compositor.layouts.eventfilter.EventFilterHost;
 import org.chromium.chrome.browser.compositor.scene_layer.SceneLayer;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchManagementDelegate;
 import org.chromium.chrome.browser.dom_distiller.ReaderModeManagerDelegate;
@@ -33,7 +32,7 @@ import org.chromium.chrome.browser.fullscreen.FullscreenManager;
 import org.chromium.chrome.browser.tabmodel.EmptyTabModelSelectorObserver;
 import org.chromium.chrome.browser.tabmodel.TabCreatorManager;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
-import org.chromium.content.browser.SPenSupport;
+import org.chromium.ui.base.SPenSupport;
 import org.chromium.ui.resources.ResourceManager;
 import org.chromium.ui.resources.dynamics.DynamicResourceLoader;
 
@@ -43,7 +42,7 @@ import java.util.List;
  * A class that is responsible for managing an active {@link Layout} to show to the screen.  This
  * includes lifecycle managment like showing/hiding this {@link Layout}.
  */
-public abstract class LayoutManager implements LayoutUpdateHost, LayoutProvider, EventFilterHost {
+public abstract class LayoutManager implements LayoutUpdateHost, LayoutProvider {
     /** Sampling at 60 fps. */
     private static final long FRAME_DELTA_TIME_MS = 16;
 
@@ -87,6 +86,9 @@ public abstract class LayoutManager implements LayoutUpdateHost, LayoutProvider,
     private final RectF mCachedRect = new RectF();
     private final PointF mCachedPoint = new PointF();
 
+    // Whether the currently active event filter has changed.
+    private boolean mIsNewEventFilter;
+
     /**
      * Creates a {@link LayoutManager} instance.
      * @param host A {@link LayoutManagerHost} instance.
@@ -121,8 +123,12 @@ public abstract class LayoutManager implements LayoutUpdateHost, LayoutProvider,
         }
 
         PointF offsets = getMotionOffsets(e);
-        mActiveEventFilter =
+
+        EventFilter layoutFilter =
                 mActiveLayout.findInterceptingEventFilter(e, offsets, isKeyboardShowing);
+        mIsNewEventFilter = layoutFilter != mActiveEventFilter;
+        mActiveEventFilter = layoutFilter;
+
         if (mActiveEventFilter != null) mActiveLayout.unstallImmediately();
         return mActiveEventFilter != null;
     }
@@ -136,33 +142,26 @@ public abstract class LayoutManager implements LayoutUpdateHost, LayoutProvider,
     public boolean onTouchEvent(MotionEvent e) {
         if (mActiveEventFilter == null) return false;
 
+        // Make sure the first event through the filter is an ACTION_DOWN.
+        if (mIsNewEventFilter && e.getActionMasked() != MotionEvent.ACTION_DOWN) {
+            MotionEvent downEvent = MotionEvent.obtain(e);
+            downEvent.setAction(MotionEvent.ACTION_DOWN);
+            if (!onTouchEventInternal(downEvent)) return false;
+        }
+        mIsNewEventFilter = false;
+
+        return onTouchEventInternal(e);
+    }
+
+    private boolean onTouchEventInternal(MotionEvent e) {
         boolean consumed = mActiveEventFilter.onTouchEvent(e);
         PointF offsets = getMotionOffsets(e);
         if (offsets != null) mActiveEventFilter.setCurrentMotionEventOffsets(offsets.x, offsets.y);
         return consumed;
     }
 
-    @Override
-    public boolean propagateEvent(MotionEvent e) {
-        if (e == null) return false;
-
-        View view = getActiveLayout().getViewForInteraction();
-        if (view == null) return false;
-
-        e.offsetLocation(-view.getLeft(), -view.getTop());
-        return view.dispatchTouchEvent(e);
-    }
-
-    @Override
-    public int getViewportWidth() {
-        return mHost.getWidth();
-    }
-
     private PointF getMotionOffsets(MotionEvent e) {
-        int actionMasked = e.getActionMasked();
-        if (SPenSupport.isSPenSupported(mHost.getContext())) {
-            actionMasked = SPenSupport.convertSPenEventAction(actionMasked);
-        }
+        int actionMasked = SPenSupport.convertSPenEventAction(e.getActionMasked());
 
         if (actionMasked == MotionEvent.ACTION_DOWN
                 || actionMasked == MotionEvent.ACTION_HOVER_ENTER) {

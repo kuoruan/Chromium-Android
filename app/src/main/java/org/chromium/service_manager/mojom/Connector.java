@@ -25,24 +25,27 @@ public interface Connector extends org.chromium.mojo.bindings.Interface {
     Manager<Connector, Connector.Proxy> MANAGER = Connector_Internal.MANAGER;
 
 
-    void startService(
-Identity name, org.chromium.mojo.system.MessagePipeHandle service, org.chromium.mojo.bindings.InterfaceRequest<PidReceiver> pidReceiverRequest);
-
-
-
-    void connect(
-Identity target, org.chromium.mojo.bindings.InterfaceRequest<InterfaceProvider> remoteInterfaces, 
-ConnectResponse callback);
-
-    interface ConnectResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<Integer, String> { }
-
-
-
     void bindInterface(
 Identity target, String interfaceName, org.chromium.mojo.system.MessagePipeHandle interfacePipe, 
 BindInterfaceResponse callback);
 
-    interface BindInterfaceResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<Integer, String> { }
+    interface BindInterfaceResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<Integer, Identity> { }
+
+
+
+    void startService(
+Identity target, 
+StartServiceResponse callback);
+
+    interface StartServiceResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<Integer, Identity> { }
+
+
+
+    void startServiceWithProcess(
+Identity target, org.chromium.mojo.system.MessagePipeHandle service, org.chromium.mojo.bindings.InterfaceRequest<PidReceiver> pidReceiverRequest, 
+StartServiceWithProcessResponse callback);
+
+    interface StartServiceWithProcessResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<Integer, Identity> { }
 
 
 

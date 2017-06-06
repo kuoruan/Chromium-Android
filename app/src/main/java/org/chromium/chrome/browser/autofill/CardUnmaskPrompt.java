@@ -19,6 +19,7 @@ import android.support.v4.view.MarginLayoutParamsCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
+import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -133,6 +134,11 @@ public class CardUnmaskPrompt
          * The controller will call update() in response.
          */
         void onNewCardLinkClicked();
+
+        /**
+         * Returns the expected length of the CVC for the card.
+         */
+        int getExpectedCvcLength();
     }
 
     /**
@@ -199,6 +205,10 @@ public class CardUnmaskPrompt
         mThisYear = -1;
         mThisMonth = -1;
         if (mShouldRequestExpirationDate) new CalendarTask().execute();
+
+        // Set the max length of the CVC field.
+        mCardUnmaskInput.setFilters(
+                new InputFilter[] {new InputFilter.LengthFilter(mDelegate.getExpectedCvcLength())});
 
         // Create the listeners to be notified when the user focuses out the input fields.
         mCardUnmaskInput.setOnFocusChangeListener(new OnFocusChangeListener() {
@@ -287,6 +297,9 @@ public class CardUnmaskPrompt
         mDialog.setTitle(title);
         mInstructions.setText(instructions);
         mShouldRequestExpirationDate = shouldRequestExpirationDate;
+        if (mShouldRequestExpirationDate && (mThisYear == -1 || mThisMonth == -1)) {
+            new CalendarTask().execute();
+        }
         showExpirationDateInputsInputs();
     }
 

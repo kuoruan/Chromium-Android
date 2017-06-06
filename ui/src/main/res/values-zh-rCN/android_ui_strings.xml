@@ -26,6 +26,9 @@
 <string name="date_picker_dialog_other_button_label">"其他"</string>
 <string name="date_picker_dialog_title">"设置日期"</string>
 <string name="date_picker_dialog_clear">"清除"</string>
+<string name="photo_picker_select_images">"选择图片"</string>
+<string name="photo_picker_camera">"摄像头"</string>
+<string name="photo_picker_browse">"浏览"</string>
 <string name="autofill_popup_content_description">"目前显示的是自动填充弹出式窗口"</string>
 <string name="password_generation_popup_content_description">"目前显示的是密码生成弹出式窗口"</string>
 <string name="autofill_keyboard_accessory_content_description">"有自动填充建议"</string>

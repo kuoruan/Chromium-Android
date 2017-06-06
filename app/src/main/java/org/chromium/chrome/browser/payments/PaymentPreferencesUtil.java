@@ -42,28 +42,6 @@ public class PaymentPreferencesUtil {
     }
 
     /**
-     * Checks whether the Android payment app is enabled by user from the settings. The default
-     * status is enabled.
-     *
-     * @param packageName The package name of the Android payment app.
-     * @return True If the Android payment app is enabled by user.
-     */
-    public static boolean isAndroidPaymentAppEnabled(String packageName) {
-        return ContextUtils.getAppSharedPreferences().getBoolean(
-                getAndroidPaymentAppEnabledPreferenceKey(packageName), true);
-    }
-
-    /**
-     * Gets preference key for status of the Android payment app.
-     *
-     * @param packageName The packageName of the Android payment app.
-     * @return The preference key.
-     */
-    public static String getAndroidPaymentAppEnabledPreferenceKey(String packageName) {
-        return PAYMENT_ANDROID_APP_ENABLED_ + packageName;
-    }
-
-    /**
      * Gets use count of the payment instrument.
      *
      * @param id The instrument identifier.

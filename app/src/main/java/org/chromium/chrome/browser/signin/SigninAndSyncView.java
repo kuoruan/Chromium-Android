@@ -113,7 +113,7 @@ public class SigninAndSyncView extends LinearLayout
 
     private void update() {
         ViewState viewState;
-        if (!ChromeSigninController.get(getContext()).isSignedIn()) {
+        if (!ChromeSigninController.get().isSignedIn()) {
             viewState = getStateForSignin();
         } else if (!AndroidSyncSettings.isMasterSyncEnabled(getContext())) {
             viewState = getStateForEnableAndroidSync();

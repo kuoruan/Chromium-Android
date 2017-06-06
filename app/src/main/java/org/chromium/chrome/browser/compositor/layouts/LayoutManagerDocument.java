@@ -20,11 +20,9 @@ import org.chromium.chrome.browser.compositor.bottombar.readermode.ReaderModePan
 import org.chromium.chrome.browser.compositor.layouts.components.LayoutTab;
 import org.chromium.chrome.browser.compositor.layouts.components.VirtualView;
 import org.chromium.chrome.browser.compositor.layouts.content.TabContentManager;
-import org.chromium.chrome.browser.compositor.layouts.eventfilter.EdgeSwipeEventFilter;
-import org.chromium.chrome.browser.compositor.layouts.eventfilter.EdgeSwipeEventFilter.ScrollDirection;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.EdgeSwipeHandler;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.EmptyEdgeSwipeHandler;
-import org.chromium.chrome.browser.compositor.layouts.eventfilter.GestureHandler;
+import org.chromium.chrome.browser.compositor.layouts.eventfilter.ScrollDirection;
 import org.chromium.chrome.browser.compositor.overlays.SceneOverlay;
 import org.chromium.chrome.browser.compositor.scene_layer.ToolbarSceneLayer;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchManagementDelegate;
@@ -56,12 +54,7 @@ public class LayoutManagerDocument extends LayoutManager
     protected final StaticLayout mStaticLayout;
 
     // Event Filters
-    private final EdgeSwipeEventFilter mStaticEdgeEventFilter;
     private final EdgeSwipeHandler mToolbarSwipeHandler;
-
-    // Event Filter Handlers
-    /** A {@link GestureHandler} that will delegate all events to {@link #getActiveLayout()}. */
-    protected final GestureHandler mGestureHandler;
 
     // Internal State
     private final SparseArray<LayoutTab> mTabCache = new SparseArray<LayoutTab>();
@@ -88,25 +81,18 @@ public class LayoutManagerDocument extends LayoutManager
         mToolbarOverlay = new ToolbarSceneLayer(mContext, this, renderHost);
 
         // Build Event Filter Handlers
-        mGestureHandler = new GestureHandlerLayoutDelegate(this);
         mToolbarSwipeHandler = new ToolbarSwipeHandler(this);
-
-        // Build Event Filters
-        mStaticEdgeEventFilter =
-                new EdgeSwipeEventFilter(mContext, this, new StaticEdgeSwipeHandler());
 
         mOverlayPanelManager = new OverlayPanelManager();
 
         // Build Layouts
-        mStaticLayout = new StaticLayout(
-                mContext, this, renderHost, mStaticEdgeEventFilter, mOverlayPanelManager);
+        mStaticLayout = new StaticLayout(mContext, this, renderHost, null, mOverlayPanelManager);
 
         // Contextual Search scene overlay.
-        mContextualSearchPanel =
-                new ContextualSearchPanel(mContext, this, this, mOverlayPanelManager);
+        mContextualSearchPanel = new ContextualSearchPanel(mContext, this, mOverlayPanelManager);
 
         // Reader Mode scene overlay.
-        mReaderModePanel = new ReaderModePanel(mContext, this, this, mOverlayPanelManager, this);
+        mReaderModePanel = new ReaderModePanel(mContext, this, mOverlayPanelManager, this);
 
         // Set up layout parameters
         mStaticLayout.setLayoutHandlesTabLifecycles(true);
@@ -125,9 +111,6 @@ public class LayoutManagerDocument extends LayoutManager
 
         // Save state
         mContextualSearchDelegate = contextualSearchDelegate;
-
-        // Initialize Event Filters
-        mStaticEdgeEventFilter.setTabModelSelector(selector);
 
         // Initialize Layouts
         mStaticLayout.setTabModelSelector(selector, content);

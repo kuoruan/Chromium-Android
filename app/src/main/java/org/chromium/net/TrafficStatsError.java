@@ -15,14 +15,13 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class TrafficStatsError {
-  @IntDef({
-      ERROR_NOT_SUPPORTED
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface TrafficStatsErrorEnum {}
+@IntDef({
+    TrafficStatsError.ERROR_NOT_SUPPORTED
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface TrafficStatsError {
   /**
    * Value returned by AndroidTrafficStats APIs when a valid value is unavailable.
    */
-  public static final int ERROR_NOT_SUPPORTED = 0;
+  int ERROR_NOT_SUPPORTED = 0;
 }

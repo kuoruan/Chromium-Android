@@ -61,7 +61,6 @@ public class PhysicalWebPreferenceFragment extends PreferenceFragment {
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     PhysicalWebUma.onPrefsLocationGranted();
                     Log.d(TAG, "Location permission granted");
-                    PhysicalWeb.startPhysicalWeb();
                 } else {
                     PhysicalWebUma.onPrefsLocationDenied();
                     Log.d(TAG, "Location permission denied");
@@ -69,6 +68,7 @@ public class PhysicalWebPreferenceFragment extends PreferenceFragment {
                 break;
             default:
         }
+        PhysicalWeb.updateScans();
     }
 
     private void initPhysicalWebSwitch() {

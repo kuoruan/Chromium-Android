@@ -53,6 +53,6 @@ public class EmptyBrowserParts implements BrowserParts {
 
     @Override
     public boolean shouldStartGpuProcess() {
-        return true;
+        return false;
     }
 }

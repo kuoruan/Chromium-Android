@@ -95,7 +95,10 @@ public class BillingAddressAdapter<T> extends DropdownFieldAdapter<T> {
                             R.dimen.payments_section_small_spacing),
                     ApiCompatibilityUtils.getPaddingEnd(convertView),
                     convertView.getPaddingBottom());
-        } else if (position == getCount() - 1) {
+        }
+
+        // The last item is "ADD ADDRESS".
+        if (position == getCount() - 1) {
             // Add a "+" icon and a blue tint to the last element.
             Resources resources = getContext().getResources();
             if (textView == null) {

@@ -40,7 +40,6 @@ public class TabContextMenuItemDelegate implements ContextMenuItemDelegate {
     public static final String PAGESPEED_PASSTHROUGH_HEADERS =
             "Chrome-Proxy: pass-through\nCache-Control: no-cache";
 
-    private final Clipboard mClipboard;
     private final Tab mTab;
     private boolean mLoadOriginalImageRequestedForPageLoad;
     private EmptyTabObserver mDataReductionProxyContextMenuTabObserver;
@@ -50,7 +49,6 @@ public class TabContextMenuItemDelegate implements ContextMenuItemDelegate {
      */
     public TabContextMenuItemDelegate(Tab tab) {
         mTab = tab;
-        mClipboard = new Clipboard(mTab.getApplicationContext());
         mDataReductionProxyContextMenuTabObserver = new EmptyTabObserver() {
             @Override
             public void onPageLoadStarted(Tab tab, String url) {
@@ -92,7 +90,7 @@ public class TabContextMenuItemDelegate implements ContextMenuItemDelegate {
 
     @Override
     public void onSaveToClipboard(String text, int clipboardType) {
-        mClipboard.setText(text);
+        Clipboard.getInstance().setText(text);
     }
 
     @Override
@@ -255,7 +253,7 @@ public class TabContextMenuItemDelegate implements ContextMenuItemDelegate {
     public void onOpenInNewChromeTabFromCCT(String linkUrl, boolean isIncognito) {
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(linkUrl));
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setPackage(mTab.getApplicationContext().getPackageName());
+        intent.setClass(mTab.getApplicationContext(), ChromeLauncherActivity.class);
         intent.putExtra(ChromeLauncherActivity.EXTRA_IS_ALLOWED_TO_RETURN_TO_PARENT, false);
         if (isIncognito) {
             intent.putExtra(IntentHandler.EXTRA_OPEN_NEW_INCOGNITO_TAB, true);

@@ -190,10 +190,8 @@ abstract class BookmarkRow extends SelectableItemView<BookmarkId> implements Boo
         }
 
         // TODO(twellington): remove this after the bookmarks 720dp layout is restyled
-        //                    to match the < 720dp style and BookmarkSearchView is refactored.
-        //                    Currently BookmarkSearchRow extends BookmarkRow but is not selectable.
-        mShouldUseListItemBackground =
-                isSelectable() && !DeviceFormFactor.isLargeTablet(getContext());
+        //                    to match the < 720dp style.
+        mShouldUseListItemBackground = !DeviceFormFactor.isLargeTablet(getContext());
 
         // TODO(twellington): Replace this with a MarginResizer after the bookmarks layout is width
         //                    constrained to 600dp.
@@ -263,8 +261,10 @@ abstract class BookmarkRow extends SelectableItemView<BookmarkId> implements Boo
     }
 
     @Override
-    public void onFolderStateSet(BookmarkId folder) {
-    }
+    public void onFolderStateSet(BookmarkId folder) {}
+
+    @Override
+    public void onSearchStateSet() {}
 
     @Override
     public void setBackgroundResourceForGroupPosition(

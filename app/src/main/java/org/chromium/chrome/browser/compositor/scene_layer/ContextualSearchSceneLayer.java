@@ -8,7 +8,6 @@ import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.compositor.bottombar.contextualsearch.ContextualSearchBarControl;
-import org.chromium.chrome.browser.compositor.bottombar.contextualsearch.ContextualSearchIconSpriteControl;
 import org.chromium.chrome.browser.compositor.bottombar.contextualsearch.ContextualSearchImageControl;
 import org.chromium.chrome.browser.compositor.bottombar.contextualsearch.ContextualSearchPanel;
 import org.chromium.chrome.browser.compositor.bottombar.contextualsearch.ContextualSearchPeekPromoControl;
@@ -77,18 +76,14 @@ public class ContextualSearchSceneLayer extends SceneOverlayLayer {
         float searchPeekPromoRippleOpacity = peekPromoControl.getRippleOpacity();
         float searchPeekPromoTextOpacity = peekPromoControl.getTextOpacity();
 
-        float staticImageVisibilityPercentage = imageControl.getStaticImageVisibilityPercentage();
-        int staticImageSize = imageControl.getStaticImageSize();
+        float customImageVisibilityPercentage = imageControl.getCustomImageVisibilityPercentage();
+        int barImageSize = imageControl.getBarImageSize();
 
         boolean quickActionIconVisible = imageControl.getQuickActionIconVisible();
         int quickActionIconResId = imageControl.getQuickActionIconResourceId();
 
         boolean thumbnailVisible = imageControl.getThumbnailVisible();
         String thumbnailUrl = imageControl.getThumbnailUrl();
-
-        ContextualSearchIconSpriteControl spriteControl = imageControl.getIconSpriteControl();
-        boolean searchProviderIconSpriteVisible = spriteControl.isVisible();
-        float searchProviderIconCompletionPercentage = spriteControl.getCompletionPercentage();
 
         float searchPanelX = panel.getOffsetX();
         float searchPanelY = panel.getOffsetY();
@@ -132,76 +127,36 @@ public class ContextualSearchSceneLayer extends SceneOverlayLayer {
         float touchHighlightXOffset = searchBarControl.getTouchHighlightXOffsetPx();
         float touchHighlightWidth = searchBarControl.getTouchHighlightWidthPx();
 
+        int barHandleResId = panel.getBarHandleResourceId();
+        float barHandleOffsetY = panel.getBarHandleOffsetY();
+        float barPaddingBottom = panel.getBarPaddingBottom();
+
         WebContents panelWebContents = panel.getContentViewCore() != null
                 ? panel.getContentViewCore().getWebContents() : null;
 
-        nativeUpdateContextualSearchLayer(mNativePtr,
-                R.drawable.contextual_search_bar_background,
-                searchContextViewId,
-                searchTermViewId,
-                searchCaptionViewId,
-                R.drawable.contextual_search_bar_shadow,
-                R.drawable.google_icon_sprite,
-                R.raw.google_icon_sprite,
-                quickActionIconResId,
-                R.drawable.breadcrumb_arrow,
-                ContextualSearchPanel.CLOSE_ICON_DRAWABLE_ID,
-                R.drawable.progress_bar_background,
-                R.drawable.progress_bar_foreground,
-                searchPromoViewId,
-                R.drawable.contextual_search_promo_ripple,
-                searchPeekPromoTextViewId,
-                mDpToPx,
-                panel.getBasePageBrightness(),
-                panel.getBasePageY() * mDpToPx,
-                panelWebContents,
-                searchPromoVisible,
-                searchPromoHeightPx,
-                searchPromoOpacity,
-                searchPeekPromoVisible,
-                searchPeekPromoHeightPx,
-                searchPeekPromoPaddingPx,
-                searchPeekPromoRippleWidthPx,
-                searchPeekPromoRippleOpacity,
-                searchPeekPromoTextOpacity,
-                searchPanelX * mDpToPx,
-                searchPanelY * mDpToPx,
-                searchPanelWidth * mDpToPx,
-                searchPanelHeight * mDpToPx,
-                searchBarMarginSide * mDpToPx,
-                searchBarHeight * mDpToPx,
-                searchContextOpacity,
-                searchBarControl.getTextLayerMinHeight(),
-                searchTermOpacity,
-                searchBarControl.getSearchTermCaptionSpacing(),
-                searchCaptionAnimationPercentage,
-                searchCaptionVisible,
-                searchBarBorderVisible,
-                searchBarBorderHeight * mDpToPx,
-                searchBarShadowVisible,
-                searchBarShadowOpacity,
-                searchProviderIconSpriteVisible,
-                searchProviderIconCompletionPercentage,
-                quickActionIconVisible,
-                thumbnailVisible,
-                thumbnailUrl,
-                staticImageVisibilityPercentage,
-                staticImageSize,
-                arrowIconOpacity,
-                arrowIconRotation,
-                closeIconOpacity,
-                isProgressBarVisible,
-                progressBarHeight * mDpToPx,
-                progressBarOpacity,
-                progressBarCompletion,
-                dividerLineVisibilityPercentage,
-                dividerLineWidth,
-                dividerLineHeight,
-                dividerLineColor,
-                dividerLineXOffset,
-                touchHighlightVisible,
-                touchHighlightXOffset,
-                touchHighlightWidth,
+        nativeUpdateContextualSearchLayer(mNativePtr, R.drawable.contextual_search_bar_background,
+                searchContextViewId, searchTermViewId, searchCaptionViewId,
+                R.drawable.contextual_search_bar_shadow, R.drawable.googleg, quickActionIconResId,
+                R.drawable.breadcrumb_arrow, ContextualSearchPanel.CLOSE_ICON_DRAWABLE_ID,
+                R.drawable.progress_bar_background, R.drawable.progress_bar_foreground,
+                searchPromoViewId, R.drawable.contextual_search_promo_ripple,
+                searchPeekPromoTextViewId, mDpToPx, panel.getBasePageBrightness(),
+                panel.getBasePageY() * mDpToPx, panelWebContents, searchPromoVisible,
+                searchPromoHeightPx, searchPromoOpacity, searchPeekPromoVisible,
+                searchPeekPromoHeightPx, searchPeekPromoPaddingPx, searchPeekPromoRippleWidthPx,
+                searchPeekPromoRippleOpacity, searchPeekPromoTextOpacity, searchPanelX * mDpToPx,
+                searchPanelY * mDpToPx, searchPanelWidth * mDpToPx, searchPanelHeight * mDpToPx,
+                searchBarMarginSide * mDpToPx, searchBarHeight * mDpToPx, searchContextOpacity,
+                searchBarControl.getTextLayerMinHeight(), searchTermOpacity,
+                searchBarControl.getSearchTermCaptionSpacing(), searchCaptionAnimationPercentage,
+                searchCaptionVisible, searchBarBorderVisible, searchBarBorderHeight * mDpToPx,
+                searchBarShadowVisible, searchBarShadowOpacity, quickActionIconVisible,
+                thumbnailVisible, thumbnailUrl, customImageVisibilityPercentage, barImageSize,
+                arrowIconOpacity, arrowIconRotation, closeIconOpacity, isProgressBarVisible,
+                progressBarHeight * mDpToPx, progressBarOpacity, progressBarCompletion,
+                dividerLineVisibilityPercentage, dividerLineWidth, dividerLineHeight,
+                dividerLineColor, dividerLineXOffset, touchHighlightVisible, touchHighlightXOffset,
+                touchHighlightWidth, barHandleResId, barHandleOffsetY, barPaddingBottom,
                 Profile.getLastUsedProfile());
     }
 
@@ -250,73 +205,29 @@ public class ContextualSearchSceneLayer extends SceneOverlayLayer {
             SceneLayer contentTree);
     private native void nativeHideTree(
             long nativeContextualSearchSceneLayer);
-    private native void nativeUpdateContextualSearchLayer(
-            long nativeContextualSearchSceneLayer,
-            int searchBarBackgroundResourceId,
-            int searchContextResourceId,
-            int searchTermResourceId,
-            int searchCaptionResourceId,
-            int searchBarShadowResourceId,
-            int spriteResourceId,
-            int searchProviderIconSpriteMetadataResourceId,
-            int quickActionIconResourceId,
-            int arrowUpResourceId,
-            int closeIconResourceId,
-            int progressBarBackgroundResourceId,
-            int progressBarResourceId,
-            int searchPromoResourceId,
-            int peekPromoRippleResourceId,
-            int peekPromoTextResourceId,
-            float dpToPx,
-            float basePageBrightness,
-            float basePageYOffset,
-            WebContents webContents,
-            boolean searchPromoVisible,
-            float searchPromoHeight,
-            float searchPromoOpacity,
-            boolean searchPeekPromoVisible,
-            float searchPeekPromoHeight,
-            float searchPeekPromoPaddingPx,
-            float searchPeekPromoRippleWidth,
-            float searchPeekPromoRippleOpacity,
-            float searchPeekPromoTextOpacity,
-            float searchPanelX,
-            float searchPanelY,
-            float searchPanelWidth,
-            float searchPanelHeight,
-            float searchBarMarginSide,
-            float searchBarHeight,
-            float searchContextOpacity,
-            float searchTextLayerMinHeight,
-            float searchTermOpacity,
-            float searchTermCaptionSpacing,
-            float searchCaptionAnimationPercentage,
-            boolean searchCaptionVisible,
-            boolean searchBarBorderVisible,
-            float searchBarBorderHeight,
-            boolean searchBarShadowVisible,
-            float searchBarShadowOpacity,
-            boolean searchProviderIconSpriteVisible,
-            float searchProviderIconCompletionPercentage,
-            boolean quickActionIconVisible,
-            boolean thumbnailVisible,
-            String thumbnailUrl,
-            float staticImageVisibilityPercentage,
-            int staticImageSize,
-            float arrowIconOpacity,
-            float arrowIconRotation,
-            float closeIconOpacity,
-            boolean isProgressBarVisible,
-            float progressBarHeight,
-            float progressBarOpacity,
-            int progressBarCompletion,
-            float dividerLineVisibilityPercentage,
-            float dividerLineWidth,
-            float dividerLineHeight,
-            int dividerLineColor,
-            float dividerLineXOffset,
-            boolean touchHighlightVisible,
-            float touchHighlightXOffset,
-            float toucHighlightWidth,
-            Profile profile);
+    private native void nativeUpdateContextualSearchLayer(long nativeContextualSearchSceneLayer,
+            int searchBarBackgroundResourceId, int searchContextResourceId,
+            int searchTermResourceId, int searchCaptionResourceId, int searchBarShadowResourceId,
+            int searchProviderIconResourceId, int quickActionIconResourceId, int arrowUpResourceId,
+            int closeIconResourceId, int progressBarBackgroundResourceId, int progressBarResourceId,
+            int searchPromoResourceId, int peekPromoRippleResourceId, int peekPromoTextResourceId,
+            float dpToPx, float basePageBrightness, float basePageYOffset, WebContents webContents,
+            boolean searchPromoVisible, float searchPromoHeight, float searchPromoOpacity,
+            boolean searchPeekPromoVisible, float searchPeekPromoHeight,
+            float searchPeekPromoPaddingPx, float searchPeekPromoRippleWidth,
+            float searchPeekPromoRippleOpacity, float searchPeekPromoTextOpacity,
+            float searchPanelX, float searchPanelY, float searchPanelWidth, float searchPanelHeight,
+            float searchBarMarginSide, float searchBarHeight, float searchContextOpacity,
+            float searchTextLayerMinHeight, float searchTermOpacity, float searchTermCaptionSpacing,
+            float searchCaptionAnimationPercentage, boolean searchCaptionVisible,
+            boolean searchBarBorderVisible, float searchBarBorderHeight,
+            boolean searchBarShadowVisible, float searchBarShadowOpacity,
+            boolean quickActionIconVisible, boolean thumbnailVisible, String thumbnailUrl,
+            float customImageVisibilityPercentage, int barImageSize, float arrowIconOpacity,
+            float arrowIconRotation, float closeIconOpacity, boolean isProgressBarVisible,
+            float progressBarHeight, float progressBarOpacity, int progressBarCompletion,
+            float dividerLineVisibilityPercentage, float dividerLineWidth, float dividerLineHeight,
+            int dividerLineColor, float dividerLineXOffset, boolean touchHighlightVisible,
+            float touchHighlightXOffset, float toucHighlightWidth, int barHandleResId,
+            float barHandleOffsetY, float barPaddingBottom, Profile profile);
 }

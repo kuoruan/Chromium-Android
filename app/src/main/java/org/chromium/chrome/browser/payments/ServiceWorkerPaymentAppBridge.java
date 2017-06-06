@@ -72,13 +72,16 @@ public class ServiceWorkerPaymentAppBridge implements PaymentAppFactory.PaymentA
      *                       app.
      * @param total          The PaymentItem that represents the total cost of the payment.
      * @param modifiers      Payment method specific modifiers to the payment items and the total.
+     * @param callback       Called after the payment app is finished running.
      */
     public static void invokePaymentApp(WebContents webContents, long registrationId,
-            String optionId, String origin, Set<PaymentMethodData> methodData, PaymentItem total,
-            List<PaymentItem> displayItems, Set<PaymentDetailsModifier> modifiers) {
+            String optionId, String origin, String unusedIframeOrigin,
+            Set<PaymentMethodData> methodData, PaymentItem total, List<PaymentItem> displayItems,
+            Set<PaymentDetailsModifier> modifiers,
+            PaymentInstrument.InstrumentDetailsCallback callback) {
         nativeInvokePaymentApp(webContents, registrationId, optionId, origin,
                 methodData.toArray(new PaymentMethodData[0]), total,
-                modifiers.toArray(new PaymentDetailsModifier[0]));
+                modifiers.toArray(new PaymentDetailsModifier[0]), callback);
     }
 
     @CalledByNative
@@ -156,6 +159,18 @@ public class ServiceWorkerPaymentAppBridge implements PaymentAppFactory.PaymentA
         ((PaymentAppFactory.PaymentAppCreatedCallback) callback).onAllPaymentAppsCreated();
     }
 
+    @CalledByNative
+    private static void onPaymentAppInvoked(
+            Object callback, String methodName, String stringifiedDetails) {
+        assert callback instanceof PaymentInstrument.InstrumentDetailsCallback;
+        if (methodName == null) {
+            ((PaymentInstrument.InstrumentDetailsCallback) callback).onInstrumentDetailsError();
+        } else {
+            ((PaymentInstrument.InstrumentDetailsCallback) callback)
+                    .onInstrumentDetailsReady(methodName, stringifiedDetails);
+        }
+    }
+
     /*
      * TODO(tommyt): crbug.com/505554. Change the |callback| parameter below to
      * be of type PaymentAppFactory.PaymentAppCreatedCallback, once this JNI bug
@@ -163,7 +178,12 @@ public class ServiceWorkerPaymentAppBridge implements PaymentAppFactory.PaymentA
      */
     private static native void nativeGetAllAppManifests(WebContents webContents, Object callback);
 
+    /*
+     * TODO(tommyt): crbug.com/505554. Change the |callback| parameter below to
+     * be of type PaymentInstrument.InstrumentDetailsCallback, once this JNI bug
+     * has been resolved.
+     */
     private static native void nativeInvokePaymentApp(WebContents webContents, long registrationId,
             String optionId, String origin, PaymentMethodData[] methodData, PaymentItem total,
-            PaymentDetailsModifier[] modifiers);
+            PaymentDetailsModifier[] modifiers, Object callback);
 }

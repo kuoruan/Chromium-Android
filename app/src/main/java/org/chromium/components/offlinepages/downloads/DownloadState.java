@@ -15,14 +15,13 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class DownloadState {
-  @IntDef({
-      PENDING, IN_PROGRESS, PAUSED, COMPLETE
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface DownloadStateEnum {}
-  public static final int PENDING = 0;
-  public static final int IN_PROGRESS = 1;
-  public static final int PAUSED = 2;
-  public static final int COMPLETE = 3;
+@IntDef({
+    DownloadState.PENDING, DownloadState.IN_PROGRESS, DownloadState.PAUSED, DownloadState.COMPLETE
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface DownloadState {
+  int PENDING = 0;
+  int IN_PROGRESS = 1;
+  int PAUSED = 2;
+  int COMPLETE = 3;
 }

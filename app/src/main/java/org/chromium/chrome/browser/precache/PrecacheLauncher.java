@@ -143,6 +143,7 @@ public abstract class PrecacheLauncher {
 
                 if (mListener == null && sync != null) {
                     mListener = new ProfileSyncService.SyncStateChangedListener() {
+                        @Override
                         public void syncStateChanged() {
                             if (sync.isEngineInitialized()) {
                                 mSyncInitialized = true;

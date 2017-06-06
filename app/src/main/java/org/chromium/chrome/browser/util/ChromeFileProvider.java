@@ -12,6 +12,8 @@ import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 
+import org.chromium.chrome.browser.UrlConstants;
+
 import java.io.FileNotFoundException;
 import java.util.Arrays;
 
@@ -46,8 +48,11 @@ public class ChromeFileProvider extends FileProvider {
     public static Uri generateUriAndBlockAccess(final Context context) {
         String authority = context.getPackageName() + AUTHORITY_SUFFIX;
         String fileName = BLOCKED_FILE_PREFIX + String.valueOf(System.nanoTime());
-        Uri blockingUri =
-                new Uri.Builder().scheme("content").authority(authority).path(fileName).build();
+        Uri blockingUri = new Uri.Builder()
+                                  .scheme(UrlConstants.CONTENT_SCHEME)
+                                  .authority(authority)
+                                  .path(fileName)
+                                  .build();
         synchronized (sLock) {
             sCurrentBlockingUri = blockingUri;
             sFileUri = null;

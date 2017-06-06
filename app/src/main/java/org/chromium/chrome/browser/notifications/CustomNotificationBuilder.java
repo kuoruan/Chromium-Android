@@ -24,7 +24,6 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.AppHooks;
 import org.chromium.ui.base.LocalizationUtils;
 
 import java.util.Date;
@@ -141,12 +140,9 @@ public class CustomNotificationBuilder extends NotificationBuilderBase {
         // Note: under the hood this is not a NotificationCompat builder so be mindful of the
         // API level of methods you call on the builder.
         // TODO(crbug.com/697104) We should probably use a Compat builder.
-        ChromeNotificationBuilder builder = AppHooks.get().createChromeNotificationBuilder(
-                false /* preferCompat */, NotificationConstants.CATEGORY_ID_SITES,
-                mContext.getString(org.chromium.chrome.R.string.notification_category_sites),
-                NotificationConstants.CATEGORY_GROUP_ID_GENERAL,
-                mContext.getString(
-                        org.chromium.chrome.R.string.notification_category_group_general));
+        ChromeNotificationBuilder builder =
+                NotificationBuilderFactory.createChromeNotificationBuilder(
+                        false /* preferCompat */, ChannelDefinitions.CHANNEL_ID_SITES);
         builder.setTicker(mTickerText);
         builder.setContentIntent(mContentIntent);
         builder.setDeleteIntent(mDeleteIntent);

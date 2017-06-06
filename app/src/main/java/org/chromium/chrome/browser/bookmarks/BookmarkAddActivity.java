@@ -63,4 +63,9 @@ public class BookmarkAddActivity extends AsyncInitializationActivity {
             mModel = null;
         }
     }
+
+    @Override
+    public boolean shouldStartGpuProcess() {
+        return false;
+    }
 }

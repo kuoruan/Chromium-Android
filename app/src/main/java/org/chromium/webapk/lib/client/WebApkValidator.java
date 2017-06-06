@@ -5,6 +5,7 @@
 package org.chromium.webapk.lib.client;
 
 import static org.chromium.webapk.lib.common.WebApkConstants.WEBAPK_PACKAGE_PREFIX;
+import static org.chromium.webapk.lib.common.WebApkMetaDataKeys.START_URL;
 
 import android.content.Context;
 import android.content.Intent;
@@ -13,8 +14,19 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.content.pm.Signature;
+import android.os.StrictMode;
+import android.text.TextUtils;
 import android.util.Log;
 
+import org.chromium.base.annotations.SuppressFBWarnings;
+
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,16 +36,20 @@ import java.util.List;
  * Server.
  */
 public class WebApkValidator {
-
     private static final String TAG = "WebApkValidator";
+    private static final String KEY_FACTORY = "EC"; // aka "ECDSA"
+
+    private static boolean sAllWebApkPackageNames;
     private static byte[] sExpectedSignature;
+    private static byte[] sCommentSignedPublicKeyBytes;
+    private static PublicKey sCommentSignedPublicKey;
 
     /**
-     * Queries the PackageManager to determine whether a WebAPK can handle the URL. Ignores
-     * whether the user has selected a default handler for the URL and whether the default
-     * handler is the WebAPK.
+     * Queries the PackageManager to determine whether a WebAPK can handle the URL. Ignores whether
+     * the user has selected a default handler for the URL and whether the default handler is the
+     * WebAPK.
      *
-     * NOTE(yfriedman): This can fail if multiple WebAPKs can match the supplied url.
+     * <p>NOTE(yfriedman): This can fail if multiple WebAPKs can match the supplied url.
      *
      * @param context The application context.
      * @param url The url to check.
@@ -45,16 +61,16 @@ public class WebApkValidator {
     }
 
     /**
-     * Queries the PackageManager to determine whether a WebAPK can handle the URL. Ignores
-     * whether the user has selected a default handler for the URL and whether the default
-     * handler is the WebAPK.
+     * Queries the PackageManager to determine whether a WebAPK can handle the URL. Ignores whether
+     * the user has selected a default handler for the URL and whether the default handler is the
+     * WebAPK.
      *
-     * NOTE: This can fail if multiple WebAPKs can match the supplied url.
+     * <p>NOTE: This can fail if multiple WebAPKs can match the supplied url.
      *
      * @param context The application context.
      * @param url The url to check.
      * @return Resolve Info of a WebAPK which can handle the URL. Null if the url should not be
-     * handled by a WebAPK.
+     *     handled by a WebAPK.
      */
     public static ResolveInfo queryResolveInfo(Context context, String url) {
         return findResolveInfo(context, resolveInfosForUrl(context, url));
@@ -90,7 +106,7 @@ public class WebApkValidator {
      * @param context The context to use to check whether WebAPK is valid.
      * @param infos The ResolveInfos to search.
      * @return Package name of the ResolveInfo which corresponds to a WebAPK. Null if none of the
-     * ResolveInfos corresponds to a WebAPK.
+     *     ResolveInfos corresponds to a WebAPK.
      */
     public static String findWebApkPackage(Context context, List<ResolveInfo> infos) {
         ResolveInfo resolveInfo = findResolveInfo(context, infos);
@@ -123,46 +139,151 @@ public class WebApkValidator {
      * @return true iff the WebAPK is installed and passes security checks
      */
     public static boolean isValidWebApk(Context context, String webappPackageName) {
-        if (sExpectedSignature == null) {
-            Log.wtf(TAG, "WebApk validation failure - expected signature not set."
-                    + "missing call to WebApkValidator.initWithBrowserHostSignature");
-        }
-        if (!webappPackageName.startsWith(WEBAPK_PACKAGE_PREFIX)) {
+        if (sExpectedSignature == null || sCommentSignedPublicKeyBytes == null) {
+            Log.wtf(TAG,
+                    "WebApk validation failure - expected signature not set."
+                            + "missing call to WebApkValidator.initWithBrowserHostSignature");
             return false;
         }
-        // check signature
         PackageInfo packageInfo = null;
         try {
             packageInfo = context.getPackageManager().getPackageInfo(webappPackageName,
-                    PackageManager.GET_SIGNATURES);
+                    PackageManager.GET_SIGNATURES | PackageManager.GET_META_DATA);
         } catch (NameNotFoundException e) {
             e.printStackTrace();
             Log.d(TAG, "WebApk not found");
             return false;
         }
+        if (isNotWebApkQuick(packageInfo)) {
+            return false;
+        }
+        if (verifyV1WebApk(packageInfo, webappPackageName)) {
+            return true;
+        }
 
-        final Signature[] arrSignatures = packageInfo.signatures;
-        if (arrSignatures != null && arrSignatures.length == 2) {
-            for (Signature signature : arrSignatures) {
-                if (Arrays.equals(sExpectedSignature, signature.toByteArray())) {
-                    Log.d(TAG, "WebApk valid - signature match!");
-                    return true;
-                }
+        return verifyCommentSignedWebApk(packageInfo, webappPackageName);
+    }
+
+    /** Determine quickly whether this is definitely not a WebAPK */
+    private static boolean isNotWebApkQuick(PackageInfo packageInfo) {
+        if (packageInfo.applicationInfo == null || packageInfo.applicationInfo.metaData == null) {
+            Log.e(TAG, "no application info, or metaData retrieved.");
+            return true;
+        }
+        // Having the startURL in AndroidManifest.xml is a strong signal.
+        String startUrl = packageInfo.applicationInfo.metaData.getString(START_URL);
+        return TextUtils.isEmpty(startUrl);
+    }
+
+    private static boolean verifyV1WebApk(PackageInfo packageInfo, String webappPackageName) {
+        if (packageInfo.signatures == null || packageInfo.signatures.length != 2
+                || !webappPackageName.startsWith(WEBAPK_PACKAGE_PREFIX)) {
+            return false;
+        }
+        for (Signature signature : packageInfo.signatures) {
+            if (Arrays.equals(sExpectedSignature, signature.toByteArray())) {
+                Log.d(TAG, "WebApk valid - signature match!");
+                return true;
             }
         }
-        Log.d(TAG, "WebApk invalid");
         return false;
     }
 
-    /**
-     * Initializes the WebApkValidator with the expected signature that WebAPKs must be signed
-     * with for the current host.
-     * @param expectedSignature
-     */
-    public static void initWithBrowserHostSignature(byte[] expectedSignature) {
-        if (sExpectedSignature != null) {
-            return;
+    /** Verify that the comment signed webapk matches the public key. */
+    private static boolean verifyCommentSignedWebApk(
+            PackageInfo packageInfo, String webappPackageName) {
+        if (!sAllWebApkPackageNames && !webappPackageName.startsWith(WEBAPK_PACKAGE_PREFIX)) {
+            return false;
         }
-        sExpectedSignature = Arrays.copyOf(expectedSignature, expectedSignature.length);
+
+        PublicKey commentSignedPublicKey;
+        try {
+            commentSignedPublicKey = getCommentSignedPublicKey();
+        } catch (Exception e) {
+            Log.e(TAG, "WebApk failed to get Public Key", e);
+            return false;
+        }
+        if (commentSignedPublicKey == null) {
+            Log.e(TAG, "WebApk validation failure - unable to decode public key");
+            return false;
+        }
+        if (packageInfo.applicationInfo == null || packageInfo.applicationInfo.sourceDir == null) {
+            Log.e(TAG, "WebApk validation failure - missing applicationInfo sourcedir");
+            return false;
+        }
+
+        String packageFilename = packageInfo.applicationInfo.sourceDir;
+        RandomAccessFile file = null;
+        FileChannel inChannel = null;
+        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
+
+        try {
+            file = new RandomAccessFile(packageFilename, "r");
+            inChannel = file.getChannel();
+
+            MappedByteBuffer buf =
+                    inChannel.map(FileChannel.MapMode.READ_ONLY, 0, inChannel.size());
+            buf.load();
+
+            WebApkVerifySignature v = new WebApkVerifySignature(buf);
+            int result = v.read();
+            if (result != WebApkVerifySignature.ERROR_OK) {
+                Log.e(TAG, String.format("Failure reading %s: %s", packageFilename, result));
+                return false;
+            }
+            result = v.verifySignature(commentSignedPublicKey);
+
+            // TODO(scottkirkwood): remove this log once well tested.
+            Log.d(TAG, "File " + packageFilename + ": " + result);
+            return result == WebApkVerifySignature.ERROR_OK;
+        } catch (Exception e) {
+            Log.e(TAG, "WebApk file error for file " + packageFilename, e);
+            return false;
+        } finally {
+            StrictMode.setThreadPolicy(oldPolicy);
+            if (inChannel != null) {
+                try {
+                    inChannel.close();
+                } catch (IOException e) {
+                }
+            }
+            if (file != null) {
+                try {
+                    file.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+    }
+
+    /**
+     * Initializes the WebApkValidator.
+     * @param allWebApkPackageNames Whether we permit any package names for comment signed WebAPKs.
+     * @param expectedSignature V1 WebAPK RSA signature.
+     * @param v2PublicKeyBytes New comment signed public key bytes as x509 encoded public key.
+     */
+    @SuppressFBWarnings("EI_EXPOSE_STATIC_REP2")
+    public static void init(
+            boolean allWebApkPackageNames, byte[] expectedSignature, byte[] v2PublicKeyBytes) {
+        sAllWebApkPackageNames = allWebApkPackageNames;
+        if (sExpectedSignature == null) {
+            sExpectedSignature = expectedSignature;
+        }
+        if (sCommentSignedPublicKeyBytes == null) {
+            sCommentSignedPublicKeyBytes = v2PublicKeyBytes;
+        }
+    }
+
+    /**
+     * Lazy evaluate the creation of the Public Key as the KeyFactories may not yet be initialized.
+     * @return The decoded PublicKey or null
+     */
+    private static PublicKey getCommentSignedPublicKey() throws Exception {
+        if (sCommentSignedPublicKey == null) {
+            sCommentSignedPublicKey =
+                    KeyFactory.getInstance(KEY_FACTORY)
+                            .generatePublic(new X509EncodedKeySpec(sCommentSignedPublicKeyBytes));
+        }
+        return sCommentSignedPublicKey;
     }
 }

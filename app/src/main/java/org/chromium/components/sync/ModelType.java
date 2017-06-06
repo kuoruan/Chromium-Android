@@ -15,31 +15,36 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ModelType {
-  @IntDef({
-      UNSPECIFIED, TOP_LEVEL_FOLDER, BOOKMARKS, FIRST_USER_MODEL_TYPE, FIRST_REAL_MODEL_TYPE,
-      PREFERENCES, PASSWORDS, AUTOFILL_PROFILE, AUTOFILL, AUTOFILL_WALLET_DATA,
-      AUTOFILL_WALLET_METADATA, THEMES, TYPED_URLS, EXTENSIONS, SEARCH_ENGINES, SESSIONS, APPS,
-      APP_SETTINGS, EXTENSION_SETTINGS, APP_NOTIFICATIONS, HISTORY_DELETE_DIRECTIVES,
-      SYNCED_NOTIFICATIONS, SYNCED_NOTIFICATION_APP_INFO, DICTIONARY, FAVICON_IMAGES,
-      FAVICON_TRACKING, DEVICE_INFO, PRIORITY_PREFERENCES, SUPERVISED_USER_SETTINGS,
-      SUPERVISED_USERS, SUPERVISED_USER_SHARED_SETTINGS, ARTICLES, APP_LIST, WIFI_CREDENTIALS,
-      SUPERVISED_USER_WHITELISTS, ARC_PACKAGE, PRINTERS, READING_LIST, PROXY_TABS, FIRST_PROXY_TYPE,
-      LAST_PROXY_TYPE, LAST_USER_MODEL_TYPE, NIGORI, FIRST_CONTROL_MODEL_TYPE, EXPERIMENTS,
-      LAST_CONTROL_MODEL_TYPE, LAST_REAL_MODEL_TYPE, MODEL_TYPE_COUNT
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ModelTypeEnum {}
+@IntDef({
+    ModelType.UNSPECIFIED, ModelType.TOP_LEVEL_FOLDER, ModelType.BOOKMARKS,
+    ModelType.FIRST_USER_MODEL_TYPE, ModelType.FIRST_REAL_MODEL_TYPE, ModelType.PREFERENCES,
+    ModelType.PASSWORDS, ModelType.AUTOFILL_PROFILE, ModelType.AUTOFILL,
+    ModelType.AUTOFILL_WALLET_DATA, ModelType.AUTOFILL_WALLET_METADATA, ModelType.THEMES,
+    ModelType.TYPED_URLS, ModelType.EXTENSIONS, ModelType.SEARCH_ENGINES, ModelType.SESSIONS,
+    ModelType.APPS, ModelType.APP_SETTINGS, ModelType.EXTENSION_SETTINGS,
+    ModelType.APP_NOTIFICATIONS, ModelType.HISTORY_DELETE_DIRECTIVES,
+    ModelType.SYNCED_NOTIFICATIONS, ModelType.SYNCED_NOTIFICATION_APP_INFO, ModelType.DICTIONARY,
+    ModelType.FAVICON_IMAGES, ModelType.FAVICON_TRACKING, ModelType.DEVICE_INFO,
+    ModelType.PRIORITY_PREFERENCES, ModelType.SUPERVISED_USER_SETTINGS, ModelType.SUPERVISED_USERS,
+    ModelType.SUPERVISED_USER_SHARED_SETTINGS, ModelType.ARTICLES, ModelType.APP_LIST,
+    ModelType.WIFI_CREDENTIALS, ModelType.SUPERVISED_USER_WHITELISTS, ModelType.ARC_PACKAGE,
+    ModelType.PRINTERS, ModelType.READING_LIST, ModelType.USER_EVENTS, ModelType.PROXY_TABS,
+    ModelType.FIRST_PROXY_TYPE, ModelType.LAST_PROXY_TYPE, ModelType.LAST_USER_MODEL_TYPE,
+    ModelType.NIGORI, ModelType.FIRST_CONTROL_MODEL_TYPE, ModelType.EXPERIMENTS,
+    ModelType.LAST_CONTROL_MODEL_TYPE, ModelType.LAST_REAL_MODEL_TYPE, ModelType.MODEL_TYPE_COUNT
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ModelType {
   /**
    * Object type unknown.  Objects may transition through the unknown state during their initial
    * creation, before their properties are set.  After deletion, object types are generally
    * preserved.
    */
-  public static final int UNSPECIFIED = 0;
+  int UNSPECIFIED = 0;
   /**
    * A permanent folder whose children may be of mixed datatypes (e.g. the "Google Chrome" folder).
    */
-  public static final int TOP_LEVEL_FOLDER = 1;
+  int TOP_LEVEL_FOLDER = 1;
   /**
    * ------------------------------------ Start of "real" model types. The model types declared
    * before here are somewhat special, as they they do not correspond to any browser data model.
@@ -47,167 +52,171 @@ public class ModelType {
    * represented in the protocol using a specific Message type in the EntitySpecifics protocol
    * buffer. A bookmark folder or a bookmark URL object.
    */
-  public static final int BOOKMARKS = 2;
-  public static final int FIRST_USER_MODEL_TYPE = 2;
-  public static final int FIRST_REAL_MODEL_TYPE = 2;
+  int BOOKMARKS = 2;
+  int FIRST_USER_MODEL_TYPE = 2;
+  int FIRST_REAL_MODEL_TYPE = 2;
   /**
    * A preference object.
    */
-  public static final int PREFERENCES = 3;
+  int PREFERENCES = 3;
   /**
    * A password object.
    */
-  public static final int PASSWORDS = 4;
+  int PASSWORDS = 4;
   /**
    * An AutofillProfile Object
    */
-  public static final int AUTOFILL_PROFILE = 5;
+  int AUTOFILL_PROFILE = 5;
   /**
    * An autofill object.
    */
-  public static final int AUTOFILL = 6;
+  int AUTOFILL = 6;
   /**
    * Credit cards and addresses synced from the user's account. These are read-only on the client.
    */
-  public static final int AUTOFILL_WALLET_DATA = 7;
+  int AUTOFILL_WALLET_DATA = 7;
   /**
    * Usage counts and last use dates for Wallet cards and addresses. This data is both readable and
    * writable.
    */
-  public static final int AUTOFILL_WALLET_METADATA = 8;
+  int AUTOFILL_WALLET_METADATA = 8;
   /**
    * A themes object.
    */
-  public static final int THEMES = 9;
+  int THEMES = 9;
   /**
    * A typed_url object.
    */
-  public static final int TYPED_URLS = 10;
+  int TYPED_URLS = 10;
   /**
    * An extension object.
    */
-  public static final int EXTENSIONS = 11;
+  int EXTENSIONS = 11;
   /**
    * An object representing a custom search engine.
    */
-  public static final int SEARCH_ENGINES = 12;
+  int SEARCH_ENGINES = 12;
   /**
    * An object representing a browser session.
    */
-  public static final int SESSIONS = 13;
+  int SESSIONS = 13;
   /**
    * An app object.
    */
-  public static final int APPS = 14;
+  int APPS = 14;
   /**
    * An app setting from the extension settings API.
    */
-  public static final int APP_SETTINGS = 15;
+  int APP_SETTINGS = 15;
   /**
    * An extension setting from the extension settings API.
    */
-  public static final int EXTENSION_SETTINGS = 16;
+  int EXTENSION_SETTINGS = 16;
   /**
    * App notifications. Deprecated.
    */
-  public static final int APP_NOTIFICATIONS = 17;
+  int APP_NOTIFICATIONS = 17;
   /**
    * History delete directives.
    */
-  public static final int HISTORY_DELETE_DIRECTIVES = 18;
+  int HISTORY_DELETE_DIRECTIVES = 18;
   /**
    * Synced push notifications. Deprecated.
    */
-  public static final int SYNCED_NOTIFICATIONS = 19;
+  int SYNCED_NOTIFICATIONS = 19;
   /**
    * Synced Notification app info. Deprecated.
    */
-  public static final int SYNCED_NOTIFICATION_APP_INFO = 20;
+  int SYNCED_NOTIFICATION_APP_INFO = 20;
   /**
    * Custom spelling dictionary.
    */
-  public static final int DICTIONARY = 21;
+  int DICTIONARY = 21;
   /**
    * Favicon images.
    */
-  public static final int FAVICON_IMAGES = 22;
+  int FAVICON_IMAGES = 22;
   /**
    * Favicon tracking information.
    */
-  public static final int FAVICON_TRACKING = 23;
+  int FAVICON_TRACKING = 23;
   /**
    * Client-specific metadata, synced before other user types.
    */
-  public static final int DEVICE_INFO = 24;
+  int DEVICE_INFO = 24;
   /**
    * These preferences are synced before other user types and are never encrypted.
    */
-  public static final int PRIORITY_PREFERENCES = 25;
+  int PRIORITY_PREFERENCES = 25;
   /**
    * Supervised user settings.
    */
-  public static final int SUPERVISED_USER_SETTINGS = 26;
+  int SUPERVISED_USER_SETTINGS = 26;
   /**
    * Supervised users. Every supervised user is a profile that is configured remotely by this user
    * and can have restrictions applied. SUPERVISED_USERS and SUPERVISED_USER_SETTINGS can not be
    * encrypted.
    */
-  public static final int SUPERVISED_USERS = 27;
+  int SUPERVISED_USERS = 27;
   /**
    * Supervised user shared settings. Shared settings can be modified both by the manager and the
    * supervised user.
    */
-  public static final int SUPERVISED_USER_SHARED_SETTINGS = 28;
+  int SUPERVISED_USER_SHARED_SETTINGS = 28;
   /**
    * Distilled articles.
    */
-  public static final int ARTICLES = 29;
+  int ARTICLES = 29;
   /**
    * App List items
    */
-  public static final int APP_LIST = 30;
+  int APP_LIST = 30;
   /**
    * WiFi credentials. Each item contains the information for connecting to one WiFi network. This
    * includes, e.g., network name and password.
    */
-  public static final int WIFI_CREDENTIALS = 31;
+  int WIFI_CREDENTIALS = 31;
   /**
    * Supervised user whitelists. Each item contains a CRX ID (like an extension ID) and a name.
    */
-  public static final int SUPERVISED_USER_WHITELISTS = 32;
+  int SUPERVISED_USER_WHITELISTS = 32;
   /**
    * ARC Package items.
    */
-  public static final int ARC_PACKAGE = 33;
+  int ARC_PACKAGE = 33;
   /**
    * Printer device information.
    */
-  public static final int PRINTERS = 34;
+  int PRINTERS = 34;
   /**
    * Reading list items.
    */
-  public static final int READING_LIST = 35;
+  int READING_LIST = 35;
+  /**
+   * Commit only user events.
+   */
+  int USER_EVENTS = 36;
   /**
    * ---- Proxy types ---- Proxy types are excluded from the sync protocol, but are still considered
    * real user types. By convention, we prefix them with 'PROXY_' to distinguish them from normal
    * protocol types. Tab sync. This is a placeholder type, so that Sessions can be implicitly
    * enabled for history sync and tabs sync.
    */
-  public static final int PROXY_TABS = 36;
-  public static final int FIRST_PROXY_TYPE = 36;
-  public static final int LAST_PROXY_TYPE = 36;
-  public static final int LAST_USER_MODEL_TYPE = 36;
+  int PROXY_TABS = 37;
+  int FIRST_PROXY_TYPE = 37;
+  int LAST_PROXY_TYPE = 37;
+  int LAST_USER_MODEL_TYPE = 37;
   /**
    * ---- Control Types ---- An object representing a set of Nigori keys.
    */
-  public static final int NIGORI = 37;
-  public static final int FIRST_CONTROL_MODEL_TYPE = 37;
+  int NIGORI = 38;
+  int FIRST_CONTROL_MODEL_TYPE = 38;
   /**
    * Flags to enable experimental features.
    */
-  public static final int EXPERIMENTS = 38;
-  public static final int LAST_CONTROL_MODEL_TYPE = 38;
-  public static final int LAST_REAL_MODEL_TYPE = 38;
+  int EXPERIMENTS = 39;
+  int LAST_CONTROL_MODEL_TYPE = 39;
+  int LAST_REAL_MODEL_TYPE = 39;
   /**
    * If you are adding a new sync datatype that is exposed to the user via the sync preferences UI,
    * be sure to update the list in components/sync/driver/user_selectable_sync_type.h so that the
@@ -215,5 +224,5 @@ public class ModelType {
    * UserSelectableTypes() definition in sync/syncable/model_type.cc. Additionally, enum
    * SyncModelTypes and suffix SyncModelType need to be updated in histograms.xml for all new types.
    */
-  public static final int MODEL_TYPE_COUNT = 39;
+  int MODEL_TYPE_COUNT = 40;
 }

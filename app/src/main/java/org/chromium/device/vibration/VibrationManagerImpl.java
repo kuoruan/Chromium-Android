@@ -10,7 +10,8 @@ import android.media.AudioManager;
 import android.os.Vibrator;
 import android.util.Log;
 
-import org.chromium.base.VisibleForTesting;
+import org.chromium.base.annotations.CalledByNative;
+import org.chromium.base.annotations.JNINamespace;
 import org.chromium.device.mojom.VibrationManager;
 import org.chromium.mojo.system.MojoException;
 import org.chromium.services.service_manager.InterfaceFactory;
@@ -19,6 +20,7 @@ import org.chromium.services.service_manager.InterfaceFactory;
  * Android implementation of the vibration manager service defined in
  * device/vibration/vibration_manager.mojom.
  */
+@JNINamespace("device")
 public class VibrationManagerImpl implements VibrationManager {
     private static final String TAG = "VibrationManagerImpl";
 
@@ -29,35 +31,12 @@ public class VibrationManagerImpl implements VibrationManager {
     private final Vibrator mVibrator;
     private final boolean mHasVibratePermission;
 
-    private static AndroidVibratorWrapper sVibratorWrapper;
-
-    /**
-     * Android Vibrator wrapper class provided to test code to extend.
-     */
-    @VisibleForTesting
-    public static class AndroidVibratorWrapper {
-        protected AndroidVibratorWrapper() {}
-
-        public void vibrate(Vibrator vibrator, long milliseconds) {
-            vibrator.vibrate(milliseconds);
-        }
-
-        public void cancel(Vibrator vibrator) {
-            vibrator.cancel();
-        }
-    }
-
-    // Test code can use this function to inject other wrapper for testing.
-    public static void setVibratorWrapperForTesting(AndroidVibratorWrapper wrapper) {
-        sVibratorWrapper = wrapper;
-    }
+    private static long sVibrateMilliSecondsForTesting = -1;
+    private static boolean sVibrateCancelledForTesting = false;
 
     public VibrationManagerImpl(Context context) {
         mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-        if (sVibratorWrapper == null) {
-            sVibratorWrapper = new AndroidVibratorWrapper();
-        }
         // TODO(mvanouwerkerk): What happens if permission is revoked? Handle this better.
         mHasVibratePermission =
                 context.checkCallingOrSelfPermission(android.Manifest.permission.VIBRATE)
@@ -82,14 +61,18 @@ public class VibrationManagerImpl implements VibrationManager {
 
         if (mAudioManager.getRingerMode() != AudioManager.RINGER_MODE_SILENT
                 && mHasVibratePermission) {
-            sVibratorWrapper.vibrate(mVibrator, sanitizedMilliseconds);
+            mVibrator.vibrate(sanitizedMilliseconds);
         }
+        setVibrateMilliSecondsForTesting(sanitizedMilliseconds);
         callback.call();
     }
 
     @Override
     public void cancel(CancelResponse callback) {
-        if (mHasVibratePermission) sVibratorWrapper.cancel(mVibrator);
+        if (mHasVibratePermission) {
+            mVibrator.cancel();
+        }
+        setVibrateCancelledForTesting(true);
         callback.call();
     }
 
@@ -106,5 +89,23 @@ public class VibrationManagerImpl implements VibrationManager {
         public VibrationManager createImpl() {
             return new VibrationManagerImpl(mContext);
         }
+    }
+
+    static void setVibrateMilliSecondsForTesting(long milliseconds) {
+        sVibrateMilliSecondsForTesting = milliseconds;
+    }
+
+    static void setVibrateCancelledForTesting(boolean cancelled) {
+        sVibrateCancelledForTesting = cancelled;
+    }
+
+    @CalledByNative
+    static long getVibrateMilliSecondsForTesting() {
+        return sVibrateMilliSecondsForTesting;
+    }
+
+    @CalledByNative
+    static boolean getVibrateCancelledForTesting() {
+        return sVibrateCancelledForTesting;
     }
 }

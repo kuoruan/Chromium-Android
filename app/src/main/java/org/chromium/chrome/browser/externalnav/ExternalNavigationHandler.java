@@ -29,6 +29,7 @@ import org.chromium.chrome.browser.tab.TabRedirectHandler;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.chrome.browser.util.UrlUtilities;
 import org.chromium.chrome.browser.webapps.ChromeWebApkHost;
+import org.chromium.content_public.common.ContentUrlConstants;
 import org.chromium.ui.base.PageTransition;
 
 import java.net.URI;
@@ -310,7 +311,7 @@ public class ExternalNavigationHandler {
 
         // The "about:", "chrome:", and "chrome-native:" schemes are internal to the browser;
         // don't want these to be dispatched to other apps.
-        if (params.getUrl().startsWith(UrlConstants.ABOUT_URL_SHORT_PREFIX)
+        if (params.getUrl().startsWith(ContentUrlConstants.ABOUT_URL_SHORT_PREFIX)
                 || params.getUrl().startsWith(UrlConstants.CHROME_URL_SHORT_PREFIX)
                 || params.getUrl().startsWith(UrlConstants.CHROME_NATIVE_URL_SHORT_PREFIX)) {
             if (DEBUG) Log.i(TAG, "NO_OVERRIDE: Navigating to a chrome-internal page");

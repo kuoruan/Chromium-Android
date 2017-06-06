@@ -104,7 +104,7 @@ public class TitleBitmapFactory {
             }
             return b;
         } catch (OutOfMemoryError ex) {
-            Log.w(TAG, "OutOfMemoryError while building favicon texture.");
+            Log.e(TAG, "OutOfMemoryError while building favicon texture.");
         } catch (InflateException ex) {
             Log.w(TAG, "InflateException while building favicon texture.");
         }
@@ -135,7 +135,7 @@ public class TitleBitmapFactory {
             }
             return b;
         } catch (OutOfMemoryError ex) {
-            Log.w(TAG, "OutOfMemoryError while building title texture.");
+            Log.e(TAG, "OutOfMemoryError while building title texture.");
         } catch (InflateException ex) {
             Log.w(TAG, "InflateException while building title texture.");
         }

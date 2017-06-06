@@ -1,4 +1,4 @@
-// Copyright 2015 The Chromium Authors. All rights reserved.
+// Copyright 2016 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -9,6 +9,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.view.Display;
 import android.view.MotionEvent;
@@ -17,14 +18,12 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 
-import org.chromium.base.CommandLine;
-import org.chromium.base.Log;
+import org.chromium.base.BuildInfo;
 import org.chromium.base.TraceEvent;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.base.annotations.UsedByReflection;
-import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.compositor.layouts.Layout;
 import org.chromium.chrome.browser.compositor.layouts.LayoutProvider;
 import org.chromium.chrome.browser.compositor.layouts.LayoutRenderHost;
@@ -35,7 +34,6 @@ import org.chromium.chrome.browser.externalnav.IntentWithGesturesHandler;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.tabmodel.TabModelImpl;
 import org.chromium.chrome.browser.widget.ClipDrawableProgressBar.DrawingInfo;
-import org.chromium.ui.base.DeviceFormFactor;
 import org.chromium.ui.base.WindowAndroid;
 import org.chromium.ui.resources.AndroidResourceType;
 import org.chromium.ui.resources.ResourceManager;
@@ -47,7 +45,8 @@ import java.util.List;
  * The is the {@link View} displaying the ui compositor results; including webpages and tabswitcher.
  */
 @JNINamespace("android")
-public class CompositorView extends SurfaceView implements SurfaceHolder.Callback2 {
+public class CompositorView
+        extends FrameLayout implements CompositorSurfaceManager.SurfaceHolderCallbackTarget {
     private static final String TAG = "CompositorView";
     private static final long NANOSECONDS_PER_MILLISECOND = 1000000;
 
@@ -55,9 +54,16 @@ public class CompositorView extends SurfaceView implements SurfaceHolder.Callbac
     private final Rect mCacheAppRect = new Rect();
     private final int[] mCacheViewPosition = new int[2];
 
+    private final CompositorSurfaceManager mCompositorSurfaceManager;
+    private boolean mOverlayVideoEnabled;
+    private boolean mAlwaysTranslucent;
+
+    // Are we waiting to hide the outgoing surface until the foreground has something to display?
+    // If == 0, then no.  If > 0, then yes.  We'll hide when it transitions from one to zero.
+    private int mFramesUntilHideBackground;
+
     private long mNativeCompositorView;
     private final LayoutRenderHost mRenderHost;
-    private boolean mEnableTabletTabStack;
     private int mPreviousWindowTop = -1;
 
     // A conservative estimate of when a frame is guaranteed to be presented after being submitted.
@@ -73,13 +79,8 @@ public class CompositorView extends SurfaceView implements SurfaceHolder.Callbac
     private TabContentManager mTabContentManager;
 
     private View mRootView;
-    private int mSurfaceWidth;
-    private int mSurfaceHeight;
     private boolean mPreloadedResources;
     private List<Runnable> mDrawingFinishedCallbacks;
-
-    // The current SurfaceView pixel format. Defaults to OPAQUE.
-    private int mCurrentPixelFormat = PixelFormat.OPAQUE;
 
     /**
      * Creates a {@link CompositorView}. This can be called only after the native library is
@@ -90,9 +91,21 @@ public class CompositorView extends SurfaceView implements SurfaceHolder.Callbac
     public CompositorView(Context c, LayoutRenderHost host) {
         super(c);
         mRenderHost = host;
-        resetFlags();
-        setVisibility(View.INVISIBLE);
-        setZOrderMediaOverlay(true);
+
+        mCompositorSurfaceManager = new CompositorSurfaceManager(this, this);
+
+        if (BuildInfo.isAtLeastO()) {
+            setBackgroundColor(Color.WHITE);
+            super.setVisibility(View.VISIBLE);
+            mCompositorSurfaceManager.setVisibility(View.INVISIBLE);
+        } else {
+            setVisibility(View.INVISIBLE);
+        }
+
+        // Request the opaque surface.  We might need the translucent one, but
+        // we don't know yet.  We'll switch back later if we discover that
+        // we're on a low memory device that always uses translucent.
+        mCompositorSurfaceManager.requestSurface(PixelFormat.OPAQUE);
     }
 
     /**
@@ -100,16 +113,6 @@ public class CompositorView extends SurfaceView implements SurfaceHolder.Callbac
      */
     public void setRootView(View view) {
         mRootView = view;
-    }
-
-    /**
-     * Reset the commandline flags. This gets called after we switch over to the
-     * native command line.
-     */
-    public void resetFlags() {
-        CommandLine commandLine = CommandLine.getInstance();
-        mEnableTabletTabStack = commandLine.hasSwitch(ChromeSwitches.ENABLE_TABLET_TAB_STACK)
-                && DeviceFormFactor.isTablet(getContext());
     }
 
     @Override
@@ -161,7 +164,7 @@ public class CompositorView extends SurfaceView implements SurfaceHolder.Callbac
      * Should be called for cleanup when the CompositorView instance is no longer used.
      */
     public void shutDown() {
-        getHolder().removeCallback(this);
+        mCompositorSurfaceManager.shutDown();
         if (mNativeCompositorView != 0) nativeDestroy(mNativeCompositorView);
         mNativeCompositorView = 0;
     }
@@ -182,9 +185,21 @@ public class CompositorView extends SurfaceView implements SurfaceHolder.Callbac
         mNativeCompositorView = nativeInit(lowMemDevice,
                 windowAndroid.getNativePointer(), layerTitleCache, tabContentManager);
 
-        assert !getHolder().getSurface().isValid()
-            : "Surface created before native library loaded.";
-        getHolder().addCallback(this);
+        // compositor_impl_android.cc will use 565 EGL surfaces if and only if we're using a low
+        // memory device, and no alpha channel is desired.  Otherwise, it will use 8888.  Since
+        // SurfaceFlinger doesn't need the eOpaque flag to optimize out alpha blending during
+        // composition if the buffer has no alpha channel, we can avoid using the extra background
+        // surface (and the memory it requires) in the low memory case.  The output buffer will
+        // either have an alpha channel or not, depending on whether the compositor needs it.  We
+        // can keep the surface translucent all the times without worrying about the impact on power
+        // usage during SurfaceFlinger composition. We might also want to set |mAlwaysTranslucent|
+        // on non-low memory devices, if we are running on hardware that implements efficient alpha
+        // blending.
+        mAlwaysTranslucent = lowMemDevice;
+
+        // In case we changed the requested format due to |lowMemDevice|,
+        // re-request the surface now.
+        mCompositorSurfaceManager.requestSurface(getSurfacePixelFormat());
 
         // Cover the black surface before it has valid content.
         setBackgroundColor(Color.WHITE);
@@ -215,22 +230,33 @@ public class CompositorView extends SurfaceView implements SurfaceHolder.Callbac
     }
 
     /**
+     * @see SurfaceView#getHolder
+     */
+    SurfaceHolder getHolder() {
+        return mCompositorSurfaceManager.getHolder();
+    }
+
+    /**
      * Enables/disables overlay video mode. Affects alpha blending on this view.
      * @param enabled Whether to enter or leave overlay video mode.
      */
     public void setOverlayVideoMode(boolean enabled) {
-        mCurrentPixelFormat = enabled ? PixelFormat.TRANSLUCENT : PixelFormat.OPAQUE;
-        getHolder().setFormat(mCurrentPixelFormat);
         nativeSetOverlayVideoMode(mNativeCompositorView, enabled);
+
+        mOverlayVideoEnabled = enabled;
+        // Request the new surface, even if it's the same as the old one.  We'll get a synthetic
+        // destroy / create / changed callback in that case, possibly before this returns.
+        mCompositorSurfaceManager.requestSurface(getSurfacePixelFormat());
+        // Note that we don't know if we'll get a surfaceCreated / surfaceDestoyed for this surface.
+        // We do know that if we do get one, then it will be for the surface that we just requested.
+    }
+
+    private int getSurfacePixelFormat() {
+        return (mOverlayVideoEnabled || mAlwaysTranslucent) ? PixelFormat.TRANSLUCENT
+                                                            : PixelFormat.OPAQUE;
     }
 
     @Override
-    public void surfaceRedrawNeeded(SurfaceHolder holder) {
-        // Intentionally not implemented.
-    }
-
-    // TODO(boliu): Mark this override instead.
-    @UsedByReflection("Android")
     public void surfaceRedrawNeededAsync(SurfaceHolder holder, Runnable drawingFinished) {
         if (mDrawingFinishedCallbacks == null) mDrawingFinishedCallbacks = new ArrayList<>();
         mDrawingFinishedCallbacks.add(drawingFinished);
@@ -240,22 +266,24 @@ public class CompositorView extends SurfaceView implements SurfaceHolder.Callbac
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         if (mNativeCompositorView == 0) return;
+
         nativeSurfaceChanged(mNativeCompositorView, format, width, height, holder.getSurface());
         mRenderHost.onPhysicalBackingSizeChanged(width, height);
-        mSurfaceWidth = width;
-        mSurfaceHeight = height;
     }
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         if (mNativeCompositorView == 0) return;
+
         nativeSurfaceCreated(mNativeCompositorView);
+        mFramesUntilHideBackground = 2;
         mRenderHost.onSurfaceCreated();
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         if (mNativeCompositorView == 0) return;
+
         nativeSurfaceDestroyed(mNativeCompositorView);
     }
 
@@ -284,29 +312,7 @@ public class CompositorView extends SurfaceView implements SurfaceHolder.Callbac
      */
     @CalledByNative
     private void onJellyBeanSurfaceDisconnectWorkaround(boolean inOverlayMode) {
-        // There is a bug in JellyBean because of which we will not be able to
-        // reconnect to the existing Surface after we launch a new GPU process.
-        // We simply trick the JB Android code to allocate a new Surface.
-        // It does a strict comparison between the current format and the requested
-        // one, even if they are the same in practice. Furthermore, the format
-        // does not matter here since the producer-side EGL config overwrites it
-        // (but transparency might matter).
-        switch (mCurrentPixelFormat) {
-            case PixelFormat.OPAQUE:
-                mCurrentPixelFormat = PixelFormat.RGBA_8888;
-                break;
-            case PixelFormat.RGBA_8888:
-                mCurrentPixelFormat = inOverlayMode
-                        ? PixelFormat.TRANSLUCENT : PixelFormat.OPAQUE;
-                break;
-            case PixelFormat.TRANSLUCENT:
-                mCurrentPixelFormat = PixelFormat.RGBA_8888;
-                break;
-            default:
-                assert false;
-                Log.e(TAG, "Unknown current pixel format.");
-        }
-        getHolder().setFormat(mCurrentPixelFormat);
+        mCompositorSurfaceManager.recreateSurfaceForJellyBean();
     }
 
     /**
@@ -333,6 +339,20 @@ public class CompositorView extends SurfaceView implements SurfaceHolder.Callbac
 
     @CalledByNative
     private void didSwapBuffers() {
+        // If we're in the middle of a surface swap, then see if we've received a new frame yet for
+        // the new surface before hiding the outgoing surface.
+        if (mFramesUntilHideBackground > 1) {
+            // We need at least one more frame before we hide the outgoing surface.  Make sure that
+            // there will be a frame.
+            mFramesUntilHideBackground--;
+            requestRender();
+        } else if (mFramesUntilHideBackground == 1) {
+            // We can hide the outgoing surface, since the incoming one has a frame.  It's okay if
+            // we've don't have an unowned surface.
+            mFramesUntilHideBackground = 0;
+            mCompositorSurfaceManager.doneWithUnownedSurface();
+        }
+
         List<Runnable> runnables = mDrawingFinishedCallbacks;
         mDrawingFinishedCallbacks = null;
         if (runnables == null) return;
@@ -379,6 +399,29 @@ public class CompositorView extends SurfaceView implements SurfaceHolder.Callbac
         TabModelImpl.flushActualTabSwitchLatencyMetric();
         nativeFinalizeLayers(mNativeCompositorView);
         TraceEvent.end("CompositorView:finalizeLayers");
+    }
+
+    @Override
+    public void setWillNotDraw(boolean willNotDraw) {
+        mCompositorSurfaceManager.setWillNotDraw(willNotDraw);
+    }
+
+    @Override
+    public void setBackgroundDrawable(Drawable background) {
+        // We override setBackgroundDrawable since that's the common entry point from all the
+        // setBackground* calls in View.  We still call to setBackground on the SurfaceView because
+        // SetBackgroundDrawable is deprecated, and the semantics are the same I think.
+        super.setBackgroundDrawable(background);
+        mCompositorSurfaceManager.setBackgroundDrawable(background);
+    }
+
+    @Override
+    public void setVisibility(int visibility) {
+        super.setVisibility(visibility);
+        // Also set the visibility on any child SurfaceViews, since that hides
+        // the surface as well.  Otherwise, the surface is kept, which can
+        // interfere with VR.
+        mCompositorSurfaceManager.setVisibility(visibility);
     }
 
     // Implemented in native

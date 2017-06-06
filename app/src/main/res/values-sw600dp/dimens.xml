@@ -17,8 +17,6 @@
 
     <!-- Data Saver -->
     <dimen name="data_usage_chart_height">325dp</dimen>
-    <dimen name="data_reduction_promo_screen_width">382dp</dimen>
-    <dimen name="data_reduction_promo_illustration_margin_bottom">62dp</dimen>
 
     <!-- Tab Strip Dimensions -->
     <dimen name="tab_strip_height">40dp</dimen>
@@ -49,4 +47,7 @@
 
     <!-- Payments UI -->
     <dimen name="payments_ui_max_dialog_width">600dp</dimen>
+
+    <!-- Context Menu Dimensions -->
+    <dimen name="context_menu_header_image_max_size">216dp</dimen>
 </resources>

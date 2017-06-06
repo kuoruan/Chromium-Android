@@ -15,15 +15,15 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class CanonicalAxisIndex {
-  @IntDef({
-      LEFT_STICK_X, LEFT_STICK_Y, RIGHT_STICK_X, RIGHT_STICK_Y, COUNT
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface CanonicalAxisIndexEnum {}
-  public static final int LEFT_STICK_X = 0;
-  public static final int LEFT_STICK_Y = 1;
-  public static final int RIGHT_STICK_X = 2;
-  public static final int RIGHT_STICK_Y = 3;
-  public static final int COUNT = 4;
+@IntDef({
+    CanonicalAxisIndex.LEFT_STICK_X, CanonicalAxisIndex.LEFT_STICK_Y,
+    CanonicalAxisIndex.RIGHT_STICK_X, CanonicalAxisIndex.RIGHT_STICK_Y, CanonicalAxisIndex.COUNT
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface CanonicalAxisIndex {
+  int LEFT_STICK_X = 0;
+  int LEFT_STICK_Y = 1;
+  int RIGHT_STICK_X = 2;
+  int RIGHT_STICK_Y = 3;
+  int COUNT = 4;
 }

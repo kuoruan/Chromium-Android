@@ -91,7 +91,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
 
     ThreadedInputConnection(View view, ImeAdapter imeAdapter, Handler handler) {
         super(view, true);
-        if (DEBUG_LOGS) Log.w(TAG, "constructor");
+        if (DEBUG_LOGS) Log.i(TAG, "constructor");
         ImeUtils.checkOnUiThread();
         mImeAdapter = imeAdapter;
         mHandler = handler;
@@ -111,7 +111,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
 
         mCachedTextInputState = new TextInputState(text, new Range(selectionStart, selectionEnd),
                 new Range(compositionStart, compositionEnd), singleLine, replyToRequest);
-        if (DEBUG_LOGS) Log.w(TAG, "updateState: %s", mCachedTextInputState);
+        if (DEBUG_LOGS) Log.i(TAG, "updateState: %s", mCachedTextInputState);
 
         addToQueueOnUiThread(mCachedTextInputState);
         if (!replyToRequest) {
@@ -151,28 +151,28 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
     @Override
     @VisibleForTesting
     public void unblockOnUiThread() {
-        if (DEBUG_LOGS) Log.w(TAG, "unblockOnUiThread");
+        if (DEBUG_LOGS) Log.i(TAG, "unblockOnUiThread");
         ImeUtils.checkOnUiThread();
         addToQueueOnUiThread(UNBLOCKER);
         mHandler.post(mProcessPendingInputStatesRunnable);
     }
 
     private void processPendingInputStates() {
-        if (DEBUG_LOGS) Log.w(TAG, "checkQueue");
+        if (DEBUG_LOGS) Log.i(TAG, "checkQueue");
         assertOnImeThread();
         // Handle all the remaining states in the queue.
         while (true) {
             TextInputState state = mQueue.poll();
             if (state == null) {
-                if (DEBUG_LOGS) Log.w(TAG, "checkQueue - finished");
+                if (DEBUG_LOGS) Log.i(TAG, "checkQueue - finished");
                 return;
             }
             // Unblocker was not used. Ignore.
             if (state.shouldUnblock()) {
-                if (DEBUG_LOGS) Log.w(TAG, "checkQueue - ignoring one unblocker");
+                if (DEBUG_LOGS) Log.i(TAG, "checkQueue - ignoring one unblocker");
                 continue;
             }
-            if (DEBUG_LOGS) Log.w(TAG, "checkQueue: " + state);
+            if (DEBUG_LOGS) Log.i(TAG, "checkQueue: " + state);
             updateSelection(state);
         }
     }
@@ -188,7 +188,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
     }
 
     private TextInputState requestAndWaitForTextInputState() {
-        if (DEBUG_LOGS) Log.w(TAG, "requestAndWaitForTextInputState");
+        if (DEBUG_LOGS) Log.i(TAG, "requestAndWaitForTextInputState");
         if (runningOnUiThread()) {
             Log.w(TAG, "InputConnection API is not called on IME thread. Returning cached result.");
             // Returning cached result is a workaround for existing webview apps. (crbug.com/643477)
@@ -206,7 +206,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
         } catch (InterruptedException e) {
             Log.e(TAG, "addToQueueOnUiThread interrupted", e);
         }
-        if (DEBUG_LOGS) Log.w(TAG, "addToQueueOnUiThread finished: %d", mQueue.size());
+        if (DEBUG_LOGS) Log.i(TAG, "addToQueueOnUiThread finished: %d", mQueue.size());
     }
 
     /**
@@ -230,7 +230,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      * @return TextInputState if we get it successfully. null otherwise.
      */
     private TextInputState blockAndGetStateUpdate() {
-        if (DEBUG_LOGS) Log.w(TAG, "blockAndGetStateUpdate");
+        if (DEBUG_LOGS) Log.i(TAG, "blockAndGetStateUpdate");
         assertOnImeThread();
         boolean shouldUpdateSelection = false;
         while (true) {
@@ -245,11 +245,11 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
                 return null;
             }
             if (state.shouldUnblock()) {
-                if (DEBUG_LOGS) Log.w(TAG, "blockAndGetStateUpdate: unblocked");
+                if (DEBUG_LOGS) Log.i(TAG, "blockAndGetStateUpdate: unblocked");
                 return null;
             } else if (state.replyToRequest()) {
                 if (shouldUpdateSelection) updateSelection(state);
-                if (DEBUG_LOGS) Log.w(TAG, "blockAndGetStateUpdate done: %d", mQueue.size());
+                if (DEBUG_LOGS) Log.i(TAG, "blockAndGetStateUpdate done: %d", mQueue.size());
                 return state;
             }
             // Ignore when state is not from IME, but make sure to update state when we handle
@@ -267,7 +267,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public boolean setComposingText(final CharSequence text, final int newCursorPosition) {
-        if (DEBUG_LOGS) Log.w(TAG, "setComposingText [%s] [%d]", text, newCursorPosition);
+        if (DEBUG_LOGS) Log.i(TAG, "setComposingText [%s] [%d]", text, newCursorPosition);
         if (text == null) return false;
         return updateComposingText(text, newCursorPosition, false);
     }
@@ -301,7 +301,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public boolean commitText(final CharSequence text, final int newCursorPosition) {
-        if (DEBUG_LOGS) Log.w(TAG, "commitText [%s] [%d]", text, newCursorPosition);
+        if (DEBUG_LOGS) Log.i(TAG, "commitText [%s] [%d]", text, newCursorPosition);
         if (text == null) return false;
         ThreadUtils.postOnUiThread(new Runnable() {
             @Override
@@ -319,7 +319,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public boolean performEditorAction(final int actionCode) {
-        if (DEBUG_LOGS) Log.w(TAG, "performEditorAction [%d]", actionCode);
+        if (DEBUG_LOGS) Log.i(TAG, "performEditorAction [%d]", actionCode);
         ThreadUtils.postOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -334,7 +334,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public boolean performContextMenuAction(final int id) {
-        if (DEBUG_LOGS) Log.w(TAG, "performContextMenuAction [%d]", id);
+        if (DEBUG_LOGS) Log.i(TAG, "performContextMenuAction [%d]", id);
         ThreadUtils.postOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -349,7 +349,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public ExtractedText getExtractedText(ExtractedTextRequest request, int flags) {
-        if (DEBUG_LOGS) Log.w(TAG, "getExtractedText");
+        if (DEBUG_LOGS) Log.i(TAG, "getExtractedText");
         TextInputState textInputState = requestAndWaitForTextInputState();
         if (textInputState == null) return null;
         ExtractedText extractedText = new ExtractedText();
@@ -367,7 +367,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
     @Override
     public boolean beginBatchEdit() {
         assertOnImeThread();
-        if (DEBUG_LOGS) Log.w(TAG, "beginBatchEdit [%b]", (mNumNestedBatchEdits == 0));
+        if (DEBUG_LOGS) Log.i(TAG, "beginBatchEdit [%b]", (mNumNestedBatchEdits == 0));
         assertOnImeThread();
         mNumNestedBatchEdits++;
         return true;
@@ -381,7 +381,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
         assertOnImeThread();
         if (mNumNestedBatchEdits == 0) return false;
         --mNumNestedBatchEdits;
-        if (DEBUG_LOGS) Log.w(TAG, "endBatchEdit [%b]", (mNumNestedBatchEdits == 0));
+        if (DEBUG_LOGS) Log.i(TAG, "endBatchEdit [%b]", (mNumNestedBatchEdits == 0));
         if (mNumNestedBatchEdits == 0) {
             updateSelection(requestAndWaitForTextInputState());
         }
@@ -393,7 +393,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public boolean deleteSurroundingText(final int beforeLength, final int afterLength) {
-        if (DEBUG_LOGS) Log.w(TAG, "deleteSurroundingText [%d %d]", beforeLength, afterLength);
+        if (DEBUG_LOGS) Log.i(TAG, "deleteSurroundingText [%d %d]", beforeLength, afterLength);
         ThreadUtils.postOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -409,10 +409,11 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
     /**
      * @see InputConnection#deleteSurroundingTextInCodePoints(int, int)
      */
+    @Override
     public boolean deleteSurroundingTextInCodePoints(
             final int beforeLength, final int afterLength) {
         if (DEBUG_LOGS) {
-            Log.w(TAG, "deleteSurroundingTextInCodePoints [%d %d]", beforeLength, afterLength);
+            Log.i(TAG, "deleteSurroundingTextInCodePoints [%d %d]", beforeLength, afterLength);
         }
         ThreadUtils.postOnUiThread(new Runnable() {
             @Override
@@ -431,7 +432,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public boolean sendKeyEvent(final KeyEvent event) {
-        if (DEBUG_LOGS) Log.w(TAG, "sendKeyEvent [%d %d]", event.getAction(), event.getKeyCode());
+        if (DEBUG_LOGS) Log.i(TAG, "sendKeyEvent [%d %d]", event.getAction(), event.getKeyCode());
         ThreadUtils.postOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -487,7 +488,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public boolean finishComposingText() {
-        if (DEBUG_LOGS) Log.w(TAG, "finishComposingText");
+        if (DEBUG_LOGS) Log.i(TAG, "finishComposingText");
         // This is the only function that may be called on UI thread because
         // of direct calls from InputMethodManager.
         ThreadUtils.postOnUiThread(mFinishComposingTextRunnable);
@@ -504,7 +505,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public boolean setSelection(final int start, final int end) {
-        if (DEBUG_LOGS) Log.w(TAG, "setSelection [%d %d]", start, end);
+        if (DEBUG_LOGS) Log.i(TAG, "setSelection [%d %d]", start, end);
         ThreadUtils.postOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -519,7 +520,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public boolean setComposingRegion(final int start, final int end) {
-        if (DEBUG_LOGS) Log.w(TAG, "setComposingRegion [%d %d]", start, end);
+        if (DEBUG_LOGS) Log.i(TAG, "setComposingRegion [%d %d]", start, end);
         ThreadUtils.postOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -534,7 +535,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public CharSequence getTextBeforeCursor(int maxChars, int flags) {
-        if (DEBUG_LOGS) Log.w(TAG, "getTextBeforeCursor [%d %x]", maxChars, flags);
+        if (DEBUG_LOGS) Log.i(TAG, "getTextBeforeCursor [%d %x]", maxChars, flags);
         TextInputState textInputState = requestAndWaitForTextInputState();
         if (textInputState == null) return null;
         return textInputState.getTextBeforeSelection(maxChars);
@@ -545,7 +546,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public CharSequence getTextAfterCursor(int maxChars, int flags) {
-        if (DEBUG_LOGS) Log.w(TAG, "getTextAfterCursor [%d %x]", maxChars, flags);
+        if (DEBUG_LOGS) Log.i(TAG, "getTextAfterCursor [%d %x]", maxChars, flags);
         TextInputState textInputState = requestAndWaitForTextInputState();
         if (textInputState == null) return null;
         return textInputState.getTextAfterSelection(maxChars);
@@ -556,7 +557,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public CharSequence getSelectedText(int flags) {
-        if (DEBUG_LOGS) Log.w(TAG, "getSelectedText [%x]", flags);
+        if (DEBUG_LOGS) Log.i(TAG, "getSelectedText [%x]", flags);
         TextInputState textInputState = requestAndWaitForTextInputState();
         if (textInputState == null) return null;
         return textInputState.getSelectedText();
@@ -573,7 +574,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
             result = TextUtils.getCapsMode(
                     textInputState.text(), textInputState.selection().start(), reqModes);
         }
-        if (DEBUG_LOGS) Log.w(TAG, "getCursorCapsMode [%x]: %x", reqModes, result);
+        if (DEBUG_LOGS) Log.i(TAG, "getCursorCapsMode [%x]: %x", reqModes, result);
         return result;
     }
 
@@ -582,7 +583,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public boolean commitCompletion(CompletionInfo text) {
-        if (DEBUG_LOGS) Log.w(TAG, "commitCompletion [%s]", text);
+        if (DEBUG_LOGS) Log.i(TAG, "commitCompletion [%s]", text);
         return false;
     }
 
@@ -592,7 +593,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
     @Override
     public boolean commitCorrection(CorrectionInfo correctionInfo) {
         if (DEBUG_LOGS) {
-            Log.w(TAG, "commitCorrection [%s]",
+            Log.i(TAG, "commitCorrection [%s]",
                     ImeUtils.getCorrectionInfoDebugString(correctionInfo));
         }
         return false;
@@ -603,7 +604,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public boolean clearMetaKeyStates(int states) {
-        if (DEBUG_LOGS) Log.w(TAG, "clearMetaKeyStates [%x]", states);
+        if (DEBUG_LOGS) Log.i(TAG, "clearMetaKeyStates [%x]", states);
         return false;
     }
 
@@ -612,7 +613,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public boolean reportFullscreenMode(boolean enabled) {
-        if (DEBUG_LOGS) Log.w(TAG, "reportFullscreenMode [%b]", enabled);
+        if (DEBUG_LOGS) Log.i(TAG, "reportFullscreenMode [%b]", enabled);
         // We ignore fullscreen mode for now. That's why we set
         // EditorInfo.IME_FLAG_NO_FULLSCREEN in constructor.
         // Note that this may be called on UI thread.
@@ -624,7 +625,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public boolean performPrivateCommand(String action, Bundle data) {
-        if (DEBUG_LOGS) Log.w(TAG, "performPrivateCommand [%s]", action);
+        if (DEBUG_LOGS) Log.i(TAG, "performPrivateCommand [%s]", action);
         return false;
     }
 
@@ -633,7 +634,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      */
     @Override
     public boolean requestCursorUpdates(final int cursorUpdateMode) {
-        if (DEBUG_LOGS) Log.w(TAG, "requestCursorUpdates [%x]", cursorUpdateMode);
+        if (DEBUG_LOGS) Log.i(TAG, "requestCursorUpdates [%x]", cursorUpdateMode);
         ThreadUtils.postOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -647,9 +648,10 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
      * @see InputConnection#closeConnection()
      */
     // TODO(crbug.com/635567): Fix this properly.
+    @Override
     @SuppressLint("MissingSuperCall")
     public void closeConnection() {
-        if (DEBUG_LOGS) Log.w(TAG, "closeConnection");
+        if (DEBUG_LOGS) Log.i(TAG, "closeConnection");
         // TODO(changwan): Implement this. http://crbug.com/595525
     }
 }

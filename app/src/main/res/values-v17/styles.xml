@@ -42,6 +42,10 @@
         <item name="android:windowSharedElementExitTransition" tools:targetApi="21">@transition/move_image</item>
     </style>
 
+    <style name="SearchActivityTheme" parent="MainTheme">
+        <item name="android:windowBackground">@color/google_grey_500</item>
+    </style>
+
     <style name="TabbedModeTheme" parent="MainTheme">
         <item name="android:windowBackground">@drawable/window_background</item>
     </style>
@@ -119,7 +123,7 @@
     </style>
     <style name="PreferenceCategoryTextStyle">
         <item name="android:textColor">@color/pref_accent_color</item>
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">12sp</item>
         <item name="android:textStyle">bold</item>
     </style>
     <style name="PreferenceTitle">
@@ -166,7 +170,7 @@
     </style>
     <style name="Divider">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">1dp</item>
+        <item name="android:layout_height">@dimen/divider_height</item>
         <item name="android:background">@color/google_grey_300</item>
     </style>
 
@@ -286,16 +290,16 @@
     </style>
 
     <!-- Bubble styles -->
-    <style name="TabSwitcherCalloutAnimation">
-        <item name="android:windowEnterAnimation">@anim/tab_switcher_callout_in</item>
-        <item name="android:windowExitAnimation">@anim/tab_switcher_callout_out</item>
+    <style name="TextBubbleAnimation">
+        <item name="android:windowEnterAnimation">@anim/textbubble_in</item>
+        <item name="android:windowExitAnimation">@anim/textbubble_out</item>
     </style>
     <style name="FullscreenNotificationBubble" parent="@android:style/Animation.Toast">
         <item name="android:windowEnterAnimation">@anim/fullscreen_notification_in</item>
     </style>
 
-    <!-- Data Saver -->
-    <style name="DataReductionPromoScreenDialog" >
+    <!-- Promo dialogs -->
+    <style name="PromoDialog" >
         <item name="android:background">@android:color/transparent</item>
         <item name="android:backgroundDimEnabled">false</item>
         <item name="android:clipChildren">false</item>
@@ -310,6 +314,7 @@
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowNoTitle">true</item>
     </style>
+
     <!-- Cast and media playback notifications -->
     <style
         name="MediaNotificationTitle"
@@ -408,6 +413,15 @@
         <item name="windowActionBar">false</item>
     </style>
 
+    <style name="SigninAlertDialogTheme" parent="AlertDialogTheme">
+        <item name="buttonBarButtonStyle">@style/SigninDialogButtonStyle</item>
+        <item name="android:textColorPrimary">@color/default_text_color</item>
+    </style>
+
+    <style name="SigninDialogButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">@color/light_active_color</item>
+    </style>
+
     <!-- Bookmarks -->
     <style name="BookmarkTitleBarButton">
         <item name="android:layout_width">wrap_content</item>
@@ -428,14 +442,6 @@
         <item name="android:singleLine">true</item>
         <item name="android:textAppearance">?android:attr/textAppearanceLargePopupMenu</item>
         <item name="android:textSize">14sp</item>
-    </style>
-
-    <!-- Signin promo dialog-->
-    <style name="SigninPromoDialog" parent="FullscreenWhite">
-        <item name="android:windowFrame">@null</item>
-        <item name="android:windowIsFloating">true</item>
-        <item name="android:windowContentOverlay">@null</item>
-        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
     </style>
 
     <!-- Contextual Search styles -->
@@ -673,5 +679,32 @@
         <item name="android:contentDescription">@null</item>
         <item name="android:scaleType">center</item>
         <item name="android:background">@color/light_active_color</item>
+    </style>
+
+    <!-- Data Reduction -->
+    <style name="DataReductionPrefSecondaryStyle">
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+    <style name="DataUsageBreakdownColumnLabel">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textAppearance">@style/RobotoMediumStyle</item>
+    </style>
+    <style name="DataUsageBreakdownColumnItem">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textColor">@color/data_reduction_breakdown_text_color</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <!-- Miscellaneous -->
+    <style name="BottomSheetContentTitle" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:textSize">20sp</item>
     </style>
 </resources>

@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextUtils;
@@ -19,12 +20,14 @@ import android.webkit.MimeTypeMap;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.download.DownloadManagerService;
 import org.chromium.chrome.browser.download.DownloadUtils;
 
 import java.io.File;
 
 /**
- * An infobar to ask whether to proceed downloading a file that already exists locally.
+ * An infobar to ask whether to proceed downloading a file that already exists locally or is still
+ * being downloaded.
  */
 public class DuplicateDownloadInfoBar extends ConfirmInfoBar {
     private static final String TAG = "DuplicateDownloadInfoBar";
@@ -32,13 +35,13 @@ public class DuplicateDownloadInfoBar extends ConfirmInfoBar {
     private final boolean mIsOfflinePage;
     private final String mPageUrl;
     private final boolean mIsIncognito;
+    private final boolean mDuplicateRequestExists;
 
     @CalledByNative
-    private static InfoBar createInfoBar(
-            String filePath, boolean isOfflinePage, String pageUrl, boolean isIncognito) {
-        return new DuplicateDownloadInfoBar(
-                ContextUtils.getApplicationContext(), filePath, isOfflinePage, pageUrl,
-                isIncognito);
+    private static InfoBar createInfoBar(String filePath, boolean isOfflinePage, String pageUrl,
+            boolean isIncognito, boolean duplicateRequestExists) {
+        return new DuplicateDownloadInfoBar(ContextUtils.getApplicationContext(), filePath,
+                isOfflinePage, pageUrl, isIncognito, duplicateRequestExists);
     }
 
     /**
@@ -48,10 +51,10 @@ public class DuplicateDownloadInfoBar extends ConfirmInfoBar {
      * @param isOfflinePage Whether the download is for offline page.
      * @param pageUrl Url of the page, ignored if this is a regular download.
      * @param isIncognito Whether download is Incognito.
+     * @param duplicateRequestExists Whether the duplicate is a download in progress.
      */
-    private DuplicateDownloadInfoBar(
-            Context context, String filePath, boolean isOfflinePage, String pageUrl,
-            boolean isIncognito) {
+    private DuplicateDownloadInfoBar(Context context, String filePath, boolean isOfflinePage,
+            String pageUrl, boolean isIncognito, boolean duplicateRequestExists) {
         super(R.drawable.infobar_downloading, null, null, null,
                 context.getString(R.string.duplicate_download_infobar_download_button),
                 context.getString(R.string.cancel));
@@ -59,6 +62,7 @@ public class DuplicateDownloadInfoBar extends ConfirmInfoBar {
         mIsOfflinePage = isOfflinePage;
         mPageUrl = pageUrl;
         mIsIncognito = isIncognito;
+        mDuplicateRequestExists = duplicateRequestExists;
     }
 
     /**
@@ -74,7 +78,22 @@ public class DuplicateDownloadInfoBar extends ConfirmInfoBar {
         return getMessageText(template, filename, new ClickableSpan() {
             @Override
             public void onClick(View view) {
-                DownloadUtils.openFile(file, mimeType, mIsIncognito);
+                new AsyncTask<Void, Void, Boolean>() {
+                    @Override
+                    protected Boolean doInBackground(Void... params) {
+                        return new File(mFilePath).exists();
+                    }
+
+                    @Override
+                    protected void onPostExecute(Boolean fileExists) {
+                        if (fileExists) {
+                            DownloadUtils.openFile(file, mimeType, null, mIsIncognito);
+                        } else {
+                            DownloadManagerService.openDownloadsPage(
+                                    ContextUtils.getApplicationContext());
+                        }
+                    }
+                }.execute();
             }
         });
     }
@@ -131,12 +150,13 @@ public class DuplicateDownloadInfoBar extends ConfirmInfoBar {
     public void createContent(InfoBarLayout layout) {
         super.createContent(layout);
         Context context = layout.getContext();
+        String template = context.getString(mDuplicateRequestExists
+                        ? R.string.duplicate_download_request_infobar_text
+                        : R.string.duplicate_download_infobar_text);
         if (mIsOfflinePage) {
-            layout.setMessage(getOfflinePageMessageText(
-                    context, context.getString(R.string.duplicate_download_infobar_text)));
+            layout.setMessage(getOfflinePageMessageText(context, template));
         } else {
-            layout.setMessage(getDownloadMessageText(
-                    context, context.getString(R.string.duplicate_download_infobar_text)));
+            layout.setMessage(getDownloadMessageText(context, template));
         }
     }
 }

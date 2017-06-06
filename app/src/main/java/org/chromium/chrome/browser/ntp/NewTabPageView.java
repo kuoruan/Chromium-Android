@@ -6,7 +6,6 @@ package org.chromium.chrome.browser.ntp;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -18,10 +17,8 @@ import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -32,10 +29,10 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.ChromeFeatureList;
+import org.chromium.chrome.browser.ntp.ContextMenuManager.TouchEnabledDelegate;
 import org.chromium.chrome.browser.ntp.LogoBridge.Logo;
 import org.chromium.chrome.browser.ntp.LogoBridge.LogoObserver;
 import org.chromium.chrome.browser.ntp.NewTabPage.OnSearchBoxScrollListener;
-import org.chromium.chrome.browser.ntp.cards.CardsVariationParameters;
 import org.chromium.chrome.browser.ntp.cards.NewTabPageAdapter;
 import org.chromium.chrome.browser.ntp.cards.NewTabPageRecyclerView;
 import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
@@ -139,9 +136,6 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
         /** @return Whether voice search is enabled and the microphone should be shown. */
         boolean isVoiceSearchEnabled();
 
-        /** @return Whether the omnibox 'Search or type URL' text should be shown. */
-        boolean isFakeOmniboxTextEnabledTablet();
-
         /**
          * Animates the search box up into the omnibox and bring up the keyboard.
          * @param beginVoiceSearch Whether to begin a voice search.
@@ -154,13 +148,6 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
          * displayed to the user.
          */
         boolean isCurrentPage();
-
-        /**
-         * @return The context menu manager. Will be {@code null} if the {@link NewTabPageView} is
-         * not done initialising.
-         */
-        @Nullable
-        ContextMenuManager getContextMenuManager();
     }
 
     /**
@@ -190,18 +177,12 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
 
         assert manager.getSuggestionsSource() != null;
 
-        mRecyclerView = (NewTabPageRecyclerView) findViewById(R.id.new_tab_page_recycler_view);
-        // Don't attach now, the recyclerView itself will determine when to do it.
-        mNewTabPageLayout =
-                (NewTabPageLayout) LayoutInflater.from(getContext())
-                        .inflate(R.layout.new_tab_page_layout, mRecyclerView, false);
-        mRecyclerView.setAboveTheFoldView(mNewTabPageLayout);
+        mRecyclerView = new NewTabPageRecyclerView(getContext());
         mRecyclerView.setContainsLocationBar(manager.isLocationBarShownInNTP());
+        addView(mRecyclerView);
 
-        // Tailor the LayoutParams for the snippets UI, as the configuration in the XML is
-        // made for the ScrollView UI.
-        ViewGroup.LayoutParams params = mNewTabPageLayout.getLayoutParams();
-        params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        // Don't attach now, the recyclerView itself will determine when to do it.
+        mNewTabPageLayout = mRecyclerView.getAboveTheFoldView();
 
         mRecyclerView.setItemAnimator(new DefaultItemAnimator() {
             @Override
@@ -236,8 +217,14 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
             }
         });
 
-        mContextMenuManager =
-                new ContextMenuManager(mActivity, mManager.getNavigationDelegate(), mRecyclerView);
+        TouchEnabledDelegate touchEnabledDelegate = new TouchEnabledDelegate() {
+            @Override
+            public void setTouchEnabled(boolean enabled) {
+                mRecyclerView.setTouchEnabled(enabled);
+            }
+        };
+        mContextMenuManager = new ContextMenuManager(
+                mActivity, mManager.getNavigationDelegate(), touchEnabledDelegate);
         mActivity.getWindowAndroid().addContextMenuCloseListener(mContextMenuManager);
         manager.addDestructionObserver(new DestructionObserver() {
             @Override
@@ -275,17 +262,8 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
         NewTabPageAdapter newTabPageAdapter = new NewTabPageAdapter(mManager, mNewTabPageLayout,
                 mUiConfig, offlinePageBridge, mContextMenuManager, /* tileGroupDelegate = */ null);
         newTabPageAdapter.refreshSuggestions();
-        mRecyclerView.setAdapter(newTabPageAdapter);
-
-        int scrollOffset;
-        if (CardsVariationParameters.isScrollBelowTheFoldEnabled()) {
-            scrollPosition = newTabPageAdapter.getFirstHeaderPosition();
-            scrollOffset = getResources().getDimensionPixelSize(R.dimen.ntp_search_box_height);
-        } else {
-            scrollOffset = 0;
-        }
-        mRecyclerView.getLinearLayoutManager().scrollToPositionWithOffset(
-                scrollPosition, scrollOffset);
+        mRecyclerView.init(mUiConfig, mContextMenuManager, newTabPageAdapter);
+        mRecyclerView.getLinearLayoutManager().scrollToPosition(scrollPosition);
 
         setupScrollHandling();
 
@@ -340,7 +318,7 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
         }
 
         String hintText = getResources().getString(R.string.search_or_type_url);
-        if (!DeviceFormFactor.isTablet(getContext()) || mManager.isFakeOmniboxTextEnabledTablet()) {
+        if (!DeviceFormFactor.isTablet(getContext())) {
             searchBoxTextView.setHint(hintText);
         } else {
             searchBoxTextView.setContentDescription(hintText);
@@ -606,6 +584,9 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
                 child.setVisibility(visibility);
             }
         }
+
+        // Update snap scrolling for the fakebox.
+        mRecyclerView.setContainsLocationBar(mManager.isLocationBarShownInNTP());
 
         updateTileGridPlaceholderVisibility();
 
@@ -879,31 +860,11 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
         mRecyclerView.updatePeekingCardAndHeader();
     }
 
-    @Override
-    protected void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        // When the viewport configuration changes, we want to update the display style so that the
-        // observers are aware of the new available space. Another moment to do this update could
-        // be through a OnLayoutChangeListener, but then we get notified of the change after the
-        // layout pass, which means that the new style will only be visible after layout happens
-        // again. We prefer updating here to avoid having to require that additional layout pass.
-        mUiConfig.updateDisplayStyle();
-
-        // Close the Context Menu as it may have moved (https://crbug.com/642688).
-        mContextMenuManager.closeContextMenu();
-    }
-
     /**
      * @return The adapter position the user has scrolled to.
      */
     public int getScrollPosition() {
         return mRecyclerView.getScrollPosition();
-    }
-
-    /** @return the context menu manager. */
-    public ContextMenuManager getContextMenuManager() {
-        return mContextMenuManager;
     }
 
     // TileGroup.Observer interface.

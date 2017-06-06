@@ -28,6 +28,7 @@ public final class PaymentDetails extends org.chromium.mojo.bindings.Struct {
 
     private PaymentDetails(int version) {
         super(STRUCT_SIZE, version);
+        error = (String) "";
     }
 
     public PaymentDetails() {
@@ -63,7 +64,7 @@ public final class PaymentDetails extends org.chromium.mojo.bindings.Struct {
             result = new PaymentDetails(mainDataHeader.elementsOrVersion);
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, true);
                 result.total = PaymentItem.decode(decoder1);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
@@ -120,7 +121,7 @@ public final class PaymentDetails extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(total, 8, false);
+        encoder0.encode(total, 8, true);
         
         if (displayItems == null) {
             encoder0.encodeNullPointer(16, false);

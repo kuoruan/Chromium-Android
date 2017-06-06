@@ -47,12 +47,11 @@ public class SyncedAccountPreference extends ListPreference {
             // signed in account
         }
 
-        Account[] accounts = AccountManagerHelper.get(getContext()).getGoogleAccounts();
+        Account[] accounts = AccountManagerHelper.get().getGoogleAccounts();
         String[] accountNames = new String[accounts.length];
         String[] accountValues = new String[accounts.length];
 
-        String signedInAccountName =
-                ChromeSigninController.get(getContext()).getSignedInAccountName();
+        String signedInAccountName = ChromeSigninController.get().getSignedInAccountName();
         String signedInSettingsKey = "";
 
         for (int i = 0; i < accounts.length; ++i) {

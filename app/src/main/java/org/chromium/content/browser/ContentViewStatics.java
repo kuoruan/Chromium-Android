@@ -10,22 +10,6 @@ import org.chromium.net.ProxyChangeListener;
  * Implementations of various static methods.
  */
 public class ContentViewStatics {
-
-    /**
-     * Return the first substring consisting of the address of a physical location.
-     * @see {@link android.webkit.WebView#findAddress(String)}
-     *
-     * @param addr The string to search for addresses.
-     * @return the address, or if no address is found, return null.
-     */
-    public static String findAddress(String addr) {
-        if (addr == null) {
-            throw new NullPointerException("addr is null");
-        }
-        String result = nativeFindAddress(addr);
-        return result == null || result.isEmpty() ? null : result;
-    }
-
     /**
      * Suspends Webkit timers in all renderers.
      * New renderers created after this call will be created with the
@@ -54,8 +38,6 @@ public class ContentViewStatics {
     }
 
     // Native functions
-
-    private static native String nativeFindAddress(String addr);
 
     private static native void nativeSetWebKitSharedTimersSuspended(boolean suspend);
 }

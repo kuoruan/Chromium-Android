@@ -28,7 +28,7 @@ public class LocationProviderAdapter {
     private LocationProviderFactory.LocationProvider mImpl;
 
     private LocationProviderAdapter(Context context) {
-        mImpl = LocationProviderFactory.get(context);
+        mImpl = LocationProviderFactory.create(context);
     }
 
     @CalledByNative

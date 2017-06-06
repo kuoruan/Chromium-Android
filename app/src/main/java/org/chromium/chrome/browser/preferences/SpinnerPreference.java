@@ -25,6 +25,7 @@ public class SpinnerPreference extends Preference {
     private ArrayAdapter<Object> mAdapter;
     private int mSelectedIndex;
     private View mView;
+    private final boolean mSingleLine;
 
     /**
      * Constructor for inflating from XML.
@@ -32,8 +33,9 @@ public class SpinnerPreference extends Preference {
     public SpinnerPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.SpinnerPreference);
-        boolean single_line = a.getBoolean(R.styleable.SpinnerPreference_singleLine, false);
-        if (single_line) {
+        mSingleLine = a.getBoolean(R.styleable.SpinnerPreference_singleLine, false);
+        a.recycle();
+        if (mSingleLine) {
             setLayoutResource(R.layout.preference_spinner_single_line);
         } else {
             setLayoutResource(R.layout.preference_spinner);
@@ -47,7 +49,13 @@ public class SpinnerPreference extends Preference {
      * @param selectedIndex Index of the initially selected option.
      */
     public void setOptions(Object[] options, int selectedIndex) {
-        mAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, options);
+        int itemLayout;
+        if (mSingleLine) {
+            itemLayout = R.layout.preference_spinner_single_line_item;
+        } else {
+            itemLayout = android.R.layout.simple_spinner_item;
+        }
+        mAdapter = new ArrayAdapter<>(getContext(), itemLayout, options);
         mAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mSelectedIndex = selectedIndex;
     }

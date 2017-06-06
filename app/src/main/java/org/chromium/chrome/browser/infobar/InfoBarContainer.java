@@ -90,7 +90,7 @@ public class InfoBarContainer extends SwipableOverlayView {
     private final TabObserver mTabObserver = new EmptyTabObserver() {
         @Override
         public void onDidFinishNavigation(Tab tab, String url, boolean isInMainFrame,
-                boolean isErrorPage, boolean hasCommitted, boolean isSamePage,
+                boolean isErrorPage, boolean hasCommitted, boolean isSameDocument,
                 boolean isFragmentNavigation, Integer pageTransition, int errorCode,
                 int httpStatusCode) {
             if (hasCommitted && isInMainFrame) {

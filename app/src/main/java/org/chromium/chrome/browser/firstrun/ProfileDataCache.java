@@ -91,7 +91,7 @@ public class ProfileDataCache implements Observer {
     public void update() {
         if (mProfile == null) return;
 
-        Account[] accounts = AccountManagerHelper.get(mContext).getGoogleAccounts();
+        Account[] accounts = AccountManagerHelper.get().getGoogleAccounts();
         for (int i = 0; i < accounts.length; i++) {
             if (mCacheEntries.get(accounts[i].name) == null) {
                 ProfileDownloader.startFetchingAccountInfoFor(

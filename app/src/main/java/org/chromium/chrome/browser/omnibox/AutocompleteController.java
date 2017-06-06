@@ -33,6 +33,9 @@ public class AutocompleteController {
     private final VoiceSuggestionProvider mVoiceSuggestionProvider = new VoiceSuggestionProvider();
 
 
+    private boolean mUseCachedZeroSuggestResults;
+    private boolean mWaitingForSuggestionsToCache;
+
     /**
      * Listener for receiving OmniboxSuggestions.
      */
@@ -73,6 +76,17 @@ public class AutocompleteController {
     }
 
     /**
+     * Use cached zero suggest results if there are any available and start caching them
+     * for all zero suggest updates.
+     */
+    public void startCachedZeroSuggest() {
+        mUseCachedZeroSuggestResults = true;
+        List<OmniboxSuggestion> suggestions =
+                OmniboxSuggestion.getCachedOmniboxSuggestionsForZeroSuggest();
+        if (suggestions != null) mListener.onSuggestionsReceived(suggestions, "");
+    }
+
+    /**
      * Starts querying for omnibox suggestions for a given text.
      *
      * @param profile The profile to use for starting the AutocompleteController
@@ -103,6 +117,7 @@ public class AutocompleteController {
         if (mNativeAutocompleteControllerAndroid != 0) {
             nativeStart(mNativeAutocompleteControllerAndroid, text, cursorPosition, null, url,
                     preventInlineAutocomplete, false, false, true);
+            mWaitingForSuggestionsToCache = false;
         }
     }
 
@@ -140,6 +155,7 @@ public class AutocompleteController {
         if (profile == null || TextUtils.isEmpty(url)) return;
         mNativeAutocompleteControllerAndroid = nativeInit(profile);
         if (mNativeAutocompleteControllerAndroid != 0) {
+            if (mUseCachedZeroSuggestResults) mWaitingForSuggestionsToCache = true;
             nativeOnOmniboxFocused(mNativeAutocompleteControllerAndroid, omniboxText, url,
                     focusedFromFakebox);
         }
@@ -159,6 +175,7 @@ public class AutocompleteController {
     public void stop(boolean clear) {
         if (clear) mVoiceSuggestionProvider.clearVoiceSearchResults();
         mCurrentNativeAutocompleteResult = 0;
+        mWaitingForSuggestionsToCache = false;
         if (mNativeAutocompleteControllerAndroid != 0) {
             nativeStop(mNativeAutocompleteControllerAndroid, clear);
         }
@@ -210,6 +227,9 @@ public class AutocompleteController {
 
         // Notify callbacks of suggestions.
         mListener.onSuggestionsReceived(suggestions, inlineAutocompleteText);
+        if (mWaitingForSuggestionsToCache) {
+            OmniboxSuggestion.cacheOmniboxSuggestionListForZeroSuggest(suggestions);
+        }
     }
 
     @CalledByNative
@@ -234,6 +254,7 @@ public class AutocompleteController {
     public void onSuggestionSelected(int selectedIndex, int type,
             String currentPageUrl, boolean focusedFromFakebox, long elapsedTimeSinceModified,
             int completedLength, WebContents webContents) {
+        assert mNativeAutocompleteControllerAndroid != 0;
         // Don't natively log voice suggestion results as we add them in Java.
         if (type == OmniboxSuggestionType.VOICE_SUGGEST) return;
         nativeOnSuggestionSelected(mNativeAutocompleteControllerAndroid, selectedIndex,

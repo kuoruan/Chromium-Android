@@ -56,13 +56,6 @@ public interface ContextualSearchManagementDelegate {
     void onCloseContextualSearch(StateChangeReason reason);
 
     /**
-     * This is called on navigation of the contextual search pane This is called on navigation
-     * of the contextual search panel.
-     * @param isFailure If the request resulted in an error page.
-     */
-    void onContextualSearchRequestNavigation(boolean isFailure);
-
-    /**
      * @return An OverlayContentDelegate to watch events on the panel's content.
      */
     OverlayContentDelegate getOverlayContentDelegate();

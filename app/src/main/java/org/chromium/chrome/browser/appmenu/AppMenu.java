@@ -12,6 +12,7 @@ import android.content.res.Resources;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.support.annotation.IdRes;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -128,18 +129,24 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
     /**
      * Creates and shows the app menu anchored to the specified view.
      *
-     * @param context The context of the AppMenu (ensure the proper theme is set on this context).
-     * @param anchorView The anchor {@link View} of the {@link ListPopupWindow}.
+     * @param context             The context of the AppMenu (ensure the proper theme is set on this
+     * context).
+     * @param anchorView          The anchor {@link View} of the {@link ListPopupWindow}.
      * @param isByPermanentButton Whether or not permanent hardware button triggered it. (oppose to
      *                            software button or keyboard).
-     * @param screenRotation Current device screen rotation.
+     * @param screenRotation      Current device screen rotation.
      * @param visibleDisplayFrame The display area rect in which AppMenu is supposed to fit in.
-     * @param screenHeight Current device screen height.
-     * @param footerResourceId The resource id for a view to add to the end of the menu list.
-     *                         Can be 0 if no such view is required.
+     * @param screenHeight        Current device screen height.
+     * @param footerResourceId    The resource id for a view to add to the end of the menu list. Can
+     *                            be 0 if no such view is required.
+     * @param highlightedItemId   The resource id of the menu item that should be highlighted.  Can
+     *                            be {@code null} if no item should be highlighted.  Note that
+     *                            {@code 0} is dedicated to custom menu items and can be declared by
+     *                            external apps.
      */
     void show(Context context, View anchorView, boolean isByPermanentButton, int screenRotation,
-            Rect visibleDisplayFrame, int screenHeight, int footerResourceId) {
+            Rect visibleDisplayFrame, int screenHeight, @IdRes int footerResourceId,
+            Integer highlightedItemId) {
         mPopup = new ListPopupWindow(context, null, android.R.attr.popupMenuStyle);
         mPopup.setModal(true);
         mPopup.setAnchorView(anchorView);
@@ -221,7 +228,8 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
 
         // A List adapter for visible items in the Menu. The first row is added as a header to the
         // list view.
-        mAdapter = new AppMenuAdapter(this, menuItems, LayoutInflater.from(context));
+        mAdapter = new AppMenuAdapter(
+                this, menuItems, LayoutInflater.from(context), highlightedItemId);
         mPopup.setAdapter(mAdapter);
 
         setMenuHeight(
@@ -281,9 +289,24 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
             // padding of the background.
             popup.setVerticalOffset(-padding.bottom);
         } else {
-            // The menu is displayed over and below the anchored view, so shift the menu up by the
-            // height of the anchor view.
-            popup.setVerticalOffset(-mNegativeSoftwareVerticalOffset - anchorHeight);
+            int[] anchorLocationScreen = new int[2];
+            popup.getAnchorView().getLocationOnScreen(anchorLocationScreen);
+            boolean isAnchorViewAtBottomOfApp =
+                    (anchorLocationScreen[1] + anchorHeight) == appRect.bottom;
+
+            if (isAnchorViewAtBottomOfApp && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                // When the anchor view is at the bottom of the screen on Android N+, the menu
+                // must be shifted down by the height of the anchor view in order to be displayed
+                // over and above it. The framework's PopupWindow positioning changed between
+                // N and M. Pre-N, setting a positive offset here shifts the menu up rather than
+                // down.
+                // See crbug.com/705348.
+                popup.setVerticalOffset(-mNegativeSoftwareVerticalOffset + anchorHeight);
+            } else {
+                // Shift the menu by the height of the anchor view so that it is displayed
+                // over the anchor view.
+                popup.setVerticalOffset(-mNegativeSoftwareVerticalOffset - anchorHeight);
+            }
         }
     }
 
@@ -383,6 +406,8 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
         // Fade out the last item if we cannot fit all items.
         if (numCanFit < numMenuItems) {
             int spaceForFullItems = numCanFit * (mItemRowHeight + mItemDividerHeight);
+            spaceForFullItems += footerHeight;
+
             int spaceForPartialItem = (int) (LAST_ITEM_SHOW_FRACTION * mItemRowHeight);
             // Determine which item needs hiding.
             if (spaceForFullItems + spaceForPartialItem < availableScreenSpace) {

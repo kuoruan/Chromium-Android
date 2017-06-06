@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.payments.ui;
 
 import android.graphics.drawable.Drawable;
+import android.text.TextUtils;
 
 import javax.annotation.Nullable;
 
@@ -178,5 +179,34 @@ public class PaymentOption implements Completable {
     /** @return True if this option is editable by users. */
     public boolean isEditable() {
         return mIsEditable;
+    }
+
+    /**
+     * Gets a preview string of this option.
+     *
+     * @param labelSeparator The string used to separate labels.
+     * @param maxLength      The expected maximum length of the preview string. The length of the
+     *                       returned string must strictly less than this value. Negative value
+     *                       indicates that the length is unlimited.
+     * @return The preview string.
+     */
+    public String getPreviewString(String labelSeparator, int maxLength) {
+        StringBuilder previewString = new StringBuilder(mLabels[0]);
+
+        if (!TextUtils.isEmpty(mLabels[1])) {
+            if (previewString.length() > 0) previewString.append(labelSeparator);
+            previewString.append(mLabels[1]);
+        }
+
+        if (!TextUtils.isEmpty(mLabels[2])) {
+            if (previewString.length() > 0) previewString.append(labelSeparator);
+            previewString.append(mLabels[2]);
+        }
+
+        if (maxLength >= 0 && previewString.length() >= maxLength) {
+            return previewString.substring(0, maxLength / 2);
+        }
+
+        return previewString.toString();
     }
 }

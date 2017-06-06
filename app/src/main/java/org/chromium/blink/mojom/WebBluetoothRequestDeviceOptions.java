@@ -20,7 +20,7 @@ public final class WebBluetoothRequestDeviceOptions extends org.chromium.mojo.bi
     private static final int STRUCT_SIZE = 32;
     private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    public WebBluetoothScanFilter[] filters;
+    public WebBluetoothLeScanFilter[] filters;
     public org.chromium.bluetooth.mojom.Uuid[] optionalServices;
     public boolean acceptAllDevices;
 
@@ -66,11 +66,11 @@ public final class WebBluetoothRequestDeviceOptions extends org.chromium.mojo.bi
                     result.filters = null;
                 } else {
                     org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                    result.filters = new WebBluetoothScanFilter[si1.elementsOrVersion];
+                    result.filters = new WebBluetoothLeScanFilter[si1.elementsOrVersion];
                     for (int i1 = 0; i1 < si1.elementsOrVersion; ++i1) {
                         
                         org.chromium.mojo.bindings.Decoder decoder2 = decoder1.readPointer(org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i1, false);
-                        result.filters[i1] = WebBluetoothScanFilter.decode(decoder2);
+                        result.filters[i1] = WebBluetoothLeScanFilter.decode(decoder2);
                     }
                 }
             }

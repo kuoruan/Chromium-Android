@@ -15,9 +15,9 @@ import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.ntp.NewTabPageUma;
 import org.chromium.chrome.browser.ntp.snippets.KnownCategories;
 import org.chromium.chrome.browser.ntp.snippets.SnippetArticle;
+import org.chromium.chrome.browser.offlinepages.DownloadUiActionFlags;
 import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
 import org.chromium.chrome.browser.offlinepages.OfflinePageUtils;
-import org.chromium.chrome.browser.offlinepages.downloads.OfflinePageNotificationBridge;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.tabmodel.TabModel;
@@ -84,7 +84,7 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
     @Override
     public void navigateToHelpPage() {
         NewTabPageUma.recordAction(NewTabPageUma.ACTION_CLICKED_LEARN_MORE);
-        // TODO(mastiz): Change this to LINK?
+        // TODO(dgn): Use the standard Help UI rather than a random link to online help?
         openUrl(WindowOpenDisposition.CURRENT_TAB,
                 new LoadUrlParams(NEW_TAB_URL_HELP, PageTransition.AUTO_BOOKMARK));
     }
@@ -97,8 +97,8 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
             assert windowOpenDisposition == WindowOpenDisposition.CURRENT_TAB
                     || windowOpenDisposition == WindowOpenDisposition.NEW_WINDOW
                     || windowOpenDisposition == WindowOpenDisposition.NEW_BACKGROUND_TAB;
-            DownloadUtils.openFile(
-                    article.getAssetDownloadFile(), article.getAssetDownloadMimeType(), false);
+            DownloadUtils.openFile(article.getAssetDownloadFile(),
+                    article.getAssetDownloadMimeType(), article.getAssetDownloadGuid(), false);
             return;
         }
 
@@ -146,7 +146,7 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
     public void openUrl(int windowOpenDisposition, LoadUrlParams loadUrlParams) {
         switch (windowOpenDisposition) {
             case WindowOpenDisposition.CURRENT_TAB:
-                mHost.loadUrl(loadUrlParams, false);
+                mHost.loadUrl(loadUrlParams, mTabModelSelector.getCurrentTab().isIncognito());
                 break;
             case WindowOpenDisposition.NEW_BACKGROUND_TAB:
                 openUrlInNewTab(loadUrlParams);
@@ -185,8 +185,8 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
     }
 
     private void saveUrlForOffline(String url) {
-        OfflinePageNotificationBridge.showDownloadingToast(mActivity);
-        OfflinePageBridge.getForProfile(mProfile).savePageLater(
-                url, "ntp_suggestions", true /* userRequested */);
+        OfflinePageBridge.getForProfile(mProfile).scheduleDownload(
+                mHost.getActiveTab().getWebContents(), "ntp_suggestions", url,
+                DownloadUiActionFlags.ALL);
     }
 }

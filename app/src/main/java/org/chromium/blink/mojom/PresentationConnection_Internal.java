@@ -60,7 +60,7 @@ class PresentationConnection_Internal {
 
         @Override
         public void onMessage(
-ConnectionMessage message, 
+PresentationConnectionMessage message, 
 OnMessageResponse callback) {
 
             PresentationConnectionOnMessageParams _message = new PresentationConnectionOnMessageParams();
@@ -221,10 +221,10 @@ int state) {
     
     static final class PresentationConnectionOnMessageParams extends org.chromium.mojo.bindings.Struct {
     
-        private static final int STRUCT_SIZE = 16;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public ConnectionMessage message;
+        public PresentationConnectionMessage message;
     
         private PresentationConnectionOnMessageParams(int version) {
             super(STRUCT_SIZE, version);
@@ -263,8 +263,7 @@ int state) {
                 result = new PresentationConnectionOnMessageParams(mainDataHeader.elementsOrVersion);
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                    result.message = ConnectionMessage.decode(decoder1);
+                    result.message = PresentationConnectionMessage.decode(decoder0, 8);
                 }
             } finally {
                 decoder0.decreaseStackDepth();

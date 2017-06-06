@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.snackbar;
 
 import android.graphics.Bitmap;
 
+import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarController;
 
 /**
@@ -146,7 +147,11 @@ public class Snackbar {
         return this;
     }
 
-    SnackbarController getController() {
+    /**
+     * @return The {@link SnackbarController} that controls this snackbar.
+     */
+    @VisibleForTesting
+    public SnackbarController getController() {
         return mController;
     }
 

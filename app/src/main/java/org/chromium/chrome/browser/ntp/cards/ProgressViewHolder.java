@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.ntp.cards;
 import android.view.LayoutInflater;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.suggestions.SuggestionsRecyclerView;
 
 /**
  * ViewHolder for an item of type {@link ItemViewType#PROGRESS}.
@@ -16,7 +17,7 @@ public class ProgressViewHolder extends NewTabPageViewHolder {
     private final ProgressIndicatorView mProgressIndicator;
     private ProgressItem mListItem;
 
-    public ProgressViewHolder(final NewTabPageRecyclerView recyclerView) {
+    public ProgressViewHolder(final SuggestionsRecyclerView recyclerView) {
         super(LayoutInflater.from(recyclerView.getContext())
                         .inflate(R.layout.new_tab_page_progress_indicator, recyclerView, false));
         mProgressIndicator = (ProgressIndicatorView) itemView.findViewById(R.id.snippets_progress);

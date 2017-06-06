@@ -102,11 +102,19 @@ class EditorDropdownField implements EditorFieldView {
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}
         });
+        final int count = adapter.getCount();
         mDropdown.setOnTouchListener(new View.OnTouchListener() {
             @SuppressLint("ClickableViewAccessibility")
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) requestFocusAndHideKeyboard();
+
+                // If the dropdown supports an hint and the hint is selected, select the first
+                // element instead.
+                if (mDropdown.getSelectedItemPosition() == count) {
+                    mDropdown.setSelection(0);
+                }
+
                 return false;
             }
         });

@@ -4,10 +4,10 @@
 
 package org.chromium.chrome.browser;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
@@ -39,9 +39,7 @@ public class ServiceTabLauncher {
 
     /**
      * Launches the browser activity and launches a tab for |url|.
-     *
-     * @param context The context using which the URL is being loaded.
-     * @param requestId Id of the request for launching this tab.
+     *  @param requestId Id of the request for launching this tab.
      * @param incognito Whether the tab should be launched in incognito mode.
      * @param url The URL which should be launched in a tab.
      * @param disposition The disposition requested by the navigation source.
@@ -51,21 +49,21 @@ public class ServiceTabLauncher {
      * @param postData Post-data to include in the tab URL's request body.
      */
     @CalledByNative
-    public static void launchTab(final Context context, final int requestId,
-            final boolean incognito, final String url, final int disposition,
-            final String referrerUrl, final int referrerPolicy, final String extraHeaders,
-            final ResourceRequestBody postData) {
+    public static void launchTab(final int requestId, final boolean incognito, final String url,
+            final int disposition, final String referrerUrl, final int referrerPolicy,
+            final String extraHeaders, final ResourceRequestBody postData) {
         final TabDelegate tabDelegate = new TabDelegate(incognito);
 
         // 1. Launch WebAPK if one matches the target URL.
         if (ChromeWebApkHost.isEnabled()) {
-            String webApkPackageName = WebApkValidator.queryWebApkPackage(context, url);
+            String webApkPackageName =
+                    WebApkValidator.queryWebApkPackage(ContextUtils.getApplicationContext(), url);
             if (webApkPackageName != null) {
-                Intent intent =
-                        WebApkNavigationClient.createLaunchWebApkIntent(webApkPackageName, url);
+                Intent intent = WebApkNavigationClient.createLaunchWebApkIntent(
+                        webApkPackageName, url, true /* forceNavigation */);
                 if (intent != null) {
                     intent.putExtra(ShortcutHelper.EXTRA_SOURCE, ShortcutSource.NOTIFICATION);
-                    context.startActivity(intent);
+                    ContextUtils.getApplicationContext().startActivity(intent);
                     return;
                 }
             }

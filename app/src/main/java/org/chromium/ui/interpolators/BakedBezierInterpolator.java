@@ -159,5 +159,4 @@ public class BakedBezierInterpolator implements Interpolator {
 
         return mValues[position] + weight * (mValues[position + 1] - mValues[position]);
     }
-
 }

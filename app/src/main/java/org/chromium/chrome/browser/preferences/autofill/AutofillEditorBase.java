@@ -27,8 +27,7 @@ import android.widget.Spinner;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.payments.ui.EditorView;
-import org.chromium.chrome.browser.payments.ui.FadingEdgeScrollView;
-import org.chromium.chrome.browser.widget.DualControlLayout;
+import org.chromium.chrome.browser.widget.FadingEdgeScrollView;
 
 /** Base class for Autofill editors (e.g. credit cards and profiles). */
 public abstract class AutofillEditorBase
@@ -67,7 +66,8 @@ public abstract class AutofillEditorBase
         // Hide the top shadow on the ScrollView because the toolbar draws one.
         FadingEdgeScrollView scrollView = (FadingEdgeScrollView) inflater.inflate(
                 R.layout.autofill_editor_base, container, false);
-        scrollView.setShadowVisibility(false, true);
+        scrollView.setEdgeVisibility(
+                FadingEdgeScrollView.DRAW_NO_EDGE, FadingEdgeScrollView.DRAW_FADING_EDGE);
 
         // Inflate the editor and buttons into the "content" LinearLayout.
         LinearLayout contentLayout = (LinearLayout) scrollView.findViewById(R.id.content);
@@ -119,9 +119,6 @@ public abstract class AutofillEditorBase
 
     /** Initializes the buttons within the layout. */
     protected void initializeButtons(View layout) {
-        DualControlLayout buttonBar = (DualControlLayout) layout.findViewById(R.id.button_bar);
-        buttonBar.setAlignment(DualControlLayout.ALIGN_END);
-
         Button button = (Button) layout.findViewById(R.id.button_secondary);
         button.setOnClickListener(new View.OnClickListener() {
                 @Override

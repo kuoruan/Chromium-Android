@@ -178,6 +178,27 @@ public class SectionInformation {
         return 0;
     }
 
+    /**
+     * Returns the resource ID for generating string to preview options in this section.
+     *
+     * @return The resource ID.
+     */
+    public int getPreviewStringResourceId() {
+        switch (mDataType) {
+            case PaymentRequestUI.TYPE_SHIPPING_ADDRESSES:
+                return R.plurals.payment_request_shipping_addresses_preview;
+            case PaymentRequestUI.TYPE_SHIPPING_OPTIONS:
+                return R.plurals.payment_request_shipping_options_preview;
+            case PaymentRequestUI.TYPE_PAYMENT_METHODS:
+                return R.plurals.payment_request_payment_methods_preview;
+            case PaymentRequestUI.TYPE_CONTACT_DETAILS:
+                return R.plurals.payment_request_contacts_preview;
+            default:
+                assert false : "unknown data type";
+                return 0;
+        }
+    }
+
     /** @param msg The optional error message to display when the selection is invalid. */
     public void setErrorMessage(String msg) {
         mErrorMessage = msg;

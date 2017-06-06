@@ -12,9 +12,7 @@ import android.view.View;
 import android.view.animation.AnimationUtils;
 
 import org.chromium.base.Log;
-import org.chromium.base.annotations.CalledByNative;
-import org.chromium.base.annotations.JNINamespace;
-import org.chromium.content_public.browser.WebContents;
+import org.chromium.ui.base.EventForwarder;
 import org.chromium.ui.base.WindowAndroid;
 import org.chromium.ui.display.DisplayAndroid;
 import org.chromium.ui.display.DisplayAndroid.DisplayAndroidObserver;
@@ -22,7 +20,6 @@ import org.chromium.ui.display.DisplayAndroid.DisplayAndroidObserver;
 /**
  * This class implements auto scrolling and panning for gamepad left joystick motion event.
  */
-@JNINamespace("content")
 public class JoystickScrollProvider {
     private static final String TAG = "JoystickScroll";
 
@@ -43,11 +40,11 @@ public class JoystickScrollProvider {
         }
     }
 
-    private WindowAndroid mWindowAndroid;
-    private View mContainerView;
-    private long mNativeJoystickScrollProvider;
-    private JoystickScrollDisplayObserver mDisplayObserver;
+    private final EventForwarder mEventForwarder;
+    private final JoystickScrollDisplayObserver mDisplayObserver;
 
+    private View mContainerView;
+    private WindowAndroid mWindowAndroid;
     private float mScrollVelocityX;
     private float mScrollVelocityY;
     private float mScrollFactor;
@@ -63,18 +60,12 @@ public class JoystickScrollProvider {
      * Constructs a new JoystickScrollProvider.
      */
     public JoystickScrollProvider(
-            WebContents webContents, View containerView, WindowAndroid windowAndroid) {
-        mNativeJoystickScrollProvider = nativeInit(webContents);
+            View containerView, WindowAndroid windowAndroid, EventForwarder eventForwarder) {
         mContainerView = containerView;
         mWindowAndroid = windowAndroid;
+        mEventForwarder = eventForwarder;
         mEnabled = true;
         mDisplayObserver = new JoystickScrollDisplayObserver();
-    }
-
-    @CalledByNative
-    private void onNativeObjectDestroyed(long nativePointer) {
-        assert nativePointer == mNativeJoystickScrollProvider;
-        mNativeJoystickScrollProvider = 0;
     }
 
     /**
@@ -85,6 +76,10 @@ public class JoystickScrollProvider {
     public void setEnabled(boolean enabled) {
         mEnabled = enabled;
         if (!enabled) stop();
+    }
+
+    public void setContainerView(View containerView) {
+        mContainerView = containerView;
     }
 
     public void onViewAttachedToWindow() {
@@ -118,12 +113,14 @@ public class JoystickScrollProvider {
         Context context = mWindowAndroid == null ? null : mWindowAndroid.getContext().get();
         TypedValue outValue = new TypedValue();
 
-        if (context != null && context.getTheme().resolveAttribute(
-                android.R.attr.listPreferredItemHeight, outValue, true)) {
+        if (context != null
+                && context.getTheme().resolveAttribute(
+                           android.R.attr.listPreferredItemHeight, outValue, true)) {
             mScrollFactor = outValue.getDimension(context.getResources().getDisplayMetrics());
         } else {
             if (context != null) {
-                Log.d(TAG, "Theme attribute listPreferredItemHeight not defined"
+                Log.d(TAG,
+                        "Theme attribute listPreferredItemHeight not defined"
                                 + " switching to fallback scroll factor");
             }
             mScrollFactor = SCROLL_FACTOR_FALLBACK * mDipScale;
@@ -134,6 +131,7 @@ public class JoystickScrollProvider {
      * This function processes motion event and computes new
      * scroll offest in pixels which is propertional to left joystick
      * axes movement.
+     *
      * It also starts runnable to scroll content view core equal to
      * scroll offset pixels.
      *
@@ -143,8 +141,9 @@ public class JoystickScrollProvider {
     public boolean onMotion(MotionEvent event) {
         if (!mEnabled) return false;
         if ((event.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) == 0) return false;
-        Log.d(TAG, "Joystick left stick axis: " + event.getAxisValue(MotionEvent.AXIS_X) + ","
-                + event.getAxisValue(MotionEvent.AXIS_Y));
+        Log.d(TAG,
+                "Joystick left stick axis: " + event.getAxisValue(MotionEvent.AXIS_X) + ","
+                        + event.getAxisValue(MotionEvent.AXIS_Y));
 
         assert mScrollFactor != 0;
 
@@ -181,10 +180,7 @@ public class JoystickScrollProvider {
         final float dx = (mScrollVelocityX * dt / 1000.f);
         final float dy = (mScrollVelocityY * dt / 1000.f);
 
-        if (mNativeJoystickScrollProvider != 0) {
-            nativeScrollBy(
-                    mNativeJoystickScrollProvider, timeMillis, dx / mDipScale, dy / mDipScale);
-        }
+        mEventForwarder.onMouseWheelEvent(timeMillis, 0, 0, -dx, -dy, 1.0f);
 
         mLastAnimateTimeMillis = timeMillis;
         mContainerView.postOnAnimation(mScrollRunnable);
@@ -197,7 +193,7 @@ public class JoystickScrollProvider {
     /**
      * Removes noise from joystick motion events.
      */
-    private float getFilteredAxisValue(MotionEvent event, int axis) {
+    private static float getFilteredAxisValue(MotionEvent event, int axis) {
         float axisValWithNoise = event.getAxisValue(axis);
         if (axisValWithNoise > JOYSTICK_SCROLL_DEADZONE
                 || axisValWithNoise < -JOYSTICK_SCROLL_DEADZONE) {
@@ -205,8 +201,4 @@ public class JoystickScrollProvider {
         }
         return 0f;
     }
-
-    private native long nativeInit(WebContents webContents);
-    private native void nativeScrollBy(
-            long nativeJoystickScrollProvider, long timeMs, float dxDip, float dyDip);
 }

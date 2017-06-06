@@ -171,7 +171,7 @@ public class LocaleManager {
             return false;
         }
 
-        new SearchEnginePromoDialog(context, this).show();
+        new SogouPromoDialog(context, this).show();
         return true;
     }
 

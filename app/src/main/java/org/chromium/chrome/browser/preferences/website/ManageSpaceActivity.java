@@ -38,6 +38,7 @@ import org.chromium.chrome.browser.preferences.AboutChromePreferences;
 import org.chromium.chrome.browser.preferences.Preferences;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
 import org.chromium.chrome.browser.preferences.website.Website.StoredDataClearedCallback;
+import org.chromium.chrome.browser.searchwidget.SearchWidgetProvider;
 
 import java.util.Collection;
 
@@ -257,6 +258,8 @@ public class ManageSpaceActivity extends AppCompatActivity implements View.OnCli
                         RecordHistogram.recordEnumeratedHistogram("Android.ManageSpace.ActionTaken",
                                 OPTION_CLEAR_APP_DATA, OPTION_MAX);
                     }
+
+                    SearchWidgetProvider.reset();
                     activityManager.clearApplicationUserData();
                 }
             });

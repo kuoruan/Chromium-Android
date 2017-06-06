@@ -70,6 +70,21 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 
+            <ViewStub
+                android:id="@+id/bottom_nav_stub"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/bottom_nav_height"
+                android:layout_gravity="start|bottom"
+                android:inflatedId="@+id/bottom_nav"
+                android:layout="@layout/bottom_sheet_bottom_nav" />
+
+           <FrameLayout
+                android:id="@+id/bottom_sheet_snackbar_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="start|bottom"
+                android:layout_marginTop="@dimen/bottom_nav_height_inverse" />
+
         </android.support.design.widget.CoordinatorLayout>
 
         <HorizontalScrollView

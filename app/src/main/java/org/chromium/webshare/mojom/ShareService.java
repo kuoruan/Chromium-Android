@@ -29,7 +29,7 @@ public interface ShareService extends org.chromium.mojo.bindings.Interface {
 String title, String text, org.chromium.url.mojom.Url url, 
 ShareResponse callback);
 
-    interface ShareResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<String> { }
+    interface ShareResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Integer> { }
 
 
 }

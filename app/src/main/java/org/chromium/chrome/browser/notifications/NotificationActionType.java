@@ -15,15 +15,14 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class NotificationActionType {
-  @IntDef({
-      BUTTON, TEXT
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface NotificationActionTypeEnum {}
+@IntDef({
+    NotificationActionType.BUTTON, NotificationActionType.TEXT
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface NotificationActionType {
   /**
    * NB. Making this a one-line enum breaks code generation! crbug.com/657847
    */
-  public static final int BUTTON = 0;
-  public static final int TEXT = 1;
+  int BUTTON = 0;
+  int TEXT = 1;
 }

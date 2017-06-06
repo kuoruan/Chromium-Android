@@ -11,6 +11,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
@@ -21,7 +22,9 @@ import org.chromium.components.sync.AndroidSyncSettings;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -93,20 +96,53 @@ public class DelayedInvalidationsController {
         String oldAccount = prefs.getString(DELAYED_ACCOUNT_NAME, null);
         // Make sure to construct a new set so it can be modified safely. See crbug.com/568369.
         Set<String> invals = new HashSet<String>(
-                prefs.getStringSet(DELAYED_INVALIDATIONS, new HashSet<String>(1)));
+                prefs.getStringSet(DELAYED_INVALIDATIONS, Collections.<String>emptySet()));
         assert invals.isEmpty() || oldAccount != null;
-        if (oldAccount != null && !oldAccount.equals(account)) {
-            invals.clear();
+        boolean invalidateAllTypes = false;
+        // We invalidate all types if:
+        // - the account has changed
+        // - we were in "invalidate all types" mode already
+        // - new invalidation indicates to invalidate all types by setting source to 0
+        // - adding invalidation to the current set failed
+        if (oldAccount != null && !oldAccount.equals(account)) invalidateAllTypes = true;
+        if (oldAccount != null && invals.isEmpty()) invalidateAllTypes = true;
+        if (invalidation.mObjectSource == 0) invalidateAllTypes = true;
+        if (!invalidateAllTypes && !addInvalidationToSet(invalidation, invals)) {
+            invalidateAllTypes = true;
         }
+
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(DELAYED_ACCOUNT_NAME, account);
-        if (invalidation.mObjectSource == 0 || (oldAccount != null && invals.isEmpty())) {
-            editor.putStringSet(DELAYED_INVALIDATIONS, null);
+        if (invalidateAllTypes) {
+            editor.remove(DELAYED_INVALIDATIONS);
         } else {
-            invals.add(invalidation.encodeToString());
             editor.putStringSet(DELAYED_INVALIDATIONS, invals);
         }
         editor.apply();
+    }
+
+    /**
+     * Adds newInvalidation into set of encoded invalidations. Invalidations with the same id/source
+     * and lower version are removed from the set. If invalidation with same or higher version is
+     * is present, then new invalidation is discarded.
+     * @return true if update is successful, false when decoding invalidation from string fails.
+     */
+    private boolean addInvalidationToSet(
+            PendingInvalidation newInvalidation, Set<String> invalidations) {
+        for (Iterator<String> iter = invalidations.iterator(); iter.hasNext();) {
+            String encodedInvalidation = iter.next();
+            PendingInvalidation invalidation =
+                    PendingInvalidation.decodeToPendingInvalidation(encodedInvalidation);
+            if (invalidation == null) return false;
+            if (ApiCompatibilityUtils.objectEquals(
+                        invalidation.mObjectId, newInvalidation.mObjectId)
+                    && invalidation.mObjectSource == newInvalidation.mObjectSource) {
+                if (invalidation.mVersion >= newInvalidation.mVersion) return true;
+                iter.remove();
+            }
+        }
+        invalidations.add(newInvalidation.encodeToString());
+        return true;
     }
 
     private List<Bundle> popPendingInvalidations(final Context context) {

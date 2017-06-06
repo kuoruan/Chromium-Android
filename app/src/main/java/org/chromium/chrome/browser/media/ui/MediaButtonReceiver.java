@@ -15,11 +15,11 @@ import android.content.Intent;
  * This is there for backward compatibility with JB_MR0 and JB_MR1.
  */
 public abstract class MediaButtonReceiver extends BroadcastReceiver {
-    public abstract String getServiceClassName();
+    public abstract Class<?> getServiceClass();
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        intent.setClassName(context, getServiceClassName());
+        intent.setClass(context, getServiceClass());
         context.startService(intent);
     }
 }

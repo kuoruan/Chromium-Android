@@ -48,6 +48,7 @@ public class SiteSettingsPreferences extends PreferenceFragment
     static final String STORAGE_KEY = "use_storage";
     static final String TRANSLATE_KEY = "translate";
     static final String USB_KEY = "usb";
+    static final String SUBRESOURCE_FILTER_KEY = "subresource_filter";
 
     // Whether the Protected Content menu is available for display.
     boolean mProtectedContentMenuAvailable;
@@ -97,6 +98,8 @@ public class SiteSettingsPreferences extends PreferenceFragment
             return ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS;
         } else if (PROTECTED_CONTENT_KEY.equals(key)) {
             return ContentSettingsType.CONTENT_SETTINGS_TYPE_PROTECTED_MEDIA_IDENTIFIER;
+        } else if (SUBRESOURCE_FILTER_KEY.equals(key)) {
+            return ContentSettingsType.CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER;
         }
         return -1;
     }
@@ -116,6 +119,7 @@ public class SiteSettingsPreferences extends PreferenceFragment
             getPreferenceScreen().removePreference(findPreference(NOTIFICATIONS_KEY));
             getPreferenceScreen().removePreference(findPreference(POPUPS_KEY));
             getPreferenceScreen().removePreference(findPreference(STORAGE_KEY));
+            getPreferenceScreen().removePreference(findPreference(SUBRESOURCE_FILTER_KEY));
             getPreferenceScreen().removePreference(findPreference(TRANSLATE_KEY));
             getPreferenceScreen().removePreference(findPreference(USB_KEY));
         } else {
@@ -128,6 +132,11 @@ public class SiteSettingsPreferences extends PreferenceFragment
                 // These two will be tucked under the Media subkey, so no reason to show them now.
                 getPreferenceScreen().removePreference(findPreference(AUTOPLAY_KEY));
                 getPreferenceScreen().removePreference(findPreference(PROTECTED_CONTENT_KEY));
+            }
+            // TODO(csharrison): Remove this condition once the experimental UI lands. It is not
+            // great to dynamically remove the preference in this way.
+            if (!SiteSettingsCategory.subresourceFilterCategoryEnabled()) {
+                getPreferenceScreen().removePreference(findPreference(SUBRESOURCE_FILTER_KEY));
             }
         }
     }
@@ -158,6 +167,10 @@ public class SiteSettingsPreferences extends PreferenceFragment
             websitePrefs.add(MICROPHONE_KEY);
             websitePrefs.add(NOTIFICATIONS_KEY);
             websitePrefs.add(POPUPS_KEY);
+
+            if (SiteSettingsCategory.subresourceFilterCategoryEnabled()) {
+                websitePrefs.add(SUBRESOURCE_FILTER_KEY);
+            }
         }
 
         // Initialize the summary and icon for all preferences that have an
@@ -185,6 +198,8 @@ public class SiteSettingsPreferences extends PreferenceFragment
                 checked = PrefServiceBridge.getInstance().popupsEnabled();
             } else if (PROTECTED_CONTENT_KEY.equals(prefName)) {
                 checked = PrefServiceBridge.getInstance().isProtectedMediaIdentifierEnabled();
+            } else if (SUBRESOURCE_FILTER_KEY.equals(prefName)) {
+                checked = PrefServiceBridge.getInstance().subresourceFilterEnabled();
             }
 
             int contentType = keyToContentSettingsType(prefName);

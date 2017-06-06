@@ -15,18 +15,18 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class StopSource {
-  @IntDef({
-      PROFILE_DESTRUCTION, SIGN_OUT, BIRTHDAY_ERROR, CHROME_SYNC_SETTINGS, ANDROID_CHROME_SYNC,
-      ANDROID_MASTER_SYNC, STOP_SOURCE_LIMIT
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface StopSourceEnum {}
-  public static final int PROFILE_DESTRUCTION = 0;
-  public static final int SIGN_OUT = 1;
-  public static final int BIRTHDAY_ERROR = 2;
-  public static final int CHROME_SYNC_SETTINGS = 3;
-  public static final int ANDROID_CHROME_SYNC = 4;
-  public static final int ANDROID_MASTER_SYNC = 5;
-  public static final int STOP_SOURCE_LIMIT = 6;
+@IntDef({
+    StopSource.PROFILE_DESTRUCTION, StopSource.SIGN_OUT, StopSource.BIRTHDAY_ERROR,
+    StopSource.CHROME_SYNC_SETTINGS, StopSource.ANDROID_CHROME_SYNC, StopSource.ANDROID_MASTER_SYNC,
+    StopSource.STOP_SOURCE_LIMIT
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface StopSource {
+  int PROFILE_DESTRUCTION = 0;
+  int SIGN_OUT = 1;
+  int BIRTHDAY_ERROR = 2;
+  int CHROME_SYNC_SETTINGS = 3;
+  int ANDROID_CHROME_SYNC = 4;
+  int ANDROID_MASTER_SYNC = 5;
+  int STOP_SOURCE_LIMIT = 6;
 }

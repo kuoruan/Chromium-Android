@@ -77,6 +77,11 @@ public class CardUnmaskBridge implements CardUnmaskPromptDelegate {
         nativeOnNewCardLinkClicked(mNativeCardUnmaskPromptViewAndroid);
     }
 
+    @Override
+    public int getExpectedCvcLength() {
+        return nativeGetExpectedCvcLength(mNativeCardUnmaskPromptViewAndroid);
+    }
+
     /**
      * Shows a prompt for unmasking a Wallet credit card.
      */
@@ -134,4 +139,5 @@ public class CardUnmaskBridge implements CardUnmaskPromptDelegate {
             long nativeCardUnmaskPromptViewAndroid, String cvc, String month, String year,
             boolean shouldStoreLocally);
     private native void nativeOnNewCardLinkClicked(long nativeCardUnmaskPromptViewAndroid);
+    private native int nativeGetExpectedCvcLength(long nativeCardUnmaskPromptViewAndroid);
 }

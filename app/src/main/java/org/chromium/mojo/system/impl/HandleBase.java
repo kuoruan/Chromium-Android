@@ -7,8 +7,7 @@ package org.chromium.mojo.system.impl;
 import android.util.Log;
 
 import org.chromium.mojo.system.Core;
-import org.chromium.mojo.system.Core.HandleSignals;
-import org.chromium.mojo.system.Core.WaitResult;
+import org.chromium.mojo.system.Core.HandleSignalsState;
 import org.chromium.mojo.system.Handle;
 import org.chromium.mojo.system.UntypedHandle;
 
@@ -63,11 +62,11 @@ abstract class HandleBase implements Handle {
     }
 
     /**
-     * @see org.chromium.mojo.system.Handle#wait(HandleSignals, long)
+     * @see org.chromium.mojo.system.Handle#querySignalsState()
      */
     @Override
-    public WaitResult wait(HandleSignals signals, long deadline) {
-        return mCore.wait(this, signals, deadline);
+    public HandleSignalsState querySignalsState() {
+        return mCore.queryHandleSignalsState(mMojoHandle);
     }
 
     /**

@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.snackbar;
 
 import android.app.Activity;
 import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -68,6 +69,7 @@ public class SnackbarManager implements OnClickListener {
     private SnackbarCollection mSnackbars = new SnackbarCollection();
     private boolean mActivityInForeground;
     private boolean mIsDisabledForTesting;
+    private ViewGroup mSnackbarParentView;
     private final Runnable mHideRunnable = new Runnable() {
         @Override
         public void run() {
@@ -79,10 +81,13 @@ public class SnackbarManager implements OnClickListener {
     /**
      * Constructs a SnackbarManager to show snackbars in the given window.
      * @param activity The embedding activity.
+     * @param snackbarParentView The ViewGroup used to display snackbars. If this is null, the
+     *                           {@link SnackbarView} will determine where to attach the snackbar.
      */
-    public SnackbarManager(Activity activity) {
+    public SnackbarManager(Activity activity, @Nullable ViewGroup snackbarParentView) {
         mActivity = activity;
         mUIThreadHandler = new Handler();
+        mSnackbarParentView = snackbarParentView;
     }
 
     /**
@@ -112,6 +117,14 @@ public class SnackbarManager implements OnClickListener {
         mSnackbars.add(snackbar);
         updateView();
         mView.announceforAccessibility();
+    }
+
+    /** Dismisses all snackbars. */
+    public void dismissAllSnackbars() {
+        if (mSnackbars.isEmpty()) return;
+
+        mSnackbars.clear();
+        updateView();
     }
 
     /**
@@ -182,7 +195,7 @@ public class SnackbarManager implements OnClickListener {
         } else {
             boolean viewChanged = true;
             if (mView == null) {
-                mView = new SnackbarView(mActivity, this, currentSnackbar);
+                mView = new SnackbarView(mActivity, this, currentSnackbar, mSnackbarParentView);
                 mView.show();
             } else {
                 viewChanged = mView.update(currentSnackbar);

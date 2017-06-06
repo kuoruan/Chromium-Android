@@ -10,6 +10,7 @@ import android.net.Uri;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.ChromeFeatureList;
+import org.chromium.chrome.browser.ChromeTabbedActivity;
 import org.chromium.chrome.browser.NativePage;
 import org.chromium.chrome.browser.NativePageHost;
 import org.chromium.chrome.browser.TabLoadStatus;
@@ -36,7 +37,8 @@ public class NativePageFactory {
         protected NativePage buildNewTabPage(ChromeActivity activity, Tab tab,
                 TabModelSelector tabModelSelector) {
             if (FeatureUtilities.isChromeHomeEnabled() && !tab.isIncognito()) {
-                return new ChromeHomeNewTabPage(activity, tab, tabModelSelector);
+                return new ChromeHomeNewTabPage(activity, tab, tabModelSelector,
+                        ((ChromeTabbedActivity) activity).getLayoutManager());
             } else if (tab.isIncognito()) {
                 return new IncognitoNewTabPage(activity);
             } else {

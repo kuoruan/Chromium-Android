@@ -104,10 +104,9 @@ public class WebappActivity extends FullScreenActivity {
         if (newWebappInfo == null) {
             Log.e(TAG, "Failed to parse new Intent: " + intent);
             ApiCompatibilityUtils.finishAndRemoveTask(this);
-        } else if (!TextUtils.equals(mWebappInfo.id(), newWebappInfo.id())) {
-            mWebappInfo = newWebappInfo;
-            resetSavedInstanceState();
-            if (mIsInitialized) initializeUI(null);
+        } else if (newWebappInfo.shouldForceNavigation() && mIsInitialized) {
+            getActivityTab().loadUrl(new LoadUrlParams(
+                    newWebappInfo.uri().toString(), PageTransition.AUTO_TOPLEVEL));
         }
     }
 
@@ -119,7 +118,7 @@ public class WebappActivity extends FullScreenActivity {
         return (intent == null) ? WebappInfo.createEmpty() : WebappInfo.create(intent);
     }
 
-    private void initializeUI(Bundle savedInstanceState) {
+    protected void initializeUI(Bundle savedInstanceState) {
         // We do not load URL when restoring from saved instance states.
         if (savedInstanceState == null && mWebappInfo.isInitialized()) {
             if (TextUtils.isEmpty(getActivityTab().getUrl())) {
@@ -133,7 +132,7 @@ public class WebappActivity extends FullScreenActivity {
         getActivityTab().addObserver(createTabObserver());
         getActivityTab().getTabWebContentsDelegateAndroid().setDisplayMode(
                 mWebappInfo.displayMode());
-        if (mWebappInfo.displayMode() == WebDisplayMode.Fullscreen) {
+        if (mWebappInfo.displayMode() == WebDisplayMode.kFullscreen) {
             enterImmersiveMode();
         }
     }
@@ -170,8 +169,9 @@ public class WebappActivity extends FullScreenActivity {
             ApiCompatibilityUtils.finishAndRemoveTask(this);
             return;
         }
-        super.finishNativeInitialization();
+
         initializeUI(getSavedInstanceState());
+        super.finishNativeInitialization();
         mIsInitialized = true;
     }
 
@@ -473,13 +473,13 @@ public class WebappActivity extends FullScreenActivity {
         return new ChromeFullscreenManager(this, false) {
             @Override
             public void setPersistentFullscreenMode(boolean enabled) {
-                if (mWebappInfo.displayMode() == WebDisplayMode.Fullscreen) return;
+                if (mWebappInfo.displayMode() == WebDisplayMode.kFullscreen) return;
                 super.setPersistentFullscreenMode(enabled);
             }
 
             @Override
             public boolean getPersistentFullscreenMode() {
-                if (mWebappInfo.displayMode() == WebDisplayMode.Fullscreen) return false;
+                if (mWebappInfo.displayMode() == WebDisplayMode.kFullscreen) return false;
                 return super.getPersistentFullscreenMode();
             }
         };
@@ -495,13 +495,13 @@ public class WebappActivity extends FullScreenActivity {
 
             @Override
             public void onDidStartNavigation(Tab tab, String url, boolean isInMainFrame,
-                    boolean isSamePage, boolean isErrorPage) {
-                if (isInMainFrame && !isSamePage) updateUrlBar();
+                    boolean isSameDocument, boolean isErrorPage) {
+                if (isInMainFrame && !isSameDocument) updateUrlBar();
             }
 
             @Override
             public void onDidFinishNavigation(Tab tab, String url, boolean isInMainFrame,
-                    boolean isErrorPage, boolean hasCommitted, boolean isSamePage,
+                    boolean isErrorPage, boolean hasCommitted, boolean isSameDocument,
                     boolean isFragmentNavigation, Integer pageTransition, int errorCode,
                     int httpStatusCode) {
                 if (hasCommitted && isInMainFrame) updateUrlBar();

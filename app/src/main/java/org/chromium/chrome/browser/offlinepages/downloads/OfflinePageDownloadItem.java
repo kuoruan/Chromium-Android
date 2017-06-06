@@ -60,8 +60,6 @@ public class OfflinePageDownloadItem {
     }
 
     /** @return Path to the offline item on the disk. */
-    // TODO(fgorski): Title would be more meaningful to show in the Download UI, where the local
-    // path is shown right now.
     public String getTargetPath() {
         return mTargetPath;
     }

@@ -14,7 +14,7 @@ import android.os.Build;
 import android.util.Log;
 
 import org.chromium.base.VisibleForTesting;
-import org.chromium.device.BatteryStatus;
+import org.chromium.device.mojom.BatteryStatus;
 
 import javax.annotation.Nullable;
 

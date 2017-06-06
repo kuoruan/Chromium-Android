@@ -28,6 +28,7 @@ import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.annotations.MainDex;
 import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.ui.PhotoPickerListener;
 import org.chromium.ui.R;
 import org.chromium.ui.UiUtils;
 
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A dialog that is triggered from a file input field that allows a user to select a file based on
@@ -43,8 +45,8 @@ import java.util.List;
  */
 @JNINamespace("ui")
 @MainDex
-public class SelectFileDialog
-        implements WindowAndroid.IntentCallback, WindowAndroid.PermissionCallback {
+public class SelectFileDialog implements WindowAndroid.IntentCallback,
+                                         WindowAndroid.PermissionCallback, PhotoPickerListener {
     private static final String TAG = "SelectFileDialog";
     private static final String IMAGE_TYPE = "image/";
     private static final String VIDEO_TYPE = "video/";
@@ -240,6 +242,12 @@ public class SelectFileDialog
             if (soundRecorder != null) extraIntents.add(soundRecorder);
         }
 
+        // Use new photo picker, if available.
+        Activity activity = mWindowAndroid.getActivity().get();
+        if (activity != null && UiUtils.showPhotoPicker(activity, this, mAllowMultiple)) {
+            return;
+        }
+
         Intent chooser = new Intent(Intent.ACTION_CHOOSER);
         if (!extraIntents.isEmpty()) {
             chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS,
@@ -252,12 +260,43 @@ public class SelectFileDialog
         }
     }
 
+    @Override
+    public void onPickerUserAction(Action action, String[] photos) {
+        UiUtils.dismissPhotoPicker();
+
+        switch (action) {
+            case CANCEL:
+                onFileNotSelected();
+                break;
+
+            case PHOTOS_SELECTED:
+                // TODO(finnur): Implement.
+                onFileNotSelected();
+                break;
+
+            case LAUNCH_GALLERY:
+                // TODO(finnur): Implement.
+                onFileNotSelected();
+                break;
+
+            case LAUNCH_CAMERA:
+                // TODO(finnur): Implement.
+                onFileNotSelected();
+                break;
+        }
+    }
+
+    @Override
+    public Map<String, Long> getFilesForTesting() {
+        return null;
+    }
+
     private class GetCameraIntentTask extends AsyncTask<Void, Void, Uri> {
         @Override
         public Uri doInBackground(Void...voids) {
             try {
                 Context context = mWindowAndroid.getApplicationContext();
-                return ApiCompatibilityUtils.getUriForImageCaptureFile(context,
+                return ApiCompatibilityUtils.getUriForImageCaptureFile(
                         getFileForImageCapture(context));
             } catch (IOException e) {
                 Log.e(TAG, "Cannot retrieve content uri from file", e);

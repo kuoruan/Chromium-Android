@@ -21,6 +21,7 @@
         android:background="@android:color/white"
         app:stackedMargin="@dimen/infobar_margin_between_stacked_buttons"
         app:primaryButtonText="@string/done"
-        app:secondaryButtonText="@string/cancel" />
+        app:secondaryButtonText="@string/cancel"
+        app:buttonAlignment="end" />
 
 </merge>

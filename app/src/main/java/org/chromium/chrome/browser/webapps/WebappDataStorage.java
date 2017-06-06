@@ -18,6 +18,7 @@ import org.chromium.chrome.browser.ShortcutHelper;
 import org.chromium.chrome.browser.ShortcutSource;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.content_public.common.ScreenOrientationValues;
+import org.chromium.webapk.lib.common.WebApkConstants;
 
 import java.util.concurrent.TimeUnit;
 
@@ -51,15 +52,27 @@ public class WebappDataStorage {
             "last_check_web_manifest_update_time";
 
     // The last time that the WebAPK update request completed (successfully or unsuccessfully).
-    static final String KEY_LAST_WEBAPK_UPDATE_REQUEST_COMPLETE_TIME =
-            "last_webapk_update_request_complete_time";
+    static final String KEY_LAST_UPDATE_REQUEST_COMPLETE_TIME = "last_update_request_complete_time";
 
     // Whether the last WebAPK update request succeeded.
-    static final String KEY_DID_LAST_WEBAPK_UPDATE_REQUEST_SUCCEED =
-            "did_last_webapk_update_request_succeed";
+    static final String KEY_DID_LAST_UPDATE_REQUEST_SUCCEED = "did_last_update_request_succeed";
 
     // The number of times that updating a WebAPK in the background has been requested.
     static final String KEY_UPDATE_REQUESTED = "update_requested";
+
+    // Whether to check updates less frequently.
+    static final String KEY_RELAX_UPDATES = "relax_updates";
+
+    // Number of milliseconds between checks for whether the WebAPK's Web Manifest has changed.
+    public static final long UPDATE_INTERVAL = TimeUnit.DAYS.toMillis(3L);
+
+    // Number of milliseconds between checks of updates for a WebAPK that is expected to check
+    // updates less frequently. crbug.com/680128.
+    public static final long RELAXED_UPDATE_INTERVAL = TimeUnit.DAYS.toMillis(30L);
+
+    // Number of milliseconds to wait before re-requesting an updated WebAPK from the WebAPK
+    // server if the previous update attempt failed.
+    public static final long RETRY_UPDATE_DURATION = TimeUnit.HOURS.toMillis(12L);
 
     // Unset/invalid constants for last used times and URLs. 0 is used as the null last used time as
     // WebappRegistry assumes that this is always a valid timestamp.
@@ -186,19 +199,16 @@ public class WebappDataStorage {
         // Use "standalone" as the default display mode as this was the original assumed default for
         // all web apps.
         return ShortcutHelper.createWebappShortcutIntent(mId,
-                mPreferences.getString(KEY_ACTION, null),
-                mPreferences.getString(KEY_URL, null),
-                mPreferences.getString(KEY_SCOPE, null),
-                mPreferences.getString(KEY_NAME, null),
+                mPreferences.getString(KEY_ACTION, null), mPreferences.getString(KEY_URL, null),
+                mPreferences.getString(KEY_SCOPE, null), mPreferences.getString(KEY_NAME, null),
                 mPreferences.getString(KEY_SHORT_NAME, null),
-                ShortcutHelper.decodeBitmapFromString(
-                        mPreferences.getString(KEY_ICON, null)), version,
-                mPreferences.getInt(KEY_DISPLAY_MODE, WebDisplayMode.Standalone),
+                ShortcutHelper.decodeBitmapFromString(mPreferences.getString(KEY_ICON, null)),
+                version, mPreferences.getInt(KEY_DISPLAY_MODE, WebDisplayMode.kStandalone),
                 mPreferences.getInt(KEY_ORIENTATION, ScreenOrientationValues.DEFAULT),
-                mPreferences.getLong(KEY_THEME_COLOR,
-                        ShortcutHelper.MANIFEST_COLOR_INVALID_OR_MISSING),
-                mPreferences.getLong(KEY_BACKGROUND_COLOR,
-                        ShortcutHelper.MANIFEST_COLOR_INVALID_OR_MISSING),
+                mPreferences.getLong(
+                        KEY_THEME_COLOR, ShortcutHelper.MANIFEST_COLOR_INVALID_OR_MISSING),
+                mPreferences.getLong(
+                        KEY_BACKGROUND_COLOR, ShortcutHelper.MANIFEST_COLOR_INVALID_OR_MISSING),
                 mPreferences.getBoolean(KEY_IS_ICON_GENERATED, false));
     }
 
@@ -246,9 +256,9 @@ public class WebappDataStorage {
             editor.putInt(KEY_VERSION, ShortcutHelper.WEBAPP_SHORTCUT_VERSION);
 
             // "Standalone" was the original assumed default for all web apps.
-            editor.putInt(KEY_DISPLAY_MODE, IntentUtils.safeGetIntExtra(
-                        shortcutIntent, ShortcutHelper.EXTRA_DISPLAY_MODE,
-                        WebDisplayMode.Standalone));
+            editor.putInt(KEY_DISPLAY_MODE,
+                    IntentUtils.safeGetIntExtra(shortcutIntent, ShortcutHelper.EXTRA_DISPLAY_MODE,
+                            WebDisplayMode.kStandalone));
             editor.putInt(KEY_ORIENTATION, IntentUtils.safeGetIntExtra(
                         shortcutIntent, ShortcutHelper.EXTRA_ORIENTATION,
                         ScreenOrientationValues.DEFAULT));
@@ -264,8 +274,9 @@ public class WebappDataStorage {
             editor.putInt(KEY_SOURCE, IntentUtils.safeGetIntExtra(
                         shortcutIntent, ShortcutHelper.EXTRA_SOURCE,
                         ShortcutSource.UNKNOWN));
-            editor.putString(KEY_WEBAPK_PACKAGE_NAME, IntentUtils.safeGetStringExtra(
-                    shortcutIntent, ShortcutHelper.EXTRA_WEBAPK_PACKAGE_NAME));
+            editor.putString(KEY_WEBAPK_PACKAGE_NAME,
+                    IntentUtils.safeGetStringExtra(
+                            shortcutIntent, WebApkConstants.EXTRA_WEBAPK_PACKAGE_NAME));
             updated = true;
         }
         if (updated) editor.apply();
@@ -302,9 +313,10 @@ public class WebappDataStorage {
         editor.remove(KEY_URL);
         editor.remove(KEY_SCOPE);
         editor.remove(KEY_LAST_CHECK_WEB_MANIFEST_UPDATE_TIME);
-        editor.remove(KEY_LAST_WEBAPK_UPDATE_REQUEST_COMPLETE_TIME);
-        editor.remove(KEY_DID_LAST_WEBAPK_UPDATE_REQUEST_SUCCEED);
+        editor.remove(KEY_LAST_UPDATE_REQUEST_COMPLETE_TIME);
+        editor.remove(KEY_DID_LAST_UPDATE_REQUEST_SUCCEED);
         editor.remove(KEY_UPDATE_REQUESTED);
+        editor.remove(KEY_RELAX_UPDATES);
         editor.apply();
     }
 
@@ -367,7 +379,7 @@ public class WebappDataStorage {
      * Returns the completion time of the last check for whether the WebAPK's Web Manifest was
      * updated. This time needs to be set when the WebAPK is registered.
      */
-    long getLastCheckForWebManifestUpdateTime() {
+    private long getLastCheckForWebManifestUpdateTime() {
         return mPreferences.getLong(KEY_LAST_CHECK_WEB_MANIFEST_UPDATE_TIME, LAST_USED_INVALID);
     }
 
@@ -376,7 +388,7 @@ public class WebappDataStorage {
      */
     void updateTimeOfLastWebApkUpdateRequestCompletion() {
         mPreferences.edit()
-                .putLong(KEY_LAST_WEBAPK_UPDATE_REQUEST_COMPLETE_TIME, sClock.currentTimeMillis())
+                .putLong(KEY_LAST_UPDATE_REQUEST_COMPLETE_TIME, sClock.currentTimeMillis())
                 .apply();
     }
 
@@ -385,24 +397,21 @@ public class WebappDataStorage {
      * This time needs to be set when the WebAPK is registered.
      */
     long getLastWebApkUpdateRequestCompletionTime() {
-        return mPreferences.getLong(
-                KEY_LAST_WEBAPK_UPDATE_REQUEST_COMPLETE_TIME, LAST_USED_INVALID);
+        return mPreferences.getLong(KEY_LAST_UPDATE_REQUEST_COMPLETE_TIME, LAST_USED_INVALID);
     }
 
     /**
-     * Updates the result of whether the last update request to WebAPK Server succeeded.
+     * Updates whether the last update request to WebAPK Server succeeded.
      */
     void updateDidLastWebApkUpdateRequestSucceed(boolean success) {
-        mPreferences.edit()
-                .putBoolean(KEY_DID_LAST_WEBAPK_UPDATE_REQUEST_SUCCEED, success)
-                .apply();
+        mPreferences.edit().putBoolean(KEY_DID_LAST_UPDATE_REQUEST_SUCCEED, success).apply();
     }
 
     /**
      * Returns whether the last update request to WebAPK Server succeeded.
      */
     boolean getDidLastWebApkUpdateRequestSucceed() {
-        return mPreferences.getBoolean(KEY_DID_LAST_WEBAPK_UPDATE_REQUEST_SUCCEED, false);
+        return mPreferences.getBoolean(KEY_DID_LAST_UPDATE_REQUEST_SUCCEED, false);
     }
 
     /**
@@ -424,6 +433,42 @@ public class WebappDataStorage {
      */
     int getUpdateRequests() {
         return mPreferences.getInt(KEY_UPDATE_REQUESTED, 0);
+    }
+
+    /**
+     * Returns whether the previous WebAPK update attempt succeeded. Returns true if there has not
+     * been any update attempts.
+     */
+    boolean didPreviousUpdateSucceed() {
+        long lastUpdateCompletionTime = getLastWebApkUpdateRequestCompletionTime();
+        if (lastUpdateCompletionTime == WebappDataStorage.LAST_USED_INVALID
+                || lastUpdateCompletionTime == WebappDataStorage.LAST_USED_UNSET) {
+            return true;
+        }
+        return getDidLastWebApkUpdateRequestSucceed();
+    }
+
+    /** Sets whether we should check for updates less frequently. */
+    void setRelaxedUpdates(boolean relaxUpdates) {
+        mPreferences.edit().putBoolean(KEY_RELAX_UPDATES, relaxUpdates).apply();
+    }
+
+    /** Returns whether we should check for updates less frequently. */
+    private boolean shouldRelaxUpdates() {
+        return mPreferences.getBoolean(KEY_RELAX_UPDATES, false);
+    }
+
+    /** Returns whether we should check for update. */
+    boolean shouldCheckForUpdate() {
+        long checkUpdatesInterval =
+                shouldRelaxUpdates() ? RELAXED_UPDATE_INTERVAL : UPDATE_INTERVAL;
+        long now = sClock.currentTimeMillis();
+        long sinceLastCheckDurationMs = now - getLastCheckForWebManifestUpdateTime();
+        if (sinceLastCheckDurationMs >= checkUpdatesInterval) return true;
+
+        long sinceLastUpdateRequestDurationMs = now - getLastWebApkUpdateRequestCompletionTime();
+        return sinceLastUpdateRequestDurationMs >= WebappDataStorage.RETRY_UPDATE_DURATION
+                && !didPreviousUpdateSucceed();
     }
 
     protected WebappDataStorage(String webappId) {

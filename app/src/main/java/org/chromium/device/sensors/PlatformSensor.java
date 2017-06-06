@@ -205,9 +205,9 @@ public class PlatformSensor implements SensorEventListener {
      * Updates reading at native device::PlatformSensorAndroid.
      */
     protected void updateSensorReading(
-            double timestamp, double value1, double value2, double value3) {
+            double timestamp, double value1, double value2, double value3, double value4) {
         nativeUpdatePlatformSensorReading(
-                mNativePlatformSensorAndroid, timestamp, value1, value2, value3);
+                mNativePlatformSensorAndroid, timestamp, value1, value2, value3, value4);
     }
 
     @Override
@@ -224,17 +224,22 @@ public class PlatformSensor implements SensorEventListener {
         double timestamp = event.timestamp * SECONDS_IN_NANOSECOND;
         switch (event.values.length) {
             case 1:
-                updateSensorReading(timestamp, event.values[0], 0.0, 0.0);
+                updateSensorReading(timestamp, event.values[0], 0.0, 0.0, 0.0);
                 break;
             case 2:
-                updateSensorReading(timestamp, event.values[0], event.values[1], 0.0);
+                updateSensorReading(timestamp, event.values[0], event.values[1], 0.0, 0.0);
+                break;
+            case 3:
+                updateSensorReading(
+                        timestamp, event.values[0], event.values[1], event.values[2], 0.0);
                 break;
             default:
-                updateSensorReading(timestamp, event.values[0], event.values[1], event.values[2]);
+                updateSensorReading(timestamp, event.values[0], event.values[1], event.values[2],
+                        event.values[3]);
         }
     }
 
     private native void nativeNotifyPlatformSensorError(long nativePlatformSensorAndroid);
     private native void nativeUpdatePlatformSensorReading(long nativePlatformSensorAndroid,
-            double timestamp, double value1, double value2, double value3);
+            double timestamp, double value1, double value2, double value3, double value4);
 }

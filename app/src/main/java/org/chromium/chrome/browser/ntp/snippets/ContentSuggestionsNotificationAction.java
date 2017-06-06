@@ -15,21 +15,25 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ContentSuggestionsNotificationAction {
-  @IntDef({
-      CONTENT_SUGGESTIONS_TAP, CONTENT_SUGGESTIONS_DISMISSAL, CONTENT_SUGGESTIONS_HIDE_DEADLINE,
-      CONTENT_SUGGESTIONS_HIDE_EXPIRY, CONTENT_SUGGESTIONS_HIDE_FRONTMOST,
-      CONTENT_SUGGESTIONS_HIDE_DISABLED, CONTENT_SUGGESTIONS_HIDE_SHUTDOWN,
-      MAX_CONTENT_SUGGESTIONS_NOTIFICATION_ACTION
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ContentSuggestionsNotificationActionEnum {}
-  public static final int CONTENT_SUGGESTIONS_TAP = 0;
-  public static final int CONTENT_SUGGESTIONS_DISMISSAL = 1;
-  public static final int CONTENT_SUGGESTIONS_HIDE_DEADLINE = 2;
-  public static final int CONTENT_SUGGESTIONS_HIDE_EXPIRY = 3;
-  public static final int CONTENT_SUGGESTIONS_HIDE_FRONTMOST = 4;
-  public static final int CONTENT_SUGGESTIONS_HIDE_DISABLED = 5;
-  public static final int CONTENT_SUGGESTIONS_HIDE_SHUTDOWN = 6;
-  public static final int MAX_CONTENT_SUGGESTIONS_NOTIFICATION_ACTION = 7;
+@IntDef({
+    ContentSuggestionsNotificationAction.TAP, ContentSuggestionsNotificationAction.DISMISSAL,
+    ContentSuggestionsNotificationAction.HIDE_DEADLINE,
+    ContentSuggestionsNotificationAction.HIDE_EXPIRY,
+    ContentSuggestionsNotificationAction.HIDE_FRONTMOST,
+    ContentSuggestionsNotificationAction.HIDE_DISABLED,
+    ContentSuggestionsNotificationAction.HIDE_SHUTDOWN,
+    ContentSuggestionsNotificationAction.OPEN_SETTINGS,
+    ContentSuggestionsNotificationAction.MAX_NOTIFICATION_ACTION
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ContentSuggestionsNotificationAction {
+  int TAP = 0;
+  int DISMISSAL = 1;
+  int HIDE_DEADLINE = 2;
+  int HIDE_EXPIRY = 3;
+  int HIDE_FRONTMOST = 4;
+  int HIDE_DISABLED = 5;
+  int HIDE_SHUTDOWN = 6;
+  int OPEN_SETTINGS = 7;
+  int MAX_NOTIFICATION_ACTION = 8;
 }

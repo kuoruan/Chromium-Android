@@ -13,39 +13,61 @@ import org.chromium.base.Callback;
  * triggering seed fetches on application startup.
  */
 public class VariationsSession {
-    private boolean mInitialized;
+    private boolean mRestrictModeFetchStarted;
     private String mRestrictMode;
 
     /**
      * Triggers to the native VariationsService that the application has entered the foreground.
      */
     public void start(Context context) {
-        if (!mInitialized) {
-            mInitialized = true;
-            // Check the restrict mode only once initially to avoid doing extra work each time the
-            // app enters foreground.
-            getRestrictMode(context, new Callback<String>() {
-                @Override
-                public void onResult(String restrictMode) {
-                    assert restrictMode != null;
-                    mRestrictMode = restrictMode;
-                    nativeStartVariationsSession(mRestrictMode);
-                }
-            });
-        // If |mRestrictMode| is null, async initialization is in progress and
-        // nativeStartVariationsSession will be called when it completes.
-        } else if (mRestrictMode != null) {
-            nativeStartVariationsSession(mRestrictMode);
+        // If |mRestrictModeFetchStarted| is true and |mRestrictMode| is null, then async
+        // initializationn is in progress and nativeStartVariationsSession() will be called
+        // when it completes.
+        if (mRestrictModeFetchStarted && mRestrictMode == null) {
+            return;
         }
+
+        mRestrictModeFetchStarted = true;
+        getRestrictModeValue(context, new Callback<String>() {
+            @Override
+            public void onResult(String restrictMode) {
+                nativeStartVariationsSession(mRestrictMode);
+            }
+        });
     }
 
     /**
      * Asynchronously returns the value of the "restrict" URL param that the variations service
-     * should use for variation seed requests.
+     * should use for variation seed requests. Public version that can be called externally.
+     * Uses the protected version (that could be overridden by subclasses) to actually get the
+     * value and also sets that value internally when retrieved.
+     * @param callback Callback that will be called with the param value when available.
+     */
+    public final void getRestrictModeValue(Context context, final Callback<String> callback) {
+        // If |mRestrictMode| is not null, the value has already been fetched and so it can
+        // simply be provided to the callback.
+        if (mRestrictMode != null) {
+            callback.onResult(mRestrictMode);
+            return;
+        }
+        getRestrictMode(context, new Callback<String>() {
+            @Override
+            public void onResult(String restrictMode) {
+                assert restrictMode != null;
+                mRestrictMode = restrictMode;
+                callback.onResult(restrictMode);
+            }
+        });
+    }
+
+    /**
+     * Asynchronously returns the value of the "restrict" URL param that the variations service
+     * should use for variation seed requests. This can be overriden by subclass to provide actual
+     * restrict values, which must not be null.
      */
     protected void getRestrictMode(Context context, Callback<String> callback) {
         callback.onResult("");
     }
 
-    private native void nativeStartVariationsSession(String restrictMode);
+    protected native void nativeStartVariationsSession(String restrictMode);
 }

@@ -7,6 +7,8 @@ package org.chromium.ui.resources;
 import android.graphics.Rect;
 import android.graphics.RectF;
 
+import org.chromium.ui.resources.statics.NinePatchData;
+
 /**
  * A resource that provides sizing information for layouts.
  */
@@ -16,9 +18,14 @@ public class LayoutResource {
     private final RectF mAperture;
 
     public LayoutResource(float pxToDp, Resource resource) {
-        Rect padding = resource.getPadding();
+        Rect padding = new Rect();
+        Rect aperture = new Rect();
+        NinePatchData ninePatchData = resource.getNinePatchData();
+        if (ninePatchData != null) {
+            padding = ninePatchData.getPadding();
+            aperture = ninePatchData.getAperture();
+        }
         Rect bitmapSize = resource.getBitmapSize();
-        Rect aperture = resource.getAperture();
 
         mPadding = new RectF(padding.left * pxToDp, padding.top * pxToDp, padding.right * pxToDp,
                 padding.bottom * pxToDp);
@@ -32,8 +39,7 @@ public class LayoutResource {
 
     /**
      * @return The padded content area of this resource in dp.  For 9-patches this will represent
-     *         the valid content of the 9-patch.  It can mean other things for other Resources
-     *         though.
+     *         the valid content of the 9-patch. In all other cases, it will be an empty rect.
      */
     public RectF getPadding() {
         return mPadding;
@@ -48,8 +54,8 @@ public class LayoutResource {
 
     /**
      * @return The aperture of this resource in dp.  For 9-patches this will represent the area of
-     *         the {@link Bitmap} that should not be stretched.  It can mean other things for other
-     *         Resources though.
+     *         the {@link Bitmap} that should not be stretched. In all other cases, it will be an
+     *         empty rect.
      */
     public RectF getAperture() {
         return mAperture;

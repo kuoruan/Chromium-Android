@@ -6,13 +6,13 @@ package org.chromium.chrome.browser.crash;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.PersistableBundle;
 
 import org.chromium.chrome.browser.preferences.privacy.PrivacyPreferencesManager;
 import org.chromium.components.minidump_uploader.MinidumpUploaderDelegate;
 import org.chromium.components.minidump_uploader.util.CrashReportingPermissionManager;
+import org.chromium.components.minidump_uploader.util.NetworkPermissionUtil;
 
 import java.io.File;
 
@@ -23,8 +23,6 @@ import java.io.File;
 public class ChromeMinidumpUploaderDelegate implements MinidumpUploaderDelegate {
     // PersistableBundle keys:
     static final String IS_CLIENT_IN_METRICS_SAMPLE = "isClientInMetricsSample";
-    static final String IS_CRASH_UPLOAD_DISABLED_BY_COMMAND_LINE =
-            "isCrashUploadDisabledByCommandLine";
     static final String IS_UPLOAD_ENABLED_FOR_TESTS = "isUploadEnabledForTests";
 
     /**
@@ -70,27 +68,7 @@ public class ChromeMinidumpUploaderDelegate implements MinidumpUploaderDelegate 
 
             @Override
             public boolean isNetworkAvailableForCrashUploads() {
-                // TODO(isherman): This code should really be shared with the Android Webview
-                // implementation, which tests whether the connection is metered, rather than
-                // testing the type of the connection. Implement this change in M59 -- for M58, it's
-                // more important to maintain consistency with the previous implementation. When
-                // changing this, note that forced uploads do *not* require unmetered connections.
-                NetworkInfo networkInfo = mConnectivityManager.getActiveNetworkInfo();
-                if (networkInfo == null || !networkInfo.isConnected()) return false;
-                return networkInfo.getType() == ConnectivityManager.TYPE_WIFI
-                        || networkInfo.getType() == ConnectivityManager.TYPE_ETHERNET;
-            }
-
-            @Override
-            public boolean isCrashUploadDisabledByCommandLine() {
-                return mPermissions.getBoolean(IS_CRASH_UPLOAD_DISABLED_BY_COMMAND_LINE, false);
-            }
-
-            @Override
-            public boolean isMetricsUploadPermitted() {
-                // This method is already represented by isClientInMetricsSample() and
-                // isNetworkAvailableForCrashUploads(), so it's fine to return a dummy value.
-                return true;
+                return NetworkPermissionUtil.isNetworkUnmetered(mConnectivityManager);
             }
 
             @Override

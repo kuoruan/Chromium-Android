@@ -82,8 +82,9 @@ public class AutofillPaymentInstrument extends PaymentInstrument
 
     @Override
     public void invokePaymentApp(String unusedMerchantName, String unusedOrigin,
-            byte[][] unusedCertificateChain, Map<String, PaymentMethodData> unusedMethodDataMap,
-            PaymentItem unusedTotal, List<PaymentItem> unusedDisplayItems,
+            String unusedIFrameOrigin, byte[][] unusedCertificateChain,
+            Map<String, PaymentMethodData> unusedMethodDataMap, PaymentItem unusedTotal,
+            List<PaymentItem> unusedDisplayItems,
             Map<String, PaymentDetailsModifier> unusedModifiers,
             InstrumentDetailsCallback callback) {
         // The billing address should never be null for a credit card at this point.
@@ -217,6 +218,7 @@ public class AutofillPaymentInstrument extends PaymentInstrument
      * @return Whether the card is complete and ready to be sent to the merchant as-is. If true,
      * this card has a valid card number, a non-empty name on card, and a complete billing address.
      */
+    @Override
     public boolean isComplete() {
         return mIsComplete;
     }
@@ -330,5 +332,19 @@ public class AutofillPaymentInstrument extends PaymentInstrument
     /** @return The billing address associated with this credit card. */
     public AutofillProfile getBillingAddress() {
         return mBillingAddress;
+    }
+
+    @Override
+    public String getPreviewString(String labelSeparator, int maxLength) {
+        StringBuilder previewString = new StringBuilder(getLabel());
+        if (maxLength < 0) return previewString.toString();
+
+        int networkNameEndIndex = previewString.indexOf(" ");
+        if (networkNameEndIndex > 0) {
+            // Only display card network name.
+            previewString.delete(networkNameEndIndex, previewString.length());
+        }
+        if (previewString.length() < maxLength) return previewString.toString();
+        return previewString.substring(0, maxLength / 2);
     }
 }

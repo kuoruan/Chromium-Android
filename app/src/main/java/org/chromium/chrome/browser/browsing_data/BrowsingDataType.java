@@ -15,17 +15,18 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class BrowsingDataType {
-  @IntDef({
-      HISTORY, CACHE, COOKIES, PASSWORDS, FORM_DATA, BOOKMARKS, NUM_TYPES
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface BrowsingDataTypeEnum {}
-  public static final int HISTORY = 0;
-  public static final int CACHE = 1;
-  public static final int COOKIES = 2;
-  public static final int PASSWORDS = 3;
-  public static final int FORM_DATA = 4;
-  public static final int BOOKMARKS = 5;
-  public static final int NUM_TYPES = 6;
+@IntDef({
+    BrowsingDataType.HISTORY, BrowsingDataType.CACHE, BrowsingDataType.COOKIES,
+    BrowsingDataType.PASSWORDS, BrowsingDataType.FORM_DATA, BrowsingDataType.BOOKMARKS,
+    BrowsingDataType.NUM_TYPES
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface BrowsingDataType {
+  int HISTORY = 0;
+  int CACHE = 1;
+  int COOKIES = 2;
+  int PASSWORDS = 3;
+  int FORM_DATA = 4;
+  int BOOKMARKS = 5;
+  int NUM_TYPES = 6;
 }

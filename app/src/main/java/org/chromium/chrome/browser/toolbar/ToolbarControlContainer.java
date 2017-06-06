@@ -17,6 +17,7 @@ import android.widget.FrameLayout;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.EdgeSwipeHandler;
+import org.chromium.chrome.browser.compositor.resources.ResourceFactory;
 import org.chromium.chrome.browser.contextualsearch.SwipeRecognizer;
 import org.chromium.chrome.browser.util.ViewUtils;
 import org.chromium.chrome.browser.widget.ClipDrawableProgressBar.DrawingInfo;
@@ -160,10 +161,11 @@ public class ToolbarControlContainer extends FrameLayout implements ControlConta
 
     private static class ToolbarViewResourceAdapter extends ViewResourceAdapter {
         private final int[] mTempPosition = new int[2];
+        private final Rect mLocationBarRect = new Rect();
+        private final Rect mToolbarRect = new Rect();
         private final View mToolbarContainer;
 
         private Toolbar mToolbar;
-        private int mToolbarActualHeightPx;
         private int mTabStripHeightPx;
 
         /** Builds the resource adapter for the toolbar. */
@@ -178,14 +180,7 @@ public class ToolbarControlContainer extends FrameLayout implements ControlConta
          */
         public void setToolbar(Toolbar toolbar) {
             mToolbar = toolbar;
-            int containerHeightResId = R.dimen.control_container_height;
-            if (mToolbar instanceof CustomTabToolbar) {
-                containerHeightResId = R.dimen.custom_tabs_control_container_height;
-            }
-            mToolbarActualHeightPx = mToolbarContainer.getResources().getDimensionPixelSize(
-                    containerHeightResId);
-            mTabStripHeightPx = mToolbarContainer.getResources().getDimensionPixelSize(
-                    R.dimen.tab_strip_height);
+            mTabStripHeightPx = mToolbar.getTabStripHeight();
         }
 
         /**
@@ -227,16 +222,18 @@ public class ToolbarControlContainer extends FrameLayout implements ControlConta
         }
 
         @Override
-        protected void computeContentPadding(Rect outContentPadding) {
-            outContentPadding.set(0, mTabStripHeightPx, mToolbarContainer.getWidth(),
-                    mToolbarActualHeightPx);
-        }
-
-        @Override
-        protected void computeContentAperture(Rect outContentAperture) {
-            mToolbar.getLocationBarContentRect(outContentAperture);
+        public long createNativeResource() {
             mToolbar.getPositionRelativeToContainer(mToolbarContainer, mTempPosition);
-            outContentAperture.offset(mTempPosition[0], mTempPosition[1]);
+            mToolbarRect.set(mTempPosition[0], mTempPosition[1], mToolbarContainer.getWidth(),
+                    mTempPosition[1] + mToolbar.getHeight());
+
+            mToolbar.getLocationBarContentRect(mLocationBarRect);
+            mLocationBarRect.offset(mTempPosition[0], mTempPosition[1]);
+
+            int shadowHeight =
+                    mToolbarContainer.getHeight() - mToolbar.getHeight() - mTabStripHeightPx;
+            return ResourceFactory.createToolbarContainerResource(
+                    mToolbarRect, mLocationBarRect, shadowHeight);
         }
     }
 

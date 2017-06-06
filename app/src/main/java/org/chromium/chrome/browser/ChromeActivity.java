@@ -20,7 +20,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.StrictMode;
 import android.os.SystemClock;
@@ -76,6 +75,7 @@ import org.chromium.chrome.browser.dom_distiller.DistilledPagePrefsView;
 import org.chromium.chrome.browser.dom_distiller.ReaderModeManager;
 import org.chromium.chrome.browser.download.DownloadManagerService;
 import org.chromium.chrome.browser.download.DownloadUtils;
+import org.chromium.chrome.browser.download.items.OfflineContentAggregatorNotificationBridgeUiFactory;
 import org.chromium.chrome.browser.firstrun.ForcedSigninProcessor;
 import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager;
 import org.chromium.chrome.browser.gsa.ContextReporter;
@@ -100,7 +100,7 @@ import org.chromium.chrome.browser.ntp.NewTabPageUma;
 import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
 import org.chromium.chrome.browser.offlinepages.OfflinePageUtils;
 import org.chromium.chrome.browser.omaha.UpdateMenuItemHelper;
-import org.chromium.chrome.browser.pageinfo.WebsiteSettingsPopup;
+import org.chromium.chrome.browser.page_info.PageInfoPopup;
 import org.chromium.chrome.browser.partnercustomizations.PartnerBrowserCustomizations;
 import org.chromium.chrome.browser.physicalweb.PhysicalWebShareActivity;
 import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
@@ -135,10 +135,11 @@ import org.chromium.chrome.browser.util.ColorUtils;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.vr_shell.VrShellDelegate;
 import org.chromium.chrome.browser.webapps.AddToHomescreenManager;
-import org.chromium.chrome.browser.widget.BottomSheet;
 import org.chromium.chrome.browser.widget.ControlContainer;
-import org.chromium.chrome.browser.widget.EmptyBottomSheetObserver;
 import org.chromium.chrome.browser.widget.FadingBackgroundView;
+import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
+import org.chromium.chrome.browser.widget.bottomsheet.BottomSheetContentController;
+import org.chromium.chrome.browser.widget.bottomsheet.EmptyBottomSheetObserver;
 import org.chromium.components.bookmarks.BookmarkId;
 import org.chromium.content.browser.ContentVideoView;
 import org.chromium.content.browser.ContentViewCore;
@@ -157,6 +158,7 @@ import org.chromium.ui.base.DeviceFormFactor;
 import org.chromium.ui.base.PageTransition;
 import org.chromium.ui.base.WindowAndroid;
 import org.chromium.ui.widget.Toast;
+import org.chromium.webapk.lib.client.WebApkNavigationClient;
 import org.chromium.webapk.lib.client.WebApkValidator;
 
 import java.util.ArrayList;
@@ -238,8 +240,6 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     // Observes when sync becomes ready to create the mContextReporter.
     private ProfileSyncService.SyncStateChangedListener mSyncStateChangedListener;
 
-    private ActivityWindowAndroid mWindowAndroid;
-
     private ChromeFullscreenManager mFullscreenManager;
     private boolean mCreatedFullscreenManager;
 
@@ -254,6 +254,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     private AppMenuHandler mAppMenuHandler;
     private ToolbarManager mToolbarManager;
     private BottomSheet mBottomSheet;
+    private BottomSheetContentController mBottomSheetContentController;
     private FadingBackgroundView mFadingBackgroundView;
 
     // Time in ms that it took took us to inflate the initial layout
@@ -284,6 +285,11 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     }
 
     @Override
+    protected ActivityWindowAndroid createWindowAndroid() {
+        return new ChromeWindow(this);
+    }
+
+    @Override
     public void preInflationStartup() {
         super.preInflationStartup();
 
@@ -295,8 +301,6 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         ApplicationInitialization.enableFullscreenFlags(
                 getResources(), this, getControlContainerHeightResource());
         getWindow().setBackgroundDrawable(getBackgroundDrawable());
-        mWindowAndroid = new ChromeWindow(this);
-        mWindowAndroid.restoreInstanceState(getSavedInstanceState());
 
         mFullscreenManager = createFullscreenManager();
         mCreatedFullscreenManager = true;
@@ -307,7 +311,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     public void postInflationStartup() {
         super.postInflationStartup();
 
-        mSnackbarManager = new SnackbarManager(this);
+        mSnackbarManager = new SnackbarManager(this, null);
         mDataUseSnackbarController = new DataUseSnackbarController(this, getSnackbarManager());
 
         mAssistStatusHandler = createAssistStatusHandler();
@@ -344,10 +348,11 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
 
         // Set up the animation placeholder to be the SurfaceView. This disables the
         // SurfaceView's 'hole' clipping during animations that are notified to the window.
-        mWindowAndroid.setAnimationPlaceholderView(mCompositorViewHolder.getSurfaceView());
+        getWindowAndroid().setAnimationPlaceholderView(mCompositorViewHolder.getCompositorView());
 
         // Inform the WindowAndroid of the keyboard accessory view.
-        mWindowAndroid.setKeyboardAccessoryView((ViewGroup) findViewById(R.id.keyboard_accessory));
+        getWindowAndroid().setKeyboardAccessoryView(
+                (ViewGroup) findViewById(R.id.keyboard_accessory));
         initializeToolbar();
         initializeTabModels();
         if (!isFinishing() && getFullscreenManager() != null) {
@@ -369,6 +374,14 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
                 }
             });
             mFadingBackgroundView.addObserver(mBottomSheet);
+
+            mBottomSheetContentController =
+                    (BottomSheetContentController) ((ViewStub) findViewById(R.id.bottom_nav_stub))
+                            .inflate();
+            int controlContainerHeight =
+                    ((ControlContainer) findViewById(R.id.control_container)).getView().getHeight();
+            mBottomSheetContentController.init(
+                    mBottomSheet, controlContainerHeight, mTabModelSelector, this);
         }
         ((BottomContainer) findViewById(R.id.bottom_container)).initialize(mFullscreenManager);
     }
@@ -422,17 +435,17 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
                 ControlContainer controlContainer =
                         (ControlContainer) findViewById(R.id.control_container);
 
+                // Inflate the correct toolbar layout for the device.
+                int toolbarLayoutId = getToolbarLayoutId();
+                if (toolbarLayoutId != NO_TOOLBAR_LAYOUT && controlContainer != null) {
+                    controlContainer.initWithToolbar(toolbarLayoutId);
+                }
+
                 // Get a handle to the bottom sheet if using the bottom control container.
                 if (controlContainerLayoutId == R.layout.bottom_control_container) {
                     View coordinator = findViewById(R.id.coordinator);
                     mBottomSheet = (BottomSheet) findViewById(R.id.bottom_sheet);
                     mBottomSheet.init(coordinator, controlContainer.getView());
-                }
-
-                // Inflate the correct toolbar layout for the device.
-                int toolbarLayoutId = getToolbarLayoutId();
-                if (toolbarLayoutId != NO_TOOLBAR_LAYOUT && controlContainer != null) {
-                    controlContainer.initWithToolbar(toolbarLayoutId);
                 }
             } finally {
                 StrictMode.setThreadPolicy(oldPolicy);
@@ -444,7 +457,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         // Set the status bar color to black by default. This is an optimization for
         // Chrome not to draw under status and navigation bars when we use the default
         // black status bar
-        ApiCompatibilityUtils.setStatusBarColor(getWindow(), Color.BLACK);
+        setStatusBarColor(null, Color.BLACK);
 
         ViewGroup rootView = (ViewGroup) getWindow().getDecorView().getRootView();
         mCompositorViewHolder = (CompositorViewHolder) findViewById(R.id.compositor_view_holder);
@@ -458,6 +471,11 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         // non-content displaying things such as the OSK.
         mInsetObserverView = InsetObserverView.create(this);
         rootView.addView(mInsetObserverView, 0);
+    }
+
+    @Override
+    public boolean shouldStartGpuProcess() {
+        return true;
     }
 
     /**
@@ -499,6 +517,9 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
                     }
                 }
             }
+
+            @Override
+            public void onMenuHighlightChanged(boolean highlighting) {}
         });
     }
 
@@ -596,6 +617,11 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
                         (ControlContainer) findViewById(R.id.control_container);
                 controlContainer.getToolbarResourceAdapter().invalidate(null);
             }
+
+            @Override
+            public void onContentChanged(Tab tab) {
+                if (getBottomSheet() != null) setStatusBarColor(tab, tab.getDefaultThemeColor());
+            }
         };
 
         if (mAssistStatusHandler != null) {
@@ -635,8 +661,18 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
      * Get the Chrome Home bottom sheet if it exists.
      * @return The bottom sheet or null.
      */
+    @Nullable
     public BottomSheet getBottomSheet() {
         return mBottomSheet;
+    }
+
+    /**
+     * Get the Chrome Home bottom sheet content controller if it exists.
+     * @return The {@link BottomSheetContentController} or null.
+     */
+    @Nullable
+    public BottomSheetContentController getBottomSheetContentController() {
+        return mBottomSheetContentController;
     }
 
     /**
@@ -705,10 +741,10 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
 
         setTabContentManager(new TabContentManager(this, getContentOffsetProvider(),
                 DeviceClassManager.enableSnapshots()));
-        mCompositorViewHolder.onNativeLibraryReady(mWindowAndroid, getTabContentManager());
+        mCompositorViewHolder.onNativeLibraryReady(getWindowAndroid(), getTabContentManager());
 
         if (isContextualSearchAllowed() && ContextualSearchFieldTrial.isEnabled()) {
-            mContextualSearchManager = new ContextualSearchManager(this, mWindowAndroid, this);
+            mContextualSearchManager = new ContextualSearchManager(this, getWindowAndroid(), this);
         }
 
         if (ReaderModeManager.isEnabled(this)) {
@@ -734,7 +770,6 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         } else {
             ContextReporter.reportStatus(ContextReporter.STATUS_GSA_NOT_AVAILABLE);
         }
-        mCompositorViewHolder.resetFlags();
 
         // postDeferredStartupIfNeeded() is called in TabModelSelectorTabObsever#onLoadStopped(),
         // #onPageLoadFinished() and #onCrash(). If we are not actively loading a tab (e.g.
@@ -812,12 +847,14 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         if (getActivityTab() != null) {
             LaunchMetrics.commitLaunchMetrics(getActivityTab().getWebContents());
         }
+        ContentViewCore cvc = getContentViewCore();
+        if (cvc != null) cvc.onResume();
         FeatureUtilities.setCustomTabVisible(isCustomTab());
         FeatureUtilities.setIsInMultiWindowMode(
                 MultiWindowUtils.getInstance().isInMultiWindowMode(this));
 
         VideoPersister.getInstance().cleanup(this);
-        VrShellDelegate.maybeRegisterVREntryHook(this);
+        VrShellDelegate.maybeRegisterVrEntryHook(this);
     }
 
     @Override
@@ -830,10 +867,10 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     public void onPauseWithNative() {
         RecordUserAction.record("MobileGoToBackground");
         Tab tab = getActivityTab();
-        if (tab != null) {
-            getTabContentManager().cacheTabThumbnail(tab);
-        }
-        VrShellDelegate.maybeUnregisterVREntryHook(this);
+        if (tab != null) getTabContentManager().cacheTabThumbnail(tab);
+        ContentViewCore cvc = getContentViewCore();
+        if (cvc != null) cvc.onPause();
+        VrShellDelegate.maybeUnregisterVrEntryHook(this);
         markSessionEnd();
         super.onPauseWithNative();
     }
@@ -936,8 +973,8 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         DeferredStartupHandler.getInstance().addDeferredTask(new Runnable() {
             @Override
             public void run() {
-                if (isActivityDestroyed() || mBottomSheet == null) return;
-                mBottomSheet.initializeDefaultContent();
+                if (isActivityDestroyed() || mBottomSheetContentController == null) return;
+                mBottomSheetContentController.initializeDefaultContent();
             }
         });
     }
@@ -1057,11 +1094,6 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
             if (selector != null) selector.destroy();
         }
 
-        if (mWindowAndroid != null) {
-            mWindowAndroid.destroy();
-            mWindowAndroid = null;
-        }
-
         CombinedPolicyProvider.get().removePolicyChangeListener(this);
 
         if (mTabContentManager != null) {
@@ -1088,33 +1120,6 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
      * by the {@link WindowAndroid}.
      */
     protected void onDestroyInternal() {
-    }
-
-    /**
-     * This will handle passing {@link Intent} results back to the {@link WindowAndroid}.  It will
-     * return whether or not the {@link WindowAndroid} has consumed the event or not.
-     */
-    @Override
-    public boolean onActivityResultWithNative(int requestCode, int resultCode, Intent intent) {
-        if (super.onActivityResultWithNative(requestCode, resultCode, intent)) return true;
-        return mWindowAndroid.onActivityResult(requestCode, resultCode, intent);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            int[] grantResults) {
-        if (mWindowAndroid != null) {
-            if (mWindowAndroid.onRequestPermissionsResult(requestCode, permissions, grantResults)) {
-                return;
-            }
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        mWindowAndroid.saveInstanceState(outState);
     }
 
     /**
@@ -1163,9 +1168,9 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     @Override
     public void finishNativeInitialization() {
         mNativeInitialized = true;
+        OfflineContentAggregatorNotificationBridgeUiFactory.instance();
         maybeRemoveWindowBackground();
-        DownloadManagerService.getDownloadManagerService(
-                getApplicationContext()).onActivityLaunched();
+        DownloadManagerService.getDownloadManagerService().onActivityLaunched();
 
         VrShellDelegate.onNativeLibraryAvailable();
         super.finishNativeInitialization();
@@ -1347,6 +1352,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
      * @return The resource id that contains how large the browser controls are.
      */
     public int getControlContainerHeightResource() {
+        if (mBottomSheet != null) return R.dimen.bottom_control_container_height;
         return R.dimen.control_container_height;
     }
 
@@ -1502,13 +1508,6 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
      */
     public ContentViewCore getCurrentContentViewCore() {
         return TabModelUtils.getCurrentContentViewCore(getCurrentTabModel());
-    }
-
-    /**
-     * @return A {@link WindowAndroid} instance.
-     */
-    public WindowAndroid getWindowAndroid() {
-        return mWindowAndroid;
     }
 
     /**
@@ -1691,6 +1690,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
      * and visa-versa.
      * @param isInMultiWindowMode True if the activity is in multi-window mode.
      */
+    @Override
     public void onMultiWindowModeChanged(boolean isInMultiWindowMode) {
         recordMultiWindowModeChangedUserAction(isInMultiWindowMode);
 
@@ -1723,7 +1723,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
 
     @Override
     public final void onBackPressed() {
-        RecordUserAction.record("SystemBack");
+        if (mNativeInitialized) RecordUserAction.record("SystemBack");
         if (VrShellDelegate.onBackPressed()) return;
         if (mCompositorViewHolder != null) {
             LayoutManager layoutManager = mCompositorViewHolder.getLayoutManager();
@@ -1838,8 +1838,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
                 RecordUserAction.record("MobileMenuReload");
             }
         } else if (id == R.id.info_menu_id) {
-            WebsiteSettingsPopup.show(
-                    this, currentTab, null, WebsiteSettingsPopup.OPENED_FROM_MENU);
+            PageInfoPopup.show(this, currentTab, null, PageInfoPopup.OPENED_FROM_MENU);
         } else if (id == R.id.open_history_menu_id) {
             if (NewTabPage.isNTPUrl(currentTab.getUrl())) {
                 NewTabPageUma.recordAction(NewTabPageUma.ACTION_OPENED_HISTORY_MANAGER);
@@ -1859,6 +1858,11 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
                 RecordUserAction.record("MobileMenuPrint");
             }
         } else if (id == R.id.add_to_homescreen_id) {
+            // Record whether or not we have finished installability checks for this page when the
+            // user clicks the add to homescren menu item. This will let us determine how effective
+            // an on page-load check will be in speeding up WebAPK installation.
+            currentTab.getAppBannerManager().recordMenuItemAddToHomescreen();
+
             AddToHomescreenManager addToHomescreenManager =
                     new AddToHomescreenManager(this, currentTab);
             addToHomescreenManager.start();
@@ -1866,8 +1870,8 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         } else if (id == R.id.open_webapk_id) {
             Context context = ContextUtils.getApplicationContext();
             String packageName = WebApkValidator.queryWebApkPackage(context, currentTab.getUrl());
-            Intent launchIntent =
-                    context.getPackageManager().getLaunchIntentForPackage(packageName);
+            Intent launchIntent = WebApkNavigationClient.createLaunchWebApkIntent(
+                    packageName, currentTab.getUrl(), false);
             boolean launchFailed = false;
             if (launchIntent != null) {
                 try {
@@ -2039,13 +2043,6 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         }
     }
 
-    @Override
-    public void onContextMenuClosed(Menu menu) {
-        if (mWindowAndroid == null) return;
-
-        mWindowAndroid.onContextMenuClosed();
-    }
-
     private boolean shouldDisableHardwareAcceleration() {
         // Low end devices should disable hardware acceleration for memory gains.
         if (SysUtils.isLowEndDevice()) return true;
@@ -2101,10 +2098,9 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     @Nullable public static ChromeActivity fromWebContents(@Nullable WebContents webContents) {
         if (webContents == null) return null;
 
-        ContentViewCore contentViewCore = ContentViewCore.fromWebContents(webContents);
-        if (contentViewCore == null) return null;
+        if (webContents.isDestroyed()) return null;
 
-        WindowAndroid window = contentViewCore.getWindowAndroid();
+        WindowAndroid window = webContents.getTopLevelNativeWindow();
         if (window == null) return null;
 
         Activity activity = window.getActivity().get();
@@ -2136,15 +2132,25 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         }
     }
 
+    @Override
+    public boolean onActivityResultWithNative(int requestCode, int resultCode, Intent intent) {
+        if (super.onActivityResultWithNative(requestCode, resultCode, intent)) return true;
+        if (requestCode == VrShellDelegate.EXIT_VR_RESULT) {
+            VrShellDelegate.onExitVrResult(resultCode);
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Called when VR mode is entered using this activity. 2D UI components that steal focus or
      * draw over VR contents should be hidden in this call.
      */
-    public void onEnterVR() {}
+    public void onEnterVr() {}
 
     /**
      * Called when VR mode using this activity is exited. Any state set for VR should be restored
      * in this call, including showing 2D UI that was hidden.
      */
-    public void onExitVR() {}
+    public void onExitVr() {}
 }

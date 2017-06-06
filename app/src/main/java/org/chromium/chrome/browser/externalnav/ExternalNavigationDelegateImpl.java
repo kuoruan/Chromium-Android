@@ -384,31 +384,34 @@ public class ExternalNavigationDelegateImpl implements ExternalNavigationDelegat
 
         Activity activity = (Activity) context;
         new AlertDialog.Builder(activity, R.style.AlertDialogTheme)
-            .setTitle(R.string.external_app_leave_incognito_warning_title)
-            .setMessage(R.string.external_app_leave_incognito_warning)
-            .setPositiveButton(R.string.ok, new OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        startActivity(intent, proxy);
-                        if (tab != null && !tab.isClosing() && tab.isInitialized()
-                                && needsToCloseTab) {
-                            closeTab(tab);
-                        }
-                    }
-                })
-            .setNegativeButton(R.string.cancel, new OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        loadIntent(intent, referrerUrl, fallbackUrl, tab, needsToCloseTab, true);
-                    }
-                })
-            .setOnCancelListener(new OnCancelListener() {
+                .setTitle(R.string.external_app_leave_incognito_warning_title)
+                .setMessage(R.string.external_app_leave_incognito_warning)
+                .setPositiveButton(R.string.external_app_leave_incognito_leave,
+                        new OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                startActivity(intent, proxy);
+                                if (tab != null && !tab.isClosing() && tab.isInitialized()
+                                        && needsToCloseTab) {
+                                    closeTab(tab);
+                                }
+                            }
+                        })
+                .setNegativeButton(R.string.external_app_leave_incognito_stay,
+                        new OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                loadIntent(intent, referrerUrl, fallbackUrl, tab, needsToCloseTab,
+                                        true);
+                            }
+                        })
+                .setOnCancelListener(new OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
                         loadIntent(intent, referrerUrl, fallbackUrl, tab, needsToCloseTab, true);
                     }
                 })
-            .show();
+                .show();
     }
 
     @Override

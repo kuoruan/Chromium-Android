@@ -20,7 +20,6 @@ import android.util.AttributeSet;
 import android.util.Pair;
 import android.view.DragEvent;
 import android.view.MotionEvent;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityEvent;
@@ -55,9 +54,9 @@ import org.chromium.chrome.browser.widget.ClipDrawableProgressBar.DrawingInfo;
 import org.chromium.chrome.browser.widget.ControlContainer;
 import org.chromium.content.browser.ContentView;
 import org.chromium.content.browser.ContentViewCore;
-import org.chromium.content.browser.SPenSupport;
 import org.chromium.ui.UiUtils;
 import org.chromium.ui.base.DeviceFormFactor;
+import org.chromium.ui.base.SPenSupport;
 import org.chromium.ui.base.WindowAndroid;
 import org.chromium.ui.resources.ResourceManager;
 import org.chromium.ui.resources.dynamics.DynamicResourceLoader;
@@ -287,14 +286,6 @@ public class CompositorViewHolder extends FrameLayout
     }
 
     /**
-     * Reset command line flags. This gets called after the native library finishes
-     * loading.
-     */
-    public void resetFlags() {
-        mCompositorView.resetFlags();
-    }
-
-    /**
      * Should be called for cleanup when the CompositorView instance is no longer used.
      */
     public void shutDown() {
@@ -418,9 +409,9 @@ public class CompositorViewHolder extends FrameLayout
     }
 
     /**
-     * @return The SurfaceView used by the Compositor.
+     * @return The SurfaceView proxy used by the Compositor.
      */
-    public SurfaceView getSurfaceView() {
+    public View getCompositorView() {
         return mCompositorView;
     }
 
@@ -497,11 +488,7 @@ public class CompositorViewHolder extends FrameLayout
         ContentViewCore contentViewCore = mTabVisible.getContentViewCore();
         if (contentViewCore == null) return;
 
-        int actionMasked = e.getActionMasked();
-
-        if (SPenSupport.isSPenSupported(getContext())) {
-            actionMasked = SPenSupport.convertSPenEventAction(actionMasked);
-        }
+        int actionMasked = SPenSupport.convertSPenEventAction(e.getActionMasked());
 
         if (actionMasked == MotionEvent.ACTION_DOWN
                 || actionMasked == MotionEvent.ACTION_HOVER_ENTER) {
@@ -974,13 +961,13 @@ public class CompositorViewHolder extends FrameLayout
      * {@link CompositorViewHolder} so that VR can take ownership of Chrome's rendering.
      * @return The detached {@link TabModelSelector}.
      */
-    public TabModelSelector detachForVR() {
+    public TabModelSelector detachForVr() {
         if (mTabModelSelector != null) mTabModelSelector.removeObserver(mTabModelSelectorObserver);
         TabModelSelector selector = mTabModelSelector;
         mTabModelSelector = null;
         mLayerTitleCache.setTabModelSelector(null);
         setTab(null);
-        getSurfaceView().setVisibility(View.INVISIBLE);
+        getCompositorView().setVisibility(View.INVISIBLE);
         return selector;
     }
 
@@ -989,8 +976,8 @@ public class CompositorViewHolder extends FrameLayout
      * so that it can take back ownership of Chrome's rendering.
      * @param tabModelSelector
      */
-    public void onExitVR(TabModelSelector tabModelSelector) {
-        getSurfaceView().setVisibility(View.VISIBLE);
+    public void onExitVr(TabModelSelector tabModelSelector) {
+        getCompositorView().setVisibility(View.VISIBLE);
         attachToTabModelSelector(tabModelSelector);
     }
 

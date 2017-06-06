@@ -15,23 +15,22 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class UserAgentOverrideOption {
-  @IntDef({
-      INHERIT, FALSE, TRUE
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface UserAgentOverrideOptionEnum {}
+@IntDef({
+    UserAgentOverrideOption.INHERIT, UserAgentOverrideOption.FALSE, UserAgentOverrideOption.TRUE
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface UserAgentOverrideOption {
   /**
    * Use the override value from the previous NavigationEntry in the NavigationController.
    */
-  public static final int INHERIT = 0;
+  int INHERIT = 0;
   /**
    * Use the default user agent.
    */
-  public static final int FALSE = 1;
+  int FALSE = 1;
   /**
    * Use the user agent override, if it's available. Adding new UserAgentOverrideOption? Also update
    * LoadUrlParams.java static constants.
    */
-  public static final int TRUE = 2;
+  int TRUE = 2;
 }

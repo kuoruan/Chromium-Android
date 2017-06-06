@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.preferences.privacy;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.browsing_data.TimePeriod;
 
 /**
  * The base class for a clear browsing data tab.
@@ -36,6 +38,25 @@ public class ClearBrowsingDataPreferencesTab extends ClearBrowsingDataPreference
     @Override
     protected int getPreferenceXmlId() {
         return R.xml.clear_browsing_data_preferences_tab;
+    }
+
+    @Override
+    protected TimePeriodSpinnerOption[] getTimePeriodSpinnerOptions() {
+        Activity activity = getActivity();
+
+        TimePeriodSpinnerOption[] options = new TimePeriodSpinnerOption[] {
+                new TimePeriodSpinnerOption(TimePeriod.LAST_HOUR,
+                        activity.getString(R.string.clear_browsing_data_tab_period_hour)),
+                new TimePeriodSpinnerOption(TimePeriod.LAST_DAY,
+                        activity.getString(R.string.clear_browsing_data_tab_period_24_hours)),
+                new TimePeriodSpinnerOption(TimePeriod.LAST_WEEK,
+                        activity.getString(R.string.clear_browsing_data_tab_period_7_days)),
+                new TimePeriodSpinnerOption(TimePeriod.FOUR_WEEKS,
+                        activity.getString(R.string.clear_browsing_data_tab_period_four_weeks)),
+                new TimePeriodSpinnerOption(TimePeriod.ALL_TIME,
+                        activity.getString(R.string.clear_browsing_data_tab_period_everything))};
+
+        return options;
     }
 
     @Override

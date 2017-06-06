@@ -78,6 +78,7 @@ public class AutofillContact extends PaymentOption {
     }
 
     /** @return Whether the contact is complete and ready to be sent to the merchant as-is. */
+    @Override
     public boolean isComplete() {
         return mIsComplete;
     }

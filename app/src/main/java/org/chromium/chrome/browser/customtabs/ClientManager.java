@@ -131,6 +131,7 @@ class ClientManager {
         private KeepAliveServiceConnection mKeepAliveConnection;
         private String mPredictedUrl;
         private long mLastMayLaunchUrlTimestamp;
+        private int mSpeculationMode;
 
         public SessionParams(Context context, int uid, DisconnectCallback callback,
                 PostMessageHandler postMessageHandler) {
@@ -138,6 +139,7 @@ class ClientManager {
             packageName = getPackageName(context, uid);
             disconnectCallback = callback;
             this.postMessageHandler = postMessageHandler;
+            this.mSpeculationMode = CustomTabsConnection.SpeculationParams.PRERENDER;
         }
 
         private static String getPackageName(Context context, int uid) {
@@ -448,6 +450,25 @@ class ClientManager {
             CustomTabsSessionToken session, boolean prerender) {
         SessionParams params = mSessionParams.get(session);
         if (params != null) params.mShouldPrerenderOnCellular = prerender;
+    }
+
+    /**
+     * Sets the speculation mode to be used by default for given session.
+     */
+    public synchronized void setSpeculationModeForSession(
+            CustomTabsSessionToken session, int speculationMode) {
+        SessionParams params = mSessionParams.get(session);
+        if (params != null) params.mSpeculationMode = speculationMode;
+    }
+
+    /**
+     * Get the speculation mode to be used by default for the given session.
+     * If no value has been set will default to PRERENDER mode.
+     */
+    public synchronized int getSpeculationModeForSession(CustomTabsSessionToken session) {
+        SessionParams params = mSessionParams.get(session);
+        return params == null ? CustomTabsConnection.SpeculationParams.PRERENDER
+                              : params.mSpeculationMode;
     }
 
     /** Tries to bind to a client to keep it alive, and returns true for success. */

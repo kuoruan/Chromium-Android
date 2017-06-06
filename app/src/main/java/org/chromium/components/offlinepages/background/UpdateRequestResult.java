@@ -15,13 +15,13 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class UpdateRequestResult {
-  @IntDef({
-      SUCCESS, STORE_FAILURE, REQUEST_DOES_NOT_EXIST
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface UpdateRequestResultEnum {}
-  public static final int SUCCESS = 0;
-  public static final int STORE_FAILURE = 1;
-  public static final int REQUEST_DOES_NOT_EXIST = 2;
+@IntDef({
+    UpdateRequestResult.SUCCESS, UpdateRequestResult.STORE_FAILURE,
+    UpdateRequestResult.REQUEST_DOES_NOT_EXIST
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface UpdateRequestResult {
+  int SUCCESS = 0;
+  int STORE_FAILURE = 1;
+  int REQUEST_DOES_NOT_EXIST = 2;
 }

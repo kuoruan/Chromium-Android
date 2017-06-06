@@ -8,6 +8,7 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.AppHooks;
+import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.datausage.DataUseTabUIManager;
 import org.chromium.chrome.browser.externalnav.ExternalNavigationHandler;
 import org.chromium.chrome.browser.externalnav.ExternalNavigationHandler.OverrideUrlLoadingResult;
@@ -75,6 +76,9 @@ public class InterceptNavigationDelegateImpl implements InterceptNavigationDeleg
     @Override
     public boolean shouldIgnoreNavigation(NavigationParams navigationParams) {
         String url = navigationParams.url;
+        ChromeActivity associatedActivity = mTab.getActivity();
+        long lastUserInteractionTime =
+                (associatedActivity == null) ? -1 : associatedActivity.getLastUserInteractionTime();
 
         if (mAuthenticatorHelper != null && mAuthenticatorHelper.handleAuthenticatorUrl(url)) {
             return true;
@@ -94,7 +98,7 @@ public class InterceptNavigationDelegateImpl implements InterceptNavigationDeleg
             // not covering the case where a gesture is carried over via a redirect.  This is
             // currently not feasible because we do not see all navigations for iframes and it is
             // better to error on the side of caution and require direct user gestures for iframes.
-            tabRedirectHandler = new TabRedirectHandler(mTab.getActivity());
+            tabRedirectHandler = new TabRedirectHandler(associatedActivity);
         } else {
             assert false;
             return false;
@@ -102,7 +106,7 @@ public class InterceptNavigationDelegateImpl implements InterceptNavigationDeleg
         tabRedirectHandler.updateNewUrlLoading(navigationParams.pageTransitionType,
                 navigationParams.isRedirect,
                 navigationParams.hasUserGesture || navigationParams.hasUserGestureCarryover,
-                mTab.getActivity().getLastUserInteractionTime(), getLastCommittedEntryIndex());
+                lastUserInteractionTime, getLastCommittedEntryIndex());
 
         boolean shouldCloseTab = shouldCloseContentsOnOverrideUrlLoadingAndLaunchIntent();
         ExternalNavigationParams params = buildExternalNavigationParams(navigationParams,

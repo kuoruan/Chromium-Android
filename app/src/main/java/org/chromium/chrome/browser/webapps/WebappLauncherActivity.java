@@ -23,6 +23,7 @@ import org.chromium.chrome.browser.metrics.LaunchMetrics;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.webapk.lib.client.WebApkValidator;
+import org.chromium.webapk.lib.common.WebApkConstants;
 
 import java.lang.ref.WeakReference;
 
@@ -137,6 +138,21 @@ public class WebappLauncherActivity extends Activity {
                     ? ActivityAssigner.WEBAPK_NAMESPACE : ActivityAssigner.WEBAPP_NAMESPACE;
             int activityIndex = ActivityAssigner.instance(namespace).assign(info.id());
             activityName += String.valueOf(activityIndex);
+
+            // Finishes the old activity if it has been assigned to a different WebappActivity. See
+            // crbug.com/702998.
+            for (WeakReference<Activity> activityRef : ApplicationStatus.getRunningActivities()) {
+                Activity activity = activityRef.get();
+                if (!(activity instanceof WebappActivity)
+                        || !activity.getClass().getName().equals(activityName)) {
+                    continue;
+                }
+                WebappActivity webappActivity = (WebappActivity) activity;
+                if (!TextUtils.equals(webappActivity.mWebappInfo.id(), info.id())) {
+                    activity.finish();
+                }
+                break;
+            }
         }
 
         // Create an intent to launch the Webapp in an unmapped WebappActivity.
@@ -148,13 +164,10 @@ public class WebappLauncherActivity extends Activity {
         // Activity.
         launchIntent.setAction(Intent.ACTION_VIEW);
         launchIntent.setData(Uri.parse(WebappActivity.WEBAPP_SCHEME + "://" + info.id()));
+        launchIntent.setFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK | ApiCompatibilityUtils.getActivityNewDocumentFlag());
 
         if (!isWebApk) {
-            // For WebAPK, we don't start a new task for WebApkActivity, it is just on top
-            // of the WebAPK's main activity and in the same task.
-            launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                    | ApiCompatibilityUtils.getActivityNewDocumentFlag());
-
             // If this is launching from a notification, we want to ensure that the URL being
             // launched is the URL in the intent. If a paused WebappActivity exists for this id,
             // then by default it will be focused and we have no way of sending the desired URL to
@@ -203,8 +216,8 @@ public class WebappLauncherActivity extends Activity {
     private boolean isValidWebApk(Intent intent) {
         if (!ChromeWebApkHost.isEnabled()) return false;
 
-        String webApkPackage = IntentUtils.safeGetStringExtra(intent,
-                ShortcutHelper.EXTRA_WEBAPK_PACKAGE_NAME);
+        String webApkPackage =
+                IntentUtils.safeGetStringExtra(intent, WebApkConstants.EXTRA_WEBAPK_PACKAGE_NAME);
         if (TextUtils.isEmpty(webApkPackage)) return false;
 
         String url = IntentUtils.safeGetStringExtra(intent, ShortcutHelper.EXTRA_URL);

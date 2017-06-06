@@ -15,14 +15,14 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ConsumerType {
-  @IntDef({
-      MOTION, ORIENTATION, ORIENTATION_ABSOLUTE, LIGHT
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ConsumerTypeEnum {}
-  public static final int MOTION = 1 << 0;
-  public static final int ORIENTATION = 1 << 1;
-  public static final int ORIENTATION_ABSOLUTE = 1 << 2;
-  public static final int LIGHT = 1 << 3;
+@IntDef({
+    ConsumerType.MOTION, ConsumerType.ORIENTATION, ConsumerType.ORIENTATION_ABSOLUTE,
+    ConsumerType.LIGHT
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ConsumerType {
+  int MOTION = 1 << 0;
+  int ORIENTATION = 1 << 1;
+  int ORIENTATION_ABSOLUTE = 1 << 2;
+  int LIGHT = 1 << 3;
 }

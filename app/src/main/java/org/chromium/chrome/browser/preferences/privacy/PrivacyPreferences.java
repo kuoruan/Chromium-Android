@@ -15,6 +15,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchFieldTrial;
 import org.chromium.chrome.browser.help.HelpAndFeedback;
 import org.chromium.chrome.browser.physicalweb.PhysicalWeb;
@@ -72,6 +73,10 @@ public class PrivacyPreferences extends PreferenceFragment
                 (ChromeBaseCheckBoxPreference) findPreference(PREF_SEARCH_SUGGESTIONS);
         searchSuggestionsPref.setOnPreferenceChangeListener(this);
         searchSuggestionsPref.setManagedPreferenceDelegate(mManagedPreferenceDelegate);
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.CONTENT_SUGGESTIONS_SETTINGS)) {
+            searchSuggestionsPref.setTitle(R.string.search_site_suggestions_title);
+            searchSuggestionsPref.setSummary(R.string.search_site_suggestions_summary);
+        }
 
         PreferenceScreen preferenceScreen = getPreferenceScreen();
         if (!ContextualSearchFieldTrial.isEnabled()) {

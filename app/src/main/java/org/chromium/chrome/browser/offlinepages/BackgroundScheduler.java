@@ -75,27 +75,6 @@ public abstract class BackgroundScheduler {
     }
 
     /**
-     * Get the latest power conditions from the android APIs.
-     */
-    public static boolean getPowerConditions(Context context) {
-        return OfflinePageUtils.getPowerConditions(context);
-    }
-
-    /**
-     * Get the latest battery conditions from the android APIs.
-     */
-    public static int getBatteryConditions(Context context) {
-        return OfflinePageUtils.getBatteryConditions(context);
-    }
-
-    /**
-     * Get the latest network conditions from the android APIs.
-     */
-    public static int getNetworkConditions(Context context) {
-        return OfflinePageUtils.getNetworkConditions(context);
-    }
-
-    /**
      * If GooglePlayServices upgrades, any outstaning tasks will be lost.
      * Set a reminder to wake up and check the task queue if an upgrade happens.
      */

@@ -15,18 +15,17 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ContentSuggestionsCardLayout {
-  @IntDef({
-      FULL_CARD, MINIMAL_CARD
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ContentSuggestionsCardLayoutEnum {}
+@IntDef({
+    ContentSuggestionsCardLayout.FULL_CARD, ContentSuggestionsCardLayout.MINIMAL_CARD
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ContentSuggestionsCardLayout {
   /**
    * Uses all fields.
    */
-  public static final int FULL_CARD = 0;
+  int FULL_CARD = 0;
   /**
    * No snippet_text and no thumbnail image.
    */
-  public static final int MINIMAL_CARD = 1;
+  int MINIMAL_CARD = 1;
 }

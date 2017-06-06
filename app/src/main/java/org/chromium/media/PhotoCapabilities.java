@@ -29,13 +29,18 @@ class PhotoCapabilities {
     public final double currentZoom;
     public final double stepZoom;
     public final int focusMode;
+    public final int[] focusModes;
     public final int exposureMode;
+    public final int[] exposureModes;
     public final double maxExposureCompensation;
     public final double minExposureCompensation;
     public final double currentExposureCompensation;
     public final double stepExposureCompensation;
     public final int whiteBalanceMode;
-    public final int fillLightMode;
+    public final int[] whiteBalanceModes;
+    public final int[] fillLightModes;
+    public final boolean supportsTorch;
+    public final boolean torch;
     public final boolean redEyeReduction;
     public final int maxColorTemperature;
     public final int minColorTemperature;
@@ -45,11 +50,12 @@ class PhotoCapabilities {
     PhotoCapabilities(int maxIso, int minIso, int currentIso, int stepIso, int maxHeight,
             int minHeight, int currentHeight, int stepHeight, int maxWidth, int minWidth,
             int currentWidth, int stepWidth, double maxZoom, double minZoom, double currentZoom,
-            double stepZoom, int focusMode, int exposureMode, double maxExposureCompensation,
-            double minExposureCompensation, double currentExposureCompensation,
-            double stepExposureCompensation, int whiteBalanceMode, int fillLightMode,
-            boolean redEyeReduction, int maxColorTemperature, int minColorTemperature,
-            int currentColorTemperature, int stepColorTemperature) {
+            double stepZoom, int focusMode, int[] focusModes, int exposureMode, int[] exposureModes,
+            double maxExposureCompensation, double minExposureCompensation,
+            double currentExposureCompensation, double stepExposureCompensation,
+            int whiteBalanceMode, int[] whiteBalanceModes, int[] fillLightModes,
+            boolean supportsTorch, boolean torch, boolean redEyeReduction, int maxColorTemperature,
+            int minColorTemperature, int currentColorTemperature, int stepColorTemperature) {
         this.maxIso = maxIso;
         this.minIso = minIso;
         this.currentIso = currentIso;
@@ -67,13 +73,18 @@ class PhotoCapabilities {
         this.currentZoom = currentZoom;
         this.stepZoom = stepZoom;
         this.focusMode = focusMode;
+        this.focusModes = focusModes;
         this.exposureMode = exposureMode;
+        this.exposureModes = exposureModes;
         this.maxExposureCompensation = maxExposureCompensation;
         this.minExposureCompensation = minExposureCompensation;
         this.currentExposureCompensation = currentExposureCompensation;
         this.stepExposureCompensation = stepExposureCompensation;
         this.whiteBalanceMode = whiteBalanceMode;
-        this.fillLightMode = fillLightMode;
+        this.whiteBalanceModes = whiteBalanceModes;
+        this.fillLightModes = fillLightModes;
+        this.supportsTorch = supportsTorch;
+        this.torch = torch;
         this.redEyeReduction = redEyeReduction;
         this.maxColorTemperature = maxColorTemperature;
         this.minColorTemperature = minColorTemperature;
@@ -167,8 +178,18 @@ class PhotoCapabilities {
     }
 
     @CalledByNative
+    public int[] getFocusModes() {
+        return focusModes != null ? focusModes.clone() : new int[0];
+    }
+
+    @CalledByNative
     public int getExposureMode() {
         return exposureMode;
+    }
+
+    @CalledByNative
+    public int[] getExposureModes() {
+        return exposureModes != null ? exposureModes.clone() : new int[0];
     }
 
     @CalledByNative
@@ -197,8 +218,23 @@ class PhotoCapabilities {
     }
 
     @CalledByNative
-    public int getFillLightMode() {
-        return fillLightMode;
+    public int[] getWhiteBalanceModes() {
+        return whiteBalanceModes != null ? whiteBalanceModes.clone() : new int[0];
+    }
+
+    @CalledByNative
+    public int[] getFillLightModes() {
+        return fillLightModes != null ? fillLightModes.clone() : new int[0];
+    }
+
+    @CalledByNative
+    public boolean getSupportsTorch() {
+        return supportsTorch;
+    }
+
+    @CalledByNative
+    public boolean getTorch() {
+        return torch;
     }
 
     @CalledByNative
@@ -244,13 +280,18 @@ class PhotoCapabilities {
         public double currentZoom;
         public double stepZoom;
         public int focusMode;
+        public int[] focusModes;
         public int exposureMode;
+        public int[] exposureModes;
         public double maxExposureCompensation;
         public double minExposureCompensation;
         public double currentExposureCompensation;
         public double stepExposureCompensation;
         public int whiteBalanceMode;
-        public int fillLightMode;
+        public int[] whiteBalanceModes;
+        public int[] fillLightModes;
+        public boolean supportsTorch;
+        public boolean torch;
         public boolean redEyeReduction;
         public int maxColorTemperature;
         public int minColorTemperature;
@@ -344,8 +385,18 @@ class PhotoCapabilities {
             return this;
         }
 
+        public Builder setFocusModes(int[] focusModes) {
+            this.focusModes = focusModes.clone();
+            return this;
+        }
+
         public Builder setExposureMode(int exposureMode) {
             this.exposureMode = exposureMode;
+            return this;
+        }
+
+        public Builder setExposureModes(int[] exposureModes) {
+            this.exposureModes = exposureModes.clone();
             return this;
         }
 
@@ -374,8 +425,23 @@ class PhotoCapabilities {
             return this;
         }
 
-        public Builder setFillLightMode(int fillLightMode) {
-            this.fillLightMode = fillLightMode;
+        public Builder setWhiteBalanceModes(int[] whiteBalanceModes) {
+            this.whiteBalanceModes = whiteBalanceModes.clone();
+            return this;
+        }
+
+        public Builder setFillLightModes(int[] fillLightModes) {
+            this.fillLightModes = fillLightModes.clone();
+            return this;
+        }
+
+        public Builder setSupportsTorch(boolean supportsTorch) {
+            this.supportsTorch = supportsTorch;
+            return this;
+        }
+
+        public Builder setTorch(boolean torch) {
+            this.torch = torch;
             return this;
         }
 
@@ -407,9 +473,10 @@ class PhotoCapabilities {
         public PhotoCapabilities build() {
             return new PhotoCapabilities(maxIso, minIso, currentIso, stepIso, maxHeight, minHeight,
                     currentHeight, stepHeight, maxWidth, minWidth, currentWidth, stepWidth, maxZoom,
-                    minZoom, currentZoom, stepZoom, focusMode, exposureMode,
-                    maxExposureCompensation, minExposureCompensation, currentExposureCompensation,
-                    stepExposureCompensation, whiteBalanceMode, fillLightMode, redEyeReduction,
+                    minZoom, currentZoom, stepZoom, focusMode, focusModes, exposureMode,
+                    exposureModes, maxExposureCompensation, minExposureCompensation,
+                    currentExposureCompensation, stepExposureCompensation, whiteBalanceMode,
+                    whiteBalanceModes, fillLightModes, supportsTorch, torch, redEyeReduction,
                     maxColorTemperature, minColorTemperature, currentColorTemperature,
                     stepColorTemperature);
         }

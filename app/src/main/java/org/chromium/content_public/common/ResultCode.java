@@ -15,34 +15,34 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ResultCode {
-  @IntDef({
-      NORMAL_EXIT, KILLED, HUNG, KILLED_BAD_MESSAGE, GPU_DEAD_ON_ARRIVAL, LAST_CODE
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ResultCodeEnum {}
+@IntDef({
+    ResultCode.NORMAL_EXIT, ResultCode.KILLED, ResultCode.HUNG, ResultCode.KILLED_BAD_MESSAGE,
+    ResultCode.GPU_DEAD_ON_ARRIVAL, ResultCode.LAST_CODE
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ResultCode {
   /**
    * Process terminated normally.
    */
-  public static final int NORMAL_EXIT = 0;
+  int NORMAL_EXIT = 0;
   /**
    * Process was killed by user or system.
    */
-  public static final int KILLED = 1;
+  int KILLED = 1;
   /**
    * Process hung.
    */
-  public static final int HUNG = 2;
+  int HUNG = 2;
   /**
    * A bad message caused the process termination.
    */
-  public static final int KILLED_BAD_MESSAGE = 3;
+  int KILLED_BAD_MESSAGE = 3;
   /**
    * The GPU process exited because initialization failed.
    */
-  public static final int GPU_DEAD_ON_ARRIVAL = 4;
+  int GPU_DEAD_ON_ARRIVAL = 4;
   /**
    * Last return code (keep this last).
    */
-  public static final int LAST_CODE = 5;
+  int LAST_CODE = 5;
 }

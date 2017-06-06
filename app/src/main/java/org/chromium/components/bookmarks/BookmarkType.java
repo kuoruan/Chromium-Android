@@ -15,12 +15,11 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class BookmarkType {
-  @IntDef({
-      NORMAL, PARTNER
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface BookmarkTypeEnum {}
-  public static final int NORMAL = 0;
-  public static final int PARTNER = 1;
+@IntDef({
+    BookmarkType.NORMAL, BookmarkType.PARTNER
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface BookmarkType {
+  int NORMAL = 0;
+  int PARTNER = 1;
 }

@@ -84,11 +84,13 @@ public class VideoCaptureCamera
     private final Object mPhotoTakenCallbackLock = new Object();
 
     // Storage of takePicture() callback Id. There can be one such request in flight at most, and
-    // needs to be exercised either in case of error or sucess.
+    // needs to be exercised either in case of error or success.
     private long mPhotoTakenCallbackId;
+
     private int mPhotoWidth;
     private int mPhotoHeight;
     private android.hardware.Camera.Area mAreaOfInterest;
+    private android.hardware.Camera.Parameters mPreviewParameters;
 
     private android.hardware.Camera mCamera;
     // Lock to mutually exclude execution of OnPreviewFrame() and {start/stop}Capture().
@@ -153,6 +155,17 @@ public class VideoCaptureCamera
     private class CrPictureCallback implements android.hardware.Camera.PictureCallback {
         @Override
         public void onPictureTaken(byte[] data, android.hardware.Camera camera) {
+            try {
+                Log.d(TAG, "|mPreviewParameters|: %s", mPreviewParameters.flatten());
+                camera.setParameters(mPreviewParameters);
+            } catch (RuntimeException ex) {
+                Log.e(TAG, "onPictureTaken, setParameters() " + ex);
+            }
+            try {
+                camera.startPreview();
+            } catch (RuntimeException ex) {
+                Log.e(TAG, "onPictureTaken, startPreview() " + ex);
+            }
             synchronized (mPhotoTakenCallbackLock) {
                 if (mPhotoTakenCallbackId != 0) {
                     nativeOnPhotoTaken(
@@ -160,10 +173,6 @@ public class VideoCaptureCamera
                 }
                 mPhotoTakenCallbackId = 0;
             }
-            android.hardware.Camera.Parameters parameters = getCameraParameters(mCamera);
-            parameters.setRotation(0);
-            mCamera.setParameters(parameters);
-            camera.startPreview();
         }
     };
 
@@ -486,11 +495,29 @@ public class VideoCaptureCamera
         builder.setMinZoom(minZoom).setMaxZoom(maxZoom);
         builder.setCurrentZoom(currentZoom).setStepZoom(stepZoom);
 
-        Log.d(TAG, "parameters.getFocusMode(): %s", parameters.getFocusMode());
-        final String focusMode = parameters.getFocusMode();
-
-        // Classify the Focus capabilities. In CONTINUOUS and SINGLE_SHOT, we can call
+        // Classify the Focus capabilities and state. In CONTINUOUS and SINGLE_SHOT, we can call
         // autoFocus(AutoFocusCallback) to configure region(s) to focus onto.
+        final List<String> focusModes = parameters.getSupportedFocusModes();
+        assert focusModes != null : "getSupportedFocusModes() should never return null";
+        ArrayList<Integer> jniFocusModes = new ArrayList<Integer>(3);
+        if (focusModes.contains(android.hardware.Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)
+                || focusModes.contains(
+                           android.hardware.Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)
+                || focusModes.contains(android.hardware.Camera.Parameters.FOCUS_MODE_EDOF)) {
+            jniFocusModes.add(Integer.valueOf(AndroidMeteringMode.CONTINUOUS));
+        }
+        // FOCUS_MODE_{AUTO,MACRO} do not imply continuously focusing: need autoFocus() trigger.
+        if (focusModes.contains(android.hardware.Camera.Parameters.FOCUS_MODE_AUTO)
+                || focusModes.contains(android.hardware.Camera.Parameters.FOCUS_MODE_MACRO)) {
+            jniFocusModes.add(Integer.valueOf(AndroidMeteringMode.SINGLE_SHOT));
+        }
+        if (focusModes.contains(android.hardware.Camera.Parameters.FOCUS_MODE_INFINITY)
+                || focusModes.contains(android.hardware.Camera.Parameters.FOCUS_MODE_FIXED)) {
+            jniFocusModes.add(Integer.valueOf(AndroidMeteringMode.FIXED));
+        }
+        builder.setFocusModes(integerArrayListToArray(jniFocusModes));
+
+        final String focusMode = parameters.getFocusMode();
         int jniFocusMode = AndroidMeteringMode.NONE;
         if (focusMode.equals(android.hardware.Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)
                 || focusMode.equals(
@@ -506,11 +533,16 @@ public class VideoCaptureCamera
         }
         builder.setFocusMode(jniFocusMode);
 
-        // Exposure is usually continuously updated except it not available at all, or if the
-        // exposure compensation is locked, in which case we consider it as FIXED.
-        int jniExposureMode = parameters.getMaxNumMeteringAreas() == 0
-                ? AndroidMeteringMode.NONE
-                : AndroidMeteringMode.CONTINUOUS;
+        // Auto Exposure is understood to be supported always; besides that, only "locked"
+        // (equivalent to AndroidMeteringMode.FIXED) may be supported and/or configured.
+        ArrayList<Integer> jniExposureModes = new ArrayList<Integer>(2);
+        jniExposureModes.add(AndroidMeteringMode.CONTINUOUS);
+        if (parameters.isAutoExposureLockSupported()) {
+            jniExposureModes.add(AndroidMeteringMode.FIXED);
+        }
+        builder.setExposureModes(integerArrayListToArray(jniExposureModes));
+
+        int jniExposureMode = AndroidMeteringMode.CONTINUOUS;
         if (parameters.isAutoExposureLockSupported() && parameters.getAutoExposureLock()) {
             jniExposureMode = AndroidMeteringMode.FIXED;
         }
@@ -522,13 +554,23 @@ public class VideoCaptureCamera
         builder.setMaxExposureCompensation(parameters.getMaxExposureCompensation() * step);
         builder.setCurrentExposureCompensation(parameters.getExposureCompensation() * step);
 
-        int jniWhiteBalanceMode = AndroidMeteringMode.NONE;
-        if (parameters.isAutoWhiteBalanceLockSupported()
-                && parameters.getSupportedWhiteBalance() != null) {
-            jniWhiteBalanceMode = parameters.getWhiteBalance()
-                            == android.hardware.Camera.Parameters.WHITE_BALANCE_AUTO
-                    ? AndroidMeteringMode.CONTINUOUS
-                    : AndroidMeteringMode.FIXED;
+        ArrayList<Integer> jniWhiteBalanceModes = new ArrayList<Integer>(2);
+        List<String> whiteBalanceModes = parameters.getSupportedWhiteBalance();
+        if (whiteBalanceModes != null) {
+            if (!whiteBalanceModes.isEmpty()) {
+                // |whiteBalanceModes| can have WHITE_BALANCE_AUTO and any value in
+                // |COLOR_TEMPERATURES_MAP|; they are all considered CONTINUOUS metering mode.
+                jniWhiteBalanceModes.add(AndroidMeteringMode.CONTINUOUS);
+            }
+            if (parameters.isAutoWhiteBalanceLockSupported()) {
+                jniWhiteBalanceModes.add(AndroidMeteringMode.FIXED);
+            }
+        }
+        builder.setWhiteBalanceModes(integerArrayListToArray(jniWhiteBalanceModes));
+
+        int jniWhiteBalanceMode = AndroidMeteringMode.CONTINUOUS;
+        if (parameters.isAutoWhiteBalanceLockSupported() && parameters.getAutoWhiteBalanceLock()) {
+            jniWhiteBalanceMode = AndroidMeteringMode.FIXED;
         }
         builder.setWhiteBalanceMode(jniWhiteBalanceMode);
 
@@ -540,29 +582,28 @@ public class VideoCaptureCamera
             if (index >= 0) builder.setCurrentColorTemperature(COLOR_TEMPERATURES_MAP.keyAt(index));
         }
 
-        if (parameters.getSupportedFlashModes() == null) {
-            builder.setFillLightMode(AndroidFillLightMode.NONE);
-        } else {
-            switch (parameters.getFlashMode()) {
-                case android.hardware.Camera.Parameters.FLASH_MODE_OFF:
-                    builder.setFillLightMode(AndroidFillLightMode.OFF);
-                    break;
-                case android.hardware.Camera.Parameters.FLASH_MODE_AUTO:
-                    builder.setFillLightMode(AndroidFillLightMode.AUTO);
-                    break;
-                case android.hardware.Camera.Parameters.FLASH_MODE_RED_EYE:
-                    builder.setRedEyeReduction(true);
-                    builder.setFillLightMode(AndroidFillLightMode.AUTO);
-                    break;
-                case android.hardware.Camera.Parameters.FLASH_MODE_ON:
-                    builder.setFillLightMode(AndroidFillLightMode.FLASH);
-                    break;
-                case android.hardware.Camera.Parameters.FLASH_MODE_TORCH:
-                    builder.setFillLightMode(AndroidFillLightMode.TORCH);
-                    break;
-                default:
-                    builder.setFillLightMode(AndroidFillLightMode.NONE);
+        final List<String> flashModes = parameters.getSupportedFlashModes();
+        if (flashModes != null) {
+            builder.setSupportsTorch(
+                    flashModes.contains(android.hardware.Camera.Parameters.FLASH_MODE_TORCH));
+            builder.setTorch(parameters.getFlashMode()
+                    == android.hardware.Camera.Parameters.FLASH_MODE_TORCH);
+
+            builder.setRedEyeReduction(
+                    flashModes.contains(android.hardware.Camera.Parameters.FLASH_MODE_RED_EYE));
+
+            ArrayList<Integer> modes = new ArrayList<Integer>(0);
+            if (flashModes.contains(android.hardware.Camera.Parameters.FLASH_MODE_OFF)) {
+                modes.add(Integer.valueOf(AndroidFillLightMode.OFF));
             }
+            if (flashModes.contains(android.hardware.Camera.Parameters.FLASH_MODE_AUTO)) {
+                modes.add(Integer.valueOf(AndroidFillLightMode.AUTO));
+            }
+            if (flashModes.contains(android.hardware.Camera.Parameters.FLASH_MODE_ON)) {
+                modes.add(Integer.valueOf(AndroidFillLightMode.FLASH));
+            }
+
+            builder.setFillLightModes(integerArrayListToArray(modes));
         }
 
         return builder.build();
@@ -573,7 +614,7 @@ public class VideoCaptureCamera
             double height, float[] pointsOfInterest2D, boolean hasExposureCompensation,
             double exposureCompensation, int whiteBalanceMode, double iso,
             boolean hasRedEyeReduction, boolean redEyeReduction, int fillLightMode,
-            double colorTemperature) {
+            boolean hasTorch, boolean torch, double colorTemperature) {
         android.hardware.Camera.Parameters parameters = getCameraParameters(mCamera);
 
         if (parameters.isZoomSupported() && zoom > 0) {
@@ -620,7 +661,7 @@ public class VideoCaptureCamera
         final boolean pointsOfInterestSupported =
                 parameters.getMaxNumMeteringAreas() > 0 || parameters.getMaxNumFocusAreas() > 0;
         if (pointsOfInterestSupported && pointsOfInterest2D.length > 0) {
-            assert pointsOfInterest2D.length == 1 : "Only 1 point of interest supported";
+            assert pointsOfInterest2D.length == 2 : "Only 1 point of interest supported";
             assert pointsOfInterest2D[0] <= 1.0 && pointsOfInterest2D[0] >= 0.0;
             assert pointsOfInterest2D[1] <= 1.0 && pointsOfInterest2D[1] >= 0.0;
             // Calculate a Rect of 1/8 the canvas, which is fixed to Rect(-1000, -1000, 1000, 1000),
@@ -667,10 +708,8 @@ public class VideoCaptureCamera
             }
         }
 
-        // NONE is only used for getting capabilities, to signify "no flash unit". Ignore it.
         if (parameters.getSupportedFlashModes() != null
-                && fillLightMode != AndroidFillLightMode.NOT_SET
-                && fillLightMode != AndroidFillLightMode.NONE) {
+                && fillLightMode != AndroidFillLightMode.NOT_SET) {
             switch (fillLightMode) {
                 case AndroidFillLightMode.OFF:
                     parameters.setFlashMode(android.hardware.Camera.Parameters.FLASH_MODE_OFF);
@@ -683,10 +722,10 @@ public class VideoCaptureCamera
                 case AndroidFillLightMode.FLASH:
                     parameters.setFlashMode(android.hardware.Camera.Parameters.FLASH_MODE_ON);
                     break;
-                case AndroidFillLightMode.TORCH:
-                    parameters.setFlashMode(android.hardware.Camera.Parameters.FLASH_MODE_TORCH);
-                    break;
                 default:
+            }
+            if (hasTorch && torch) {
+                parameters.setFlashMode(android.hardware.Camera.Parameters.FLASH_MODE_TORCH);
             }
         }
 
@@ -718,44 +757,40 @@ public class VideoCaptureCamera
             if (mPhotoTakenCallbackId != 0) return false;
             mPhotoTakenCallbackId = callbackId;
         }
+        mPreviewParameters = getCameraParameters(mCamera);
 
-        android.hardware.Camera.Parameters parameters = getCameraParameters(mCamera);
-        parameters.setRotation(getCameraRotation());
-        final android.hardware.Camera.Size original_size = parameters.getPictureSize();
+        android.hardware.Camera.Parameters photoParameters = getCameraParameters(mCamera);
+        photoParameters.setRotation(getCameraRotation());
 
-        List<android.hardware.Camera.Size> supportedSizes = parameters.getSupportedPictureSizes();
-        android.hardware.Camera.Size closestSize = null;
-        int minDiff = Integer.MAX_VALUE;
-        for (android.hardware.Camera.Size size : supportedSizes) {
-            final int diff = ((mPhotoWidth > 0) ? Math.abs(size.width - mPhotoWidth) : 0)
-                    + ((mPhotoHeight > 0) ? Math.abs(size.height - mPhotoHeight) : 0);
-            if (diff < minDiff) {
-                minDiff = diff;
-                closestSize = size;
+        if (mPhotoWidth > 0 || mPhotoHeight > 0) {
+            final List<android.hardware.Camera.Size> supportedSizes =
+                    photoParameters.getSupportedPictureSizes();
+            android.hardware.Camera.Size closestSize = null;
+            int minDiff = Integer.MAX_VALUE;
+            for (android.hardware.Camera.Size size : supportedSizes) {
+                final int diff = ((mPhotoWidth > 0) ? Math.abs(size.width - mPhotoWidth) : 0)
+                        + ((mPhotoHeight > 0) ? Math.abs(size.height - mPhotoHeight) : 0);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestSize = size;
+                }
+            }
+            if (minDiff != Integer.MAX_VALUE) {
+                Log.d(TAG, "requested resolution: (%dx%d); matched (%dx%d)", mPhotoWidth,
+                        mPhotoHeight, closestSize.width, closestSize.height);
+                photoParameters.setPictureSize(closestSize.width, closestSize.height);
             }
         }
-        Log.d(TAG, "requested resolution: (%dx%d)", mPhotoWidth, mPhotoHeight);
-        if (minDiff != Integer.MAX_VALUE) {
-            Log.d(TAG, " matched (%dx%d)", closestSize.width, closestSize.height);
-            parameters.setPictureSize(closestSize.width, closestSize.height);
-        }
 
         try {
-            mCamera.setParameters(parameters);
-            mCamera.takePicture(null, null, null, new CrPictureCallback());
+            Log.d(TAG, "|photoParameters|: %s", photoParameters.flatten());
+            mCamera.setParameters(photoParameters);
         } catch (RuntimeException ex) {
-            Log.e(TAG, "takePicture ", ex);
+            Log.e(TAG, "setParameters " + ex);
             return false;
         }
 
-        // Restore original parameters.
-        parameters.setPictureSize(original_size.width, original_size.height);
-        try {
-            mCamera.setParameters(parameters);
-        } catch (RuntimeException ex) {
-            Log.e(TAG, "takePicture ", ex);
-            return false;
-        }
+        mCamera.takePicture(null, null, null, new CrPictureCallback());
         return true;
     }
 

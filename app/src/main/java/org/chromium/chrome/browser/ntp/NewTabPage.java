@@ -18,7 +18,6 @@ import android.view.View;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.CommandLine;
-import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.TraceEvent;
 import org.chromium.base.VisibleForTesting;
@@ -87,7 +86,6 @@ public class NewTabPage
     private final TileGroup.Delegate mTileGroupDelegate;
 
     private TabObserver mTabObserver;
-    private LogoBridge mLogoBridge;
     private boolean mSearchProviderHasLogo;
     private FakeboxDelegate mFakeboxDelegate;
     private SnippetsBridge mSnippetsBridge;
@@ -195,11 +193,6 @@ public class NewTabPage
             return mFakeboxDelegate != null && mFakeboxDelegate.isVoiceSearchEnabled();
         }
 
-        @Override
-        public boolean isFakeOmniboxTextEnabledTablet() {
-            return ChromeFeatureList.isEnabled(ChromeFeatureList.NTP_FAKE_OMNIBOX_TEXT);
-        }
-
         @TargetApi(Build.VERSION_CODES.LOLLIPOP)
         private boolean switchToExistingTab(String url) {
             String matchPattern = CommandLine.getInstance().getSwitchValue(
@@ -252,12 +245,6 @@ public class NewTabPage
             if (mFakeboxDelegate == null) return false;
             return mFakeboxDelegate.isCurrentPage(NewTabPage.this);
         }
-
-        @Override
-        public ContextMenuManager getContextMenuManager() {
-            assert !mIsDestroyed;
-            return mNewTabPageView.getContextMenuManager();
-        }
     }
 
     /**
@@ -268,7 +255,8 @@ public class NewTabPage
         private NewTabPageTileGroupDelegate(ChromeActivity activity, Profile profile,
                 TabModelSelector tabModelSelector,
                 SuggestionsNavigationDelegate navigationDelegate) {
-            super(activity, profile, tabModelSelector, navigationDelegate);
+            super(activity, profile, tabModelSelector, navigationDelegate,
+                    activity.getSnackbarManager());
         }
 
         @Override
@@ -380,7 +368,6 @@ public class NewTabPage
             }
         };
         mTab.addObserver(mTabObserver);
-        mLogoBridge = new LogoBridge(profile);
         updateSearchProviderHasLogo();
 
         LayoutInflater inflater = LayoutInflater.from(activity);
@@ -392,8 +379,8 @@ public class NewTabPage
             mSnippetsBridge.onNtpInitialized();
         }
 
-        DownloadManagerService.getDownloadManagerService(ContextUtils.getApplicationContext())
-                .checkForExternallyRemovedDownloads(/*isOffRecord=*/false);
+        DownloadManagerService.getDownloadManagerService().checkForExternallyRemovedDownloads(
+                /*isOffRecord=*/false);
 
         RecordHistogram.recordBooleanHistogram(
                 "NewTabPage.MobileIsUserOnline", NetworkChangeNotifier.isOnline());
@@ -563,10 +550,6 @@ public class NewTabPage
                 .isAttachedToWindow(getView()) : "Destroy called before removed from window";
         if (mIsLoaded && !mTab.isHidden()) recordNTPInteractionTime();
 
-        if (mLogoBridge != null) {
-            mLogoBridge.destroy();
-            mLogoBridge = null;
-        }
         if (mSnippetsBridge != null) {
             mSnippetsBridge.onDestroy();
             mSnippetsBridge = null;

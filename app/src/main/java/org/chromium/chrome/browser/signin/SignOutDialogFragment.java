@@ -67,7 +67,7 @@ public class SignOutDialogFragment extends DialogFragment implements
                     R.string.signout_managed_account_message, managementDomain);
         }
 
-        return new AlertDialog.Builder(getActivity(), R.style.AlertDialogTheme)
+        return new AlertDialog.Builder(getActivity(), R.style.SigninAlertDialogTheme)
                 .setTitle(R.string.signout_title)
                 .setPositiveButton(R.string.signout_dialog_positive_button, this)
                 .setNegativeButton(R.string.cancel, this)

@@ -43,10 +43,17 @@ public class SiteEngagementService {
      * Sets the provided URL to have the provided engagement score.
      * Must be called on the UI thread.
      */
-    public void resetScoreForUrl(String url, double score) {
+    public void resetBaseScoreForUrl(String url, double score) {
         assert ThreadUtils.runningOnUiThread();
         if (mNativePointer == 0) return;
-        nativeResetScoreForURL(mNativePointer, url, score);
+        nativeResetBaseScoreForURL(mNativePointer, url, score);
+    }
+
+    /**
+     * Sets site engagement param values to constants for testing.
+     */
+    public static void setParamValuesForTesting() {
+        nativeSetParamValuesForTesting();
     }
 
     @CalledByNative
@@ -66,7 +73,8 @@ public class SiteEngagementService {
 
     private static native SiteEngagementService nativeSiteEngagementServiceForProfile(
             Profile profile);
+    private static native void nativeSetParamValuesForTesting();
     private native double nativeGetScore(long nativeSiteEngagementServiceAndroid, String url);
-    private native void nativeResetScoreForURL(
+    private native void nativeResetBaseScoreForURL(
             long nativeSiteEngagementServiceAndroid, String url, double score);
 }

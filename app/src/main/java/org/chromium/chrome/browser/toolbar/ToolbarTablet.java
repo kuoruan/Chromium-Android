@@ -15,10 +15,8 @@ import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 
 import org.chromium.base.ApiCompatibilityUtils;
-import org.chromium.base.CommandLine;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.NavigationPopup;
 import org.chromium.chrome.browser.device.DeviceClassManager;
 import org.chromium.chrome.browser.download.DownloadUtils;
@@ -96,8 +94,7 @@ public class ToolbarTablet extends ToolbarLayout implements OnClickListener {
         mBackButton = (TintedImageButton) findViewById(R.id.back_button);
         mForwardButton = (TintedImageButton) findViewById(R.id.forward_button);
         mReloadButton = (TintedImageButton) findViewById(R.id.refresh_button);
-        mShowTabStack = DeviceClassManager.isAccessibilityModeEnabled(getContext())
-                || CommandLine.getInstance().hasSwitch(ChromeSwitches.ENABLE_TABLET_TAB_STACK);
+        mShowTabStack = DeviceClassManager.isAccessibilityModeEnabled(getContext());
 
         mTabSwitcherButtonDrawable =
                 TabSwitcherDrawable.createTabSwitcherDrawable(getResources(), false);
@@ -359,6 +356,7 @@ public class ToolbarTablet extends ToolbarLayout implements OnClickListener {
             mUseLightColorAssets = incognito;
         }
 
+        setMenuButtonHighlightDrawable(mHighlightingMenu);
         updateNtp();
     }
 
@@ -466,6 +464,7 @@ public class ToolbarTablet extends ToolbarLayout implements OnClickListener {
                 setAppMenuUpdateBadgeToVisible(false);
             }
         }
+        setMenuButtonHighlightDrawable(mHighlightingMenu);
     }
 
     @Override
@@ -480,8 +479,7 @@ public class ToolbarTablet extends ToolbarLayout implements OnClickListener {
 
     @Override
     public void onAccessibilityStatusChanged(boolean enabled) {
-        mShowTabStack = enabled || CommandLine.getInstance().hasSwitch(
-                ChromeSwitches.ENABLE_TABLET_TAB_STACK);
+        mShowTabStack = enabled;
         updateSwitcherButtonVisibility(enabled);
     }
 
@@ -503,6 +501,11 @@ public class ToolbarTablet extends ToolbarLayout implements OnClickListener {
     @Override
     public LocationBar getLocationBar() {
         return mLocationBar;
+    }
+
+    @Override
+    public boolean useLightDrawables() {
+        return mUseLightColorAssets;
     }
 
     @Override

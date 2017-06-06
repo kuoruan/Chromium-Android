@@ -45,6 +45,7 @@ class JsonObjectHttpRequest extends HttpRequest<JSONObject> {
      * Helper method to make an HTTP request.
      * @param urlConnection The HTTP connection.
      */
+    @Override
     public void writeToUrlConnection(HttpURLConnection urlConnection) throws IOException {
         urlConnection.setDoOutput(true);
         urlConnection.setRequestProperty("Content-Type", "application/json");
@@ -60,6 +61,7 @@ class JsonObjectHttpRequest extends HttpRequest<JSONObject> {
      * @param is The InputStream.
      * @return An object representing the HTTP response.
      */
+    @Override
     protected JSONObject readInputStream(InputStream is) throws IOException {
         String jsonString = readStreamToString(is);
         JSONObject jsonObject;

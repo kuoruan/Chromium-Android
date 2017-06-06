@@ -15,15 +15,14 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class NetId {
-  @IntDef({
-      INVALID
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface NetIdEnum {}
+@IntDef({
+    NetId.INVALID
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface NetId {
   /**
    * Cannot use |kInvalidNetworkHandle| here as the Java generator fails, instead enforce their
    * equality with CHECK in NetworkChangeNotifierAndroid().
    */
-  public static final int INVALID = -1;
+  int INVALID = -1;
 }

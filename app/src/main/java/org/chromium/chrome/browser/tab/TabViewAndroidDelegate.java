@@ -4,12 +4,8 @@
 
 package org.chromium.chrome.browser.tab;
 
-import android.content.ActivityNotFoundException;
-import android.content.Intent;
 import android.view.ViewGroup;
 
-import org.chromium.base.Log;
-import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.ui.base.ViewAndroidDelegate;
 
 /**
@@ -40,16 +36,6 @@ class TabViewAndroidDelegate extends ViewAndroidDelegate {
     @Override
     public void onBottomControlsChanged(float bottomControlsOffsetY, float bottomContentOffsetY) {
         mTab.onOffsetsChanged(Float.NaN, bottomControlsOffsetY, Float.NaN);
-    }
-
-    @Override
-    public void startContentIntent(Intent intent, String intentUrl, boolean isMainFrame) {
-        try {
-            RecordUserAction.record("Android.ContentDetectorActivated");
-            mContainerView.getContext().startActivity(intent);
-        } catch (ActivityNotFoundException ex) {
-            Log.w(TAG, "No application can handle %s", intentUrl);
-        }
     }
 
     @Override

@@ -15,43 +15,44 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ConnectionSecurityLevel {
-  @IntDef({
-      NONE, HTTP_SHOW_WARNING, EV_SECURE, SECURE, SECURITY_WARNING,
-      SECURE_WITH_POLICY_INSTALLED_CERT, DANGEROUS
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ConnectionSecurityLevelEnum {}
+@IntDef({
+    ConnectionSecurityLevel.NONE, ConnectionSecurityLevel.HTTP_SHOW_WARNING,
+    ConnectionSecurityLevel.EV_SECURE, ConnectionSecurityLevel.SECURE,
+    ConnectionSecurityLevel.SECURITY_WARNING,
+    ConnectionSecurityLevel.SECURE_WITH_POLICY_INSTALLED_CERT, ConnectionSecurityLevel.DANGEROUS
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ConnectionSecurityLevel {
   /**
    * HTTP/no URL/HTTPS but with insecure passive content on the page.
    */
-  public static final int NONE = 0;
+  int NONE = 0;
   /**
    * HTTP, in a case where we want to show a visible warning about the page's lack of security. The
    * criteria used to classify pages as NONE vs. HTTP_SHOW_WARNING will change over time.
    * Eventually, NONE will be eliminated. See https://crbug.com/647754.
    */
-  public static final int HTTP_SHOW_WARNING = 1;
+  int HTTP_SHOW_WARNING = 1;
   /**
    * HTTPS with valid EV cert.
    */
-  public static final int EV_SECURE = 2;
+  int EV_SECURE = 2;
   /**
    * HTTPS (non-EV) with valid cert.
    */
-  public static final int SECURE = 3;
+  int SECURE = 3;
   /**
    * HTTPS, but with an outdated protocol version.
    */
-  public static final int SECURITY_WARNING = 4;
+  int SECURITY_WARNING = 4;
   /**
    * HTTPS, but the certificate verification chain is anchored on a certificate that was installed
    * by the system administrator.
    */
-  public static final int SECURE_WITH_POLICY_INSTALLED_CERT = 5;
+  int SECURE_WITH_POLICY_INSTALLED_CERT = 5;
   /**
    * Attempted HTTPS and failed, page not authenticated, HTTPS with insecure active content on the
    * page, malware, phishing, or any other serious security issue that could be dangerous.
    */
-  public static final int DANGEROUS = 6;
+  int DANGEROUS = 6;
 }

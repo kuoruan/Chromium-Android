@@ -109,6 +109,11 @@ public class WindowAndroid {
 
     private AndroidPermissionDelegate mPermissionDelegate;
 
+    // Note that this state lives in Java, rather than in the native BeginFrameSource because
+    // clients may pause VSync before the native WindowAndroid is created.
+    private boolean mPendingVSyncRequest;
+    private boolean mVSyncPaused;
+
     /**
      * An interface to notify listeners of changes in the soft keyboard's visibility.
      */
@@ -134,6 +139,10 @@ public class WindowAndroid {
     private final VSyncMonitor.Listener mVSyncListener = new VSyncMonitor.Listener() {
         @Override
         public void onVSync(VSyncMonitor monitor, long vsyncTimeMicros) {
+            if (mVSyncPaused) {
+                mPendingVSyncRequest = true;
+                return;
+            }
             if (mNativeWindowAndroid != 0) {
                 nativeOnVSync(mNativeWindowAndroid,
                               vsyncTimeMicros,
@@ -497,6 +506,10 @@ public class WindowAndroid {
 
     @CalledByNative
     private void requestVSyncUpdate() {
+        if (mVSyncPaused) {
+            mPendingVSyncRequest = true;
+            return;
+        }
         mVSyncMonitor.requestUpdate();
     }
 
@@ -557,6 +570,7 @@ public class WindowAndroid {
     public long getNativePointer() {
         if (mNativeWindowAndroid == 0) {
             mNativeWindowAndroid = nativeInit(mDisplayAndroid.getDisplayId());
+            nativeSetVSyncPaused(mNativeWindowAndroid, mVSyncPaused);
         }
         return mNativeWindowAndroid;
     }
@@ -724,6 +738,17 @@ public class WindowAndroid {
         }
     }
 
+    /**
+     * Pauses/Unpauses VSync. When VSync is paused the compositor for this window will idle, and
+     * requestAnimationFrame callbacks won't fire, etc.
+     */
+    public void setVSyncPaused(boolean paused) {
+        if (mVSyncPaused == paused) return;
+        mVSyncPaused = paused;
+        if (!mVSyncPaused && mPendingVSyncRequest) requestVSyncUpdate();
+        if (mNativeWindowAndroid != 0) nativeSetVSyncPaused(mNativeWindowAndroid, paused);
+    }
+
     private native long nativeInit(int displayId);
     private native void nativeOnVSync(long nativeWindowAndroid,
                                       long vsyncTimeMicros,
@@ -731,6 +756,7 @@ public class WindowAndroid {
     private native void nativeOnVisibilityChanged(long nativeWindowAndroid, boolean visible);
     private native void nativeOnActivityStopped(long nativeWindowAndroid);
     private native void nativeOnActivityStarted(long nativeWindowAndroid);
+    private native void nativeSetVSyncPaused(long nativeWindowAndroid, boolean paused);
     private native void nativeDestroy(long nativeWindowAndroid);
 
 }

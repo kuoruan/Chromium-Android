@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.support.annotation.CallSuper;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
@@ -78,9 +79,9 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
 
     protected boolean mIsSelectionEnabled;
     protected SelectionDelegate<E> mSelectionDelegate;
+    protected boolean mIsSearching;
 
     private boolean mHasSearchView;
-    private boolean mIsSearching;
     private LinearLayout mSearchView;
     private EditText mSearchEditText;
     private TintedImageButton mClearTextButton;
@@ -112,6 +113,8 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
     private int mOriginalContentInsetStartWithNavigation;
     private int mOriginalContentInsetEndWithActions;
 
+    private boolean mIsDestroyed;
+
     /**
      * Constructor for inflating from XML.
      */
@@ -122,10 +125,10 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
     /**
      * Destroys and cleans up itself.
      */
-    public void destroy() {
-        if (mSelectionDelegate != null) {
-            mSelectionDelegate.removeObserver(this);
-        }
+    void destroy() {
+        mIsDestroyed = true;
+        if (mSelectionDelegate != null) mSelectionDelegate.removeObserver(this);
+        UiUtils.hideKeyboard(mSearchEditText);
     }
 
     /**
@@ -313,7 +316,8 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
 
         if (mActionBarDrawerToggle != null) {
             mActionBarDrawerToggle.setDrawerIndicatorEnabled(false);
-            mDrawerLayout.addDrawerListener(null);
+            mDrawerLayout.removeDrawerListener(mActionBarDrawerToggle);
+            mActionBarDrawerToggle = null;
         }
 
         setNavigationOnClickListener(this);
@@ -392,6 +396,17 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
         return false;
     }
 
+    @Override
+    public void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+
+        if (mIsDestroyed) return;
+
+        mSelectionDelegate.clearSelection();
+        if (mIsSearching) hideSearchView();
+        if (mDrawerLayout != null) mDrawerLayout.closeDrawer(GravityCompat.START);
+    }
+
     /**
      * When the toolbar has a wide display style, its contents will be width constrained to
      * {@link UiConfig#WIDE_DISPLAY_STYLE_MIN_WIDTH_DP}. If the current screen width is greater than
@@ -454,12 +469,17 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
         setContentInsetEndWithActions(contentInsetEndWithActions);
     }
 
-    SelectionDelegate<E> getSelectionDelegate() {
-        return mSelectionDelegate;
+    /**
+     * @return Whether search mode is currently active. Once a search is started, this method will
+     *         return true until the search is ended regardless of whether the toolbar view changes
+     *         dues to a selection.
+     */
+    public boolean isSearching() {
+        return mIsSearching;
     }
 
-    boolean isSearching() {
-        return mIsSearching;
+    SelectionDelegate<E> getSelectionDelegate() {
+        return mSelectionDelegate;
     }
 
     /**

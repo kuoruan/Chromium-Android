@@ -17,7 +17,7 @@
     <include layout="@layout/payment_request_header" />
     <include layout="@layout/payment_request_spinny" />
 
-    <org.chromium.chrome.browser.payments.ui.FadingEdgeScrollView
+    <org.chromium.chrome.browser.widget.FadingEdgeScrollView
         android:id="@+id/option_container"
         android:layout_height="0dp"
         android:layout_width="match_parent"
@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical" />
 
-    </org.chromium.chrome.browser.payments.ui.FadingEdgeScrollView>
+    </org.chromium.chrome.browser.widget.FadingEdgeScrollView>
 
      <include layout="@layout/payment_request_bottom_bar" />
 

@@ -5,7 +5,6 @@
 package org.chromium.chrome.browser.media.router;
 
 import android.app.Activity;
-import android.content.Context;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -103,10 +102,9 @@ public abstract class BaseMediaRouteDialogManager implements MediaRouteDialogMan
         return mDialogFragment != null && mDialogFragment.isVisible();
     }
 
-    protected BaseMediaRouteDialogManager(MediaSource source, Context applicationContext,
-            MediaRouteDialogDelegate delegate) {
+    protected BaseMediaRouteDialogManager(MediaSource source, MediaRouteDialogDelegate delegate) {
         mMediaSource = source;
-        mAndroidMediaRouter = ChromeMediaRouter.getAndroidMediaRouter(applicationContext);
+        mAndroidMediaRouter = ChromeMediaRouter.getAndroidMediaRouter();
         mDelegate = delegate;
     }
 

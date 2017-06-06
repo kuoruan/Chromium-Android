@@ -37,16 +37,6 @@ public abstract class ChromeSwitches {
     /** Force the crash dump to be uploaded regardless of preferences. */
     public static final String FORCE_CRASH_DUMP_UPLOAD = "force-dump-upload";
 
-    /**
-     * Force the crash dump NOT to be uploaded regardless of preferences.
-     * This is intended for testing use, when command-line switches may be needed.
-     * Overrides any other upload preference.
-     */
-    public static final String DISABLE_CRASH_DUMP_UPLOAD = "disable-dump-upload";
-
-    /** Whether or not to enable the experimental tablet tab stack. */
-    public static final String ENABLE_TABLET_TAB_STACK = "enable-tablet-tab-stack";
-
     /** Never forward URL requests to external intents. */
     public static final String DISABLE_EXTERNAL_INTENT_REQUESTS =
             "disable-external-intent-requests";
@@ -191,6 +181,9 @@ public abstract class ChromeSwitches {
      */
     public static final String ALWAYS_EXTRACT_WEBAPK_RUNTIME_DEX_ON_STARTUP =
             "always-extract-webapk-dex-on-startup";
+
+    /** Enable non-'org.chromium.webapk' prefixed package names with proper signature. */
+    public static final String ENABLE_ANY_WEBAPK_PACKAGE_NAME = "any-webapk-package-name";
 
     /**
      * Forces a check for whether the WebAPK's Web Manifest has changed each time that a WebAPK is

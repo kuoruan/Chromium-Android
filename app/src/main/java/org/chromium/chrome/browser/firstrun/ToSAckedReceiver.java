@@ -56,7 +56,7 @@ public class ToSAckedReceiver extends BroadcastReceiver {
                 ContextUtils.getAppSharedPreferences().getStringSet(
                         TOS_ACKED_ACCOUNTS, null);
         if (toSAckedAccounts == null || toSAckedAccounts.isEmpty()) return false;
-        AccountManagerHelper accountHelper = AccountManagerHelper.get(context);
+        AccountManagerHelper accountHelper = AccountManagerHelper.get();
         List<String> accountNames = accountHelper.getGoogleAccountNames();
         if (accountNames.isEmpty()) return false;
         for (int k = 0; k < accountNames.size(); k++) {

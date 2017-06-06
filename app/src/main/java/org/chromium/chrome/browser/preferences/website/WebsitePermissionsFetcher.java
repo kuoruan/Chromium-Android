@@ -62,6 +62,8 @@ public class WebsitePermissionsFetcher {
         // Popup exceptions are host-based patterns (unless we start
         // synchronizing popup exceptions with desktop Chrome).
         queue.add(new PopupExceptionInfoFetcher());
+        // Subresource filter exceptions are host-based.
+        queue.add(new SubresourceFilterExceptionInfoFetcher());
         // JavaScript exceptions are host-based patterns.
         queue.add(new JavaScriptExceptionInfoFetcher());
         // Protected media identifier permission is per-origin and per-embedder.
@@ -118,6 +120,9 @@ public class WebsitePermissionsFetcher {
             // Popup exceptions are host-based patterns (unless we start
             // synchronizing popup exceptions with desktop Chrome.)
             queue.add(new PopupExceptionInfoFetcher());
+        } else if (category.showSubresourceFilterSites()) {
+            // Subresource filter exceptions are host-based.
+            queue.add(new SubresourceFilterExceptionInfoFetcher());
         } else if (category.showJavaScriptSites()) {
             // JavaScript exceptions are host-based patterns.
             queue.add(new JavaScriptExceptionInfoFetcher());
@@ -178,6 +183,9 @@ public class WebsitePermissionsFetcher {
                     break;
                 case ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS:
                     site.setPopupException(exception);
+                    break;
+                case ContentSettingsType.CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER:
+                    site.setSubresourceFilterException(exception);
                     break;
                 default:
                     assert false : "Unexpected content setting type received: "
@@ -250,6 +258,13 @@ public class WebsitePermissionsFetcher {
         @Override
         public void run() {
             setException(ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS);
+        }
+    }
+
+    private class SubresourceFilterExceptionInfoFetcher extends Task {
+        @Override
+        public void run() {
+            setException(ContentSettingsType.CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER);
         }
     }
 

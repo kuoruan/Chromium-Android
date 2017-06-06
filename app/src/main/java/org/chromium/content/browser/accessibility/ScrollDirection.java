@@ -15,16 +15,16 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ScrollDirection {
-  @IntDef({
-      FORWARD, BACKWARD, UP, DOWN, LEFT, RIGHT
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ScrollDirectionEnum {}
-  public static final int FORWARD = 0;
-  public static final int BACKWARD = 1;
-  public static final int UP = 2;
-  public static final int DOWN = 3;
-  public static final int LEFT = 4;
-  public static final int RIGHT = 5;
+@IntDef({
+    ScrollDirection.FORWARD, ScrollDirection.BACKWARD, ScrollDirection.UP, ScrollDirection.DOWN,
+    ScrollDirection.LEFT, ScrollDirection.RIGHT
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ScrollDirection {
+  int FORWARD = 0;
+  int BACKWARD = 1;
+  int UP = 2;
+  int DOWN = 3;
+  int LEFT = 4;
+  int RIGHT = 5;
 }

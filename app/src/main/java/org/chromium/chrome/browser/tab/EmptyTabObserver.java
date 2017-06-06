@@ -86,12 +86,12 @@ public class EmptyTabObserver implements TabObserver {
             Tab tab, boolean isMainFrame, int errorCode, String description, String failingUrl) {}
 
     @Override
-    public void onDidStartNavigation(
-            Tab tab, String url, boolean isInMainFrame, boolean isSamePage, boolean isErrorPage) {}
+    public void onDidStartNavigation(Tab tab, String url, boolean isInMainFrame,
+            boolean isSameDocument, boolean isErrorPage) {}
 
     @Override
     public void onDidFinishNavigation(Tab tab, String url, boolean isInMainFrame,
-            boolean isErrorPage, boolean hasCommitted, boolean isSamePage,
+            boolean isErrorPage, boolean hasCommitted, boolean isSameDocument,
             boolean isFragmentNavigation, Integer pageTransition, int errorCode,
             int httpStatusCode) {}
 

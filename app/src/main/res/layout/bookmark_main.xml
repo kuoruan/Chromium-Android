@@ -3,35 +3,25 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
-<ViewSwitcher xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/bookmark_view_switcher"
+<android.support.v4.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/bookmark_drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:inAnimation="@android:anim/fade_in"
-    android:outAnimation="@android:anim/fade_out" >
+    android:layout_height="match_parent" >
 
-    <android.support.v4.widget.DrawerLayout
-        android:id="@+id/bookmark_drawer_layout"
+    <org.chromium.chrome.browser.widget.selection.SelectableListLayout
+        android:id="@+id/selectable_list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" >
+        android:layout_height="match_parent"
+        android:background="@color/default_primary_color" />
 
-        <org.chromium.chrome.browser.widget.selection.SelectableListLayout
-            android:id="@+id/selectable_list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/default_primary_color" />
-
-        <org.chromium.chrome.browser.bookmarks.BookmarkDrawerListView
-            android:id="@+id/bookmark_drawer_list"
-            android:layout_width="@dimen/drawer_width"
-            android:layout_height="match_parent"
-            android:layout_gravity="start"
-            android:background="@android:color/white"
-            android:choiceMode="singleChoice"
-            android:divider="@null"
-            android:dividerHeight="0dp" />
-    </android.support.v4.widget.DrawerLayout>
-
-    <include layout="@layout/bookmark_search"/>
-
-</ViewSwitcher>
+    <org.chromium.chrome.browser.bookmarks.BookmarkDrawerListView
+        android:id="@+id/bookmark_drawer_list"
+        android:layout_width="@dimen/drawer_width"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@android:color/white"
+        android:choiceMode="singleChoice"
+        android:divider="@null"
+        android:dividerHeight="0dp" />
+</android.support.v4.widget.DrawerLayout>

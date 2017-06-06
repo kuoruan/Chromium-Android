@@ -27,7 +27,7 @@ public abstract class StatusItem extends OptionalLeaf implements StatusCardViewH
         @Override
         @StringRes
         public int getHeader() {
-            return R.string.ntp_status_card_title_no_suggestions;
+            return R.string.ntp_title_no_suggestions;
         }
 
         @Override

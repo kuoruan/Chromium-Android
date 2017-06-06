@@ -77,15 +77,21 @@ public class VariationsSeedFetcher {
     }
 
     @VisibleForTesting
-    protected HttpURLConnection getServerConnection() throws MalformedURLException, IOException {
-        URL url = new URL(VARIATIONS_SERVER_URL);
+    protected HttpURLConnection getServerConnection(String restrictMode)
+            throws MalformedURLException, IOException {
+        String urlString = VARIATIONS_SERVER_URL;
+        if (restrictMode != null && !restrictMode.isEmpty()) {
+            urlString += "&restrict=" + restrictMode;
+        }
+        URL url = new URL(urlString);
         return (HttpURLConnection) url.openConnection();
     }
 
     /**
      * Fetch the first run variations seed.
+     * @param restrictMode The restrict mode parameter to pass to the server via a URL param.
      */
-    public void fetchSeed() {
+    public void fetchSeed(String restrictMode) {
         assert !ThreadUtils.runningOnUiThread();
         // Prevent multiple simultaneous fetches
         synchronized (sLock) {
@@ -100,7 +106,7 @@ public class VariationsSeedFetcher {
                     || VariationsSeedBridge.hasNativePref(context)) {
                 return;
             }
-            downloadContent(context);
+            downloadContent(context, restrictMode);
             prefs.edit().putBoolean(VARIATIONS_INITIALIZED_PREF, true).apply();
         }
     }
@@ -124,11 +130,11 @@ public class VariationsSeedFetcher {
         histogram.record(timeDeltaMillis);
     }
 
-    private void downloadContent(Context context) {
+    private void downloadContent(Context context, String restrictMode) {
         HttpURLConnection connection = null;
         try {
             long startTimeMillis = SystemClock.elapsedRealtime();
-            connection = getServerConnection();
+            connection = getServerConnection(restrictMode);
             connection.setReadTimeout(READ_TIMEOUT);
             connection.setConnectTimeout(REQUEST_TIMEOUT);
             connection.setDoInput(true);

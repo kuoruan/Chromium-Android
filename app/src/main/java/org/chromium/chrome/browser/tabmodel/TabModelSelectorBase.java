@@ -8,7 +8,6 @@ import org.chromium.base.ObserverList;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
-import org.chromium.content_public.browser.WebContents;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,6 +19,8 @@ import java.util.List;
 public abstract class TabModelSelectorBase implements TabModelSelector {
     public static final int NORMAL_TAB_MODEL_INDEX = 0;
     public static final int INCOGNITO_TAB_MODEL_INDEX = 1;
+
+    private static TabModelSelectorObserver sObserver;
 
     private List<TabModel> mTabModels = Collections.emptyList();
     private int mActiveModelIndex = NORMAL_TAB_MODEL_INDEX;
@@ -52,12 +53,6 @@ public abstract class TabModelSelectorBase implements TabModelSelector {
             @Override
             public void didSelectTab(Tab tab, TabSelectionType type, int lastId) {
                 notifyChanged();
-
-                Tab oldTab = getTabById(lastId);
-                if (tab.getId() != lastId) {
-                    WebContents oldWebContents = (oldTab == null) ? null : oldTab.getWebContents();
-                    nativeOnActiveTabChanged(oldWebContents, tab.getWebContents());
-                }
             }
 
             @Override
@@ -68,7 +63,16 @@ public abstract class TabModelSelectorBase implements TabModelSelector {
         for (TabModel model : models) {
             model.addObserver(tabModelObserver);
         }
+
+        if (sObserver != null) {
+            addObserver(sObserver);
+        }
+
         notifyChanged();
+    }
+
+    public static void setObserverForTests(TabModelSelectorObserver observer) {
+        sObserver = observer;
     }
 
     @Override
@@ -238,6 +242,4 @@ public abstract class TabModelSelectorBase implements TabModelSelector {
             listener.onNewTabCreated(tab);
         }
     }
-
-    static native void nativeOnActiveTabChanged(WebContents oldContents, WebContents newContents);
 }

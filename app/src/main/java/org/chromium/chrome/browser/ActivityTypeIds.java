@@ -15,17 +15,18 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ActivityTypeIds {
-  @IntDef({
-      NONE, UNKNOWN, MAIN, PREFERENCES, WEBAPPACTIVITY, FULLSCREENACTIVITY, MAX_VALUE
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ActivityTypeIdsEnum {}
-  public static final int NONE = 0;
-  public static final int UNKNOWN = 1;
-  public static final int MAIN = 2;
-  public static final int PREFERENCES = 3;
-  public static final int WEBAPPACTIVITY = 4;
-  public static final int FULLSCREENACTIVITY = 5;
-  public static final int MAX_VALUE = 6;
+@IntDef({
+    ActivityTypeIds.NONE, ActivityTypeIds.UNKNOWN, ActivityTypeIds.MAIN,
+    ActivityTypeIds.PREFERENCES, ActivityTypeIds.WEBAPPACTIVITY, ActivityTypeIds.FULLSCREENACTIVITY,
+    ActivityTypeIds.MAX_VALUE
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ActivityTypeIds {
+  int NONE = 0;
+  int UNKNOWN = 1;
+  int MAIN = 2;
+  int PREFERENCES = 3;
+  int WEBAPPACTIVITY = 4;
+  int FULLSCREENACTIVITY = 5;
+  int MAX_VALUE = 6;
 }

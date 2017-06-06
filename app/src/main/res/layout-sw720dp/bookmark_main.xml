@@ -18,20 +18,10 @@
         android:divider="@null"
         android:dividerHeight="0dp" />
 
-    <ViewSwitcher
-        android:id="@+id/bookmark_view_switcher"
+    <org.chromium.chrome.browser.widget.selection.SelectableListLayout
+        android:id="@+id/selectable_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:inAnimation="@android:anim/fade_in"
-        android:outAnimation="@android:anim/fade_out" >
-
-        <org.chromium.chrome.browser.widget.selection.SelectableListLayout
-            android:id="@+id/selectable_list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@android:color/white" />
-
-        <include layout="@layout/bookmark_search" />
-    </ViewSwitcher>
+        android:background="@android:color/white" />
 
 </LinearLayout>

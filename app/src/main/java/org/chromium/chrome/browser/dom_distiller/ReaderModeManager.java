@@ -440,9 +440,9 @@ public class ReaderModeManager extends TabModelSelectorTabObserver
 
         return new WebContentsObserver(webContents) {
             @Override
-            public void didStartNavigation(
-                    String url, boolean isInMainFrame, boolean isSamePage, boolean isErrorPage) {
-                if (!isInMainFrame || isSamePage) return;
+            public void didStartNavigation(String url, boolean isInMainFrame,
+                    boolean isSameDocument, boolean isErrorPage) {
+                if (!isInMainFrame || isSameDocument) return;
                 // If there is a navigation in the current tab, hide the bar. It will show again
                 // once the distillability test is successful.
                 if (readerTabId == mTabModelSelector.getCurrentTabId()) {
@@ -462,12 +462,12 @@ public class ReaderModeManager extends TabModelSelectorTabObserver
 
             @Override
             public void didFinishNavigation(String url, boolean isInMainFrame, boolean isErrorPage,
-                    boolean hasCommitted, boolean isSamePage, boolean isFragmentNavigation,
+                    boolean hasCommitted, boolean isSameDocument, boolean isFragmentNavigation,
                     Integer pageTransition, int errorCode, String errorDescription,
                     int httpStatusCode) {
                 // TODO(cjhopman): This should possibly ignore navigations that replace the entry
                 // (like those from history.replaceState()).
-                if (!hasCommitted || !isInMainFrame || isSamePage) return;
+                if (!hasCommitted || !isInMainFrame || isSameDocument) return;
                 if (DomDistillerUrlUtils.isDistilledPage(url)) return;
 
                 // Make sure the tab was not destroyed.
@@ -545,6 +545,7 @@ public class ReaderModeManager extends TabModelSelectorTabObserver
      * Open a link from the panel in a new tab.
      * @param url The URL to load.
      */
+    @Override
     public void createNewTab(String url) {
         if (mChromeActivity == null) return;
 

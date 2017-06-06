@@ -20,7 +20,6 @@ import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Callback;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
@@ -129,7 +128,7 @@ public class AccountSigninView extends FrameLayout implements ProfileDownloader.
 
     public AccountSigninView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mAccountManagerHelper = AccountManagerHelper.get(getContext().getApplicationContext());
+        mAccountManagerHelper = AccountManagerHelper.get();
     }
 
     /**
@@ -162,11 +161,6 @@ public class AccountSigninView extends FrameLayout implements ProfileDownloader.
         mPositiveButton = (ButtonCompat) findViewById(R.id.positive_button);
         mNegativeButton = (Button) findViewById(R.id.negative_button);
         mMoreButton = (Button) findViewById(R.id.more_button);
-
-        // A workaround for Android support library ignoring padding set in XML. b/20307607
-        int padding = getResources().getDimensionPixelSize(R.dimen.fre_button_padding);
-        ApiCompatibilityUtils.setPaddingRelative(mPositiveButton, padding, 0, padding, 0);
-        ApiCompatibilityUtils.setPaddingRelative(mNegativeButton, padding, 0, padding, 0);
 
         // TODO(peconn): Ensure this is changed to R.string.cancel when used in Settings > Sign In.
         mCancelButtonTextId = R.string.no_thanks;
@@ -448,15 +442,14 @@ public class AccountSigninView extends FrameLayout implements ProfileDownloader.
 
         // Ensure that the AccountTrackerService has a fully up to date GAIA id <-> email mapping,
         // as this is needed for the previous account check.
-        if (AccountTrackerService.get(getContext()).checkAndSeedSystemAccounts()) {
+        if (AccountTrackerService.get().checkAndSeedSystemAccounts()) {
             showConfirmSigninPagePreviousAccountCheck();
         } else {
-            AccountTrackerService.get(getContext()).addSystemAccountsSeededListener(
+            AccountTrackerService.get().addSystemAccountsSeededListener(
                     new OnSystemAccountsSeededListener() {
                         @Override
                         public void onSystemAccountsSeedingComplete() {
-                            AccountTrackerService.get(getContext())
-                                    .removeSystemAccountsSeededListener(this);
+                            AccountTrackerService.get().removeSystemAccountsSeededListener(this);
                             showConfirmSigninPagePreviousAccountCheck();
                         }
 

@@ -29,7 +29,7 @@ public class InputMethodManagerWrapper {
     private final Context mContext;
 
     public InputMethodManagerWrapper(Context context) {
-        if (DEBUG_LOGS) Log.d(TAG, "Constructor");
+        if (DEBUG_LOGS) Log.i(TAG, "Constructor");
         mContext = context;
     }
 
@@ -41,7 +41,7 @@ public class InputMethodManagerWrapper {
      * @see android.view.inputmethod.InputMethodManager#restartInput(View)
      */
     public void restartInput(View view) {
-        if (DEBUG_LOGS) Log.d(TAG, "restartInput");
+        if (DEBUG_LOGS) Log.i(TAG, "restartInput");
         getInputMethodManager().restartInput(view);
     }
 
@@ -49,7 +49,7 @@ public class InputMethodManagerWrapper {
      * @see android.view.inputmethod.InputMethodManager#showSoftInput(View, int, ResultReceiver)
      */
     public void showSoftInput(View view, int flags, ResultReceiver resultReceiver) {
-        if (DEBUG_LOGS) Log.d(TAG, "showSoftInput");
+        if (DEBUG_LOGS) Log.i(TAG, "showSoftInput");
         StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();  // crbug.com/616283
         try {
             getInputMethodManager().showSoftInput(view, flags, resultReceiver);
@@ -63,7 +63,7 @@ public class InputMethodManagerWrapper {
      */
     public boolean isActive(View view) {
         final boolean active = getInputMethodManager().isActive(view);
-        if (DEBUG_LOGS) Log.d(TAG, "isActive: " + active);
+        if (DEBUG_LOGS) Log.i(TAG, "isActive: " + active);
         return active;
     }
 
@@ -72,7 +72,7 @@ public class InputMethodManagerWrapper {
      */
     public boolean hideSoftInputFromWindow(IBinder windowToken, int flags,
             ResultReceiver resultReceiver) {
-        if (DEBUG_LOGS) Log.d(TAG, "hideSoftInputFromWindow");
+        if (DEBUG_LOGS) Log.i(TAG, "hideSoftInputFromWindow");
         StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();  // crbug.com/616283
         try {
             return getInputMethodManager().hideSoftInputFromWindow(
@@ -87,8 +87,10 @@ public class InputMethodManagerWrapper {
      */
     public void updateSelection(View view, int selStart, int selEnd,
             int candidatesStart, int candidatesEnd) {
-        if (DEBUG_LOGS) Log.d(TAG, "updateSelection: SEL [%d, %d], COM [%d, %d]", selStart, selEnd,
-                candidatesStart, candidatesEnd);
+        if (DEBUG_LOGS) {
+            Log.i(TAG, "updateSelection: SEL [%d, %d], COM [%d, %d]", selStart, selEnd,
+                    candidatesStart, candidatesEnd);
+        }
         getInputMethodManager().updateSelection(view, selStart, selEnd, candidatesStart,
                 candidatesEnd);
     }
@@ -99,7 +101,7 @@ public class InputMethodManagerWrapper {
      */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public void updateCursorAnchorInfo(View view, CursorAnchorInfo cursorAnchorInfo) {
-        if (DEBUG_LOGS) Log.d(TAG, "updateCursorAnchorInfo");
+        if (DEBUG_LOGS) Log.i(TAG, "updateCursorAnchorInfo");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getInputMethodManager().updateCursorAnchorInfo(view, cursorAnchorInfo);
         }
@@ -112,14 +114,14 @@ public class InputMethodManagerWrapper {
     public void notifyUserAction() {
         // On N and above, this is not needed.
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) return;
-        if (DEBUG_LOGS) Log.d(TAG, "notifyUserAction");
+        if (DEBUG_LOGS) Log.i(TAG, "notifyUserAction");
         InputMethodManager manager = getInputMethodManager();
         try {
             Method method = InputMethodManager.class.getMethod("notifyUserAction");
             method.invoke(manager);
         } catch (NoSuchMethodException | IllegalAccessException | IllegalArgumentException
                 | InvocationTargetException e) {
-            if (DEBUG_LOGS) Log.d(TAG, "notifyUserAction failed");
+            if (DEBUG_LOGS) Log.i(TAG, "notifyUserAction failed");
             return;
         }
     }

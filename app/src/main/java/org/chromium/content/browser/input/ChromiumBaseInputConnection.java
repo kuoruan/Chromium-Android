@@ -65,6 +65,7 @@ public interface ChromiumBaseInputConnection extends InputConnection {
     /**
      * @return The {@link Handler} used for this InputConnection.
      */
+    @Override
     @VisibleForTesting
     Handler getHandler();
 

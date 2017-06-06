@@ -46,6 +46,8 @@
     <org.chromium.chrome.browser.preferences.ChromeBaseListPreference
         android:key="popup_permission_list" />
     <org.chromium.chrome.browser.preferences.ChromeBaseListPreference
+        android:key="subresource_filter_permission_list" />
+    <org.chromium.chrome.browser.preferences.ChromeBaseListPreference
         android:key="background_sync_permission_list" />
     <org.chromium.chrome.browser.preferences.ChromeBaseListPreference
         android:key="protected_media_identifier_permission_list" />

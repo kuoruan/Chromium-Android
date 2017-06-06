@@ -15,18 +15,16 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class WebApkInstallResult {
-  @IntDef({
-      SUCCESS, FAILURE, PROBABLE_FAILURE
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface WebApkInstallResultEnum {}
-  public static final int SUCCESS = 0;
-  public static final int FAILURE = 1;
+@IntDef({
+    WebApkInstallResult.SUCCESS, WebApkInstallResult.FAILURE, WebApkInstallResult.PROBABLE_FAILURE
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface WebApkInstallResult {
+  int SUCCESS = 0;
+  int FAILURE = 1;
   /**
-   * An install was initiated but it timed out. We did not get a response from Google Play (or the
-   * Android OS in the case of the "unknown sources" flow) so it is possible that the install will
-   * complete some time in the future.
+   * An install was initiated but it timed out. We did not get a response from the install service
+   * so it is possible that the install will complete some time in the future.
    */
-  public static final int PROBABLE_FAILURE = 2;
+  int PROBABLE_FAILURE = 2;
 }

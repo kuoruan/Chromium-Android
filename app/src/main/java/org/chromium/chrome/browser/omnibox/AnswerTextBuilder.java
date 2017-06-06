@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.omnibox;
 
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.text.Html;
 import android.text.Spannable;
@@ -64,11 +63,10 @@ class AnswerTextBuilder {
     private static final int ANSWERS_DESCRIPTION_TEXT_POSITIVE_COLOR = 0xFF0B8043;
     private static final int ANSWERS_SUGGESTION_TEXT_COLOR =
             SuggestionView.TITLE_COLOR_STANDARD_FONT_DARK;
-    private static final int ANSWERS_PERSONALIZED_SUGGESTION_TEXT_COLOR = Color.BLACK;
-    private static final int ANSWERS_ANSWER_TEXT_MEDIUM_COLOR =
+    private static final int ANSWERS_PERSONALIZED_SUGGESTION_TEXT_COLOR =
             SuggestionView.TITLE_COLOR_STANDARD_FONT_DARK;
-    private static final int ANSWERS_ANSWER_TEXT_LARGE_COLOR =
-            SuggestionView.TITLE_COLOR_STANDARD_FONT_DARK;
+    private static final int ANSWERS_ANSWER_TEXT_MEDIUM_COLOR = 0xFF8A8A8A;
+    private static final int ANSWERS_ANSWER_TEXT_LARGE_COLOR = 0xFF8A8A8A;
     private static final int ANSWERS_SECONDARY_TEXT_SMALL_COLOR = 0xFF8A8A8A;
     private static final int ANSWERS_SECONDARY_TEXT_MEDIUM_COLOR = 0xFF8A8A8A;
 

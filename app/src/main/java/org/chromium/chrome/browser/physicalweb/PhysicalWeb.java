@@ -4,9 +4,13 @@
 
 package org.chromium.chrome.browser.physicalweb;
 
+import android.annotation.TargetApi;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
+import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 
 import org.chromium.base.ContextUtils;
@@ -23,7 +27,7 @@ import org.chromium.components.location.LocationUtils;
  */
 public class PhysicalWeb {
     public static final int OPTIN_NOTIFY_MAX_TRIES = 1;
-    private static final String PREF_PHYSICAL_WEB_NOTIFY_COUNT = "physical_web_notify_count";
+    private static final String PHYSICAL_WEB_SHARING_PREFERENCE = "physical_web_sharing";
     private static final String FEATURE_NAME = "PhysicalWeb";
     private static final String PHYSICAL_WEB_SHARING_FEATURE_NAME = "PhysicalWebSharing";
     private static final int MIN_ANDROID_VERSION = 18;
@@ -57,6 +61,26 @@ public class PhysicalWeb {
     }
 
     /**
+     * Checks whether the user has consented to use the Sharing feature.
+     *
+     * @return boolean {@code true} if the feature is enabled
+     */
+    public static boolean sharingIsOptedIn() {
+        return ContextUtils.getAppSharedPreferences()
+            .getBoolean(PHYSICAL_WEB_SHARING_PREFERENCE, false);
+    }
+
+    /**
+     * Sets the preference that the user has opted into use the Sharing feature.
+     */
+    public static void setSharingOptedIn() {
+        ContextUtils.getAppSharedPreferences()
+                .edit()
+                .putBoolean(PHYSICAL_WEB_SHARING_PREFERENCE, true)
+                .apply();
+    }
+
+    /**
      * Checks whether the Physical Web onboard flow is active and the user has
      * not yet elected to either enable or decline the feature.
      *
@@ -67,57 +91,13 @@ public class PhysicalWeb {
     }
 
     /**
-     * Starts the Physical Web feature.
-     * At the moment, this only enables URL discovery over BLE.
-     */
-    public static void startPhysicalWeb() {
-        // Only subscribe to Nearby if we have the location permission.
-        LocationUtils locationUtils = LocationUtils.getInstance();
-        if (locationUtils.hasAndroidLocationPermission()
-                && locationUtils.isSystemLocationSettingEnabled()) {
-            new NearbyBackgroundSubscription(NearbySubscription.SUBSCRIBE).run();
-        }
-    }
-
-    /**
-     * Stops the Physical Web feature.
-     */
-    public static void stopPhysicalWeb() {
-        new NearbyBackgroundSubscription(NearbySubscription.UNSUBSCRIBE, new Runnable() {
-            @Override
-            public void run() {
-                // This isn't absolutely necessary, but it's nice to clean up all our shared prefs.
-                UrlManager.getInstance().clearAllUrls();
-            }
-        }).run();
-    }
-
-    /**
-     * Increments a value tracking how many times we've shown the Physical Web
-     * opt-in notification.
-     */
-    public static void recordOptInNotification() {
-        SharedPreferences sharedPreferences = ContextUtils.getAppSharedPreferences();
-        int value = sharedPreferences.getInt(PREF_PHYSICAL_WEB_NOTIFY_COUNT, 0);
-        sharedPreferences.edit().putInt(PREF_PHYSICAL_WEB_NOTIFY_COUNT, value + 1).apply();
-    }
-
-    /**
-     * Gets the current count of how many times a high-priority opt-in notification
-     * has been shown.
-     * @return an integer representing the high-priority notifification display count.
-     */
-    public static int getOptInNotifyCount() {
-        SharedPreferences sharedPreferences = ContextUtils.getAppSharedPreferences();
-        return sharedPreferences.getInt(PREF_PHYSICAL_WEB_NOTIFY_COUNT, 0);
-    }
-
-    /**
      * Performs various Physical Web operations that should happen on startup.
      */
     public static void onChromeStart() {
+        // In the case that the user has disabled our flag and restarted, this is a minimal code
+        // path to disable our subscription to Nearby.
         if (!featureIsEnabled()) {
-            stopPhysicalWeb();
+            new NearbyBackgroundSubscription(NearbySubscription.UNSUBSCRIBE).run();
             return;
         }
 
@@ -126,12 +106,21 @@ public class PhysicalWeb {
             PrivacyPreferencesManager.getInstance().setPhysicalWebEnabled(true);
         }
 
-        if (isPhysicalWebPreferenceEnabled()) {
-            startPhysicalWeb();
-            // The PhysicalWebUma call in this method should be called only when the native library
-            // is loaded.  This is always the case on chrome startup.
-            PhysicalWebUma.uploadDeferredMetrics();
-        }
+        updateScans();
+        // The PhysicalWebUma call in this method should be called only when the native library
+        // is loaded.  This is always the case on chrome startup.
+        PhysicalWebUma.uploadDeferredMetrics();
+
+        // We can remove this block after M60.
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                ContextUtils.getAppSharedPreferences().edit()
+                        .remove("physical_web_notify_count")
+                        .apply();
+                return null;
+            }
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     /**
@@ -152,5 +141,44 @@ public class PhysicalWeb {
         IntentHandler.startChromeLauncherActivityForTrustedIntent(
                 new Intent(Intent.ACTION_VIEW, Uri.parse(UrlConstants.PHYSICAL_WEB_URL))
                         .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+    }
+
+    /**
+     * Check if bluetooth is on and enabled.
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public static boolean bluetoothIsEnabled() {
+        Context context = ContextUtils.getApplicationContext();
+        BluetoothManager bluetoothManager =
+                (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
+        return bluetoothAdapter != null && bluetoothAdapter.isEnabled();
+    }
+
+    /**
+     * Check if the device bluetooth hardware supports BLE advertisements.
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public static boolean hasBleAdvertiseCapability() {
+        Context context = ContextUtils.getApplicationContext();
+        BluetoothManager bluetoothManager =
+                (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
+        return bluetoothAdapter != null && bluetoothAdapter.getBluetoothLeAdvertiser() != null;
+    }
+
+    /**
+     * Examines the environment in order to decide whether we should begin or end a scan.
+     */
+    public static void updateScans() {
+        LocationUtils locationUtils = LocationUtils.getInstance();
+        if (!locationUtils.hasAndroidLocationPermission()
+                || !locationUtils.isSystemLocationSettingEnabled()
+                || !isPhysicalWebPreferenceEnabled()) {
+            new NearbyBackgroundSubscription(NearbySubscription.UNSUBSCRIBE).run();
+            return;
+        }
+
+        new NearbyBackgroundSubscription(NearbySubscription.SUBSCRIBE).run();
     }
 }

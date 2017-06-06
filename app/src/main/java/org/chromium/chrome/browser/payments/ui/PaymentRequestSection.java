@@ -52,7 +52,7 @@ import javax.annotation.Nullable;
  * .................................................................|                |    or   .
  * . LEFT SUMMARY TEXT                        |  RIGHT SUMMARY TEXT |           LOGO |   ADD   .
  * .................................................................|                |    or   .
- * . MAIN SECTION CONTENT                                           |                |  SELECT .
+ * . MAIN SECTION CONTENT                                           |                |  CHOOSE .
  * .............................................................................................
  *
  * 1) MAIN CONTENT
@@ -64,9 +64,9 @@ import javax.annotation.Nullable;
  *    Displays an optional logo (e.g. a credit card image) that floats to the right of the main
  *    content.
  *
- * 3) CHEVRON or ADD or SELECT
+ * 3) CHEVRON or ADD or CHOOSE
  *    Drawn to indicate that the current section may be expanded.  Displayed only when the view is
- *    in the {@link #DISPLAY_MODE_EXPANDABLE} state and only if an ADD or SELECT button isn't shown.
+ *    in the {@link #DISPLAY_MODE_EXPANDABLE} state and only if an ADD or CHOOSE button isn't shown.
  *
  * There are three states that the UI may flip between; see {@link #DISPLAY_MODE_NORMAL},
  * {@link #DISPLAY_MODE_EXPANDABLE}, and {@link #DISPLAY_MODE_FOCUSED} for details.
@@ -110,7 +110,7 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
     public static final int EDIT_BUTTON_GONE = 0;
 
     /** Edit button mode: Indicate that the section requires a selection. */
-    public static final int EDIT_BUTTON_SELECT = 1;
+    public static final int EDIT_BUTTON_CHOOSE = 1;
 
     /** Edit button mode: Indicate that the section requires adding an option. */
     public static final int EDIT_BUTTON_ADD = 2;
@@ -210,6 +210,12 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
         return mSummaryRightTextView;
     }
 
+    /** Returns the left summary TextView. */
+    protected TextView getSummaryLeftTextView() {
+        assert mSummaryLeftTextView != null;
+        return mSummaryLeftTextView;
+    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
         // Allow touches to propagate to children only if the layout can be interacted with.
@@ -220,7 +226,7 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
     public final void onClick(View v) {
         if (!mDelegate.isAcceptingUserInput()) return;
 
-        // Handle clicking on "ADD" or "SELECT".
+        // Handle clicking on "ADD" or "CHOOSE".
         if (v == mEditButtonView) {
             if (getEditButtonState() == EDIT_BUTTON_ADD) {
                 mDelegate.onAddPaymentOption(this);
@@ -398,7 +404,7 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
     private Button createAndAddEditButton(ViewGroup parent) {
         Resources resources = parent.getResources();
         Button view = DualControlLayout.createButtonForLayout(
-                parent.getContext(), true, resources.getString(R.string.select), this);
+                parent.getContext(), true, resources.getString(R.string.choose), this);
         view.setId(R.id.payments_section);
 
         LayoutParams params =
@@ -451,21 +457,18 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
             mEditButtonView.setVisibility(GONE);
             mChevronView.setVisibility(
                     mDisplayMode == DISPLAY_MODE_EXPANDABLE ? VISIBLE : GONE);
-
-            // Update whether the summary is displayed.
-            boolean showSummary =
-                    mIsSummaryAllowed && !TextUtils.isEmpty(mSummaryLeftTextView.getText());
-            mSummaryLayout.setVisibility(showSummary ? VISIBLE : GONE);
         } else {
-            // Show the edit button and hide the chevron and the summary.
+            // Show the edit button and hide the chevron.
             boolean isButtonAllowed = mDisplayMode == DISPLAY_MODE_EXPANDABLE
                     || mDisplayMode == DISPLAY_MODE_NORMAL;
-            mSummaryLayout.setVisibility(GONE);
             mChevronView.setVisibility(GONE);
             mEditButtonView.setVisibility(isButtonAllowed ? VISIBLE : GONE);
             mEditButtonView.setText(
-                    editButtonState == EDIT_BUTTON_SELECT ? R.string.select : R.string.add);
+                    editButtonState == EDIT_BUTTON_CHOOSE ? R.string.choose : R.string.add);
         }
+
+        // Update whether the summary is displayed.
+        mSummaryLayout.setVisibility(mIsSummaryAllowed ? VISIBLE : GONE);
 
         // The title gains extra spacing when there is another visible view in the main section.
         int numVisibleMainViews = 0;
@@ -486,7 +489,7 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
     }
 
     /**
-     * Section with three extra TextViews beneath the summary to show additional details.
+     * Section with three extra TextViews beneath the summary to show additional shipping details.
      *
      * ............................................................................
      * . TITLE                                                          |         .
@@ -495,16 +498,17 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
      * .................................................................|    or   .
      * . EXTRA TEXT ONE                                                 |   ADD   .
      * .................................................................|    or   .
-     * . EXTRA TEXT TWO                                                 |  SELECT .
+     * . EXTRA TEXT TWO                                                 |  CHOOSE .
      * .................................................................|         .
      * . EXTRA TEXT THREE                                               |         .
      * ............................................................................
      */
-    public static class ExtraTextsSection extends PaymentRequestSection {
+    public static class ShippingSummarySection extends PaymentRequestSection {
         private TextView[] mExtraTextViews;
         private int mEditButtonState = EDIT_BUTTON_GONE;
 
-        public ExtraTextsSection(Context context, String sectionName, SectionDelegate delegate) {
+        public ShippingSummarySection(
+                Context context, String sectionName, SectionDelegate delegate) {
             super(context, sectionName, delegate);
             setExtraTexts(new String[] {null, null, null});
         }
@@ -525,11 +529,42 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
         }
 
         /**
+         * Updates the View to account for the new {@link ShippingSummaryInformation} being passed
+         * in.
+         */
+        public void update(ShippingSummaryInformation info) {
+            String selectedShippingName = info.getSelectedShippingAddressLabel();
+            String selectedShippingAddress = info.getSelectedShippingAddressSublabel();
+            String selectedShippingPhone = info.getSelectedShippingAddressTertiaryLabel();
+            String selectedShippingOptionLabel = info.getSelectedShippingOptionLabel();
+
+            // Display the summary in a single line.
+            setSummaryProperties(TruncateAt.END, true /* leftIsSingleLine */,
+                    null /* rightTruncate */, false /* rightIsSingleLine */);
+            if (selectedShippingAddress == null || selectedShippingOptionLabel == null) {
+                ApiCompatibilityUtils.setTextAppearance(
+                        getSummaryLeftTextView(), R.style.PaymentsUiSectionDescriptiveText);
+                SectionUiUtils.showSectionSummaryInTextViewInSingeLine(getContext(),
+                        info.getShippingAddressSectionInfo(), getSummaryLeftTextView());
+            } else {
+                // Show the shipping name in the summary section.
+                setSummaryText(selectedShippingName, null);
+
+                // Show the shipping address, phone and option below the summary.
+                setExtraTextsProperties(
+                        new TruncateAt[] {TruncateAt.MIDDLE, TruncateAt.END, TruncateAt.END},
+                        new boolean[] {true, true, true});
+                setExtraTexts(new String[] {selectedShippingAddress, selectedShippingPhone,
+                        selectedShippingOptionLabel});
+            }
+        }
+
+        /**
          * Sets the CharSequences that are displayed in the extra TextViews.
          *
          * @param extraTexts Texts to display in the extra TextViews.
          */
-        public void setExtraTexts(CharSequence[] extraTexts) {
+        private void setExtraTexts(CharSequence[] extraTexts) {
             assert extraTexts.length == mExtraTextViews.length;
 
             for (int i = 0; i < mExtraTextViews.length; i++) {
@@ -544,7 +579,7 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
          * @param textsTruncate How to truncate the extra texts. Set the element to null to clear.
          * @param textsAreSingleLine Whether the extra texts should be displayed in a single line.
          */
-        public void setExtraTextsProperties(
+        private void setExtraTextsProperties(
                 TruncateAt[] textsTruncate, boolean[] textsAreSingleLine) {
             assert textsTruncate.length == mExtraTextViews.length;
             assert textsAreSingleLine.length == mExtraTextViews.length;
@@ -581,7 +616,7 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
      * . LEFT SUMMARY TEXT          | UPDATE TEXT |  RIGHT SUMMARY TEXT |    or   .
      * .................................................................|   ADD   .
      * .                                      | Line item 1 |    $13.99 |    or   .
-     * .                                      | Line item 2 |      $.99 |  SELECT .
+     * .                                      | Line item 2 |      $.99 |  CHOOSE .
      * .                                      | Line item 3 |     $2.99 |         .
      * ............................................................................
      */
@@ -642,6 +677,13 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
                     new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
             breakdownParams.gravity = Gravity.END;
             mainSectionLayout.addView(mBreakdownLayout, breakdownParams);
+
+            // Sets the summary right text view takes the same available space as the summary left
+            // text view.
+            LinearLayout.LayoutParams rightTextViewLayoutParams =
+                    (LinearLayout.LayoutParams) getSummaryRightTextView().getLayoutParams();
+            rightTextViewLayoutParams.width = 0;
+            rightTextViewLayoutParams.weight = 1f;
         }
 
         /**
@@ -664,6 +706,9 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
             ApiCompatibilityUtils.setTextAlignment(mUpdatedView, TEXT_ALIGNMENT_TEXT_END);
             mUpdatedView.setTextColor(ApiCompatibilityUtils.getColor(
                     context.getResources(), R.color.google_green_700));
+            ApiCompatibilityUtils.setMarginStart(updatedLayoutParams,
+                    context.getResources().getDimensionPixelSize(
+                            R.dimen.payments_section_small_spacing));
             ApiCompatibilityUtils.setMarginEnd(
                     updatedLayoutParams, context.getResources().getDimensionPixelSize(
                                                  R.dimen.payments_section_small_spacing));
@@ -799,6 +844,23 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
         }
 
         @Override
+        public void setDisplayMode(int displayMode) {
+            // Displays the summary left text view in at most three lines if in focus mode,
+            // otherwise display it in a single line.
+            if (displayMode == DISPLAY_MODE_FOCUSED) {
+                setSummaryProperties(TruncateAt.END, false /* leftIsSingleLine */,
+                        null /* rightTruncate */, false /* rightIsSingleLine */);
+                getSummaryLeftTextView().setMaxLines(3);
+            } else {
+                setSummaryProperties(TruncateAt.END, true /* leftIsSingleLine */,
+                        null /* rightTruncate */, false /* rightIsSingleLine */);
+                getSummaryLeftTextView().setMaxLines(1);
+            }
+
+            super.setDisplayMode(displayMode);
+        }
+
+        @Override
         protected void updateControlLayout() {
             if (!mIsLayoutInitialized) return;
 
@@ -826,7 +888,7 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
      * . Descriptive text that spans all three columns because it can.  |                |    or   .
      * . ! Warning text that displays a big scary warning and icon.     |           LOGO |   ADD   .
      * . O Option 1                                  ICON 1 | Edit Icon |                |    or   .
-     * . O Option 2                                  ICON 2 | Edit Icon |                |  SELECT .
+     * . O Option 2                                  ICON 2 | Edit Icon |                |  CHOOSE .
      * . O Option 3                                  ICON 3 | Edit Icon |                |         .
      * . + ADD THING                                                    |                |         .
      * .............................................................................................
@@ -1116,6 +1178,9 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
         /** Indicates whether the summary should be a single line. */
         private boolean mSummaryInSingleLine;
 
+        /** Indicates whether the summary is set to R.style.PaymentsUiSectionDescriptiveText. */
+        private boolean mSummaryInDescriptiveText;
+
         private FocusChangedObserver mFocusChangedObserver;
 
         /**
@@ -1186,26 +1251,18 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
                         mSectionInformation.getDataType(), shouldFocus);
             }
 
+            int previousDisplayMode = mDisplayMode;
             super.focusSection(shouldFocus);
+
+            // Update summary when display mode changed from DISPLAY_MODE_NORMAL to other modes.
+            if (mSectionInformation != null && previousDisplayMode == DISPLAY_MODE_NORMAL) {
+                updateSelectedItem(mSectionInformation.getSelectedItem());
+            }
         }
 
         @Override
         protected boolean isLogoNecessary() {
             return true;
-        }
-
-        @Override
-        public void setSummaryProperties(@Nullable TruncateAt leftTruncate,
-                boolean leftIsSingleLine, @Nullable TruncateAt rightTruncate,
-                boolean rightIsSingleLine) {
-            super.setSummaryProperties(
-                    leftTruncate, leftIsSingleLine, rightTruncate, rightIsSingleLine);
-
-            // Updates the summary if necessary after properties are changed.
-            mSummaryInSingleLine = leftIsSingleLine;
-            if (mSectionInformation != null) {
-                updateSelectedItem(mSectionInformation.getSelectedItem());
-            }
         }
 
         @Override
@@ -1296,19 +1353,47 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
                 return EDIT_BUTTON_ADD;
             } else if (mSectionInformation.getSelectedItem() == null) {
                 // The user hasn't selected any available PaymentOptions.  Ask the user to pick one.
-                return EDIT_BUTTON_SELECT;
+                return EDIT_BUTTON_CHOOSE;
             } else {
                 return EDIT_BUTTON_GONE;
             }
         }
 
         private void updateSelectedItem(PaymentOption selectedItem) {
+            // Only left TextView in the summary section is used in this section.
+            // Set the summary to display in a single line when there is no selected item in this
+            // section or the display mode is DISPLAY_MODE_NORMAL.
+            if (selectedItem == null || mDisplayMode == DISPLAY_MODE_NORMAL) {
+                if (!mSummaryInSingleLine) {
+                    setSummaryProperties(TruncateAt.END, true /* leftIsSingleLine */,
+                            null /* rightTruncate */, false /* rightIsSingleLine */);
+                    mSummaryInSingleLine = true;
+                }
+            } else if (mSummaryInSingleLine) {
+                setSummaryProperties(null /* leftTruncate */, false /* leftIsSingleLine */,
+                        null /* rightTruncate */, false /* rightIsSingleLine */);
+                mSummaryInSingleLine = false;
+            }
+
             if (selectedItem == null) {
                 setLogoDrawable(null, false);
-                setIsSummaryAllowed(false);
-                setSummaryText(null, null);
+                // Section summary should be displayed as R.style.PaymentsUiSectionDescriptiveText.
+                if (!mSummaryInDescriptiveText) {
+                    ApiCompatibilityUtils.setTextAppearance(
+                            getSummaryLeftTextView(), R.style.PaymentsUiSectionDescriptiveText);
+                    mSummaryInDescriptiveText = true;
+                }
+                SectionUiUtils.showSectionSummaryInTextViewInSingeLine(
+                        getContext(), mSectionInformation, getSummaryLeftTextView());
             } else {
                 setLogoDrawable(selectedItem.getDrawableIcon(), selectedItem.isEditable());
+                // Selected item summary should be displayed as
+                // R.style.PaymentsUiSectionDefaultText.
+                if (mSummaryInDescriptiveText) {
+                    ApiCompatibilityUtils.setTextAppearance(
+                            getSummaryLeftTextView(), R.style.PaymentsUiSectionDefaultText);
+                    mSummaryInDescriptiveText = false;
+                }
                 setSummaryText(
                         convertOptionToString(selectedItem, false /* useBoldLabel */,
                                 mSummaryInSingleLine),
@@ -1441,9 +1526,9 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
             Resources resources = parent.getContext().getResources();
             setBackgroundColor(ApiCompatibilityUtils.getColor(
                     resources, R.color.payments_section_separator));
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    LayoutParams.MATCH_PARENT,
-                    resources.getDimensionPixelSize(R.dimen.payments_section_separator_height));
+            LinearLayout.LayoutParams params =
+                    new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+                            resources.getDimensionPixelSize(R.dimen.separator_height));
 
             int margin = resources.getDimensionPixelSize(R.dimen.payments_section_large_spacing);
             ApiCompatibilityUtils.setMarginStart(params, margin);

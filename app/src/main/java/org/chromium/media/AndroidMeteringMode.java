@@ -15,15 +15,15 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class AndroidMeteringMode {
-  @IntDef({
-      NOT_SET, NONE, FIXED, SINGLE_SHOT, CONTINUOUS
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface AndroidMeteringModeEnum {}
-  public static final int NOT_SET = 0;
-  public static final int NONE = 1;
-  public static final int FIXED = 2;
-  public static final int SINGLE_SHOT = 3;
-  public static final int CONTINUOUS = 4;
+@IntDef({
+    AndroidMeteringMode.NOT_SET, AndroidMeteringMode.NONE, AndroidMeteringMode.FIXED,
+    AndroidMeteringMode.SINGLE_SHOT, AndroidMeteringMode.CONTINUOUS
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface AndroidMeteringMode {
+  int NOT_SET = 0;
+  int NONE = 1;
+  int FIXED = 2;
+  int SINGLE_SHOT = 3;
+  int CONTINUOUS = 4;
 }

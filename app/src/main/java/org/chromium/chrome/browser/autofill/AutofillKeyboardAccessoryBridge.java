@@ -57,6 +57,9 @@ public class AutofillKeyboardAccessoryBridge
     }
 
     @Override
+    public void accessibilityFocusCleared() {}
+
+    @Override
     public void onClick(DialogInterface dialog, int which) {
         assert which == DialogInterface.BUTTON_POSITIVE;
         if (mNativeAutofillKeyboardAccessory == 0) return;

@@ -387,7 +387,7 @@ public class DocumentModeAssassin {
         // safely copied to the other directory.
         Log.d(TAG, "Setting tabbed mode preference.");
         setOptedOutState(OPTED_OUT_OF_DOCUMENT_MODE);
-        TabSwitcherCallout.setIsTabSwitcherCalloutNecessary(getContext(), true);
+        TabSwitcherCallout.setIsTabSwitcherCalloutNecessary(true);
 
         // Remove all the {@link DocumentActivity} tasks from Android's Recents list.  Users
         // viewing Recents during migration will continue to see their tabs until they exit.

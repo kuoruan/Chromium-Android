@@ -12,6 +12,9 @@ import android.view.View;
 import android.view.View.OnLayoutChangeListener;
 
 import org.chromium.base.TraceEvent;
+import org.chromium.ui.resources.Resource;
+import org.chromium.ui.resources.ResourceFactory;
+import org.chromium.ui.resources.statics.NinePatchData;
 
 /**
  * An adapter that exposes a {@link View} as a {@link DynamicResource}. In order to properly use
@@ -22,8 +25,6 @@ import org.chromium.base.TraceEvent;
 public class ViewResourceAdapter implements DynamicResource, OnLayoutChangeListener {
     private final View mView;
     private final Rect mDirtyRect = new Rect();
-    private final Rect mContentPadding = new Rect();
-    private final Rect mContentAperture = new Rect();
 
     private Bitmap mBitmap;
     private Rect mBitmapSize = new Rect();
@@ -72,18 +73,17 @@ public class ViewResourceAdapter implements DynamicResource, OnLayoutChangeListe
         return mBitmapSize;
     }
 
+    /**
+     * Override this method to create the native resource type for the generated bitmap.
+     */
     @Override
-    public Rect getPadding() {
-        computeContentPadding(mContentPadding);
-
-        return mContentPadding;
+    public long createNativeResource() {
+        return ResourceFactory.createBitmapResource(null);
     }
 
     @Override
-    public Rect getAperture() {
-        computeContentAperture(mContentAperture);
-
-        return mContentAperture;
+    public final NinePatchData getNinePatchData() {
+        return null;
     }
 
     @Override
@@ -144,22 +144,6 @@ public class ViewResourceAdapter implements DynamicResource, OnLayoutChangeListe
      * Called after {@link #capture(Canvas)}.
      */
     protected void onCaptureEnd() {
-    }
-
-    /**
-     * Gives overriding classes the chance to specify a different content padding.
-     * @param outContentPadding The resulting content padding.
-     */
-    protected void computeContentPadding(Rect outContentPadding) {
-        outContentPadding.set(0, 0, mView.getWidth(), mView.getHeight());
-    }
-
-    /**
-     * Gives overriding classes the chance to specify a different content aperture.
-     * @param outContentAperture The resulting content aperture.
-     */
-    protected void computeContentAperture(Rect outContentAperture) {
-        outContentAperture.set(0, 0, mView.getWidth(), mView.getHeight());
     }
 
     /**

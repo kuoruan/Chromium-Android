@@ -38,9 +38,9 @@ import org.chromium.chrome.browser.ntp.ContextMenuManager.ContextMenuItemId;
 import org.chromium.chrome.browser.ntp.cards.CardViewHolder;
 import org.chromium.chrome.browser.ntp.cards.CardsVariationParameters;
 import org.chromium.chrome.browser.ntp.cards.ImpressionTracker;
-import org.chromium.chrome.browser.ntp.cards.NewTabPageRecyclerView;
 import org.chromium.chrome.browser.ntp.cards.NewTabPageViewHolder;
 import org.chromium.chrome.browser.ntp.cards.SuggestionsCategoryInfo;
+import org.chromium.chrome.browser.suggestions.SuggestionsRecyclerView;
 import org.chromium.chrome.browser.suggestions.SuggestionsUiDelegate;
 import org.chromium.chrome.browser.widget.TintedImageView;
 import org.chromium.chrome.browser.widget.displaystyle.DisplayStyleObserver;
@@ -70,6 +70,7 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
     private static final int[] FAVICON_SERVICE_SUPPORTED_SIZES = {16, 24, 32, 48, 64};
     private static final String FAVICON_SERVICE_FORMAT =
             "https://s2.googleusercontent.com/s2/favicons?domain=%s&src=chrome_newtab_mobile&sz=%d&alt=404";
+    private static final int PUBLISHER_FAVICON_MINIMUM_SIZE_PX = 16;
 
     private final SuggestionsUiDelegate mUiDelegate;
     private final UiConfig mUiConfig;
@@ -85,8 +86,8 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
     /** Total horizontal space occupied by the thumbnail, sum of its size and margin. */
     private final int mThumbnailFootprintPx;
     private final boolean mUseFaviconService;
-    private final ColorStateList mIconForegroundColorList;
     private final int mIconBackgroundColor;
+    private final ColorStateList mIconForegroundColorList;
 
     private FetchImageCallback mImageCallback;
     private SnippetArticle mArticle;
@@ -95,12 +96,12 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
 
     /**
      * Constructs a {@link SnippetArticleViewHolder} item used to display snippets.
-     * @param parent The NewTabPageRecyclerView that is going to contain the newly created view.
+     * @param parent The SuggestionsRecyclerView that is going to contain the newly created view.
      * @param contextMenuManager The manager responsible for the context menu.
      * @param uiDelegate The delegate object used to open an article, fetch thumbnails, etc.
      * @param uiConfig The NTP UI configuration object used to adjust the article UI.
      */
-    public SnippetArticleViewHolder(NewTabPageRecyclerView parent,
+    public SnippetArticleViewHolder(SuggestionsRecyclerView parent,
             ContextMenuManager contextMenuManager, SuggestionsUiDelegate uiDelegate,
             UiConfig uiConfig) {
         super(R.layout.new_tab_page_snippets_card, parent, uiConfig, contextMenuManager);
@@ -178,7 +179,8 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
      * @param article The snippet to take the data from.
      * @param categoryInfo The info of the category which the snippet belongs to.
      */
-    public void onBindViewHolder(SnippetArticle article, SuggestionsCategoryInfo categoryInfo) {
+    public void onBindViewHolder(
+            final SnippetArticle article, SuggestionsCategoryInfo categoryInfo) {
         super.onBindViewHolder();
 
         mArticle = article;
@@ -203,15 +205,22 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
         // from moving later.
         setDefaultFaviconOnView();
         try {
-            fetchFaviconFromLocalCache(new URI(mArticle.mUrl), true);
+            long faviconFetchStartTimeMs = SystemClock.elapsedRealtime();
+            URI pageUrl = new URI(mArticle.mUrl);
+            if (!article.isArticle() || !SnippetsConfig.isFaviconsFromNewServerEnabled()) {
+                // The old code path. Remove when the experiment is successful.
+                // Currently, we have to use this for non-articles, due to privacy.
+                fetchFaviconFromLocalCache(pageUrl, true, faviconFetchStartTimeMs);
+            } else {
+                // The new code path.
+                fetchFaviconFromLocalCacheOrGoogleServer(faviconFetchStartTimeMs);
+            }
         } catch (URISyntaxException e) {
             // Do nothing, stick to the default favicon.
         }
 
         mOfflineBadge.setVisibility(View.GONE);
         refreshOfflineBadgeVisibility();
-
-        mRecyclerView.onSnippetBound(itemView);
     }
 
     /**
@@ -289,7 +298,6 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
     private void setThumbnailFromBitmap(Bitmap thumbnail) {
         assert thumbnail != null && !thumbnail.isRecycled();
         mThumbnailView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        mThumbnailView.setPadding(0, 0, 0, 0);
         mThumbnailView.setBackground(null);
         mThumbnailView.setImageBitmap(thumbnail);
         mThumbnailView.setTint(null);
@@ -297,25 +305,9 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
 
     private void setThumbnailFromFileType(int fileType) {
         mThumbnailView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-
-        // The provided asset is 36dp, but the spec requires 32dp. Add padding to force the asset to
-        // be scaled down.
-        final int actualIconSizeDp = 36;
-        final int desiredIconSizeDp = 32;
-        Drawable icon = ApiCompatibilityUtils.getDrawable(mThumbnailView.getResources(),
-                DownloadUtils.getIconResId(fileType, DownloadUtils.ICON_SIZE_36_DP));
-
-        final int drawableSize = icon.getIntrinsicWidth();
-        assert icon.getIntrinsicHeight() == drawableSize;
-
-        final int viewSize = mThumbnailView.getResources().getDimensionPixelSize(
-                R.dimen.snippets_thumbnail_size);
-        final float scale = ((float) desiredIconSizeDp) / actualIconSizeDp;
-        final int padding = (int) (viewSize / 2f - drawableSize * scale / 2f);
-        mThumbnailView.setPadding(padding, padding, padding, padding);
-
         mThumbnailView.setBackgroundColor(mIconBackgroundColor);
-        mThumbnailView.setImageDrawable(icon);
+        mThumbnailView.setImageResource(
+                DownloadUtils.getIconResId(fileType, DownloadUtils.ICON_SIZE_36_DP));
         mThumbnailView.setTint(mIconForegroundColorList);
     }
 
@@ -360,7 +352,6 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
         }
 
         // Temporarily set placeholder and then fetch the thumbnail from a provider.
-        mThumbnailView.setPadding(0, 0, 0, 0);
         mThumbnailView.setBackground(null);
         mThumbnailView.setImageResource(R.drawable.ic_snippet_thumbnail_placeholder);
         mThumbnailView.setTint(null);
@@ -370,7 +361,6 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
 
     /** Updates the visibility of the card's offline badge by checking the bound article's info. */
     private void refreshOfflineBadgeVisibility() {
-        if (!SnippetsConfig.isOfflineBadgeEnabled()) return;
         boolean visible = mArticle.getOfflinePageOfflineId() != null || mArticle.isAssetDownload();
         if (visible == (mOfflineBadge.getVisibility() == View.VISIBLE)) return;
         mOfflineBadge.setVisibility(visible ? View.VISIBLE : View.GONE);
@@ -406,7 +396,6 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
                 new BitmapDrawable(mThumbnailView.getResources(), scaledThumbnail)};
         TransitionDrawable transitionDrawable = new TransitionDrawable(layers);
         mThumbnailView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        mThumbnailView.setPadding(0, 0, 0, 0);
         mThumbnailView.setBackground(null);
         mThumbnailView.setImageDrawable(transitionDrawable);
         mThumbnailView.setTint(null);
@@ -414,15 +403,52 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
         transitionDrawable.startTransition(FADE_IN_ANIMATION_TIME_MS);
     }
 
-    private void fetchFaviconFromLocalCache(final URI snippetUri, final boolean fallbackToService) {
+    private void fetchFaviconFromLocalCacheOrGoogleServer(final long faviconFetchStartTimeMs) {
+        // Set the desired size to 0 to specify we do not want to resize in c++, we'll resize here.
+        mUiDelegate.getSuggestionsSource().fetchSuggestionFavicon(mArticle,
+                PUBLISHER_FAVICON_MINIMUM_SIZE_PX, /* desiredSizePx */ 0, new Callback<Bitmap>() {
+                    @Override
+                    public void onResult(Bitmap image) {
+                        recordFaviconFetchTime(faviconFetchStartTimeMs);
+                        if (image == null) return;
+                        setFaviconOnView(image);
+                    }
+                });
+    }
+
+    private void recordFaviconFetchTime(long faviconFetchStartTimeMs) {
+        RecordHistogram.recordMediumTimesHistogram(
+                "NewTabPage.ContentSuggestions.ArticleFaviconFetchTime",
+                SystemClock.elapsedRealtime() - faviconFetchStartTimeMs, TimeUnit.MILLISECONDS);
+    }
+
+    private void recordFaviconFetchResult(
+            @FaviconFetchResult int result, long faviconFetchStartTimeMs) {
+        // Record the histogram for articles only to have a fair comparision.
+        if (!mArticle.isArticle()) return;
+        RecordHistogram.recordEnumeratedHistogram(
+                "NewTabPage.ContentSuggestions.ArticleFaviconFetchResult", result,
+                FaviconFetchResult.COUNT);
+        recordFaviconFetchTime(faviconFetchStartTimeMs);
+    }
+
+    private void fetchFaviconFromLocalCache(final URI snippetUri, final boolean fallbackToService,
+            final long faviconFetchStartTimeMs) {
         mUiDelegate.getLocalFaviconImageForURL(
                 getSnippetDomain(snippetUri), mPublisherFaviconSizePx, new FaviconImageCallback() {
                     @Override
                     public void onFaviconAvailable(Bitmap image, String iconUrl) {
                         if (image != null) {
                             setFaviconOnView(image);
+                            recordFaviconFetchResult(fallbackToService
+                                            ? FaviconFetchResult.SUCCESS_CACHED
+                                            : FaviconFetchResult.SUCCESS_FETCHED,
+                                    faviconFetchStartTimeMs);
                         } else if (fallbackToService) {
-                            fetchFaviconFromService(snippetUri);
+                            if (!fetchFaviconFromService(snippetUri, faviconFetchStartTimeMs)) {
+                                recordFaviconFetchResult(
+                                        FaviconFetchResult.FAILURE, faviconFetchStartTimeMs);
+                            }
                         }
                         // Else do nothing, we already have the placeholder set.
                     }
@@ -431,10 +457,11 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
 
     // TODO(crbug.com/635567): Fix this properly.
     @SuppressLint("DefaultLocale")
-    private void fetchFaviconFromService(final URI snippetUri) {
-        if (!mUseFaviconService) return;
+    private boolean fetchFaviconFromService(
+            final URI snippetUri, final long faviconFetchStartTimeMs) {
+        if (!mUseFaviconService) return false;
         int sizePx = getFaviconServiceSupportedSize();
-        if (sizePx == 0) return;
+        if (sizePx == 0) return false;
 
         // Replace the default icon by another one from the service when it is fetched.
         mUiDelegate.ensureIconIsAvailable(
@@ -443,11 +470,17 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
                 /*useLargeIcon=*/false, /*isTemporary=*/true, new IconAvailabilityCallback() {
                     @Override
                     public void onIconAvailabilityChecked(boolean newlyAvailable) {
-                        if (!newlyAvailable) return;
+                        if (!newlyAvailable) {
+                            recordFaviconFetchResult(
+                                    FaviconFetchResult.FAILURE, faviconFetchStartTimeMs);
+                            return;
+                        }
                         // The download succeeded, the favicon is in the cache; fetch it.
-                        fetchFaviconFromLocalCache(snippetUri, /*fallbackToService=*/false);
+                        fetchFaviconFromLocalCache(
+                                snippetUri, /*fallbackToService=*/false, faviconFetchStartTimeMs);
                     }
                 });
+        return true;
     }
 
     private int getFaviconServiceSupportedSize() {

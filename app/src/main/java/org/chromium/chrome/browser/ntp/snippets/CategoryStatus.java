@@ -15,47 +15,44 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class CategoryStatus {
-  @IntDef({
-      INITIALIZING, AVAILABLE, AVAILABLE_LOADING, NOT_PROVIDED, ALL_SUGGESTIONS_EXPLICITLY_DISABLED,
-      CATEGORY_EXPLICITLY_DISABLED, SIGNED_OUT, LOADING_ERROR
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface CategoryStatusEnum {}
+@IntDef({
+    CategoryStatus.INITIALIZING, CategoryStatus.AVAILABLE, CategoryStatus.AVAILABLE_LOADING,
+    CategoryStatus.NOT_PROVIDED, CategoryStatus.ALL_SUGGESTIONS_EXPLICITLY_DISABLED,
+    CategoryStatus.CATEGORY_EXPLICITLY_DISABLED, CategoryStatus.LOADING_ERROR
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface CategoryStatus {
   /**
    * The provider is still initializing and it is not yet determined whether content suggestions
    * will be available or not.
    */
-  public static final int INITIALIZING = 0;
+  int INITIALIZING = 0;
   /**
    * Content suggestions are available (though the list of available suggestions may be empty simply
    * because there are no reasonable suggestions to be made at the moment).
    */
-  public static final int AVAILABLE = 1;
+  int AVAILABLE = 1;
   /**
    * Content suggestions are provided but not yet loaded.
    */
-  public static final int AVAILABLE_LOADING = 2;
+  int AVAILABLE_LOADING = 2;
   /**
    * There is no provider that provides suggestions for this category.
    */
-  public static final int NOT_PROVIDED = 3;
+  int NOT_PROVIDED = 3;
   /**
    * The entire content suggestions feature has explicitly been disabled as part of the service
    * configuration.
    */
-  public static final int ALL_SUGGESTIONS_EXPLICITLY_DISABLED = 4;
+  int ALL_SUGGESTIONS_EXPLICITLY_DISABLED = 4;
   /**
    * Content suggestions from a specific category have been disabled as part of the service
-   * configuration.
+   * configuration. Any suggestions from this category should be removed from the UI immediately.
    */
-  public static final int CATEGORY_EXPLICITLY_DISABLED = 5;
-  /**
-   * Content suggestions are not available because the user is not signed in.
-   */
-  public static final int SIGNED_OUT = 6;
+  int CATEGORY_EXPLICITLY_DISABLED = 5;
   /**
    * Content suggestions are not available because an error occurred when loading or updating them.
+   * Any suggestions from this category should be removed from the UI immediately.
    */
-  public static final int LOADING_ERROR = 7;
+  int LOADING_ERROR = 6;
 }

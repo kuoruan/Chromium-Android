@@ -15,7 +15,7 @@ import java.nio.ByteOrder;
 /**
  * A helper class to decode and expose relevant 9-patch data from a Bitmap.
  */
-class NinePatchData {
+public class NinePatchData {
     private final int mWidth;
     private final int mHeight;
     private final Rect mPadding;

@@ -46,7 +46,7 @@ public class ChromeBrowserSyncAdapter extends AbstractThreadedSyncAdapter {
     public void onPerformSync(Account account, Bundle extras, String authority,
             ContentProviderClient provider, SyncResult syncResult) {
         if (extras.getBoolean(ContentResolver.SYNC_EXTRAS_INITIALIZE)) {
-            Account signedInAccount = ChromeSigninController.get(getContext()).getSignedInUser();
+            Account signedInAccount = ChromeSigninController.get().getSignedInUser();
             if (account.equals(signedInAccount)) {
                 ContentResolver.setIsSyncable(account, authority, 1);
             } else {

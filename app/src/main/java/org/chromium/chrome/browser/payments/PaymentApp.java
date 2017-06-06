@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * The interface that a payment app implements. A payment app can get its data from Chrome autofill,
  * Android Pay, or third party apps.
@@ -35,14 +37,16 @@ public interface PaymentApp {
      *
      * @param methodDataMap    The map from methods to method specific data. The data contains such
      *                         information as whether the app should be invoked in test or
-     * production
-     *                         mode, merchant identifier, or a public key.
+     *                         production mode, merchant identifier, or a public key.
      * @param origin           The origin of this merchant.
-     * @param certificateChain The site certificate chain of the merchant.
+     * @param iframeOrigin     The origin of the iframe that invoked PaymentRequest. Same as origin
+     *                         if PaymentRequest was not invoked from inside an iframe.
+     * @param certificateChain The site certificate chain of the merchant. Null for localhost and
+     *                         file on disk, which are secure origins without SSL.
      * @param callback         The object that will receive the list of instruments.
      */
     void getInstruments(Map<String, PaymentMethodData> methodDataMap, String origin,
-            byte[][] certificateChain, InstrumentsCallback callback);
+            String iframeOrigin, @Nullable byte[][] certificateChain, InstrumentsCallback callback);
 
     /**
      * Returns a list of all payment method names that this app supports. For example, ["visa",

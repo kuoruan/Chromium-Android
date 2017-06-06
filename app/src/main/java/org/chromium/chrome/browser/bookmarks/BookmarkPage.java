@@ -11,6 +11,7 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.BasicNativePage;
 import org.chromium.chrome.browser.NativePageHost;
 import org.chromium.chrome.browser.UrlConstants;
+import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarManageable;
 
 /**
  * A native page holding a {@link BookmarkManager} on _tablet_.
@@ -30,7 +31,8 @@ public class BookmarkPage extends BasicNativePage {
 
     @Override
     protected void initialize(Activity activity, NativePageHost host) {
-        mManager = new BookmarkManager(activity, false);
+        mManager = new BookmarkManager(
+                activity, false, ((SnackbarManageable) activity).getSnackbarManager());
         mManager.setBasicNativePage(this);
         mTitle = activity.getString(R.string.bookmarks);
     }

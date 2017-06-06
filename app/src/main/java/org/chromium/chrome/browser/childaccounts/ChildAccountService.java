@@ -9,7 +9,6 @@ import android.app.Activity;
 import android.content.Context;
 
 import org.chromium.base.Callback;
-import org.chromium.base.ContextUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.components.signin.AccountManagerHelper;
@@ -42,7 +41,7 @@ public class ChildAccountService {
      */
     public static void checkHasChildAccount(Context context, final Callback<Boolean> callback) {
         ThreadUtils.assertOnUiThread();
-        final AccountManagerHelper helper = AccountManagerHelper.get(context);
+        final AccountManagerHelper helper = AccountManagerHelper.get();
         helper.getGoogleAccounts(new Callback<Account[]>() {
             @Override
             public void onResult(Account[] accounts) {
@@ -90,13 +89,12 @@ public class ChildAccountService {
         }
 
         Account account = AccountManagerHelper.createAccountFromName(accountName);
-        AccountManagerHelper.get(ContextUtils.getApplicationContext())
-                .updateCredentials(account, activity, new Callback<Boolean>() {
-                    @Override
-                    public void onResult(Boolean result) {
-                        nativeOnReauthenticationResult(nativeCallback, result);
-                    }
-                });
+        AccountManagerHelper.get().updateCredentials(account, activity, new Callback<Boolean>() {
+            @Override
+            public void onResult(Boolean result) {
+                nativeOnReauthenticationResult(nativeCallback, result);
+            }
+        });
     }
 
     private static native boolean nativeIsChildAccount();

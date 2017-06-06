@@ -8,6 +8,9 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.view.View;
+import android.view.View.AccessibilityDelegate;
+import android.view.ViewGroup;
+import android.view.accessibility.AccessibilityEvent;
 import android.widget.AdapterView;
 import android.widget.PopupWindow;
 
@@ -34,9 +37,25 @@ public class AutofillPopup extends DropdownPopupWindow implements AdapterView.On
      */
     private static final int ITEM_ID_SEPARATOR_ENTRY = -3;
 
+    /**
+     * We post a delayed runnable to clear accessibility focus from the autofill popup's list view
+     * when we receive a {@code TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED} event because we receive a
+     * {@code TYPE_VIEW_ACCESSIBILITY_FOCUSED} for the same list view if user navigates to a
+     * different suggestion. On the other hand, if user navigates out of the popup we do not receive
+     * a {@code TYPE_VIEW_ACCESSIBILITY_FOCUSED} in immediate succession.
+     */
+    private static final long CLEAR_ACCESSIBILITY_FOCUS_DELAY_MS = 100;
+
     private final Context mContext;
     private final AutofillDelegate mAutofillDelegate;
     private List<AutofillSuggestion> mSuggestions;
+
+    private final Runnable mClearAccessibilityFocusRunnable = new Runnable() {
+        @Override
+        public void run() {
+            mAutofillDelegate.accessibilityFocusCleared();
+        }
+    };
 
     /**
      * Creates an AutofillWindow with specified parameters.
@@ -94,6 +113,19 @@ public class AutofillPopup extends DropdownPopupWindow implements AdapterView.On
         setRtl(isRtl);
         show();
         getListView().setOnItemLongClickListener(this);
+        getListView().setAccessibilityDelegate(new AccessibilityDelegate() {
+            @Override
+            public boolean onRequestSendAccessibilityEvent(
+                    ViewGroup host, View child, AccessibilityEvent event) {
+                getListView().removeCallbacks(mClearAccessibilityFocusRunnable);
+                if (event.getEventType()
+                        == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED) {
+                    getListView().postDelayed(
+                            mClearAccessibilityFocusRunnable, CLEAR_ACCESSIBILITY_FOCUS_DELAY_MS);
+                }
+                return super.onRequestSendAccessibilityEvent(host, child, event);
+            }
+        });
     }
 
     @Override

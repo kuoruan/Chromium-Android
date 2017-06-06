@@ -17,16 +17,19 @@ import android.support.v7.widget.RecyclerView.Adapter;
 import android.support.v7.widget.RecyclerView.AdapterDataObserver;
 import android.support.v7.widget.RecyclerView.ItemAnimator;
 import android.support.v7.widget.RecyclerView.OnScrollListener;
+import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.Toolbar.OnMenuItemClickListener;
 import android.util.AttributeSet;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewStub;
-import android.widget.RelativeLayout;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.FadingShadow;
 import org.chromium.chrome.browser.widget.FadingShadowView;
 import org.chromium.chrome.browser.widget.LoadingView;
@@ -51,7 +54,7 @@ import javax.annotation.Nullable;
  * @param <E> The type of the selectable items this layout holds.
  */
 public class SelectableListLayout<E>
-        extends RelativeLayout implements DisplayStyleObserver, SelectionObserver<E> {
+        extends FrameLayout implements DisplayStyleObserver, SelectionObserver<E> {
     /**
      * @param res Resources used to retrieve drawables and dimensions.
      * @return The default list item lateral margin size in pixels. This value should be used in
@@ -91,6 +94,7 @@ public class SelectableListLayout<E>
     private boolean mToolbarPermanentlyHidden;
     private int mEmptyStringResId;
     private int mSearchEmptyStringResId;
+    private int mChromeHomeEmptyAndLoadingViewTopPadding;
 
     private UiConfig mUiConfig;
 
@@ -135,8 +139,15 @@ public class SelectableListLayout<E>
 
         LayoutInflater.from(getContext()).inflate(R.layout.selectable_list_layout, this);
 
+        // TODO(twellington): Remove this fork in the code after UX decides on final design
+        // for empty and loading views.
+        mChromeHomeEmptyAndLoadingViewTopPadding =
+                getResources().getDimensionPixelSize(R.dimen.chrome_home_empty_view_top_padding);
+
         mEmptyView = (TextView) findViewById(R.id.empty_view);
+        setEmptyOrLoadingViewStyle(mEmptyView);
         mLoadingView = (LoadingView) findViewById(R.id.loading_view);
+        setEmptyOrLoadingViewStyle(mLoadingView);
         mLoadingView.showLoadingUI();
 
         mToolbarStub = (ViewStub) findViewById(R.id.action_bar_stub);
@@ -247,6 +258,7 @@ public class SelectableListLayout<E>
 
         mEmptyView.setCompoundDrawablesWithIntrinsicBounds(null, emptyDrawable, null, null);
         mEmptyView.setText(mEmptyStringResId);
+
         return mEmptyView;
     }
 
@@ -256,6 +268,7 @@ public class SelectableListLayout<E>
     public void onDestroyed() {
         mAdapter.unregisterAdapterDataObserver(mAdapterObserver);
         mToolbar.getSelectionDelegate().removeObserver(this);
+        mToolbar.destroy();
     }
 
     /**
@@ -298,6 +311,23 @@ public class SelectableListLayout<E>
     }
 
     /**
+     * Removes the toolbar view from this view and returns it so that it may be re-attached
+     * elsewhere.
+     * @return The toolbar view.
+     */
+    public Toolbar detachToolbarView() {
+        removeView(mToolbar);
+
+        // The top margin for the content and shadow needs to be removed now that the toolbar
+        // has been removed.
+        View content = findViewById(R.id.list_content);
+        ((MarginLayoutParams) content.getLayoutParams()).topMargin = 0;
+        ((MarginLayoutParams) mToolbarShadow.getLayoutParams()).topMargin = 0;
+
+        return mToolbar;
+    }
+
+    /**
      * Called when a search is starting.
      */
     public void onStartSearch() {
@@ -335,8 +365,8 @@ public class SelectableListLayout<E>
     private void setToolbarShadowVisibility() {
         if (mToolbarPermanentlyHidden || mToolbar == null || mRecyclerView == null) return;
 
-        boolean showShadow = mRecyclerView.computeVerticalScrollOffset() != 0
-                || mToolbar.isSearching() || mToolbar.getSelectionDelegate().isSelectionEnabled();
+        boolean showShadow = mRecyclerView.canScrollVertically(-1) || mToolbar.isSearching()
+                || mToolbar.getSelectionDelegate().isSelectionEnabled();
         mToolbarShadow.setVisibility(showShadow ? View.VISIBLE : View.GONE);
     }
 
@@ -351,5 +381,14 @@ public class SelectableListLayout<E>
     @VisibleForTesting
     public View getToolbarShadowForTests() {
         return mToolbarShadow;
+    }
+
+    private void setEmptyOrLoadingViewStyle(View view) {
+        if (!FeatureUtilities.isChromeHomeEnabled()) return;
+
+        ((FrameLayout.LayoutParams) view.getLayoutParams()).gravity = Gravity.CENTER_HORIZONTAL;
+        ApiCompatibilityUtils.setPaddingRelative(view, ApiCompatibilityUtils.getPaddingStart(view),
+                view.getPaddingTop() + mChromeHomeEmptyAndLoadingViewTopPadding,
+                ApiCompatibilityUtils.getPaddingEnd(view), view.getPaddingBottom());
     }
 }

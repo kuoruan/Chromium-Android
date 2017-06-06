@@ -22,6 +22,7 @@ import android.view.inputmethod.InputConnection;
 import android.widget.FrameLayout;
 
 import org.chromium.base.TraceEvent;
+import org.chromium.ui.base.EventForwarder;
 
 /**
  * The containing view for {@link ContentViewCore} that exists in the Android UI hierarchy and
@@ -37,6 +38,7 @@ public class ContentView extends FrameLayout
             MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
 
     protected final ContentViewCore mContentViewCore;
+    private EventForwarder mEventForwarder;
 
     /**
      * The desired size of this view in {@link MeasureSpec}. Set by the host
@@ -184,7 +186,7 @@ public class ContentView extends FrameLayout
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        return mContentViewCore.onTouchEvent(event);
+        return getEventForwarder().onTouchEvent(event);
     }
 
     /**
@@ -202,6 +204,13 @@ public class ContentView extends FrameLayout
     @Override
     public boolean onGenericMotionEvent(MotionEvent event) {
         return mContentViewCore.onGenericMotionEvent(event);
+    }
+
+    private EventForwarder getEventForwarder() {
+        if (mEventForwarder == null) {
+            mEventForwarder = mContentViewCore.getWebContents().getEventForwarder();
+        }
+        return mEventForwarder;
     }
 
     @Override
@@ -289,10 +298,8 @@ public class ContentView extends FrameLayout
     // Implements SmartClipProvider
     @Override
     public void extractSmartClipData(int x, int y, int width, int height) {
-        float dpi = mContentViewCore.getRenderCoordinates().getDeviceScaleFactor();
-        y -= mContentViewCore.getRenderCoordinates().getContentOffsetYPix();
         mContentViewCore.getWebContents().requestSmartClipExtract(
-                (int) (x / dpi), (int) (y / dpi), (int) (width / dpi), (int) (height / dpi));
+                x, y, width, height, mContentViewCore.getRenderCoordinates());
     }
 
     // Implements SmartClipProvider

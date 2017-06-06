@@ -16,11 +16,13 @@ import android.util.Log;
 
 import org.chromium.base.ThreadUtils;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.AppHooks;
+import org.chromium.chrome.browser.notifications.ChannelDefinitions;
 import org.chromium.chrome.browser.notifications.ChromeNotificationBuilder;
+import org.chromium.chrome.browser.notifications.NotificationBuilderFactory;
 import org.chromium.chrome.browser.notifications.NotificationConstants;
 import org.chromium.chrome.browser.notifications.NotificationManagerProxy;
 import org.chromium.chrome.browser.notifications.NotificationManagerProxyImpl;
+import org.chromium.chrome.browser.notifications.NotificationUmaTracker;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
 import org.chromium.components.sync.AndroidSyncSettings;
 
@@ -102,14 +104,9 @@ public class SyncNotificationController implements ProfileSyncService.SyncStateC
         // There is no need to provide a group summary notification because the NOTIFICATION_ID_SYNC
         // notification id ensures there's only one sync notification at a time.
         ChromeNotificationBuilder builder =
-                AppHooks.get()
-                        .createChromeNotificationBuilder(true /* preferCompat */,
-                                NotificationConstants.CATEGORY_ID_BROWSER,
-                                mApplicationContext.getString(
-                                        R.string.notification_category_browser),
-                                NotificationConstants.CATEGORY_GROUP_ID_GENERAL,
-                                mApplicationContext.getString(
-                                        R.string.notification_category_group_general))
+                NotificationBuilderFactory
+                        .createChromeNotificationBuilder(
+                                true /* preferCompat */, ChannelDefinitions.CHANNEL_ID_BROWSER)
                         .setAutoCancel(true)
                         .setContentIntent(contentIntent)
                         .setContentTitle(title)
@@ -122,6 +119,8 @@ public class SyncNotificationController implements ProfileSyncService.SyncStateC
         Notification notification = builder.buildWithBigTextStyle(text);
 
         mNotificationManager.notify(NotificationConstants.NOTIFICATION_ID_SYNC, notification);
+        NotificationUmaTracker.getInstance().onNotificationShown(
+                NotificationUmaTracker.SYNC, ChannelDefinitions.CHANNEL_ID_BROWSER);
     }
 
     private boolean shouldSyncAuthErrorBeShown() {

@@ -43,31 +43,29 @@ class WebBluetoothService_Internal {
     };
 
 
-    private static final int SET_CLIENT_ORDINAL = 0;
+    private static final int REQUEST_DEVICE_ORDINAL = 0;
 
-    private static final int REQUEST_DEVICE_ORDINAL = 1;
+    private static final int REMOTE_SERVER_CONNECT_ORDINAL = 1;
 
-    private static final int REMOTE_SERVER_CONNECT_ORDINAL = 2;
+    private static final int REMOTE_SERVER_DISCONNECT_ORDINAL = 2;
 
-    private static final int REMOTE_SERVER_DISCONNECT_ORDINAL = 3;
+    private static final int REMOTE_SERVER_GET_PRIMARY_SERVICES_ORDINAL = 3;
 
-    private static final int REMOTE_SERVER_GET_PRIMARY_SERVICES_ORDINAL = 4;
+    private static final int REMOTE_SERVICE_GET_CHARACTERISTICS_ORDINAL = 4;
 
-    private static final int REMOTE_SERVICE_GET_CHARACTERISTICS_ORDINAL = 5;
+    private static final int REMOTE_CHARACTERISTIC_READ_VALUE_ORDINAL = 5;
 
-    private static final int REMOTE_CHARACTERISTIC_READ_VALUE_ORDINAL = 6;
+    private static final int REMOTE_CHARACTERISTIC_WRITE_VALUE_ORDINAL = 6;
 
-    private static final int REMOTE_CHARACTERISTIC_WRITE_VALUE_ORDINAL = 7;
+    private static final int REMOTE_CHARACTERISTIC_START_NOTIFICATIONS_ORDINAL = 7;
 
-    private static final int REMOTE_CHARACTERISTIC_START_NOTIFICATIONS_ORDINAL = 8;
+    private static final int REMOTE_CHARACTERISTIC_STOP_NOTIFICATIONS_ORDINAL = 8;
 
-    private static final int REMOTE_CHARACTERISTIC_STOP_NOTIFICATIONS_ORDINAL = 9;
+    private static final int REMOTE_CHARACTERISTIC_GET_DESCRIPTORS_ORDINAL = 9;
 
-    private static final int REMOTE_CHARACTERISTIC_GET_DESCRIPTORS_ORDINAL = 10;
+    private static final int REMOTE_DESCRIPTOR_READ_VALUE_ORDINAL = 10;
 
-    private static final int REMOTE_DESCRIPTOR_READ_VALUE_ORDINAL = 11;
-
-    private static final int REMOTE_DESCRIPTOR_WRITE_VALUE_ORDINAL = 12;
+    private static final int REMOTE_DESCRIPTOR_WRITE_VALUE_ORDINAL = 11;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements WebBluetoothService.Proxy {
@@ -75,23 +73,6 @@ class WebBluetoothService_Internal {
         Proxy(org.chromium.mojo.system.Core core,
               org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             super(core, messageReceiver);
-        }
-
-
-        @Override
-        public void setClient(
-org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client) {
-
-            WebBluetoothServiceSetClientParams _message = new WebBluetoothServiceSetClientParams();
-
-            _message.client = client;
-
-
-            getProxyHandler().getMessageReceiver().accept(
-                    _message.serializeWithHeader(
-                            getProxyHandler().getCore(),
-                            new org.chromium.mojo.bindings.MessageHeader(SET_CLIENT_ORDINAL)));
-
         }
 
 
@@ -119,12 +100,14 @@ RequestDeviceResponse callback) {
 
         @Override
         public void remoteServerConnect(
-WebBluetoothDeviceId deviceId, 
+WebBluetoothDeviceId deviceId, org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client, 
 RemoteServerConnectResponse callback) {
 
             WebBluetoothServiceRemoteServerConnectParams _message = new WebBluetoothServiceRemoteServerConnectParams();
 
             _message.deviceId = deviceId;
+
+            _message.client = client;
 
 
             getProxyHandler().getMessageReceiver().acceptWithResponder(
@@ -256,12 +239,14 @@ RemoteCharacteristicWriteValueResponse callback) {
 
         @Override
         public void remoteCharacteristicStartNotifications(
-String characteristicInstanceId, 
+String characteristicInstanceId, org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client, 
 RemoteCharacteristicStartNotificationsResponse callback) {
 
             WebBluetoothServiceRemoteCharacteristicStartNotificationsParams _message = new WebBluetoothServiceRemoteCharacteristicStartNotificationsParams();
 
             _message.characteristicInstanceId = characteristicInstanceId;
+
+            _message.client = client;
 
 
             getProxyHandler().getMessageReceiver().acceptWithResponder(
@@ -397,19 +382,6 @@ RemoteDescriptorWriteValueResponse callback) {
             
             
             
-                    case SET_CLIENT_ORDINAL: {
-            
-                        WebBluetoothServiceSetClientParams data =
-                                WebBluetoothServiceSetClientParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().setClient(data.client);
-                        return true;
-                    }
-            
-            
-            
-            
-            
             
             
             
@@ -472,8 +444,6 @@ RemoteDescriptorWriteValueResponse callback) {
             
             
             
-            
-            
                     case REQUEST_DEVICE_ORDINAL: {
             
                         WebBluetoothServiceRequestDeviceParams data =
@@ -494,7 +464,7 @@ RemoteDescriptorWriteValueResponse callback) {
                         WebBluetoothServiceRemoteServerConnectParams data =
                                 WebBluetoothServiceRemoteServerConnectParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().remoteServerConnect(data.deviceId, new WebBluetoothServiceRemoteServerConnectResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        getImpl().remoteServerConnect(data.deviceId, data.client, new WebBluetoothServiceRemoteServerConnectResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
             
@@ -571,7 +541,7 @@ RemoteDescriptorWriteValueResponse callback) {
                         WebBluetoothServiceRemoteCharacteristicStartNotificationsParams data =
                                 WebBluetoothServiceRemoteCharacteristicStartNotificationsParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().remoteCharacteristicStartNotifications(data.characteristicInstanceId, new WebBluetoothServiceRemoteCharacteristicStartNotificationsResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        getImpl().remoteCharacteristicStartNotifications(data.characteristicInstanceId, data.client, new WebBluetoothServiceRemoteCharacteristicStartNotificationsResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
             
@@ -645,98 +615,6 @@ RemoteDescriptorWriteValueResponse callback) {
             }
         }
     }
-
-
-    
-    static final class WebBluetoothServiceSetClientParams extends org.chromium.mojo.bindings.Struct {
-    
-        private static final int STRUCT_SIZE = 16;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
-        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client;
-    
-        private WebBluetoothServiceSetClientParams(int version) {
-            super(STRUCT_SIZE, version);
-        }
-    
-        public WebBluetoothServiceSetClientParams() {
-            this(0);
-        }
-    
-        public static WebBluetoothServiceSetClientParams deserialize(org.chromium.mojo.bindings.Message message) {
-            return decode(new org.chromium.mojo.bindings.Decoder(message));
-        }
-    
-        /**
-         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
-         *
-         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
-         */
-        public static WebBluetoothServiceSetClientParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
-            return deserialize(new org.chromium.mojo.bindings.Message(
-                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
-        }
-    
-        @SuppressWarnings("unchecked")
-        public static WebBluetoothServiceSetClientParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
-            if (decoder0 == null) {
-                return null;
-            }
-            decoder0.increaseStackDepth();
-            WebBluetoothServiceSetClientParams result;
-            try {
-                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new WebBluetoothServiceSetClientParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.client = decoder0.readAssociatedServiceInterfaceNotSupported(8, false);
-                }
-            } finally {
-                decoder0.decreaseStackDepth();
-            }
-            return result;
-        }
-    
-        @SuppressWarnings("unchecked")
-        @Override
-        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
-            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-            
-            encoder0.encode(client, 8, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            WebBluetoothServiceSetClientParams other = (WebBluetoothServiceSetClientParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.client, other.client))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(client);
-            return result;
-        }
-    }
-
 
 
     
@@ -1002,10 +880,11 @@ RemoteDescriptorWriteValueResponse callback) {
     
     static final class WebBluetoothServiceRemoteServerConnectParams extends org.chromium.mojo.bindings.Struct {
     
-        private static final int STRUCT_SIZE = 16;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public WebBluetoothDeviceId deviceId;
+        public org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client;
     
         private WebBluetoothServiceRemoteServerConnectParams(int version) {
             super(STRUCT_SIZE, version);
@@ -1047,6 +926,10 @@ RemoteDescriptorWriteValueResponse callback) {
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     result.deviceId = WebBluetoothDeviceId.decode(decoder1);
                 }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.client = decoder0.readAssociatedServiceInterfaceNotSupported(16, false);
+                }
             } finally {
                 decoder0.decreaseStackDepth();
             }
@@ -1059,6 +942,8 @@ RemoteDescriptorWriteValueResponse callback) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(deviceId, 8, false);
+            
+            encoder0.encode(client, 16, false);
         }
     
         /**
@@ -1075,6 +960,8 @@ RemoteDescriptorWriteValueResponse callback) {
             WebBluetoothServiceRemoteServerConnectParams other = (WebBluetoothServiceRemoteServerConnectParams) object;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.deviceId, other.deviceId))
                 return false;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.client, other.client))
+                return false;
             return true;
         }
     
@@ -1086,6 +973,7 @@ RemoteDescriptorWriteValueResponse callback) {
             final int prime = 31;
             int result = prime + getClass().hashCode();
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(deviceId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(client);
             return result;
         }
     }
@@ -2455,10 +2343,11 @@ RemoteDescriptorWriteValueResponse callback) {
     
     static final class WebBluetoothServiceRemoteCharacteristicStartNotificationsParams extends org.chromium.mojo.bindings.Struct {
     
-        private static final int STRUCT_SIZE = 16;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public String characteristicInstanceId;
+        public org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client;
     
         private WebBluetoothServiceRemoteCharacteristicStartNotificationsParams(int version) {
             super(STRUCT_SIZE, version);
@@ -2499,6 +2388,10 @@ RemoteDescriptorWriteValueResponse callback) {
                     
                     result.characteristicInstanceId = decoder0.readString(8, false);
                 }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.client = decoder0.readAssociatedServiceInterfaceNotSupported(16, false);
+                }
             } finally {
                 decoder0.decreaseStackDepth();
             }
@@ -2511,6 +2404,8 @@ RemoteDescriptorWriteValueResponse callback) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(characteristicInstanceId, 8, false);
+            
+            encoder0.encode(client, 16, false);
         }
     
         /**
@@ -2527,6 +2422,8 @@ RemoteDescriptorWriteValueResponse callback) {
             WebBluetoothServiceRemoteCharacteristicStartNotificationsParams other = (WebBluetoothServiceRemoteCharacteristicStartNotificationsParams) object;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.characteristicInstanceId, other.characteristicInstanceId))
                 return false;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.client, other.client))
+                return false;
             return true;
         }
     
@@ -2538,6 +2435,7 @@ RemoteDescriptorWriteValueResponse callback) {
             final int prime = 31;
             int result = prime + getClass().hashCode();
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(characteristicInstanceId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(client);
             return result;
         }
     }

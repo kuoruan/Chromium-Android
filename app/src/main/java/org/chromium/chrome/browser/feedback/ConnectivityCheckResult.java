@@ -15,16 +15,17 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ConnectivityCheckResult {
-  @IntDef({
-      UNKNOWN, CONNECTED, NOT_CONNECTED, TIMEOUT, ERROR, END
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ConnectivityCheckResultEnum {}
-  public static final int UNKNOWN = 0;
-  public static final int CONNECTED = 1;
-  public static final int NOT_CONNECTED = 2;
-  public static final int TIMEOUT = 3;
-  public static final int ERROR = 4;
-  public static final int END = 5;
+@IntDef({
+    ConnectivityCheckResult.UNKNOWN, ConnectivityCheckResult.CONNECTED,
+    ConnectivityCheckResult.NOT_CONNECTED, ConnectivityCheckResult.TIMEOUT,
+    ConnectivityCheckResult.ERROR, ConnectivityCheckResult.END
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ConnectivityCheckResult {
+  int UNKNOWN = 0;
+  int CONNECTED = 1;
+  int NOT_CONNECTED = 2;
+  int TIMEOUT = 3;
+  int ERROR = 4;
+  int END = 5;
 }

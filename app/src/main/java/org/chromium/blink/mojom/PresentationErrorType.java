@@ -19,9 +19,9 @@ public final class PresentationErrorType {
 
     public static final int NO_AVAILABLE_SCREENS = 0;
 
-    public static final int SESSION_REQUEST_CANCELLED = NO_AVAILABLE_SCREENS + 1;
+    public static final int PRESENTATION_REQUEST_CANCELLED = NO_AVAILABLE_SCREENS + 1;
 
-    public static final int NO_PRESENTATION_FOUND = SESSION_REQUEST_CANCELLED + 1;
+    public static final int NO_PRESENTATION_FOUND = PRESENTATION_REQUEST_CANCELLED + 1;
 
     public static final int PREVIOUS_START_IN_PROGRESS = NO_PRESENTATION_FOUND + 1;
 

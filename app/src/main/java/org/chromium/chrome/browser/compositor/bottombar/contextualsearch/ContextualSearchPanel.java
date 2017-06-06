@@ -12,8 +12,8 @@ import android.os.Handler;
 import org.chromium.base.ActivityState;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
-
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.compositor.LayerTitleCache;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayContentProgressObserver;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel;
@@ -22,7 +22,6 @@ import org.chromium.chrome.browser.compositor.bottombar.OverlayPanelManager;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanelManager.PanelPriority;
 import org.chromium.chrome.browser.compositor.bottombar.contextualsearch.ContextualSearchPromoControl.ContextualSearchPromoHost;
 import org.chromium.chrome.browser.compositor.layouts.LayoutUpdateHost;
-import org.chromium.chrome.browser.compositor.layouts.eventfilter.EventFilterHost;
 import org.chromium.chrome.browser.compositor.scene_layer.ContextualSearchSceneLayer;
 import org.chromium.chrome.browser.compositor.scene_layer.SceneOverlayLayer;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchManagementDelegate;
@@ -51,6 +50,11 @@ public class ContextualSearchPanel extends OverlayPanel {
     private final float mBarShadowHeightPx;
 
     /**
+     * The distance of the divider from the end of the bar, in dp.
+     */
+    private final float mEndButtonWidthDp;
+
+    /**
      * Whether the Panel should be promoted to a new tab after being maximized.
      */
     private boolean mShouldPromoteToTabAfterMaximizing;
@@ -70,11 +74,6 @@ public class ContextualSearchPanel extends OverlayPanel {
      */
     private ContextualSearchSceneLayer mSceneLayer;
 
-    /**
-     * The distance of the divider from the end of the bar, in dp.
-     */
-    private final float mEndButtonWidthDp;
-
     // ============================================================================================
     // Constructor
     // ============================================================================================
@@ -82,12 +81,11 @@ public class ContextualSearchPanel extends OverlayPanel {
     /**
      * @param context The current Android {@link Context}.
      * @param updateHost The {@link LayoutUpdateHost} used to request updates in the Layout.
-     * @param eventHost The {@link EventFilterHost} for propagating events.
      * @param panelManager The object managing the how different panels are shown.
      */
-    public ContextualSearchPanel(Context context, LayoutUpdateHost updateHost,
-                EventFilterHost eventHost, OverlayPanelManager panelManager) {
-        super(context, updateHost, eventHost, panelManager);
+    public ContextualSearchPanel(
+            Context context, LayoutUpdateHost updateHost, OverlayPanelManager panelManager) {
+        super(context, updateHost, panelManager);
         mSceneLayer = createNewContextualSearchSceneLayer();
         mPanelMetrics = new ContextualSearchPanelMetrics();
 
@@ -201,12 +199,6 @@ public class ContextualSearchPanel extends OverlayPanel {
             if (getPeekPromoControl().isVisible()) {
                 getPeekPromoControl().animateAppearance();
             }
-            if (getImageControl().getIconSpriteControl().shouldAnimateAppearance()) {
-                mPanelMetrics.setWasIconSpriteAnimated(true);
-                getImageControl().getIconSpriteControl().animateApperance();
-            } else {
-                mPanelMetrics.setWasIconSpriteAnimated(false);
-            }
         }
 
         if (fromState == PanelState.PEEKED
@@ -246,6 +238,12 @@ public class ContextualSearchPanel extends OverlayPanel {
             projectedState = PanelState.EXPANDED;
         }
 
+        // If we're swiping the panel down from MAXIMIZED skip the EXPANDED state and go all the
+        // way to PEEKED.
+        if (getPanelState() == PanelState.MAXIMIZED && projectedState == PanelState.EXPANDED) {
+            projectedState = PanelState.PEEKED;
+        }
+
         return projectedState;
     }
 
@@ -261,7 +259,7 @@ public class ContextualSearchPanel extends OverlayPanel {
 
         setProgressBarCompletion(0);
         setProgressBarVisible(false);
-        getImageControl().hideStaticImage(false);
+        getImageControl().hideCustomImage(false);
 
         super.onClosed(reason);
 
@@ -408,6 +406,15 @@ public class ContextualSearchPanel extends OverlayPanel {
                 || super.shouldHideAndroidBrowserControls();
     }
 
+    @Override
+    public void setChromeActivity(ChromeActivity activity) {
+        super.setChromeActivity(activity);
+
+        if (mActivity.getBottomSheet() == null) return;
+
+        addBarHandle(mActivity.getToolbarManager().getToolbar().getHeight());
+    }
+
     // ============================================================================================
     // Animation Handling
     // ============================================================================================
@@ -459,15 +466,6 @@ public class ContextualSearchPanel extends OverlayPanel {
     @VisibleForTesting
     public boolean isPeekPromoVisible() {
         return getPeekPromoControl().isVisible();
-    }
-
-    /**
-     * Called when the SERP finishes loading, this records the duration of loading the SERP from
-     * the time the panel was opened until the present.
-     * @param wasPrefetch Whether the request was prefetch-enabled.
-     */
-    public void onSearchResultsLoaded(boolean wasPrefetch) {
-        mPanelMetrics.onSearchResultsLoaded(wasPrefetch);
     }
 
     /**
@@ -540,20 +538,22 @@ public class ContextualSearchPanel extends OverlayPanel {
      * @param searchTerm The string that represents the search term.
      */
     public void setSearchTerm(String searchTerm) {
-        getImageControl().hideStaticImage(true);
+        getImageControl().hideCustomImage(true);
         getSearchBarControl().setSearchTerm(searchTerm);
         mPanelMetrics.onSearchRequestStarted();
     }
 
     /**
-     * Sets the search context to display in the SearchBar.
+     * Sets the search context details to display in the SearchBar.
      * @param selection The portion of the context that represents the user's selection.
      * @param end The portion of the context from the selection to its end.
      */
-    public void setSearchContext(String selection, String end) {
-        getImageControl().hideStaticImage(true);
-        getSearchBarControl().setSearchContext(selection, end);
+    public void setContextDetails(String selection, String end) {
+        getImageControl().hideCustomImage(true);
+        getSearchBarControl().setContextDetails(selection, end);
         mPanelMetrics.onSearchRequestStarted();
+        // Make sure the new Context draws.
+        requestUpdate();
     }
 
     /**

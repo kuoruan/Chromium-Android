@@ -10,6 +10,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.view.Gravity;
@@ -21,11 +23,13 @@ import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.util.MathUtils;
@@ -64,10 +68,15 @@ public class ItemChooserDialog {
     public static class ItemChooserRow {
         private final String mKey;
         private String mDescription;
+        private Drawable mIcon;
+        private String mIconDescription;
 
-        public ItemChooserRow(String key, String description) {
+        public ItemChooserRow(String key, String description, @Nullable Drawable icon,
+                @Nullable String iconDescription) {
             mKey = key;
             mDescription = description;
+            mIcon = icon;
+            mIconDescription = iconDescription;
         }
 
         /**
@@ -75,10 +84,14 @@ public class ItemChooserDialog {
          *
          * @param key Expected item unique identifier.
          * @param description Expected item description.
+         * @param icon Expected item icon.
          */
-        public boolean hasSameContents(String key, String description) {
+        public boolean hasSameContents(String key, String description, @Nullable Drawable icon,
+                @Nullable String iconDescription) {
             if (!TextUtils.equals(mKey, key)) return false;
             if (!TextUtils.equals(mDescription, description)) return false;
+            if (!ApiCompatibilityUtils.objectEquals(mIcon, icon)) return false;
+            if (!TextUtils.equals(mIconDescription, iconDescription)) return false;
             return true;
         }
     }
@@ -123,8 +136,10 @@ public class ItemChooserDialog {
      */
     private static class ViewHolder {
         private TextView mTextView;
+        private ImageView mImageView;
 
         public ViewHolder(View view) {
+            mImageView = (ImageView) view.findViewById(R.id.icon);
             mTextView = (TextView) view.findViewById(R.id.description);
         }
     }
@@ -154,6 +169,9 @@ public class ItemChooserDialog {
         // Map of keys to items so that we can access the items in O(1).
         private Map<String, ItemChooserRow> mKeyToItemMap = new HashMap<>();
 
+        // True when there is at least one row with an icon.
+        private boolean mHasIcon;
+
         public ItemAdapter(Context context, int resource) {
             super(context, resource);
 
@@ -174,10 +192,20 @@ public class ItemChooserDialog {
             return isEmpty;
         }
 
-        public void addOrUpdate(String key, String description) {
+        /**
+         * Adds an item to the list to show in the dialog if the item
+         * was not in the chooser. Otherwise updates the items description, icon
+         * and icon description.
+         * @param key Unique identifier for that item.
+         * @param description Text in the row.
+         * @param icon Drawable to show next to the item.
+         * @param iconDescription Description of the icon.
+         */
+        public void addOrUpdate(String key, String description, @Nullable Drawable icon,
+                @Nullable String iconDescription) {
             ItemChooserRow oldItem = mKeyToItemMap.get(key);
             if (oldItem != null) {
-                if (oldItem.hasSameContents(key, description)) {
+                if (oldItem.hasSameContents(key, description, icon, iconDescription)) {
                     // No need to update anything.
                     return;
                 }
@@ -188,12 +216,17 @@ public class ItemChooserDialog {
                     addToDescriptionsMap(oldItem.mDescription);
                 }
 
+                if (!ApiCompatibilityUtils.objectEquals(icon, oldItem.mIcon)) {
+                    oldItem.mIcon = icon;
+                    oldItem.mIconDescription = iconDescription;
+                }
+
                 notifyDataSetChanged();
                 return;
             }
 
             assert !mKeyToItemMap.containsKey(key);
-            ItemChooserRow newItem = new ItemChooserRow(key, description);
+            ItemChooserRow newItem = new ItemChooserRow(key, description, icon, iconDescription);
             mKeyToItemMap.put(key, newItem);
 
             addToDescriptionsMap(newItem.mDescription);
@@ -267,7 +300,8 @@ public class ItemChooserDialog {
 
             if (mSelectedItem != ListView.INVALID_POSITION) {
                 ItemChooserRow selectedRow = getItem(mSelectedItem);
-                if (id.equals(selectedRow.mKey)) {
+                if (id.equals(selectedRow.mKey) && !enabled) {
+                    mSelectedItem = ListView.INVALID_POSITION;
                     mConfirmButton.setEnabled(enabled);
                 }
             }
@@ -302,10 +336,38 @@ public class ItemChooserDialog {
                 row = (ViewHolder) convertView.getTag();
             }
 
+            row.mTextView.setSelected(position == mSelectedItem);
             row.mTextView.setEnabled(isEnabled(position));
             row.mTextView.setText(getDisplayText(position));
 
+            // If there is at least one item with an icon then we set mImageView's
+            // visibility to INVISIBLE for all items with no icons. We do this
+            // so that all items' desriptions are aligned.
+            if (!mHasIcon) {
+                row.mImageView.setVisibility(View.GONE);
+            } else {
+                ItemChooserRow item = getItem(position);
+                if (item.mIcon != null) {
+                    row.mImageView.setContentDescription(item.mIconDescription);
+                    row.mImageView.setImageDrawable(item.mIcon);
+                    row.mImageView.setVisibility(View.VISIBLE);
+                } else {
+                    row.mImageView.setVisibility(View.INVISIBLE);
+                    row.mImageView.setImageDrawable(null);
+                    row.mImageView.setContentDescription(null);
+                }
+                row.mImageView.setSelected(position == mSelectedItem);
+            }
             return convertView;
+        }
+
+        @Override
+        public void notifyDataSetChanged() {
+            mHasIcon = false;
+            for (ItemChooserRow row : mKeyToItemMap.values()) {
+                if (row.mIcon != null) mHasIcon = true;
+            }
+            super.notifyDataSetChanged();
         }
 
         @Override
@@ -366,6 +428,10 @@ public class ItemChooserDialog {
     // The maximum height of the listview in the dialog (in dp).
     private static final int MAX_HEIGHT_DP = (int) (LIST_ROW_HEIGHT_DP * 8.5);
 
+    // If this variable is false, the window should be closed when it loses focus;
+    // Otherwise, the window should not be closed when it loses focus.
+    private boolean mIgnorePendingWindowFocusChangeForClose;
+
     /**
      * Creates the ItemChooserPopup and displays it (and starts waiting for data).
      *
@@ -425,7 +491,20 @@ public class ItemChooserDialog {
                 getListHeight(mActivity.getWindow().getDecorView().getHeight(),
                         mActivity.getResources().getDisplayMetrics().density)));
 
+        mIgnorePendingWindowFocusChangeForClose = false;
+
         showDialogForView(dialogContainer);
+    }
+
+    /**
+     * Sets whether the window should be closed when it loses focus.
+     *
+     * @param ignorePendingWindowFocusChangeForClose Whether the window should be closed when it
+     * loses focus.
+     */
+    public void setIgnorePendingWindowFocusChangeForClose(
+            boolean ignorePendingWindowFocusChangeForClose) {
+        mIgnorePendingWindowFocusChangeForClose = ignorePendingWindowFocusChangeForClose;
     }
 
     // Computes the height of the device list, bound to half-multiples of the
@@ -444,7 +523,8 @@ public class ItemChooserDialog {
             @Override
             public void onWindowFocusChanged(boolean hasFocus) {
                 super.onWindowFocusChanged(hasFocus);
-                if (!hasFocus) super.dismiss();
+                if (!mIgnorePendingWindowFocusChangeForClose && !hasFocus) super.dismiss();
+                setIgnorePendingWindowFocusChangeForClose(false);
             }
         };
         mDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -484,8 +564,24 @@ public class ItemChooserDialog {
      * @param description Text in the row.
      */
     public void addOrUpdateItem(String key, String description) {
+        addOrUpdateItem(key, description, null /* icon */, null /* iconDescription */);
+    }
+
+    /**
+     * Adds an item to the end of the list to show in the dialog if the item
+     * was not in the chooser. Otherwise updates the items description or icon.
+     * Note that as long as at least one item has an icon all rows will be inset
+     * with the icon dimensions.
+     *
+     * @param key Unique identifier for that item.
+     * @param description Text in the row.
+     * @param icon Drawable to show left of the description.
+     * @param iconDescription Description of the icon.
+     */
+    public void addOrUpdateItem(String key, String description, @Nullable Drawable icon,
+            @Nullable String iconDescription) {
         mProgressBar.setVisibility(View.GONE);
-        mItemAdapter.addOrUpdate(key, description);
+        mItemAdapter.addOrUpdate(key, description, icon, iconDescription);
         setState(State.PROGRESS_UPDATE_AVAILABLE);
     }
 

@@ -15,71 +15,77 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class OmniboxSuggestionType {
-  @IntDef({
-      URL_WHAT_YOU_TYPED, HISTORY_URL, HISTORY_TITLE, HISTORY_BODY, HISTORY_KEYWORD, NAVSUGGEST,
-      SEARCH_WHAT_YOU_TYPED, SEARCH_HISTORY, SEARCH_SUGGEST, SEARCH_SUGGEST_ENTITY,
-      SEARCH_SUGGEST_TAIL, SEARCH_SUGGEST_PERSONALIZED, SEARCH_SUGGEST_PROFILE, SEARCH_OTHER_ENGINE,
-      EXTENSION_APP, CONTACT_DEPRECATED, BOOKMARK_TITLE, NAVSUGGEST_PERSONALIZED, CALCULATOR,
-      CLIPBOARD, VOICE_SUGGEST, PHYSICAL_WEB, PHYSICAL_WEB_OVERFLOW, NUM_TYPES
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface OmniboxSuggestionTypeEnum {}
-  public static final int URL_WHAT_YOU_TYPED = 0;
-  public static final int HISTORY_URL = 1;
-  public static final int HISTORY_TITLE = 2;
-  public static final int HISTORY_BODY = 3;
-  public static final int HISTORY_KEYWORD = 4;
+@IntDef({
+    OmniboxSuggestionType.URL_WHAT_YOU_TYPED, OmniboxSuggestionType.HISTORY_URL,
+    OmniboxSuggestionType.HISTORY_TITLE, OmniboxSuggestionType.HISTORY_BODY,
+    OmniboxSuggestionType.HISTORY_KEYWORD, OmniboxSuggestionType.NAVSUGGEST,
+    OmniboxSuggestionType.SEARCH_WHAT_YOU_TYPED, OmniboxSuggestionType.SEARCH_HISTORY,
+    OmniboxSuggestionType.SEARCH_SUGGEST, OmniboxSuggestionType.SEARCH_SUGGEST_ENTITY,
+    OmniboxSuggestionType.SEARCH_SUGGEST_TAIL, OmniboxSuggestionType.SEARCH_SUGGEST_PERSONALIZED,
+    OmniboxSuggestionType.SEARCH_SUGGEST_PROFILE, OmniboxSuggestionType.SEARCH_OTHER_ENGINE,
+    OmniboxSuggestionType.EXTENSION_APP, OmniboxSuggestionType.CONTACT_DEPRECATED,
+    OmniboxSuggestionType.BOOKMARK_TITLE, OmniboxSuggestionType.NAVSUGGEST_PERSONALIZED,
+    OmniboxSuggestionType.CALCULATOR, OmniboxSuggestionType.CLIPBOARD,
+    OmniboxSuggestionType.VOICE_SUGGEST, OmniboxSuggestionType.PHYSICAL_WEB,
+    OmniboxSuggestionType.PHYSICAL_WEB_OVERFLOW, OmniboxSuggestionType.NUM_TYPES
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface OmniboxSuggestionType {
+  int URL_WHAT_YOU_TYPED = 0;
+  int HISTORY_URL = 1;
+  int HISTORY_TITLE = 2;
+  int HISTORY_BODY = 3;
+  int HISTORY_KEYWORD = 4;
   /**
    * input.
    */
-  public static final int NAVSUGGEST = 5;
-  public static final int SEARCH_WHAT_YOU_TYPED = 6;
+  int NAVSUGGEST = 5;
+  int SEARCH_WHAT_YOU_TYPED = 6;
   /**
    * default engine).
    */
-  public static final int SEARCH_HISTORY = 7;
+  int SEARCH_HISTORY = 7;
   /**
    * containing the input.
    */
-  public static final int SEARCH_SUGGEST = 8;
+  int SEARCH_SUGGEST = 8;
   /**
    * query that doesn't fall into one of the more specific suggestion categories below.
    */
-  public static final int SEARCH_SUGGEST_ENTITY = 9;
-  public static final int SEARCH_SUGGEST_TAIL = 10;
+  int SEARCH_SUGGEST_ENTITY = 9;
+  int SEARCH_SUGGEST_TAIL = 10;
   /**
    * tail of the query.
    */
-  public static final int SEARCH_SUGGEST_PERSONALIZED = 11;
-  public static final int SEARCH_SUGGEST_PROFILE = 12;
+  int SEARCH_SUGGEST_PERSONALIZED = 11;
+  int SEARCH_SUGGEST_PROFILE = 12;
   /**
    * Google+ profile.
    */
-  public static final int SEARCH_OTHER_ENGINE = 13;
-  public static final int EXTENSION_APP = 14;
+  int SEARCH_OTHER_ENGINE = 13;
+  int EXTENSION_APP = 14;
   /**
    * contains the input (deprecated).
    */
-  public static final int CONTACT_DEPRECATED = 15;
+  int CONTACT_DEPRECATED = 15;
   /**
    * (deprecated).
    */
-  public static final int BOOKMARK_TITLE = 16;
+  int BOOKMARK_TITLE = 16;
   /**
    * input.
    */
-  public static final int NAVSUGGEST_PERSONALIZED = 17;
-  public static final int CALCULATOR = 18;
-  public static final int CLIPBOARD = 19;
-  public static final int VOICE_SUGGEST = 20;
+  int NAVSUGGEST_PERSONALIZED = 17;
+  int CALCULATOR = 18;
+  int CLIPBOARD = 19;
+  int VOICE_SUGGEST = 20;
   /**
    * indicates a search from voice recognizer.
    */
-  public static final int PHYSICAL_WEB = 21;
-  public static final int PHYSICAL_WEB_OVERFLOW = 22;
+  int PHYSICAL_WEB = 21;
+  int PHYSICAL_WEB_OVERFLOW = 22;
   /**
    * Physical Web nearby URLs.
    */
-  public static final int NUM_TYPES = 23;
+  int NUM_TYPES = 23;
 }

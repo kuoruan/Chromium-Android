@@ -11,7 +11,6 @@
     <item name="bookmark_page" type="id"/>
     <item name="foreground_drawable" type="id"/>
     <item name="fre_pager" type="id"/>
-    <item name="menu_item_enter_anim_id" type="id" />
     <item name="permission_intent_override" type="id" />
     <item name="permission_type" type="id"/>
     <item name="refine_view_id" type="id"/>
@@ -29,6 +28,7 @@
     <item type="id" name="translate_infobar_always_toggle" />
     <item type="id" name="translate_infobar_source_spinner" />
     <item type="id" name="translate_infobar_target_spinner" />
+    <item type="id" name="subresource_filter_infobar_toggle" />
 
     <!-- Menu items IDs in Settings -->
     <item type="id" name="menu_id_close" />
@@ -37,9 +37,6 @@
     <item type="id" name="menu_id_reset" />
     <item type="id" name="menu_id_refresh" />
     <item type="id" name="menu_id_settings" />
-
-    <!-- Menu item IDs for FullscreenActivities -->
-    <item type="id" name="menu_id_open_in_chrome" />
 
     <!-- Cast notification -->
     <item type="id" name="remote_notification" />
@@ -70,4 +67,43 @@
 
     <!-- Password update prompt -->
     <item type="id" name="password_infobar_accounts_spinner" />
+
+    <!-- Context Menu Ids -->
+    <!-- Custom Tab Group -->
+    <item type="id" name="contextmenu_open_in_new_chrome_tab" />
+    <item type="id" name="contextmenu_open_in_chrome_incognito_tab" />
+    <item type="id" name="contextmenu_open_in_browser_id" />
+
+    <!-- Link Group -->
+    <item type="id" name="contextmenu_open_in_other_window" />
+    <item type="id" name="contextmenu_open_in_new_tab" />
+    <item type="id" name="contextmenu_open_in_incognito_tab" />
+    <item type="id" name="contextmenu_copy_link_address" />
+    <item type="id" name="contextmenu_copy_link_text" />
+    <item type="id" name="contextmenu_save_link_as" />
+
+    <!--Image Group -->
+    <item type="id" name="contextmenu_load_original_image" />
+    <item type="id" name="contextmenu_save_image" />
+    <item type="id" name="contextmenu_open_image" />
+    <item type="id" name="contextmenu_open_image_in_new_tab" />
+    <item type="id" name="contextmenu_search_by_image" />
+    <item type="id" name="contextmenu_share_image" />
+
+    <!-- Message Group -->
+    <item type="id" name="contextmenu_call" />
+    <item type="id" name="contextmenu_send_message" />
+    <item type="id" name="contextmenu_add_to_contacts" />
+    <item type="id" name="contextmenu_copy" />
+
+    <!-- Other Group -->
+    <item type="id" name="contextmenu_save_video" />
+
+    <!-- Menu item IDs for FullscreenActivities -->
+    <item type="id" name="menu_id_open_in_chrome" />
+
+    <!-- App menu item custom tags -->
+    <item type="id" name="menu_item_enter_anim_id" />
+    <item type="id" name="menu_item_original_background" />
+    <item type="id" name="menu_item_background_drawable_position" />
 </resources>

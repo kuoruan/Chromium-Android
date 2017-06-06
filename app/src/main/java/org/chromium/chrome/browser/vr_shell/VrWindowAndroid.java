@@ -28,7 +28,6 @@ import java.util.Arrays;
  */
 public class VrWindowAndroid extends WindowAndroid
         implements ApplicationStatus.ActivityStateListener {
-
     public VrWindowAndroid(Context context, DisplayAndroid display) {
         super(context, display);
         Activity activity = activityFromContext(context);

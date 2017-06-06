@@ -11,7 +11,7 @@ import org.chromium.base.Callback;
 import org.chromium.base.Log;
 import org.chromium.chrome.browser.ntp.NewTabPageUma;
 import org.chromium.chrome.browser.ntp.snippets.CategoryInt;
-import org.chromium.chrome.browser.ntp.snippets.CategoryStatus.CategoryStatusEnum;
+import org.chromium.chrome.browser.ntp.snippets.CategoryStatus;
 import org.chromium.chrome.browser.ntp.snippets.SectionHeader;
 import org.chromium.chrome.browser.ntp.snippets.SnippetArticle;
 import org.chromium.chrome.browser.ntp.snippets.SnippetArticleViewHolder;
@@ -336,8 +336,8 @@ public class SuggestionsSection extends InnerNode {
      * @param replaceExisting If true, {@code suggestions} replace the current list of suggestions.
      * If false, {@code suggestions} are appended to current list of suggestions.
      */
-    public void setSuggestions(List<SnippetArticle> suggestions, @CategoryStatusEnum int status,
-            boolean replaceExisting) {
+    public void setSuggestions(
+            List<SnippetArticle> suggestions, @CategoryStatus int status, boolean replaceExisting) {
         Log.d(TAG, "setSuggestions: previous number of suggestions: %d; replace existing: %b",
                 mSuggestionsList.getItemCount(), replaceExisting);
         if (!SnippetsBridge.isCategoryStatusAvailable(status)) mSuggestionsList.clear();
@@ -403,7 +403,7 @@ public class SuggestionsSection extends InnerNode {
     }
 
     /** Sets the status for the section. Some statuses can cause the suggestions to be cleared. */
-    public void setStatus(@CategoryStatusEnum int status) {
+    public void setStatus(@CategoryStatus int status) {
         if (!SnippetsBridge.isCategoryStatusAvailable(status)) mSuggestionsList.clear();
         mProgressIndicator.setVisible(SnippetsBridge.isCategoryLoading(status));
     }

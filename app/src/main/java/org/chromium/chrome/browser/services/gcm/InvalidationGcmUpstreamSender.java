@@ -37,7 +37,7 @@ public class InvalidationGcmUpstreamSender extends GcmUpstreamSenderService {
     @Override
     public void deliverMessage(final String to, final Bundle data) {
         @Nullable
-        Account account = ChromeSigninController.get(this).getSignedInUser();
+        Account account = ChromeSigninController.get().getSignedInUser();
         if (account == null) {
             // This should never happen, because this code should only be run if a user is
             // signed-in.

@@ -47,7 +47,7 @@ public final class ForcedSigninProcessor {
      * changes with early exit if an account has already been signed in.
      */
     public static void start(final Context appContext, @Nullable final Runnable onComplete) {
-        if (ChromeSigninController.get(appContext).isSignedIn()) return;
+        if (ChromeSigninController.get().isSignedIn()) return;
         new AndroidEduAndChildAccountHelper() {
             @Override
             public void onParametersReady() {
@@ -75,7 +75,7 @@ public final class ForcedSigninProcessor {
             Log.d(TAG, "Sign in disallowed");
             return;
         }
-        AccountManagerHelper.get(appContext).getGoogleAccounts(new Callback<Account[]>() {
+        AccountManagerHelper.get().getGoogleAccounts(new Callback<Account[]>() {
             @Override
             public void onResult(Account[] accounts) {
                 if (accounts.length != 1) {

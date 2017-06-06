@@ -28,6 +28,8 @@ sync_components() {
 		${components}/bookmarks/common/android/java/src/* \
 		${components}/dom_distiller/content/browser/android/java/src/* \
 		${components}/dom_distiller/core/android/java/src/* \
+		${components}/feature_engagement_tracker/internal/android/java/src/* \
+		${components}/feature_engagement_tracker/public/android/java/src/* \
 		${components}/gcm_driver/android/java/src/* \
 		${components}/gcm_driver/instance_id/android/java/src/* \
 		${components}/invalidation/impl/android/java/src/* \
@@ -35,6 +37,8 @@ sync_components() {
 		${components}/minidump_uploader/android/java/src/* \
 		${components}/navigation_interception/android/java/src/* \
 		${components}/ntp_tiles/android/java/src/* \
+		${components}/offline_items_collection/core/android/java/src/* \
+		${components}/payments/content/android/java/src/* \
 		${components}/policy/android/java/src/* \
 		${components}/precache/android/java/src/* \
 		${components}/safe_browsing_db/android/java/src/* \
@@ -78,7 +82,7 @@ sync_content() {
 	#
 	# mv ${APP_DIR}/src/main/java/org/chromium/content/common/*.aidl "$aidl_j"
 
-	find ${APP_DIR}/src/main/java/org/chromium -name "*.aidl" -type f -print0 | xargs -0 rm -f
+	# find ${APP_DIR}/src/main/java/org/chromium -name "*.aidl" -type f -print0 | xargs -0 rm -f
 }
 
 sync_data_chart() {
@@ -109,6 +113,7 @@ sync_chrome() {
 		${BASE_DIR}/chrome/android/java/src/* \
 		${BASE_DIR}/chrome/android/webapk/libs/client/src/* \
 		${BASE_DIR}/chrome/android/webapk/libs/common/src/* \
+		${BASE_DIR}/chrome/android/webapk/libs/runtime_library/src/* \
 		${BASE_DIR}/device/battery/android/java/src/* \
 		${BASE_DIR}/device/bluetooth/android/java/src/* \
 		${BASE_DIR}/device/gamepad/android/java/src/* \
@@ -128,6 +133,7 @@ sync_chrome() {
 		${BASE_DIR}/mojo/public/java/system/src/* \
 		${BASE_DIR}/net/android/java/src/* \
 		${BASE_DIR}/printing/android/java/src/* \
+		${BASE_DIR}/services/device/android/java/src/* \
 		${BASE_DIR}/services/device/time_zone_monitor/android/java/src/* \
 		${BASE_DIR}/services/service_manager/public/java/src/* \
 		${BASE_DIR}/third_party/android_protobuf/src/java/src/device/main/java/* \
@@ -143,6 +149,7 @@ sync_chrome() {
 
 	cp -r ${BASE_DIR}/chrome/android/java/res/* \
 		${BASE_DIR}/chrome/android/java/res_chromium/* \
+		${BASE_DIR}/media/base/android/java/res/* \
 		${RELEASE_DIR}/gen/chrome/java/res/* \
 		${RELEASE_DIR}/gen/chrome/android/chrome_strings_grd_grit_output/* \
 		${RELEASE_DIR}/gradle/chrome/android/chrome_public_apk/extracted-res/xml \
@@ -173,6 +180,7 @@ sync_assets() {
 	cp ${RELEASE_DIR}/*.pak \
 		${RELEASE_DIR}/*.bin \
 		${RELEASE_DIR}/*.dat \
+		${RELEASE_DIR}/locales/{en-US,zh-CN,zh-TW}.pak \
 		"$asset_dir"
 }
 
@@ -190,10 +198,9 @@ sync_jniLibs() {
 }
 
 clean_project() {
-	find "$PRO_DIR" -name "R.java" -type f -print0 | xargs -0 rm -f
-	find "$PRO_DIR" -name "OWNERS" -type f -print0 | xargs -0 rm -f
-	find "$PRO_DIR" -name "*.template" -type f -print0 | xargs -0 rm -f
-	find "$PRO_DIR" -name "*.stamp" -type f -print0 | xargs -0 rm -f
+	local del_files="README|OWNERS|.*\.template|R\.java|.*\.stamp|.*stamp\.d"
+	find "$PRO_DIR" -regextype "posix-egrep" -regex ".*/(${del_files})" -type f -print0 | \
+		xargs -0 rm -f
 
 	local langs="am|ar|bg|ca|cs|da|de|el|en-rGB|es|es-rUS|fa|fi|fr|hi|hr|hu|in|it|iw"
 	langs="$langs|ja|ko|lt|lv|nb|nl|pl|pt-rBR|pt-rPT|ro|ru|sk|sl|sr|sv|sw|th|tl|tr|uk|vi"

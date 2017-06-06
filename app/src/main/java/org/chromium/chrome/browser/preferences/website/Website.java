@@ -37,6 +37,7 @@ public class Website implements Serializable {
     private MidiInfo mMidiInfo;
     private NotificationInfo mNotificationInfo;
     private ContentSettingException mPopupException;
+    private ContentSettingException mSubresourceFilterException;
     private ProtectedMediaIdentifierInfo mProtectedMediaIdentifierInfo;
     private final List<StorageInfo> mStorageInfo = new ArrayList<StorageInfo>();
     private int mStorageInfoCallbacksLeft;
@@ -343,6 +344,39 @@ public class Website implements Serializable {
     public void setPopupPermission(ContentSetting value) {
         if (mPopupException != null) {
             mPopupException.setContentSetting(value);
+        }
+    }
+
+    /**
+     * Sets the Subresource Filter exception info for this Website.
+     */
+    public void setSubresourceFilterException(ContentSettingException exception) {
+        mSubresourceFilterException = exception;
+    }
+
+    /**
+     * Returns the Subresource Filter exception info for this Website.
+     */
+    public ContentSettingException getSubresourceFilterException() {
+        return mSubresourceFilterException;
+    }
+
+    /**
+     * Returns what permission governs the Subresource Filter.
+     */
+    public ContentSetting getSubresourceFilterPermission() {
+        if (mSubresourceFilterException != null) {
+            return mSubresourceFilterException.getContentSetting();
+        }
+        return null;
+    }
+
+    /**
+     * Sets the Subresource Filter permission.
+     */
+    public void setSubresourceFilterPermission(ContentSetting value) {
+        if (mSubresourceFilterException != null) {
+            mSubresourceFilterException.setContentSetting(value);
         }
     }
 

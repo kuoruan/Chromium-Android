@@ -19,8 +19,6 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.SuppressFBWarnings;
-import org.chromium.components.location.LocationSettingsDialogContext.LocationSettingsDialogContextEnum;
-import org.chromium.components.location.LocationSettingsDialogOutcome.LocationSettingsDialogOutcomeEnum;
 import org.chromium.ui.base.WindowAndroid;
 
 /**
@@ -74,6 +72,7 @@ public class LocationUtils {
      * Returns whether location services are enabled system-wide, i.e. whether any application is
      * able to access location.
      */
+    @SuppressWarnings("deprecation")
     public boolean isSystemLocationSettingEnabled() {
         Context context = ContextUtils.getApplicationContext();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -106,8 +105,8 @@ public class LocationUtils {
      * dialog, which in practice happens very infrequently since the dialog is modal.
      */
     public void promptToEnableSystemLocationSetting(
-            @LocationSettingsDialogContextEnum int promptContext, WindowAndroid window,
-            @LocationSettingsDialogOutcomeEnum Callback<Integer> callback) {
+            @LocationSettingsDialogContext int promptContext, WindowAndroid window,
+            @LocationSettingsDialogOutcome Callback<Integer> callback) {
         callback.onResult(LocationSettingsDialogOutcome.NO_PROMPT);
     }
 

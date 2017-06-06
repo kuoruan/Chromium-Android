@@ -55,16 +55,15 @@ public class BackgroundSyncLauncher {
 
     /**
      * Create a BackgroundSyncLauncher object, which is owned by C++.
-     * @param context The app context.
      */
     @VisibleForTesting
     @CalledByNative
-    protected static BackgroundSyncLauncher create(Context context) {
+    protected static BackgroundSyncLauncher create() {
         if (sInstance != null) {
             throw new IllegalStateException("Already instantiated");
         }
 
-        sInstance = new BackgroundSyncLauncher(context);
+        sInstance = new BackgroundSyncLauncher();
         return sInstance;
     }
 
@@ -159,14 +158,14 @@ public class BackgroundSyncLauncher {
         return sInstance != null;
     }
 
-    protected BackgroundSyncLauncher(Context context) {
-        mScheduler = GcmNetworkManager.getInstance(context);
+    protected BackgroundSyncLauncher() {
+        mScheduler = GcmNetworkManager.getInstance(ContextUtils.getApplicationContext());
         launchBrowserIfStopped(false, 0);
     }
 
-    private static boolean canUseGooglePlayServices(Context context) {
+    private static boolean canUseGooglePlayServices() {
         return ExternalAuthUtils.getInstance().canUseGooglePlayServices(
-                context, new UserRecoverableErrorHandler.Silent());
+                ContextUtils.getApplicationContext(), new UserRecoverableErrorHandler.Silent());
     }
 
     /**
@@ -175,16 +174,15 @@ public class BackgroundSyncLauncher {
      * which fail cannot be reregistered. Better to wait until Play Services is updated before
      * attempting them.
      *
-     * @param context The application context.
      */
     @CalledByNative
-    private static boolean shouldDisableBackgroundSync(Context context) {
+    private static boolean shouldDisableBackgroundSync() {
         // Check to see if Play Services is up to date, and disable GCM if not.
         // This will not automatically set {@link sGCMEnabled} to true, in case it has been
         // disabled in tests.
         if (sGCMEnabled) {
             boolean isAvailable = true;
-            if (!canUseGooglePlayServices(context)) {
+            if (!canUseGooglePlayServices()) {
                 setGCMEnabled(false);
                 Log.i(TAG, "Disabling Background Sync because Play Services is not up to date.");
                 isAvailable = false;

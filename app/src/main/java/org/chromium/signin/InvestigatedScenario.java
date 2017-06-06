@@ -15,33 +15,34 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class InvestigatedScenario {
-  @IntDef({
-      UPGRADE_LOW_RISK, UPGRADE_HIGH_RISK, SAME_ACCOUNT, DIFFERENT_ACCOUNT, HISTOGRAM_COUNT
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface InvestigatedScenarioEnum {}
+@IntDef({
+    InvestigatedScenario.UPGRADE_LOW_RISK, InvestigatedScenario.UPGRADE_HIGH_RISK,
+    InvestigatedScenario.SAME_ACCOUNT, InvestigatedScenario.DIFFERENT_ACCOUNT,
+    InvestigatedScenario.HISTOGRAM_COUNT
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface InvestigatedScenario {
   /**
    * First signin and should not be warned. As little friction as possible should get between the
    * user and signing in.
    */
-  public static final int UPGRADE_LOW_RISK = 0;
+  int UPGRADE_LOW_RISK = 0;
   /**
    * First signin but should be warned. There is a reason to believe this signin may not be what the
    * user wanted.
    */
-  public static final int UPGRADE_HIGH_RISK = 1;
+  int UPGRADE_HIGH_RISK = 1;
   /**
    * Relogging with the same account.
    */
-  public static final int SAME_ACCOUNT = 2;
+  int SAME_ACCOUNT = 2;
   /**
    * User is switching accounts, can be very dangerous depending on the amount of local syncable
    * data.
    */
-  public static final int DIFFERENT_ACCOUNT = 3;
+  int DIFFERENT_ACCOUNT = 3;
   /**
    * Always the last enumerated type.
    */
-  public static final int HISTOGRAM_COUNT = 4;
+  int HISTOGRAM_COUNT = 4;
 }

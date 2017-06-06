@@ -15,22 +15,24 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ShortcutSource {
-  @IntDef({
-      UNKNOWN, ADD_TO_HOMESCREEN_DEPRECATED, APP_BANNER, BOOKMARK_NAVIGATOR_WIDGET,
-      BOOKMARK_SHORTCUT_WIDGET, NOTIFICATION, ADD_TO_HOMESCREEN_PWA, ADD_TO_HOMESCREEN_STANDALONE,
-      ADD_TO_HOMESCREEN_SHORTCUT, COUNT
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ShortcutSourceEnum {}
-  public static final int UNKNOWN = 0;
-  public static final int ADD_TO_HOMESCREEN_DEPRECATED = 1;
-  public static final int APP_BANNER = 2;
-  public static final int BOOKMARK_NAVIGATOR_WIDGET = 3;
-  public static final int BOOKMARK_SHORTCUT_WIDGET = 4;
-  public static final int NOTIFICATION = 5;
-  public static final int ADD_TO_HOMESCREEN_PWA = 6;
-  public static final int ADD_TO_HOMESCREEN_STANDALONE = 7;
-  public static final int ADD_TO_HOMESCREEN_SHORTCUT = 8;
-  public static final int COUNT = 9;
+@IntDef({
+    ShortcutSource.UNKNOWN, ShortcutSource.ADD_TO_HOMESCREEN_DEPRECATED, ShortcutSource.APP_BANNER,
+    ShortcutSource.BOOKMARK_NAVIGATOR_WIDGET, ShortcutSource.BOOKMARK_SHORTCUT_WIDGET,
+    ShortcutSource.NOTIFICATION, ShortcutSource.ADD_TO_HOMESCREEN_PWA,
+    ShortcutSource.ADD_TO_HOMESCREEN_STANDALONE, ShortcutSource.ADD_TO_HOMESCREEN_SHORTCUT,
+    ShortcutSource.EXTERNAL_INTENT, ShortcutSource.COUNT
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ShortcutSource {
+  int UNKNOWN = 0;
+  int ADD_TO_HOMESCREEN_DEPRECATED = 1;
+  int APP_BANNER = 2;
+  int BOOKMARK_NAVIGATOR_WIDGET = 3;
+  int BOOKMARK_SHORTCUT_WIDGET = 4;
+  int NOTIFICATION = 5;
+  int ADD_TO_HOMESCREEN_PWA = 6;
+  int ADD_TO_HOMESCREEN_STANDALONE = 7;
+  int ADD_TO_HOMESCREEN_SHORTCUT = 8;
+  int EXTERNAL_INTENT = 9;
+  int COUNT = 10;
 }

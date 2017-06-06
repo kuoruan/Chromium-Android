@@ -18,6 +18,7 @@ import org.chromium.chrome.browser.compositor.layouts.eventfilter.EventFilter;
 import org.chromium.chrome.browser.compositor.overlays.SceneOverlay;
 import org.chromium.chrome.browser.device.DeviceClassManager;
 import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.ClipDrawableProgressBar.DrawingInfo;
 import org.chromium.chrome.browser.widget.ControlContainer;
 import org.chromium.ui.base.DeviceFormFactor;
@@ -65,7 +66,7 @@ public class ToolbarSceneLayer extends SceneOverlayLayer implements SceneOverlay
      * @param fullscreenManager A ChromeFullscreenManager instance.
      * @param resourceManager A ResourceManager for loading static resources.
      * @param forceHideAndroidBrowserControls True if the Android browser controls are being hidden.
-     * @param sizingFlags The sizing flags for the toolbar.
+     * @param viewportMode The sizing mode of the viewport being drawn in.
      * @param isTablet If the device is a tablet.
      * @param windowHeight The height of the window.
      */
@@ -77,7 +78,8 @@ public class ToolbarSceneLayer extends SceneOverlayLayer implements SceneOverlay
 
         if (fullscreenManager == null) return;
         ControlContainer toolbarContainer = fullscreenManager.getControlContainer();
-        if (!isTablet && toolbarContainer != null) {
+        if (!isTablet && toolbarContainer != null
+                && !fullscreenManager.areBrowserControlsAtBottom()) {
             if (mProgressBarDrawingInfo == null) mProgressBarDrawingInfo = new DrawingInfo();
             toolbarContainer.getProgressBarDrawingInfo(mProgressBarDrawingInfo);
         } else {
@@ -101,8 +103,7 @@ public class ToolbarSceneLayer extends SceneOverlayLayer implements SceneOverlay
                 fullscreenManager.areBrowserControlsAtBottom());
 
         if (mProgressBarDrawingInfo == null) return;
-        nativeUpdateProgressBar(mNativePtr,
-                mProgressBarDrawingInfo.progressBarRect.left,
+        nativeUpdateProgressBar(mNativePtr, mProgressBarDrawingInfo.progressBarRect.left,
                 mProgressBarDrawingInfo.progressBarRect.top,
                 mProgressBarDrawingInfo.progressBarRect.width(),
                 mProgressBarDrawingInfo.progressBarRect.height(),
@@ -164,8 +165,12 @@ public class ToolbarSceneLayer extends SceneOverlayLayer implements SceneOverlay
     }
 
     @Override
-    public void onSizeChanged(float width, float height, float visibleViewportOffsetY,
-            int orientation) {}
+    public void onSizeChanged(
+            float width, float height, float visibleViewportOffsetY, int orientation) {
+        // If Chrome Home is enabled, a size change means the toolbar is now in a different
+        // location so a render is needed.
+        if (FeatureUtilities.isChromeHomeEnabled()) mRenderHost.requestRender();
+    }
 
     @Override
     public void getVirtualViews(List<VirtualView> views) {}

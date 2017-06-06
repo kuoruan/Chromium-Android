@@ -297,8 +297,6 @@ public class OfflinePageTabObserver
 
     void reinitialize(Context context, TabModel tabModel, SnackbarManager manager,
             SnackbarController controller) {
-        // TODO(fgorski): Work out if we need to also update network changes observer with the
-        // context change.
         mContext = context;
         mSnackbarManager = manager;
         mSnackbarController = controller;

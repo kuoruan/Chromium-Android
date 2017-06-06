@@ -6,8 +6,10 @@ package org.chromium.content.browser.input;
 
 import android.view.InputDevice;
 import android.view.MotionEvent;
+import android.view.View;
+import android.view.animation.AnimationUtils;
 
-import org.chromium.content.browser.ContentViewCore;
+import org.chromium.base.VisibleForTesting;
 
 /**
  * This class controls page zoomin/out using trigger joystick events.
@@ -21,36 +23,93 @@ public class JoystickZoomProvider {
 
     private static final float ZOOM_SPEED = 1.65f;
 
-    private long mLastAnimateTimeMillis;
+    /**
+     * Interface that provides the implementation of pinch zoom action.
+     */
+    public interface PinchZoomHandler {
+        /**
+         * Send start of pinch zoom gesture.
+         *
+         * @param xPix X-coordinate of location from which pinch zoom would start.
+         * @param yPix Y-coordinate of location from which pinch zoom would start.
+         * @return whether the pinch zoom start gesture was sent.
+         */
+        boolean pinchBegin(int xPix, int yPix);
 
-    private float mZoomInVelocity;
+        /**
+         * Send pinch zoom gesture.
+         *
+         * @param xPix X-coordinate of pinch zoom location.
+         * @param yPix Y-coordinate of pinch zoom location.
+         * @param delta the factor by which the current page scale should be multiplied by.
+         * @return whether the pinchby gesture was sent.
+         */
+        boolean pinchBy(int xPix, int yPix, float delta);
 
-    private float mZoomOutVelocity;
+        /**
+         * Stop pinch zoom gesture.
+         *
+         * @return whether the pinch stop gesture was sent.
+         */
+        boolean pinchEnd();
+    }
+    ;
 
-    protected final ContentViewCore mContentViewCore;
+    /**
+     * Interface that provides last animation interval. Overriden for testing.
+     */
+    public interface AnimationIntervalProvider {
+        /**
+         * Returns last animation interval.
+         */
+        public long getLastAnimationFrameInterval();
+    }
+    ;
 
-    protected float mDeviceScaleFactor;
-
-    private int mZoomXcoord;
-
-    private int mZoomYcoord;
-
+    protected final float mDeviceScaleFactor;
+    protected View mContainerView;
     protected Runnable mZoomRunnable;
 
+    private final int mZoomXcoord;
+    private final int mZoomYcoord;
+    private final PinchZoomHandler mPinchZoomHandler;
+
     private AnimationIntervalProvider mSystemAnimationIntervalProvider;
+    private long mLastAnimateTimeMillis;
+    private float mZoomInVelocity;
+    private float mZoomOutVelocity;
 
     /**
      * Constructs a new JoystickZoomProvider.
      *
-     * @param cvc The ContentViewCore used to create this.
+     * @param containerView The view to which the zoom action will be posted.
+     * @param scaleFactor Device scale factor.
+     * @param xcoord X position of the zoom point.
+     * @param ycoord Y position of the zoom point.
+     * @param pinchZoomHandler {@link PinchZoomHandler} implementation.
      */
-    public JoystickZoomProvider(
-            ContentViewCore cvc, AnimationIntervalProvider animationTimeProvider) {
-        mContentViewCore = cvc;
-        mDeviceScaleFactor = mContentViewCore.getRenderCoordinates().getDeviceScaleFactor();
-        mZoomXcoord = mContentViewCore.getViewportWidthPix() / 2;
-        mZoomYcoord = mContentViewCore.getViewportHeightPix() / 2;
-        mSystemAnimationIntervalProvider = animationTimeProvider;
+    public JoystickZoomProvider(View containerView, float scaleFactor, int xcoord, int ycoord,
+            PinchZoomHandler pinchZoomHandler) {
+        mContainerView = containerView;
+        mDeviceScaleFactor = scaleFactor;
+        mZoomXcoord = xcoord;
+        mZoomYcoord = ycoord;
+        mPinchZoomHandler = pinchZoomHandler;
+        mSystemAnimationIntervalProvider = new AnimationIntervalProvider() {
+            @Override
+            public long getLastAnimationFrameInterval() {
+                return AnimationUtils.currentAnimationTimeMillis();
+            }
+        };
+    }
+
+    @VisibleForTesting
+    public void setAnimationIntervalProviderForTesting(AnimationIntervalProvider intervalProvider) {
+        mSystemAnimationIntervalProvider = intervalProvider;
+    }
+
+    public void setContainerView(View containerView) {
+        mContainerView = containerView;
     }
 
     /**
@@ -80,15 +139,15 @@ public class JoystickZoomProvider {
         if (mLastAnimateTimeMillis == 0) {
             mLastAnimateTimeMillis =
                     mSystemAnimationIntervalProvider.getLastAnimationFrameInterval();
-            mContentViewCore.getContainerView().postOnAnimation(mZoomRunnable);
-            mContentViewCore.pinchBegin(mZoomXcoord, mZoomYcoord);
+            mContainerView.postOnAnimation(mZoomRunnable);
+            mPinchZoomHandler.pinchBegin(mZoomXcoord, mZoomYcoord);
         }
         return true;
     }
 
     protected void stop() {
         if (mLastAnimateTimeMillis != 0) {
-            mContentViewCore.pinchEnd();
+            mPinchZoomHandler.pinchEnd();
             mLastAnimateTimeMillis = 0;
         }
     }
@@ -99,7 +158,7 @@ public class JoystickZoomProvider {
     }
 
     protected void animateZoom() {
-        if (!mContentViewCore.getContainerView().hasFocus()) {
+        if (!mContainerView.hasFocus()) {
             stop();
             return;
         }
@@ -109,9 +168,9 @@ public class JoystickZoomProvider {
         final long dt = timeMillis - mLastAnimateTimeMillis;
         final float zoomFactor = (float) Math.pow(
                 ZOOM_SPEED, mDeviceScaleFactor * (mZoomInVelocity - mZoomOutVelocity) * dt / 1000f);
-        mContentViewCore.pinchBy(mZoomXcoord, mZoomYcoord, zoomFactor);
+        mPinchZoomHandler.pinchBy(mZoomXcoord, mZoomYcoord, zoomFactor);
         mLastAnimateTimeMillis = timeMillis;
-        mContentViewCore.getContainerView().postOnAnimation(mZoomRunnable);
+        mContainerView.postOnAnimation(mZoomRunnable);
     }
 
     /**
@@ -124,7 +183,7 @@ public class JoystickZoomProvider {
      * @param axis Joystick axis (whether X_AXIS of Y_AXIS)
      * @return Processed joystick value.
      */
-    private float getFilteredAxisValue(MotionEvent event, int axis) {
+    private static float getFilteredAxisValue(MotionEvent event, int axis) {
         float axisValWithNoise = event.getAxisValue(axis);
         return (axisValWithNoise > JOYSTICK_NOISE_THRESHOLD) ? axisValWithNoise : 0f;
     }

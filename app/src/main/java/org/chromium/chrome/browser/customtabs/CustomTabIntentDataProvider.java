@@ -26,6 +26,7 @@ import android.widget.RemoteViews;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.IntentHandler;
@@ -404,9 +405,15 @@ public class CustomTabIntentDataProvider {
         try {
             // Media viewers pass in PendingIntents that contain CHOOSER Intents.  Setting the data
             // in these cases prevents the Intent from firing correctly.
+            String title = mMenuEntries.get(menuIndex).first;
             PendingIntent pendingIntent = mMenuEntries.get(menuIndex).second;
             pendingIntent.send(
                     activity, 0, isMediaViewer() ? null : addedIntent, mOnFinished, null);
+            if (shouldEnableEmbeddedMediaExperience()
+                    && TextUtils.equals(
+                               title, activity.getString(R.string.download_manager_open_with))) {
+                RecordUserAction.record("CustomTabsMenuCustomMenuItem.DownloadsUI.OpenWith");
+            }
         } catch (CanceledException e) {
             Log.e(TAG, "Custom tab in Chrome failed to send pending intent.");
         }

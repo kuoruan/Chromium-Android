@@ -7,6 +7,9 @@ package org.chromium.ui.resources.dynamics;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 
+import org.chromium.ui.resources.ResourceFactory;
+import org.chromium.ui.resources.statics.NinePatchData;
+
 /**
  * A basic implementation of {@link DynamicResource} to handle updatable bitmaps.
  */
@@ -54,13 +57,13 @@ public class BitmapDynamicResource implements DynamicResource {
     }
 
     @Override
-    public Rect getPadding() {
-        return EMPTY_RECT;
+    public long createNativeResource() {
+        return ResourceFactory.createBitmapResource(null);
     }
 
     @Override
-    public Rect getAperture() {
-        return EMPTY_RECT;
+    public NinePatchData getNinePatchData() {
+        return null;
     }
 
     @Override

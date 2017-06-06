@@ -6,6 +6,8 @@ package org.chromium.chrome.browser.metrics;
 
 import org.chromium.base.metrics.RecordHistogram;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Centralizes UMA data collection for WebAPKs. NOTE: Histogram names and values are defined in
  * tools/metrics/histograms/histograms.xml. Please update that file if any change is made.
@@ -86,5 +88,11 @@ public class WebApkUma {
         assert result >= 0 && result < GOOGLE_PLAY_INSTALL_RESULT_MAX;
         RecordHistogram.recordEnumeratedHistogram(
                 "WebApk.Install.GooglePlayInstallResult", result, GOOGLE_PLAY_INSTALL_RESULT_MAX);
+    }
+
+    /** Records the duration of a WebAPK session (from launch/foreground to background). */
+    public static void recordWebApkSessionDuration(long duration) {
+        RecordHistogram.recordLongTimesHistogram(
+                "WebApk.Session.TotalDuration", duration, TimeUnit.MILLISECONDS);
     }
 }

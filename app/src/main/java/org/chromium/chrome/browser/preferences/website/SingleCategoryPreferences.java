@@ -228,6 +228,8 @@ public class SingleCategoryPreferences extends PreferenceFragment
             return website.site().getPopupPermission() == ContentSetting.BLOCK;
         } else if (mCategory.showProtectedMediaSites()) {
             return website.site().getProtectedMediaIdentifierPermission() == ContentSetting.BLOCK;
+        } else if (mCategory.showSubresourceFilterSites()) {
+            return website.site().getSubresourceFilterPermission() == ContentSetting.BLOCK;
         }
 
         return false;
@@ -490,6 +492,9 @@ public class SingleCategoryPreferences extends PreferenceFragment
             } else if (mCategory.showProtectedMediaSites()) {
                 PrefServiceBridge.getInstance().setProtectedMediaIdentifierEnabled(
                         (boolean) newValue);
+            } else if (mCategory.showSubresourceFilterSites()) {
+                PrefServiceBridge.getInstance().setAllowSubresourceFilterEnabled(
+                        (boolean) newValue);
             }
 
             // Categories that support adding exceptions also manage the 'Add site' preference.
@@ -717,6 +722,9 @@ public class SingleCategoryPreferences extends PreferenceFragment
                 } else if (mCategory.showProtectedMediaSites()) {
                     globalToggle.setChecked(
                             PrefServiceBridge.getInstance().isProtectedMediaIdentifierEnabled());
+                } else if (mCategory.showSubresourceFilterSites()) {
+                    globalToggle.setChecked(
+                            PrefServiceBridge.getInstance().subresourceFilterEnabled());
                 }
             }
         }
@@ -725,6 +733,8 @@ public class SingleCategoryPreferences extends PreferenceFragment
     private void updateThirdPartyCookiesCheckBox() {
         ChromeBaseCheckBoxPreference thirdPartyCookiesPref = (ChromeBaseCheckBoxPreference)
                 getPreferenceScreen().findPreference(THIRD_PARTY_COOKIES_TOGGLE_KEY);
+        thirdPartyCookiesPref.setChecked(
+                !PrefServiceBridge.getInstance().isBlockThirdPartyCookiesEnabled());
         thirdPartyCookiesPref.setEnabled(PrefServiceBridge.getInstance().isAcceptCookiesEnabled());
         thirdPartyCookiesPref.setManagedPreferenceDelegate(new ManagedPreferenceDelegate() {
             @Override

@@ -42,6 +42,9 @@ public interface BackendProvider {
 
         /** See {@link DownloadManagerService#isDownloadOpenableInBrowser}. */
         boolean isDownloadOpenableInBrowser(boolean isOffTheRecord, String mimeType);
+
+        /** See {@link DownloadManagerService#updateLastAccessTime}. */
+        void updateLastAccessTime(String downloadGuid, boolean isOffTheRecord);
     }
 
     /** Interacts with the Offline Pages backend. */

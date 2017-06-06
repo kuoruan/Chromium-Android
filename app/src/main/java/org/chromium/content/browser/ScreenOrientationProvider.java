@@ -11,7 +11,6 @@ import android.content.pm.PackageManager;
 import android.view.Surface;
 
 import org.chromium.base.Log;
-import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.content_public.common.ScreenOrientationConstants;
@@ -122,26 +121,6 @@ public class ScreenOrientationProvider {
         } finally {
             activity.setRequestedOrientation(defaultOrientation);
         }
-    }
-
-    @CalledByNative
-    static void startAccurateListening() {
-        ThreadUtils.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                DisplayAndroid.startAccurateListening();
-            }
-        });
-    }
-
-    @CalledByNative
-    static void stopAccurateListening() {
-        ThreadUtils.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                DisplayAndroid.stopAccurateListening();
-            }
-        });
     }
 
     private ScreenOrientationProvider() {

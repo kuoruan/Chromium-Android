@@ -5,30 +5,45 @@
 package org.chromium.chrome.browser.contextmenu;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Pair;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.view.MenuItem;
-import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
 import android.view.View.OnCreateContextMenuListener;
 
+import org.chromium.base.Callback;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.share.ShareHelper;
 import org.chromium.content.browser.ContentViewCore;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.base.WindowAndroid;
 import org.chromium.ui.base.WindowAndroid.OnCloseContextMenuListener;
 
+import java.util.List;
+
+import javax.annotation.Nullable;
+
 /**
  * A helper class that handles generating context menus for {@link ContentViewCore}s.
  */
-public class ContextMenuHelper implements OnCreateContextMenuListener, OnMenuItemClickListener {
+public class ContextMenuHelper implements OnCreateContextMenuListener {
+    private static final int MAX_SHARE_DIMEN_PX = 2048;
+
     private long mNativeContextMenuHelper;
 
     private ContextMenuPopulator mPopulator;
     private ContextMenuParams mCurrentContextMenuParams;
+    private Activity mActivity;
+    private Callback<Integer> mCallback;
+    private Runnable mOnMenuShown;
+    private Runnable mOnMenuClosed;
 
     private ContextMenuHelper(long nativeContextMenuHelper) {
         mNativeContextMenuHelper = nativeContextMenuHelper;
@@ -61,29 +76,73 @@ public class ContextMenuHelper implements OnCreateContextMenuListener, OnMenuIte
      * @param params          The {@link ContextMenuParams} that indicate what menu items to show.
      */
     @CalledByNative
-    private void showContextMenu(ContentViewCore contentViewCore, ContextMenuParams params) {
+    private void showContextMenu(final ContentViewCore contentViewCore, ContextMenuParams params) {
+        if (params.isFile()) return;
         View view = contentViewCore.getContainerView();
         final WindowAndroid windowAndroid = contentViewCore.getWindowAndroid();
 
         if (view == null || view.getVisibility() != View.VISIBLE || view.getParent() == null
-                || windowAndroid == null) {
+                || windowAndroid == null || windowAndroid.getActivity().get() == null
+                || mPopulator == null) {
             return;
         }
 
         mCurrentContextMenuParams = params;
+        mActivity = windowAndroid.getActivity().get();
+        mCallback = new Callback<Integer>() {
+            @Override
+            public void onResult(Integer result) {
+                mPopulator.onItemSelected(
+                        ContextMenuHelper.this, mCurrentContextMenuParams, result);
+            }
+        };
+        mOnMenuShown = new Runnable() {
+            @Override
+            public void run() {
+                WebContents webContents = contentViewCore.getWebContents();
+                RecordHistogram.recordBooleanHistogram("ContextMenu.Shown", webContents != null);
+            }
+        };
+        mOnMenuClosed = new Runnable() {
+            @Override
+            public void run() {
+                if (mNativeContextMenuHelper == 0) return;
+                nativeOnContextMenuClosed(mNativeContextMenuHelper);
+            }
+        };
 
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.CUSTOM_CONTEXT_MENU)) {
+            List<Pair<Integer, List<ContextMenuItem>>> items =
+                    mPopulator.buildContextMenu(null, mActivity, mCurrentContextMenuParams);
+
+            final ContextMenuUi menuUi = new TabularContextMenuUi(new Runnable() {
+                @Override
+                public void run() {
+                    shareImageDirectly(ShareHelper.getLastShareComponentName());
+                }
+            });
+            menuUi.displayMenu(mActivity, mCurrentContextMenuParams, items, mCallback, mOnMenuShown,
+                    mOnMenuClosed);
+            if (mCurrentContextMenuParams.isImage()) {
+                getThumbnail(new Callback<Bitmap>() {
+                    @Override
+                    public void onResult(Bitmap result) {
+                        ((TabularContextMenuUi) menuUi).onImageThumbnailRetrieved(result);
+                    }
+                });
+            }
+            return;
+        }
+
+        // The Platform Context Menu requires the listener within this hepler since this helper and
+        // provides context menu for us to show.
         view.setOnCreateContextMenuListener(this);
         if (view.showContextMenu()) {
-            WebContents webContents = contentViewCore.getWebContents();
-            RecordHistogram.recordBooleanHistogram(
-                    "ContextMenu.Shown", webContents != null);
-
+            mOnMenuShown.run();
             windowAndroid.addContextMenuCloseListener(new OnCloseContextMenuListener() {
                 @Override
                 public void onContextMenuClosed() {
-                    if (mNativeContextMenuHelper == 0) return;
-
-                    nativeOnContextMenuClosed(mNativeContextMenuHelper);
+                    mOnMenuClosed.run();
                     windowAndroid.removeContextMenuCloseListener(this);
                 }
             });
@@ -112,32 +171,56 @@ public class ContextMenuHelper implements OnCreateContextMenuListener, OnMenuIte
      * Share the image that triggered the current context menu.
      */
     public void shareImage() {
-        if (mNativeContextMenuHelper == 0) return;
-        nativeShareImage(mNativeContextMenuHelper);
+        shareImageDirectly(null);
     }
 
-    @CalledByNative
-    private void onShareImageReceived(
-            WindowAndroid windowAndroid, byte[] jpegImageData) {
-        Activity activity = windowAndroid.getActivity().get();
-        if (activity == null) return;
+    /**
+     * Share image triggered with the current context menu directly with a specific app.
+     * @param name The {@link ComponentName} of the app to share the image directly with.
+     */
+    public void shareImageDirectly(@Nullable final ComponentName name) {
+        if (mNativeContextMenuHelper == 0) return;
+        Callback<byte[]> callback = new Callback<byte[]>() {
+            @Override
+            public void onResult(byte[] result) {
+                WebContents webContents = nativeGetJavaWebContents(mNativeContextMenuHelper);
+                WindowAndroid windowAndroid = webContents.getTopLevelNativeWindow();
 
-        ShareHelper.shareImage(activity, jpegImageData);
+                Activity activity = windowAndroid.getActivity().get();
+                if (activity == null) return;
+
+                ShareHelper.shareImage(activity, result, name);
+            }
+        };
+        nativeRetrieveImage(mNativeContextMenuHelper, callback, MAX_SHARE_DIMEN_PX);
+    }
+
+    /**
+     * Gets the thumbnail of the current image that triggered the context menu.
+     * @param callback Called once the the thumbnail is received.
+     */
+    private void getThumbnail(final Callback<Bitmap> callback) {
+        if (mNativeContextMenuHelper == 0) return;
+        int maxSizePx = mActivity.getResources().getDimensionPixelSize(
+                R.dimen.context_menu_header_image_max_size);
+        Callback<byte[]> rawDataCallback = new Callback<byte[]>() {
+            @Override
+            public void onResult(byte[] result) {
+                // TODO(tedchoc): Decode in separate process before launch.
+                Bitmap bitmap = BitmapFactory.decodeByteArray(result, 0, result.length);
+                callback.onResult(bitmap);
+            }
+        };
+        nativeRetrieveImage(mNativeContextMenuHelper, rawDataCallback, maxSizePx);
     }
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-        assert mPopulator != null;
-        mPopulator.buildContextMenu(menu, v.getContext(), mCurrentContextMenuParams);
-
-        for (int i = 0; i < menu.size(); i++) {
-            menu.getItem(i).setOnMenuItemClickListener(this);
-        }
-    }
-
-    @Override
-    public boolean onMenuItemClick(MenuItem item) {
-        return mPopulator.onItemSelected(this, mCurrentContextMenuParams, item.getItemId());
+        List<Pair<Integer, List<ContextMenuItem>>> items =
+                mPopulator.buildContextMenu(menu, v.getContext(), mCurrentContextMenuParams);
+        ContextMenuUi menuUi = new PlatformContextMenuUi(menu);
+        menuUi.displayMenu(mActivity, mCurrentContextMenuParams, items, mCallback, mOnMenuShown,
+                mOnMenuClosed);
     }
 
     /**
@@ -148,9 +231,11 @@ public class ContextMenuHelper implements OnCreateContextMenuListener, OnMenuIte
         return mPopulator;
     }
 
+    private native WebContents nativeGetJavaWebContents(long nativeContextMenuHelper);
     private native void nativeOnStartDownload(
             long nativeContextMenuHelper, boolean isLink, boolean isDataReductionProxyEnabled);
     private native void nativeSearchForImage(long nativeContextMenuHelper);
-    private native void nativeShareImage(long nativeContextMenuHelper);
+    private native void nativeRetrieveImage(
+            long nativeContextMenuHelper, Callback<byte[]> callback, int maxSizePx);
     private native void nativeOnContextMenuClosed(long nativeContextMenuHelper);
 }

@@ -5,7 +5,7 @@
 package org.chromium.chrome.browser.payments;
 
 import org.chromium.chrome.browser.ChromeFeatureList;
-import org.chromium.content_public.browser.WebContents;
+import org.chromium.content_public.browser.RenderFrameHost;
 import org.chromium.mojo.system.MojoException;
 import org.chromium.payments.mojom.CanMakePaymentQueryResult;
 import org.chromium.payments.mojom.PaymentDetails;
@@ -20,7 +20,7 @@ import org.chromium.services.service_manager.InterfaceFactory;
  * Creates instances of PaymentRequest.
  */
 public class PaymentRequestFactory implements InterfaceFactory<PaymentRequest> {
-    private final WebContents mWebContents;
+    private final RenderFrameHost mRenderFrameHost;
 
     /**
      * An implementation of PaymentRequest that immediately rejects all connections.
@@ -71,8 +71,8 @@ public class PaymentRequestFactory implements InterfaceFactory<PaymentRequest> {
      *
      * @param webContents The web contents that may invoke the PaymentRequest API.
      */
-    public PaymentRequestFactory(WebContents webContents) {
-        mWebContents = webContents;
+    public PaymentRequestFactory(RenderFrameHost renderFrameHost) {
+        mRenderFrameHost = renderFrameHost;
     }
 
     @Override
@@ -81,8 +81,8 @@ public class PaymentRequestFactory implements InterfaceFactory<PaymentRequest> {
             return new InvalidPaymentRequest();
         }
 
-        if (mWebContents == null) return new InvalidPaymentRequest();
+        if (mRenderFrameHost == null) return new InvalidPaymentRequest();
 
-        return new PaymentRequestImpl(mWebContents);
+        return new PaymentRequestImpl(mRenderFrameHost);
     }
 }

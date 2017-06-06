@@ -314,8 +314,11 @@ public class ShareHelper {
      * Trigger the share action for the given image data.
      * @param activity The activity used to trigger the share action.
      * @param jpegImageData The image data to be shared in jpeg format.
+     * @param name When this is not null, it will share the image directly with the
+     *             {@link ComponentName}
      */
-    public static void shareImage(final Activity activity, final byte[] jpegImageData) {
+    public static void shareImage(
+            final Activity activity, final byte[] jpegImageData, final ComponentName name) {
         if (jpegImageData.length == 0) {
             Log.w(TAG, "Share failed -- Received image contains no data.");
             return;
@@ -359,12 +362,17 @@ public class ShareHelper {
 
                 if (ApplicationStatus.getStateForApplication()
                         != ApplicationState.HAS_DESTROYED_ACTIVITIES) {
-                    Uri imageUri = ApiCompatibilityUtils.getUriForImageCaptureFile(activity,
-                            saveFile);
+                    Uri imageUri = ApiCompatibilityUtils.getUriForImageCaptureFile(saveFile);
 
-                    Intent chooserIntent = Intent.createChooser(getShareImageIntent(imageUri),
-                            activity.getString(R.string.share_link_chooser_title));
-                    fireIntent(activity, chooserIntent);
+                    if (name == null) {
+                        Intent chooserIntent = Intent.createChooser(getShareImageIntent(imageUri),
+                                activity.getString(R.string.share_link_chooser_title));
+                        fireIntent(activity, chooserIntent);
+                    } else {
+                        Intent imageIntent = getShareImageIntent(imageUri);
+                        imageIntent.setComponent(name);
+                        fireIntent(activity, imageIntent);
+                    }
                 }
             }
         }.execute();
@@ -415,7 +423,7 @@ public class ShareHelper {
                 if (ApplicationStatus.getStateForApplication()
                         != ApplicationState.HAS_DESTROYED_ACTIVITIES
                         && savedFile != null) {
-                    fileUri = ApiCompatibilityUtils.getUriForImageCaptureFile(context, savedFile);
+                    fileUri = ApiCompatibilityUtils.getUriForImageCaptureFile(savedFile);
                 }
                 callback.onResult(fileUri);
             }
@@ -540,6 +548,23 @@ public class ShareHelper {
      * @param item The menu item that is used for direct share
      */
     public static void configureDirectShareMenuItem(Activity activity, MenuItem item) {
+        Pair<Drawable, CharSequence> directShare = getShareableIconAndName(activity);
+        Drawable directShareIcon = directShare.first;
+        CharSequence directShareTitle = directShare.second;
+
+        item.setIcon(directShareIcon);
+        if (directShareTitle != null) {
+            item.setTitle(
+                    activity.getString(R.string.accessibility_menu_share_via, directShareTitle));
+        }
+    }
+
+    /**
+     * Get the icon and name of the most recently shared app within chrome.
+     * @param activity Activity that is used to access the package manager.
+     * @return The Image and the String of the recently shared Icon.
+     */
+    public static Pair<Drawable, CharSequence> getShareableIconAndName(Activity activity) {
         Drawable directShareIcon = null;
         CharSequence directShareTitle = null;
 
@@ -597,11 +622,7 @@ public class ShareHelper {
                     "Android.IsLastSharedAppInfoRetrieved", retrieved);
         }
 
-        item.setIcon(directShareIcon);
-        if (directShareTitle != null) {
-            item.setTitle(activity.getString(R.string.accessibility_menu_share_via,
-                    directShareTitle));
-        }
+        return new Pair<>(directShareIcon, directShareTitle);
     }
 
     /*
@@ -674,7 +695,11 @@ public class ShareHelper {
         return intent;
     }
 
-    private static ComponentName getLastShareComponentName() {
+    /**
+     * Gets the {@link ComponentName} of the app that was used to last share.
+     */
+    @Nullable
+    public static ComponentName getLastShareComponentName() {
         SharedPreferences preferences = ContextUtils.getAppSharedPreferences();
         String packageName = preferences.getString(PACKAGE_NAME_KEY, null);
         String className = preferences.getString(CLASS_NAME_KEY, null);

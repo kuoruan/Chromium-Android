@@ -8,97 +8,54 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.os.Handler;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.widget.TextBubble;
+import org.chromium.chrome.browser.widget.textbubble.TextBubble;
+import org.chromium.chrome.browser.widget.textbubble.ViewAnchoredTextBubble;
 
 /**
  * Draws a bubble pointing upward at the tab switcher button.
+ * TODO(dtrainor, nyquist): Migrate this to an IPH message if it doesn't go away.
  */
-public class TabSwitcherCallout extends TextBubble {
+public class TabSwitcherCallout {
     public static final String PREF_NEED_TO_SHOW_TAB_SWITCHER_CALLOUT =
             "org.chromium.chrome.browser.toolbar.NEED_TO_SHOW_TAB_SWITCHER_CALLOUT";
 
     private static final int TAB_SWITCHER_CALLOUT_DISMISS_MS = 10000;
-    private static final float Y_OVERLAP_PERCENTAGE = 0.33f;
-
-    private final Handler mHandler;
-    private final Runnable mDismissRunnable;
+    private static final float Y_OVERLAP_DP = 18.f;
 
     /**
      * Show the TabSwitcherCallout, if necessary.
-     * @param context           Context to draw resources from.
+     * @param context           {@link Context} to draw resources from.
      * @param tabSwitcherButton Button that triggers the tab switcher.
-     * @return TabSwitcherCallout if one was shown, null otherwise.
+     * @return                  {@link TextBubble} if one was shown, {@code null} otherwise.
      */
-    public static TabSwitcherCallout showIfNecessary(Context context, View tabSwitcherButton) {
-        if (!isTabSwitcherCalloutNecessary(context)) return null;
-        setIsTabSwitcherCalloutNecessary(context, false);
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public static TextBubble showIfNecessary(Context context, View tabSwitcherButton) {
+        if (!isTabSwitcherCalloutNecessary()) return null;
+        setIsTabSwitcherCalloutNecessary(false);
 
-        final TabSwitcherCallout callout = new TabSwitcherCallout(context);
-        callout.show(tabSwitcherButton);
-        return callout;
-    }
-
-    @Override
-    protected View createContent(Context context) {
-        View content = LayoutInflater.from(context).inflate(R.layout.tab_switcher_callout, null);
-
-        // Dismiss the popup when the "OK" button is clicked.
-        View okButton = content.findViewById(R.id.confirm_button);
-        okButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dismiss();
-            }
-        });
-
-        return content;
+        ViewAnchoredTextBubble bubble = new ViewAnchoredTextBubble(
+                context, tabSwitcherButton, R.string.tab_switcher_callout_body);
+        bubble.setDismissOnTouchInteraction(true);
+        bubble.setAutoDismissTimeout(TAB_SWITCHER_CALLOUT_DISMISS_MS);
+        int yInsetPx = (int) (Y_OVERLAP_DP * context.getResources().getDisplayMetrics().density);
+        bubble.setInsetPx(0, yInsetPx, 0, yInsetPx);
+        bubble.show();
+        return bubble;
     }
 
     /** @return Whether or not the tab switcher button callout needs to be shown. */
-    public static boolean isTabSwitcherCalloutNecessary(Context context) {
+    public static boolean isTabSwitcherCalloutNecessary() {
         SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
         return prefs.getBoolean(PREF_NEED_TO_SHOW_TAB_SWITCHER_CALLOUT, false);
     }
 
-    /**
-     * Sets whether the tab switcher callout should be shown when the browser starts up.
-     */
-    public static void setIsTabSwitcherCalloutNecessary(Context context, boolean shouldShow) {
+    /** Sets whether the tab switcher callout should be shown when the browser starts up. */
+    public static void setIsTabSwitcherCalloutNecessary(boolean shouldShow) {
         SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
         prefs.edit().putBoolean(PREF_NEED_TO_SHOW_TAB_SWITCHER_CALLOUT, shouldShow).apply();
-    }
-
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private TabSwitcherCallout(Context context) {
-        super(context, Y_OVERLAP_PERCENTAGE);
-        setAnimationStyle(R.style.TabSwitcherCalloutAnimation);
-
-        // Dismiss the popup automatically after a delay.
-        mDismissRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (isShowing()) dismiss();
-            }
-        };
-        mHandler = new Handler();
-    }
-
-    @Override
-    public void show(View anchorView) {
-        super.show(anchorView);
-        mHandler.postDelayed(mDismissRunnable, TAB_SWITCHER_CALLOUT_DISMISS_MS);
-    }
-
-    @Override
-    public void dismiss() {
-        super.dismiss();
-        mHandler.removeCallbacks(mDismissRunnable);
     }
 }

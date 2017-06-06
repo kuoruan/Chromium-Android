@@ -8,7 +8,9 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -21,8 +23,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.base.ContextUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.omaha.UpdateMenuItemHelper;
+import org.chromium.chrome.browser.widget.PulseDrawable;
 import org.chromium.chrome.browser.widget.TintedImageButton;
 import org.chromium.ui.base.LocalizationUtils;
 import org.chromium.ui.interpolators.BakedBezierInterpolator;
@@ -97,12 +101,21 @@ class AppMenuAdapter extends BaseAdapter {
     private final LayoutInflater mInflater;
     private final List<MenuItem> mMenuItems;
     private final int mNumMenuItems;
+    private final Integer mHighlightedItemId;
     private final float mDpToPx;
 
-    public AppMenuAdapter(AppMenu appMenu, List<MenuItem> menuItems, LayoutInflater inflater) {
+    // Use a single PulseDrawable to spawn the other drawables so that the ConstantState gets
+    // shared.  This allows the animation to stay in step even as the views are recycled and the
+    // background gets changed.  This Drawable isn't just used directly because Drawables need to
+    // have a single owner or the internals of View can modify it's state as it gets cleared later.
+    private PulseDrawable mHighlightDrawableSource;
+
+    public AppMenuAdapter(AppMenu appMenu, List<MenuItem> menuItems, LayoutInflater inflater,
+            Integer highlightedItemId) {
         mAppMenu = appMenu;
         mMenuItems = menuItems;
         mInflater = inflater;
+        mHighlightedItemId = highlightedItemId;
         mNumMenuItems = menuItems.size();
         mDpToPx = inflater.getContext().getResources().getDisplayMetrics().density;
     }
@@ -164,6 +177,8 @@ class AppMenuAdapter extends BaseAdapter {
                     convertView.setTag(holder);
                     convertView.setTag(R.id.menu_item_enter_anim_id,
                             buildStandardItemEnterAnimator(convertView, position));
+                    convertView.setTag(
+                            R.id.menu_item_original_background, convertView.getBackground());
                 } else {
                     holder = (StandardMenuItemViewHolder) convertView.getTag();
                 }
@@ -183,6 +198,8 @@ class AppMenuAdapter extends BaseAdapter {
                     convertView.setTag(holder);
                     convertView.setTag(R.id.menu_item_enter_anim_id,
                             buildStandardItemEnterAnimator(convertView, position));
+                    convertView.setTag(
+                            R.id.menu_item_original_background, convertView.getBackground());
                 } else {
                     holder = (CustomMenuItemViewHolder) convertView.getTag();
                 }
@@ -218,12 +235,15 @@ class AppMenuAdapter extends BaseAdapter {
                     convertView = mInflater.inflate(R.layout.title_button_menu_item, parent, false);
                     holder.title = (TextView) convertView.findViewById(R.id.title);
                     holder.button = (TintedImageButton) convertView.findViewById(R.id.button);
-
+                    holder.button.setTag(
+                            R.id.menu_item_original_background, holder.button.getBackground());
                     View animatedView = convertView;
 
                     convertView.setTag(holder);
                     convertView.setTag(R.id.menu_item_enter_anim_id,
                             buildStandardItemEnterAnimator(animatedView, position));
+                    convertView.setTag(
+                            R.id.menu_item_original_background, convertView.getBackground());
                 } else {
                     holder = (TitleButtonMenuItemViewHolder) convertView.getTag();
                 }
@@ -251,6 +271,9 @@ class AppMenuAdapter extends BaseAdapter {
             default:
                 assert false : "Unexpected MenuItem type";
         }
+
+        highlightItemIfNecessary(convertView, false, item.getItemId());
+
         return convertView;
     }
 
@@ -274,6 +297,8 @@ class AppMenuAdapter extends BaseAdapter {
                 mAppMenu.onItemClick(item);
             }
         });
+
+        highlightItemIfNecessary(button, true, item.getItemId());
 
         // Menu items may be hidden by command line flags before they get to this point.
         button.setVisibility(item.isVisible() ? View.VISIBLE : View.GONE);
@@ -336,21 +361,22 @@ class AppMenuAdapter extends BaseAdapter {
      * This builds an {@link Animator} for the enter animation of icon row menu items.  This means
      * it will animate the alpha from 0 to 1 and translate the views from 10dp to 0dp on the x axis.
      *
-     * @param views        The list if icons in the menu item that should be animated.
-     * @return             The {@link Animator}.
+     * @param buttons The list of icons in the menu item that should be animated.
+     * @return        The {@link Animator}.
      */
-    private Animator buildIconItemEnterAnimator(final ImageView[] views) {
+    private Animator buildIconItemEnterAnimator(final ImageView[] buttons) {
         final boolean rtl = LocalizationUtils.isLayoutRtl();
         final float offsetXPx = ENTER_STANDARD_ITEM_OFFSET_X_DP * mDpToPx * (rtl ? -1.f : 1.f);
-        final int maxViewsToAnimate = views.length;
+        final int maxViewsToAnimate = buttons.length;
 
         AnimatorSet animation = new AnimatorSet();
         AnimatorSet.Builder builder = null;
         for (int i = 0; i < maxViewsToAnimate; i++) {
             final int startDelay = ENTER_ITEM_ADDL_DELAY_MS * i;
 
-            Animator alpha = ObjectAnimator.ofFloat(views[i], View.ALPHA, 0.f, 1.f);
-            Animator translate = ObjectAnimator.ofFloat(views[i], View.TRANSLATION_X, offsetXPx, 0);
+            ImageView view = buttons[i];
+            Animator alpha = ObjectAnimator.ofFloat(view, View.ALPHA, 0.f, 1.f);
+            Animator translate = ObjectAnimator.ofFloat(view, View.TRANSLATION_X, offsetXPx, 0);
             alpha.setStartDelay(startDelay);
             translate.setStartDelay(startDelay);
             alpha.setDuration(ENTER_ITEM_DURATION_MS);
@@ -370,7 +396,7 @@ class AppMenuAdapter extends BaseAdapter {
             @Override
             public void onAnimationStart(Animator animation) {
                 for (int i = 0; i < maxViewsToAnimate; i++) {
-                    views[i].setAlpha(0.f);
+                    buttons[i].setAlpha(0.f);
                 }
             }
         });
@@ -385,11 +411,15 @@ class AppMenuAdapter extends BaseAdapter {
                 || ((RowItemViewHolder) convertView.getTag()).buttons.length != numItems) {
             holder = new RowItemViewHolder(numItems);
             convertView = mInflater.inflate(R.layout.icon_row_menu_item, parent, false);
+            convertView.setTag(R.id.menu_item_original_background, convertView.getBackground());
 
             // Save references to all the buttons.
             for (int i = 0; i < numItems; i++) {
-                holder.buttons[i] =
+                TintedImageButton view =
                         (TintedImageButton) convertView.findViewById(BUTTON_IDS[i]);
+                holder.buttons[i] = view;
+                holder.buttons[i].setTag(
+                        R.id.menu_item_original_background, holder.buttons[i].getBackground());
             }
 
             // Remove unused menu items.
@@ -410,6 +440,35 @@ class AppMenuAdapter extends BaseAdapter {
         convertView.setFocusable(false);
         convertView.setEnabled(false);
         return convertView;
+    }
+
+    private void highlightItemIfNecessary(View view, boolean isIcon, int itemId) {
+        if (mHighlightedItemId == null) return;
+
+        Drawable background = (Drawable) view.getTag(R.id.menu_item_original_background);
+        if (background == null) return;
+
+        if (itemId != mHighlightedItemId) {
+            view.setBackground(background);
+            return;
+        }
+
+        if (mHighlightDrawableSource == null) {
+            mHighlightDrawableSource =
+                    isIcon ? PulseDrawable.createCircle() : PulseDrawable.createHighlight();
+        }
+
+        Resources resources = ContextUtils.getApplicationContext().getResources();
+
+        PulseDrawable pulse =
+                (PulseDrawable) mHighlightDrawableSource.getConstantState().newDrawable(resources);
+        if (background.getConstantState() != null) {
+            background = background.getConstantState().newDrawable(resources);
+        }
+
+        LayerDrawable drawable = new LayerDrawable(new Drawable[] {pulse, background});
+        view.setBackground(drawable);
+        pulse.start();
     }
 
     static class StandardMenuItemViewHolder {

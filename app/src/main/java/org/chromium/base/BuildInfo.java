@@ -44,8 +44,8 @@ public class BuildInfo {
 
     /**
      * @return The build fingerprint for the current Android install.  The value is truncated to a
-     *         128 characters as this is used for crash and UMA reporting, which should avoid huge
-     *         strings.
+     * 128 characters as this is used for crash and UMA reporting, which should avoid huge
+     * strings.
      */
     @CalledByNative
     public static String getAndroidBuildFingerprint() {
@@ -64,10 +64,11 @@ public class BuildInfo {
     }
 
     @CalledByNative
-    public static String getGMSVersionCode(Context context) {
+    public static String getGMSVersionCode() {
         String msg = "gms versionCode not available.";
         try {
-            PackageManager packageManager = context.getPackageManager();
+            PackageManager packageManager =
+                    ContextUtils.getApplicationContext().getPackageManager();
             PackageInfo packageInfo = packageManager.getPackageInfo("com.google.android.gms", 0);
             msg = Integer.toString(packageInfo.versionCode);
         } catch (NameNotFoundException e) {
@@ -77,11 +78,11 @@ public class BuildInfo {
     }
 
     @CalledByNative
-    public static String getPackageVersionCode(Context context) {
+    public static String getPackageVersionCode() {
         String msg = "versionCode not available.";
         try {
-            PackageManager pm = context.getPackageManager();
-            PackageInfo pi = pm.getPackageInfo(context.getPackageName(), 0);
+            PackageManager pm = ContextUtils.getApplicationContext().getPackageManager();
+            PackageInfo pi = pm.getPackageInfo(getPackageName(), 0);
             msg = "";
             if (pi.versionCode > 0) {
                 msg = Integer.toString(pi.versionCode);
@@ -93,11 +94,11 @@ public class BuildInfo {
     }
 
     @CalledByNative
-    public static String getPackageVersionName(Context context) {
+    public static String getPackageVersionName() {
         String msg = "versionName not available";
         try {
-            PackageManager pm = context.getPackageManager();
-            PackageInfo pi = pm.getPackageInfo(context.getPackageName(), 0);
+            PackageManager pm = ContextUtils.getApplicationContext().getPackageManager();
+            PackageInfo pi = pm.getPackageInfo(getPackageName(), 0);
             msg = "";
             if (pi.versionName != null) {
                 msg = pi.versionName;
@@ -108,16 +109,33 @@ public class BuildInfo {
         return msg;
     }
 
+    /** Returns a string that is different each time the apk changes. */
     @CalledByNative
-    public static String getPackageLabel(Context context) {
+    public static String getExtractedFileSuffix() {
+        PackageManager pm = ContextUtils.getApplicationContext().getPackageManager();
+        try {
+            PackageInfo pi =
+                    pm.getPackageInfo(ContextUtils.getApplicationContext().getPackageName(), 0);
+            // Use lastUpdateTime when developing locally, since versionCode does not normally
+            // change in this case.
+            long version = pi.versionCode > 10 ? pi.versionCode : pi.lastUpdateTime;
+            return "@" + Long.toHexString(version);
+        } catch (PackageManager.NameNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @CalledByNative
+    public static String getPackageLabel() {
         // Third-party code does disk read on the getApplicationInfo call. http://crbug.com/614343
         StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
         try {
-            PackageManager packageManager = context.getPackageManager();
-            ApplicationInfo appInfo = packageManager.getApplicationInfo(context.getPackageName(),
-                    PackageManager.GET_META_DATA);
+            PackageManager packageManager =
+                    ContextUtils.getApplicationContext().getPackageManager();
+            ApplicationInfo appInfo = packageManager.getApplicationInfo(
+                    getPackageName(), PackageManager.GET_META_DATA);
             CharSequence label = packageManager.getApplicationLabel(appInfo);
-            return  label != null ? label.toString() : "";
+            return label != null ? label.toString() : "";
         } catch (NameNotFoundException e) {
             return "";
         } finally {
@@ -126,9 +144,11 @@ public class BuildInfo {
     }
 
     @CalledByNative
-    public static String getPackageName(Context context) {
-        String packageName = context != null ? context.getPackageName() : null;
-        return packageName != null ? packageName : "";
+    public static String getPackageName() {
+        if (ContextUtils.getApplicationContext() == null) {
+            return "";
+        }
+        return ContextUtils.getApplicationContext().getPackageName();
     }
 
     @CalledByNative
@@ -149,34 +169,16 @@ public class BuildInfo {
     }
 
     /**
-     * @return Whether the current build version is greater than Android N.
-     */
-    public static boolean isGreaterThanN() {
-        return Build.VERSION.SDK_INT > 24 || Build.VERSION.CODENAME.equals("NMR1");
-    }
-
-    /**
      * @return Whether the current device is running Android O release or newer.
      */
     public static boolean isAtLeastO() {
-        if ("REL".equals(Build.VERSION.CODENAME)) return Build.VERSION.SDK_INT >= 26;
-
-        // The following allows pre-releases of Android O to be identified as Android O.
-        // TODO(crbug/685808): Remove this and simplify check above once Android O is available.
-        return "O".equals(Build.VERSION.CODENAME) || Build.VERSION.CODENAME.startsWith("OMR");
+        return Build.VERSION.SDK_INT >= 26;
     }
 
     /**
      * @return Whether the current app targets the SDK for at least O
      */
     public static boolean targetsAtLeastO(Context appContext) {
-        if (appContext.getApplicationInfo().targetSdkVersion >= 26) return true;
-
-        // The following accepts target SDK version to be |CUR_DEVELOPMENT| when the platform Chrome
-        // is running on is a pre-release of Android O.
-        // TODO(crbug/685808): Remove this and simplify the check above once Android O is available.
-        return ("O".equals(Build.VERSION.CODENAME) || Build.VERSION.CODENAME.startsWith("OMR"))
-                && appContext.getApplicationInfo().targetSdkVersion
-                == Build.VERSION_CODES.CUR_DEVELOPMENT;
+        return appContext.getApplicationInfo().targetSdkVersion >= 26;
     }
 }

@@ -7,7 +7,7 @@
     xmlns:chrome="http://schemas.android.com/apk/res-auto"
     android:id="@+id/ntp_content"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:layout_gravity="center_horizontal"
     android:orientation="vertical"
     android:gravity="center"

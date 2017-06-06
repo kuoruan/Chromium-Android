@@ -13,7 +13,6 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
-import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.view.View;
@@ -26,6 +25,7 @@ import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
+import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
@@ -264,9 +264,8 @@ public class ChromeDownloadDelegate {
      * @param info Download information about the download.
      */
     private void enqueueDownloadManagerRequest(final DownloadInfo info) {
-        DownloadManagerService.getDownloadManagerService(
-                mContext.getApplicationContext()).enqueueDownloadManagerRequest(
-                        new DownloadItem(true, info), true);
+        DownloadManagerService.getDownloadManagerService().enqueueDownloadManagerRequest(
+                new DownloadItem(true, info), true);
         closeBlankTab();
     }
 
@@ -307,8 +306,7 @@ public class ChromeDownloadDelegate {
      * @param reason Reason of failure defined in {@link DownloadManager}
      */
     private void alertDownloadFailure(String fileName, int reason) {
-        DownloadManagerService.getDownloadManagerService(
-                mContext.getApplicationContext()).onDownloadFailed(fileName, reason);
+        DownloadManagerService.getDownloadManagerService().onDownloadFailed(fileName, reason);
     }
 
     /**
@@ -344,12 +342,7 @@ public class ChromeDownloadDelegate {
     @CalledByNative
     private void onDownloadStarted(String filename) {
         DownloadUtils.showDownloadStartToast(mContext);
-        new Handler().post(new Runnable() {
-            @Override
-            public void run() {
-                closeBlankTab();
-            }
-        });
+        closeBlankTab();
     }
 
     /**
@@ -442,7 +435,6 @@ public class ChromeDownloadDelegate {
             if (!(activity instanceof ChromeActivity)) return true;
 
             TabModelSelector selector = ((ChromeActivity) activity).getTabModelSelector();
-            if (mTab.isIncognito() && selector.getModel(true).getCount() == 1) return false;
             return selector == null ? true : selector.closeTab(mTab);
         }
         return false;
@@ -458,7 +450,9 @@ public class ChromeDownloadDelegate {
     public boolean shouldInterceptContextMenuDownload(String url) {
         Uri uri = Uri.parse(url);
         String scheme = uri.normalizeScheme().getScheme();
-        if (!"http".equals(scheme) && !"https".equals(scheme)) return false;
+        if (!UrlConstants.HTTP_SCHEME.equals(scheme) && !UrlConstants.HTTPS_SCHEME.equals(scheme)) {
+            return false;
+        }
         String path = uri.getPath();
         // OMA downloads have extension "dm" or "dd". For the latter, it
         // can be handled when native download completes.

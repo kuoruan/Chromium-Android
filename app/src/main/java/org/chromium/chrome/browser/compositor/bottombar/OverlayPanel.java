@@ -17,12 +17,11 @@ import org.chromium.chrome.browser.compositor.LayerTitleCache;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanelManager.PanelPriority;
 import org.chromium.chrome.browser.compositor.layouts.LayoutUpdateHost;
 import org.chromium.chrome.browser.compositor.layouts.components.VirtualView;
-import org.chromium.chrome.browser.compositor.layouts.eventfilter.EdgeSwipeEventFilter.ScrollDirection;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.EdgeSwipeHandler;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.EventFilter;
-import org.chromium.chrome.browser.compositor.layouts.eventfilter.EventFilterHost;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.GestureHandler;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.OverlayPanelEventFilter;
+import org.chromium.chrome.browser.compositor.layouts.eventfilter.ScrollDirection;
 import org.chromium.chrome.browser.compositor.overlays.SceneOverlay;
 import org.chromium.chrome.browser.compositor.scene_layer.SceneOverlayLayer;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
@@ -138,14 +137,14 @@ public class OverlayPanel extends OverlayPanelAnimation implements ActivityState
      * @param eventHost The {@link EventFilterHost} used to propagate events.
      * @param panelManager The {@link OverlayPanelManager} responsible for showing panels.
      */
-    public OverlayPanel(Context context, LayoutUpdateHost updateHost, EventFilterHost eventHost,
-                OverlayPanelManager panelManager) {
+    public OverlayPanel(
+            Context context, LayoutUpdateHost updateHost, OverlayPanelManager panelManager) {
         super(context, updateHost);
         mContentFactory = this;
 
         mPanelManager = panelManager;
         mPanelManager.registerPanel(this);
-        mEventFilter = new OverlayPanelEventFilter(mContext, eventHost, this);
+        mEventFilter = new OverlayPanelEventFilter(mContext, this);
     }
 
     /**

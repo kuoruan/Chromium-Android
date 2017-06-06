@@ -16,11 +16,13 @@ import org.chromium.chrome.browser.compositor.layouts.Layout;
 import org.chromium.chrome.browser.compositor.layouts.LayoutRenderHost;
 import org.chromium.chrome.browser.compositor.layouts.LayoutUpdateHost;
 import org.chromium.chrome.browser.compositor.layouts.content.TabContentManager;
+import org.chromium.chrome.browser.compositor.layouts.eventfilter.BlackHoleEventFilter;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.EventFilter;
 import org.chromium.chrome.browser.compositor.scene_layer.SceneLayer;
 import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.TabModelUtils;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.accessibility.AccessibilityTabModelAdapter.AccessibilityTabModelAdapterListener;
 import org.chromium.chrome.browser.widget.accessibility.AccessibilityTabModelWrapper;
 
@@ -31,11 +33,13 @@ import org.chromium.chrome.browser.widget.accessibility.AccessibilityTabModelWra
 public class OverviewListLayout extends Layout implements AccessibilityTabModelAdapterListener {
     private AccessibilityTabModelWrapper mTabModelWrapper;
     private final float mDpToPx;
+    private final BlackHoleEventFilter mBlackHoleEventFilter;
     private final SceneLayer mSceneLayer;
 
-    public OverviewListLayout(Context context, LayoutUpdateHost updateHost,
-            LayoutRenderHost renderHost, EventFilter eventFilter) {
-        super(context, updateHost, renderHost, eventFilter);
+    public OverviewListLayout(
+            Context context, LayoutUpdateHost updateHost, LayoutRenderHost renderHost) {
+        super(context, updateHost, renderHost);
+        mBlackHoleEventFilter = new BlackHoleEventFilter(context);
         mDpToPx = context.getResources().getDisplayMetrics().density;
         mSceneLayer = new SceneLayer();
     }
@@ -73,7 +77,13 @@ public class OverviewListLayout extends Layout implements AccessibilityTabModelA
         FrameLayout.LayoutParams params =
                 (FrameLayout.LayoutParams) mTabModelWrapper.getLayoutParams();
         if (params == null) return;
-        params.topMargin = (int) ((getHeight() - getHeightMinusBrowserControls()) * mDpToPx);
+
+        int margin = (int) ((getHeight() - getHeightMinusBrowserControls()) * mDpToPx);
+        if (FeatureUtilities.isChromeHomeEnabled()) {
+            params.bottomMargin = margin;
+        } else {
+            params.topMargin = margin;
+        }
         mTabModelWrapper.setLayoutParams(params);
     }
 
@@ -183,6 +193,11 @@ public class OverviewListLayout extends Layout implements AccessibilityTabModelA
     @Override
     public void showTab(int tabId) {
         onTabSelecting(0, tabId);
+    }
+
+    @Override
+    protected EventFilter getEventFilter() {
+        return mBlackHoleEventFilter;
     }
 
     @Override

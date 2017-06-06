@@ -7,11 +7,6 @@ package org.chromium.chrome.browser.infobar;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.TextPaint;
-import android.text.style.ClickableSpan;
-import android.view.View;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
@@ -26,7 +21,6 @@ import org.chromium.chrome.browser.util.IntentUtils;
  * default.
  */
 public class SearchGeolocationDisclosureInfoBar extends InfoBar {
-    private final String mMessageText;
     private final int mInlineLinkRangeStart;
     private final int mInlineLinkRangeEnd;
 
@@ -40,15 +34,14 @@ public class SearchGeolocationDisclosureInfoBar extends InfoBar {
 
     /**
      * Creates the infobar.
-     * @param iconDrawableId Drawable ID corresponding to the icon that the infobar will show.
-     * @param messageText Message to display in the infobar.
-     * @param inlineLinkRangeStartBeginning Beginning of the link in the message.
-     * @param inlineLinkRangeStartEnd End of the link in the message.
+     * @param iconDrawableId       Drawable ID corresponding to the icon that the infobar will show.
+     * @param messageText          Message to display in the infobar.
+     * @param inlineLinkRangeStart Beginning of the link in the message.
+     * @param inlineLinkRangeEnd   End of the link in the message.
      */
     private SearchGeolocationDisclosureInfoBar(int iconDrawableId, String messageText,
             int inlineLinkRangeStart, int inlineLinkRangeEnd) {
-        super(iconDrawableId, null, null);
-        mMessageText = messageText;
+        super(iconDrawableId, null, messageText);
         mInlineLinkRangeStart = inlineLinkRangeStart;
         mInlineLinkRangeEnd = inlineLinkRangeEnd;
     }
@@ -56,21 +49,7 @@ public class SearchGeolocationDisclosureInfoBar extends InfoBar {
     @Override
     public void createContent(InfoBarLayout layout) {
         super.createContent(layout);
-        SpannableString message = new SpannableString(mMessageText);
-        message.setSpan(
-                new ClickableSpan() {
-                    @Override
-                    public void onClick(View view) {
-                        onLinkClicked();
-                    }
-
-                    @Override
-                    public void updateDrawState(TextPaint ds) {
-                        super.updateDrawState(ds);
-                        ds.setUnderlineText(false);
-                    }
-                }, mInlineLinkRangeStart, mInlineLinkRangeEnd, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
-        layout.setMessage(message);
+        layout.setInlineMessageLink(mInlineLinkRangeStart, mInlineLinkRangeEnd);
     }
 
     @Override

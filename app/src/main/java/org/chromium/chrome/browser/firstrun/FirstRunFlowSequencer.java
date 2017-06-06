@@ -91,7 +91,7 @@ public abstract class FirstRunFlowSequencer  {
 
     @VisibleForTesting
     protected boolean isSignedIn() {
-        return ChromeSigninController.get(mActivity).isSignedIn();
+        return ChromeSigninController.get().isSignedIn();
     }
 
     @VisibleForTesting
@@ -103,7 +103,7 @@ public abstract class FirstRunFlowSequencer  {
 
     @VisibleForTesting
     protected Account[] getGoogleAccounts() {
-        return AccountManagerHelper.get(mActivity).getGoogleAccounts();
+        return AccountManagerHelper.get().getGoogleAccounts();
     }
 
     @VisibleForTesting

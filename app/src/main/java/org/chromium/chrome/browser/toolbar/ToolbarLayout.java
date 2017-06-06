@@ -34,9 +34,10 @@ import org.chromium.chrome.browser.omaha.UpdateMenuItemHelper;
 import org.chromium.chrome.browser.omnibox.LocationBar;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.util.ViewUtils;
-import org.chromium.chrome.browser.widget.BottomSheet;
+import org.chromium.chrome.browser.widget.PulseDrawable;
 import org.chromium.chrome.browser.widget.TintedImageButton;
 import org.chromium.chrome.browser.widget.ToolbarProgressBar;
+import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
 import org.chromium.ui.UiUtils;
 import org.chromium.ui.widget.Toast;
 
@@ -75,9 +76,10 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
 
     private long mFirstDrawTimeMs;
 
-    protected final int mToolbarHeightWithoutShadow;
-
     private boolean mFindInPageToolbarShowing;
+
+    protected boolean mHighlightingMenu;
+    private PulseDrawable mHighlightDrawable;
 
     protected boolean mShowMenuBadge;
     private AnimatorSet mMenuBadgeAnimatorSet;
@@ -88,12 +90,26 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
      */
     public ToolbarLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mToolbarHeightWithoutShadow = getResources().getDimensionPixelOffset(
-                getToolbarHeightWithoutShadowResId());
         mDarkModeTint =
                 ApiCompatibilityUtils.getColorStateList(getResources(), R.color.dark_mode_tint);
         mLightModeTint =
                 ApiCompatibilityUtils.getColorStateList(getResources(), R.color.light_mode_tint);
+        mProgressBar = new ToolbarProgressBar(getContext(), getProgressBarHeight(),
+                getProgressBarTopMargin(), getProgressBarUsesThemeColors());
+
+        addOnLayoutChangeListener(new OnLayoutChangeListener() {
+            @Override
+            public void onLayoutChange(View view, int left, int top, int right, int bottom,
+                    int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                if (isNativeLibraryReady() && mProgressBar.getParent() != null) {
+                    mProgressBar.initializeAnimation();
+                }
+                mProgressBar.setTopMargin(getProgressBarTopMargin());
+
+                // Since this only needs to happen once, remove this listener from the view.
+                removeOnLayoutChangeListener(this);
+            }
+        });
     }
 
     /**
@@ -102,17 +118,28 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
      * @return The top margin of the progress bar.
      */
     protected int getProgressBarTopMargin() {
-        return mToolbarHeightWithoutShadow
+        return getHeight()
                 - getResources().getDimensionPixelSize(R.dimen.toolbar_progress_bar_height);
+    }
+
+    /**
+     * Set the height that the progress bar should be.
+     * @return The progress bar height in px.
+     */
+    protected int getProgressBarHeight() {
+        return getResources().getDimensionPixelSize(R.dimen.toolbar_progress_bar_height);
+    }
+
+    /**
+     * @return Whether or not the toolbar's progress bar should use theme colors.
+     */
+    protected boolean getProgressBarUsesThemeColors() {
+        return true;
     }
 
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-
-        mProgressBar = new ToolbarProgressBar(getContext(), getProgressBarTopMargin());
-
-        if (isNativeLibraryReady()) mProgressBar.initializeAnimation();
 
         mMenuButton = (TintedImageButton) findViewById(R.id.menu_button);
         mMenuBadge = (ImageView) findViewById(R.id.menu_badge);
@@ -167,13 +194,6 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
     }
 
     /**
-     * @return The resource id to be used while getting the toolbar height with no shadow.
-     */
-    protected int getToolbarHeightWithoutShadowResId() {
-        return R.dimen.toolbar_height_no_shadow;
-    }
-
-    /**
      * Initialize the external dependencies required for view interaction.
      * @param toolbarDataProvider The provider for toolbar data.
      * @param tabController       The controller that handles interactions with the tab.
@@ -198,7 +218,13 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
      */
     public void onNativeLibraryReady() {
         mNativeLibraryReady = true;
-        if (mProgressBar != null) mProgressBar.initializeAnimation();
+        if (mProgressBar.getParent() != null) mProgressBar.initializeAnimation();
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        addProgressBarToHierarchy();
     }
 
     /**
@@ -245,20 +271,12 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
      * Add the toolbar's progress bar to the view hierarchy.
      */
     protected void addProgressBarToHierarchy() {
-        if (mProgressBar == null) return;
-
         ViewGroup controlContainer =
                 (ViewGroup) getRootView().findViewById(R.id.control_container);
         int progressBarPosition = UiUtils.insertAfter(
                 controlContainer, mProgressBar, (View) getParent());
         assert progressBarPosition >= 0;
         mProgressBar.setProgressBarContainer(controlContainer);
-    }
-
-    @Override
-    protected void onAttachedToWindow() {
-        super.onAttachedToWindow();
-        addProgressBarToHierarchy();
     }
 
     /**
@@ -463,6 +481,7 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
     /**
      * @return The height of the tab strip. Return 0 for toolbars that do not have a tabstrip.
      */
+    @Override
     public int getTabStripHeight() {
         return getResources().getDimensionPixelSize(R.dimen.tab_strip_height);
     }
@@ -583,9 +602,7 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
      * Starts load progress.
      */
     protected void startLoadProgress() {
-        if (mProgressBar != null) {
-            mProgressBar.start();
-        }
+        mProgressBar.start();
     }
 
     /**
@@ -593,9 +610,7 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
      * @param progress The load progress between 0 and 1.
      */
     protected void setLoadProgress(float progress) {
-        if (mProgressBar != null) {
-            mProgressBar.setProgress(progress);
-        }
+        mProgressBar.setProgress(progress);
     }
 
     /**
@@ -604,16 +619,14 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
      *                        recognize the last state.
      */
     protected void finishLoadProgress(boolean delayed) {
-        if (mProgressBar != null) {
-            mProgressBar.finish(delayed);
-        }
+        mProgressBar.finish(delayed);
     }
 
     /**
      * @return True if the progress bar is started.
      */
     protected boolean isProgressStarted() {
-        return mProgressBar != null ? mProgressBar.isStarted() : false;
+        return mProgressBar.isStarted();
     }
 
     /**
@@ -643,6 +656,11 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
      * @return {@link LocationBar} object this {@link ToolbarLayout} contains.
      */
     public abstract LocationBar getLocationBar();
+
+    /**
+     * @return Whether or not this toolbar should use light or dark assets based on the theme.
+     */
+    public abstract boolean useLightDrawables();
 
     /**
      * Navigates the current Tab back.
@@ -679,6 +697,12 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
     protected void openHomepage() {
         getLocationBar().hideSuggestions();
         if (mToolbarTabController != null) mToolbarTabController.openHomepage();
+    }
+
+    @Override
+    public void setMenuButtonHighlight(boolean highlight) {
+        mHighlightingMenu = highlight;
+        setMenuButtonHighlightDrawable(mHighlightingMenu);
     }
 
     @Override
@@ -783,6 +807,28 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
     protected void setAppMenuUpdateBadgeDrawable(boolean useLightDrawable) {
         mMenuBadge.setImageResource(useLightDrawable ? R.drawable.badge_update_light
                 : R.drawable.badge_update_dark);
+    }
+
+    /**
+     * Sets the menu button's background depending on whether or not we are highlighting and whether
+     * or not we are using light or dark assets.
+     * @param highlighting Whether or not the menu button should be highlighted.
+     */
+    protected void setMenuButtonHighlightDrawable(boolean highlighting) {
+        if (highlighting) {
+            if (mHighlightDrawable == null) {
+                mHighlightDrawable = PulseDrawable.createCircle();
+                mHighlightDrawable.setInset(ApiCompatibilityUtils.getPaddingStart(mMenuButton),
+                        mMenuButton.getPaddingTop(),
+                        ApiCompatibilityUtils.getPaddingEnd(mMenuButton),
+                        mMenuButton.getPaddingBottom());
+            }
+            mHighlightDrawable.setUseLightPulseColor(useLightDrawables());
+            mMenuButtonWrapper.setBackground(mHighlightDrawable);
+            mHighlightDrawable.start();
+        } else {
+            mMenuButtonWrapper.setBackground(null);
+        }
     }
 
     /**

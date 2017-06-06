@@ -12,11 +12,13 @@ public class MicrophoneInfo extends PermissionInfo {
         super(origin, embedder, isIncognito);
     }
 
+    @Override
     protected int getNativePreferenceValue(String origin, String embedder, boolean isIncognito) {
         return WebsitePreferenceBridge.nativeGetMicrophoneSettingForOrigin(
                 origin, embedder, isIncognito);
     }
 
+    @Override
     protected void setNativePreferenceValue(
             String origin, String embedder, ContentSetting value, boolean isIncognito) {
         WebsitePreferenceBridge.nativeSetMicrophoneSettingForOrigin(

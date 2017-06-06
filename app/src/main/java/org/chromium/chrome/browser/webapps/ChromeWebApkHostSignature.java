@@ -4,8 +4,8 @@
 
 package org.chromium.chrome.browser.webapps;
 
+/** Public key and signature for WebAPKs */
 public class ChromeWebApkHostSignature {
-
     // The public key to verify whether a WebAPK is signed by WebAPK Server.
     static final byte[] EXPECTED_SIGNATURE = new byte[] {48, -126, 4, 104, 48, -126, 2, -48, -96, 3,
             2, 1, 2, 2, 20, 120, 33, -22, -36, -115, 7, 116, 66, 116, 113, -122, -126, -124, 32, 44,
@@ -65,4 +65,11 @@ public class ChromeWebApkHostSignature {
             -27, -68, 62, -81, 98, -54, -80, -23, 59, 38, -127, 96, 71, 123, 34, -113, -23, -80, 32,
             -97, -55, -100, 121, 120, 50, -48, 58, 69, -105, 26, 126, 30, -1, -112, -41, -18, -16,
             62, 48, -22, -2, 19, 117, -6, 59, 74, -13, 92, -1};
+
+    // The public key for comment signed WebAPK's. Elliptic Curve, NIST P-256 in ASN.1 format.
+    static final byte[] PUBLIC_KEY = new byte[] {48, 89, 48, 19, 6, 7, 42, -122, 72, -50, 61, 2, 1,
+            6, 8, 42, -122, 72, -50, 61, 3, 1, 7, 3, 66, 0, 4, -25, 45, 2, 49, 44, -60, 107, -108,
+            -45, 27, -40, -8, -116, 44, 7, -38, -103, 52, -81, 33, -90, -80, -94, 125, -3, -67, 51,
+            -125, -63, 6, -127, 89, 32, 53, 83, -120, -106, -113, -121, -39, 115, -50, 15, 117, 66,
+            78, -89, -124, -120, 4, -61, 8, -90, -67, -6, 71, -120, -120, 23, 23, 77, 75, 103, -28};
 }

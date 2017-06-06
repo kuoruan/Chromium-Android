@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.bookmarks;
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.ViewHolder;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,10 +34,14 @@ class BookmarkItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     private static final int DIVIDER_VIEW = 2;
     private static final int BOOKMARK_VIEW = 3;
 
+    private static final int MAXIMUM_NUMBER_OF_SEARCH_RESULTS = 500;
+    private static final String EMPTY_QUERY = null;
+
     private BookmarkDelegate mDelegate;
     private Context mContext;
     private BookmarkPromoHeader mPromoHeaderManager;
     private boolean mShouldShowDividers;
+    private String mSearchText;
 
     private List<List<? extends Object>> mSections;
     private List<Object> mPromoHeaderSection = new ArrayList<>();
@@ -74,6 +79,11 @@ class BookmarkItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         public void bookmarkModelChanged() {
             assert mDelegate != null;
             mDelegate.notifyStateChange(BookmarkItemsAdapter.this);
+
+            if (mDelegate.getCurrentState() == BookmarkUIState.STATE_SEARCHING
+                    && !TextUtils.equals(mSearchText, EMPTY_QUERY)) {
+                search(mSearchText);
+            }
         }
     };
 
@@ -153,12 +163,7 @@ class BookmarkItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         mBookmarkSection.clear();
         mBookmarkSection.addAll(bookmarks);
 
-        updateHeader();
-        updateDividerSections();
-
-        // TODO(kkimlabs): Animation is disabled due to a performance issue on bookmark undo.
-        //                 http://crbug.com/484174
-        notifyDataSetChanged();
+        updateHeaderAndNotify();
     }
 
     private void updateDividerSections() {
@@ -285,9 +290,7 @@ class BookmarkItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             return;
         }
 
-        updateHeader();
-        updateDividerSections();
-        notifyDataSetChanged();
+        updateHeaderAndNotify();
     }
 
     // BookmarkUIObserver implementations.
@@ -314,15 +317,39 @@ class BookmarkItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         assert mDelegate != null;
         setBookmarks(mDelegate.getModel().getChildIDs(folder, true, false),
                 mDelegate.getModel().getChildIDs(folder, false, true));
+
+        mSearchText = EMPTY_QUERY;
+    }
+
+    @Override
+    public void onSearchStateSet() {
+        updateHeaderAndNotify();
     }
 
     @Override
     public void onSelectionStateChange(List<BookmarkId> selectedBookmarks) {}
 
+    /**
+     * Synchronously searches for the given query.
+     * @param query The query text to search for.
+     */
+    void search(String query) {
+        mSearchText = query.toString().trim();
+        List<BookmarkId> results =
+                mDelegate.getModel().searchBookmarks(mSearchText, MAXIMUM_NUMBER_OF_SEARCH_RESULTS);
+        setBookmarks(null, results);
+    }
+
     private static class ItemViewHolder extends RecyclerView.ViewHolder {
         private ItemViewHolder(View view) {
             super(view);
         }
+    }
+
+    private void updateHeaderAndNotify() {
+        updateHeader();
+        updateDividerSections();
+        notifyDataSetChanged();
     }
 
     private void updateHeader() {
@@ -332,6 +359,9 @@ class BookmarkItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         if (currentUIState == BookmarkUIState.STATE_LOADING) return;
 
         mPromoHeaderSection.clear();
+
+        if (currentUIState == BookmarkUIState.STATE_SEARCHING) return;
+
         assert currentUIState == BookmarkUIState.STATE_FOLDER : "Unexpected UI state";
         if (mPromoHeaderManager.shouldShow()) {
             mPromoHeaderSection.add(null);

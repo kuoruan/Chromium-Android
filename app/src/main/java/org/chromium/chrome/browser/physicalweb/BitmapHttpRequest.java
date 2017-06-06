@@ -42,6 +42,7 @@ class BitmapHttpRequest extends HttpRequest<Bitmap> {
      * Helper method to make an HTTP request.
      * @param urlConnection The HTTP connection.
      */
+    @Override
     public void writeToUrlConnection(HttpURLConnection urlConnection) throws IOException {}
 
     /**
@@ -49,6 +50,7 @@ class BitmapHttpRequest extends HttpRequest<Bitmap> {
      * @param is The InputStream.
      * @return The decoded image.
      */
+    @Override
     protected Bitmap readInputStream(InputStream is) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         byte[] buffer = new byte[1024];

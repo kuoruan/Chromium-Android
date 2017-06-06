@@ -12,7 +12,6 @@ import org.chromium.chrome.browser.payments.AutofillAddress;
 import org.chromium.chrome.browser.payments.AutofillContact;
 import org.chromium.chrome.browser.payments.ContactEditor;
 import org.chromium.chrome.browser.payments.PaymentRequestImpl;
-import org.chromium.chrome.browser.payments.PaymentRequestJourneyLogger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,7 +27,6 @@ import javax.annotation.Nullable;
 public class ContactDetailsSection extends SectionInformation {
     private final Context mContext;
     private final ContactEditor mContactEditor;
-    private final PaymentRequestJourneyLogger mJourneyLogger = new PaymentRequestJourneyLogger();
 
     private List<AutofillProfile> mProfiles;
 
@@ -134,10 +132,6 @@ public class ContactDetailsSection extends SectionInformation {
             // Limit the number of suggestions.
             if (uniqueContacts.size() == PaymentRequestImpl.SUGGESTIONS_LIMIT) break;
         }
-
-        // Log the number of suggested contact infos.
-        mJourneyLogger.setNumberOfSuggestionsShown(
-                PaymentRequestJourneyLogger.SECTION_CONTACT_INFO, uniqueContacts.size());
 
         // Automatically select the first address if it is complete.
         int firstCompleteContactIndex = SectionInformation.NO_SELECTION;

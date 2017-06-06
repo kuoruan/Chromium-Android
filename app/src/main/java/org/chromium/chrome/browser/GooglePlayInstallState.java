@@ -15,16 +15,19 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class GooglePlayInstallState {
-  @IntDef({
-      SUPPORTED, DISABLED_OTHER, NO_PLAY_SERVICES, DISABLED_BY_VARIATIONS, DISABLED_BY_PLAY, MAX
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface GooglePlayInstallStateEnum {}
-  public static final int SUPPORTED = 0;
-  public static final int DISABLED_OTHER = 1;
-  public static final int NO_PLAY_SERVICES = 2;
-  public static final int DISABLED_BY_VARIATIONS = 3;
-  public static final int DISABLED_BY_PLAY = 4;
-  public static final int MAX = 5;
+@IntDef({
+    GooglePlayInstallState.SUPPORTED, GooglePlayInstallState.DISABLED_OTHER,
+    GooglePlayInstallState.NO_PLAY_SERVICES, GooglePlayInstallState.DISABLED_BY_PLAY,
+    GooglePlayInstallState.MAX
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface GooglePlayInstallState {
+  int SUPPORTED = 0;
+  int DISABLED_OTHER = 1;
+  int NO_PLAY_SERVICES = 2;
+  /**
+   * Deprecated: DISABLED_BY_VARIATIONS = 3,
+   */
+  int DISABLED_BY_PLAY = 4;
+  int MAX = 5;
 }

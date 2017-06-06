@@ -15,31 +15,32 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class VideoCodec {
-  @IntDef({
-      kUnknownVideoCodec, kCodecH264, kCodecVC1, kCodecMPEG2, kCodecMPEG4, kCodecTheora, kCodecVP8,
-      kCodecVP9, kCodecHEVC, kCodecDolbyVision, kVideoCodecMax
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface VideoCodecEnum {}
+@IntDef({
+    VideoCodec.kUnknownVideoCodec, VideoCodec.kCodecH264, VideoCodec.kCodecVC1,
+    VideoCodec.kCodecMPEG2, VideoCodec.kCodecMPEG4, VideoCodec.kCodecTheora, VideoCodec.kCodecVP8,
+    VideoCodec.kCodecVP9, VideoCodec.kCodecHEVC, VideoCodec.kCodecDolbyVision,
+    VideoCodec.kVideoCodecMax
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface VideoCodec {
   /**
    * These values are histogrammed over time; do not change their ordinal values.  When deleting a
    * codec replace it with a dummy value; when adding a codec, do so at the bottom (and update
    * kVideoCodecMax).
    */
-  public static final int kUnknownVideoCodec = 0;
-  public static final int kCodecH264 = 1;
-  public static final int kCodecVC1 = 2;
-  public static final int kCodecMPEG2 = 3;
-  public static final int kCodecMPEG4 = 4;
-  public static final int kCodecTheora = 5;
-  public static final int kCodecVP8 = 6;
-  public static final int kCodecVP9 = 7;
-  public static final int kCodecHEVC = 8;
-  public static final int kCodecDolbyVision = 9;
+  int kUnknownVideoCodec = 0;
+  int kCodecH264 = 1;
+  int kCodecVC1 = 2;
+  int kCodecMPEG2 = 3;
+  int kCodecMPEG4 = 4;
+  int kCodecTheora = 5;
+  int kCodecVP8 = 6;
+  int kCodecVP9 = 7;
+  int kCodecHEVC = 8;
+  int kCodecDolbyVision = 9;
   /**
    * DO NOT ADD RANDOM VIDEO CODECS! The only acceptable time to add a new codec is if there is
    * production code that uses said codec in the same CL.
    */
-  public static final int kVideoCodecMax = 9;
+  int kVideoCodecMax = 9;
 }

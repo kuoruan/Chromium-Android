@@ -15,16 +15,14 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class AndroidFillLightMode {
-  @IntDef({
-      NOT_SET, NONE, OFF, AUTO, FLASH, TORCH
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface AndroidFillLightModeEnum {}
-  public static final int NOT_SET = 0;
-  public static final int NONE = 1;
-  public static final int OFF = 2;
-  public static final int AUTO = 3;
-  public static final int FLASH = 4;
-  public static final int TORCH = 5;
+@IntDef({
+    AndroidFillLightMode.NOT_SET, AndroidFillLightMode.OFF, AndroidFillLightMode.AUTO,
+    AndroidFillLightMode.FLASH
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface AndroidFillLightMode {
+  int NOT_SET = 0;
+  int OFF = 1;
+  int AUTO = 2;
+  int FLASH = 3;
 }

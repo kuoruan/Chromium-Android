@@ -15,17 +15,18 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class ContentSettingValues {
-  @IntDef({
-      DEFAULT, ALLOW, BLOCK, ASK, SESSION_ONLY, DETECT_IMPORTANT_CONTENT, NUM_SETTINGS
-  })
-  @Retention(RetentionPolicy.SOURCE)
-  public @interface ContentSettingValuesEnum {}
-  public static final int DEFAULT = 0;
-  public static final int ALLOW = 1;
-  public static final int BLOCK = 2;
-  public static final int ASK = 3;
-  public static final int SESSION_ONLY = 4;
-  public static final int DETECT_IMPORTANT_CONTENT = 5;
-  public static final int NUM_SETTINGS = 6;
+@IntDef({
+    ContentSettingValues.DEFAULT, ContentSettingValues.ALLOW, ContentSettingValues.BLOCK,
+    ContentSettingValues.ASK, ContentSettingValues.SESSION_ONLY,
+    ContentSettingValues.DETECT_IMPORTANT_CONTENT, ContentSettingValues.NUM_SETTINGS
+})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ContentSettingValues {
+  int DEFAULT = 0;
+  int ALLOW = 1;
+  int BLOCK = 2;
+  int ASK = 3;
+  int SESSION_ONLY = 4;
+  int DETECT_IMPORTANT_CONTENT = 5;
+  int NUM_SETTINGS = 6;
 }

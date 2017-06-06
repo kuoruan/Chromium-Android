@@ -70,10 +70,10 @@ public class PostMessageHandler extends PostMessageServiceConnection {
 
             @Override
             public void didFinishNavigation(String url, boolean isInMainFrame, boolean isErrorPage,
-                    boolean hasCommitted, boolean isSamePage, boolean isFragmentNavigation,
+                    boolean hasCommitted, boolean isSameDocument, boolean isFragmentNavigation,
                     Integer pageTransition, int errorCode, String errorDescription,
                     int httpStatusCode) {
-                if (mNavigatedOnce && hasCommitted && isInMainFrame && !isSamePage
+                if (mNavigatedOnce && hasCommitted && isInMainFrame && !isSameDocument
                         && mChannel != null) {
                     webContents.removeObserver(this);
                     disconnectChannel();
