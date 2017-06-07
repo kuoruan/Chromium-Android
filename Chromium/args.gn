@@ -1,0 +1,8 @@
+target_os = "android"
+is_debug = false
+is_official_build = true
+enable_nacl = false
+remove_webcore_debug_symbols = true
+proprietary_codecs = true
+ffmpeg_branding = "Chrome"
+exclude_unwind_tables = true
