@@ -178,10 +178,11 @@ sync_assets() {
 	mkdir -p "$asset_dir"
 
 	cp ${RELEASE_DIR}/*.pak \
-		${RELEASE_DIR}/*.bin \
 		${RELEASE_DIR}/*.dat \
+		${RELEASE_DIR}/natives_blob.bin \
 		${RELEASE_DIR}/locales/{en-US,zh-CN,zh-TW}.pak \
 		"$asset_dir"
+	cp ${RELEASE_DIR}/snapshot_blob.bin "$asset_dir"/snapshot_blob_32.bin
 }
 
 sync_libs() {
