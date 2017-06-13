@@ -12,7 +12,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 25
         versionCode 1
-        versionName "1.0"
+        versionName "59.0.3071.86"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -27,7 +27,7 @@ android {
         }
     }
     aaptOptions {
-        noCompress "dat", "bin", "pak", "dex", "txt"
+        noCompress "dat", "bin", "pak"
     }
     sourceSets {
         main {
