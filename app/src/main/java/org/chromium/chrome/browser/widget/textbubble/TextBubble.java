@@ -16,6 +16,8 @@ import android.view.View;
 import android.view.View.MeasureSpec;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.FrameLayout;
 import android.widget.PopupWindow;
 import android.widget.PopupWindow.OnDismissListener;
 import android.widget.TextView;
@@ -302,9 +304,15 @@ public class TextBubble implements OnTouchListener {
 
     private void createContentView() {
         if (mPopupWindow.getContentView() != null) return;
+
         View view = LayoutInflater.from(mContext).inflate(R.layout.textbubble_text, null);
         ((TextView) view).setText(mStringId);
         mPopupWindow.setContentView(view);
+
+        // On some versions of Android, the LayoutParams aren't set until after the popup window
+        // is shown. Explicitly set the LayoutParams to avoid crashing. See crbug.com/713759.
+        view.setLayoutParams(
+                new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
     }
 
     // OnTouchListener implementation.

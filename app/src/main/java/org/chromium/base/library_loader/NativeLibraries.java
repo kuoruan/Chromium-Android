@@ -8,5 +8,5 @@ public class NativeLibraries {
     public static final String[] LIBRARIES =
       {"chrome"};
     static String sVersionNumber =
-      "59.0.3071.86";
+      "59.0.3071.104";
 }
