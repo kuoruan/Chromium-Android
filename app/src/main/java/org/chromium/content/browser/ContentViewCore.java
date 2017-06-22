@@ -1025,8 +1025,19 @@ public class ContentViewCore
         if (type == GestureEventType.LONG_PRESS && offerLongPressToEmbedder()) {
             return true;
         }
-        updateForTapOrPress(type, x, y);
+
+        if (!mPopupZoomer.isShowing()) mPopupZoomer.setLastTouch(x, y);
+
         return false;
+    }
+
+    @SuppressWarnings("unused")
+    @CalledByNative
+    private void requestFocus() {
+        if (mContainerView.isFocusable() && mContainerView.isFocusableInTouchMode()
+                && !mContainerView.isFocused()) {
+            mContainerView.requestFocus();
+        }
     }
 
     @VisibleForTesting
@@ -1619,22 +1630,6 @@ public class ContentViewCore
         } else {
             return mContainerViewInternals.super_awakenScrollBars(startDelay, invalidate);
         }
-    }
-
-    private void updateForTapOrPress(int type, float xPix, float yPix) {
-        if (type != GestureEventType.SINGLE_TAP_CONFIRMED
-                && type != GestureEventType.SINGLE_TAP_UP
-                && type != GestureEventType.LONG_PRESS
-                && type != GestureEventType.LONG_TAP) {
-            return;
-        }
-
-        if (mContainerView.isFocusable() && mContainerView.isFocusableInTouchMode()
-                && !mContainerView.isFocused())  {
-            mContainerView.requestFocus();
-        }
-
-        if (!mPopupZoomer.isShowing()) mPopupZoomer.setLastTouch(xPix, yPix);
     }
 
     public void updateMultiTouchZoomSupport(boolean supportsMultiTouchZoom) {
