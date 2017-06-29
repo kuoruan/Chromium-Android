@@ -14,6 +14,7 @@ import android.view.ContextMenu;
 import android.webkit.MimeTypeMap;
 
 import org.chromium.base.CollectionUtil;
+import org.chromium.base.library_loader.LibraryProcessType;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.firstrun.FirstRunStatus;
@@ -21,6 +22,7 @@ import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
 import org.chromium.chrome.browser.preferences.datareduction.DataReductionProxyUma;
 import org.chromium.chrome.browser.search_engines.TemplateUrlService;
 import org.chromium.chrome.browser.util.UrlUtilities;
+import org.chromium.content.browser.BrowserStartupController;
 import org.chromium.content_public.common.ContentUrlConstants;
 
 import java.lang.annotation.Retention;
@@ -162,6 +164,16 @@ public class ChromeContextMenuPopulator implements ContextMenuPopulator {
         static final int TYPE_PDF = 5;
         static final int NUM_TYPES = 6;
 
+        // Note: these values must match the ContextMenuSaveImage enum in histograms.xml.
+        // Only add new values at the end, right before NUM_SAVE_IMAGE_TYPES.
+        static final int TYPE_SAVE_IMAGE_LOADED = 0;
+        static final int TYPE_SAVE_IMAGE_FETCHED_LOFI = 1;
+        static final int TYPE_SAVE_IMAGE_NOT_DOWNLOADABLE = 2;
+        static final int TYPE_SAVE_IMAGE_DISABLED_AND_IS_NOT_IMAGE_PARAM = 3;
+        static final int TYPE_SAVE_IMAGE_DISABLED_AND_IS_IMAGE_PARAM = 4;
+        static final int TYPE_SAVE_IMAGE_SHOWN = 5;
+        static final int NUM_SAVE_IMAGE_TYPES = 6;
+
         /**
          * Records a histogram entry when the user selects an item from a context menu.
          * @param params The ContextMenuParams describing the current context menu.
@@ -209,6 +221,15 @@ public class ChromeContextMenuPopulator implements ContextMenuPopulator {
             }
             RecordHistogram.recordEnumeratedHistogram(
                     "ContextMenu.SaveLinkType", mimeType, NUM_TYPES);
+        }
+
+        /**
+         * Helper method to record MobileDownload.ContextMenu.SaveImage UMA
+         * @param type Type to record
+         */
+        static void recordSaveImageUma(int type) {
+            RecordHistogram.recordEnumeratedHistogram(
+                    "MobileDownload.ContextMenu.SaveImage", type, NUM_SAVE_IMAGE_TYPES);
         }
     }
 
@@ -302,6 +323,24 @@ public class ChromeContextMenuPopulator implements ContextMenuPopulator {
             groupedItems.remove(0);
         }
 
+        if (!groupedItems.isEmpty()) {
+            boolean hasSaveImage = false;
+            for (int i = 0; i < groupedItems.size(); ++i) {
+                Pair<Integer, List<ContextMenuItem>> menuList = groupedItems.get(i);
+                if (menuList.second != null
+                        && menuList.second.contains(ContextMenuItem.SAVE_IMAGE)) {
+                    hasSaveImage = true;
+                    break;
+                }
+            }
+            if (!hasSaveImage) {
+                ContextMenuUma.recordSaveImageUma(params.isImage()
+                                ? ContextMenuUma.TYPE_SAVE_IMAGE_DISABLED_AND_IS_IMAGE_PARAM
+                                : ContextMenuUma.TYPE_SAVE_IMAGE_DISABLED_AND_IS_NOT_IMAGE_PARAM);
+            } else {
+                ContextMenuUma.recordSaveImageUma(ContextMenuUma.TYPE_SAVE_IMAGE_SHOWN);
+            }
+        }
         return groupedItems;
     }
 
@@ -446,13 +485,14 @@ public class ChromeContextMenuPopulator implements ContextMenuPopulator {
             disabledOptions.add(ContextMenuItem.OPEN_IMAGE);
             disabledOptions.add(ContextMenuItem.SEARCH_BY_IMAGE);
             disabledOptions.add(ContextMenuItem.SHARE_IMAGE);
+            recordSaveImageContextMenuResult(true, isSrcDownloadableScheme);
         } else if (params.isImage() && !params.imageWasFetchedLoFi()) {
             disabledOptions.add(ContextMenuItem.LOAD_ORIGINAL_IMAGE);
 
             if (!isSrcDownloadableScheme) {
                 disabledOptions.add(ContextMenuItem.SAVE_IMAGE);
             }
-
+            recordSaveImageContextMenuResult(false, isSrcDownloadableScheme);
             // Avoid showing open image option for same image which is already opened.
             if (mDelegate.getPageUrl().equals(params.getSrcUrl())) {
                 disabledOptions.add(ContextMenuItem.OPEN_IMAGE);
@@ -626,6 +666,30 @@ public class ChromeContextMenuPopulator implements ContextMenuPopulator {
             return params.getLinkUrl();
         } else {
             return params.getSrcUrl();
+        }
+    }
+
+    /**
+     * Record the UMA related to save image context menu option.
+     * @param wasFetchedLoFi The image was fectched LoFi.
+     * @param isDownloadableScheme The image is downloadable.
+     */
+    private void recordSaveImageContextMenuResult(
+            boolean wasFetchedLoFi, boolean isDownloadableScheme) {
+        if (!BrowserStartupController.get(LibraryProcessType.PROCESS_BROWSER)
+                .isStartupSuccessfullyCompleted()) {
+            return;
+        }
+
+        ContextMenuUma.recordSaveImageUma(ContextMenuUma.TYPE_SAVE_IMAGE_LOADED);
+
+        if (wasFetchedLoFi) {
+            ContextMenuUma.recordSaveImageUma(ContextMenuUma.TYPE_SAVE_IMAGE_FETCHED_LOFI);
+            return;
+        }
+
+        if (!isDownloadableScheme) {
+            ContextMenuUma.recordSaveImageUma(ContextMenuUma.TYPE_SAVE_IMAGE_NOT_DOWNLOADABLE);
         }
     }
 }

@@ -264,7 +264,6 @@ public class ChildProcessLauncher {
      * @param context the application context used for the connection.
      */
     public static void warmUp(final Context context) {
-        assert ThreadUtils.runningOnUiThread();
         LauncherThread.post(new Runnable() {
             @Override
             public void run() {
