@@ -10,6 +10,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.view.ViewGroup;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordUserAction;
@@ -105,8 +106,13 @@ class BookmarkPromoHeader implements AndroidSyncSettingsObserver,
             }
         };
 
-        return new ViewHolder(
-                SigninAndSyncView.create(parent, listener, SigninAccessPoint.BOOKMARK_MANAGER)) {};
+        SigninAndSyncView view =
+                SigninAndSyncView.create(parent, listener, SigninAccessPoint.BOOKMARK_MANAGER);
+        // A MarginResizer is used to apply margins in regular and wide display modes. Remove the
+        // view's lateral padding so that margins can be used instead.
+        ApiCompatibilityUtils.setPaddingRelative(
+                view, 0, view.getPaddingTop(), 0, view.getPaddingBottom());
+        return new ViewHolder(view) {};
     }
 
     /**

@@ -25,6 +25,7 @@ public class FaviconHelper {
     public static final int FAVICON = 1 << 0;
     public static final int TOUCH_ICON = 1 << 1;
     public static final int TOUCH_PRECOMPOSED_ICON = 1 << 2;
+    public static final int WEB_MANIFEST_ICON = 1 << 3;
 
     private long mNativeFaviconHelper;
 
@@ -86,8 +87,8 @@ public class FaviconHelper {
             FaviconImageCallback faviconImageCallback) {
         assert mNativeFaviconHelper != 0;
         return nativeGetLocalFaviconImageForURL(mNativeFaviconHelper, profile, pageUrl,
-                FAVICON | TOUCH_ICON | TOUCH_PRECOMPOSED_ICON, desiredSizeInPixel,
-                faviconImageCallback);
+                FAVICON | TOUCH_ICON | TOUCH_PRECOMPOSED_ICON | WEB_MANIFEST_ICON,
+                desiredSizeInPixel, faviconImageCallback);
     }
 
     /**

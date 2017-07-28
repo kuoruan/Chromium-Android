@@ -9,6 +9,7 @@ import android.os.Build;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 
 /**
@@ -28,14 +29,13 @@ public class DeviceFormFactor {
     private static Float sDensity;
 
     /**
-     * @param context {@link Context} used to get the Application Context.
      * @return Whether the app should treat the device as a tablet for layout. This method is not
      *         affected by Android N multi-window.
      */
     @CalledByNative
-    public static boolean isTablet(Context context) {
+    public static boolean isTablet() {
         if (sIsTablet == null) {
-            sIsTablet = getSmallestDeviceWidthDp(context) >= MINIMUM_TABLET_WIDTH_DP;
+            sIsTablet = getSmallestDeviceWidthDp() >= MINIMUM_TABLET_WIDTH_DP;
         }
         return sIsTablet;
     }
@@ -47,7 +47,7 @@ public class DeviceFormFactor {
      */
     public static boolean isLargeTablet(Context context) {
         if (sIsLargeTablet == null) {
-            sIsLargeTablet = getSmallestDeviceWidthDp(context) >= MINIMUM_LARGE_TABLET_WIDTH_DP;
+            sIsLargeTablet = getSmallestDeviceWidthDp() >= MINIMUM_LARGE_TABLET_WIDTH_DP;
         }
         return sIsLargeTablet;
     }
@@ -56,19 +56,18 @@ public class DeviceFormFactor {
      * Calculates the minimum device width in dp. This method is not affected by Android N
      * multi-window.
      *
-     * @param context {@link Context} used to get the Application Context.
      * @return The smaller of device width and height in dp.
      */
-    public static int getSmallestDeviceWidthDp(Context context) {
-        assert context.getApplicationContext() != null;
-
+    public static int getSmallestDeviceWidthDp() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             DisplayMetrics metrics = new DisplayMetrics();
             // The Application Context must be used instead of the regular Context, because
             // in Android N multi-window calling Display.getRealMetrics() using the regular Context
             // returns the size of the current screen rather than the device.
-            ((WindowManager) context.getApplicationContext().getSystemService(
-                    Context.WINDOW_SERVICE)).getDefaultDisplay().getRealMetrics(metrics);
+            ((WindowManager) ContextUtils.getApplicationContext().getSystemService(
+                     Context.WINDOW_SERVICE))
+                    .getDefaultDisplay()
+                    .getRealMetrics(metrics);
             return Math.round(Math.min(metrics.heightPixels / metrics.density,
                     metrics.widthPixels / metrics.density));
         } else {
@@ -76,7 +75,10 @@ public class DeviceFormFactor {
             // Configuration.smallestScreenWidthDp is used instead. Proir to the introduction of
             // multi-window in Android N, smallestScreenWidthDp was the same as the minimum size
             // in getRealMetrics().
-            return context.getResources().getConfiguration().smallestScreenWidthDp;
+            return ContextUtils.getApplicationContext()
+                    .getResources()
+                    .getConfiguration()
+                    .smallestScreenWidthDp;
         }
     }
 

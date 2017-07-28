@@ -4,10 +4,10 @@
 
 package org.chromium.media;
 
-import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.SystemClock;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -26,7 +26,6 @@ public class MediaServerCrashListener implements MediaPlayer.OnErrorListener {
 
     // Watchdog player. Used to listen to all media server crashes.
     private MediaPlayer mPlayer;
-    private final Context mContext;
 
     // Protecting the creation/release of the watchdog player.
     private final Object mLock = new Object();
@@ -40,13 +39,11 @@ public class MediaServerCrashListener implements MediaPlayer.OnErrorListener {
     private long mNativeMediaServerCrashListener;
 
     @CalledByNative
-    private static MediaServerCrashListener create(
-            Context context, long nativeMediaServerCrashListener) {
-        return new MediaServerCrashListener(context, nativeMediaServerCrashListener);
+    private static MediaServerCrashListener create(long nativeMediaServerCrashListener) {
+        return new MediaServerCrashListener(nativeMediaServerCrashListener);
     }
 
-    private MediaServerCrashListener(Context context, long nativeMediaServerCrashListener) {
-        mContext = context;
+    private MediaServerCrashListener(long nativeMediaServerCrashListener) {
         mNativeMediaServerCrashListener = nativeMediaServerCrashListener;
     }
 
@@ -63,7 +60,7 @@ public class MediaServerCrashListener implements MediaPlayer.OnErrorListener {
         if (mPlayer != null) return true;
 
         try {
-            mPlayer = MediaPlayer.create(mContext, R.raw.empty);
+            mPlayer = MediaPlayer.create(ContextUtils.getApplicationContext(), R.raw.empty);
         } catch (IllegalStateException e) {
             Log.e(TAG, "Exception while creating the watchdog player.", e);
         } catch (RuntimeException e) {

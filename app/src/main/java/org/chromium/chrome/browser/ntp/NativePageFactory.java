@@ -17,7 +17,6 @@ import org.chromium.chrome.browser.TabLoadStatus;
 import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.bookmarks.BookmarkPage;
 import org.chromium.chrome.browser.download.DownloadPage;
-import org.chromium.chrome.browser.history.HistoryManagerUtils;
 import org.chromium.chrome.browser.history.HistoryPage;
 import org.chromium.chrome.browser.physicalweb.PhysicalWebDiagnosticsPage;
 import org.chromium.chrome.browser.tab.Tab;
@@ -36,9 +35,14 @@ public class NativePageFactory {
     static class NativePageBuilder {
         protected NativePage buildNewTabPage(ChromeActivity activity, Tab tab,
                 TabModelSelector tabModelSelector) {
-            if (FeatureUtilities.isChromeHomeEnabled() && !tab.isIncognito()) {
-                return new ChromeHomeNewTabPage(activity, tab, tabModelSelector,
-                        ((ChromeTabbedActivity) activity).getLayoutManager());
+            if (FeatureUtilities.isChromeHomeEnabled()) {
+                if (tab.isIncognito()) {
+                    return new ChromeHomeIncognitoNewTabPage(activity, tab, tabModelSelector,
+                            ((ChromeTabbedActivity) activity).getLayoutManager());
+                } else {
+                    return new ChromeHomeNewTabPage(activity, tab, tabModelSelector,
+                            ((ChromeTabbedActivity) activity).getLayoutManager());
+                }
             } else if (tab.isIncognito()) {
                 return new IncognitoNewTabPage(activity);
             } else {
@@ -58,7 +62,7 @@ public class NativePageFactory {
             return new HistoryPage(activity, new TabShim(tab));
         }
 
-        protected NativePage buildRecentTabsPage(Activity activity, Tab tab) {
+        protected NativePage buildRecentTabsPage(ChromeActivity activity, Tab tab) {
             RecentTabsManager recentTabsManager =
                     new RecentTabsManager(tab, tab.getProfile(), activity);
             return new RecentTabsPage(activity, recentTabsManager);
@@ -94,11 +98,7 @@ public class NativePageFactory {
         } else if (UrlConstants.DOWNLOADS_HOST.equals(host)) {
             return NativePageType.DOWNLOADS;
         } else if (UrlConstants.HISTORY_HOST.equals(host)) {
-            if (HistoryManagerUtils.isAndroidHistoryManagerEnabled()) {
-                return NativePageType.HISTORY;
-            } else {
-                return NativePageType.NONE;
-            }
+            return NativePageType.HISTORY;
         } else if (UrlConstants.RECENT_TABS_HOST.equals(host) && !isIncognito) {
             return NativePageType.RECENT_TABS;
         } else if (UrlConstants.PHYSICAL_WEB_DIAGNOSTICS_HOST.equals(host)) {

@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.text.TextUtils;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.PathUtils;
 import org.chromium.base.VisibleForTesting;
@@ -112,12 +113,10 @@ class MediaResourceGetter {
     }
 
     @CalledByNative
-    private static MediaMetadata extractMediaMetadata(final Context context,
-            final String url,
-            final String cookies,
-            final String userAgent) {
+    private static MediaMetadata extractMediaMetadata(
+            final String url, final String cookies, final String userAgent) {
         return new MediaResourceGetter().extract(
-                context, url, cookies, userAgent);
+                ContextUtils.getApplicationContext(), url, cookies, userAgent);
     }
 
     @CalledByNative

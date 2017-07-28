@@ -265,12 +265,12 @@ public class DownloadSharedPreferenceEntry {
     static DownloadSharedPreferenceEntry parseFromVersion6(String string) {
         String[] entries = string.split(",", 9);
         if (entries.length != 9) return INVALID_ENTRY;
-        // VERSION,NOTIFICATIONID,NAMESPACE,GUID,OFFTHERECORD,METEREDOK,AUTORESUMEOK,ISTRANSIENT,
+        // VERSION,NOTIFICATIONID,NAMESPACE,ID,OFFTHERECORD,METEREDOK,AUTORESUMEOK,ISTRANSIENT,
         // FILENAME
         String stringVersion = entries[0];
         String stringNotificationId = entries[1];
         String stringNamespace = entries[2];
-        String stringGuid = entries[3];
+        String stringId = entries[3];
         String stringOffTheRecord = entries[4];
         String stringMetered = entries[5];
         String stringAutoResume = entries[6];
@@ -291,10 +291,10 @@ public class DownloadSharedPreferenceEntry {
         }
 
         if (version != 6) return INVALID_ENTRY;
-        if (!isValidGUID(stringGuid)) return INVALID_ENTRY;
+        if (TextUtils.isEmpty(stringId)) return INVALID_ENTRY;
         if (TextUtils.isEmpty(stringNamespace)) return INVALID_ENTRY;
 
-        return new DownloadSharedPreferenceEntry(new ContentId(stringNamespace, stringGuid),
+        return new DownloadSharedPreferenceEntry(new ContentId(stringNamespace, stringId),
                 notificationId, offTheRecord, metered, stringFileName, autoResume, isTransient);
     }
 

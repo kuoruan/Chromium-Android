@@ -64,6 +64,13 @@ public class Profile {
     }
 
     /**
+     * @return Whether the profile is signed in to a child account.
+     */
+    public boolean isChild() {
+        return nativeIsChild(mNativeProfileAndroid);
+    }
+
+    /**
      * @return Whether or not the native side profile exists.
      */
     @VisibleForTesting
@@ -97,4 +104,5 @@ public class Profile {
     private native Object nativeGetOffTheRecordProfile(long nativeProfileAndroid);
     private native boolean nativeHasOffTheRecordProfile(long nativeProfileAndroid);
     private native boolean nativeIsOffTheRecord(long nativeProfileAndroid);
+    private native boolean nativeIsChild(long nativeProfileAndroid);
 }

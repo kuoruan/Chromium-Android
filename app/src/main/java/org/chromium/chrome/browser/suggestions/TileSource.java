@@ -17,7 +17,7 @@ import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
     TileSource.TOP_SITES, TileSource.SUGGESTIONS_SERVICE, TileSource.POPULAR, TileSource.WHITELIST,
-    TileSource.LAST
+    TileSource.HOMEPAGE, TileSource.LAST
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface TileSource {
@@ -37,5 +37,9 @@ public @interface TileSource {
    * Tile is on a custodian-managed whitelist.
    */
   int WHITELIST = 3;
-  int LAST = 3;
+  /**
+   * Tile containing the user-set home page is replacing the home page button.
+   */
+  int HOMEPAGE = 4;
+  int LAST = 4;
 }

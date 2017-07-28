@@ -36,7 +36,7 @@ public interface LayoutRenderHost {
     /**
      * Indicates that the rendering surface has been resized.
      */
-    void onPhysicalBackingSizeChanged(int width, int height);
+    void onSurfaceResized(int width, int height);
 
     /**
      * Pushes a debug rectangle that will be drawn.

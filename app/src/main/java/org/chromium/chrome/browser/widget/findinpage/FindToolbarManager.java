@@ -64,12 +64,13 @@ public class FindToolbarManager {
     public void showToolbar() {
         if (mFindToolbar == null) {
             int stubId = R.id.find_toolbar_stub;
-            if (DeviceFormFactor.isTablet(mActivity)) {
+            if (DeviceFormFactor.isTablet()) {
                 stubId = R.id.find_toolbar_tablet_stub;
             }
             mFindToolbar = (FindToolbar) ((ViewStub) mActivity.findViewById(stubId)).inflate();
             mFindToolbar.setTabModelSelector(mActivity.getTabModelSelector());
             mFindToolbar.setWindowAndroid(mActivity.getWindowAndroid());
+            if (mActivity.getBottomSheet() != null) mFindToolbar.disableHideKeyboardWhileFinding();
             mFindToolbar.setActionModeCallbackForTextEdit(mCallback);
             mFindToolbar.setObserver(new FindToolbarObserver() {
                 @Override

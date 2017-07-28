@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.preferences.privacy;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
@@ -39,6 +40,7 @@ public class PrivacyPreferencesManager implements CrashReportingPermissionManage
     private static final int PHYSICAL_WEB_ON = 1;
     private static final int PHYSICAL_WEB_ONBOARDING = 2;
 
+    @SuppressLint("StaticFieldLeak")
     private static PrivacyPreferencesManager sInstance;
 
     private final Context mContext;

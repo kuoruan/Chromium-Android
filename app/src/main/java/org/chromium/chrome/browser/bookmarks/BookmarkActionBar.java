@@ -146,19 +146,21 @@ public class BookmarkActionBar extends SelectableListToolbar<BookmarkId>
         getMenu().findItem(R.id.search_menu_id).setVisible(true);
         getMenu().findItem(R.id.edit_menu_id).setVisible(mCurrentFolder.isEditable());
 
-        // If the parent folder is a top level node, we don't go up anymore.
-        if (mDelegate.getModel().getTopLevelFolderParentIDs().contains(
-                mCurrentFolder.getParentId())) {
-            if (TextUtils.isEmpty(mCurrentFolder.getTitle())) {
-                setTitle(R.string.bookmarks);
-            } else {
-                setTitle(mCurrentFolder.getTitle());
-            }
-            setNavigationButton(NAVIGATION_BUTTON_MENU);
+        // If this is the root folder, we can't go up anymore.
+        if (folder.equals(mDelegate.getModel().getRootFolderId())) {
+            setTitle(R.string.bookmarks);
+            setNavigationButton(NAVIGATION_BUTTON_NONE);
+            return;
+        }
+
+        if (mDelegate.getModel().getTopLevelFolderParentIDs().contains(mCurrentFolder.getParentId())
+                && TextUtils.isEmpty(mCurrentFolder.getTitle())) {
+            setTitle(R.string.bookmarks);
         } else {
             setTitle(mCurrentFolder.getTitle());
-            setNavigationButton(NAVIGATION_BUTTON_BACK);
         }
+
+        setNavigationButton(NAVIGATION_BUTTON_BACK);
     }
 
     @Override

@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -20,7 +21,6 @@ import org.chromium.base.annotations.JNINamespace;
 class TimeZoneMonitor {
     private static final String TAG = "cr_TimeZoneMonitor";
 
-    private final Context mAppContext;
     private final IntentFilter mFilter = new IntentFilter(Intent.ACTION_TIMEZONE_CHANGED);
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -40,15 +40,14 @@ class TimeZoneMonitor {
      * Start listening for intents.
      * @param nativePtr The native device::TimeZoneMonitorAndroid to notify of time zone changes.
      */
-    private TimeZoneMonitor(Context context, long nativePtr) {
-        mAppContext = context.getApplicationContext();
+    private TimeZoneMonitor(long nativePtr) {
         mNativePtr = nativePtr;
-        mAppContext.registerReceiver(mBroadcastReceiver, mFilter);
+        ContextUtils.getApplicationContext().registerReceiver(mBroadcastReceiver, mFilter);
     }
 
     @CalledByNative
-    static TimeZoneMonitor getInstance(Context context, long nativePtr) {
-        return new TimeZoneMonitor(context, nativePtr);
+    static TimeZoneMonitor getInstance(long nativePtr) {
+        return new TimeZoneMonitor(nativePtr);
     }
 
     /**
@@ -56,7 +55,7 @@ class TimeZoneMonitor {
      */
     @CalledByNative
     void stop() {
-        mAppContext.unregisterReceiver(mBroadcastReceiver);
+        ContextUtils.getApplicationContext().unregisterReceiver(mBroadcastReceiver);
         mNativePtr = 0;
     }
 

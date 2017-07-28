@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.signin;
 
 import android.accounts.Account;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.AsyncTask;
 
@@ -53,6 +54,7 @@ public class SigninHelper {
     private static final String ACCOUNT_RENAME_EVENT_INDEX_PREFS_KEY =
             "prefs_sync_account_rename_event_index";
 
+    @SuppressLint("StaticFieldLeak")
     private static SigninHelper sInstance;
 
     /**

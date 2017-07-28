@@ -84,8 +84,7 @@ public class BookmarkWidgetService extends RemoteViewsService {
     // TODO(crbug.com/635567): Fix this properly.
     @SuppressLint("DefaultLocale")
     static SharedPreferences getWidgetState(Context context, int widgetId) {
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-        StrictMode.allowThreadDiskWrites();
+        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
         try {
             return context.getSharedPreferences(
                     String.format("widgetState-%d", widgetId),

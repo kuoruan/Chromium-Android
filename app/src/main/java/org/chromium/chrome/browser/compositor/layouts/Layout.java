@@ -1084,4 +1084,9 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
             LayerTitleCache layerTitleCache, TabContentManager tabContentManager,
             ResourceManager resourceManager, ChromeFullscreenManager fullscreenManager) {
     }
+
+    @VisibleForTesting
+    public void finishAnimationsForTests() {
+        if (mLayoutAnimations != null) mLayoutAnimations.updateAndFinish();
+    }
 }

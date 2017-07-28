@@ -69,5 +69,13 @@ public class VariationsSession {
         callback.onResult("");
     }
 
+    /**
+     * @return The latest country according to the current variations state. Null if not known.
+     */
+    public String getLatestCountry() {
+        return nativeGetLatestCountry();
+    }
+
     protected native void nativeStartVariationsSession(String restrictMode);
+    protected native String nativeGetLatestCountry();
 }

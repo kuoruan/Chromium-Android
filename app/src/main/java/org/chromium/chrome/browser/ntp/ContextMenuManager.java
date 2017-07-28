@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
 
+import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
 import org.chromium.chrome.browser.suggestions.SuggestionsNavigationDelegate;
@@ -123,6 +124,8 @@ public class ContextMenuManager implements OnCloseContextMenuListener {
         // https://crbug.com/638555, https://crbug.com/636296).
         mTouchEnabledDelegate.setTouchEnabled(false);
         mContextMenuOpen = true;
+
+        RecordUserAction.record("Suggestions.ContextMenu.Shown");
     }
 
     @Override
@@ -184,18 +187,23 @@ public class ContextMenuManager implements OnCloseContextMenuListener {
             switch (item.getItemId()) {
                 case ID_OPEN_IN_NEW_WINDOW:
                     mDelegate.openItem(WindowOpenDisposition.NEW_WINDOW);
+                    RecordUserAction.record("Suggestions.ContextMenu.OpenItemInNewWindow");
                     return true;
                 case ID_OPEN_IN_NEW_TAB:
                     mDelegate.openItem(WindowOpenDisposition.NEW_BACKGROUND_TAB);
+                    RecordUserAction.record("Suggestions.ContextMenu.OpenItemInNewTab");
                     return true;
                 case ID_OPEN_IN_INCOGNITO_TAB:
                     mDelegate.openItem(WindowOpenDisposition.OFF_THE_RECORD);
+                    RecordUserAction.record("Suggestions.ContextMenu.OpenItemInIncognitoTab");
                     return true;
                 case ID_SAVE_FOR_OFFLINE:
                     mDelegate.openItem(WindowOpenDisposition.SAVE_TO_DISK);
+                    RecordUserAction.record("Suggestions.ContextMenu.DownloadItem");
                     return true;
                 case ID_REMOVE:
                     mDelegate.removeItem();
+                    RecordUserAction.record("Suggestions.ContextMenu.RemoveItem");
                     return true;
                 default:
                     return false;

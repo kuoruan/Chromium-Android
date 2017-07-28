@@ -55,8 +55,9 @@ public class TabularContextMenuUi implements ContextMenuUi, AdapterView.OnItemCl
             final Runnable onMenuShown, final Runnable onMenuClosed) {
         mCallback = onItemClicked;
         mDialog = createDialog(activity, params, items);
+
         mDialog.getWindow().setBackgroundDrawable(ApiCompatibilityUtils.getDrawable(
-                activity.getResources(), R.drawable.bg_find_toolbar_popup));
+                activity.getResources(), R.drawable.white_with_rounded_corners));
 
         mDialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
@@ -91,6 +92,54 @@ public class TabularContextMenuUi implements ContextMenuUi, AdapterView.OnItemCl
     }
 
     /**
+     * Creates a ViewPageAdapter based off the given list of views.
+     * @param activity Used to inflate the new ViewPager
+     * @param params Used to get the header text.
+     * @param itemGroups The list of views to put into the ViewPager. The string is the title of the
+     *                   tab
+     * @return Returns a complete tabular context menu view.
+     */
+    @VisibleForTesting
+    View createPagerView(Activity activity, ContextMenuParams params,
+            List<Pair<Integer, List<ContextMenuItem>>> itemGroups) {
+        View view = LayoutInflater.from(activity).inflate(R.layout.tabular_context_menu, null);
+
+        List<Pair<String, ViewGroup>> viewGroups = new ArrayList<>();
+        int maxCount = 0;
+        for (int i = 0; i < itemGroups.size(); i++) {
+            Pair<Integer, List<ContextMenuItem>> itemGroup = itemGroups.get(i);
+            maxCount = Math.max(maxCount, itemGroup.second.size());
+        }
+        for (int i = 0; i < itemGroups.size(); i++) {
+            Pair<Integer, List<ContextMenuItem>> itemGroup = itemGroups.get(i);
+            // TODO(tedchoc): Pass the ContextMenuGroup identifier to determine if it's an image.
+            boolean isImageTab = itemGroup.first == R.string.contextmenu_image_title;
+            viewGroups.add(new Pair<>(activity.getString(itemGroup.first),
+                    createContextMenuPageUi(
+                            activity, params, itemGroup.second, isImageTab, maxCount)));
+        }
+        if (itemGroups.size() == 1) {
+            viewGroups.get(0)
+                    .second.getChildAt(0)
+                    .findViewById(R.id.context_header_layout)
+                    .setBackgroundResource(R.color.google_grey_100);
+        }
+
+        TabularContextMenuViewPager pager =
+                (TabularContextMenuViewPager) view.findViewById(R.id.custom_pager);
+        pager.setAdapter(new TabularContextMenuPagerAdapter(viewGroups));
+
+        TabLayout tabLayout = (TabLayout) view.findViewById(R.id.tab_layout);
+        if (itemGroups.size() <= 1) {
+            tabLayout.setVisibility(View.GONE);
+        } else {
+            tabLayout.setupWithViewPager((ViewPager) view.findViewById(R.id.custom_pager));
+        }
+
+        return view;
+    }
+
+    /**
      * Creates the view of a context menu. Based off the Context Type, it'll adjust the list of
      * items and display only the ones that'll be on that specific group.
      * @param activity Used to get the resources of an item.
@@ -109,15 +158,25 @@ public class TabularContextMenuUi implements ContextMenuUi, AdapterView.OnItemCl
                 R.layout.tabular_context_menu_page, null);
         ListView listView = (ListView) baseLayout.findViewById(R.id.selectable_items);
 
+        displayHeaderIfVisibleItems(params, baseLayout);
         if (isImage) {
+            // #displayHeaderIfVisibleItems() sets these two views to GONE if the header text is
+            // empty but they should still be visible because we have an image to display.
+            baseLayout.findViewById(R.id.context_header_layout).setVisibility(View.VISIBLE);
+            baseLayout.findViewById(R.id.context_divider).setVisibility(View.VISIBLE);
             displayImageHeader(baseLayout, params, activity.getResources());
-        } else {
-            displayHeaderIfVisibleItems(params, baseLayout);
         }
 
         // Set the list adapter and get the height to display it appropriately in a dialog.
+        Runnable onDirectShare = new Runnable() {
+            @Override
+            public void run() {
+                mOnShareItemClicked.run();
+                mDialog.dismiss();
+            }
+        };
         TabularContextMenuListAdapter listAdapter =
-                new TabularContextMenuListAdapter(items, activity, mOnShareItemClicked);
+                new TabularContextMenuListAdapter(items, activity, onDirectShare);
         ViewGroup.LayoutParams layoutParams = listView.getLayoutParams();
         layoutParams.height = measureApproximateListViewHeight(listView, listAdapter, maxCount);
         listView.setLayoutParams(layoutParams);
@@ -155,12 +214,6 @@ public class TabularContextMenuUi implements ContextMenuUi, AdapterView.OnItemCl
 
     private void displayImageHeader(
             ViewGroup baseLayout, ContextMenuParams params, Resources resources) {
-        displayHeaderIfVisibleItems(params, baseLayout);
-        // #displayHeaderIfVisibleItems() sets these two views to GONE if the header text is
-        // empty but they should still be visible because we have an image to display.
-        baseLayout.findViewById(R.id.context_header_layout).setVisibility(View.VISIBLE);
-        baseLayout.findViewById(R.id.context_divider).setVisibility(View.VISIBLE);
-
         mHeaderImageView = (ImageView) baseLayout.findViewById(R.id.context_header_image);
         TextView headerTextView = (TextView) baseLayout.findViewById(R.id.context_header_text);
         // We'd prefer the header text is the title text instead of the link text for images.
@@ -207,46 +260,6 @@ public class TabularContextMenuUi implements ContextMenuUi, AdapterView.OnItemCl
             mMenuItemHeight = view.getMeasuredHeight();
         }
         return totalHeight + mMenuItemHeight * maxCount;
-    }
-
-    /**
-     * Creates a ViewPageAdapter based off the given list of views.
-     * @param activity Used to inflate the new ViewPager
-     * @param params Used to get the header text.
-     * @param itemGroups The list of views to put into the ViewPager. The string is the title of the
-     *                   tab
-     * @return Returns a complete tabular context menu view.
-     */
-    @VisibleForTesting
-    View createPagerView(Activity activity, ContextMenuParams params,
-            List<Pair<Integer, List<ContextMenuItem>>> itemGroups) {
-        View view = LayoutInflater.from(activity).inflate(R.layout.tabular_context_menu, null);
-
-        List<Pair<String, ViewGroup>> viewGroups = new ArrayList<>();
-        int maxCount = 0;
-        for (int i = 0; i < itemGroups.size(); i++) {
-            Pair<Integer, List<ContextMenuItem>> itemGroup = itemGroups.get(i);
-            maxCount = Math.max(maxCount, itemGroup.second.size());
-        }
-        for (int i = 0; i < itemGroups.size(); i++) {
-            Pair<Integer, List<ContextMenuItem>> itemGroup = itemGroups.get(i);
-            // TODO(tedchoc): Pass the ContextMenuGroup identifier to determine if it's an image.
-            boolean isImageTab = itemGroup.first == R.string.contextmenu_image_title;
-            viewGroups.add(new Pair<>(activity.getString(itemGroup.first),
-                    createContextMenuPageUi(
-                            activity, params, itemGroup.second, isImageTab, maxCount)));
-        }
-        TabularContextMenuViewPager pager =
-                (TabularContextMenuViewPager) view.findViewById(R.id.custom_pager);
-        pager.setAdapter(new TabularContextMenuPagerAdapter(viewGroups));
-
-        TabLayout tabLayout = (TabLayout) view.findViewById(R.id.tab_layout);
-        if (itemGroups.size() <= 1) {
-            tabLayout.setVisibility(View.GONE);
-        }
-        tabLayout.setupWithViewPager((ViewPager) view.findViewById(R.id.custom_pager));
-
-        return view;
     }
 
     /**

@@ -108,6 +108,15 @@ public class InputMethodManagerWrapper {
     }
 
     /**
+     * @see android.view.inputmethod.InputMethodManager
+     * #updateExtractedText(View,int, ExtractedText)
+     */
+    void updateExtractedText(View view, int token, android.view.inputmethod.ExtractedText text) {
+        if (DEBUG_LOGS) Log.d(TAG, "updateExtractedText");
+        getInputMethodManager().updateExtractedText(view, token, text);
+    }
+
+    /**
      * Notify that a user took some action with the current input method. Without this call
      * an input method app may wait longer when the user switches methods within the app.
      */

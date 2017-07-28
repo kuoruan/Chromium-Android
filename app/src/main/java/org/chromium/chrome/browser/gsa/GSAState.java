@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.gsa;
 
 import android.accounts.Account;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -32,6 +33,7 @@ public class GSAState {
     /**
      * An instance of GSAState class encapsulating knowledge about the current status.
      */
+    @SuppressLint("StaticFieldLeak")
     private static GSAState sGSAState;
 
     /**

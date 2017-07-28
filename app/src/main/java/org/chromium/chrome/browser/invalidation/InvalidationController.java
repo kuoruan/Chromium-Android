@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.invalidation;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -129,6 +130,7 @@ public class InvalidationController implements ApplicationStatus.ApplicationStat
 
     private static final Object LOCK = new Object();
 
+    @SuppressLint("StaticFieldLeak")
     private static InvalidationController sInstance;
 
     private final Context mContext;

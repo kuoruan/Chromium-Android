@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.media.remote;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -37,6 +38,7 @@ import java.util.List;
  */
 public class RemoteMediaPlayerController implements MediaRouteController.UiListener {
     // Singleton instance of the class. May only be accessed from UI thread.
+    @SuppressLint("StaticFieldLeak")
     private static RemoteMediaPlayerController sInstance;
 
     private static final String TAG = "MediaFling";

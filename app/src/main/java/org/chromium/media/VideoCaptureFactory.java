@@ -5,10 +5,10 @@
 package org.chromium.media;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -28,7 +28,7 @@ class VideoCaptureFactory {
         private static int sNumberOfSystemCameras = -1;
         private static final String TAG = "cr.media";
 
-        private static int getNumberOfCameras(Context appContext) {
+        private static int getNumberOfCameras() {
             if (sNumberOfSystemCameras == -1) {
                 // getNumberOfCameras() would not fail due to lack of permission, but the
                 // following operations on camera would. "No permission" isn't a fatal
@@ -38,15 +38,16 @@ class VideoCaptureFactory {
                 // applies only to pre-M on Android because that is when runtime permissions
                 // were introduced.
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
-                        && appContext.getPackageManager().checkPermission(
-                                   Manifest.permission.CAMERA, appContext.getPackageName())
+                        && ContextUtils.getApplicationContext().getPackageManager().checkPermission(
+                                   Manifest.permission.CAMERA,
+                                   ContextUtils.getApplicationContext().getPackageName())
                                 != PackageManager.PERMISSION_GRANTED) {
                     sNumberOfSystemCameras = 0;
                     Log.w(TAG, "Missing android.permission.CAMERA permission, "
                                     + "no system camera available.");
                 } else {
                     if (isLReleaseOrLater()) {
-                        sNumberOfSystemCameras = VideoCaptureCamera2.getNumberOfCameras(appContext);
+                        sNumberOfSystemCameras = VideoCaptureCamera2.getNumberOfCameras();
                     } else {
                         sNumberOfSystemCameras = VideoCaptureCamera.getNumberOfCameras();
                     }
@@ -61,45 +62,44 @@ class VideoCaptureFactory {
     }
 
     @CalledByNative
-    static boolean isLegacyOrDeprecatedDevice(Context context, int id) {
-        return !isLReleaseOrLater() || VideoCaptureCamera2.isLegacyDevice(context, id);
+    static boolean isLegacyOrDeprecatedDevice(int id) {
+        return !isLReleaseOrLater() || VideoCaptureCamera2.isLegacyDevice(id);
     }
 
     // Factory methods.
     @CalledByNative
-    static VideoCapture createVideoCapture(
-            Context context, int id, long nativeVideoCaptureDeviceAndroid) {
-        if (isLReleaseOrLater() && !VideoCaptureCamera2.isLegacyDevice(context, id)) {
-            return new VideoCaptureCamera2(context, id, nativeVideoCaptureDeviceAndroid);
+    static VideoCapture createVideoCapture(int id, long nativeVideoCaptureDeviceAndroid) {
+        if (isLReleaseOrLater() && !VideoCaptureCamera2.isLegacyDevice(id)) {
+            return new VideoCaptureCamera2(id, nativeVideoCaptureDeviceAndroid);
         }
-        return new VideoCaptureCamera(context, id, nativeVideoCaptureDeviceAndroid);
+        return new VideoCaptureCamera(id, nativeVideoCaptureDeviceAndroid);
     }
 
     @CalledByNative
-    static int getNumberOfCameras(Context appContext) {
-        return ChromiumCameraInfo.getNumberOfCameras(appContext);
+    static int getNumberOfCameras() {
+        return ChromiumCameraInfo.getNumberOfCameras();
     }
 
     @CalledByNative
-    static int getCaptureApiType(int id, Context appContext) {
+    static int getCaptureApiType(int id) {
         if (isLReleaseOrLater()) {
-            return VideoCaptureCamera2.getCaptureApiType(id, appContext);
+            return VideoCaptureCamera2.getCaptureApiType(id);
         }
         return VideoCaptureCamera.getCaptureApiType(id);
     }
 
     @CalledByNative
-    static String getDeviceName(int id, Context appContext) {
-        if (isLReleaseOrLater() && !VideoCaptureCamera2.isLegacyDevice(appContext, id)) {
-            return VideoCaptureCamera2.getName(id, appContext);
+    static String getDeviceName(int id) {
+        if (isLReleaseOrLater() && !VideoCaptureCamera2.isLegacyDevice(id)) {
+            return VideoCaptureCamera2.getName(id);
         }
         return VideoCaptureCamera.getName(id);
     }
 
     @CalledByNative
-    static VideoCaptureFormat[] getDeviceSupportedFormats(Context appContext, int id) {
-        if (isLReleaseOrLater() && !VideoCaptureCamera2.isLegacyDevice(appContext, id)) {
-            return VideoCaptureCamera2.getDeviceSupportedFormats(appContext, id);
+    static VideoCaptureFormat[] getDeviceSupportedFormats(int id) {
+        if (isLReleaseOrLater() && !VideoCaptureCamera2.isLegacyDevice(id)) {
+            return VideoCaptureCamera2.getDeviceSupportedFormats(id);
         }
         return VideoCaptureCamera.getDeviceSupportedFormats(id);
     }

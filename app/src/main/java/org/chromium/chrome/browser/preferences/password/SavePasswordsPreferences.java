@@ -16,9 +16,7 @@ import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 
 import org.chromium.base.ApiCompatibilityUtils;
-import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.PasswordUIView;
 import org.chromium.chrome.browser.PasswordUIView.PasswordListObserver;
 import org.chromium.chrome.browser.preferences.ChromeBaseCheckBoxPreference;
@@ -48,9 +46,6 @@ public class SavePasswordsPreferences extends PreferenceFragment
 
     public static final String PREF_SAVE_PASSWORDS_SWITCH = "save_passwords_switch";
     public static final String PREF_AUTOSIGNIN_SWITCH = "autosignin_switch";
-
-    @VisibleForTesting
-    public static final String CREDENTIAL_MANAGER_API = "CredentialManagementAPI";
 
     private static final String PREF_CATEGORY_SAVED_PASSWORDS = "saved_passwords";
     private static final String PREF_CATEGORY_EXCEPTIONS = "exceptions";
@@ -247,9 +242,6 @@ public class SavePasswordsPreferences extends PreferenceFragment
     }
 
     private void createAutoSignInCheckbox() {
-        if (!ChromeFeatureList.isEnabled(CREDENTIAL_MANAGER_API)) {
-            return;
-        }
         mAutoSignInSwitch = new ChromeBaseCheckBoxPreference(getActivity(), null);
         mAutoSignInSwitch.setKey(PREF_AUTOSIGNIN_SWITCH);
         mAutoSignInSwitch.setTitle(R.string.passwords_auto_signin_title);

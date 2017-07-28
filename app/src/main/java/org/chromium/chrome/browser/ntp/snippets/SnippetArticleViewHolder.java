@@ -6,7 +6,6 @@ package org.chromium.chrome.browser.ntp.snippets;
 
 import android.annotation.SuppressLint;
 import android.content.res.ColorStateList;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -14,6 +13,7 @@ import android.graphics.drawable.TransitionDrawable;
 import android.media.ThumbnailUtils;
 import android.os.StrictMode;
 import android.os.SystemClock;
+import android.support.annotation.IntDef;
 import android.support.v4.text.BidiFormatter;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
@@ -27,6 +27,7 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Callback;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.download.DownloadUtils;
 import org.chromium.chrome.browser.download.ui.DownloadFilter;
 import org.chromium.chrome.browser.download.ui.ThumbnailProvider;
@@ -40,6 +41,7 @@ import org.chromium.chrome.browser.ntp.cards.CardsVariationParameters;
 import org.chromium.chrome.browser.ntp.cards.ImpressionTracker;
 import org.chromium.chrome.browser.ntp.cards.NewTabPageViewHolder;
 import org.chromium.chrome.browser.ntp.cards.SuggestionsCategoryInfo;
+import org.chromium.chrome.browser.suggestions.SuggestionsMetrics;
 import org.chromium.chrome.browser.suggestions.SuggestionsRecyclerView;
 import org.chromium.chrome.browser.suggestions.SuggestionsUiDelegate;
 import org.chromium.chrome.browser.widget.TintedImageView;
@@ -50,6 +52,8 @@ import org.chromium.chrome.browser.widget.displaystyle.UiConfig;
 import org.chromium.chrome.browser.widget.displaystyle.VerticalDisplayStyle;
 import org.chromium.ui.mojom.WindowOpenDisposition;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
@@ -65,12 +69,19 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
     public static final RefreshOfflineBadgeVisibilityCallback
             REFRESH_OFFLINE_BADGE_VISIBILITY_CALLBACK = new RefreshOfflineBadgeVisibilityCallback();
 
-    private static final String PUBLISHER_FORMAT_STRING = "%s - %s";
+    private static final String ARTICLE_AGE_FORMAT_STRING = " - %s";
     private static final int FADE_IN_ANIMATION_TIME_MS = 300;
     private static final int[] FAVICON_SERVICE_SUPPORTED_SIZES = {16, 24, 32, 48, 64};
     private static final String FAVICON_SERVICE_FORMAT =
             "https://s2.googleusercontent.com/s2/favicons?domain=%s&src=chrome_newtab_mobile&sz=%d&alt=404";
+
+    /** Min size for site attribution: only 16px as many sites do not have any other small icon. */
     private static final int PUBLISHER_FAVICON_MINIMUM_SIZE_PX = 16;
+    /** Desired size for site attribution: only 32px as larger icons are often too complex */
+    private static final int PUBLISHER_FAVICON_DESIRED_SIZE_PX = 32;
+
+    private static final int THUMBNAIL_SOURCE_ARTICLE = 0;
+    private static final int THUMBNAIL_SOURCE_DOWNLOAD = 1;
 
     private final SuggestionsUiDelegate mUiDelegate;
     private final UiConfig mUiConfig;
@@ -79,10 +90,12 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
     private final TextView mHeadlineTextView;
     private final TextView mPublisherTextView;
     private final TextView mArticleSnippetTextView;
+    private final TextView mArticleAgeTextView;
     private final TintedImageView mThumbnailView;
     private final ImageView mOfflineBadge;
     private final View mPublisherBar;
 
+    private final int mThumbnailSize;
     /** Total horizontal space occupied by the thumbnail, sum of its size and margin. */
     private final int mThumbnailFootprintPx;
     private final boolean mUseFaviconService;
@@ -90,6 +103,7 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
     private final ColorStateList mIconForegroundColorList;
 
     private FetchImageCallback mImageCallback;
+    private ThumbnailCallback mDownloadThumbnailCallback;
     private SnippetArticle mArticle;
     private SuggestionsCategoryInfo mCategoryInfo;
     private int mPublisherFaviconSizePx;
@@ -110,21 +124,25 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
         mUiConfig = uiConfig;
 
         mThumbnailView = (TintedImageView) itemView.findViewById(R.id.article_thumbnail);
+        mThumbnailSize =
+                itemView.getResources().getDimensionPixelSize(R.dimen.snippets_thumbnail_size);
+
         mHeadlineTextView = (TextView) itemView.findViewById(R.id.article_headline);
         mPublisherTextView = (TextView) itemView.findViewById(R.id.article_publisher);
         mArticleSnippetTextView = (TextView) itemView.findViewById(R.id.article_snippet);
+        mArticleAgeTextView = (TextView) itemView.findViewById(R.id.article_age);
         mPublisherBar = itemView.findViewById(R.id.publisher_bar);
         mOfflineBadge = (ImageView) itemView.findViewById(R.id.offline_icon);
 
-        mThumbnailFootprintPx =
-                itemView.getResources().getDimensionPixelSize(R.dimen.snippets_thumbnail_size)
+        mThumbnailFootprintPx = mThumbnailSize
                 + itemView.getResources().getDimensionPixelSize(R.dimen.snippets_thumbnail_margin);
         mUseFaviconService = CardsVariationParameters.isFaviconServiceEnabled();
 
         mIconBackgroundColor = DownloadUtils.getIconBackgroundColor(parent.getContext());
         mIconForegroundColorList = DownloadUtils.getIconForegroundColorList(parent.getContext());
-        mThumbnailProvider = new ThumbnailProviderImpl(
-                Math.min(mThumbnailView.getMaxWidth(), mThumbnailView.getMaxHeight()));
+
+        // TODO(bauerb): Share ThumbnailProvider between instances
+        mThumbnailProvider = new ThumbnailProviderImpl(mThumbnailSize);
 
         new ImpressionTracker(itemView, this);
         new DisplayStyleObserverAdapter(itemView, uiConfig, new DisplayStyleObserver() {
@@ -138,21 +156,24 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
     @Override
     public void onImpression() {
         if (mArticle != null && mArticle.trackImpression()) {
-            mUiDelegate.getMetricsReporter().onSuggestionShown(mArticle);
+            mUiDelegate.getEventReporter().onSuggestionShown(mArticle);
             mRecyclerView.onSnippetImpression();
         }
     }
 
     @Override
     public void onCardTapped() {
+        SuggestionsMetrics.recordCardTapped();
         int windowDisposition = WindowOpenDisposition.CURRENT_TAB;
-        mUiDelegate.getMetricsReporter().onSuggestionOpened(mArticle, windowDisposition);
+        mUiDelegate.getEventReporter().onSuggestionOpened(
+                mArticle, windowDisposition, mUiDelegate.getSuggestionsRanker());
         mUiDelegate.getNavigationDelegate().openSnippet(windowDisposition, mArticle);
     }
 
     @Override
     public void openItem(int windowDisposition) {
-        mUiDelegate.getMetricsReporter().onSuggestionOpened(mArticle, windowDisposition);
+        mUiDelegate.getEventReporter().onSuggestionOpened(
+                mArticle, windowDisposition, mUiDelegate.getSuggestionsRanker());
         mUiDelegate.getNavigationDelegate().openSnippet(windowDisposition, mArticle);
     }
 
@@ -171,7 +192,7 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
 
     @Override
     public void onContextMenuCreated() {
-        mUiDelegate.getMetricsReporter().onSuggestionMenuOpened(mArticle);
+        mUiDelegate.getEventReporter().onSuggestionMenuOpened(mArticle);
     }
 
     /**
@@ -188,7 +209,6 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
         updateLayout();
 
         mHeadlineTextView.setText(mArticle.mTitle);
-        mPublisherTextView.setText(getAttributionString(mArticle));
 
         // The favicon of the publisher should match the TextView height.
         int widthSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
@@ -197,7 +217,8 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
         mPublisherFaviconSizePx = mPublisherTextView.getMeasuredHeight();
 
         mArticleSnippetTextView.setText(mArticle.mPreviewText);
-
+        mPublisherTextView.setText(getPublisherString(mArticle));
+        mArticleAgeTextView.setText(getArticleAge(mArticle));
         setThumbnail();
 
         // Set the favicon of the publisher.
@@ -231,21 +252,39 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
         final int verticalStyle = mUiConfig.getCurrentDisplayStyle().vertical;
         final int layout = mCategoryInfo.getCardLayout();
 
+        boolean showHeadline = shouldShowHeadline();
         boolean showDescription = shouldShowDescription(horizontalStyle, verticalStyle, layout);
         boolean showThumbnail = shouldShowThumbnail(horizontalStyle, verticalStyle, layout);
 
+        mHeadlineTextView.setVisibility(showHeadline ? View.VISIBLE : View.GONE);
         mArticleSnippetTextView.setVisibility(showDescription ? View.VISIBLE : View.GONE);
         mThumbnailView.setVisibility(showThumbnail ? View.VISIBLE : View.GONE);
 
-        // If we aren't showing the article snippet, reduce the top margin for publisher text.
-        ViewGroup.MarginLayoutParams params =
+        ViewGroup.MarginLayoutParams publisherBarParams =
                 (ViewGroup.MarginLayoutParams) mPublisherBar.getLayoutParams();
 
-        params.topMargin = mPublisherBar.getResources().getDimensionPixelSize(showDescription
-                        ? R.dimen.snippets_publisher_margin_top_with_article_snippet
-                        : R.dimen.snippets_publisher_margin_top_without_article_snippet);
-        ApiCompatibilityUtils.setMarginEnd(params, showThumbnail ? mThumbnailFootprintPx : 0);
-        mPublisherBar.setLayoutParams(params);
+        if (showDescription) {
+            publisherBarParams.topMargin = mPublisherBar.getResources().getDimensionPixelSize(
+                    R.dimen.snippets_publisher_margin_top_with_article_snippet);
+        } else if (showHeadline) {
+            // When we show a headline and not a description, we reduce the top margin of the
+            // publisher bar.
+            publisherBarParams.topMargin = mPublisherBar.getResources().getDimensionPixelSize(
+                    R.dimen.snippets_publisher_margin_top_without_article_snippet);
+        } else {
+            // When there is no headline and no description, we remove the top margin of the
+            // publisher bar.
+            publisherBarParams.topMargin = 0;
+        }
+
+        ApiCompatibilityUtils.setMarginEnd(
+                publisherBarParams, showThumbnail ? mThumbnailFootprintPx : 0);
+        mPublisherBar.setLayoutParams(publisherBarParams);
+    }
+
+    /** If the title is empty (or contains only whitespace characters), we do not show it. */
+    private boolean shouldShowHeadline() {
+        return !mArticle.mTitle.trim().isEmpty();
     }
 
     private boolean shouldShowDescription(int horizontalStyle, int verticalStyle, int layout) {
@@ -260,7 +299,7 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
         // When article's description is empty, we do not want empty space.
         if (mArticle != null && TextUtils.isEmpty(mArticle.mPreviewText)) return false;
 
-        return true;
+        return ChromeFeatureList.isEnabled(ChromeFeatureList.CONTENT_SUGGESTIONS_SHOW_SUMMARY);
     }
 
     private boolean shouldShowThumbnail(int horizontalStyle, int verticalStyle, int layout) {
@@ -270,8 +309,14 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
         return true;
     }
 
-    private static String getAttributionString(SnippetArticle article) {
-        if (article.mPublishTimestampMilliseconds == 0) return article.mPublisher;
+    private static String getPublisherString(SnippetArticle article) {
+        // We format the publisher here so that having a publisher name in an RTL language
+        // doesn't mess up the formatting on an LTR device and vice versa.
+        return BidiFormatter.getInstance().unicodeWrap(article.mPublisher);
+    }
+
+    private static String getArticleAge(SnippetArticle article) {
+        if (article.mPublishTimestampMilliseconds == 0) return "";
 
         // DateUtils.getRelativeTimeSpanString(...) calls through to TimeZone.getDefault(). If this
         // has never been called before it loads the current time zone from disk. In most likelihood
@@ -289,14 +334,18 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
         } finally {
             StrictMode.setThreadPolicy(oldPolicy);
         }
-        // We format the publisher here so that having a publisher name in an RTL language
-        // doesn't mess up the formatting on an LTR device and vice versa.
-        return String.format(PUBLISHER_FORMAT_STRING,
-                BidiFormatter.getInstance().unicodeWrap(article.mPublisher), relativeTimeSpan);
+
+        // We add a dash before the elapsed time, e.g. " - 14 minutes ago".
+        return String.format(ARTICLE_AGE_FORMAT_STRING,
+                BidiFormatter.getInstance().unicodeWrap(relativeTimeSpan));
     }
 
     private void setThumbnailFromBitmap(Bitmap thumbnail) {
-        assert thumbnail != null && !thumbnail.isRecycled();
+        assert thumbnail != null;
+        assert !thumbnail.isRecycled();
+        assert thumbnail.getWidth() == mThumbnailSize;
+        assert thumbnail.getHeight() == mThumbnailSize;
+
         mThumbnailView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         mThumbnailView.setBackground(null);
         mThumbnailView.setImageBitmap(thumbnail);
@@ -313,26 +362,28 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
 
     private void setDownloadThumbnail() {
         assert mArticle.isDownload();
-        if (mArticle.isAssetDownload()) {
-            int fileType = DownloadFilter.fromMimeType(mArticle.getAssetDownloadMimeType());
-            setThumbnailFromFileType(fileType);
-
-            if (fileType != DownloadFilter.FILTER_IMAGE) return;
-            if (mImageCallback != null) {
-                mThumbnailProvider.cancelRetrieval(mImageCallback);
-                mImageCallback = null;
-            }
-            mImageCallback = new FetchImageCallback(this, mArticle);
-            mArticle.setThumbnailBitmap(null);
-            Bitmap thumbnail = mThumbnailProvider.getThumbnail(mImageCallback);
-            if (thumbnail == null || thumbnail.isRecycled()) return;
-            mArticle.setThumbnailBitmap(thumbnail);
-            setThumbnailFromBitmap(thumbnail);
-
+        if (!mArticle.isAssetDownload()) {
+            setThumbnailFromFileType(DownloadFilter.FILTER_PAGE);
             return;
         }
 
-        setThumbnailFromFileType(DownloadFilter.FILTER_PAGE);
+        int fileType = DownloadFilter.fromMimeType(mArticle.getAssetDownloadMimeType());
+        if (fileType == DownloadFilter.FILTER_IMAGE) {
+            // For image downloads, attempt to fetch a thumbnail.
+            cancelImageFetch();
+            mImageCallback = new FetchImageCallback(this, mArticle, THUMBNAIL_SOURCE_DOWNLOAD);
+            mDownloadThumbnailCallback = new ThumbnailCallback(mImageCallback, mArticle);
+            Bitmap thumbnail = mThumbnailProvider.getThumbnail(mDownloadThumbnailCallback);
+            if (thumbnail != null) {
+                // If there is already a thumbnail available, use it immediately, otherwise fall
+                // through to using the default icon for the type. Once the thumbnail is fetched
+                // it will be faded in.
+                mArticle.setThumbnailBitmap(mUiDelegate.getReferencePool().put(thumbnail));
+                setThumbnailFromBitmap(thumbnail);
+                return;
+            }
+        }
+        setThumbnailFromFileType(fileType);
     }
 
     private void setThumbnail() {
@@ -341,8 +392,9 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
 
         // mThumbnailView's visibility is modified in updateLayout().
         if (mThumbnailView.getVisibility() != View.VISIBLE) return;
-        if (mArticle.getThumbnailBitmap() != null && !mArticle.getThumbnailBitmap().isRecycled()) {
-            setThumbnailFromBitmap(mArticle.getThumbnailBitmap());
+        Bitmap thumbnail = mArticle.getThumbnailBitmap();
+        if (thumbnail != null) {
+            setThumbnailFromBitmap(thumbnail);
             return;
         }
 
@@ -355,7 +407,7 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
         mThumbnailView.setBackground(null);
         mThumbnailView.setImageResource(R.drawable.ic_snippet_thumbnail_placeholder);
         mThumbnailView.setTint(null);
-        mImageCallback = new FetchImageCallback(this, mArticle);
+        mImageCallback = new FetchImageCallback(this, mArticle, THUMBNAIL_SOURCE_ARTICLE);
         mUiDelegate.getSuggestionsSource().fetchSuggestionImage(mArticle, mImageCallback);
     }
 
@@ -367,33 +419,38 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
     }
 
     private void cancelImageFetch() {
-        if (mImageCallback == null) return;
-        mImageCallback.cancel();
-        if (mArticle.isAssetDownload()) {
-            mThumbnailProvider.cancelRetrieval(mImageCallback);
+        if (mImageCallback != null) {
+            mImageCallback.cancel();
+            mImageCallback = null;
         }
-        mImageCallback = null;
+
+        if (mDownloadThumbnailCallback != null) {
+            mThumbnailProvider.cancelRetrieval(mDownloadThumbnailCallback);
+            mDownloadThumbnailCallback = null;
+        }
     }
 
-    private void fadeThumbnailIn(SnippetArticle snippet, Bitmap thumbnail) {
+    private void fadeThumbnailIn(SnippetArticle snippet, Bitmap thumbnail, boolean owned) {
         mImageCallback = null;
         if (thumbnail == null) return; // Nothing to do, we keep the placeholder.
 
         // We need to crop and scale the downloaded bitmap, as the ImageView we set it on won't be
         // able to do so when using a TransitionDrawable (as opposed to the straight bitmap).
         // That's a limitation of TransitionDrawable, which doesn't handle layers of varying sizes.
-        Resources res = mThumbnailView.getResources();
-        int targetSize = res.getDimensionPixelSize(R.dimen.snippets_thumbnail_size);
-        Bitmap scaledThumbnail = ThumbnailUtils.extractThumbnail(
-                thumbnail, targetSize, targetSize, ThumbnailUtils.OPTIONS_RECYCLE_INPUT);
+        if (thumbnail.getHeight() != mThumbnailSize || thumbnail.getWidth() != mThumbnailSize) {
+            // Resize the thumbnail. If we fully own the input bitmap (e.g. it isn't cached anywhere
+            // else), recycle the input image in the process.
+            thumbnail = ThumbnailUtils.extractThumbnail(thumbnail, mThumbnailSize, mThumbnailSize,
+                    owned ? ThumbnailUtils.OPTIONS_RECYCLE_INPUT : 0);
+        }
 
         // Store the bitmap to skip the download task next time we display this snippet.
-        snippet.setThumbnailBitmap(scaledThumbnail);
+        snippet.setThumbnailBitmap(mUiDelegate.getReferencePool().put(thumbnail));
 
         // Cross-fade between the placeholder and the thumbnail. We cross-fade because the incoming
         // image may have transparency and we don't want the previous image showing up behind.
         Drawable[] layers = {mThumbnailView.getDrawable(),
-                new BitmapDrawable(mThumbnailView.getResources(), scaledThumbnail)};
+                new BitmapDrawable(mThumbnailView.getResources(), thumbnail)};
         TransitionDrawable transitionDrawable = new TransitionDrawable(layers);
         mThumbnailView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         mThumbnailView.setBackground(null);
@@ -404,9 +461,10 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
     }
 
     private void fetchFaviconFromLocalCacheOrGoogleServer(final long faviconFetchStartTimeMs) {
-        // Set the desired size to 0 to specify we do not want to resize in c++, we'll resize here.
+        // The bitmap will not be resized to desired size in c++, this only expresses preference.
         mUiDelegate.getSuggestionsSource().fetchSuggestionFavicon(mArticle,
-                PUBLISHER_FAVICON_MINIMUM_SIZE_PX, /* desiredSizePx */ 0, new Callback<Bitmap>() {
+                PUBLISHER_FAVICON_MINIMUM_SIZE_PX, PUBLISHER_FAVICON_DESIRED_SIZE_PX,
+                new Callback<Bitmap>() {
                     @Override
                     public void onResult(Bitmap image) {
                         recordFaviconFetchTime(faviconFetchStartTimeMs);
@@ -515,39 +573,60 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
         mPublisherTextView.setVisibility(View.VISIBLE);
     }
 
-    private static class FetchImageCallback
-            extends Callback<Bitmap> implements ThumbnailProvider.ThumbnailRequest {
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({THUMBNAIL_SOURCE_ARTICLE, THUMBNAIL_SOURCE_DOWNLOAD})
+    private @interface ThumbnailSource {}
+
+    private static class FetchImageCallback extends Callback<Bitmap> {
         private SnippetArticleViewHolder mViewHolder;
         private final SnippetArticle mSnippet;
+        @ThumbnailSource
+        private final int mSource;
 
-        public FetchImageCallback(SnippetArticleViewHolder viewHolder, SnippetArticle snippet) {
+        public FetchImageCallback(SnippetArticleViewHolder viewHolder, SnippetArticle snippet,
+                @ThumbnailSource int source) {
             mViewHolder = viewHolder;
             mSnippet = snippet;
+            mSource = source;
         }
 
         @Override
         public void onResult(Bitmap image) {
             if (mViewHolder == null) return;
-            mViewHolder.fadeThumbnailIn(mSnippet, image);
-        }
-
-        @Override
-        public String getFilePath() {
-            return mSnippet == null ? null : mSnippet.getAssetDownloadFile().getAbsolutePath();
-        }
-
-        @Override
-        public void onThumbnailRetrieved(String filePath, Bitmap thumbnail) {
-            if (TextUtils.equals(getFilePath(), filePath) && thumbnail != null
-                    && thumbnail.getWidth() > 0 && thumbnail.getHeight() > 0) {
-                assert !thumbnail.isRecycled();
-                onResult(thumbnail);
-            }
+            mViewHolder.fadeThumbnailIn(mSnippet, image, mSource == THUMBNAIL_SOURCE_ARTICLE);
         }
 
         public void cancel() {
             // TODO(treib): Pass the "cancel" on to the actual image fetcher.
             mViewHolder = null;
+        }
+    }
+
+    private static class ThumbnailCallback implements ThumbnailProvider.ThumbnailRequest {
+        private final SnippetArticle mSnippet;
+        private final FetchImageCallback mCallback;
+
+        public ThumbnailCallback(FetchImageCallback callback, SnippetArticle snippet) {
+            assert snippet != null;
+            assert callback != null;
+
+            mSnippet = snippet;
+            mCallback = callback;
+        }
+
+        @Override
+        public String getFilePath() {
+            return mSnippet.getAssetDownloadFile().getAbsolutePath();
+        }
+
+        @Override
+        public void onThumbnailRetrieved(String filePath, Bitmap thumbnail) {
+            assert !thumbnail.isRecycled();
+
+            if (!getFilePath().equals(filePath)) return;
+            if (thumbnail.getWidth() <= 0 || thumbnail.getHeight() <= 0) return;
+
+            mCallback.onResult(thumbnail);
         }
     }
 

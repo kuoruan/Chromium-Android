@@ -738,7 +738,7 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
     }
 
     private void addGroup(Group group) {
-        if (!DeviceFormFactor.isTablet(mActivity)) {
+        if (!DeviceFormFactor.isTablet()) {
             mGroups.add(group);
         } else {
             if (mGroups.size() == 0) {
@@ -767,7 +767,7 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
 
         // Add separator line after the recently closed tabs group.
         int recentlyClosedIndex = mGroups.indexOf(mRecentlyClosedTabsGroup);
-        if (DeviceFormFactor.isTablet(mActivity)) {
+        if (DeviceFormFactor.isTablet()) {
             if (recentlyClosedIndex != mGroups.size() - 2) {
                 mGroups.set(recentlyClosedIndex + 1, mVisibleSeparatorGroup);
             }

@@ -4,7 +4,6 @@
 
 package org.chromium.components.gcm_driver;
 
-import android.content.Context;
 import android.os.AsyncTask;
 
 import org.chromium.base.Log;
@@ -30,29 +29,25 @@ public class GCMDriver {
     private static GCMDriver sInstance;
 
     private long mNativeGCMDriverAndroid;
-    private final Context mContext;
     private GoogleCloudMessagingSubscriber mSubscriber;
 
-    private GCMDriver(long nativeGCMDriverAndroid, Context context) {
+    private GCMDriver(long nativeGCMDriverAndroid) {
         mNativeGCMDriverAndroid = nativeGCMDriverAndroid;
-        mContext = context;
-        mSubscriber = new GoogleCloudMessagingV2(context);
+        mSubscriber = new GoogleCloudMessagingV2();
     }
 
     /**
      * Create a GCMDriver object, which is owned by GCMDriverAndroid
      * on the C++ side.
+     *  @param nativeGCMDriverAndroid The C++ object that owns us.
      *
-     * @param nativeGCMDriverAndroid The C++ object that owns us.
-     * @param context The app context.
      */
     @CalledByNative
-    private static GCMDriver create(long nativeGCMDriverAndroid,
-                                    Context context) {
+    private static GCMDriver create(long nativeGCMDriverAndroid) {
         if (sInstance != null) {
             throw new IllegalStateException("Already instantiated");
         }
-        sInstance = new GCMDriver(nativeGCMDriverAndroid, context);
+        sInstance = new GCMDriver(nativeGCMDriverAndroid);
         return sInstance;
     }
 

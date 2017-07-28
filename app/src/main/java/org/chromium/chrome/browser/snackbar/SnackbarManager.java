@@ -13,7 +13,7 @@ import android.view.ViewGroup;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordHistogram;
-import org.chromium.chrome.browser.device.DeviceClassManager;
+import org.chromium.chrome.browser.util.AccessibilityUtil;
 
 /**
  * Manager for the snackbar showing at the bottom of activity. There should be only one
@@ -214,7 +214,7 @@ public class SnackbarManager implements OnClickListener {
     private int getDuration(Snackbar snackbar) {
         int durationMs = snackbar.getDuration();
         if (durationMs == 0) {
-            durationMs = DeviceClassManager.isAccessibilityModeEnabled(mActivity)
+            durationMs = AccessibilityUtil.isAccessibilityEnabled()
                     ? sAccessibilitySnackbarDurationMs : sSnackbarDurationMs;
         }
         return durationMs;

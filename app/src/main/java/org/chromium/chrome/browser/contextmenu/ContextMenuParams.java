@@ -20,7 +20,7 @@ import org.chromium.content_public.common.Referrer;
 public class ContextMenuParams {
     /** Must correspond to the MediaType enum in WebKit/chromium/public/WebContextMenuData.h */
     @SuppressWarnings("unused")
-    private static interface MediaType {
+    static interface MediaType {
         public static final int MEDIA_TYPE_NONE = 0;
         public static final int MEDIA_TYPE_IMAGE = 1;
         public static final int MEDIA_TYPE_VIDEO = 2;
@@ -41,7 +41,7 @@ public class ContextMenuParams {
     private final boolean mIsAnchor;
     private final boolean mIsImage;
     private final boolean mIsVideo;
-    private final boolean mCanSavemedia;
+    private final boolean mCanSaveMedia;
 
     /**
      * @return The URL associated with the main frame of the page that triggered the context menu.
@@ -121,7 +121,7 @@ public class ContextMenuParams {
     }
 
     public boolean canSaveMedia() {
-        return mCanSavemedia;
+        return mCanSaveMedia;
     }
 
     /**
@@ -135,9 +135,9 @@ public class ContextMenuParams {
     }
 
     @VisibleForTesting
-    ContextMenuParams(int mediaType, String pageUrl, String linkUrl, String linkText,
+    public ContextMenuParams(int mediaType, String pageUrl, String linkUrl, String linkText,
             String unfilteredLinkUrl, String srcUrl, String titleText, boolean imageWasFetchedLoFi,
-            Referrer referrer, boolean canSavemedia) {
+            Referrer referrer, boolean canSaveMedia) {
         mPageUrl = pageUrl;
         mLinkUrl = linkUrl;
         mLinkText = linkText;
@@ -150,17 +150,17 @@ public class ContextMenuParams {
         mIsAnchor = !TextUtils.isEmpty(linkUrl);
         mIsImage = mediaType == MediaType.MEDIA_TYPE_IMAGE;
         mIsVideo = mediaType == MediaType.MEDIA_TYPE_VIDEO;
-        mCanSavemedia = canSavemedia;
+        mCanSaveMedia = canSaveMedia;
     }
 
     @CalledByNative
     private static ContextMenuParams create(int mediaType, String pageUrl, String linkUrl,
             String linkText, String unfilteredLinkUrl, String srcUrl, String titleText,
             boolean imageWasFetchedLoFi, String sanitizedReferrer, int referrerPolicy,
-            boolean canSavemedia) {
+            boolean canSaveMedia) {
         Referrer referrer = TextUtils.isEmpty(sanitizedReferrer)
                 ? null : new Referrer(sanitizedReferrer, referrerPolicy);
         return new ContextMenuParams(mediaType, pageUrl, linkUrl, linkText, unfilteredLinkUrl,
-                srcUrl, titleText, imageWasFetchedLoFi, referrer, canSavemedia);
+                srcUrl, titleText, imageWasFetchedLoFi, referrer, canSaveMedia);
     }
 }

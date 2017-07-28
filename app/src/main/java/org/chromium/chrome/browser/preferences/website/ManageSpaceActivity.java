@@ -73,7 +73,7 @@ public class ManageSpaceActivity extends AppCompatActivity implements View.OnCli
 
     private boolean mIsNativeInitialized;
 
-    @SuppressLint("CommitPrefEdits")
+    @SuppressLint({"ApplySharedPref", "CommitPrefEdits"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ensureActivityNotExported();
@@ -120,8 +120,7 @@ public class ManageSpaceActivity extends AppCompatActivity implements View.OnCli
 
         // Allow reading/writing to disk to check whether the last attempt was successful before
         // kicking off the browser process initialization.
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-        StrictMode.allowThreadDiskWrites();
+        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
         try {
             String productVersion = AboutChromePreferences.getApplicationVersion(
                     this, ChromeVersionInfo.getProductVersion());

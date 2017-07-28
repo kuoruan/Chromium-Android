@@ -4,7 +4,6 @@
 
 package org.chromium.components.variations.firstrun;
 
-import android.content.Context;
 import android.util.Base64;
 
 import org.chromium.base.ContextUtils;
@@ -29,7 +28,7 @@ public class VariationsSeedBridge {
     protected static final String VARIATIONS_FIRST_RUN_SEED_NATIVE_STORED =
             "variations_seed_native_stored";
 
-    protected static String getVariationsFirstRunSeedPref(Context context, String prefName) {
+    protected static String getVariationsFirstRunSeedPref(String prefName) {
         return ContextUtils.getAppSharedPreferences().getString(prefName, "");
     }
 
@@ -38,8 +37,8 @@ public class VariationsSeedBridge {
      * CalledByNative attribute is used by unit tests code to set test data.
      */
     @CalledByNative
-    public static void setVariationsFirstRunSeed(Context context, byte[] rawSeed, String signature,
-            String country, String date, boolean isGzipCompressed) {
+    public static void setVariationsFirstRunSeed(byte[] rawSeed, String signature, String country,
+            String date, boolean isGzipCompressed) {
         ContextUtils.getAppSharedPreferences()
                 .edit()
                 .putString(VARIATIONS_FIRST_RUN_SEED_BASE64,
@@ -52,7 +51,7 @@ public class VariationsSeedBridge {
     }
 
     @CalledByNative
-    private static void clearFirstRunPrefs(Context context) {
+    private static void clearFirstRunPrefs() {
         ContextUtils.getAppSharedPreferences()
                 .edit()
                 .remove(VARIATIONS_FIRST_RUN_SEED_BASE64)
@@ -66,7 +65,7 @@ public class VariationsSeedBridge {
     /**
      * Returns the status of the variations first run fetch: was it successful or not.
      */
-    public static boolean hasJavaPref(Context context) {
+    public static boolean hasJavaPref() {
         return !ContextUtils.getAppSharedPreferences()
                         .getString(VARIATIONS_FIRST_RUN_SEED_BASE64, "")
                         .isEmpty();
@@ -75,13 +74,13 @@ public class VariationsSeedBridge {
     /**
      * Returns the status of the variations seed storing on the C++ side: was it successful or not.
      */
-    public static boolean hasNativePref(Context context) {
+    public static boolean hasNativePref() {
         return ContextUtils.getAppSharedPreferences().getBoolean(
                 VARIATIONS_FIRST_RUN_SEED_NATIVE_STORED, false);
     }
 
     @CalledByNative
-    private static void markVariationsSeedAsStored(Context context) {
+    private static void markVariationsSeedAsStored() {
         ContextUtils.getAppSharedPreferences()
                 .edit()
                 .putBoolean(VARIATIONS_FIRST_RUN_SEED_NATIVE_STORED, true)
@@ -89,29 +88,28 @@ public class VariationsSeedBridge {
     }
 
     @CalledByNative
-    private static byte[] getVariationsFirstRunSeedData(Context context) {
+    private static byte[] getVariationsFirstRunSeedData() {
         return Base64.decode(
-                getVariationsFirstRunSeedPref(context, VARIATIONS_FIRST_RUN_SEED_BASE64),
-                Base64.NO_WRAP);
+                getVariationsFirstRunSeedPref(VARIATIONS_FIRST_RUN_SEED_BASE64), Base64.NO_WRAP);
     }
 
     @CalledByNative
-    private static String getVariationsFirstRunSeedSignature(Context context) {
-        return getVariationsFirstRunSeedPref(context, VARIATIONS_FIRST_RUN_SEED_SIGNATURE);
+    private static String getVariationsFirstRunSeedSignature() {
+        return getVariationsFirstRunSeedPref(VARIATIONS_FIRST_RUN_SEED_SIGNATURE);
     }
 
     @CalledByNative
-    private static String getVariationsFirstRunSeedCountry(Context context) {
-        return getVariationsFirstRunSeedPref(context, VARIATIONS_FIRST_RUN_SEED_COUNTRY);
+    private static String getVariationsFirstRunSeedCountry() {
+        return getVariationsFirstRunSeedPref(VARIATIONS_FIRST_RUN_SEED_COUNTRY);
     }
 
     @CalledByNative
-    private static String getVariationsFirstRunSeedDate(Context context) {
-        return getVariationsFirstRunSeedPref(context, VARIATIONS_FIRST_RUN_SEED_DATE);
+    private static String getVariationsFirstRunSeedDate() {
+        return getVariationsFirstRunSeedPref(VARIATIONS_FIRST_RUN_SEED_DATE);
     }
 
     @CalledByNative
-    private static boolean getVariationsFirstRunSeedIsGzipCompressed(Context context) {
+    private static boolean getVariationsFirstRunSeedIsGzipCompressed() {
         return ContextUtils.getAppSharedPreferences().getBoolean(
                 VARIATIONS_FIRST_RUN_SEED_IS_GZIP_COMPRESSED, false);
     }

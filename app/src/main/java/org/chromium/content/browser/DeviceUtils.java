@@ -20,7 +20,7 @@ public class DeviceUtils {
      * @param context The context for the caller activity.
      */
     public static void addDeviceSpecificUserAgentSwitch(Context context) {
-        if (!DeviceFormFactor.isTablet(context)) {
+        if (!DeviceFormFactor.isTablet()) {
             CommandLine.getInstance().appendSwitch(ContentSwitches.USE_MOBILE_UA);
         }
     }

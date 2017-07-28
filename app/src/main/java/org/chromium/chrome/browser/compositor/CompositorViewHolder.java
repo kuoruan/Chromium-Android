@@ -214,7 +214,7 @@ public class CompositorViewHolder extends FrameLayout
             }
         };
 
-        mEnableCompositorTabStrip = DeviceFormFactor.isTablet(getContext());
+        mEnableCompositorTabStrip = DeviceFormFactor.isTablet();
 
         addOnLayoutChangeListener(new OnLayoutChangeListener() {
             @Override
@@ -435,7 +435,7 @@ public class CompositorViewHolder extends FrameLayout
     }
 
     @Override
-    public void onPhysicalBackingSizeChanged(int width, int height) {
+    public void onSurfaceResized(int width, int height) {
         ContentViewCore content = getActiveContent();
         if (content != null) adjustPhysicalBackingSize(content, width, height);
     }
@@ -514,7 +514,7 @@ public class CompositorViewHolder extends FrameLayout
         if (mLayoutManager != null) {
             mLayoutManager.onUpdate();
 
-            if (!DeviceFormFactor.isTablet(getContext()) && mControlContainer != null) {
+            if (!DeviceFormFactor.isTablet() && mControlContainer != null) {
                 if (mProgressBarDrawingInfo == null) mProgressBarDrawingInfo = new DrawingInfo();
                 mControlContainer.getProgressBarDrawingInfo(mProgressBarDrawingInfo);
             } else {
@@ -578,14 +578,17 @@ public class CompositorViewHolder extends FrameLayout
     public void didSwapFrame(int pendingFrameCount) {
         TraceEvent.instant("didSwapFrame");
 
-        // Wait until the second frame to turn off the placeholder background on
-        // tablets so the tab strip has time to start drawing.
+        // Wait until the second frame to turn off the placeholder background for the CompositorView
+        // and the tab strip, to ensure the compositor frame has been drawn.
         final ViewGroup controlContainer = (ViewGroup) mControlContainer;
-        if (controlContainer != null && controlContainer.getBackground() != null && mHasDrawnOnce) {
+        if (mHasDrawnOnce) {
             post(new Runnable() {
                 @Override
                 public void run() {
-                    controlContainer.setBackgroundResource(0);
+                    mCompositorView.setBackgroundResource(0);
+                    if (controlContainer != null) {
+                        controlContainer.setBackgroundResource(0);
+                    }
                 }
             });
         }
@@ -909,7 +912,8 @@ public class CompositorViewHolder extends FrameLayout
             width = MeasureSpec.getSize(mOverlayContentWidthMeasureSpec);
             height = MeasureSpec.getSize(mOverlayContentHeightMeasureSpec);
         }
-        contentViewCore.onPhysicalBackingSizeChanged(width, height);
+        mCompositorView.onPhysicalBackingSizeChanged(
+                contentViewCore.getWebContents(), width, height);
     }
 
     /**

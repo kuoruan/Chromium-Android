@@ -5,7 +5,6 @@
 package org.chromium.chrome.browser.ntp.cards;
 
 import org.chromium.base.Callback;
-import org.chromium.chrome.browser.ntp.snippets.SnippetArticle;
 
 import java.util.Set;
 
@@ -52,13 +51,6 @@ public interface TreeNode {
     void onBindViewHolder(NewTabPageViewHolder holder, int position);
 
     /**
-     * @param position The position to query.
-     * @return The article at {@code position} under this subtree, or null if the item is not
-     * an article.
-     */
-    SnippetArticle getSuggestionAt(int position);
-
-    /**
      * @param position the position of an item to be dismissed.
      * @return the set of item positions that should be dismissed simultaneously when dismissing the
      *         item at the given {@code position} (including the position itself), or an empty set
@@ -74,5 +66,12 @@ public interface TreeNode {
      * it for accessibility purposes.
      * @see NewTabPageAdapter#dismissItem
      */
-    public void dismissItem(int position, Callback<String> itemRemovedCallback);
+    void dismissItem(int position, Callback<String> itemRemovedCallback);
+
+    /**
+     * Iterates over all items under this subtree and visits them with the given
+     * {@link NodeVisitor}.
+     * @param visitor The {@link NodeVisitor} with which to visit all items under this subtree.
+     */
+    void visitItems(NodeVisitor visitor);
 }

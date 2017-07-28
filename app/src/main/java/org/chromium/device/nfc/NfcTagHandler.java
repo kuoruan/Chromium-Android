@@ -48,8 +48,9 @@ public class NfcTagHandler {
      */
     private interface TagTechnologyHandler {
         public void write(NdefMessage message)
-                throws IOException, TagLostException, FormatException;
-        public NdefMessage read() throws IOException, TagLostException, FormatException;
+                throws IOException, TagLostException, FormatException, IllegalStateException;
+        public NdefMessage read()
+                throws IOException, TagLostException, FormatException, IllegalStateException;
     }
 
     /**
@@ -65,12 +66,13 @@ public class NfcTagHandler {
 
         @Override
         public void write(NdefMessage message)
-                throws IOException, TagLostException, FormatException {
+                throws IOException, TagLostException, FormatException, IllegalStateException {
             mNdef.writeNdefMessage(message);
         }
 
         @Override
-        public NdefMessage read() throws IOException, TagLostException, FormatException {
+        public NdefMessage read()
+                throws IOException, TagLostException, FormatException, IllegalStateException {
             return mNdef.getNdefMessage();
         }
     }
@@ -88,12 +90,12 @@ public class NfcTagHandler {
 
         @Override
         public void write(NdefMessage message)
-                throws IOException, TagLostException, FormatException {
+                throws IOException, TagLostException, FormatException, IllegalStateException {
             mNdefFormattable.format(message);
         }
 
         @Override
-        public NdefMessage read() throws IOException, TagLostException, FormatException {
+        public NdefMessage read() throws FormatException {
             return NfcTypeConverter.emptyNdefMessage();
         }
     }
@@ -130,11 +132,13 @@ public class NfcTagHandler {
     /**
      * Writes NdefMessage to NFC tag.
      */
-    public void write(NdefMessage message) throws IOException, TagLostException, FormatException {
+    public void write(NdefMessage message)
+            throws IOException, TagLostException, FormatException, IllegalStateException {
         mTechHandler.write(message);
     }
 
-    public NdefMessage read() throws IOException, TagLostException, FormatException {
+    public NdefMessage read()
+            throws IOException, TagLostException, FormatException, IllegalStateException {
         return mTechHandler.read();
     }
 

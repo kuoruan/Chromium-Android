@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.payments;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -29,6 +30,7 @@ public class PackageManagerDelegate {
      * @param packageName The package name of an installed application.
      * @return The package information of the installed application.
      */
+    @SuppressLint("PackageManagerGetSignatures")
     public PackageInfo getPackageInfoWithSignatures(String packageName) {
         try {
             return ContextUtils.getApplicationContext().getPackageManager().getPackageInfo(

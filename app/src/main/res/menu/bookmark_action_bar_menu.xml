@@ -9,7 +9,7 @@
     <group android:id="@+id/normal_menu_group" >
         <item
             android:id="@+id/edit_menu_id"
-            android:icon="@drawable/bookmark_edit_normal"
+            android:icon="@drawable/ic_edit_24dp"
             android:title="@string/bookmark_action_bar_edit_folder"
             android:visible="false"
             chrome:showAsAction="ifRoom"/>

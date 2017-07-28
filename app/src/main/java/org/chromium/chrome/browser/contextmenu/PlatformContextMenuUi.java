@@ -22,7 +22,7 @@ import java.util.List;
 public class PlatformContextMenuUi implements ContextMenuUi {
     private ContextMenu mMenu;
 
-    PlatformContextMenuUi(ContextMenu menu) {
+    public PlatformContextMenuUi(ContextMenu menu) {
         mMenu = menu;
     }
 
@@ -46,7 +46,7 @@ public class PlatformContextMenuUi implements ContextMenuUi {
             List<ContextMenuItem> group = itemGroups.get(groupIndex).second;
             for (int itemIndex = 0; itemIndex < group.size(); itemIndex++) {
                 ContextMenuItem item = group.get(itemIndex);
-                MenuItem menuItem = mMenu.add(0, item.menuId, 0, item.getString(activity));
+                MenuItem menuItem = mMenu.add(0, item.getMenuId(), 0, item.getTitle(activity));
                 menuItem.setOnMenuItemClickListener(menuListener);
             }
         }

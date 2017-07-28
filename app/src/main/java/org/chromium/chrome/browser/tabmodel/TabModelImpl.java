@@ -761,4 +761,12 @@ public class TabModelImpl extends TabModelJniBridge {
         // If there is only one tab, select it.
         if (getCount() == 1) setIndex(0, TabSelectionType.FROM_NEW);
     }
+
+    @Override
+    public void setIsPendingTabAdd(boolean isPendingTabAdd) {}
+
+    @Override
+    public boolean isPendingTabAdd() {
+        return false;
+    }
 }

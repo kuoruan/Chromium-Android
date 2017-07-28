@@ -10,24 +10,36 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.base.ApplicationStatus;
 import org.chromium.base.CommandLine;
 import org.chromium.base.FieldTrialList;
+import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.ChromeSwitches;
+import org.chromium.chrome.browser.IntentHandler;
+import org.chromium.chrome.browser.IntentHandler.ExternalAppId;
+import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.preferences.privacy.PrivacyPreferencesManager;
 import org.chromium.chrome.browser.services.AndroidEduAndChildAccountHelper;
 import org.chromium.chrome.browser.signin.SigninManager;
 import org.chromium.chrome.browser.util.FeatureUtilities;
+import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.components.signin.AccountManagerHelper;
 import org.chromium.components.signin.ChromeSigninController;
 
+import java.lang.ref.WeakReference;
+import java.util.List;
+
 /**
- * A helper to determine what should be the sequence of First Run Experience screens.
+ * A helper to determine what should be the sequence of First Run Experience screens, and whether
+ * it should be run.
+ *
  * Usage:
  * new FirstRunFlowSequencer(activity, launcherProvidedProperties) {
  *     override onFlowIsKnown
@@ -40,6 +52,7 @@ public abstract class FirstRunFlowSequencer  {
     public static final String SKIP_FIRST_RUN_EXPERIENCE = "skip_first_run_experience";
 
     private static final int FIRST_RUN_EXPERIENCE_REQUEST_CODE = 101;
+    private static final String TAG = "firstrun";
 
     private final Activity mActivity;
     private final Bundle mLaunchProperties;
@@ -124,6 +137,13 @@ public abstract class FirstRunFlowSequencer  {
     protected boolean shouldShowDataReductionPage() {
         return !DataReductionProxySettings.getInstance().isDataReductionProxyManaged()
                 && FieldTrialList.findFullName("DataReductionProxyFREPromo").startsWith("Enabled");
+    }
+
+    @VisibleForTesting
+    protected boolean shouldShowSearchEnginePage() {
+        int searchPromoType = LocaleManager.getInstance().getSearchEnginePromoShowType();
+        return searchPromoType == LocaleManager.SEARCH_ENGINE_PROMO_SHOW_NEW
+                || searchPromoType == LocaleManager.SEARCH_ENGINE_PROMO_SHOW_EXISTING;
     }
 
     @VisibleForTesting
@@ -218,6 +238,8 @@ public abstract class FirstRunFlowSequencer  {
 
         freProperties.putBoolean(
                 FirstRunActivity.SHOW_DATA_REDUCTION_PAGE, shouldShowDataReductionPage());
+        freProperties.putBoolean(
+                FirstRunActivity.SHOW_SEARCH_ENGINE_PAGE, shouldShowSearchEnginePage());
         freProperties.remove(FirstRunActivity.POST_NATIVE_SETUP_NEEDED);
     }
 
@@ -239,11 +261,12 @@ public abstract class FirstRunFlowSequencer  {
 
     /**
      * Checks if the First Run needs to be launched.
-     * @return The intent to launch the First Run Experience if necessary, or null.
      * @param context The context.
      * @param fromIntent The intent that was used to launch Chrome.
      * @param forLightweightFre Whether this is a check for the Lightweight First Run Experience.
+     * @return The intent to launch the First Run Experience if necessary, or null.
      */
+    @Nullable
     public static Intent checkIfFirstRunIsNecessary(
             Context context, Intent fromIntent, boolean forLightweightFre) {
         // If FRE is disabled (e.g. in tests), proceed directly to the intent handling.
@@ -306,15 +329,97 @@ public abstract class FirstRunFlowSequencer  {
      * Adds fromIntent as a PendingIntent to the firstRunIntent. This should be used to add a
      * PendingIntent that will be sent when first run is either completed or canceled.
      *
-     * @param context        The context.
-     * @param firstRunIntent The intent that will be used to start first run.
-     * @param fromIntent     The intent that was used to launch Chrome.
+     * @param caller            The context that corresponds to the Intent.
+     * @param firstRunIntent    The intent that will be used to start first run.
+     * @param fromIntent        The intent that was used to launch Chrome.
+     * @param requiresBroadcast Whether or not the fromIntent must be broadcasted.
      */
-    public static void addPendingIntent(Context context, Intent firstRunIntent, Intent fromIntent) {
-        PendingIntent pendingIntent = PendingIntent.getActivity(context,
-                FIRST_RUN_EXPERIENCE_REQUEST_CODE,
-                fromIntent,
-                fromIntent.getFlags());
+    private static void addPendingIntent(
+            Context caller, Intent firstRunIntent, Intent fromIntent, boolean requiresBroadcast) {
+        PendingIntent pendingIntent = null;
+        int pendingIntentFlags = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT;
+        if (requiresBroadcast) {
+            pendingIntent = PendingIntent.getBroadcast(
+                    caller, FIRST_RUN_EXPERIENCE_REQUEST_CODE, fromIntent, pendingIntentFlags);
+        } else {
+            pendingIntent = PendingIntent.getActivity(
+                    caller, FIRST_RUN_EXPERIENCE_REQUEST_CODE, fromIntent, pendingIntentFlags);
+        }
         firstRunIntent.putExtra(FirstRunActivity.EXTRA_CHROME_LAUNCH_INTENT, pendingIntent);
+    }
+
+    /**
+     * Tries to launch the First Run Experience.  If the Activity was launched with the wrong Intent
+     * flags, we first relaunch it to make sure it runs in its own task, then trigger First Run.
+     *
+     * @param caller            Activity instance that is checking if first run is necessary.
+     * @param intent            Intent used to launch the caller.
+     * @param requiresBroadcast Whether or not the Intent triggers a BroadcastReceiver.
+     * @return Whether startup must be blocked (e.g. via Activity#finish or dropping the Intent).
+     */
+    public static boolean launch(Context caller, Intent intent, boolean requiresBroadcast) {
+        // Check if the user just came back from the FRE.
+        boolean firstRunActivityResult = IntentUtils.safeGetBooleanExtra(
+                intent, FirstRunActivity.EXTRA_FIRST_RUN_ACTIVITY_RESULT, false);
+        boolean firstRunComplete = IntentUtils.safeGetBooleanExtra(
+                intent, FirstRunActivity.EXTRA_FIRST_RUN_COMPLETE, false);
+        if (firstRunActivityResult && !firstRunComplete) {
+            Log.d(TAG, "User failed to complete the FRE.  Aborting");
+            return true;
+        }
+
+        // Tries to launch the Generic First Run Experience for intent from GSA.
+        boolean showLightweightFre =
+                IntentHandler.determineExternalIntentSource(caller.getPackageName(), intent)
+                != ExternalAppId.GSA;
+
+        // Check if the user needs to go through First Run at all.
+        Intent freIntent = checkIfFirstRunIsNecessary(caller, intent, showLightweightFre);
+        if (freIntent == null) return false;
+
+        Log.d(TAG, "Redirecting user through FRE.");
+        if ((intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK) != 0) {
+            if (CommandLine.getInstance().hasSwitch(
+                        ChromeSwitches.ENABLE_LIGHTWEIGHT_FIRST_RUN_EXPERIENCE)) {
+                boolean isGenericFreActive = false;
+                List<WeakReference<Activity>> activities = ApplicationStatus.getRunningActivities();
+                for (WeakReference<Activity> weakActivity : activities) {
+                    Activity activity = weakActivity.get();
+                    if (activity == null) {
+                        continue;
+                    } else if (activity instanceof LightweightFirstRunActivity) {
+                        // A Generic or a new Lightweight First Run Experience will be launched
+                        // below, so finish the old Lightweight First Run Experience.
+                        activity.setResult(Activity.RESULT_CANCELED);
+                        activity.finish();
+                        continue;
+                    } else if (activity instanceof FirstRunActivity) {
+                        isGenericFreActive = true;
+                        continue;
+                    }
+                }
+
+                if (isGenericFreActive) {
+                    // Launch the Generic First Run Experience if it was previously active.
+                    freIntent = createGenericFirstRunIntent(
+                            caller, TextUtils.equals(intent.getAction(), Intent.ACTION_MAIN));
+                }
+            }
+
+            // Add a PendingIntent so that the intent used to launch Chrome will be resent when
+            // First Run is completed or canceled.
+            addPendingIntent(caller, freIntent, intent, requiresBroadcast);
+            freIntent.putExtra(FirstRunActivity.EXTRA_FINISH_ON_TOUCH_OUTSIDE, true);
+
+            if (!(caller instanceof Activity)) freIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            IntentUtils.safeStartActivity(caller, freIntent);
+        } else {
+            // First Run requires that the Intent contains NEW_TASK so that it doesn't sit on top
+            // of something else.
+            Intent newIntent = new Intent(intent);
+            newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            IntentUtils.safeStartActivity(caller, newIntent);
+        }
+        return true;
     }
 }

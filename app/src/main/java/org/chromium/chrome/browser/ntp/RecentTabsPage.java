@@ -20,6 +20,7 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.NativePage;
 import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.compositor.layouts.content.InvalidationAwareThumbnailProvider;
@@ -78,7 +79,7 @@ public class RecentTabsPage
      * @param activity The activity this view belongs to.
      * @param recentTabsManager The RecentTabsManager which provides the model data.
      */
-    public RecentTabsPage(Activity activity, RecentTabsManager recentTabsManager) {
+    public RecentTabsPage(ChromeActivity activity, RecentTabsManager recentTabsManager) {
         mActivity = activity;
         mRecentTabsManager = recentTabsManager;
 
@@ -100,6 +101,15 @@ public class RecentTabsPage
         mView.addOnAttachStateChangeListener(this);
         ApplicationStatus.registerStateListenerForActivity(this, activity);
         // {@link #mInForeground} will be updated once the view is attached to the window.
+
+        if (activity.getBottomSheet() != null) {
+            View recentTabsRoot = mView.findViewById(R.id.recent_tabs_root);
+            ApiCompatibilityUtils.setPaddingRelative(recentTabsRoot,
+                    ApiCompatibilityUtils.getPaddingStart(recentTabsRoot), 0,
+                    ApiCompatibilityUtils.getPaddingEnd(recentTabsRoot),
+                    activity.getResources().getDimensionPixelSize(
+                            R.dimen.bottom_control_container_height));
+        }
 
         onUpdated();
     }

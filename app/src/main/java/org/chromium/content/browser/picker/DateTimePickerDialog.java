@@ -6,8 +6,16 @@ package org.chromium.content.browser.picker;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.content.res.AssetManager;
+import android.content.res.Configuration;
+import android.content.res.Resources;
+import android.os.Build;
+import android.os.LocaleList;
+import android.support.annotation.NonNull;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.DatePicker;
@@ -20,7 +28,12 @@ import org.chromium.content.R;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.IllegalFormatConversionException;
+import java.util.Locale;
 import java.util.TimeZone;
+import java.util.regex.Pattern;
+
+import javax.annotation.CheckForNull;
 
 /**
  * A dialog that allows the user to choose a date and time. Shown for HTML form input elements
@@ -82,8 +95,9 @@ public class DateTimePickerDialog extends AlertDialog implements OnClickListener
         setIcon(0);
         setTitle(context.getText(R.string.date_time_picker_dialog_title));
 
+        Context dialogContext = getDialogContext(context);
         LayoutInflater inflater =
-                (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                (LayoutInflater) dialogContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View view = inflater.inflate(R.layout.date_time_picker_dialog, null);
         setView(view);
         mDatePicker = (DatePicker) view.findViewById(R.id.date_picker);
@@ -180,5 +194,73 @@ public class DateTimePickerDialog extends AlertDialog implements OnClickListener
     @SuppressWarnings("deprecation")
     private static int getMinute(TimePicker picker) {
         return picker.getCurrentMinute();
+    }
+
+    /**
+     * Wraps context with {@link WorkaroundContextForSamsungLDateTimeBug} instance if needed.
+     */
+    private static Context getDialogContext(Context context) {
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP
+                || Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP_MR1) {
+            return new WorkaroundContextForSamsungLDateTimeBug(context);
+        }
+
+        return context;
+    }
+
+    /**
+     * Workaround for Samsung Lollipop devices that may crash due to wrong string resource supplied
+     * to {@link android.widget.SimpleMonthView}'s content description.
+     */
+    private static class WorkaroundContextForSamsungLDateTimeBug extends ContextWrapper {
+        @CheckForNull
+        private Resources mWrappedResources;
+
+        private WorkaroundContextForSamsungLDateTimeBug(Context context) {
+            super(context);
+        }
+
+        @Override
+        public Resources getResources() {
+            if (mWrappedResources == null) {
+                Resources r = super.getResources();
+                mWrappedResources = new WrappedResources(
+                        r.getAssets(), r.getDisplayMetrics(), r.getConfiguration()) {};
+            }
+            return mWrappedResources;
+        }
+
+        private class WrappedResources extends Resources {
+            WrappedResources(AssetManager assets, DisplayMetrics displayMetrics,
+                    Configuration configuration) {
+                super(assets, displayMetrics, configuration);
+            }
+
+            @NonNull
+            @Override
+            public String getString(int id, Object... formatArgs) throws NotFoundException {
+                try {
+                    return super.getString(id, formatArgs);
+                } catch (IllegalFormatConversionException conversationException) {
+                    String template = super.getString(id);
+                    char conversion = conversationException.getConversion();
+                    // Trying to replace either all digit patterns (%d) or first one (%1$d).
+                    template = template.replaceAll(Pattern.quote("%" + conversion), "%s")
+                                       .replaceAll(Pattern.quote("%1$" + conversion), "%s");
+
+                    return String.format(getLocale(), template, formatArgs);
+                }
+            }
+
+            private Locale getLocale() {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    LocaleList locales = getConfiguration().getLocales();
+                    if (locales.size() > 0) {
+                        return locales.get(0);
+                    }
+                }
+                return getConfiguration().locale;
+            }
+        }
     }
 }

@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.crash;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Handler;
 
@@ -20,6 +21,7 @@ import org.chromium.net.NetworkChangeNotifier;
 class MinidumpUploadRetry implements NetworkChangeNotifier.ConnectionTypeObserver {
     private final Context mContext;
     private final CrashReportingPermissionManager mPermissionManager;
+    @SuppressLint("StaticFieldLeak")
     private static MinidumpUploadRetry sSingleton;
 
     private static class Scheduler implements Runnable {

@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.app.FragmentManager;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.os.SystemClock;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
@@ -21,6 +22,7 @@ import android.widget.TextView;
 import com.google.android.gms.common.ConnectionResult;
 
 import org.chromium.base.Callback;
+import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.externalauth.ExternalAuthUtils;
@@ -37,6 +39,7 @@ import org.chromium.ui.text.SpanApplier.SpanInfo;
 import org.chromium.ui.widget.ButtonCompat;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 // TODO(gogerald): refactor common part into one place after redesign all sign in screens.
 
@@ -56,26 +59,28 @@ public class AccountSigninView extends FrameLayout implements ProfileDownloader.
         /**
          * The user canceled account selection.
          */
-        public void onAccountSelectionCanceled();
+        void onAccountSelectionCanceled();
 
         /**
          * The user wants to make a new account.
          */
-        public void onNewAccount();
+        void onNewAccount();
 
         /**
          * The user completed the View and selected an account.
          * @param accountName The name of the account
+         * @param isDefaultAccount Whether selected account is a default one (first of all accounts)
          * @param settingsClicked If true, user requested to see their sync settings, if false
          *                        they just clicked Done.
          */
-        public void onAccountSelected(String accountName, boolean settingsClicked);
+        void onAccountSelected(
+                String accountName, boolean isDefaultAccount, boolean settingsClicked);
 
         /**
          * Failed to set the forced account because it wasn't found.
          * @param forcedAccountName The name of the forced-sign-in account
          */
-        public void onFailedToSetForcedAccount(String forcedAccountName);
+        void onFailedToSetForcedAccount(String forcedAccountName);
     }
 
     // TODO(peconn): Investigate expanding the Delegate to simplify the Listener implementations.
@@ -134,12 +139,17 @@ public class AccountSigninView extends FrameLayout implements ProfileDownloader.
     /**
      * Initializes this view with profile data cache, delegate and listener.
      * @param profileData ProfileDataCache that will be used to call to retrieve user account info.
+     * @param isChildAccount Whether this view is for a child account.
+     * @param forcedAccountName An account that should be force-selected.
      * @param delegate    The UI object creation delegate.
      * @param listener    The account selection event listener.
      */
-    public void init(ProfileDataCache profileData, Delegate delegate, Listener listener) {
+    public void init(ProfileDataCache profileData, boolean isChildAccount, String forcedAccountName,
+            Delegate delegate, Listener listener) {
         mProfileData = profileData;
-        mProfileData.setObserver(this);
+        mProfileData.addObserver(this);
+        mIsChildAccount = isChildAccount;
+        mForcedAccountName = TextUtils.isEmpty(forcedAccountName) ? null : forcedAccountName;
         mDelegate = delegate;
         mListener = listener;
         showSigninPage();
@@ -167,13 +177,6 @@ public class AccountSigninView extends FrameLayout implements ProfileDownloader.
 
         mSigninConfirmationView =
                 (AccountSigninConfirmationView) findViewById(R.id.signin_confirmation_view);
-        mSigninConfirmationView.setScrolledToBottomObserver(
-                new AccountSigninConfirmationView.Observer() {
-                    @Override
-                    public void onScrolledToBottom() {
-                        setUpMoreButtonVisible(false);
-                    }
-                });
         mSigninAccountImage = (ImageView) findViewById(R.id.signin_account_image);
         mSigninAccountName = (TextView) findViewById(R.id.signin_account_name);
         mSigninAccountEmail = (TextView) findViewById(R.id.signin_account_email);
@@ -223,31 +226,15 @@ public class AccountSigninView extends FrameLayout implements ProfileDownloader.
     }
 
     /**
-     * Refresh the list of available system accounts asynchronously. This is a convenience method
-     * that will ignore whether the accounts updating was actually successful.
+     * Refresh the list of available system accounts asynchronously.
      */
     private void updateAccounts() {
-        updateAccounts(new Callback<Boolean>() {
-            @Override
-            public void onResult(Boolean result) {}
-        });
-    }
-
-    /**
-     * Refresh the list of available system accounts asynchronously.
-     *
-     * @param callback Called once the accounts have been refreshed. Boolean indicates whether the
-     *                 accounts haven been successfully updated.
-     */
-    private void updateAccounts(final Callback<Boolean> callback) {
         if (mSignedIn || mProfileData == null) {
-            callback.onResult(false);
             return;
         }
 
         if (!checkGooglePlayServicesAvailable()) {
             setUpSigninButton(false);
-            callback.onResult(false);
             return;
         }
 
@@ -280,53 +267,46 @@ public class AccountSigninView extends FrameLayout implements ProfileDownloader.
 
                 mAccountNames = result;
 
-                int accountToSelect = 0;
+                int oldSelectedAccount = mSigninChooseView.getSelectedAccountPosition();
+                final int accountToSelect;
+                final boolean shouldJumpToConfirmationScreen;
                 if (isInForcedAccountMode()) {
                     accountToSelect = mAccountNames.indexOf(mForcedAccountName);
                     if (accountToSelect < 0) {
                         mListener.onFailedToSetForcedAccount(mForcedAccountName);
-                        callback.onResult(false);
                         return;
                     }
+                    shouldJumpToConfirmationScreen = true;
                 } else {
-                    accountToSelect = getIndexOfNewElement(
-                            oldAccountNames, mAccountNames,
-                            mSigninChooseView.getSelectedAccountPosition());
+                    AccountSelectionResult selection = selectAccountAfterAccountsUpdate(
+                            oldAccountNames, mAccountNames, oldSelectedAccount);
+                    accountToSelect = selection.getSelectedAccountIndex();
+                    shouldJumpToConfirmationScreen = selection.shouldJumpToConfirmationScreen();
                 }
 
-                int oldSelectedAccount = mSigninChooseView.getSelectedAccountPosition();
                 mSigninChooseView.updateAccounts(mAccountNames, accountToSelect, mProfileData);
-                if (mAccountNames.isEmpty()) {
-                    setUpSigninButton(false);
-                    callback.onResult(true);
-                    return;
-                }
-                setUpSigninButton(true);
+                setUpSigninButton(!mAccountNames.isEmpty());
+                mProfileData.update(mAccountNames);
 
-                mProfileData.update();
-
-                // Determine how the accounts have changed. Each list should only have unique
-                // elements.
-                if (oldAccountNames == null || oldAccountNames.isEmpty()) {
-                    callback.onResult(true);
-                    return;
-                }
-
-                if (!mAccountNames.get(accountToSelect).equals(
-                        oldAccountNames.get(oldSelectedAccount))) {
+                boolean selectedAccountChanged = oldAccountNames != null
+                        && !oldAccountNames.isEmpty()
+                        && (mAccountNames.isEmpty()
+                                   || mAccountNames.get(accountToSelect)
+                                              .equals(oldAccountNames.get(oldSelectedAccount)));
+                // There is a race condition where the FragmentManager can be null. This
+                // presumably happens once the AccountSigninView has been detached (the bug is
+                // triggered when Chrome is hidden). Since we are detached, the dialogs will
+                // have already been deleted so we don't need to cancel them.
+                // https://crbug.com/733117
+                if (selectedAccountChanged && mDelegate.getFragmentManager() != null) {
                     // Any dialogs that may have been showing are now invalid (they were created
                     // for the previously selected account).
-                    ConfirmSyncDataStateMachine
-                            .cancelAllDialogs(mDelegate.getFragmentManager());
-
-                    if (mAccountNames.containsAll(oldAccountNames)) {
-                        // A new account has been added and no accounts have been deleted. We
-                        // will have changed the account selection to the newly added account, so
-                        // shortcut to the confirm signin page.
-                        showConfirmSigninPageAccountTrackerServiceCheck();
-                    }
+                    ConfirmSyncDataStateMachine.cancelAllDialogs(mDelegate.getFragmentManager());
                 }
-                callback.onResult(true);
+
+                if (shouldJumpToConfirmationScreen) {
+                    showConfirmSigninPageAccountTrackerServiceCheck();
+                }
             }
         });
     }
@@ -346,26 +326,51 @@ public class AccountSigninView extends FrameLayout implements ProfileDownloader.
         return resultCode == ConnectionResult.SUCCESS;
     }
 
+    private static class AccountSelectionResult {
+        private final int mSelectedAccountIndex;
+        private final boolean mShouldJumpToConfirmationScreen;
+
+        AccountSelectionResult(int selectedAccountIndex, boolean shouldJumpToConfirmationScreen) {
+            mSelectedAccountIndex = selectedAccountIndex;
+            mShouldJumpToConfirmationScreen = shouldJumpToConfirmationScreen;
+        }
+
+        int getSelectedAccountIndex() {
+            return mSelectedAccountIndex;
+        }
+
+        boolean shouldJumpToConfirmationScreen() {
+            return mShouldJumpToConfirmationScreen;
+        }
+    }
+
     /**
-     * Attempt to select a new element that is in the new list, but not in the old list.
-     * If no such element exist and both the new and the old lists are the same then keep
-     * the selection. Otherwise select the first element.
+     * Determine what account should be selected after account list update. This function also
+     * decides whether AccountSigninView should jump to confirmation screen.
+     *
      * @param oldList Old list of user accounts.
      * @param newList New list of user accounts.
      * @param oldIndex Index of the selected account in the old list.
-     * @return The index of the new element, if it does not exist but lists are the same the
-     *         return the old index, otherwise return 0.
+     * @return {@link AccountSelectionResult} that incapsulates new index and jump/no jump flag.
      */
-    private static int getIndexOfNewElement(
+    private static AccountSelectionResult selectAccountAfterAccountsUpdate(
             List<String> oldList, List<String> newList, int oldIndex) {
-        if (oldList == null || newList == null) return 0;
-        if (oldList.size() == newList.size() && oldList.containsAll(newList)) return oldIndex;
-        if (oldList.size() + 1 == newList.size()) {
+        if (oldList == null || newList == null) return new AccountSelectionResult(0, false);
+        // Return the old index if nothing changed
+        if (oldList.size() == newList.size() && oldList.containsAll(newList)) {
+            return new AccountSelectionResult(oldIndex, false);
+        }
+        if (newList.containsAll(oldList)) {
+            // A new account(s) has been added and no accounts have been deleted. Select new account
+            // and jump to the confirmation screen if only one account was added.
+            boolean shouldJumpToConfirmationScreen = newList.size() == oldList.size() + 1;
             for (int i = 0; i < newList.size(); i++) {
-                if (!oldList.contains(newList.get(i))) return i;
+                if (!oldList.contains(newList.get(i))) {
+                    return new AccountSelectionResult(i, shouldJumpToConfirmationScreen);
+                }
             }
         }
-        return 0;
+        return new AccountSelectionResult(0, false);
     }
 
     @Override
@@ -386,16 +391,6 @@ public class AccountSigninView extends FrameLayout implements ProfileDownloader.
         String text = String.format(getResources().getString(R.string.signin_hi_name), name);
         mSigninAccountName.setText(text);
         mSigninAccountEmail.setText(selectedAccountEmail);
-    }
-
-    /**
-     * Updates the view to show that sign in has completed.
-     * This should only be used if the user is not currently signed in (eg on the First
-     * Run Experience).
-     */
-    public void switchToSignedMode() {
-        // TODO(peconn): Add a warning here
-        showConfirmSigninPage();
     }
 
     private void showSigninPage() {
@@ -423,7 +418,8 @@ public class AccountSigninView extends FrameLayout implements ProfileDownloader.
         NoUnderlineClickableSpan settingsSpan = new NoUnderlineClickableSpan() {
             @Override
             public void onClick(View widget) {
-                mListener.onAccountSelected(getSelectedAccountName(), true);
+                mListener.onAccountSelected(
+                        getSelectedAccountName(), isDefaultAccountSelected(), true);
                 RecordUserAction.record("Signin_Signin_WithAdvancedSyncSettings");
             }
         };
@@ -442,15 +438,16 @@ public class AccountSigninView extends FrameLayout implements ProfileDownloader.
 
         // Ensure that the AccountTrackerService has a fully up to date GAIA id <-> email mapping,
         // as this is needed for the previous account check.
+        final long seedingStartTime = SystemClock.elapsedRealtime();
         if (AccountTrackerService.get().checkAndSeedSystemAccounts()) {
-            showConfirmSigninPagePreviousAccountCheck();
+            showConfirmSigninPagePreviousAccountCheck(seedingStartTime);
         } else {
             AccountTrackerService.get().addSystemAccountsSeededListener(
                     new OnSystemAccountsSeededListener() {
                         @Override
                         public void onSystemAccountsSeedingComplete() {
                             AccountTrackerService.get().removeSystemAccountsSeededListener(this);
-                            showConfirmSigninPagePreviousAccountCheck();
+                            showConfirmSigninPagePreviousAccountCheck(seedingStartTime);
                         }
 
                         @Override
@@ -459,7 +456,9 @@ public class AccountSigninView extends FrameLayout implements ProfileDownloader.
         }
     }
 
-    private void showConfirmSigninPagePreviousAccountCheck() {
+    private void showConfirmSigninPagePreviousAccountCheck(long seedingStartTime) {
+        RecordHistogram.recordTimesHistogram("Signin.AndroidAccountSigninViewSeedingTime",
+                SystemClock.elapsedRealtime() - seedingStartTime, TimeUnit.MILLISECONDS);
         String accountName = getSelectedAccountName();
         ConfirmSyncDataStateMachine.run(PrefServiceBridge.getInstance().getSyncLastAccountName(),
                 accountName, ImportSyncType.PREVIOUS_DATA_FOUND,
@@ -540,7 +539,8 @@ public class AccountSigninView extends FrameLayout implements ProfileDownloader.
         mPositiveButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.onAccountSelected(getSelectedAccountName(), false);
+                mListener.onAccountSelected(
+                        getSelectedAccountName(), isDefaultAccountSelected(), false);
                 RecordUserAction.record("Signin_Signin_WithDefaultSyncSettings");
             }
         });
@@ -562,9 +562,16 @@ public class AccountSigninView extends FrameLayout implements ProfileDownloader.
                     RecordUserAction.record("Signin_MoreButton_Shown");
                 }
             });
+            mSigninConfirmationView.setObserver(new AccountSigninConfirmationView.Observer() {
+                @Override
+                public void onScrolledToBottom() {
+                    setUpMoreButtonVisible(false);
+                }
+            });
         } else {
             mPositiveButton.setVisibility(View.VISIBLE);
             mMoreButton.setVisibility(View.GONE);
+            mSigninConfirmationView.setObserver(null);
         }
     }
 
@@ -588,30 +595,6 @@ public class AccountSigninView extends FrameLayout implements ProfileDownloader.
     }
 
     /**
-     * @param isChildAccount Whether this view is for a child account.
-     */
-    public void setIsChildAccount(boolean isChildAccount) {
-        mIsChildAccount = isChildAccount;
-    }
-
-    /**
-     * Switches the view to "no choice, just a confirmation" forced-account mode.
-     * @param forcedAccountName An account that should be force-selected.
-     */
-    public void switchToForcedAccountMode(String forcedAccountName) {
-        mForcedAccountName = forcedAccountName;
-        updateAccounts(new Callback<Boolean>() {
-            @Override
-            public void onResult(Boolean result) {
-                if (!result) return;
-                assert TextUtils.equals(getSelectedAccountName(), mForcedAccountName);
-                switchToSignedMode();
-                assert TextUtils.equals(getSelectedAccountName(), mForcedAccountName);
-            }
-        });
-    }
-
-    /**
      * @return Whether the view is in signed in mode.
      */
     public boolean isSignedIn() {
@@ -627,5 +610,9 @@ public class AccountSigninView extends FrameLayout implements ProfileDownloader.
 
     private String getSelectedAccountName() {
         return mAccountNames.get(mSigninChooseView.getSelectedAccountPosition());
+    }
+
+    private boolean isDefaultAccountSelected() {
+        return mSigninChooseView.getSelectedAccountPosition() == 0;
     }
 }

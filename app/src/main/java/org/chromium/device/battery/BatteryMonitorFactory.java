@@ -4,9 +4,7 @@
 
 package org.chromium.device.battery;
 
-import android.content.Context;
-import android.util.Log;
-
+import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
 import org.chromium.device.battery.BatteryStatusManager.BatteryStatusCallback;
 import org.chromium.device.mojom.BatteryMonitor;
@@ -22,7 +20,7 @@ import java.util.List;
  * status changes.
  */
 public class BatteryMonitorFactory implements InterfaceFactory<BatteryMonitor> {
-    static final String TAG = "BatteryMonitorFactory";
+    private static final String TAG = "BattMonitorFactory";
 
     // Backing source of battery information.
     private final BatteryStatusManager mManager;
@@ -42,9 +40,8 @@ public class BatteryMonitorFactory implements InterfaceFactory<BatteryMonitor> {
         }
     };
 
-    public BatteryMonitorFactory(Context applicationContext) {
-        assert applicationContext != null;
-        mManager = new BatteryStatusManager(applicationContext, mCallback);
+    public BatteryMonitorFactory() {
+        mManager = new BatteryStatusManager(mCallback);
     }
 
     @Override

@@ -215,8 +215,7 @@ public class ContextualSearchQuickActionControl extends ViewResourceInflater {
 
         // On KitKat, calling PackageManager#resolveActivity() causes disk reads and writes.
         // Temporarily allow this while resolving the intent.
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-        StrictMode.allowThreadDiskWrites();
+        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
         try {
             possibleDefaultActivity = packageManager.resolveActivity(mIntent, 0);
         } finally {

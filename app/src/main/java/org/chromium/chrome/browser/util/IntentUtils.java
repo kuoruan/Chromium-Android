@@ -20,6 +20,7 @@ import android.support.v4.app.BundleCompat;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
@@ -260,6 +261,23 @@ public class IntentUtils {
         } catch (Throwable t) {
             // Catches un-parceling exceptions.
             Log.e(TAG, "getByteArrayExtra failed on intent " + intent);
+            return null;
+        }
+    }
+
+    /**
+     * Just like {@link Intent#getSerializableExtra(String)} but doesn't throw exceptions.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends Serializable> T safeGetSerializableExtra(Intent intent, String name) {
+        try {
+            return (T) intent.getSerializableExtra(name);
+        } catch (ClassCastException ex) {
+            Log.e(TAG, "Invalide class for Serializable: " + name, ex);
+            return null;
+        } catch (Throwable t) {
+            // Catches un-serializable exceptions.
+            Log.e(TAG, "getSerializableExtra failed on intent " + intent);
             return null;
         }
     }

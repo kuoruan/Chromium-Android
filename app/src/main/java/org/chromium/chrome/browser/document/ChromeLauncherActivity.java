@@ -20,7 +20,6 @@ import android.text.TextUtils;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ApplicationStatus;
-import org.chromium.base.CommandLine;
 import org.chromium.base.CommandLineInitUtil;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
@@ -31,7 +30,6 @@ import org.chromium.chrome.browser.ChromeApplication;
 import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.ChromeTabbedActivity;
 import org.chromium.chrome.browser.IntentHandler;
-import org.chromium.chrome.browser.IntentHandler.ExternalAppId;
 import org.chromium.chrome.browser.IntentHandler.TabOpenType;
 import org.chromium.chrome.browser.ShortcutHelper;
 import org.chromium.chrome.browser.UrlConstants;
@@ -39,9 +37,7 @@ import org.chromium.chrome.browser.WarmupManager;
 import org.chromium.chrome.browser.customtabs.CustomTabActivity;
 import org.chromium.chrome.browser.customtabs.CustomTabIntentDataProvider;
 import org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity;
-import org.chromium.chrome.browser.firstrun.FirstRunActivity;
 import org.chromium.chrome.browser.firstrun.FirstRunFlowSequencer;
-import org.chromium.chrome.browser.firstrun.LightweightFirstRunActivity;
 import org.chromium.chrome.browser.instantapps.InstantAppsHandler;
 import org.chromium.chrome.browser.metrics.MediaNotificationUma;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
@@ -59,7 +55,6 @@ import org.chromium.ui.widget.Toast;
 
 import java.lang.ref.WeakReference;
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -116,7 +111,6 @@ public class ChromeLauncherActivity extends Activity
     public void onCreate(Bundle savedInstanceState) {
         // Third-party code adds disk access to Activity.onCreate. http://crbug.com/619824
         StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-        TraceEvent.begin("ChromeLauncherActivity");
         TraceEvent.begin("ChromeLauncherActivity.onCreate");
         try {
             super.onCreate(savedInstanceState);
@@ -161,17 +155,6 @@ public class ChromeLauncherActivity extends Activity
         boolean incognito = intent.getBooleanExtra(
                 IntentHandler.EXTRA_OPEN_NEW_INCOGNITO_TAB, false);
 
-        // Check if this intent was fired at the end of the first run experience and return if
-        // first run was not successfully completed.
-        boolean firstRunActivityResult = IntentUtils.safeGetBooleanExtra(intent,
-                FirstRunActivity.EXTRA_FIRST_RUN_ACTIVITY_RESULT, false);
-        boolean firstRunComplete = IntentUtils.safeGetBooleanExtra(intent,
-                FirstRunActivity.EXTRA_FIRST_RUN_COMPLETE, false);
-        if (firstRunActivityResult && !firstRunComplete) {
-            finish();
-            return;
-        }
-
         // Check if a web search Intent is being handled.
         String url = IntentHandler.getUrlFromIntent(intent);
         if (url == null && tabId == Tab.INVALID_TAB_ID
@@ -205,30 +188,15 @@ public class ChromeLauncherActivity extends Activity
             return;
         }
 
-        // Check if we should launch the ChromeTabbedActivity.
-        if (!mIsCustomTabIntent && !FeatureUtilities.isDocumentMode(this)) {
-            boolean checkedFre = false;
-            if (CommandLine.getInstance().hasSwitch(
-                        ChromeSwitches.ENABLE_LIGHTWEIGHT_FIRST_RUN_EXPERIENCE)) {
-                // Launch the First Run Experience for VIEW Intents with URLs before launching
-                // ChromeTabbedActivity if necessary.
-                if (getIntent() != null && Intent.ACTION_VIEW.equals(getIntent().getAction())
-                        && IntentHandler.getUrlFromIntent(getIntent()) != null) {
-                    if (launchFirstRunExperience(true)) {
-                        finish();
-                        return;
-                    }
-                    checkedFre = true;
-                }
-            }
-            launchTabbedMode(checkedFre);
+        // Check if we should push the user through First Run.
+        if (FirstRunFlowSequencer.launch(this, getIntent(), false)) {
             finish();
             return;
         }
 
-        // Check if we should launch the FirstRunActivity.  This occurs after the check to launch
-        // ChromeTabbedActivity because ChromeTabbedActivity handles FRE in its own way.
-        if (launchFirstRunExperience(false)) {
+        // Check if we should launch the ChromeTabbedActivity.
+        if (!mIsCustomTabIntent && !FeatureUtilities.isDocumentMode(this)) {
+            launchTabbedMode(false);
             finish();
             return;
         }
@@ -252,12 +220,6 @@ public class ChromeLauncherActivity extends Activity
         Log.e(TAG, "User wasn't sent to another Activity.");
         assert false;
         ApiCompatibilityUtils.finishAndRemoveTask(this);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        TraceEvent.end("ChromeLauncherActivity");
     }
 
     @Override
@@ -449,8 +411,7 @@ public class ChromeLauncherActivity extends Activity
         }
 
         // This system call is often modified by OEMs and not actionable. http://crbug.com/619646.
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-        StrictMode.allowThreadDiskWrites();
+        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
         try {
             startActivity(newIntent);
         } catch (SecurityException ex) {
@@ -480,83 +441,6 @@ public class ChromeLauncherActivity extends Activity
             }
         }
         return false;
-    }
-
-    /**
-     * Tries to launch the First Run Experience.  If ChromeLauncherActivity is running with the
-     * wrong Intent flags, we instead relaunch ChromeLauncherActivity to make sure it runs in its
-     * own task, which then triggers First Run.
-     * @return Whether or not the First Run Experience needed to be shown.
-     * @param forTabbedMode Whether the First Run Experience is launched for tabbed mode.
-     */
-    private boolean launchFirstRunExperience(boolean forTabbedMode) {
-        // Tries to launch the Generic First Run Experience for intent from GSA.
-        boolean showLightweightFre =
-                IntentHandler.determineExternalIntentSource(this.getPackageName(), getIntent())
-                != ExternalAppId.GSA;
-        Intent freIntent = FirstRunFlowSequencer.checkIfFirstRunIsNecessary(
-                this, getIntent(), showLightweightFre);
-        if (freIntent == null) return false;
-
-        if ((getIntent().getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK) != 0) {
-            if (CommandLine.getInstance().hasSwitch(
-                        ChromeSwitches.ENABLE_LIGHTWEIGHT_FIRST_RUN_EXPERIENCE)) {
-                boolean isTabbedModeActive = false;
-                boolean isLightweightFreActive = false;
-                boolean isGenericFreActive = false;
-                List<WeakReference<Activity>> activities = ApplicationStatus.getRunningActivities();
-                for (WeakReference<Activity> weakActivity : activities) {
-                    Activity activity = weakActivity.get();
-                    if (activity == null) {
-                        continue;
-                    }
-
-                    if (activity instanceof ChromeTabbedActivity) {
-                        isTabbedModeActive = true;
-                        continue;
-                    }
-
-                    if (activity instanceof LightweightFirstRunActivity) {
-                        isLightweightFreActive = true;
-                        // A Generic or a new Lightweight First Run Experience will be launched
-                        // below, so finish the old Lightweight First Run Experience.
-                        activity.setResult(Activity.RESULT_CANCELED);
-                        activity.finish();
-                        continue;
-                    }
-
-                    if (activity instanceof FirstRunActivity) {
-                        isGenericFreActive = true;
-                        continue;
-                    }
-                }
-
-                if (forTabbedMode) {
-                    if (isTabbedModeActive || isLightweightFreActive || !showLightweightFre) {
-                        // Lets ChromeTabbedActivity checks and launches the Generic First Run
-                        // Experience.
-                        launchTabbedMode(false);
-                        finish();
-                        return true;
-                    }
-                } else if (isGenericFreActive) {
-                    // Launch the Generic First Run Experience if it is active previously.
-                    freIntent = FirstRunFlowSequencer.createGenericFirstRunIntent(
-                            this, TextUtils.equals(getIntent().getAction(), Intent.ACTION_MAIN));
-                }
-            }
-            // Add a PendingIntent so that the intent used to launch Chrome will be resent when
-            // first run is completed or canceled.
-            FirstRunFlowSequencer.addPendingIntent(this, freIntent, getIntent());
-            freIntent.putExtra(FirstRunActivity.EXTRA_FINISH_ON_TOUCH_OUTSIDE, !forTabbedMode);
-            startActivity(freIntent);
-        } else {
-            Intent newIntent = new Intent(getIntent());
-            newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(newIntent);
-        }
-        finish();
-        return true;
     }
 
     /**

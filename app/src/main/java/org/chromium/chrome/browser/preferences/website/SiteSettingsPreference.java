@@ -10,6 +10,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageView;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 
 /**
@@ -27,9 +28,9 @@ public class SiteSettingsPreference extends Preference {
     protected void onBindView(View view) {
         super.onBindView(view);
 
-        int padding = getContext().getResources().getDimensionPixelSize(
-                R.dimen.site_setttings_icon_padding);
+        int padding = getContext().getResources().getDimensionPixelSize(R.dimen.pref_icon_padding);
         ImageView icon = (ImageView) view.findViewById(android.R.id.icon);
-        icon.setPadding(padding, icon.getPaddingTop(), 0, icon.getPaddingBottom());
+        ApiCompatibilityUtils.setPaddingRelative(
+                icon, padding, icon.getPaddingTop(), 0, icon.getPaddingBottom());
     }
 }

@@ -18,7 +18,7 @@ import java.lang.annotation.RetentionPolicy;
 @IntDef({
     BrowsingDataType.HISTORY, BrowsingDataType.CACHE, BrowsingDataType.COOKIES,
     BrowsingDataType.PASSWORDS, BrowsingDataType.FORM_DATA, BrowsingDataType.BOOKMARKS,
-    BrowsingDataType.NUM_TYPES
+    BrowsingDataType.SITE_SETTINGS, BrowsingDataType.NUM_TYPES
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface BrowsingDataType {
@@ -28,5 +28,6 @@ public @interface BrowsingDataType {
   int PASSWORDS = 3;
   int FORM_DATA = 4;
   int BOOKMARKS = 5;
-  int NUM_TYPES = 6;
+  int SITE_SETTINGS = 6;
+  int NUM_TYPES = 7;
 }

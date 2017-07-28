@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.metrics;
 
 import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.webapk.lib.common.WebApkConstants;
 
 import java.util.concurrent.TimeUnit;
 
@@ -90,9 +91,33 @@ public class WebApkUma {
                 "WebApk.Install.GooglePlayInstallResult", result, GOOGLE_PLAY_INSTALL_RESULT_MAX);
     }
 
+    /**
+     * Records whether updating a WebAPK from Google Play succeeded. If not, records the reason
+     * that the update failed.
+     */
+    public static void recordGooglePlayUpdateResult(int result) {
+        assert result >= 0 && result < GOOGLE_PLAY_INSTALL_RESULT_MAX;
+        RecordHistogram.recordEnumeratedHistogram(
+                "WebApk.Update.GooglePlayUpdateResult", result, GOOGLE_PLAY_INSTALL_RESULT_MAX);
+    }
+
     /** Records the duration of a WebAPK session (from launch/foreground to background). */
     public static void recordWebApkSessionDuration(long duration) {
         RecordHistogram.recordLongTimesHistogram(
                 "WebApk.Session.TotalDuration", duration, TimeUnit.MILLISECONDS);
+    }
+
+    /** Records the amount of time that it takes to bind to the play install service. */
+    public static void recordGooglePlayBindDuration(long durationMs) {
+        RecordHistogram.recordTimesHistogram(
+                "WebApk.Install.GooglePlayBindDuration", durationMs, TimeUnit.MILLISECONDS);
+    }
+
+    /** Records the current Shell APK version. */
+    public static void recordShellApkVersion(int shellApkVersion, String packageName) {
+        String name = packageName.startsWith(WebApkConstants.WEBAPK_PACKAGE_PREFIX)
+                ? "WebApk.ShellApkVersion.BrowserApk"
+                : "WebApk.ShellApkVersion.UnboundApk";
+        RecordHistogram.recordSparseSlowlyHistogram(name, shellApkVersion);
     }
 }

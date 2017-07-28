@@ -10,5 +10,8 @@ public final class SyncConstants {
     public static final String CHROME_SYNC_OAUTH2_SCOPE =
             "https://www.googleapis.com/auth/chromesync";
 
+    // This should always have the same value as TabNodePool::kInvalidTabNodeID.
+    public static final int INVALID_TAB_NODE_ID = -1;
+
     private SyncConstants() {}
 }

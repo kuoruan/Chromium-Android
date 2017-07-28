@@ -5,13 +5,8 @@
 
 <!-- NOTES ON SPEC IMPLEMENTATION:
           +................................................................+
-     42dp | STRING TO SHOW                                             MIC |
+     48dp | STRING TO SHOW                                             MIC |
           +................................................................+
-
-     The microphone icon is supposed to be 24dp x 24dp.  To allow a bigger
-     touch target, we make it 42dp by adding 9dp of padding to each side.
-     Because there is supposed to be a 12dp in between the microphone and
-     the box, we use a total of 12dp for the end padding.
 -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -24,10 +19,13 @@
         android:gravity="center_vertical"
         android:orientation="horizontal" >
 
+    <!-- The 12dp padding on the left comes from the fact that the microphone is 24dp x 24dp,
+         and sits in a 48dp x 48dp box.  This means there's an implied 12dp of padding
+         around the entire microphone. -->
     <TextView
             android:id="@+id/title"
             android:layout_width="0dp"
-            android:layout_height="42dp"
+            android:layout_height="48dp"
             android:layout_weight="1"
             android:paddingStart="12dp"
             android:gravity="center_vertical"
@@ -38,15 +36,11 @@
 
     <ImageView
             android:id="@+id/microphone_icon"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
-            android:paddingTop="9dp"
-            android:paddingBottom="9dp"
-            android:paddingStart="9dp"
-            android:paddingEnd="12dp"
-            android:src="@drawable/infobar_microphone"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/btn_mic"
             android:tint="@color/light_normal_color"
-            android:contentDescription="@null"
-            android:scaleType="centerInside" />
+            android:scaleType="centerInside"
+            android:contentDescription="@string/accessibility_toolbar_btn_mic" />
 
 </LinearLayout>

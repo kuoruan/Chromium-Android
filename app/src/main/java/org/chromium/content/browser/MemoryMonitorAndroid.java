@@ -9,6 +9,7 @@ import android.content.ComponentCallbacks2;
 import android.content.Context;
 import android.content.res.Configuration;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -30,14 +31,14 @@ class MemoryMonitorAndroid {
      * Get the current MemoryInfo from ActivityManager and invoke the native
      * callback to populate the MemoryInfo.
      *
-     * @param context The context of the application.
      * @param outPtr A native output pointer to populate MemoryInfo. This is
      * passed back to the native callback.
      */
     @CalledByNative
-    private static void getMemoryInfo(Context context, long outPtr) {
-        ActivityManager am = (ActivityManager) context.getSystemService(
-                Context.ACTIVITY_SERVICE);
+    private static void getMemoryInfo(long outPtr) {
+        ActivityManager am =
+                (ActivityManager) ContextUtils.getApplicationContext().getSystemService(
+                        Context.ACTIVITY_SERVICE);
         try {
             am.getMemoryInfo(sMemoryInfo);
         } catch (RuntimeException e) {
@@ -59,10 +60,9 @@ class MemoryMonitorAndroid {
     /**
      * Register ComponentCallbacks2 to receive memory pressure signals.
      *
-     * @param context The context of the application.
      */
     @CalledByNative
-    private static void registerComponentCallbacks(Context context) {
+    private static void registerComponentCallbacks() {
         sCallbacks = new ComponentCallbacks2() {
                 @Override
                 public void onTrimMemory(int level) {
@@ -78,7 +78,7 @@ class MemoryMonitorAndroid {
                 public void onConfigurationChanged(Configuration config) {
                 }
             };
-        context.registerComponentCallbacks(sCallbacks);
+        ContextUtils.getApplicationContext().registerComponentCallbacks(sCallbacks);
     }
 
     private static native void nativeGetMemoryInfoCallback(

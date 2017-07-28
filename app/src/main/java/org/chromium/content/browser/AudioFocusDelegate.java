@@ -7,6 +7,7 @@ package org.chromium.content.browser;
 import android.content.Context;
 import android.media.AudioManager;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.CalledByNative;
@@ -27,7 +28,6 @@ import org.chromium.base.annotations.JNINamespace;
 public class AudioFocusDelegate implements AudioManager.OnAudioFocusChangeListener {
     private static final String TAG = "MediaSession";
 
-    private Context mContext;
     private int mFocusType;
     private boolean mIsDucking;
 
@@ -35,15 +35,13 @@ public class AudioFocusDelegate implements AudioManager.OnAudioFocusChangeListen
     // It will be set to 0 when the native AudioFocusDelegateAndroid object is destroyed.
     private long mNativeAudioFocusDelegateAndroid;
 
-    private AudioFocusDelegate(final Context context, long nativeAudioFocusDelegateAndroid) {
-        mContext = context;
+    private AudioFocusDelegate(long nativeAudioFocusDelegateAndroid) {
         mNativeAudioFocusDelegateAndroid = nativeAudioFocusDelegateAndroid;
     }
 
     @CalledByNative
-    private static AudioFocusDelegate create(
-            Context context, long nativeAudioFocusDelegateAndroid) {
-        return new AudioFocusDelegate(context, nativeAudioFocusDelegateAndroid);
+    private static AudioFocusDelegate create(long nativeAudioFocusDelegateAndroid) {
+        return new AudioFocusDelegate(nativeAudioFocusDelegateAndroid);
     }
 
     @CalledByNative
@@ -64,12 +62,14 @@ public class AudioFocusDelegate implements AudioManager.OnAudioFocusChangeListen
     @CalledByNative
     private void abandonAudioFocus() {
         assert ThreadUtils.runningOnUiThread();
-        AudioManager am = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+        AudioManager am = (AudioManager) ContextUtils.getApplicationContext().getSystemService(
+                Context.AUDIO_SERVICE);
         am.abandonAudioFocus(this);
     }
 
     private boolean requestAudioFocusInternal() {
-        AudioManager am = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+        AudioManager am = (AudioManager) ContextUtils.getApplicationContext().getSystemService(
+                Context.AUDIO_SERVICE);
 
         int result = am.requestAudioFocus(this, AudioManager.STREAM_MUSIC, mFocusType);
         return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;

@@ -51,11 +51,14 @@
         android:orientation="horizontal">
 
         <!-- The following attributes:
-        - LinearLayout's android:layout_width="wrap_content"
-        - TextView's android:layout_width="0dp"
-        - TextView's android:layout_weight="1"
-        All ensure that when the TextView is long and the ImageView is showing, the TextView starts
-        to ellipsize before pushing the ImageView off the screen. See: https://crbug.com/678568 -->
+             - LinearLayout's android:layout_width="wrap_content"
+             - article_publisher's android:layout_width="0dp"
+             - article_publisher's android:layout_weight="1"
+             - article_publisher's android:ellipsize="end"
+             - article_age's android:layout_width="wrap_content"
+             All ensure that when the publisher string is long, it starts to ellipsize before
+             pushing the article age string and the offline icon off the screen.
+             See: https://crbug.com/625775 and https://crbug.com/678568 -->
         <TextView
             android:id="@+id/article_publisher"
             android:layout_width="0dp"
@@ -64,14 +67,23 @@
             android:drawablePadding="8dp"
             android:paddingStart="4dp"
             android:maxLines="1"
+            android:singleLine="true"
             android:ellipsize="end"
             android:textSize="12sp"
             android:textColor="@color/snippets_publisher_name_color"
             android:textDirection="locale" />
+        <TextView
+            android:id="@+id/article_age"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:textSize="12sp"
+            android:textColor="@color/snippets_publisher_name_color"
+            android:textDirection="locale"/>
 
         <!-- We can't add this ImageView as a CompoundDrawable to the TextView because we want to
-        have different paddings between the favicon (which is a compound drawable on the TextView)
-        and the offline icon. -->
+             have different paddings between the favicon (which is a compound drawable on the
+             TextView) and the offline icon. -->
         <org.chromium.chrome.browser.widget.TintedImageView
             android:id="@+id/offline_icon"
             android:layout_width="@dimen/snippets_offline_icon_size"
@@ -81,7 +93,7 @@
             android:src="@drawable/offline_pin_round"
             android:contentDescription="@string/accessibility_ntp_offline_badge"
             android:visibility="gone"
-            chrome:tint="#000" />
+            chrome:chrometint="#000" />
 
     </LinearLayout>
 

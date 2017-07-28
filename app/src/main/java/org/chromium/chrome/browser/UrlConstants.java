@@ -50,6 +50,7 @@ public class UrlConstants {
     public static final String RECENT_TABS_HOST = "recent-tabs";
     public static final String RECENT_TABS_URL = "chrome-native://recent-tabs/";
 
+    // TODO(dbeam): do we need both HISTORY_URL and NATIVE_HISTORY_URL?
     public static final String HISTORY_HOST = "history";
     public static final String HISTORY_URL = "chrome://history/";
     public static final String NATIVE_HISTORY_URL = "chrome-native://history/";

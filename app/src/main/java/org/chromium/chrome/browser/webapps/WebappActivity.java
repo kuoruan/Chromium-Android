@@ -132,9 +132,6 @@ public class WebappActivity extends FullScreenActivity {
         getActivityTab().addObserver(createTabObserver());
         getActivityTab().getTabWebContentsDelegateAndroid().setDisplayMode(
                 mWebappInfo.displayMode());
-        if (mWebappInfo.displayMode() == WebDisplayMode.kFullscreen) {
-            enterImmersiveMode();
-        }
     }
 
     @Override
@@ -208,8 +205,7 @@ public class WebappActivity extends FullScreenActivity {
         File tabFile = new File(activityDirectory, tabFileName);
 
         // Temporarily allowing disk access while fixing. TODO: http://crbug.com/525781
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-        StrictMode.allowThreadDiskWrites();
+        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
         try {
             long time = SystemClock.elapsedRealtime();
             TabState.saveState(tabFile, getActivityTab().getState(), false);
@@ -266,7 +262,7 @@ public class WebappActivity extends FullScreenActivity {
             });
         }
 
-        asyncSetImmersive(ENTER_IMMERSIVE_MODE_DELAY_MILLIS);
+        asyncSetImmersive(0);
     }
 
     /**
@@ -310,6 +306,14 @@ public class WebappActivity extends FullScreenActivity {
         }
     }
 
+    @Override
+    protected void recordIntentToCreationTime(long timeMs) {
+        super.recordIntentToCreationTime(timeMs);
+
+        RecordHistogram.recordTimesHistogram(
+                "MobileStartup.IntentToCreationTime.WebApp", timeMs, TimeUnit.MILLISECONDS);
+    }
+
     protected void onDeferredStartupWithStorage(WebappDataStorage storage) {
         updateStorage(storage);
     }
@@ -349,6 +353,10 @@ public class WebappActivity extends FullScreenActivity {
     }
 
     private void initializeWebappData() {
+        if (mWebappInfo.displayMode() == WebDisplayMode.FULLSCREEN) {
+            enterImmersiveMode();
+        }
+
         final int backgroundColor = ColorUtils.getOpaqueColor(mWebappInfo.backgroundColor(
                 ApiCompatibilityUtils.getColor(getResources(), R.color.webapp_default_bg)));
 
@@ -473,13 +481,13 @@ public class WebappActivity extends FullScreenActivity {
         return new ChromeFullscreenManager(this, false) {
             @Override
             public void setPersistentFullscreenMode(boolean enabled) {
-                if (mWebappInfo.displayMode() == WebDisplayMode.kFullscreen) return;
+                if (mWebappInfo.displayMode() == WebDisplayMode.FULLSCREEN) return;
                 super.setPersistentFullscreenMode(enabled);
             }
 
             @Override
             public boolean getPersistentFullscreenMode() {
-                if (mWebappInfo.displayMode() == WebDisplayMode.kFullscreen) return false;
+                if (mWebappInfo.displayMode() == WebDisplayMode.FULLSCREEN) return false;
                 return super.getPersistentFullscreenMode();
             }
         };
@@ -612,8 +620,13 @@ public class WebappActivity extends FullScreenActivity {
 
         int taskDescriptionColor =
                 ApiCompatibilityUtils.getColor(getResources(), R.color.default_primary_color);
+
+        // Don't use the brand color for the status bars if we're in display: fullscreen. This works
+        // around an issue where the status bars go transparent and can't be seen on top of the page
+        // content when users swipe them in or they appear because the on-screen keyboard was
+        // triggered.
         int statusBarColor = Color.BLACK;
-        if (mBrandColor != null) {
+        if (mBrandColor != null && mWebappInfo.displayMode() != WebDisplayMode.FULLSCREEN) {
             taskDescriptionColor = mBrandColor;
             statusBarColor = ColorUtils.getDarkenedColorForStatusBar(mBrandColor);
         }

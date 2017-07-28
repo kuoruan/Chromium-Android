@@ -78,6 +78,11 @@ public interface LocationBar extends UrlBarDelegate {
     void setToolbarDataProvider(ToolbarDataProvider model);
 
     /**
+     * Gets the {@link ToolbarDataProvider} to be used for accessing {@link Toolbar} state.
+     */
+    ToolbarDataProvider getToolbarDataProvider();
+
+    /**
      * Set the bottom sheet for Chrome Home.
      * @param sheet The bottom sheet for Chrome Home if it exists.
      */

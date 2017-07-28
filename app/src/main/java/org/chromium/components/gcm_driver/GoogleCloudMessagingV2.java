@@ -5,7 +5,6 @@
 package org.chromium.components.gcm_driver;
 
 import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,6 +12,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.PackageUtils;
 
 import java.io.IOException;
@@ -42,13 +42,10 @@ public class GoogleCloudMessagingV2 implements GoogleCloudMessagingSubscriber {
     private static final String EXTRA_SUBTYPE = "subtype";
     private static final String EXTRA_SUBSCRIPTION = "subscription";
 
-    private Context mContext;
     private PendingIntent mAppPendingIntent;
     private final Object mAppPendingIntentLock = new Object();
 
-    public GoogleCloudMessagingV2(Context context) {
-        mContext = context;
-    }
+    public GoogleCloudMessagingV2() {}
 
     @Override
     public String subscribe(String source, String subtype, @Nullable Bundle data)
@@ -134,7 +131,9 @@ public class GoogleCloudMessagingV2 implements GoogleCloudMessagingSubscriber {
         if (Looper.getMainLooper() == Looper.myLooper()) {
             throw new IOException(ERROR_MAIN_THREAD);
         }
-        if (PackageUtils.getPackageVersion(mContext, GOOGLE_PLAY_SERVICES_PACKAGE) < 0) {
+        if (PackageUtils.getPackageVersion(
+                    ContextUtils.getApplicationContext(), GOOGLE_PLAY_SERVICES_PACKAGE)
+                < 0) {
             throw new IOException("Google Play Services missing");
         }
         if (data == null) {
@@ -156,7 +155,7 @@ public class GoogleCloudMessagingV2 implements GoogleCloudMessagingSubscriber {
         setPackageNameExtra(intent);
         intent.putExtras(data);
         intent.putExtra(EXTRA_MESSENGER, responseMessenger);
-        mContext.startService(intent);
+        ContextUtils.getApplicationContext().startService(intent);
         try {
             return responseResult.poll(REGISTER_TIMEOUT, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
@@ -189,7 +188,7 @@ public class GoogleCloudMessagingV2 implements GoogleCloudMessagingSubscriber {
                 // Fill in the package, to prevent the intent from being used.
                 target.setPackage("com.google.example.invalidpackage");
                 mAppPendingIntent = PendingIntent.getBroadcast(
-                    mContext.getApplicationContext(), 0, target, 0);
+                        ContextUtils.getApplicationContext(), 0, target, 0);
             }
         }
         intent.putExtra(INTENT_PARAM_APP, mAppPendingIntent);

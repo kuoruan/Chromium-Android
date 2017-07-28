@@ -4,8 +4,9 @@
 
 package org.chromium.device.geolocation;
 
-import android.content.Context;
+import android.location.Location;
 
+import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
@@ -24,16 +25,18 @@ import java.util.concurrent.FutureTask;
 @MainDex
 @VisibleForTesting
 public class LocationProviderAdapter {
+    private static final String TAG = "cr_LocationProvider";
+
     // Delegate handling the real work in the main thread.
     private LocationProviderFactory.LocationProvider mImpl;
 
-    private LocationProviderAdapter(Context context) {
-        mImpl = LocationProviderFactory.create(context);
+    private LocationProviderAdapter() {
+        mImpl = LocationProviderFactory.create();
     }
 
     @CalledByNative
-    public static LocationProviderAdapter create(Context context) {
-        return new LocationProviderAdapter(context);
+    public static LocationProviderAdapter create() {
+        return new LocationProviderAdapter();
     }
 
     /**
@@ -75,14 +78,15 @@ public class LocationProviderAdapter {
         return mImpl.isRunning();
     }
 
-    public static void newLocationAvailable(double latitude, double longitude, double timestamp,
-            boolean hasAltitude, double altitude, boolean hasAccuracy, double accuracy,
-            boolean hasHeading, double heading, boolean hasSpeed, double speed) {
-        nativeNewLocationAvailable(latitude, longitude, timestamp, hasAltitude, altitude,
-                hasAccuracy, accuracy, hasHeading, heading, hasSpeed, speed);
+    public static void onNewLocationAvailable(Location location) {
+        nativeNewLocationAvailable(location.getLatitude(), location.getLongitude(),
+                location.getTime() / 1000.0, location.hasAltitude(), location.getAltitude(),
+                location.hasAccuracy(), location.getAccuracy(), location.hasBearing(),
+                location.getBearing(), location.hasSpeed(), location.getSpeed());
     }
 
     public static void newErrorAvailable(String message) {
+        Log.e(TAG, "newErrorAvailable %s", message);
         nativeNewErrorAvailable(message);
     }
 

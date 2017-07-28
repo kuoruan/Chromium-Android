@@ -17,12 +17,13 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class Origin extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 32;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
+    private static final int STRUCT_SIZE = 40;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public String scheme;
     public String host;
     public short port;
+    public String suborigin;
     public boolean unique;
 
     private Origin(int version) {
@@ -76,6 +77,10 @@ public final class Origin extends org.chromium.mojo.bindings.Struct {
                 
                 result.unique = decoder0.readBoolean(26, 0);
             }
+            if (mainDataHeader.elementsOrVersion >= 0) {
+                
+                result.suborigin = decoder0.readString(32, false);
+            }
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -94,6 +99,8 @@ public final class Origin extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(port, 24);
         
         encoder0.encode(unique, 26, 0);
+        
+        encoder0.encode(suborigin, 32, false);
     }
 
     /**
@@ -114,6 +121,8 @@ public final class Origin extends org.chromium.mojo.bindings.Struct {
             return false;
         if (this.port!= other.port)
             return false;
+        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.suborigin, other.suborigin))
+            return false;
         if (this.unique!= other.unique)
             return false;
         return true;
@@ -129,6 +138,7 @@ public final class Origin extends org.chromium.mojo.bindings.Struct {
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(scheme);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(host);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(port);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(suborigin);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(unique);
         return result;
     }

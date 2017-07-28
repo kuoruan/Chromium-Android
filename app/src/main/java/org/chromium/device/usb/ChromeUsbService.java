@@ -13,6 +13,7 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -30,22 +31,21 @@ final class ChromeUsbService {
     private static final String TAG = "Usb";
     private static final String ACTION_USB_PERMISSION = "org.chromium.device.ACTION_USB_PERMISSION";
 
-    Context mContext;
     long mUsbServiceAndroid;
     UsbManager mUsbManager;
     BroadcastReceiver mUsbDeviceReceiver;
 
-    private ChromeUsbService(Context context, long usbServiceAndroid) {
-        mContext = context;
+    private ChromeUsbService(long usbServiceAndroid) {
         mUsbServiceAndroid = usbServiceAndroid;
-        mUsbManager = (UsbManager) mContext.getSystemService(Context.USB_SERVICE);
+        mUsbManager = (UsbManager) ContextUtils.getApplicationContext().getSystemService(
+                Context.USB_SERVICE);
         registerForUsbDeviceIntentBroadcast();
         Log.v(TAG, "ChromeUsbService created.");
     }
 
     @CalledByNative
-    private static ChromeUsbService create(Context context, long usbServiceAndroid) {
-        return new ChromeUsbService(context, usbServiceAndroid);
+    private static ChromeUsbService create(long usbServiceAndroid) {
+        return new ChromeUsbService(usbServiceAndroid);
     }
 
     @CalledByNative
@@ -66,8 +66,8 @@ final class ChromeUsbService {
         if (mUsbManager.hasPermission(device)) {
             nativeDevicePermissionRequestComplete(mUsbServiceAndroid, device.getDeviceId(), true);
         } else {
-            PendingIntent intent =
-                    PendingIntent.getBroadcast(mContext, 0, new Intent(ACTION_USB_PERMISSION), 0);
+            PendingIntent intent = PendingIntent.getBroadcast(
+                    ContextUtils.getApplicationContext(), 0, new Intent(ACTION_USB_PERMISSION), 0);
             mUsbManager.requestPermission(wrapper.getDevice(), intent);
         }
     }
@@ -104,11 +104,11 @@ final class ChromeUsbService {
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         filter.addAction(ACTION_USB_PERMISSION);
-        mContext.registerReceiver(mUsbDeviceReceiver, filter);
+        ContextUtils.getApplicationContext().registerReceiver(mUsbDeviceReceiver, filter);
     }
 
     private void unregisterForUsbDeviceIntentBroadcast() {
-        mContext.unregisterReceiver(mUsbDeviceReceiver);
+        ContextUtils.getApplicationContext().unregisterReceiver(mUsbDeviceReceiver);
         mUsbDeviceReceiver = null;
     }
 }

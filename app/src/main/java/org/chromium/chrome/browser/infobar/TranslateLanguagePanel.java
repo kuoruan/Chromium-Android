@@ -175,7 +175,7 @@ public class TranslateLanguagePanel
      */
     private ArrayList<SpinnerLanguageElement> createSpinnerLanguages(String avoidCode) {
         ArrayList<SpinnerLanguageElement> result = new ArrayList<SpinnerLanguageElement>();
-        for (TranslateOptions.TranslateLanguagePair language : mSessionOptions.allLanguages()) {
+        for (TranslateOptions.TranslateLanguageData language : mSessionOptions.allLanguages()) {
             if (!language.mLanguageCode.equals(avoidCode)) {
                 result.add(new SpinnerLanguageElement(
                         language.mLanguageRepresentation, language.mLanguageCode));

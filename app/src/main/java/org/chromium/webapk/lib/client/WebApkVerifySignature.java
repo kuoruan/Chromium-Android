@@ -35,6 +35,8 @@ public class WebApkVerifySignature {
     public static final int ERROR_INCORRECT_SIGNATURE = 4;
     public static final int ERROR_SIGNATURE_NOT_FOUND = 5;
     public static final int ERROR_TOO_MANY_META_INF_FILES = 6;
+    public static final int ERROR_BAD_BLANK_SPACE = 7;
+    public static final int ERROR_BAD_V2_SIGNING_BLOCK = 8;
 
     private static final String TAG = "WebApkVerifySignature";
 
@@ -47,6 +49,9 @@ public class WebApkVerifySignature {
     /** Local File Header Signature. */
     private static final long LFH_SIG = 0x04034b50;
 
+    /** Data descriptor Signature. */
+    private static final long DATA_DESCRIPTOR_SIG = 0x08074b50;
+
     /** Minimum end-of-central-directory size in bytes, including variable length file comment. */
     private static final int MIN_EOCD_SIZE = 22;
 
@@ -58,6 +63,12 @@ public class WebApkVerifySignature {
 
     /** The signature algorithm used (must also match with HASH). */
     private static final String SIGNING_ALGORITHM = "SHA256withECDSA";
+
+    /** Maximum expected V2 signing block size */
+    private static final int MAX_V2_SIGNING_BLOCK_SIZE = 8192;
+
+    /** The magic string for v2 signing. */
+    private static final String V2_SIGNING_MAGIC = "APK Sig Block 42";
 
     /**
      * The pattern we look for in the APK/zip comment for signing key.
@@ -82,6 +93,9 @@ public class WebApkVerifySignature {
 
     /** Byte offset from the start where the central directory is found. */
     private int mCentralDirOffset;
+
+    /** Byte offset from the start where the EOCD is found. */
+    private int mEndOfCentralDirOffset;
 
     /** The zip archive comment as a UTF-8 string. */
     private String mComment;
@@ -254,6 +268,8 @@ public class WebApkVerifySignature {
         if (start < 0) {
             return ERROR_BAD_APK;
         }
+        mEndOfCentralDirOffset = start;
+
         //  Signature(4), Disk Number(2), Start disk number(2), Records on this disk (2)
         seek(start + 10);
         mRecordCount = read2(); // Number of Central Directory records
@@ -261,6 +277,10 @@ public class WebApkVerifySignature {
         mCentralDirOffset = read4(); // as bytes from start of file.
         int commentLength = read2();
         mComment = readString(commentLength);
+        if (mBuffer.position() < mBuffer.limit()) {
+            // We should have read every byte to the end of the file by this time.
+            return ERROR_BAD_BLANK_SPACE;
+        }
         return ERROR_OK;
     }
 
@@ -299,18 +319,31 @@ public class WebApkVerifySignature {
             mBlocks.add(new Block(filename, offset, compressedSize));
         }
 
+        if (mBuffer.position() != mEndOfCentralDirOffset) {
+            // At this point we should be exactly at the EOCD start.
+            return ERROR_BAD_BLANK_SPACE;
+        }
+
+        boolean hasBlockAtStart = false;
+        long positionOfLastByteOfLastBlock = 0;
+
         // Read the 'local file header' block to the size of the header in bytes.
         for (Block block : mBlocks) {
             seek(block.mPosition);
+            if (block.mPosition == 0) {
+                hasBlockAtStart = true;
+            }
             int signature = read4();
             if (signature != LFH_SIG) {
                 Log.d(TAG, "LFH Signature missing");
                 return ERROR_BAD_APK;
             }
-            // ReaderVersion(2), Flags(2), CompressionMethod(2),
-            // ModifiedTime (2), ModifiedDate(2), CRC32(4), CompressedSize(4),
-            // UncompressedSize(4) = 22 bytes
-            seekDelta(22);
+            // ReaderVersion(2)
+            seekDelta(2);
+            int flags = read2();
+            // CompressionMethod(2), ModifiedTime (2), ModifiedDate(2), CRC32(4), CompressedSize(4),
+            // UncompressedSize(4) = 18 bytes
+            seekDelta(18);
             int fileNameLength = read2();
             int extraFieldLength = read2();
             if (extraFieldLength > MAX_EXTRA_LENGTH) {
@@ -319,6 +352,39 @@ public class WebApkVerifySignature {
 
             block.mHeaderSize =
                     (mBuffer.position() - block.mPosition) + fileNameLength + extraFieldLength;
+
+            int lastByte = block.mPosition + block.mHeaderSize + block.mCompressedSize;
+            if ((flags & 0x8) != 0) {
+                seek(lastByte);
+                if (read4() == DATA_DESCRIPTOR_SIG) {
+                    // Data descriptor, style 1: sig(4), crc-32(4), compressed size(4),
+                    // uncompressed size(4) = 16 bytes
+                    lastByte += 16;
+                } else {
+                    // Data descriptor, style 2: crc-32(4), compressed size(4),
+                    // uncompressed size(4) = 12 bytes
+                    lastByte += 12;
+                }
+            }
+            if (lastByte > positionOfLastByteOfLastBlock) {
+                positionOfLastByteOfLastBlock = lastByte;
+            }
+        }
+        if (!hasBlockAtStart) {
+            return ERROR_BAD_BLANK_SPACE;
+        }
+        if (positionOfLastByteOfLastBlock != mCentralDirOffset) {
+            seek(mCentralDirOffset - V2_SIGNING_MAGIC.length());
+            String magic = readString(V2_SIGNING_MAGIC.length());
+            if (V2_SIGNING_MAGIC.equals(magic)) {
+                // Only if we have a v2 signature do we allow medium sized gap between the last
+                // block and the start of the central directory.
+                if (mCentralDirOffset - positionOfLastByteOfLastBlock > MAX_V2_SIGNING_BLOCK_SIZE) {
+                    return ERROR_BAD_V2_SIGNING_BLOCK;
+                }
+            } else {
+                return ERROR_BAD_BLANK_SPACE;
+            }
         }
         return ERROR_OK;
     }

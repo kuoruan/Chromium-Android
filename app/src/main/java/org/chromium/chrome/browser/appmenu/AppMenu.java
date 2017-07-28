@@ -7,12 +7,15 @@ package org.chromium.chrome.browser.appmenu;
 import android.animation.Animator;
 import android.animation.Animator.AnimatorListener;
 import android.animation.AnimatorSet;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
 import android.support.annotation.IdRes;
+import android.support.annotation.Nullable;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -32,9 +35,12 @@ import android.widget.PopupWindow.OnDismissListener;
 
 import org.chromium.base.AnimationFrameTimeHistogram;
 import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.base.ContextUtils;
 import org.chromium.base.SysUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.omaha.UpdateMenuItemHelper;
+import org.chromium.chrome.browser.util.AccessibilityUtil;
+import org.chromium.chrome.browser.widget.PulseDrawable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,9 +60,12 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
     private final int mItemDividerHeight;
     private final int mVerticalFadeDistance;
     private final int mNegativeSoftwareVerticalOffset;
+    private final int[] mTempLocation;
+
     private ListPopupWindow mPopup;
     private AppMenuAdapter mAdapter;
     private AppMenuHandler mHandler;
+    private View mPromptView;
     private int mCurrentScreenRotation = -1;
     private boolean mIsByPermanentButton;
     private AnimatorSet mMenuItemEnterAnimator;
@@ -86,6 +95,8 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
         mNegativeSoftwareVerticalOffset =
                 res.getDimensionPixelSize(R.dimen.menu_negative_software_vertical_offset);
         mVerticalFadeDistance = res.getDimensionPixelSize(R.dimen.menu_vertical_fade_distance);
+
+        mTempLocation = new int[2];
     }
 
     /**
@@ -144,6 +155,7 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
      *                            {@code 0} is dedicated to custom menu items and can be declared by
      *                            external apps.
      */
+    @SuppressLint("ResourceType")
     void show(Context context, View anchorView, boolean isByPermanentButton, int screenRotation,
             Rect visibleDisplayFrame, int screenHeight, @IdRes int footerResourceId,
             Integer highlightedItemId) {
@@ -155,11 +167,15 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
         int footerHeight = 0;
         if (footerResourceId != 0) {
             mPopup.setPromptPosition(ListPopupWindow.POSITION_PROMPT_BELOW);
-            View promptView = LayoutInflater.from(context).inflate(footerResourceId, null);
-            mPopup.setPromptView(promptView);
+            // TODO(crbug.com/635567): Fix lint error properly.
+            mPromptView = LayoutInflater.from(context).inflate(footerResourceId, null);
+            mPopup.setPromptView(mPromptView);
             int measureSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
-            promptView.measure(measureSpec, measureSpec);
-            footerHeight = promptView.getMeasuredHeight();
+            mPromptView.measure(measureSpec, measureSpec);
+            footerHeight = mPromptView.getMeasuredHeight();
+            highlightViewInFooter(highlightedItemId, mPromptView);
+        } else {
+            mPromptView = null;
         }
         mPopup.setOnDismissListener(new OnDismissListener() {
             @Override
@@ -260,16 +276,59 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
         }
     }
 
+    /**
+     * Highlights the given {@code footerView} or one of its child. If {@code highlightedItemId} is
+     * same as the id of the {@code footerView}, the entire {@code footerView} will be highlighted.
+     * Otherwise it will only use a circle pulse around the individual child view.
+     * @param highlightedItemId The resource id of the view that should be highlighted. Can be
+     *                          {@code null} if no item should be highlighted.
+     * @param footerView        The root view in which the {@code highlightedItemId} is to be found.
+     */
+    private void highlightViewInFooter(Integer highlightedItemId, View footerView) {
+        if (highlightedItemId == null) return;
+
+        View view = footerView.findViewById(highlightedItemId);
+        if (view == null) return;
+
+        PulseDrawable pulse = view == footerView
+                ? PulseDrawable.createHighlight()
+                : PulseDrawable.createCircle(footerView.getContext());
+
+        Drawable newBackground = pulse;
+        Drawable currentBackground = view.getBackground();
+        if (currentBackground != null && currentBackground.getConstantState() != null) {
+            Drawable backgroundClone =
+                    currentBackground.getConstantState().newDrawable(footerView.getResources());
+            newBackground = new LayerDrawable(new Drawable[] {pulse, backgroundClone});
+        }
+
+        view.setBackground(newBackground);
+        pulse.start();
+    }
+
+    /**
+     * @return The prompt view for the menu or null if one has not been set.
+     */
+    @Nullable
+    public View getPromptView() {
+        return mPromptView;
+    }
+
+    private boolean isAnchorAtBottom(View anchorView, Rect visibleDisplayFrame) {
+        anchorView.getLocationOnScreen(mTempLocation);
+        return (mTempLocation[1] + anchorView.getHeight()) >= visibleDisplayFrame.bottom;
+    }
+
     private void setPopupOffset(
             ListPopupWindow popup, int screenRotation, Rect appRect, Rect padding) {
-        int[] anchorLocation = new int[2];
-        popup.getAnchorView().getLocationInWindow(anchorLocation);
+        popup.getAnchorView().getLocationInWindow(mTempLocation);
+        int anchorViewX = mTempLocation[0];
         int anchorHeight = popup.getAnchorView().getHeight();
 
         // If we have a hardware menu button, locate the app menu closer to the estimated
         // hardware menu button location.
         if (mIsByPermanentButton) {
-            int horizontalOffset = -anchorLocation[0];
+            int horizontalOffset = -anchorViewX;
             switch (screenRotation) {
                 case Surface.ROTATION_0:
                 case Surface.ROTATION_180:
@@ -289,12 +348,8 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
             // padding of the background.
             popup.setVerticalOffset(-padding.bottom);
         } else {
-            int[] anchorLocationScreen = new int[2];
-            popup.getAnchorView().getLocationOnScreen(anchorLocationScreen);
-            boolean isAnchorViewAtBottomOfApp =
-                    (anchorLocationScreen[1] + anchorHeight) == appRect.bottom;
-
-            if (isAnchorViewAtBottomOfApp && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            boolean anchorAtBottom = isAnchorAtBottom(mPopup.getAnchorView(), appRect);
+            if (anchorAtBottom && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 // When the anchor view is at the bottom of the screen on Android N+, the menu
                 // must be shifted down by the height of the anchor view in order to be displayed
                 // over and above it. The framework's PopupWindow positioning changed between
@@ -322,6 +377,33 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
             dismiss();
             mHandler.onOptionsItemSelected(menuItem);
         }
+    }
+
+    /**
+     * Handles long clicks on image buttons on the AppMenu popup.
+     * @param menuItem The menu item in the popup that was long clicked.
+     * @param view The anchor view of the menu item.
+     */
+    boolean onItemLongClick(MenuItem menuItem, View view) {
+        if (!menuItem.isEnabled()) return false;
+
+        String description = null;
+        Context context = ContextUtils.getApplicationContext();
+        Resources resources = context.getResources();
+        final int itemId = menuItem.getItemId();
+
+        if (itemId == R.id.forward_menu_id) {
+            description = resources.getString(R.string.menu_forward);
+        } else if (itemId == R.id.bookmark_this_page_id) {
+            description = resources.getString(R.string.menu_bookmark);
+        } else if (itemId == R.id.offline_page_id) {
+            description = resources.getString(R.string.menu_download);
+        } else if (itemId == R.id.info_menu_id) {
+            description = resources.getString(R.string.menu_page_info);
+        } else if (itemId == R.id.reload_menu_id) {
+            description = resources.getString(R.string.menu_refresh);
+        }
+        return AccessibilityUtil.showAccessibilityToast(context, view, description);
     }
 
     @Override
@@ -386,17 +468,25 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
             int screenHeight, Rect padding, int footerHeight) {
         assert mPopup.getAnchorView() != null;
         View anchorView = mPopup.getAnchorView();
-        int[] anchorViewLocation = new int[2];
-        anchorView.getLocationInWindow(anchorViewLocation);
-        anchorViewLocation[1] -= appDimensions.top;
+        anchorView.getLocationInWindow(mTempLocation);
+        int anchorViewY = mTempLocation[1] - appDimensions.top;
+
+        // The framework's PopupWindow positioning changed between N and M. Pre-N, increasing the
+        // height here causes the menu to be cut-off in landscape mode. See crbug.com/722105.
+        // TODO(twellington): stop using ListPopupWindow for the app menu.
+        if (isAnchorAtBottom(anchorView, appDimensions)
+                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            anchorViewY += mPopup.getAnchorView().getHeight();
+        }
+
         int anchorViewImpactHeight = mIsByPermanentButton ? anchorView.getHeight() : 0;
 
         // Set appDimensions.height() for abnormal anchorViewLocation.
-        if (anchorViewLocation[1] > screenHeight) {
-            anchorViewLocation[1] = appDimensions.height();
+        if (anchorViewY > screenHeight) {
+            anchorViewY = appDimensions.height();
         }
-        int availableScreenSpace = Math.max(anchorViewLocation[1],
-                appDimensions.height() - anchorViewLocation[1] - anchorViewImpactHeight);
+        int availableScreenSpace = Math.max(
+                anchorViewY, appDimensions.height() - anchorViewY - anchorViewImpactHeight);
 
         availableScreenSpace -= padding.bottom + footerHeight;
         if (mIsByPermanentButton) availableScreenSpace -= padding.top;

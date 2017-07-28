@@ -22,16 +22,14 @@ public class VirtualDisplayAndroid extends DisplayAndroid {
      * @param other Sets the properties of this display to those of the other display.
      */
     public void setTo(DisplayAndroid other) {
-        update(new Point(other.getDisplayWidth(), other.getDisplayHeight()),
-                new Point(other.getPhysicalDisplayWidth(), other.getPhysicalDisplayHeight()),
-                other.getDipScale(), other.getBitsPerPixel(),
-                other.getBitsPerComponent(), other.getRotation());
+        update(new Point(other.getDisplayWidth(), other.getDisplayHeight()), other.getDipScale(),
+                other.getBitsPerPixel(), other.getBitsPerComponent(), other.getRotation());
     }
 
     @Override
-    public void update(Point size, Point physicalSize, Float dipScale, Integer bitsPerPixel,
-            Integer bitsPerComponent, Integer rotation) {
-        super.update(size, physicalSize, dipScale, bitsPerPixel, bitsPerComponent, rotation);
+    public void update(Point size, Float dipScale, Integer bitsPerPixel, Integer bitsPerComponent,
+            Integer rotation) {
+        super.update(size, dipScale, bitsPerPixel, bitsPerComponent, rotation);
     }
 
     /**

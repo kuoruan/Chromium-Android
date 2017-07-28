@@ -18,7 +18,6 @@ import org.chromium.base.Log;
 import org.chromium.base.StreamUtil;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordHistogram;
-import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.UrlConstants;
@@ -77,7 +76,8 @@ public class OfflinePageUtils {
     // Used instead of the constant so tests can override the value.
     private static int sSnackbarDurationMs = DEFAULT_SNACKBAR_DURATION_MS;
 
-    private static OfflinePageUtils sInstance;
+    /** Instance carrying actual implementation of utility methods. */
+    private static Internal sInstance;
 
     private static File sOfflineSharingDirectory;
 
@@ -87,6 +87,88 @@ public class OfflinePageUtils {
      * that it can be destroyed when the ChromeActivity gets a new TabModelSelector.
      */
     private static Map<ChromeActivity, RecentTabTracker> sTabModelObservers = new HashMap<>();
+
+    /**
+     * Interface for implementation of offline page utilities, that can be implemented for testing.
+     * We are using an internal interface, so that instance methods can have the same names as
+     * static methods.
+     */
+    @VisibleForTesting
+    interface Internal {
+        /** Returns offline page bridge for specified profile. */
+        OfflinePageBridge getOfflinePageBridge(Profile profile);
+
+        /** Returns whether the network is connected. */
+        boolean isConnected();
+
+        /**
+         * Checks if an offline page is shown for the tab.
+         * @param tab The tab to be reloaded.
+         * @return True if the offline page is opened.
+         */
+        boolean isOfflinePage(Tab tab);
+
+        /**
+         * Returns whether the tab is showing offline preview.
+         * @param tab The current tab.
+         */
+        boolean isShowingOfflinePreview(Tab tab);
+
+        /**
+         * Shows the "reload" snackbar for the given tab.
+         * @param context The application context.
+         * @param snackbarManager Class that shows the snackbar.
+         * @param snackbarController Class to control the snackbar.
+         * @param tabId Id of a tab that the snackbar is related to.
+         */
+        void showReloadSnackbar(Context context, SnackbarManager snackbarManager,
+                final SnackbarController snackbarController, int tabId);
+    }
+
+    private static class OfflinePageUtilsImpl implements Internal {
+        @Override
+        public OfflinePageBridge getOfflinePageBridge(Profile profile) {
+            return OfflinePageBridge.getForProfile(profile);
+        }
+
+        @Override
+        public boolean isConnected() {
+            return NetworkChangeNotifier.isOnline();
+        }
+
+        @Override
+        public boolean isOfflinePage(Tab tab) {
+            WebContents webContents = tab.getWebContents();
+            if (webContents == null) return false;
+            OfflinePageBridge offlinePageBridge =
+                    getInstance().getOfflinePageBridge(tab.getProfile());
+            if (offlinePageBridge == null) return false;
+            return offlinePageBridge.isOfflinePage(webContents);
+        }
+
+        @Override
+        public boolean isShowingOfflinePreview(Tab tab) {
+            OfflinePageBridge offlinePageBridge = getOfflinePageBridge(tab.getProfile());
+            if (offlinePageBridge == null) return false;
+            return offlinePageBridge.isShowingOfflinePreview(tab.getWebContents());
+        }
+
+        @Override
+        public void showReloadSnackbar(Context context, SnackbarManager snackbarManager,
+                final SnackbarController snackbarController, int tabId) {
+            if (tabId == Tab.INVALID_TAB_ID) return;
+
+            Log.d(TAG, "showReloadSnackbar called with controller " + snackbarController);
+            Snackbar snackbar =
+                    Snackbar.make(context.getString(R.string.offline_pages_viewing_offline_page),
+                                    snackbarController, Snackbar.TYPE_ACTION,
+                                    Snackbar.UMA_OFFLINE_PAGE_RELOAD)
+                            .setSingleLine(false)
+                            .setAction(context.getString(R.string.reload), tabId);
+            snackbar.setDuration(sSnackbarDurationMs);
+            snackbarManager.showSnackbar(snackbar);
+        }
+    }
 
     /**
      * Contains values from the histogram enum OfflinePagesTabRestoreType used for reporting the
@@ -108,9 +190,9 @@ public class OfflinePageUtils {
         public static final int COUNT = 10;
     }
 
-    private static OfflinePageUtils getInstance() {
+    private static Internal getInstance() {
         if (sInstance == null) {
-            sInstance = new OfflinePageUtils();
+            sInstance = new OfflinePageUtilsImpl();
         }
         return sInstance;
     }
@@ -129,11 +211,9 @@ public class OfflinePageUtils {
         return Environment.getDataDirectory().getTotalSpace();
     }
 
-    /**
-     * Returns true if the network is connected.
-     */
+    /** Returns whether the network is connected. */
     public static boolean isConnected() {
-        return NetworkChangeNotifier.isOnline();
+        return getInstance().isConnected();
     }
 
     /*
@@ -196,81 +276,27 @@ public class OfflinePageUtils {
 
     /**
      * Shows the snackbar for the current tab to provide offline specific information if needed.
-     * @param activity The activity owning the tab.
      * @param tab The current tab.
      */
-    public static void showOfflineSnackbarIfNecessary(ChromeActivity activity, Tab tab) {
-        if (OfflinePageTabObserver.getInstance() == null
-                || !OfflinePageTabObserver.getInstance().isCurrentContext(
-                           activity.getBaseContext())) {
-            SnackbarController snackbarController =
-                    createReloadSnackbarController(activity.getTabModelSelector());
-            OfflinePageTabObserver.init(activity.getBaseContext(),
-                    activity.getTabModelSelector().getModel(false), activity.getSnackbarManager(),
-                    snackbarController);
-        }
-
-        showOfflineSnackbarIfNecessary(tab);
-    }
-
-    /**
-     * Shows the snackbar for the current tab to provide offline specific information if needed.
-     * This method is used by testing for dependency injecting a snackbar controller.
-     * @param context android context
-     * @param snackbarManager The snackbar manager to show and dismiss snackbars.
-     * @param tab The current tab.
-     * @param snackbarController The snackbar controller to control snackbar behavior.
-     */
-    static void showOfflineSnackbarIfNecessary(Tab tab) {
+    public static void showOfflineSnackbarIfNecessary(Tab tab) {
         // Set up the tab observer to watch for the tab being shown (not hidden) and a valid
         // connection. When both conditions are met a snackbar is shown.
         OfflinePageTabObserver.addObserverForTab(tab);
     }
 
+    protected void showReloadSnackbarInternal(Context context, SnackbarManager snackbarManager,
+            final SnackbarController snackbarController, int tabId) {}
+
     /**
      * Shows the "reload" snackbar for the given tab.
-     * @param activity The activity owning the tab.
-     * @param snackbarController Class to show the snackbar.
+     * @param context The application context.
+     * @param snackbarManager Class that shows the snackbar.
+     * @param snackbarController Class to control the snackbar.
+     * @param tabId Id of a tab that the snackbar is related to.
      */
     public static void showReloadSnackbar(Context context, SnackbarManager snackbarManager,
             final SnackbarController snackbarController, int tabId) {
-        if (tabId == Tab.INVALID_TAB_ID) return;
-
-        Log.d(TAG, "showReloadSnackbar called with controller " + snackbarController);
-        Snackbar snackbar =
-                Snackbar.make(context.getString(R.string.offline_pages_viewing_offline_page),
-                        snackbarController, Snackbar.TYPE_ACTION, Snackbar.UMA_OFFLINE_PAGE_RELOAD)
-                        .setSingleLine(false).setAction(context.getString(R.string.reload), tabId);
-        snackbar.setDuration(sSnackbarDurationMs);
-        snackbarManager.showSnackbar(snackbar);
-    }
-
-    /**
-     * Gets a snackbar controller that we can use to show our snackbar.
-     * @param tabModelSelector used to retrieve a tab by ID
-     */
-    private static SnackbarController createReloadSnackbarController(
-            final TabModelSelector tabModelSelector) {
-        Log.d(TAG, "building snackbar controller");
-
-        return new SnackbarController() {
-            @Override
-            public void onAction(Object actionData) {
-                assert actionData != null;
-                int tabId = (int) actionData;
-                RecordUserAction.record("OfflinePages.ReloadButtonClicked");
-                Tab foundTab = tabModelSelector.getTabById(tabId);
-                if (foundTab == null) return;
-                // Delegates to Tab to reload the page. Tab will send the correct header in order to
-                // load the right page.
-                foundTab.reload();
-            }
-
-            @Override
-            public void onDismissNoAction(Object actionData) {
-                RecordUserAction.record("OfflinePages.ReloadButtonNotClicked");
-            }
-        };
+        getInstance().showReloadSnackbar(context, snackbarManager, snackbarController, tabId);
     }
 
     /**
@@ -334,7 +360,7 @@ public class OfflinePageUtils {
             return;
         }
 
-        OfflinePageItem offlinePage = currentTab.getOfflinePage();
+        OfflinePageItem offlinePage = offlinePageBridge.getOfflinePage(currentTab.getWebContents());
         if (offlinePage != null) {
             // If we're currently on offline page get the saved file directly.
             prepareFileAndShare(shareDirectly, saveLastUsed, mainActivity, title, text,
@@ -609,9 +635,29 @@ public class OfflinePageUtils {
      * @param tab The current tab.
      */
     public static boolean isShowingOfflinePreview(Tab tab) {
+        return getInstance().isShowingOfflinePreview(tab);
+    }
+
+    /**
+     * Checks if an offline page is shown for the tab.
+     * @param tab The tab to be reloaded.
+     * @return True if the offline page is opened.
+     */
+    public static boolean isOfflinePage(Tab tab) {
+        return getInstance().isOfflinePage(tab);
+    }
+
+    /**
+     * Retrieves the offline page that is shown for the tab.
+     * @param tab The tab to be reloaded.
+     * @return The offline page if tab currently displays it, null otherwise.
+     */
+    public static OfflinePageItem getOfflinePage(Tab tab) {
+        WebContents webContents = tab.getWebContents();
+        if (webContents == null) return null;
         OfflinePageBridge offlinePageBridge = getInstance().getOfflinePageBridge(tab.getProfile());
-        if (offlinePageBridge == null) return false;
-        return offlinePageBridge.isShowingOfflinePreview(tab.getWebContents());
+        if (offlinePageBridge == null) return null;
+        return offlinePageBridge.getOfflinePage(webContents);
     }
 
     /**
@@ -640,10 +686,6 @@ public class OfflinePageUtils {
         // Extra headers are not read in loadUrl, but verbatim headers are.
         params.setVerbatimHeaders(params.getExtraHeadersString());
         tab.loadUrl(params);
-    }
-
-    protected OfflinePageBridge getOfflinePageBridge(Profile profile) {
-        return OfflinePageBridge.getForProfile(profile);
     }
 
     /**
@@ -749,7 +791,7 @@ public class OfflinePageUtils {
             // We first compute the bitwise tab restore context.
             int tabRestoreContext = 0;
             if (isConnected()) tabRestoreContext |= BIT_ONLINE;
-            OfflinePageItem page = tab.getOfflinePage();
+            OfflinePageItem page = getOfflinePage(tab);
             if (page != null) {
                 tabRestoreContext |= BIT_OFFLINE_PAGE;
                 if (page.getClientId().getNamespace().equals(OfflinePageBridge.LAST_N_NAMESPACE)) {
@@ -817,7 +859,7 @@ public class OfflinePageUtils {
     }
 
     @VisibleForTesting
-    static void setInstanceForTesting(OfflinePageUtils instance) {
+    static void setInstanceForTesting(Internal instance) {
         sInstance = instance;
     }
 

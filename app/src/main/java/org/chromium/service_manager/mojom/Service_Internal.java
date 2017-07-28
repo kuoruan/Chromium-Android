@@ -58,12 +58,12 @@ class Service_Internal {
 
         @Override
         public void onStart(
-ServiceInfo info, 
+Identity identity, 
 OnStartResponse callback) {
 
             ServiceOnStartParams _message = new ServiceOnStartParams();
 
-            _message.info = info;
+            _message.identity = identity;
 
 
             getProxyHandler().getMessageReceiver().acceptWithResponder(
@@ -80,12 +80,12 @@ OnStartResponse callback) {
 
         @Override
         public void onBindInterface(
-ServiceInfo sourceInfo, String interfaceName, org.chromium.mojo.system.MessagePipeHandle interfacePipe, 
+BindSourceInfo source, String interfaceName, org.chromium.mojo.system.MessagePipeHandle interfacePipe, 
 OnBindInterfaceResponse callback) {
 
             ServiceOnBindInterfaceParams _message = new ServiceOnBindInterfaceParams();
 
-            _message.sourceInfo = sourceInfo;
+            _message.source = source;
 
             _message.interfaceName = interfaceName;
 
@@ -167,7 +167,7 @@ OnBindInterfaceResponse callback) {
                         ServiceOnStartParams data =
                                 ServiceOnStartParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().onStart(data.info, new ServiceOnStartResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        getImpl().onStart(data.identity, new ServiceOnStartResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
             
@@ -182,7 +182,7 @@ OnBindInterfaceResponse callback) {
                         ServiceOnBindInterfaceParams data =
                                 ServiceOnBindInterfaceParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().onBindInterface(data.sourceInfo, data.interfaceName, data.interfacePipe, new ServiceOnBindInterfaceResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        getImpl().onBindInterface(data.source, data.interfaceName, data.interfacePipe, new ServiceOnBindInterfaceResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
             
@@ -204,7 +204,7 @@ OnBindInterfaceResponse callback) {
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public ServiceInfo info;
+        public Identity identity;
     
         private ServiceOnStartParams(int version) {
             super(STRUCT_SIZE, version);
@@ -244,7 +244,7 @@ OnBindInterfaceResponse callback) {
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                    result.info = ServiceInfo.decode(decoder1);
+                    result.identity = Identity.decode(decoder1);
                 }
             } finally {
                 decoder0.decreaseStackDepth();
@@ -257,7 +257,7 @@ OnBindInterfaceResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(info, 8, false);
+            encoder0.encode(identity, 8, false);
         }
     
         /**
@@ -272,7 +272,7 @@ OnBindInterfaceResponse callback) {
             if (getClass() != object.getClass())
                 return false;
             ServiceOnStartParams other = (ServiceOnStartParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.info, other.info))
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.identity, other.identity))
                 return false;
             return true;
         }
@@ -284,7 +284,7 @@ OnBindInterfaceResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(info);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(identity);
             return result;
         }
     }
@@ -462,7 +462,7 @@ OnBindInterfaceResponse callback) {
         private static final int STRUCT_SIZE = 32;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public ServiceInfo sourceInfo;
+        public BindSourceInfo source;
         public String interfaceName;
         public org.chromium.mojo.system.MessagePipeHandle interfacePipe;
     
@@ -505,7 +505,7 @@ OnBindInterfaceResponse callback) {
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                    result.sourceInfo = ServiceInfo.decode(decoder1);
+                    result.source = BindSourceInfo.decode(decoder1);
                 }
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
@@ -526,7 +526,7 @@ OnBindInterfaceResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(sourceInfo, 8, false);
+            encoder0.encode(source, 8, false);
             
             encoder0.encode(interfaceName, 16, false);
             
@@ -545,7 +545,7 @@ OnBindInterfaceResponse callback) {
             if (getClass() != object.getClass())
                 return false;
             ServiceOnBindInterfaceParams other = (ServiceOnBindInterfaceParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sourceInfo, other.sourceInfo))
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.source, other.source))
                 return false;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.interfaceName, other.interfaceName))
                 return false;
@@ -561,7 +561,7 @@ OnBindInterfaceResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sourceInfo);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(source);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(interfaceName);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(interfacePipe);
             return result;

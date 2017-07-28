@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser;
 
+import android.support.annotation.Nullable;
+
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.content_public.browser.LoadUrlParams;
 
@@ -37,9 +39,11 @@ public interface NativePageHost {
 
     /**
      * Get the currently active tab. This may be the tab that is displaying the native page or the
-     * tab behind the bottom sheet (if enabled).
+     * tab behind the bottom sheet (if enabled). If the bottom sheet is open and displaying the
+     * NTP UI, then the active tab will be null.
      * @return The active tab.
      */
+    @Nullable
     Tab getActiveTab();
 
     /** @return whether the hosted native page is currently visible. */

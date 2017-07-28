@@ -65,7 +65,7 @@ class CompositorSurfaceManager implements SurfaceHolder.Callback2 {
         public SurfaceState(Context context, int format, SurfaceHolder.Callback2 callback) {
             surfaceView = new SurfaceView(context);
             surfaceView.setZOrderMediaOverlay(true);
-            surfaceView.setVisibility(View.VISIBLE);
+            surfaceView.setVisibility(View.INVISIBLE);
             surfaceHolder().setFormat(format);
             surfaceHolder().addCallback(callback);
 
@@ -187,8 +187,8 @@ class CompositorSurfaceManager implements SurfaceHolder.Callback2 {
 
         // See if we're expecting a surfaceChanged.  If not, then send a synthetic one.
         if (mOwnedByClient.format != PixelFormat.UNKNOWN) {
-            mClient.surfaceChanged(mOwnedByClient.surfaceHolder(), mOwnedByClient.width,
-                    mOwnedByClient.height, mOwnedByClient.format);
+            mClient.surfaceChanged(mOwnedByClient.surfaceHolder(), mOwnedByClient.format,
+                    mOwnedByClient.width, mOwnedByClient.height);
         }
     }
 

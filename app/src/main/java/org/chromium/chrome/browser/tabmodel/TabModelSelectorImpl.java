@@ -337,7 +337,7 @@ public class TabModelSelectorImpl extends TabModelSelectorBase implements TabMod
             TabModelImpl.startTabSwitchLatencyTiming(type);
         }
         if (mVisibleTab != null && mVisibleTab != tab && !mVisibleTab.needsReload()) {
-            if (mVisibleTab.isInitialized() && !mVisibleTab.isDetachedForReparenting()) {
+            if (mVisibleTab.isInitialized() && !mVisibleTab.isDetached()) {
                 // TODO(dtrainor): Once we figure out why we can't grab a snapshot from the current
                 // tab when we have other tabs loading from external apps remove the checks for
                 // FROM_EXTERNAL_APP/FROM_NEW.

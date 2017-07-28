@@ -76,8 +76,12 @@ public class WebappInfo {
     }
 
     protected static int sourceFromIntent(Intent intent) {
-        return IntentUtils.safeGetIntExtra(
+        int source = IntentUtils.safeGetIntExtra(
                 intent, ShortcutHelper.EXTRA_SOURCE, ShortcutSource.UNKNOWN);
+        if (source >= ShortcutSource.COUNT) {
+            source = ShortcutSource.UNKNOWN;
+        }
+        return source;
     }
 
     private static String titleFromIntent(Intent intent) {
@@ -108,7 +112,7 @@ public class WebappInfo {
         String url = urlFromIntent(intent);
         String scope = IntentUtils.safeGetStringExtra(intent, ShortcutHelper.EXTRA_SCOPE);
         int displayMode = IntentUtils.safeGetIntExtra(
-                intent, ShortcutHelper.EXTRA_DISPLAY_MODE, WebDisplayMode.kStandalone);
+                intent, ShortcutHelper.EXTRA_DISPLAY_MODE, WebDisplayMode.STANDALONE);
         int orientation = IntentUtils.safeGetIntExtra(
                 intent, ShortcutHelper.EXTRA_ORIENTATION, ScreenOrientationValues.DEFAULT);
         int source = sourceFromIntent(intent);

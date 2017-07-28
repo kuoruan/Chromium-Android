@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 
 import org.chromium.base.ContextUtils;
+import org.chromium.chrome.browser.DefaultBrowserInfo;
 import org.chromium.chrome.browser.preferences.privacy.PrivacyPreferencesManager;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModel;
@@ -102,6 +103,7 @@ public class UmaSessionStats {
         nativeUmaResumeSession(sNativeUmaSessionStats);
         updatePreferences();
         updateMetricsServiceState();
+        DefaultBrowserInfo.logDefaultBrowserStats();
     }
 
     private static void ensureNativeInitialized() {

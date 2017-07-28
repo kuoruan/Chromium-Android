@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.suggestions;
 
 import android.support.annotation.Nullable;
 
+import org.chromium.base.DiscardableReferencePool;
 import org.chromium.chrome.browser.NativePageHost;
 import org.chromium.chrome.browser.favicon.FaviconHelper;
 import org.chromium.chrome.browser.favicon.FaviconHelper.FaviconImageCallback;
@@ -24,12 +25,15 @@ import java.util.List;
 public class SuggestionsUiDelegateImpl implements SuggestionsUiDelegate {
     private final List<DestructionObserver> mDestructionObservers = new ArrayList<>();
     private final SuggestionsSource mSuggestionsSource;
-    private final SuggestionsMetricsReporter mSuggestionsMetricsReporter;
+    private final SuggestionsRanker mSuggestionsRanker;
+    private final SuggestionsEventReporter mSuggestionsEventReporter;
     private final SuggestionsNavigationDelegate mSuggestionsNavigationDelegate;
 
     private final Profile mProfile;
 
     private final NativePageHost mHost;
+
+    private final DiscardableReferencePool mReferencePool;
 
     private FaviconHelper mFaviconHelper;
     private LargeIconBridge mLargeIconBridge;
@@ -37,15 +41,17 @@ public class SuggestionsUiDelegateImpl implements SuggestionsUiDelegate {
     private boolean mIsDestroyed;
 
     public SuggestionsUiDelegateImpl(SuggestionsSource suggestionsSource,
-            SuggestionsMetricsReporter metricsReporter,
-            SuggestionsNavigationDelegate navigationDelegate, Profile profile,
-            NativePageHost host) {
+            SuggestionsEventReporter eventReporter,
+            SuggestionsNavigationDelegate navigationDelegate, Profile profile, NativePageHost host,
+            DiscardableReferencePool referencePool) {
         mSuggestionsSource = suggestionsSource;
-        mSuggestionsMetricsReporter = metricsReporter;
+        mSuggestionsRanker = new SuggestionsRanker();
+        mSuggestionsEventReporter = eventReporter;
         mSuggestionsNavigationDelegate = navigationDelegate;
 
         mProfile = profile;
         mHost = host;
+        mReferencePool = referencePool;
     }
 
     @Override
@@ -77,16 +83,26 @@ public class SuggestionsUiDelegateImpl implements SuggestionsUiDelegate {
         return mSuggestionsSource;
     }
 
+    @Override
+    public SuggestionsRanker getSuggestionsRanker() {
+        return mSuggestionsRanker;
+    }
+
     @Nullable
     @Override
-    public SuggestionsMetricsReporter getMetricsReporter() {
-        return mSuggestionsMetricsReporter;
+    public SuggestionsEventReporter getEventReporter() {
+        return mSuggestionsEventReporter;
     }
 
     @Nullable
     @Override
     public SuggestionsNavigationDelegate getNavigationDelegate() {
         return mSuggestionsNavigationDelegate;
+    }
+
+    @Override
+    public DiscardableReferencePool getReferencePool() {
+        return mReferencePool;
     }
 
     @Override

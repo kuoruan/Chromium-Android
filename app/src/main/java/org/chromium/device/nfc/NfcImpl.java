@@ -17,19 +17,22 @@ import android.nfc.NfcManager;
 import android.nfc.Tag;
 import android.nfc.TagLostException;
 import android.os.Build;
+import android.os.Handler;
 import android.os.Process;
 import android.util.SparseArray;
 
+import org.chromium.base.Callback;
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
-import org.chromium.device.nfc.mojom.Nfc;
-import org.chromium.device.nfc.mojom.NfcClient;
-import org.chromium.device.nfc.mojom.NfcError;
-import org.chromium.device.nfc.mojom.NfcErrorType;
-import org.chromium.device.nfc.mojom.NfcMessage;
-import org.chromium.device.nfc.mojom.NfcPushOptions;
-import org.chromium.device.nfc.mojom.NfcPushTarget;
-import org.chromium.device.nfc.mojom.NfcWatchMode;
-import org.chromium.device.nfc.mojom.NfcWatchOptions;
+import org.chromium.device.mojom.Nfc;
+import org.chromium.device.mojom.NfcClient;
+import org.chromium.device.mojom.NfcError;
+import org.chromium.device.mojom.NfcErrorType;
+import org.chromium.device.mojom.NfcMessage;
+import org.chromium.device.mojom.NfcPushOptions;
+import org.chromium.device.mojom.NfcPushTarget;
+import org.chromium.device.mojom.NfcWatchMode;
+import org.chromium.device.mojom.NfcWatchOptions;
 import org.chromium.mojo.bindings.Callbacks;
 import org.chromium.mojo.system.MojoException;
 
@@ -38,12 +41,14 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Android implementation of the NFC mojo service defined in
- * device/nfc/nfc.mojom.
+/** Android implementation of the NFC mojo service defined in device/nfc/nfc.mojom.
  */
 public class NfcImpl implements Nfc {
     private static final String TAG = "NfcImpl";
+
+    private final int mHostId;
+
+    private final NfcDelegate mDelegate;
 
     /**
      * Used to get instance of NFC adapter, @see android.nfc.NfcManager
@@ -103,17 +108,38 @@ public class NfcImpl implements Nfc {
      */
     private final SparseArray<NfcWatchOptions> mWatchers = new SparseArray<>();
 
-    public NfcImpl(Context context) {
-        int permission =
-                context.checkPermission(Manifest.permission.NFC, Process.myPid(), Process.myUid());
+    /**
+     * Handler that runs delayed push timeout task.
+     */
+    private final Handler mPushTimeoutHandler = new Handler();
+
+    /**
+     * Runnable responsible for cancelling push operation after specified timeout.
+     */
+    private Runnable mPushTimeoutRunnable;
+
+    public NfcImpl(int hostId, NfcDelegate delegate) {
+        mHostId = hostId;
+        mDelegate = delegate;
+        int permission = ContextUtils.getApplicationContext().checkPermission(
+                Manifest.permission.NFC, Process.myPid(), Process.myUid());
         mHasPermission = permission == PackageManager.PERMISSION_GRANTED;
+        Callback<Activity> onActivityUpdatedCallback = new Callback<Activity>() {
+            @Override
+            public void onResult(Activity activity) {
+                setActivity(activity);
+            }
+        };
+
+        mDelegate.trackActivityForHost(mHostId, onActivityUpdatedCallback);
 
         if (!mHasPermission || Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
             Log.w(TAG, "NFC operations are not permitted.");
             mNfcAdapter = null;
             mNfcManager = null;
         } else {
-            mNfcManager = (NfcManager) context.getSystemService(Context.NFC_SERVICE);
+            mNfcManager = (NfcManager) ContextUtils.getApplicationContext().getSystemService(
+                    Context.NFC_SERVICE);
             if (mNfcManager == null) {
                 Log.w(TAG, "NFC is not supported.");
                 mNfcAdapter = null;
@@ -162,7 +188,9 @@ public class NfcImpl implements Nfc {
             return;
         }
 
-        if (options.target == NfcPushTarget.PEER) {
+        // Check NfcPushOptions that are not supported by Android platform.
+        if (options.target == NfcPushTarget.PEER || options.timeout < 0
+                || (options.timeout > Long.MAX_VALUE && !Double.isInfinite(options.timeout))) {
             callback.call(createError(NfcErrorType.NOT_SUPPORTED));
             return;
         }
@@ -170,9 +198,13 @@ public class NfcImpl implements Nfc {
         // If previous pending push operation is not completed, cancel it.
         if (mPendingPushOperation != null) {
             mPendingPushOperation.complete(createError(NfcErrorType.OPERATION_CANCELLED));
+            cancelPushTimeoutTask();
         }
 
         mPendingPushOperation = new PendingPushOperation(message, options, callback);
+
+        // Schedule push timeout task for new #mPendingPushOperation.
+        schedulePushTimeoutTask(options);
         enableReaderModeIfNeeded();
         processPendingPushOperation();
     }
@@ -196,10 +228,8 @@ public class NfcImpl implements Nfc {
         if (mPendingPushOperation == null) {
             callback.call(createError(NfcErrorType.NOT_FOUND));
         } else {
-            mPendingPushOperation.complete(createError(NfcErrorType.OPERATION_CANCELLED));
-            mPendingPushOperation = null;
+            completePendingPushOperation(createError(NfcErrorType.OPERATION_CANCELLED));
             callback.call(null);
-            disableReaderModeIfNeeded();
         }
     }
 
@@ -278,6 +308,7 @@ public class NfcImpl implements Nfc {
 
     @Override
     public void close() {
+        mDelegate.stopTrackingActivityForHost(mHostId);
         disableReaderMode();
     }
 
@@ -432,16 +463,24 @@ public class NfcImpl implements Nfc {
     }
 
     /**
-     * Completes pending push operation. On error, invalidates #mTagHandler.
+     * Handles completion of pending push operation, cancels timeout task and completes push
+     * operation. On error, invalidates #mTagHandler.
      */
     private void pendingPushOperationCompleted(NfcError error) {
-        if (mPendingPushOperation != null) {
-            mPendingPushOperation.complete(error);
-            mPendingPushOperation = null;
-            disableReaderModeIfNeeded();
-        }
-
+        completePendingPushOperation(error);
         if (error != null) mTagHandler = null;
+    }
+
+    /**
+     * Completes pending push operation and disables reader mode if needed.
+     */
+    private void completePendingPushOperation(NfcError error) {
+        if (mPendingPushOperation == null) return;
+
+        cancelPushTimeoutTask();
+        mPendingPushOperation.complete(error);
+        mPendingPushOperation = null;
+        disableReaderModeIfNeeded();
     }
 
     /**
@@ -466,7 +505,7 @@ public class NfcImpl implements Nfc {
         } catch (TagLostException e) {
             Log.w(TAG, "Cannot write data to NFC tag. Tag is lost.");
             pendingPushOperationCompleted(createError(NfcErrorType.IO_ERROR));
-        } catch (FormatException | IOException e) {
+        } catch (FormatException | IllegalStateException | IOException e) {
             Log.w(TAG, "Cannot write data to NFC tag. IO_ERROR.");
             pendingPushOperationCompleted(createError(NfcErrorType.IO_ERROR));
         }
@@ -499,7 +538,7 @@ public class NfcImpl implements Nfc {
             }
         } catch (TagLostException e) {
             Log.w(TAG, "Cannot read data from NFC tag. Tag is lost.");
-        } catch (FormatException | IOException e) {
+        } catch (FormatException | IllegalStateException | IOException e) {
             Log.w(TAG, "Cannot read data from NFC tag. IO_ERROR.");
         }
 
@@ -598,5 +637,34 @@ public class NfcImpl implements Nfc {
                 Log.w(TAG, "Cannot close NFC tag connection.");
             }
         }
+    }
+
+    /**
+     * Schedules task that is executed after timeout and cancels pending push operation.
+     */
+    private void schedulePushTimeoutTask(NfcPushOptions options) {
+        assert mPushTimeoutRunnable == null;
+        // Default timeout value.
+        if (Double.isInfinite(options.timeout)) return;
+
+        // Create and schedule timeout.
+        mPushTimeoutRunnable = new Runnable() {
+            @Override
+            public void run() {
+                completePendingPushOperation(createError(NfcErrorType.TIMER_EXPIRED));
+            }
+        };
+
+        mPushTimeoutHandler.postDelayed(mPushTimeoutRunnable, (long) options.timeout);
+    }
+
+    /**
+     * Cancels push timeout task.
+     */
+    void cancelPushTimeoutTask() {
+        if (mPushTimeoutRunnable == null) return;
+
+        mPushTimeoutHandler.removeCallbacks(mPushTimeoutRunnable);
+        mPushTimeoutRunnable = null;
     }
 }

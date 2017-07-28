@@ -34,7 +34,6 @@ import org.chromium.content_public.browser.SmartClipCallback;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.content_public.browser.WebContentsObserver;
 import org.chromium.ui.OverscrollRefreshHandler;
-import org.chromium.ui.accessibility.AXTextStyle;
 import org.chromium.ui.base.EventForwarder;
 import org.chromium.ui.base.WindowAndroid;
 
@@ -252,6 +251,11 @@ import java.util.UUID;
     }
 
     @Override
+    public void pasteAsPlainText() {
+        nativePasteAsPlainText(mNativeWebContentsAndroid);
+    }
+
+    @Override
     public void replace(String word) {
         nativeReplace(mNativeWebContentsAndroid, word);
     }
@@ -399,6 +403,10 @@ import java.util.UUID;
                 }
             }
         }
+        // Treat "*" as a wildcard. Internally, a wildcard is a empty string.
+        if (targetOrigin.equals("*")) {
+            targetOrigin = "";
+        }
         nativePostMessageToFrame(
                 mNativeWebContentsAndroid, frameName, message, sourceOrigin, targetOrigin, ports);
     }
@@ -480,15 +488,12 @@ import java.util.UUID;
     @CalledByNative
     private static AccessibilitySnapshotNode createAccessibilitySnapshotNode(int parentRelativeLeft,
             int parentRelativeTop, int width, int height, boolean isRootNode, String text,
-            int color, int bgcolor, float size, int textStyle, String className) {
+            int color, int bgcolor, float size, boolean bold, boolean italic, boolean underline,
+            boolean lineThrough, String className) {
         AccessibilitySnapshotNode node = new AccessibilitySnapshotNode(text, className);
 
         // if size is smaller than 0, then style information does not exist.
         if (size >= 0.0) {
-            boolean bold = (textStyle & AXTextStyle.text_style_bold) > 0;
-            boolean italic = (textStyle & AXTextStyle.text_style_italic) > 0;
-            boolean underline = (textStyle & AXTextStyle.text_style_underline) > 0;
-            boolean lineThrough = (textStyle & AXTextStyle.text_style_line_through) > 0;
             node.setStyle(color, bgcolor, size, bold, italic, underline, lineThrough);
         }
         node.setLocationInfo(parentRelativeLeft, parentRelativeTop, width, height, isRootNode);
@@ -617,6 +622,7 @@ import java.util.UUID;
     private native void nativeCut(long nativeWebContentsAndroid);
     private native void nativeCopy(long nativeWebContentsAndroid);
     private native void nativePaste(long nativeWebContentsAndroid);
+    private native void nativePasteAsPlainText(long nativeWebContentsAndroid);
     private native void nativeReplace(long nativeWebContentsAndroid, String word);
     private native void nativeSelectAll(long nativeWebContentsAndroid);
     private native void nativeCollapseSelection(long nativeWebContentsAndroid);

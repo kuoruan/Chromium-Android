@@ -4,19 +4,21 @@
 
 package org.chromium.chrome.browser.photo_picker;
 
+import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
+import android.os.AsyncTask;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.text.TextUtils;
+
+import org.chromium.chrome.R;
 
 import java.util.List;
 
 /**
  * Holds on to a {@link PickerBitmapView} that displays information about a picker bitmap.
  */
-public class PickerBitmapViewHolder extends ViewHolder {
+public class PickerBitmapViewHolder
+        extends ViewHolder implements DecoderServiceHost.ImageDecodedCallback {
     // Our parent category.
     private PickerCategoryView mCategoryView;
 
@@ -35,21 +37,32 @@ public class PickerBitmapViewHolder extends ViewHolder {
         mItemView = itemView;
     }
 
-    /**
-     * The notification handler for when an image has been decoded.
-     * @param filePath The file path for the newly decoded image.
-     * @param bitmap The results of the decoding (or placeholder image, if failed).
-     */
+    // DecoderServiceHost.ImageDecodedCallback
+
+    @Override
     public void imageDecodedCallback(String filePath, Bitmap bitmap) {
         if (bitmap == null || bitmap.getWidth() == 0 || bitmap.getHeight() == 0) {
             return;
+        }
+
+        if (mCategoryView.getHighResBitmaps().get(filePath) == null) {
+            mCategoryView.getHighResBitmaps().put(filePath, bitmap);
+        }
+
+        if (mCategoryView.getLowResBitmaps().get(filePath) == null) {
+            Resources resources = mItemView.getContext().getResources();
+            new BitmapScalerTask(mCategoryView.getLowResBitmaps(), filePath,
+                    resources.getDimensionPixelSize(R.dimen.photo_picker_grainy_thumbnail_size))
+                    .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, bitmap);
         }
 
         if (!TextUtils.equals(mBitmapDetails.getFilePath(), filePath)) {
             return;
         }
 
-        mItemView.setThumbnailBitmap(bitmap);
+        if (mItemView.setThumbnailBitmap(bitmap)) {
+            mItemView.fadeInThumbnail();
+        }
     }
 
     /**
@@ -65,31 +78,28 @@ public class PickerBitmapViewHolder extends ViewHolder {
 
         if (mBitmapDetails.type() == PickerBitmap.CAMERA
                 || mBitmapDetails.type() == PickerBitmap.GALLERY) {
-            mItemView.initializeSpecialTile(mBitmapDetails);
+            mItemView.initialize(mBitmapDetails, null, false);
             return;
         }
 
-        // TODO(finnur): Use cached image, if available.
+        String filePath = mBitmapDetails.getFilePath();
+        Bitmap original = mCategoryView.getHighResBitmaps().get(filePath);
+        if (original != null) {
+            mItemView.initialize(mBitmapDetails, original, false);
+            return;
+        }
 
-        // TODO(finnur): Use decoder instead.
         int size = mCategoryView.getImageSize();
-        imageDecodedCallback(mBitmapDetails.getFilePath(), createPlaceholderBitmap(size, size));
-    }
+        Bitmap placeholder = mCategoryView.getLowResBitmaps().get(filePath);
+        if (placeholder != null) {
+            // For performance stats see http://crbug.com/719919.
+            placeholder = BitmapUtils.scale(placeholder, size, false);
+            mItemView.initialize(mBitmapDetails, placeholder, true);
+        } else {
+            mItemView.initialize(mBitmapDetails, null, true);
+        }
 
-    /**
-     * Creates a placeholder bitmap.
-     * @param width The requested width of the resulting bitmap.
-     * @param height The requested height of the resulting bitmap.
-     * @return Placeholder bitmap.
-     */
-    // TODO(finnur): Remove once the decoder is in place.
-    private Bitmap createPlaceholderBitmap(int width, int height) {
-        Bitmap placeholder = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(placeholder);
-        Paint paint = new Paint();
-        paint.setColor(Color.GRAY);
-        canvas.drawRect(0, 0, (float) width, (float) height, paint);
-        return placeholder;
+        mCategoryView.getDecoderServiceHost().decodeImage(filePath, size, this);
     }
 
     /**

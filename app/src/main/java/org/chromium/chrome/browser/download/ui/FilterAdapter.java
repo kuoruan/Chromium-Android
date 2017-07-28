@@ -4,8 +4,8 @@
 
 package org.chromium.chrome.browser.download.ui;
 
-import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
+import android.support.annotation.LayoutRes;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,18 +13,14 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.download.ui.DownloadManagerUi.DownloadUiObserver;
 import org.chromium.chrome.browser.widget.TintedDrawable;
 
-/** An adapter that allows selecting an item from a list displayed in the drawer. */
-class FilterAdapter extends BaseAdapter
-        implements AdapterView.OnItemClickListener, DownloadUiObserver {
-
-    private int mSelectedBackgroundColor;
+/** An adapter that allows selecting an item from a dropdown spinner. */
+class FilterAdapter
+        extends BaseAdapter implements AdapterView.OnItemSelectedListener, DownloadUiObserver {
     private DownloadManagerUi mManagerUi;
-    private int mSelectedIndex;
 
     @Override
     public int getCount() {
@@ -42,62 +38,56 @@ class FilterAdapter extends BaseAdapter
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        Resources resources = mManagerUi.getActivity().getResources();
-
-        TextView labelView = null;
-        if (convertView instanceof TextView) {
-            labelView = (TextView) convertView;
-        } else {
-            labelView = (TextView) LayoutInflater.from(mManagerUi.getActivity()).inflate(
-                    R.layout.download_manager_ui_drawer_filter, null);
-        }
-
-        int iconId = DownloadFilter.getDrawableForFilter(position);
+    public View getDropDownView(int position, View convertView, ViewGroup parent) {
+        TextView labelView =
+                getTextViewFromResource(convertView, R.layout.download_manager_spinner_drop_down);
         labelView.setText(DownloadFilter.getStringIdForFilter(position));
-
-        Drawable iconDrawable = null;
-        if (position == mSelectedIndex) {
-            // Highlight the selected item by changing the foreground and background colors.
-            labelView.setBackgroundColor(mSelectedBackgroundColor);
-            iconDrawable = TintedDrawable.constructTintedDrawable(
-                    resources, iconId, R.color.light_active_color);
-            labelView.setTextColor(
-                    ApiCompatibilityUtils.getColor(resources, R.color.light_active_color));
-        } else {
-            // Draw the item normally.
-            labelView.setBackground(null);
-            iconDrawable = TintedDrawable.constructTintedDrawable(
-                    resources, iconId, R.color.descriptive_text_color);
-            labelView.setTextColor(
-                    ApiCompatibilityUtils.getColor(resources, R.color.default_text_color));
-        }
-
+        int iconId = DownloadFilter.getDrawableForFilter(position);
+        Drawable iconDrawable = TintedDrawable.constructTintedDrawable(
+                mManagerUi.getActivity().getResources(), iconId, R.color.descriptive_text_color);
         labelView.setCompoundDrawablesWithIntrinsicBounds(iconDrawable, null, null, null);
+
         return labelView;
     }
 
     @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    public View getView(int position, View convertView, ViewGroup parent) {
+        TextView labelView =
+                getTextViewFromResource(convertView, R.layout.download_manager_spinner);
+        labelView.setText(position == 0 ? R.string.menu_downloads
+                                        : DownloadFilter.getStringIdForFilter(position));
+        return labelView;
+    }
+
+    private TextView getTextViewFromResource(View convertView, @LayoutRes int resId) {
+        TextView labelView = null;
+        if (convertView instanceof TextView) {
+            labelView = (TextView) convertView;
+        } else {
+            labelView =
+                    (TextView) LayoutInflater.from(mManagerUi.getActivity()).inflate(resId, null);
+        }
+
+        return labelView;
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         mManagerUi.onFilterChanged(position);
     }
 
     public void initialize(DownloadManagerUi manager) {
         mManagerUi = manager;
-        mSelectedBackgroundColor = ApiCompatibilityUtils
-                .getColor(mManagerUi.getActivity().getResources(), R.color.default_primary_color);
     }
 
     @Override
-    public void onFilterChanged(int filter) {
-        if (mSelectedIndex == filter) return;
-        mSelectedIndex = filter;
-        notifyDataSetChanged();
-        mManagerUi.closeDrawer();
-    }
+    public void onFilterChanged(int filter) {}
 
     @Override
     public void onManagerDestroyed() {
         mManagerUi = null;
     }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {}
 }

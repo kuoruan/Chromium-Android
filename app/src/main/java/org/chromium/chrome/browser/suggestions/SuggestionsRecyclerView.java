@@ -59,6 +59,7 @@ public class SuggestionsRecyclerView extends RecyclerView {
 
     private final GestureDetector mGestureDetector;
     private final LinearLayoutManager mLayoutManager;
+    private final SuggestionsMetrics.ScrollEventReporter mScrollEventReporter;
 
     /**
      * Total height of the items being dismissed.  Tracked to allow the bottom space to compensate
@@ -114,6 +115,9 @@ public class SuggestionsRecyclerView extends RecyclerView {
 
         ItemTouchHelper helper = new ItemTouchHelper(new ItemTouchCallbacks());
         helper.attachToRecyclerView(this);
+
+        mScrollEventReporter = new SuggestionsMetrics.ScrollEventReporter();
+        addOnScrollListener(mScrollEventReporter);
     }
 
     public boolean isFirstItemVisible() {
@@ -325,10 +329,15 @@ public class SuggestionsRecyclerView extends RecyclerView {
         return mCompensationHeight;
     }
 
+    public SuggestionsMetrics.ScrollEventReporter getScrollEventReporter() {
+        return mScrollEventReporter;
+    }
+
     private class ItemTouchCallbacks extends ItemTouchHelper.Callback {
         @Override
         public void onSwiped(ViewHolder viewHolder, int direction) {
             onItemDismissStarted(viewHolder);
+            SuggestionsMetrics.recordCardSwipedAway();
             dismissItemInternal(viewHolder);
         }
 

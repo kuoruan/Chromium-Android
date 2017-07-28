@@ -21,6 +21,7 @@ by a child template that "extends" this file.
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission-sdk-23 android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!--
@@ -29,8 +30,6 @@ by a child template that "extends" this file.
       channels use "runtime permission" uses-permission-sdk-m which provides
       permission on Android M and later without a prompt.
     -->
-        <uses-permission android:name="android.permission.BLUETOOTH"/>
-        <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
         <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <uses-permission-sdk-m android:name="android.permission.BLUETOOTH"/>
     <uses-permission-sdk-m android:name="android.permission.BLUETOOTH_ADMIN"/>
@@ -476,6 +475,15 @@ by a child template that "extends" this file.
             android:hardwareAccelerated="false"
 >
         </activity>
+        <activity android:name="org.chromium.chrome.browser.FullscreenWebContentsActivity"
+            android:theme="@style/MainTheme"
+            android:exported="false"
+                        android:windowSoftInputMode="adjustResize"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:hardwareAccelerated="false"
+
+             >
+        </activity>
 
         <activity android:name="org.chromium.chrome.browser.sync.ui.PassphraseActivity"
             android:theme="@style/MainTheme"
@@ -490,8 +498,8 @@ by a child template that "extends" this file.
         </activity>
         <activity android:name="org.chromium.chrome.browser.firstrun.FirstRunActivity"
             android:theme="@style/DialogWhenLarge"
-            android:label="@string/fre_label"
-            android:launchMode="singleTop"
+            android:launchMode="singleInstance"
+            android:excludeFromRecents="true"
             android:autoRemoveFromRecents="true"
             android:windowSoftInputMode="stateHidden|adjustPan"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize">
@@ -997,11 +1005,32 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize" >
         </activity>
 
+        <!-- Activities for Browser Actions -->
+        <activity android:name="org.chromium.chrome.browser.browseractions.BrowserActionActivity"
+            android:theme="@style/FullscreenTransparentActivityTheme"
+            android:exported="true"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize">
+            <intent-filter>
+                <action android:name="android.support.customtabs.browseractions.browser_action_open" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+            </intent-filter>
+        </activity>
+
         <!-- Service for Broadcasting a Physical Web URL -->
         <service
             android:name="org.chromium.chrome.browser.physicalweb.PhysicalWebBroadcastService"
             android:exported="false">
         </service>
+
+        <!-- Service for decoding images in a sandboxed process. -->
+        <service
+            android:description="@string/decoder_description"
+            android:name="org.chromium.chrome.browser.photo_picker.DecoderService"
+            android:exported="false"
+            android:isolatedProcess="true"
+            android:process=":decoder_service" />
 
         <!-- Providers for chrome data. -->
         <provider android:name="org.chromium.chrome.browser.provider.ChromeBrowserProvider"
@@ -1066,18 +1095,24 @@ by a child template that "extends" this file.
             android:exported="false" />
 
         <!-- Search widget -->
-        <receiver android:name="org.chromium.chrome.browser.searchwidget.SearchWidgetProvider">
+        <receiver
+                android:name="org.chromium.chrome.browser.searchwidget.SearchWidgetProvider"
+                android:label="@string/search_widget_title">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <intent-filter>
-                <action android:name="org.chromium.chrome.browser.searchwidget.START_SEARCH_ACTIVITY" />
+                <action android:name="org.chromium.chrome.browser.searchwidget.START_TEXT_QUERY" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="org.chromium.chrome.browser.searchwidget.START_VOICE_QUERY" />
             </intent-filter>
             <intent-filter>
                 <action android:name="org.chromium.chrome.browser.searchwidget.UPDATE_ALL_WIDGETS" />
             </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                       android:resource="@xml/search_widget_info" />
+            <meta-data
+                    android:name="android.appwidget.provider"
+                    android:resource="@xml/search_widget_info" />
         </receiver>
 
         <!-- Search Activity -->
@@ -1169,6 +1204,15 @@ by a child template that "extends" this file.
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE"/>
 
+        <!-- Background Task Scheduler GCM task service -->
+        <service android:name="org.chromium.components.background_task_scheduler.BackgroundTaskGcmTaskService"
+            android:permission="com.google.android.gms.permission.BIND_NETWORK_TASK_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.gcm.ACTION_TASK_READY" />
+            </intent-filter>
+        </service>
+
         <!-- GcmTaskService implementation to wake Chrome on scheduled events -->
         <service android:name="org.chromium.chrome.browser.ChromeBackgroundService"
             android:permission="com.google.android.gms.permission.BIND_NETWORK_TASK_SERVICE"
@@ -1210,6 +1254,9 @@ by a child template that "extends" this file.
              you also need to update kHelperProcessExecutableName in chrome_constants.cc. -->
         <meta-data android:name="org.chromium.content.browser.NUM_SANDBOXED_SERVICES"
             android:value="20"/>
+        <meta-data android:name="org.chromium.content.browser.SANDBOXED_SERVICES_NAME"
+            android:value="org.chromium.content.app.SandboxedProcessService"/>
+
         <service android:name="org.chromium.content.app.SandboxedProcessService0"
             android:process=":sandboxed_process0"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
@@ -1333,6 +1380,9 @@ by a child template that "extends" this file.
 
         <meta-data android:name="org.chromium.content.browser.NUM_PRIVILEGED_SERVICES"
             android:value="3"/>
+        <meta-data android:name="org.chromium.content.browser.PRIVILEGED_SERVICES_NAME"
+            android:value="org.chromium.content.app.PrivilegedProcessService"/>
+
         <!-- TODO(tedchoc): Omit this for release builds as MultiDex is debug only. -->
         <meta-data android:name="org.chromium.chrome:privileged_process0.ignore_multidex"
 android:value="true" />

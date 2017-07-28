@@ -51,7 +51,7 @@
             android:background="?attr/selectableItemBackground"
             android:contentDescription="@string/accessibility_tabstrip_btn_close_tab"
             android:src="@drawable/btn_close"
-            chrome:tint="@color/light_mode_tint"
+            chrome:chrometint="@color/light_mode_tint"
             android:gravity="end|center_vertical" />
     </LinearLayout>
 

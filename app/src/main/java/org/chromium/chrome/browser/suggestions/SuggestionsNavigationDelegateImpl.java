@@ -4,9 +4,8 @@
 
 package org.chromium.chrome.browser.suggestions;
 
-import android.app.Activity;
-
 import org.chromium.base.metrics.RecordUserAction;
+import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.NativePageHost;
 import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.bookmarks.BookmarkUtils;
@@ -39,13 +38,13 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
     private static final String NEW_TAB_URL_HELP =
             "https://support.google.com/chrome/?p=new_tab";
 
-    private final Activity mActivity;
+    private final ChromeActivity mActivity;
     private final Profile mProfile;
 
     private final NativePageHost mHost;
     private final TabModelSelector mTabModelSelector;
 
-    public SuggestionsNavigationDelegateImpl(Activity activity, Profile profile,
+    public SuggestionsNavigationDelegateImpl(ChromeActivity activity, Profile profile,
             NativePageHost host, TabModelSelector tabModelSelector) {
         mActivity = activity;
         mProfile = profile;
@@ -109,11 +108,6 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
             return;
         }
 
-        // TODO(treib): Also track other dispositions. crbug.com/665915
-        if (windowOpenDisposition == WindowOpenDisposition.CURRENT_TAB) {
-            NewTabPageUma.monitorContentSuggestionVisit(mHost.getActiveTab(), article.mCategory);
-        }
-
         LoadUrlParams loadUrlParams;
         // We explicitly open an offline page only for offline page downloads. For all other
         // sections the URL is opened and it is up to Offline Pages whether to open its offline
@@ -140,13 +134,18 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
         }
 
         openUrl(windowOpenDisposition, loadUrlParams);
+
+        // TODO(treib): Also track other dispositions. crbug.com/665915
+        if (windowOpenDisposition == WindowOpenDisposition.CURRENT_TAB) {
+            NewTabPageUma.monitorContentSuggestionVisit(mHost.getActiveTab(), article.mCategory);
+        }
     }
 
     @Override
     public void openUrl(int windowOpenDisposition, LoadUrlParams loadUrlParams) {
         switch (windowOpenDisposition) {
             case WindowOpenDisposition.CURRENT_TAB:
-                mHost.loadUrl(loadUrlParams, mTabModelSelector.getCurrentTab().isIncognito());
+                mHost.loadUrl(loadUrlParams, mTabModelSelector.isIncognitoSelected());
                 break;
             case WindowOpenDisposition.NEW_BACKGROUND_TAB:
                 openUrlInNewTab(loadUrlParams);
@@ -185,8 +184,13 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
     }
 
     private void saveUrlForOffline(String url) {
-        OfflinePageBridge.getForProfile(mProfile).scheduleDownload(
-                mHost.getActiveTab().getWebContents(), "ntp_suggestions", url,
-                DownloadUiActionFlags.ALL);
+        if (mHost.getActiveTab() != null) {
+            OfflinePageBridge.getForProfile(mProfile).scheduleDownload(
+                    mHost.getActiveTab().getWebContents(), "ntp_suggestions", url,
+                    DownloadUiActionFlags.ALL);
+        } else {
+            OfflinePageBridge.getForProfile(mProfile).savePageLater(
+                    url, "ntp_suggestions", true /* userRequested */);
+        }
     }
 }

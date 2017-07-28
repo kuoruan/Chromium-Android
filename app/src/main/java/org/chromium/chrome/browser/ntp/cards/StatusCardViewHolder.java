@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ntp.ContextMenuManager;
+import org.chromium.chrome.browser.suggestions.SuggestionsMetrics;
 import org.chromium.chrome.browser.suggestions.SuggestionsRecyclerView;
 import org.chromium.chrome.browser.widget.displaystyle.UiConfig;
 
@@ -75,6 +76,7 @@ public class StatusCardViewHolder extends CardViewHolder {
 
                 @Override
                 public void onClick(View v) {
+                    SuggestionsMetrics.recordCardActionTapped();
                     item.performAction(v.getContext());
                 }
             });

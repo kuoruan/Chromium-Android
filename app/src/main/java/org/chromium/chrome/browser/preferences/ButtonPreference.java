@@ -27,7 +27,7 @@ public class ButtonPreference extends Preference {
         super(context, attrs);
         setLayoutResource(R.layout.button_preference_layout);
         setWidgetLayoutResource(R.layout.button_preference_button);
-        setSelectable(false);
+        setSelectable(true);
     }
 
     @Override
@@ -41,6 +41,15 @@ public class ButtonPreference extends Preference {
                 if (getOnPreferenceClickListener() != null) {
                     getOnPreferenceClickListener().onPreferenceClick(ButtonPreference.this);
                 }
+            }
+        });
+
+        View viewFrame = view.findViewById(android.R.id.widget_frame);
+        viewFrame.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // This is intentionally left blank to prevent triggering an event after tapping
+                // any part of the view that is not the button.
             }
         });
     }

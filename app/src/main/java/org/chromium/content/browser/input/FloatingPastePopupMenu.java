@@ -8,7 +8,6 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Rect;
 import android.os.Build;
-import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,25 +22,12 @@ import org.chromium.ui.base.DeviceFormFactor;
  */
 @TargetApi(Build.VERSION_CODES.M)
 public class FloatingPastePopupMenu implements PastePopupMenu {
-    private static final int CONTENT_RECT_OFFSET_DIP = 15;
-    private static final int SLOP_LENGTH_DIP = 10;
-
     private final View mParent;
     private final PastePopupMenuDelegate mDelegate;
     private final Context mContext;
 
-    // Offset from the paste coordinates to provide the floating ActionMode.
-    private final int mContentRectOffset;
-
-    // Slack for ignoring small deltas in the paste popup position. The initial
-    // position can change by a few pixels due to differences in how context
-    // menu and selection coordinates are computed. Suppressing this small delta
-    // avoids the floating ActionMode flicker when the popup is repositioned.
-    private final int mSlopLengthSquared;
-
     private ActionMode mActionMode;
-    private int mRawPositionX;
-    private int mRawPositionY;
+    private Rect mSelectionRect;
 
     public FloatingPastePopupMenu(Context context, View parent, PastePopupMenuDelegate delegate) {
         assert Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
@@ -49,22 +35,11 @@ public class FloatingPastePopupMenu implements PastePopupMenu {
         mParent = parent;
         mDelegate = delegate;
         mContext = context;
-
-        mContentRectOffset = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                CONTENT_RECT_OFFSET_DIP, mContext.getResources().getDisplayMetrics());
-        int slopLength = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                SLOP_LENGTH_DIP, mContext.getResources().getDisplayMetrics());
-        mSlopLengthSquared = slopLength * slopLength;
     }
 
     @Override
-    public void show(int x, int y) {
-        int dx = mRawPositionX - x;
-        int dy = mRawPositionY - y;
-        if (dx * dx + dy * dy < mSlopLengthSquared) return;
-
-        mRawPositionX = x;
-        mRawPositionY = y;
+    public void show(Rect selectionRect) {
+        mSelectionRect = selectionRect;
         if (mActionMode != null) {
             mActionMode.invalidateContentRect();
             return;
@@ -103,12 +78,22 @@ public class FloatingPastePopupMenu implements PastePopupMenu {
         }
 
         private void createPasteMenu(ActionMode mode, Menu menu) {
-            mode.setTitle(DeviceFormFactor.isTablet(mContext)
-                    ? mContext.getString(R.string.actionbar_textselection_title) : null);
+            mode.setTitle(DeviceFormFactor.isTablet()
+                            ? mContext.getString(R.string.actionbar_textselection_title)
+                            : null);
             mode.setSubtitle(null);
             SelectionPopupController.initializeMenu(mContext, mode, menu);
             if (!mDelegate.canPaste()) menu.removeItem(R.id.select_action_menu_paste);
             if (!mDelegate.canSelectAll()) menu.removeItem(R.id.select_action_menu_select_all);
+            if (!mDelegate.canPasteAsPlainText()) {
+                menu.removeItem(R.id.select_action_menu_paste_as_plain_text);
+            }
+            // TODO(ctzsm): Remove runtime title set after O SDK rolls.
+            MenuItem item = menu.findItem(R.id.select_action_menu_paste_as_plain_text);
+            if (item != null) {
+                item.setTitle(mContext.getResources().getIdentifier(
+                        "paste_as_plain_text", "string", "android"));
+            }
             menu.removeItem(R.id.select_action_menu_cut);
             menu.removeItem(R.id.select_action_menu_copy);
             menu.removeItem(R.id.select_action_menu_share);
@@ -122,11 +107,16 @@ public class FloatingPastePopupMenu implements PastePopupMenu {
 
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            if (item.getItemId() == R.id.select_action_menu_paste) {
+            int id = item.getItemId();
+            if (id == R.id.select_action_menu_paste) {
                 mDelegate.paste();
                 mode.finish();
             }
-            if (item.getItemId() == R.id.select_action_menu_select_all) {
+            if (id == R.id.select_action_menu_paste_as_plain_text) {
+                mDelegate.pasteAsPlainText();
+                mode.finish();
+            }
+            if (id == R.id.select_action_menu_select_all) {
                 mDelegate.selectAll();
                 mode.finish();
             }
@@ -140,10 +130,7 @@ public class FloatingPastePopupMenu implements PastePopupMenu {
 
         @Override
         public void onGetContentRect(ActionMode mode, View view, Rect outRect) {
-            // Use a rect that spans above and below the insertion point.
-            // This avoids paste popup overlap with selection handles.
-            outRect.set(mRawPositionX - mContentRectOffset, mRawPositionY - mContentRectOffset,
-                    mRawPositionX + mContentRectOffset, mRawPositionY + mContentRectOffset);
+            outRect.set(mSelectionRect);
         }
     };
 }

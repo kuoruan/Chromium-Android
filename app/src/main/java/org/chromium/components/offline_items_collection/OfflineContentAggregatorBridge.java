@@ -4,6 +4,8 @@
 
 package org.chromium.components.offline_items_collection;
 
+import android.os.Handler;
+
 import org.chromium.base.ObserverList;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -18,6 +20,8 @@ import java.util.ArrayList;
  */
 @JNINamespace("offline_items_collection::android")
 public class OfflineContentAggregatorBridge implements OfflineContentProvider {
+    private final Handler mHandler = new Handler();
+
     private long mNativeOfflineContentAggregatorBridge;
     private ObserverList<OfflineContentProvider.Observer> mObservers;
     private boolean mItemsAvailable;
@@ -82,13 +86,32 @@ public class OfflineContentAggregatorBridge implements OfflineContentProvider {
     }
 
     @Override
-    public void addObserver(OfflineContentProvider.Observer observer) {
+    public void getVisualsForItem(ContentId id, VisualsCallback callback) {
+        nativeGetVisualsForItem(
+                mNativeOfflineContentAggregatorBridge, id.namespace, id.id, callback);
+    }
+
+    @Override
+    public void addObserver(final OfflineContentProvider.Observer observer) {
         mObservers.addObserver(observer);
+        if (!areItemsAvailable()) return;
+
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                notifyObserverOfItemsReady(observer);
+            }
+        });
     }
 
     @Override
     public void removeObserver(OfflineContentProvider.Observer observer) {
         mObservers.removeObserver(observer);
+    }
+
+    private void notifyObserverOfItemsReady(Observer observer) {
+        if (!mObservers.hasObserver(observer)) return;
+        observer.onItemsAvailable();
     }
 
     // Methods called from C++ via JNI.
@@ -124,6 +147,12 @@ public class OfflineContentAggregatorBridge implements OfflineContentProvider {
         for (Observer observer : mObservers) {
             observer.onItemUpdated(item);
         }
+    }
+
+    @CalledByNative
+    private static void onVisualsAvailable(
+            VisualsCallback callback, String nameSpace, String id, OfflineItemVisuals visuals) {
+        callback.onVisualsAvailable(new ContentId(nameSpace, id), visuals);
     }
 
     /**
@@ -163,4 +192,6 @@ public class OfflineContentAggregatorBridge implements OfflineContentProvider {
             long nativeOfflineContentAggregatorBridge, String nameSpace, String id);
     private native ArrayList<OfflineItem> nativeGetAllItems(
             long nativeOfflineContentAggregatorBridge);
+    private native void nativeGetVisualsForItem(long nativeOfflineContentAggregatorBridge,
+            String nameSpace, String id, VisualsCallback callback);
 }

@@ -129,7 +129,7 @@ public class ChromeStrictMode {
     private static void turnOnDetection(StrictMode.ThreadPolicy.Builder threadPolicy,
             StrictMode.VmPolicy.Builder vmPolicy) {
         threadPolicy.detectAll();
-        if (Build.VERSION.CODENAME.equals("N") || Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             vmPolicy.detectAll();
         } else {
             // Explicitly enable detection of all violations except file URI leaks, as that

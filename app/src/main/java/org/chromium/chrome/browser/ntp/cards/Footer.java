@@ -31,6 +31,11 @@ public class Footer extends OptionalLeaf {
         // Nothing to do (the footer view is static).
     }
 
+    @Override
+    public void visitOptionalItem(NodeVisitor visitor) {
+        visitor.visitFooter();
+    }
+
     /**
      * The {@code ViewHolder} for the {@link Footer}.
      */

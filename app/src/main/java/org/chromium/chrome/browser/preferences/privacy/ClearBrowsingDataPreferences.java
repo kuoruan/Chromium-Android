@@ -153,6 +153,7 @@ public class ClearBrowsingDataPreferences extends PreferenceFragment
     private static final String PREF_CACHE = "clear_cache_checkbox";
     private static final String PREF_PASSWORDS = "clear_passwords_checkbox";
     private static final String PREF_FORM_DATA = "clear_form_data_checkbox";
+    private static final String PREF_SITE_SETTINGS = "clear_site_settings_checkbox";
 
     @VisibleForTesting
     public static final String PREF_GOOGLE_SUMMARY = "google_summary";
@@ -194,8 +195,9 @@ public class ClearBrowsingDataPreferences extends PreferenceFragment
         CLEAR_CACHE(BrowsingDataType.CACHE, PREF_CACHE, R.drawable.ic_collections_grey, false),
         CLEAR_PASSWORDS(
                 BrowsingDataType.PASSWORDS, PREF_PASSWORDS, R.drawable.ic_vpn_key_grey, false),
-        CLEAR_FORM_DATA(
-                BrowsingDataType.FORM_DATA, PREF_FORM_DATA, R.drawable.bookmark_edit_normal, true);
+        CLEAR_FORM_DATA(BrowsingDataType.FORM_DATA, PREF_FORM_DATA, R.drawable.ic_edit_24dp, true),
+        CLEAR_SITE_SETTINGS(BrowsingDataType.SITE_SETTINGS, PREF_SITE_SETTINGS,
+                R.drawable.ic_tv_options_input_settings_rotated_grey, false);
 
         private final int mDataType;
         private final String mPreferenceKey;
@@ -503,7 +505,11 @@ public class ClearBrowsingDataPreferences extends PreferenceFragment
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        RecordUserAction.record("ClearBrowsingData_DialogCreated");
+        // Don't record this action if TabsInCBD is enabled because this class is created twice.
+        // The action will be recorded in ClearBrowsingDataTabsFragment instead.
+        if (!ClearBrowsingDataTabsFragment.isFeatureEnabled()) {
+            RecordUserAction.record("ClearBrowsingData_DialogCreated");
+        }
         mMaxImportantSites = BrowsingDataBridge.getMaxImportantSites();
         BrowsingDataBridge.getInstance().requestInfoAboutOtherFormsOfBrowsingHistory(this);
         getActivity().setTitle(R.string.clear_browsing_data_title);
@@ -621,8 +627,11 @@ public class ClearBrowsingDataPreferences extends PreferenceFragment
         // Now that the dialog's view has been created, update the button state.
         updateButtonState();
 
-        // Remove the dividers between checkboxes.
-        ((ListView) getView().findViewById(android.R.id.list)).setDivider(null);
+        // Remove the dividers between checkboxes, and make sure the individual widgets can be
+        // focused.
+        ListView view = (ListView) getView().findViewById(android.R.id.list);
+        view.setDivider(null);
+        view.setItemsCanFocus(true);
     }
 
     @Override

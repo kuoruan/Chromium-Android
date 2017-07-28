@@ -16,6 +16,7 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
+import android.support.annotation.CallSuper;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Display;
@@ -35,6 +36,7 @@ import org.chromium.base.library_loader.ProcessInitException;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeApplication;
 import org.chromium.chrome.browser.WarmupManager;
+import org.chromium.chrome.browser.firstrun.FirstRunFlowSequencer;
 import org.chromium.chrome.browser.metrics.MemoryUma;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.tabmodel.DocumentModeAssassin;
@@ -75,6 +77,9 @@ public abstract class AsyncInitializationActivity extends AppCompatActivity impl
     // first |onResume| call.
     private boolean mFirstResumePending = true;
 
+    private boolean mStartupDelayed;
+    private boolean mFirstDrawComplete;
+
     public AsyncInitializationActivity() {
         mHandler = new Handler();
     }
@@ -100,8 +105,8 @@ public abstract class AsyncInitializationActivity extends AppCompatActivity impl
         // multi-window, if Chrome is launched into a smaller screen Android will load the tab
         // switcher resources. Overriding the smallestScreenWidthDp in the Configuration ensures
         // Android will load the tab strip resources. See crbug.com/588838.
-        if (Build.VERSION.CODENAME.equals("N") || Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
-            int smallestDeviceWidthDp = DeviceFormFactor.getSmallestDeviceWidthDp(this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            int smallestDeviceWidthDp = DeviceFormFactor.getSmallestDeviceWidthDp();
 
             if (smallestDeviceWidthDp >= DeviceFormFactor.MINIMUM_TABLET_WIDTH_DP) {
                 Configuration overrideConfiguration = new Configuration();
@@ -126,20 +131,19 @@ public abstract class AsyncInitializationActivity extends AppCompatActivity impl
 
     @Override
     public final void setContentViewAndLoadLibrary() {
-        // Unless it was called before (due to delaying all browser startup on purpose),
-        // {@link #setContentView} inflates the decorView and the basic UI hierarchy as stubs.
-        // This is done here before kicking long running I/O because inflation accesses resource
-        // files (XML, etc) even if we are inflating views defined by the framework. If this
-        // operation gets blocked because other long running I/O are running, we delay onCreate(),
-        // onStart() and first draw consequently.
+        // Unless it was called before, {@link #setContentView} inflates the decorView and the basic
+        // UI hierarchy as stubs. This is done here before kicking long running I/O because
+        // inflation accesses resource files (XML, etc) even if we are inflating views defined by
+        // the framework. If this operation gets blocked because other long running I/O are running,
+        // we delay onCreate(), onStart() and first draw consequently.
 
-        if (!shouldDelayBrowserStartup()) {
-            setContentView();
-            if (mLaunchBehindWorkaround != null) mLaunchBehindWorkaround.onSetContentView();
+        setContentView();
+        if (mLaunchBehindWorkaround != null) mLaunchBehindWorkaround.onSetContentView();
+
+        if (!mStartupDelayed) {
+            // Kick off long running IO tasks that can be done in parallel.
+            mNativeInitializationController.startBackgroundTasks(shouldAllocateChildConnection());
         }
-
-        // Kick off long running IO tasks that can be done in parallel.
-        mNativeInitializationController.startBackgroundTasks(shouldAllocateChildConnection());
     }
 
     /** Controls the parameter of {@link NativeInitializationController#startBackgroundTasks()}.*/
@@ -148,6 +152,7 @@ public abstract class AsyncInitializationActivity extends AppCompatActivity impl
         return true;
     }
 
+    @CallSuper
     @Override
     public void postInflationStartup() {
         final View firstDrawView = getViewToBeDrawnBeforeInitializingNative();
@@ -157,7 +162,10 @@ public abstract class AsyncInitializationActivity extends AppCompatActivity impl
             @Override
             public boolean onPreDraw() {
                 firstDrawView.getViewTreeObserver().removeOnPreDrawListener(this);
-                onFirstDrawComplete();
+                mFirstDrawComplete = true;
+                if (!mStartupDelayed) {
+                    onFirstDrawComplete();
+                }
                 return true;
             }
         };
@@ -206,13 +214,6 @@ public abstract class AsyncInitializationActivity extends AppCompatActivity impl
         mNativeInitializationController.onNativeInitializationComplete();
     }
 
-    /**
-     * Actions that may be run at some point after startup. Place tasks that are not critical to the
-     * startup path here.  This method will be called automatically and should not be called
-     * directly by subclasses.
-     */
-    protected void onDeferredStartup() { }
-
     @Override
     public void onStartupFailure() {
         ProcessInitException e =
@@ -247,8 +248,13 @@ public abstract class AsyncInitializationActivity extends AppCompatActivity impl
         }
 
         if (!isStartedUpCorrectly(getIntent())) {
-            super.onCreate(null);
-            ApiCompatibilityUtils.finishAndRemoveTask(this);
+            abortLaunch();
+            return;
+        }
+
+        if (requiresFirstRunToBeCompleted(getIntent())
+                && FirstRunFlowSequencer.launch(this, getIntent(), false)) {
+            abortLaunch();
             return;
         }
 
@@ -262,14 +268,26 @@ public abstract class AsyncInitializationActivity extends AppCompatActivity impl
             getWindowAndroid().restoreInstanceState(getSavedInstanceState());
         }
 
-        if (shouldDelayBrowserStartup()) {
-            // Even if the browser startup is being delayed, the UI still has to be inflated.
-            setContentView();
-            if (mLaunchBehindWorkaround != null) mLaunchBehindWorkaround.onSetContentView();
-        } else {
-            ChromeBrowserInitializer.getInstance(
-                    getApplicationContext()).handlePreNativeStartup(this);
-        }
+        mStartupDelayed = shouldDelayBrowserStartup();
+        ChromeBrowserInitializer.getInstance(this).handlePreNativeStartup(this);
+    }
+
+    private void abortLaunch() {
+        super.onCreate(null);
+        ApiCompatibilityUtils.finishAndRemoveTask(this);
+    }
+
+    /**
+     * Call to begin loading the library, if it was delayed.
+     */
+    protected void startDelayedNativeInitialization() {
+        assert mStartupDelayed;
+        mStartupDelayed = false;
+
+        // Kick off long running IO tasks that can be done in parallel.
+        mNativeInitializationController.startBackgroundTasks(shouldAllocateChildConnection());
+
+        if (mFirstDrawComplete) onFirstDrawComplete();
     }
 
     /**
@@ -294,6 +312,14 @@ public abstract class AsyncInitializationActivity extends AppCompatActivity impl
      */
     protected Bundle transformSavedInstanceStateForOnCreate(Bundle savedInstanceState) {
         return savedInstanceState;
+    }
+
+    /**
+     * Overriding this function is almost always wrong.
+     * @return Whether or not the user needs to go through First Run before using this Activity.
+     */
+    protected boolean requiresFirstRunToBeCompleted(Intent intent) {
+        return true;
     }
 
     /**
@@ -411,8 +437,10 @@ public abstract class AsyncInitializationActivity extends AppCompatActivity impl
         if (mWindowAndroid != null) mWindowAndroid.onContextMenuClosed();
     }
 
-    @Override
-    public final void onFirstDrawComplete() {
+    private void onFirstDrawComplete() {
+        assert mFirstDrawComplete;
+        assert !mStartupDelayed;
+
         mHandler.post(new Runnable() {
             @Override
             public void run() {

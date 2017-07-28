@@ -73,14 +73,11 @@ public class OfflinePageNotificationBridge {
         DownloadNotifier notifier = getDownloadNotifier();
         if (notifier == null) return;
 
-        int percentage =
-                org.chromium.chrome.browser.download.DownloadItem.INDETERMINATE_DOWNLOAD_PERCENTAGE;
         DownloadInfo downloadInfo = new DownloadInfo.Builder()
                                             .setIsOfflinePage(true)
                                             .setDownloadGuid(guid)
                                             .setFileName(displayName)
                                             .setFilePath(url)
-                                            .setPercentCompleted(percentage)
                                             .setBytesReceived(bytesReceived)
                                             .setIsOffTheRecord(false)
                                             .setIsResumable(true)

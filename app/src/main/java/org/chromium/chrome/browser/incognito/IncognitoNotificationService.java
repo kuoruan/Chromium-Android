@@ -31,6 +31,7 @@ import org.chromium.chrome.browser.document.DocumentUtils;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.tabmodel.TabWindowManager;
 import org.chromium.chrome.browser.tabmodel.TabbedModeTabPersistencePolicy;
+import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
 import org.chromium.content.browser.BrowserStartupController;
 
 import java.io.File;
@@ -74,8 +75,7 @@ public class IncognitoNotificationService extends IntentService {
         ThreadUtils.runOnUiThreadBlocking(new Runnable() {
             @Override
             public void run() {
-                int incognitoCount = TabWindowManager.getInstance().getIncognitoTabCount();
-                if (incognitoCount != 0) {
+                if (!TabWindowManager.getInstance().canDestroyIncognitoProfile()) {
                     assert false : "Not all incognito tabs closed as expected";
                     return;
                 }
@@ -193,6 +193,17 @@ public class IncognitoNotificationService extends IntentService {
 
                     ChromeTabbedActivity tabbedActivity = (ChromeTabbedActivity) activity;
                     if (tabbedActivity.isActivityDestroyed()) continue;
+
+                    // Close the Chrome Home bottom sheet if it is open over an incognito tab.
+                    if (tabbedActivity.getBottomSheet() != null
+                            && tabbedActivity.getBottomSheet().isSheetOpen()
+                            && tabbedActivity.getTabModelSelector().isIncognitoSelected()) {
+                        // Skip animating to ensure to sheet is closed immediately. If the animation
+                        // is run, the incognito profile will be in use until the end of the
+                        // animation.
+                        tabbedActivity.getBottomSheet().setSheetState(
+                                BottomSheet.SHEET_STATE_PEEK, false);
+                    }
 
                     tabbedActivity.getTabModelSelector().getModel(true).closeAllTabs(
                             false, false);

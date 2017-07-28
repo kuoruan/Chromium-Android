@@ -15,12 +15,12 @@ import org.chromium.chrome.browser.dom_distiller.DomDistillerServiceFactory;
 import org.chromium.chrome.browser.dom_distiller.DomDistillerTabUtils;
 import org.chromium.chrome.browser.ntp.NewTabPage;
 import org.chromium.chrome.browser.offlinepages.OfflinePageUtils;
+import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.toolbar.ToolbarModel.ToolbarModelDelegate;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
 import org.chromium.components.dom_distiller.core.DomDistillerService;
 import org.chromium.components.dom_distiller.core.DomDistillerUrlUtils;
-import org.chromium.components.security_state.ConnectionSecurityLevel;
 import org.chromium.content_public.browser.WebContents;
 
 /**
@@ -77,6 +77,9 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
         // TODO(dtrainor, tedchoc): Remove the isInitialized() check when we no longer wait for
         // TAB_CLOSED events to remove this tab.  Otherwise there is a chance we use this tab after
         // {@link ChromeTab#destroy()} is called.
+        if (mBottomSheet != null && mBottomSheet.isShowingNewTab()) {
+            return null;
+        }
         return (mTab == null || !mTab.isInitialized()) ? null : mTab;
     }
 
@@ -115,8 +118,7 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
                 displayText =
                         DomDistillerTabUtils.getFormattedUrlFromOriginalDistillerUrl(originalUrl);
             }
-        } else if (mTab.isOfflinePage()
-                && mTab.getSecurityLevel() == ConnectionSecurityLevel.NONE) {
+        } else if (OfflinePageUtils.isOfflinePage(mTab)) {
             String originalUrl = mTab.getOriginalUrl();
             displayText = OfflinePageUtils.stripSchemeFromOnlineUrl(
                   DomDistillerTabUtils.getFormattedUrlFromOriginalDistillerUrl(originalUrl));
@@ -138,6 +140,16 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
         return mIsIncognito;
     }
 
+    @Override
+    public Profile getProfile() {
+        Profile lastUsedProfile = Profile.getLastUsedProfile();
+        if (mIsIncognito) {
+            assert lastUsedProfile.hasOffTheRecordProfile();
+            return lastUsedProfile.getOffTheRecordProfile();
+        }
+        return lastUsedProfile.getOriginalProfile();
+    }
+
     /**
      * Sets the primary color and changes the state for isUsingBrandColor.
      * @param color The primary color for the current tab.
@@ -153,8 +165,7 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
 
     @Override
     public int getPrimaryColor() {
-        if (mBottomSheet != null && mBottomSheet.isSheetOpen()
-                && mBottomSheet.getTargetSheetState() != BottomSheet.SHEET_STATE_PEEK) {
+        if (mBottomSheet != null) {
             int colorId =
                     isIncognito() ? R.color.incognito_primary_color : R.color.default_primary_color;
             return ApiCompatibilityUtils.getColor(
@@ -165,6 +176,6 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
 
     @Override
     public boolean isUsingBrandColor() {
-        return mIsUsingBrandColor;
+        return mIsUsingBrandColor && mBottomSheet == null;
     }
 }

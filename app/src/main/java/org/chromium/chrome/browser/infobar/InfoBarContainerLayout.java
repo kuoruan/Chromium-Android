@@ -17,6 +17,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import org.chromium.base.ObserverList;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.infobar.InfoBarContainer.InfoBarAnimationListener;
 
@@ -60,12 +61,11 @@ import java.util.ArrayList;
  *
  * TODO(newt): finalize animation timings and interpolators.
  */
-class InfoBarContainerLayout extends FrameLayout {
-
+public class InfoBarContainerLayout extends FrameLayout {
     /**
      * An interface for items that can be added to an InfoBarContainerLayout.
      */
-    interface Item {
+    public interface Item {
         /**
          * Returns the View that represents this infobar. This should have no background or borders;
          * a background and shadow will be added by a wrapper view.
@@ -95,6 +95,13 @@ class InfoBarContainerLayout extends FrameLayout {
          * any other infobars already visible.
          */
         boolean isLegalDisclosure();
+
+        /**
+         * Returns the type of infobar, as best as can be determined at this time.  See
+         * components/infobars/core/infobar_delegate.h.
+         */
+        @InfoBarIdentifier
+        int getInfoBarIdentifier();
     }
 
     /**
@@ -146,10 +153,17 @@ class InfoBarContainerLayout extends FrameLayout {
     }
 
     /**
-     * Sets a listener to receive updates when each animation is complete.
+     * Adds a listener to receive updates when each animation is complete.
      */
-    void setAnimationListener(InfoBarAnimationListener listener) {
-        mAnimationListener = listener;
+    void addAnimationListener(InfoBarAnimationListener listener) {
+        mAnimationListeners.addObserver(listener);
+    }
+
+    /**
+     * Removes a listener that was receiving updates when each animation is complete.
+     */
+    void removeAnimationListener(InfoBarAnimationListener listener) {
+        mAnimationListeners.removeObserver(listener);
     }
 
     /////////////////////////////////////////
@@ -184,8 +198,8 @@ class InfoBarContainerLayout extends FrameLayout {
                 public void onAnimationEnd(Animator animation) {
                     mAnimation = null;
                     InfoBarAnimation.this.onAnimationEnd();
-                    if (mAnimationListener != null) {
-                        mAnimationListener.notifyAnimationFinished(getAnimationType());
+                    for (InfoBarAnimationListener listener : mAnimationListeners) {
+                        listener.notifyAnimationFinished(getAnimationType());
                     }
                     processPendingAnimations();
                 }
@@ -683,10 +697,11 @@ class InfoBarContainerLayout extends FrameLayout {
      */
     private final ArrayList<InfoBarWrapper> mInfoBarWrappers = new ArrayList<>();
 
+    /** A list of observers that are notified when animations finish. */
+    private final ObserverList<InfoBarAnimationListener> mAnimationListeners = new ObserverList<>();
+
     /** The current animation, or null if no animation is happening currently. */
     private InfoBarAnimation mAnimation;
-
-    private InfoBarAnimationListener mAnimationListener;
 
     private FloatingBehavior mFloatingBehavior;
 
@@ -769,6 +784,13 @@ class InfoBarContainerLayout extends FrameLayout {
             runAnimation(mInfoBarWrappers.isEmpty()
                     ? new FirstInfoBarAppearingAnimation(itemToShow)
                     : new BackInfoBarAppearingAnimation(itemToShow));
+            return;
+        }
+
+        // Fifth, now that we've stabilized, let listeners know that we have no more animations.
+        Item frontItem = mInfoBarWrappers.size() > 0 ? mInfoBarWrappers.get(0).getItem() : null;
+        for (InfoBarAnimationListener listener : mAnimationListeners) {
+            listener.notifyAllAnimationsFinished(frontItem);
         }
     }
 

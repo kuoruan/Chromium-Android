@@ -110,7 +110,7 @@ public class SignInPreference extends Preference
 
     private void setupSigninDisabled() {
         setTitle(R.string.sign_in_to_chrome);
-        setSummary(R.string.sign_in_to_chrome_summary);
+        setSummary(R.string.sign_in_to_chrome_disabled_summary);
         setFragment(null);
         setIcon(ManagedPreferencesUtils.getManagedByEnterpriseIconId());
         setWidgetLayoutResource(0);

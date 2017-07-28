@@ -23,6 +23,13 @@ public abstract class MediaSessionObserver {
      * Construct a MediaSessionObserver and start observing |mediaSession|.
      */
     protected MediaSessionObserver(MediaSession mediaSession) {
+        // In tests, the MediaSession might be a mocked object which is not instance of
+        // MediaSessionImpl.
+        //
+        // TODO(mlamouri): move addObserver()/removeObserver() methods to the {@link MediaSession}
+        // class so that we don't need this type check?
+        if (!(mediaSession instanceof MediaSessionImpl)) return;
+
         mMediaSession = (MediaSessionImpl) mediaSession;
         mMediaSession.addObserver(this);
     }

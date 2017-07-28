@@ -8,14 +8,15 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingStart="15dp"
-    android:paddingEnd="15dp"
     android:minHeight="40dp"
     tools:ignore="UseCompoundDrawables">
     <ImageView
         android:id="@+id/context_menu_icon"
         android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_gravity="center_vertical"
+        android:layout_height="match_parent"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:scaleType="centerInside"
         android:contentDescription="@null" />
     <TextView
         android:id="@+id/context_text"
@@ -28,9 +29,17 @@
         android:textColor="#dd000000" />
     <ImageView
         android:id="@+id/context_menu_share_icon"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_gravity="center_vertical"
+        android:layout_width="51dp"
+        android:layout_height="match_parent"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="15dp"
+        android:scaleType="centerInside"
         android:contentDescription="@null"
         android:visibility="gone"/>
+    <Space
+        android:id="@+id/context_menu_right_padding"
+        android:layout_width="15dp"
+        android:layout_height="wrap_content"/>
 </LinearLayout>

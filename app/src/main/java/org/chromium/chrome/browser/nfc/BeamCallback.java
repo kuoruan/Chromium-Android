@@ -10,7 +10,6 @@ import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter.CreateNdefMessageCallback;
 import android.nfc.NfcAdapter.OnNdefPushCompleteCallback;
 import android.nfc.NfcEvent;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
@@ -50,11 +49,6 @@ class BeamCallback implements CreateNdefMessageCallback, OnNdefPushCompleteCallb
             this.errorStrID = null;
         }
     }
-
-    // In ICS returning null from createNdefMessage will cause beam to send our market
-    // link so we need to hook to the return from the beam overlay to display the error.
-    // But in SDK_INT >= 16, beam won't activate, so the hook wouldn't go off. (b/5943350)
-    private static final boolean NFC_BUGS_ACTIVE = Build.VERSION.SDK_INT < 16;
 
     // Arbitrarily chosen interval to delay toast to allow NFC animations to finish
     // and our app to return to foreground.
@@ -121,11 +115,7 @@ class BeamCallback implements CreateNdefMessageCallback, OnNdefPushCompleteCallb
                 Toast.makeText(mActivity, errorStringId, Toast.LENGTH_SHORT).show();
             }
         };
-        if (NFC_BUGS_ACTIVE) {
-            mErrorRunnableIfBeamSent = errorRunnable;
-        } else {
-            ThreadUtils.runOnUiThread(errorRunnable);
-        }
+        ThreadUtils.runOnUiThread(errorRunnable);
     }
 
     @Override

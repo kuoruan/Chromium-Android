@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.contextmenu;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.util.Pair;
 import android.view.LayoutInflater;
@@ -12,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.Space;
 import android.widget.TextView;
 
 import org.chromium.chrome.R;
@@ -26,7 +28,7 @@ import java.util.List;
 class TabularContextMenuListAdapter extends BaseAdapter {
     private final List<ContextMenuItem> mMenuItems;
     private final Activity mActivity;
-    private final Runnable mOnShareItemClicked;
+    private final Runnable mOnDirectShare;
 
     /**
      * Adapter for the tabular context menu UI
@@ -34,10 +36,10 @@ class TabularContextMenuListAdapter extends BaseAdapter {
      * @param activity Used to inflate the layout.
      */
     TabularContextMenuListAdapter(
-            List<ContextMenuItem> menuItems, Activity activity, Runnable onShareItemClicked) {
+            List<ContextMenuItem> menuItems, Activity activity, Runnable onDirectShare) {
         mMenuItems = menuItems;
         mActivity = activity;
-        mOnShareItemClicked = onShareItemClicked;
+        mOnDirectShare = onDirectShare;
     }
 
     @Override
@@ -52,7 +54,7 @@ class TabularContextMenuListAdapter extends BaseAdapter {
 
     @Override
     public long getItemId(int position) {
-        return mMenuItems.get(position).menuId;
+        return mMenuItems.get(position).getMenuId();
     }
 
     @Override
@@ -69,20 +71,23 @@ class TabularContextMenuListAdapter extends BaseAdapter {
             viewHolder.mText = (TextView) convertView.findViewById(R.id.context_text);
             viewHolder.mShareIcon =
                     (ImageView) convertView.findViewById(R.id.context_menu_share_icon);
+            viewHolder.mRightPadding =
+                    (Space) convertView.findViewById(R.id.context_menu_right_padding);
 
             convertView.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolderItem) convertView.getTag();
         }
 
-        viewHolder.mText.setText(menuItem.getString(mActivity));
-        Drawable icon = menuItem.getDrawableAndDescription(mActivity);
+        viewHolder.mText.setText(menuItem.getTitle(mActivity));
+        Drawable icon = menuItem.getDrawable(mActivity);
         viewHolder.mIcon.setImageDrawable(icon);
         viewHolder.mIcon.setVisibility(icon != null ? View.VISIBLE : View.INVISIBLE);
 
-        if (menuItem == ContextMenuItem.SHARE_IMAGE) {
+        if (menuItem == ChromeContextMenuItem.SHARE_IMAGE) {
+            Intent shareIntent = ShareHelper.getShareImageIntent(null);
             final Pair<Drawable, CharSequence> shareInfo =
-                    ShareHelper.getShareableIconAndName(mActivity);
+                    ShareHelper.getShareableIconAndName(mActivity, shareIntent);
             if (shareInfo.first != null) {
                 viewHolder.mShareIcon.setImageDrawable(shareInfo.first);
                 viewHolder.mShareIcon.setVisibility(View.VISIBLE);
@@ -91,12 +96,14 @@ class TabularContextMenuListAdapter extends BaseAdapter {
                 viewHolder.mShareIcon.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        mOnShareItemClicked.run();
+                        mOnDirectShare.run();
                     }
                 });
+                viewHolder.mRightPadding.setVisibility(View.GONE);
             }
         } else {
             viewHolder.mShareIcon.setVisibility(View.GONE);
+            viewHolder.mRightPadding.setVisibility(View.VISIBLE);
         }
 
         return convertView;
@@ -106,5 +113,6 @@ class TabularContextMenuListAdapter extends BaseAdapter {
         ImageView mIcon;
         TextView mText;
         ImageView mShareIcon;
+        Space mRightPadding;
     }
 }

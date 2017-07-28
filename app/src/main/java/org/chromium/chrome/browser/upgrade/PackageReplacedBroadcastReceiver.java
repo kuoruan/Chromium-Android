@@ -10,7 +10,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 
 import org.chromium.base.BuildInfo;
-import org.chromium.chrome.browser.notifications.ChannelsUpdater;
+import org.chromium.chrome.browser.notifications.channels.ChannelsUpdater;
 
 /**
  * Triggered when Chrome's package is replaced (e.g. when it is upgraded).

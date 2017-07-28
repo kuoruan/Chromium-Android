@@ -15,13 +15,13 @@ import android.text.TextUtils;
 import org.chromium.base.Callback;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.AutofillProfile;
+import org.chromium.chrome.browser.autofill.PersonalDataManager.NormalizedAddressRequestDelegate;
 import org.chromium.chrome.browser.favicon.FaviconHelper;
 import org.chromium.chrome.browser.page_info.CertificateChainHelper;
 import org.chromium.chrome.browser.payments.ui.Completable;
@@ -36,6 +36,7 @@ import org.chromium.chrome.browser.payments.ui.ShoppingCart;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
 import org.chromium.chrome.browser.preferences.autofill.AutofillAndPaymentsPreferences;
 import org.chromium.chrome.browser.profiles.Profile;
+import org.chromium.chrome.browser.ssl.SecurityStateModel;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.EmptyTabModelObserver;
 import org.chromium.chrome.browser.tabmodel.EmptyTabModelSelectorObserver;
@@ -45,6 +46,7 @@ import org.chromium.chrome.browser.tabmodel.TabModelObserver;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.TabModelSelectorObserver;
 import org.chromium.components.payments.CurrencyFormatter;
+import org.chromium.components.payments.OriginSecurityChecker;
 import org.chromium.components.payments.PaymentValidator;
 import org.chromium.components.url_formatter.UrlFormatter;
 import org.chromium.content_public.browser.RenderFrameHost;
@@ -53,6 +55,7 @@ import org.chromium.content_public.browser.WebContentsStatics;
 import org.chromium.mojo.system.MojoException;
 import org.chromium.payments.mojom.CanMakePaymentQueryResult;
 import org.chromium.payments.mojom.PaymentComplete;
+import org.chromium.payments.mojom.PaymentCurrencyAmount;
 import org.chromium.payments.mojom.PaymentDetails;
 import org.chromium.payments.mojom.PaymentDetailsModifier;
 import org.chromium.payments.mojom.PaymentErrorReason;
@@ -82,11 +85,12 @@ import javax.annotation.Nullable;
  * Android implementation of the PaymentRequest service defined in
  * components/payments/content/payment_request.mojom.
  */
-public class PaymentRequestImpl
-        implements PaymentRequest, PaymentRequestUI.Client, PaymentApp.InstrumentsCallback,
-                   PaymentInstrument.InstrumentDetailsCallback,
-                   PaymentAppFactory.PaymentAppCreatedCallback,
-                   PaymentResponseHelper.PaymentResponseRequesterDelegate, FocusChangedObserver {
+public class PaymentRequestImpl implements PaymentRequest, PaymentRequestUI.Client,
+                                           PaymentApp.InstrumentsCallback,
+                                           PaymentInstrument.InstrumentDetailsCallback,
+                                           PaymentAppFactory.PaymentAppCreatedCallback,
+                                           PaymentResponseHelper.PaymentResponseRequesterDelegate,
+                                           FocusChangedObserver, NormalizedAddressRequestDelegate {
     /**
      * A test-only observer for the PaymentRequest service implementation.
      */
@@ -217,6 +221,7 @@ public class PaymentRequestImpl
     private static final int CAN_MAKE_PAYMENT_QUERY_PERIOD_MS = 30 * 60 * 1000;
 
     private static PaymentRequestServiceObserverForTest sObserverForTest;
+    private static boolean sIsLocalCanMakePaymentQueryQuotaEnforcedForTest;
 
     /**
      * True if show() was called in any PaymentRequestImpl object. Used to prevent showing more than
@@ -251,9 +256,8 @@ public class PaymentRequestImpl
     private final Handler mHandler = new Handler();
     private final RenderFrameHost mRenderFrameHost;
     private final WebContents mWebContents;
-    private final String mSchemelessOriginForPaymentApp;
-    private final String mOriginForDisplay;
-    private final String mSchemelessIFrameOriginForPaymentApp;
+    private final String mTopLevelOrigin;
+    private final String mPaymentRequestOrigin;
     private final String mMerchantName;
     @Nullable
     private final byte[][] mCertificateChain;
@@ -296,6 +300,7 @@ public class PaymentRequestImpl
      */
     private SectionInformation mUiShippingOptions;
 
+    private String mId;
     private Map<String, PaymentMethodData> mMethodData;
     private boolean mRequestShipping;
     private boolean mRequestPayerName;
@@ -315,8 +320,7 @@ public class PaymentRequestImpl
     private boolean mMerchantSupportsAutofillPaymentInstruments;
     private ContactEditor mContactEditor;
     private boolean mHasRecordedAbortReason;
-    private boolean mQueriedCanMakePayment;
-    private CurrencyFormatter mCurrencyFormatter;
+    private Map<String, CurrencyFormatter> mCurrencyFormatterMap;
     private TabModelSelector mObservedTabModelSelector;
     private TabModel mObservedTabModel;
 
@@ -358,15 +362,12 @@ public class PaymentRequestImpl
         assert renderFrameHost != null;
 
         mRenderFrameHost = renderFrameHost;
-        mSchemelessIFrameOriginForPaymentApp = UrlFormatter.formatUrlForSecurityDisplay(
-                mRenderFrameHost.getLastCommittedURL(), false /* omit scheme for payment apps. */);
         mWebContents = WebContentsStatics.fromRenderFrameHost(renderFrameHost);
 
-        mSchemelessOriginForPaymentApp = UrlFormatter.formatUrlForSecurityDisplay(
-                mWebContents.getLastCommittedUrl(), false /* omit scheme for payment apps. */);
-
-        mOriginForDisplay = UrlFormatter.formatUrlForSecurityDisplay(
-                mWebContents.getLastCommittedUrl(), true /* include scheme in display */);
+        mPaymentRequestOrigin = UrlFormatter.formatUrlForSecurityDisplay(
+                mRenderFrameHost.getLastCommittedURL(), true);
+        mTopLevelOrigin =
+                UrlFormatter.formatUrlForSecurityDisplay(mWebContents.getLastCommittedUrl(), true);
 
         mMerchantName = mWebContents.getTitle();
 
@@ -385,15 +386,16 @@ public class PaymentRequestImpl
 
         if (sCanMakePaymentQueries == null) sCanMakePaymentQueries = new ArrayMap<>();
 
-        recordSuccessFunnelHistograms("Initiated");
+        mCurrencyFormatterMap = new HashMap<>();
     }
 
     @Override
     protected void finalize() throws Throwable {
         super.finalize();
-        if (mCurrencyFormatter != null) {
+        for (CurrencyFormatter formatter : mCurrencyFormatterMap.values()) {
+            assert formatter != null;
             // Ensures the native implementation of currency formatter does not leak.
-            mCurrencyFormatter.destroy();
+            formatter.destroy();
         }
     }
 
@@ -403,41 +405,76 @@ public class PaymentRequestImpl
     @Override
     public void init(PaymentRequestClient client, PaymentMethodData[] methodData,
             PaymentDetails details, PaymentOptions options) {
-        if (mClient != null || client == null) return;
+        if (mClient != null) {
+            mJourneyLogger.setAborted(AbortReason.INVALID_DATA_FROM_RENDERER);
+            disconnectFromClientWithDebugMessage("Renderer should never call init() twice");
+            return;
+        }
+
+        if (client == null) {
+            mJourneyLogger.setAborted(AbortReason.INVALID_DATA_FROM_RENDERER);
+            disconnectFromClientWithDebugMessage("Invalid mojo client");
+            return;
+        }
+
         mClient = client;
+        mMethodData = new HashMap<>();
 
-        if (mMethodData != null) {
-            disconnectFromClientWithDebugMessage("PaymentRequest.show() called more than once.");
-            recordAbortReasonHistogram(
-                    PaymentRequestMetrics.ABORT_REASON_INVALID_DATA_FROM_RENDERER);
+        if (!OriginSecurityChecker.isOriginSecure(mWebContents.getLastCommittedUrl())) {
+            mJourneyLogger.setAborted(AbortReason.INVALID_DATA_FROM_RENDERER);
+            disconnectFromClientWithDebugMessage("Not in a secure context");
             return;
         }
-
-        mMethodData = getValidatedMethodData(methodData, mCardEditor);
-        if (mMethodData == null) {
-            disconnectFromClientWithDebugMessage("Invalid payment methods or data");
-            recordAbortReasonHistogram(
-                    PaymentRequestMetrics.ABORT_REASON_INVALID_DATA_FROM_RENDERER);
-            return;
-        }
-
-        if (!parseAndValidateDetailsOrDisconnectFromClient(details)) return;
-
-        if (mRawTotal == null) {
-            disconnectFromClientWithDebugMessage("Missing total");
-            recordAbortReasonHistogram(
-                    PaymentRequestMetrics.ABORT_REASON_INVALID_DATA_FROM_RENDERER);
-            return;
-        }
-
-        PaymentAppFactory.getInstance().create(mWebContents,
-                Collections.unmodifiableSet(mMethodData.keySet()), this /* callback */);
 
         mRequestShipping = options != null && options.requestShipping;
         mRequestPayerName = options != null && options.requestPayerName;
         mRequestPayerPhone = options != null && options.requestPayerPhone;
         mRequestPayerEmail = options != null && options.requestPayerEmail;
         mShippingType = options == null ? PaymentShippingType.SHIPPING : options.shippingType;
+
+        if (!OriginSecurityChecker.isSchemeCryptographic(mWebContents.getLastCommittedUrl())
+                && !OriginSecurityChecker.isOriginLocalhostOrFile(
+                           mWebContents.getLastCommittedUrl())) {
+            Log.d(TAG, "Only localhost, file://, and cryptographic scheme origins allowed");
+            // Don't show any UI. Resolve .canMakePayment() with "false". Reject .show() with
+            // "NotSupportedError".
+            onAllPaymentAppsCreated();
+            return;
+        }
+
+        mJourneyLogger.setRequestedInformation(
+                mRequestShipping, mRequestPayerEmail, mRequestPayerPhone, mRequestPayerName);
+
+        if (OriginSecurityChecker.isSchemeCryptographic(mWebContents.getLastCommittedUrl())
+                && !SslValidityChecker.isSslCertificateValid(mWebContents)) {
+            Log.d(TAG, "SSL certificate is not valid");
+            // Don't show any UI. Resolve .canMakePayment() with "false". Reject .show() with
+            // "NotSupportedError".
+            onAllPaymentAppsCreated();
+            return;
+        }
+
+        mMethodData = getValidatedMethodData(methodData, mCardEditor);
+        if (mMethodData == null) {
+            mJourneyLogger.setAborted(AbortReason.INVALID_DATA_FROM_RENDERER);
+            disconnectFromClientWithDebugMessage("Invalid payment methods or data");
+            return;
+        }
+
+        if (!parseAndValidateDetailsOrDisconnectFromClient(details)) return;
+
+        if (mRawTotal == null) {
+            mJourneyLogger.setAborted(AbortReason.INVALID_DATA_FROM_RENDERER);
+            disconnectFromClientWithDebugMessage("Missing total");
+            return;
+        }
+        mId = details.id;
+
+        // Checks whether the merchant supports autofill payment instrument before show is called.
+        mMerchantSupportsAutofillPaymentInstruments =
+                AutofillPaymentApp.merchantSupportsAutofillPaymentInstruments(mMethodData);
+        PaymentAppFactory.getInstance().create(mWebContents,
+                Collections.unmodifiableSet(mMethodData.keySet()), this /* callback */);
 
         // If there is a single payment method and the merchant has not requested any other
         // information, we can safely go directly to the payment app instead of showing
@@ -451,9 +488,6 @@ public class PaymentRequestImpl
                 // the payment request UI, thus can't be skipped.
                 && mMethodData.keySet().iterator().next() != null
                 && mMethodData.keySet().iterator().next().startsWith(UrlConstants.HTTPS_URL_PREFIX);
-
-        PaymentRequestMetrics.recordRequestedInformationHistogram(mRequestPayerEmail,
-                mRequestPayerPhone, mRequestShipping, mRequestPayerName);
     }
 
     private void buildUI(Activity activity) {
@@ -480,7 +514,8 @@ public class PaymentRequestImpl
         mUI = new PaymentRequestUI(activity, this, mRequestShipping,
                 mRequestPayerName || mRequestPayerPhone || mRequestPayerEmail,
                 mMerchantSupportsAutofillPaymentInstruments,
-                !PaymentPreferencesUtil.isPaymentCompleteOnce(), mMerchantName, mOriginForDisplay,
+                !PaymentPreferencesUtil.isPaymentCompleteOnce(), mMerchantName, mTopLevelOrigin,
+                SecurityStateModel.getSecurityLevelForWebContents(mWebContents),
                 new ShippingStrings(mShippingType));
 
         final FaviconHelper faviconHelper = new FaviconHelper();
@@ -490,6 +525,7 @@ public class PaymentRequestImpl
                 new FaviconHelper.FaviconImageCallback() {
                     @Override
                     public void onFaviconAvailable(Bitmap bitmap, String iconUrl) {
+                        if (mClient != null && bitmap == null) mClient.warnNoFavicon();
                         if (mUI != null && bitmap != null) mUI.setTitleBitmap(bitmap);
                         faviconHelper.destroy();
                     }
@@ -498,9 +534,9 @@ public class PaymentRequestImpl
         // Add the callback to change the label of shipping addresses depending on the focus.
         if (mRequestShipping) mUI.setShippingAddressSectionFocusChangedObserver(this);
 
-        mAddressEditor.setEditorView(mUI.getEditorView());
-        mCardEditor.setEditorView(mUI.getCardEditorView());
-        if (mContactEditor != null) mContactEditor.setEditorView(mUI.getEditorView());
+        mAddressEditor.setEditorDialog(mUI.getEditorDialog());
+        mCardEditor.setEditorDialog(mUI.getCardEditorDialog());
+        if (mContactEditor != null) mContactEditor.setEditorDialog(mUI.getEditorDialog());
     }
 
     private void createShippingSection(
@@ -529,13 +565,12 @@ public class PaymentRequestImpl
             String countryCode = AutofillAddress.getCountryCode(addresses.get(i).getProfile());
             if (!uniqueCountryCodes.contains(countryCode)) {
                 uniqueCountryCodes.add(countryCode);
-                PersonalDataManager.getInstance().loadRulesForRegion(countryCode);
+                PersonalDataManager.getInstance().loadRulesForAddressNormalization(countryCode);
             }
         }
 
         // Log the number of suggested shipping addresses.
-        mJourneyLogger.setNumberOfSuggestionsShown(
-                JourneyLogger.SECTION_SHIPPING_ADDRESS, addresses.size());
+        mJourneyLogger.setNumberOfSuggestionsShown(Section.SHIPPING_ADDRESS, addresses.size());
 
         // Automatically select the first address if one is complete and if the merchant does
         // not require a shipping address to calculate shipping costs.
@@ -560,10 +595,22 @@ public class PaymentRequestImpl
     public void show() {
         if (mClient == null) return;
 
+        if (mUI != null) {
+            // Can be triggered only by a compromised renderer. In normal operation, calling show()
+            // twice on the same instance of PaymentRequest in JavaScript is rejected at the
+            // renderer level.
+            mJourneyLogger.setAborted(AbortReason.INVALID_DATA_FROM_RENDERER);
+            disconnectFromClientWithDebugMessage("Renderer should never invoke show() twice");
+            return;
+        }
+
         if (getIsAnyPaymentRequestShowing()) {
+            // The renderer can create multiple instances of PaymentRequest and call show() on each
+            // one. Only the first one will be shown. This also prevents multiple tabs and windows
+            // from showing PaymentRequest UI at the same time.
+            mJourneyLogger.setNotShown(NotShownReason.CONCURRENT_REQUESTS);
             disconnectFromClientWithDebugMessage("A PaymentRequest UI is already showing");
-            recordAbortReasonHistogram(
-                    PaymentRequestMetrics.ABORT_REASON_INVALID_DATA_FROM_RENDERER);
+            if (sObserverForTest != null) sObserverForTest.onPaymentRequestServiceShowFailed();
             return;
         }
 
@@ -572,8 +619,9 @@ public class PaymentRequestImpl
 
         ChromeActivity chromeActivity = ChromeActivity.fromWebContents(mWebContents);
         if (chromeActivity == null) {
+            mJourneyLogger.setNotShown(NotShownReason.OTHER);
             disconnectFromClientWithDebugMessage("Unable to find Chrome activity");
-            recordAbortReasonHistogram(PaymentRequestMetrics.ABORT_REASON_OTHER);
+            if (sObserverForTest != null) sObserverForTest.onPaymentRequestServiceShowFailed();
             return;
         }
 
@@ -599,8 +647,7 @@ public class PaymentRequestImpl
 
             mDidRecordShowEvent = true;
             mShouldRecordAbortReason = true;
-            recordSuccessFunnelHistograms("SkippedShow");
-            mJourneyLogger.setEventOccurred(JourneyLogger.EVENT_SKIPPED_SHOW);
+            mJourneyLogger.setEventOccurred(Event.SKIPPED_SHOW);
             mJourneyLogger.setShowCalled();
 
             onPayClicked(null /* selectedShippingAddress */, null /* selectedShippingOption */,
@@ -655,14 +702,12 @@ public class PaymentRequestImpl
                 mPendingApps.remove(app);
             } else {
                 mArePaymentMethodsSupported = true;
-                mMerchantSupportsAutofillPaymentInstruments |= app instanceof AutofillPaymentApp;
                 queryApps.put(app, appMethods);
             }
         }
 
         if (queryApps.isEmpty()) {
-            CanMakePaymentQuery query =
-                    sCanMakePaymentQueries.get(mSchemelessIFrameOriginForPaymentApp);
+            CanMakePaymentQuery query = sCanMakePaymentQueries.get(mPaymentRequestOrigin);
             if (query != null && query.matchesPaymentMethods(mMethodData)) {
                 query.notifyObserversOfResponse(mCanMakePayment);
             }
@@ -670,12 +715,9 @@ public class PaymentRequestImpl
 
         if (disconnectIfNoPaymentMethodsSupported()) return;
 
-        // Query instruments after mMerchantSupportsAutofillPaymentInstruments has been initialized,
-        // so a fast response from a non-autofill payment app at the front of the app list does not
-        // cause NOT_SUPPORTED payment rejection.
         for (Map.Entry<PaymentApp, Map<String, PaymentMethodData>> q : queryApps.entrySet()) {
-            q.getKey().getInstruments(q.getValue(), mSchemelessOriginForPaymentApp,
-                    mSchemelessIFrameOriginForPaymentApp, mCertificateChain, this);
+            q.getKey().getInstruments(q.getValue(), mTopLevelOrigin, mPaymentRequestOrigin,
+                    mCertificateChain, mRawTotal, this);
         }
     }
 
@@ -701,10 +743,9 @@ public class PaymentRequestImpl
         if (mClient == null) return;
 
         if (mUI == null) {
+            mJourneyLogger.setAborted(AbortReason.INVALID_DATA_FROM_RENDERER);
             disconnectFromClientWithDebugMessage(
                     "PaymentRequestUpdateEvent.updateWith() called without PaymentRequest.show()");
-            recordAbortReasonHistogram(
-                    PaymentRequestMetrics.ABORT_REASON_INVALID_DATA_FROM_RENDERER);
             return;
         }
 
@@ -735,34 +776,30 @@ public class PaymentRequestImpl
      */
     private boolean parseAndValidateDetailsOrDisconnectFromClient(PaymentDetails details) {
         if (!PaymentValidator.validatePaymentDetails(details)) {
+            mJourneyLogger.setAborted(AbortReason.INVALID_DATA_FROM_RENDERER);
             disconnectFromClientWithDebugMessage("Invalid payment details");
-            recordAbortReasonHistogram(
-                    PaymentRequestMetrics.ABORT_REASON_INVALID_DATA_FROM_RENDERER);
             return false;
-        }
-
-        if (mCurrencyFormatter == null) {
-            mCurrencyFormatter = new CurrencyFormatter(details.total.amount.currency,
-                    details.total.amount.currencySystem, Locale.getDefault());
         }
 
         if (details.total != null) {
             mRawTotal = details.total;
         }
 
+        loadCurrencyFormattersForPaymentDetails(details);
+
         if (mRawTotal != null) {
             // Total is never pending.
-            LineItem uiTotal = new LineItem(mRawTotal.label,
-                    mCurrencyFormatter.getFormattedCurrencyCode(),
-                    mCurrencyFormatter.format(mRawTotal.amount.value), /* isPending */ false);
+            CurrencyFormatter formatter = getOrCreateCurrencyFormatter(mRawTotal.amount);
+            LineItem uiTotal = new LineItem(mRawTotal.label, formatter.getFormattedCurrencyCode(),
+                    formatter.format(mRawTotal.amount.value), /* isPending */ false);
 
-            List<LineItem> uiLineItems = getLineItems(details.displayItems, mCurrencyFormatter);
+            List<LineItem> uiLineItems = getLineItems(details.displayItems);
 
             mUiShoppingCart = new ShoppingCart(uiTotal, uiLineItems);
         }
         mRawLineItems = Collections.unmodifiableList(Arrays.asList(details.displayItems));
 
-        mUiShippingOptions = getShippingOptions(details.shippingOptions, mCurrencyFormatter);
+        mUiShippingOptions = getShippingOptions(details.shippingOptions);
 
         for (int i = 0; i < details.modifiers.length; i++) {
             PaymentDetailsModifier modifier = details.modifiers[i];
@@ -789,7 +826,8 @@ public class PaymentRequestImpl
             PaymentDetailsModifier modifier = getModifier(instrument);
             instrument.setModifiedTotal(modifier == null || modifier.total == null
                             ? null
-                            : mCurrencyFormatter.format(modifier.total.amount.value));
+                            : getOrCreateCurrencyFormatter(modifier.total.amount)
+                                      .format(modifier.total.amount.value));
         }
 
         updateOrderSummary((PaymentInstrument) mPaymentMethodsSection.getSelectedItem());
@@ -803,19 +841,19 @@ public class PaymentRequestImpl
         PaymentItem total = modifier == null ? null : modifier.total;
         if (total == null) total = mRawTotal;
 
-        mUiShoppingCart.setTotal(
-                new LineItem(total.label, mCurrencyFormatter.getFormattedCurrencyCode(),
-                        mCurrencyFormatter.format(total.amount.value), false /* isPending */));
-        mUiShoppingCart.setAdditionalContents(modifier == null
-                        ? null
-                        : getLineItems(modifier.additionalDisplayItems, mCurrencyFormatter));
-        mUI.updateOrderSummarySection(mUiShoppingCart);
+        CurrencyFormatter formatter = getOrCreateCurrencyFormatter(total.amount);
+        mUiShoppingCart.setTotal(new LineItem(total.label, formatter.getFormattedCurrencyCode(),
+                formatter.format(total.amount.value), false /* isPending */));
+        mUiShoppingCart.setAdditionalContents(
+                modifier == null ? null : getLineItems(modifier.additionalDisplayItems));
+        if (mUI != null) mUI.updateOrderSummarySection(mUiShoppingCart);
     }
 
     /** @return The first modifier that matches the given instrument, or null. */
     @Nullable private PaymentDetailsModifier getModifier(@Nullable PaymentInstrument instrument) {
         if (mModifiers == null || instrument == null) return null;
-        Set<String> methodNames = instrument.getInstrumentMethodNames();
+        // Makes a copy to ensure it is modifiable.
+        Set<String> methodNames = new HashSet<>(instrument.getInstrumentMethodNames());
         methodNames.retainAll(mModifiers.keySet());
         return methodNames.isEmpty() ? null : mModifiers.get(methodNames.iterator().next());
     }
@@ -824,20 +862,19 @@ public class PaymentRequestImpl
      * Converts a list of payment items and returns their parsed representation.
      *
      * @param items     The payment items to parse. Can be null.
-     * @param formatter A formatter for the currency amount value.
      * @return A list of valid line items.
      */
-    private static List<LineItem> getLineItems(
-            @Nullable PaymentItem[] items, CurrencyFormatter formatter) {
+    private List<LineItem> getLineItems(@Nullable PaymentItem[] items) {
         // Line items are optional.
         if (items == null) return new ArrayList<>();
 
         List<LineItem> result = new ArrayList<>(items.length);
         for (int i = 0; i < items.length; i++) {
             PaymentItem item = items[i];
-
-            result.add(new LineItem(
-                    item.label, "", formatter.format(item.amount.value), item.pending));
+            CurrencyFormatter formatter = getOrCreateCurrencyFormatter(item.amount);
+            result.add(new LineItem(item.label,
+                    isMixedOrChangedCurrency() ? formatter.getFormattedCurrencyCode() : "",
+                    formatter.format(item.amount.value), item.pending));
         }
 
         return Collections.unmodifiableList(result);
@@ -847,11 +884,9 @@ public class PaymentRequestImpl
      * Converts a list of shipping options and returns their parsed representation.
      *
      * @param options   The raw shipping options to parse. Can be null.
-     * @param formatter A formatter for the currency amount value.
      * @return The UI representation of the shipping options.
      */
-    private static SectionInformation getShippingOptions(
-            @Nullable PaymentShippingOption[] options, CurrencyFormatter formatter) {
+    private SectionInformation getShippingOptions(@Nullable PaymentShippingOption[] options) {
         // Shipping options are optional.
         if (options == null || options.length == 0) {
             return new SectionInformation(PaymentRequestUI.TYPE_SHIPPING_OPTIONS);
@@ -861,13 +896,73 @@ public class PaymentRequestImpl
         int selectedItemIndex = SectionInformation.NO_SELECTION;
         for (int i = 0; i < options.length; i++) {
             PaymentShippingOption option = options[i];
+            CurrencyFormatter formatter = getOrCreateCurrencyFormatter(option.amount);
+            String currencyPrefix = isMixedOrChangedCurrency()
+                    ? formatter.getFormattedCurrencyCode() + "\u0020"
+                    : "";
             result.add(new PaymentOption(option.id, option.label,
-                    formatter.format(option.amount.value), null));
+                    currencyPrefix + formatter.format(option.amount.value), null));
             if (option.selected) selectedItemIndex = i;
         }
 
         return new SectionInformation(PaymentRequestUI.TYPE_SHIPPING_OPTIONS, selectedItemIndex,
                 Collections.unmodifiableList(result));
+    }
+
+    /**
+     * Load required currency formatter for a given PaymentDetails.
+     *
+     * Note that the cache (mCurrencyFormatterMap) is not cleared for
+     * updated payment details so as to indicate the currency has been changed.
+     *
+     * @param details The given payment details.
+     */
+    private void loadCurrencyFormattersForPaymentDetails(PaymentDetails details) {
+        if (details.total != null) {
+            getOrCreateCurrencyFormatter(details.total.amount);
+        }
+
+        if (details.displayItems != null) {
+            for (PaymentItem item : details.displayItems) {
+                getOrCreateCurrencyFormatter(item.amount);
+            }
+        }
+
+        if (details.shippingOptions != null) {
+            for (PaymentShippingOption option : details.shippingOptions) {
+                getOrCreateCurrencyFormatter(option.amount);
+            }
+        }
+
+        if (details.modifiers != null) {
+            for (PaymentDetailsModifier modifier : details.modifiers) {
+                if (modifier.total != null) getOrCreateCurrencyFormatter(modifier.total.amount);
+                for (PaymentItem displayItem : modifier.additionalDisplayItems) {
+                    getOrCreateCurrencyFormatter(displayItem.amount);
+                }
+            }
+        }
+    }
+
+    private boolean isMixedOrChangedCurrency() {
+        return mCurrencyFormatterMap.size() > 1;
+    }
+
+    /**
+     * Gets currency formatter for a given PaymentCurrencyAmount,
+     * creates one if no existing instance is found.
+     *
+     * @amount The given payment amount.
+     */
+    private CurrencyFormatter getOrCreateCurrencyFormatter(PaymentCurrencyAmount amount) {
+        String key = amount.currency + amount.currencySystem;
+        CurrencyFormatter formatter = mCurrencyFormatterMap.get(key);
+        if (formatter == null) {
+            formatter = new CurrencyFormatter(
+                    amount.currency, amount.currencySystem, Locale.getDefault());
+            mCurrencyFormatterMap.put(key, formatter);
+        }
+        return formatter;
     }
 
     /**
@@ -896,7 +991,7 @@ public class PaymentRequestImpl
         if (!mDidRecordShowEvent) {
             mDidRecordShowEvent = true;
             mShouldRecordAbortReason = true;
-            recordSuccessFunnelHistograms("Shown");
+            mJourneyLogger.setEventOccurred(Event.SHOWN);
             mJourneyLogger.setShowCalled();
         }
     }
@@ -938,12 +1033,11 @@ public class PaymentRequestImpl
         if (optionType == PaymentRequestUI.TYPE_SHIPPING_ADDRESSES) {
             assert option instanceof AutofillAddress;
             // Log the change of shipping address.
-            mJourneyLogger.incrementSelectionChanges(JourneyLogger.SECTION_SHIPPING_ADDRESS);
+            mJourneyLogger.incrementSelectionChanges(Section.SHIPPING_ADDRESS);
             AutofillAddress address = (AutofillAddress) option;
             if (address.isComplete()) {
                 mShippingAddressesSection.setSelectedItem(option);
-                // This updates the line items and the shipping options asynchronously.
-                mClient.onShippingAddressChange(address.toPaymentAddress());
+                startShippingAddressChangeNormalization(address);
             } else {
                 editAddress(address);
             }
@@ -958,7 +1052,7 @@ public class PaymentRequestImpl
         } else if (optionType == PaymentRequestUI.TYPE_CONTACT_DETAILS) {
             assert option instanceof AutofillContact;
             // Log the change of contact info.
-            mJourneyLogger.incrementSelectionChanges(JourneyLogger.SECTION_CONTACT_INFO);
+            mJourneyLogger.incrementSelectionChanges(Section.CONTACT_INFO);
             AutofillContact contact = (AutofillContact) option;
 
             if (contact.isComplete()) {
@@ -971,7 +1065,7 @@ public class PaymentRequestImpl
             assert option instanceof PaymentInstrument;
             if (option instanceof AutofillPaymentInstrument) {
                 // Log the change of credit card.
-                mJourneyLogger.incrementSelectionChanges(JourneyLogger.SECTION_CREDIT_CARDS);
+                mJourneyLogger.incrementSelectionChanges(Section.CREDIT_CARDS);
                 AutofillPaymentInstrument card = (AutofillPaymentInstrument) option;
 
                 if (!card.isComplete()) {
@@ -1022,17 +1116,17 @@ public class PaymentRequestImpl
             editAddress(null);
             mPaymentInformationCallback = callback;
             // Log the add of shipping address.
-            mJourneyLogger.incrementSelectionAdds(JourneyLogger.SECTION_SHIPPING_ADDRESS);
+            mJourneyLogger.incrementSelectionAdds(Section.SHIPPING_ADDRESS);
             return PaymentRequestUI.SELECTION_RESULT_ASYNCHRONOUS_VALIDATION;
         } else if (optionType == PaymentRequestUI.TYPE_CONTACT_DETAILS) {
             editContact(null);
             // Log the add of contact info.
-            mJourneyLogger.incrementSelectionAdds(JourneyLogger.SECTION_CONTACT_INFO);
+            mJourneyLogger.incrementSelectionAdds(Section.CONTACT_INFO);
             return PaymentRequestUI.SELECTION_RESULT_EDITOR_LAUNCH;
         } else if (optionType == PaymentRequestUI.TYPE_PAYMENT_METHODS) {
             editCard(null);
             // Log the add of credit card.
-            mJourneyLogger.incrementSelectionAdds(JourneyLogger.SECTION_CREDIT_CARDS);
+            mJourneyLogger.incrementSelectionAdds(Section.CREDIT_CARDS);
             return PaymentRequestUI.SELECTION_RESULT_EDITOR_LAUNCH;
         }
 
@@ -1042,7 +1136,7 @@ public class PaymentRequestImpl
     private void editAddress(final AutofillAddress toEdit) {
         if (toEdit != null) {
             // Log the edit of a shipping address.
-            mJourneyLogger.incrementSelectionEdits(JourneyLogger.SECTION_SHIPPING_ADDRESS);
+            mJourneyLogger.incrementSelectionEdits(Section.SHIPPING_ADDRESS);
         }
         mAddressEditor.edit(toEdit, new Callback<AutofillAddress>() {
             @Override
@@ -1078,9 +1172,7 @@ public class PaymentRequestImpl
                                     PaymentRequestUI.TYPE_CONTACT_DETAILS, mContactSection);
                         }
 
-                        // This updates the line items and the shipping options asynchronously by
-                        // sending the new address to the merchant website.
-                        mClient.onShippingAddressChange(editedAddress.toPaymentAddress());
+                        startShippingAddressChangeNormalization(editedAddress);
                     }
                 } else {
                     providePaymentInformation();
@@ -1092,7 +1184,7 @@ public class PaymentRequestImpl
     private void editContact(final AutofillContact toEdit) {
         if (toEdit != null) {
             // Log the edit of a contact info.
-            mJourneyLogger.incrementSelectionEdits(JourneyLogger.SECTION_CONTACT_INFO);
+            mJourneyLogger.incrementSelectionEdits(Section.CONTACT_INFO);
         }
         mContactEditor.edit(toEdit, new Callback<AutofillContact>() {
             @Override
@@ -1125,7 +1217,7 @@ public class PaymentRequestImpl
     private void editCard(final AutofillPaymentInstrument toEdit) {
         if (toEdit != null) {
             // Log the edit of a credit card.
-            mJourneyLogger.incrementSelectionEdits(JourneyLogger.SECTION_CREDIT_CARDS);
+            mJourneyLogger.incrementSelectionEdits(Section.CREDIT_CARDS);
         }
         mCardEditor.edit(toEdit, new Callback<AutofillPaymentInstrument>() {
             @Override
@@ -1194,20 +1286,18 @@ public class PaymentRequestImpl
             }
         }
 
-        instrument.invokePaymentApp(mMerchantName, mSchemelessOriginForPaymentApp,
-                mSchemelessIFrameOriginForPaymentApp, mCertificateChain,
-                Collections.unmodifiableMap(methodData), mRawTotal, mRawLineItems,
-                Collections.unmodifiableMap(modifiers), this);
+        instrument.invokePaymentApp(mId, mMerchantName, mTopLevelOrigin, mPaymentRequestOrigin,
+                mCertificateChain, Collections.unmodifiableMap(methodData), mRawTotal,
+                mRawLineItems, Collections.unmodifiableMap(modifiers), this);
 
-        recordSuccessFunnelHistograms("PayClicked");
-        mJourneyLogger.setEventOccurred(JourneyLogger.EVENT_PAY_CLICKED);
+        mJourneyLogger.setEventOccurred(Event.PAY_CLICKED);
         return !(instrument instanceof AutofillPaymentInstrument);
     }
 
     @Override
     public void onDismiss() {
+        mJourneyLogger.setAborted(AbortReason.ABORTED_BY_USER);
         disconnectFromClientWithDebugMessage("Dialog dismissed");
-        recordAbortReasonHistogram(PaymentRequestMetrics.ABORT_REASON_ABORTED_BY_USER);
     }
 
     private void disconnectFromClientWithDebugMessage(String debugMessage) {
@@ -1233,7 +1323,7 @@ public class PaymentRequestImpl
         } else {
             closeClient();
             closeUI(true);
-            recordAbortReasonHistogram(PaymentRequestMetrics.ABORT_REASON_ABORTED_BY_MERCHANT);
+            mJourneyLogger.setAborted(AbortReason.ABORTED_BY_MERCHANT);
         }
     }
 
@@ -1243,7 +1333,7 @@ public class PaymentRequestImpl
     @Override
     public void complete(int result) {
         if (mClient == null) return;
-        recordSuccessFunnelHistograms("Completed");
+        mJourneyLogger.setCompleted();
         if (!PaymentPreferencesUtil.isPaymentCompleteOnce()) {
             PaymentPreferencesUtil.setPaymentCompleteOnce();
         }
@@ -1265,16 +1355,16 @@ public class PaymentRequestImpl
     public void onCardAndAddressSettingsClicked() {
         Context context = ChromeActivity.fromWebContents(mWebContents);
         if (context == null) {
+            mJourneyLogger.setAborted(AbortReason.OTHER);
             disconnectFromClientWithDebugMessage("Unable to find Chrome activity");
-            recordAbortReasonHistogram(PaymentRequestMetrics.ABORT_REASON_OTHER);
             return;
         }
 
         Intent intent = PreferencesLauncher.createIntentForSettingsPage(
                 context, AutofillAndPaymentsPreferences.class.getName());
         context.startActivity(intent);
+        mJourneyLogger.setAborted(AbortReason.ABORTED_BY_USER);
         disconnectFromClientWithDebugMessage("Card and address settings clicked");
-        recordAbortReasonHistogram(PaymentRequestMetrics.ABORT_REASON_ABORTED_BY_USER);
     }
 
     /**
@@ -1284,18 +1374,25 @@ public class PaymentRequestImpl
     public void canMakePayment() {
         if (mClient == null) return;
 
-        CanMakePaymentQuery query =
-                sCanMakePaymentQueries.get(mSchemelessIFrameOriginForPaymentApp);
+        CanMakePaymentQuery query = sCanMakePaymentQueries.get(mPaymentRequestOrigin);
         if (query == null) {
+            // If there has not been a canMakePayment() query in the last 30 minutes, take a note
+            // that one has happened just now. Remember the payment method names and the
+            // corresponding data for the next 30 minutes. Forget about it after the 30 minute
+            // period expires.
             query = new CanMakePaymentQuery(Collections.unmodifiableMap(mMethodData));
-            sCanMakePaymentQueries.put(mSchemelessIFrameOriginForPaymentApp, query);
+            sCanMakePaymentQueries.put(mPaymentRequestOrigin, query);
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    sCanMakePaymentQueries.remove(mSchemelessIFrameOriginForPaymentApp);
+                    sCanMakePaymentQueries.remove(mPaymentRequestOrigin);
                 }
             }, CAN_MAKE_PAYMENT_QUERY_PERIOD_MS);
-        } else if (!query.matchesPaymentMethods(Collections.unmodifiableMap(mMethodData))) {
+        } else if (shouldEnforceCanMakePaymentQueryQuota()
+                && !query.matchesPaymentMethods(Collections.unmodifiableMap(mMethodData))) {
+            // If there has been a canMakePayment() query in the last 30 minutes, but the previous
+            // payment method names and the corresponding data don't match, enforce the
+            // canMakePayment() query quota (unless the quota is turned off).
             mClient.onCanMakePayment(CanMakePaymentQueryResult.QUERY_QUOTA_EXCEEDED);
             if (sObserverForTest != null) {
                 sObserverForTest.onPaymentRequestServiceCanMakePaymentQueryResponded();
@@ -1309,13 +1406,44 @@ public class PaymentRequestImpl
 
     private void respondCanMakePaymentQuery(boolean response) {
         if (mClient == null) return;
-        mClient.onCanMakePayment(response || mIsIncognito
-                        ? CanMakePaymentQueryResult.CAN_MAKE_PAYMENT
-                        : CanMakePaymentQueryResult.CANNOT_MAKE_PAYMENT);
+
+        boolean isIgnoringQueryQuota = false;
+        if (!shouldEnforceCanMakePaymentQueryQuota()) {
+            CanMakePaymentQuery query = sCanMakePaymentQueries.get(mPaymentRequestOrigin);
+            // The cached query may have expired between instantiation of PaymentRequest and
+            // finishing the query of the payment apps.
+            if (query != null) {
+                isIgnoringQueryQuota =
+                        !query.matchesPaymentMethods(Collections.unmodifiableMap(mMethodData));
+            }
+        }
+
+        if (mIsIncognito) {
+            mClient.onCanMakePayment(CanMakePaymentQueryResult.CAN_MAKE_PAYMENT);
+        } else if (isIgnoringQueryQuota) {
+            mClient.onCanMakePayment(response
+                            ? CanMakePaymentQueryResult.WARNING_CAN_MAKE_PAYMENT
+                            : CanMakePaymentQueryResult.WARNING_CANNOT_MAKE_PAYMENT);
+        } else {
+            mClient.onCanMakePayment(response ? CanMakePaymentQueryResult.CAN_MAKE_PAYMENT
+                                              : CanMakePaymentQueryResult.CANNOT_MAKE_PAYMENT);
+        }
+
         mJourneyLogger.setCanMakePaymentValue(response || mIsIncognito);
+
         if (sObserverForTest != null) {
             sObserverForTest.onPaymentRequestServiceCanMakePaymentQueryResponded();
         }
+    }
+
+    /**
+     * @return Whether canMakePayment() query quota should be enforced. By default, the quota is
+     * enforced only on https:// scheme origins. However, the tests also enable the quota on
+     * localhost and file:// scheme origins to verify its behavior.
+     */
+    private boolean shouldEnforceCanMakePaymentQueryQuota() {
+        return !OriginSecurityChecker.isOriginLocalhostOrFile(mWebContents.getLastCommittedUrl())
+                || sIsLocalCanMakePaymentQueryQuotaEnforcedForTest;
     }
 
     /**
@@ -1326,7 +1454,7 @@ public class PaymentRequestImpl
         if (mClient == null) return;
         closeClient();
         closeUI(true);
-        recordAbortReasonHistogram(PaymentRequestMetrics.ABORT_REASON_MOJO_RENDERER_CLOSING);
+        mJourneyLogger.setAborted(AbortReason.MOJO_RENDERER_CLOSING);
     }
 
     /**
@@ -1337,7 +1465,7 @@ public class PaymentRequestImpl
         if (mClient == null) return;
         closeClient();
         closeUI(true);
-        recordAbortReasonHistogram(PaymentRequestMetrics.ABORT_REASON_MOJO_CONNECTION_ERROR);
+        mJourneyLogger.setAborted(AbortReason.MOJO_CONNECTION_ERROR);
     }
 
     /**
@@ -1389,7 +1517,7 @@ public class PaymentRequestImpl
             String countryCode = AutofillAddress.getCountryCode(creditCard.getBillingAddress());
             if (!uniqueCountryCodes.contains(countryCode)) {
                 uniqueCountryCodes.add(countryCode);
-                PersonalDataManager.getInstance().loadRulesForRegion(countryCode);
+                PersonalDataManager.getInstance().loadRulesForAddressNormalization(countryCode);
             }
 
             // If there's a card on file with a valid number and a name, then
@@ -1409,7 +1537,7 @@ public class PaymentRequestImpl
 
         // Log the number of suggested credit cards.
         mJourneyLogger.setNumberOfSuggestionsShown(
-                JourneyLogger.SECTION_CREDIT_CARDS, mPendingAutofillInstruments.size());
+                Section.CREDIT_CARDS, mPendingAutofillInstruments.size());
 
         // Possibly pre-select the first instrument on the list.
         int selection = SectionInformation.NO_SELECTION;
@@ -1425,8 +1553,7 @@ public class PaymentRequestImpl
             }
         }
 
-        CanMakePaymentQuery query =
-                sCanMakePaymentQueries.get(mSchemelessIFrameOriginForPaymentApp);
+        CanMakePaymentQuery query = sCanMakePaymentQueries.get(mPaymentRequestOrigin);
         if (query != null && query.matchesPaymentMethods(mMethodData)) {
             query.notifyObserversOfResponse(mCanMakePayment);
         }
@@ -1466,12 +1593,12 @@ public class PaymentRequestImpl
             // All payment apps have responded, but none of them have instruments. It's possible to
             // add credit cards, but the merchant does not support them either. The payment request
             // must be rejected.
+            mJourneyLogger.setNotShown(mArePaymentMethodsSupported
+                            ? NotShownReason.NO_MATCHING_PAYMENT_METHOD
+                            : NotShownReason.NO_SUPPORTED_PAYMENT_METHOD);
             disconnectFromClientWithDebugMessage("Requested payment methods have no instruments",
                     mIsIncognito ? PaymentErrorReason.USER_CANCEL
                                  : PaymentErrorReason.NOT_SUPPORTED);
-            recordNoShowReasonHistogram(mArePaymentMethodsSupported
-                            ? PaymentRequestMetrics.NO_SHOW_NO_MATCHING_PAYMENT_METHOD
-                            : PaymentRequestMetrics.NO_SHOW_NO_SUPPORTED_PAYMENT_METHOD);
             if (sObserverForTest != null) sObserverForTest.onPaymentRequestServiceShowFailed();
             return true;
         }
@@ -1489,6 +1616,9 @@ public class PaymentRequestImpl
      */
     @Override
     public void onInstrumentDetailsReady(String methodName, String stringifiedDetails) {
+        assert methodName != null;
+        assert stringifiedDetails != null;
+
         if (mClient == null || mPaymentResponseHelper == null) return;
 
         // Record the payment method used to complete the transaction. If the payment method was an
@@ -1499,23 +1629,19 @@ public class PaymentRequestImpl
                 PersonalDataManager.getInstance().recordAndLogCreditCardUse(
                         selectedPaymentMethod.getIdentifier());
             }
-            PaymentRequestMetrics.recordSelectedPaymentMethodHistogram(
-                    PaymentRequestMetrics.SELECTED_METHOD_CREDIT_CARD);
+            mJourneyLogger.setSelectedPaymentMethod(SelectedPaymentMethod.CREDIT_CARD);
         } else if (methodName.equals(ANDROID_PAY_METHOD_NAME)
                 || methodName.equals(PAY_WITH_GOOGLE_METHOD_NAME)) {
-            PaymentRequestMetrics.recordSelectedPaymentMethodHistogram(
-                    PaymentRequestMetrics.SELECTED_METHOD_ANDROID_PAY);
+            mJourneyLogger.setSelectedPaymentMethod(SelectedPaymentMethod.ANDROID_PAY);
         } else {
-            PaymentRequestMetrics.recordSelectedPaymentMethodHistogram(
-                    PaymentRequestMetrics.SELECTED_METHOD_OTHER_PAYMENT_APP);
+            mJourneyLogger.setSelectedPaymentMethod(SelectedPaymentMethod.OTHER_PAYMENT_APP);
         }
 
         // Showing the payment request UI if we were previously skipping it so the loading
         // spinner shows up until the merchant notifies that payment was completed.
         if (mShouldSkipShowingPaymentRequestUi) mUI.showProcessingMessageAfterUiSkip();
 
-        recordSuccessFunnelHistograms("ReceivedInstrumentDetails");
-        mJourneyLogger.setEventOccurred(JourneyLogger.EVENT_RECEIVED_INSTRUMENT_DETAILS);
+        mJourneyLogger.setEventOccurred(Event.RECEIVED_INSTRUMENT_DETAILS);
 
         mPaymentResponseHelper.onInstrumentDetailsReceived(methodName, stringifiedDetails);
     }
@@ -1560,6 +1686,38 @@ public class PaymentRequestImpl
         }
 
         mUI.updateSection(PaymentRequestUI.TYPE_SHIPPING_ADDRESSES, mShippingAddressesSection);
+    }
+
+    @Override
+    public void onAddressNormalized(AutofillProfile profile) {
+        ChromeActivity chromeActivity = ChromeActivity.fromWebContents(mWebContents);
+
+        // Can happen if the tab is closed during the normalization process.
+        if (chromeActivity == null) {
+            mJourneyLogger.setAborted(AbortReason.OTHER);
+            disconnectFromClientWithDebugMessage("Unable to find Chrome activity");
+            if (sObserverForTest != null) sObserverForTest.onPaymentRequestServiceShowFailed();
+            return;
+        }
+
+        // Don't reuse the selected address because it is formatted for display.
+        AutofillAddress shippingAddress = new AutofillAddress(chromeActivity, profile);
+
+        // This updates the line items and the shipping options asynchronously.
+        mClient.onShippingAddressChange(shippingAddress.toPaymentAddress());
+    }
+
+    @Override
+    public void onCouldNotNormalize(AutofillProfile profile) {
+        // Since the phone number is formatted in either case, this profile should be used.
+        onAddressNormalized(profile);
+    }
+
+    /** Starts the normalization of the new shipping address. Will call back into either
+     * onAddressNormalized or onCouldNotNormalize which will send the result to the merchant. */
+    private void startShippingAddressChangeNormalization(AutofillAddress address) {
+        PersonalDataManager.getInstance().normalizeAddress(
+                address.getProfile(), AutofillAddress.getCountryCode(address.getProfile()), this);
     }
 
     /**
@@ -1630,49 +1788,9 @@ public class PaymentRequestImpl
         sObserverForTest = observerForTest;
     }
 
-    /**
-     * Records specific histograms related to the different steps of a successful checkout.
-     */
-    private void recordSuccessFunnelHistograms(String funnelPart) {
-        RecordHistogram.recordBooleanHistogram("PaymentRequest.CheckoutFunnel." + funnelPart, true);
-
-        if (funnelPart.equals("Completed")) {
-            mJourneyLogger.recordJourneyStatsHistograms(JourneyLogger.COMPLETION_STATUS_COMPLETED);
-        }
-    }
-
-    /**
-     * Adds an entry to the aborted Payment Request histogram in the bucket corresponding to the
-     * reason for aborting. Only records the initial reason for aborting, as some closing code calls
-     * other closing code that can log too.
-     */
-    private void recordAbortReasonHistogram(int abortReason) {
-        assert abortReason < PaymentRequestMetrics.ABORT_REASON_MAX;
-        if (mHasRecordedAbortReason || !mShouldRecordAbortReason) return;
-
-        mHasRecordedAbortReason = true;
-        RecordHistogram.recordEnumeratedHistogram(
-                "PaymentRequest.CheckoutFunnel.Aborted", abortReason,
-                PaymentRequestMetrics.ABORT_REASON_MAX);
-
-        if (abortReason == PaymentRequestMetrics.ABORT_REASON_ABORTED_BY_USER) {
-            mJourneyLogger.recordJourneyStatsHistograms(
-                    JourneyLogger.COMPLETION_STATUS_USER_ABORTED);
-        } else {
-            mJourneyLogger.recordJourneyStatsHistograms(
-                    JourneyLogger.COMPLETION_STATUS_OTHER_ABORTED);
-        }
-    }
-
-    /**
-     * Adds an entry to the NoShow Payment Request histogram in the bucket corresponding to the
-     * reason for not showing the Payment Request.
-     */
-    private void recordNoShowReasonHistogram(int reason) {
-        assert reason < PaymentRequestMetrics.NO_SHOW_REASON_MAX;
-
-        RecordHistogram.recordEnumeratedHistogram("PaymentRequest.CheckoutFunnel.NoShow", reason,
-                PaymentRequestMetrics.NO_SHOW_REASON_MAX);
+    @VisibleForTesting
+    public static void setIsLocalCanMakePaymentQueryQuotaEnforcedForTest() {
+        sIsLocalCanMakePaymentQueryQuotaEnforcedForTest = true;
     }
 
     /**

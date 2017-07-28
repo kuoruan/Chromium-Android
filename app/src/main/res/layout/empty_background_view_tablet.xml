@@ -52,7 +52,7 @@
             android:scaleType="center"
             android:contentDescription="@string/accessibility_toolbar_btn_menu"
             android:paddingStart="2dp"
-            chrome:tint="@color/light_mode_tint"
+            chrome:chrometint="@color/light_mode_tint"
             />
     </LinearLayout>
 </org.chromium.chrome.browser.widget.emptybackground.EmptyBackgroundViewTablet>

@@ -252,8 +252,10 @@ public class SigninAndSyncView extends LinearLayout
     }
 
     private ViewState getStateForStartUsing() {
-        assert mAccessPoint == SigninAccessPoint.RECENT_TABS
-                : "This should not be showing from bookmarks";
+        // TODO(peconn): Ensure this state is never seen when used for bookmarks.
+        // State is updated before this view is removed, so this invalid state happens, but is not
+        // visible. I want there to be a guarantee that this state is never seen, but to do so would
+        // require some code restructuring.
 
         return new ViewState(R.string.ntp_recent_tabs_sync_promo_instructions,
                 new ButtonAbsent(), new ButtonAbsent());

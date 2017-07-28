@@ -30,7 +30,7 @@
         <item name="colorControlActivated">@color/light_active_color</item>
 
         <!-- Default TintedImageButton tint -->
-        <item name="tint">@color/dark_mode_tint</item>
+        <item name="chrometint">@color/dark_mode_tint</item>
 
         <!-- Navigation Transitions, requires API level 21 -->
         <item name="android:windowAllowEnterTransitionOverlap" tools:targetApi="21">false</item>
@@ -56,6 +56,15 @@
         <item name="colorPrimaryDark">@android:color/black</item>
         <item name="colorPrimary">@color/light_active_color</item>
         <item name="colorAccent">@color/light_active_color</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="FullscreenTransparentActivityTheme" parent="Theme.AppCompat.Light.NoActionBar" >
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:windowIsTranslucent">true</item>
         <item name="windowNoTitle">true</item>
     </style>
 
@@ -87,7 +96,7 @@
         <item name="colorPrimary">@color/light_active_color</item>
 
         <!-- Default TintedImageButton tint -->
-        <item name="tint">@color/dark_mode_tint</item>
+        <item name="chrometint">@color/dark_mode_tint</item>
     </style>
 
     <style name="SimpleDialog" parent="AlertDialogTheme">
@@ -432,17 +441,6 @@
     <style name="BookmarkMenuStyle" parent="Widget.AppCompat.ListPopupWindow">
         <item name="android:popupBackground">@drawable/menu_bg</item>
     </style>
-    <style name="BookmarkDrawerItemStyle">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">?android:attr/listPreferredItemHeightSmall</item>
-        <item name="android:textAlignment">viewStart</item>
-        <item name="android:gravity">start|center_vertical</item>
-        <item name="android:paddingStart">@dimen/bookmark_drawer_drawable_padding</item>
-        <item name="android:paddingEnd">@dimen/bookmark_drawer_drawable_padding</item>
-        <item name="android:singleLine">true</item>
-        <item name="android:textAppearance">?android:attr/textAppearanceLargePopupMenu</item>
-        <item name="android:textSize">14sp</item>
-    </style>
 
     <!-- Contextual Search styles -->
     <style name="ContextualSearchTextViewLayout">
@@ -583,13 +581,13 @@
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textSize">20sp</item>
     </style>
-    <style name="PrivacyDisclaimerText">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginTop">6dp</item>
-        <item name="android:lineSpacingExtra">6sp</item>
+    <style name="BottomSheetContentTitle" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:textSize">20sp</item>
+    </style>
+    <style name="SadTabBodyText">
+        <item name="android:textColor">@color/sad_tab_body_text_color</item>
         <item name="android:textSize">14sp</item>
-        <item name="android:visibility">gone</item>
+        <item name="android:layout_gravity">start</item>
     </style>
 
     <!-- New tab page RecyclerView overscroll color -->
@@ -610,6 +608,14 @@
         <item name="android:background">@null</item>
         <item name="android:scaleType">center</item>
         <item name="android:paddingEnd">@dimen/selectable_list_layout_row_end_padding</item>
+    </style>
+    <style name="PrivacyDisclaimerText">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:lineSpacingExtra">6sp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:visibility">gone</item>
     </style>
 
     <!-- Download Home -->
@@ -703,8 +709,31 @@
         <item name="android:textSize">12sp</item>
     </style>
 
-    <!-- Miscellaneous -->
-    <style name="BottomSheetContentTitle" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
-        <item name="android:textSize">20sp</item>
+    <!-- Incognito New Tab Page -->
+    <style name="IncognitoNewTabMessage">
+        <item name="android:maxWidth">660dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineSpacingMultiplier">1.2</item>
+    </style>
+    <style name="IncognitoNewTabLearnMoreLink">
+        <item name="android:background">?attr/listChoiceBackgroundIndicator</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:padding">16dp</item>
+    </style>
+
+    <!-- Photo Picker animations -->
+
+    <style name="PhotoPickerDialogAnimation">
+        <item name="android:windowEnterAnimation">@anim/design_bottom_sheet_slide_in</item>
+        <item name="android:windowExitAnimation">@null</item>
+    </style>
+
+    <!-- VR animations -->
+    <style name="VrEntryAnimation">
+        <item name="android:windowEnterAnimation">@anim/stay_hidden</item>
+        <item name="android:windowExitAnimation">@null</item>
     </style>
 </resources>

@@ -24,10 +24,10 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.ShortcutHelper;
 import org.chromium.chrome.browser.document.ChromeLauncherActivity;
-import org.chromium.chrome.browser.notifications.ChannelDefinitions;
 import org.chromium.chrome.browser.notifications.ChromeNotificationBuilder;
 import org.chromium.chrome.browser.notifications.NotificationBuilderFactory;
 import org.chromium.chrome.browser.notifications.NotificationUmaTracker;
+import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
 import org.chromium.chrome.browser.ntp.snippets.ContentSuggestionsNotificationAction;
 import org.chromium.chrome.browser.ntp.snippets.ContentSuggestionsNotificationOptOut;
 
@@ -96,8 +96,7 @@ public class ContentSuggestionsNotificationHelper {
             int category = intent.getIntExtra(NOTIFICATION_CATEGORY_EXTRA, -1);
             String idWithinCategory = intent.getStringExtra(NOTIFICATION_ID_WITHIN_CATEGORY_EXTRA);
             openUrl(intent.getData());
-            recordCachedActionMetric(ContentSuggestionsNotificationAction.TAP);
-            removeActiveNotification(category, idWithinCategory);
+            hideNotification(category, idWithinCategory, ContentSuggestionsNotificationAction.TAP);
         }
     }
 
@@ -109,8 +108,9 @@ public class ContentSuggestionsNotificationHelper {
         public void onReceive(Context context, Intent intent) {
             int category = intent.getIntExtra(NOTIFICATION_CATEGORY_EXTRA, -1);
             String idWithinCategory = intent.getStringExtra(NOTIFICATION_ID_WITHIN_CATEGORY_EXTRA);
-            recordCachedActionMetric(ContentSuggestionsNotificationAction.DISMISSAL);
-            removeActiveNotification(category, idWithinCategory);
+            if (removeActiveNotification(category, idWithinCategory)) {
+                recordCachedActionMetric(ContentSuggestionsNotificationAction.DISMISSAL);
+            }
         }
     }
 
@@ -122,10 +122,6 @@ public class ContentSuggestionsNotificationHelper {
         public void onReceive(Context context, Intent intent) {
             int category = intent.getIntExtra(NOTIFICATION_CATEGORY_EXTRA, -1);
             String idWithinCategory = intent.getStringExtra(NOTIFICATION_ID_WITHIN_CATEGORY_EXTRA);
-            if (findActiveNotification(category, idWithinCategory) == null) {
-                return; // tapped or swiped
-            }
-
             hideNotification(
                     category, idWithinCategory, ContentSuggestionsNotificationAction.HIDE_DEADLINE);
         }
@@ -172,7 +168,6 @@ public class ContentSuggestionsNotificationHelper {
                 NotificationBuilderFactory
                         .createChromeNotificationBuilder(
                                 true /* preferCompat */, ChannelDefinitions.CHANNEL_ID_BROWSER)
-                        .setAutoCancel(true)
                         .setContentIntent(contentIntent)
                         .setDeleteIntent(deleteIntent)
                         .setContentTitle(title)
@@ -206,17 +201,22 @@ public class ContentSuggestionsNotificationHelper {
         return true;
     }
 
+    /**
+     * Hides a notification and records an action to the Actions histogram.
+     *
+     * If the notification is not actually visible, then no action will be taken, and the action
+     * will not be recorded.
+     */
     @CalledByNative
     private static void hideNotification(int category, String idWithinCategory, int why) {
+        ActiveNotification activeNotification = findActiveNotification(category, idWithinCategory);
+        if (!removeActiveNotification(category, idWithinCategory)) return;
+
         Context context = ContextUtils.getApplicationContext();
         NotificationManager manager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        ActiveNotification activeNotification = findActiveNotification(category, idWithinCategory);
-        if (activeNotification == null) return;
         manager.cancel(NOTIFICATION_TAG, activeNotification.mId);
-        if (removeActiveNotification(category, idWithinCategory)) {
-            recordCachedActionMetric(why);
-        }
+        recordCachedActionMetric(why);
     }
 
     @CalledByNative
@@ -226,8 +226,12 @@ public class ContentSuggestionsNotificationHelper {
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         for (ActiveNotification activeNotification : getActiveNotifications()) {
             manager.cancel(NOTIFICATION_TAG, activeNotification.mId);
-            recordCachedActionMetric(why);
+            if (removeActiveNotification(
+                        activeNotification.mCategory, activeNotification.mIdWithinCategory)) {
+                recordCachedActionMetric(why);
+            }
         }
+        assert getActiveNotifications().isEmpty();
     }
 
     private static class ActiveNotification {
@@ -281,6 +285,7 @@ public class ContentSuggestionsNotificationHelper {
         return new HashSet<String>(prefValue);
     }
 
+    /** Adds notification to the "active" set. */
     private static void addActiveNotification(ActiveNotification notification) {
         SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
         Set<String> activeNotifications =
@@ -289,6 +294,7 @@ public class ContentSuggestionsNotificationHelper {
         prefs.edit().putStringSet(PREF_ACTIVE_NOTIFICATIONS, activeNotifications).apply();
     }
 
+    /** Removes notification from the "active" set. Returns false if it wasn't there. */
     private static boolean removeActiveNotification(int category, String idWithinCategory) {
         SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
         ActiveNotification notification = findActiveNotification(category, idWithinCategory);

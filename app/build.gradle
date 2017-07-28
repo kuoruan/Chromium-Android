@@ -12,7 +12,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 25
         versionCode 1
-        versionName "59.0.3071.115"
+        versionName "60.0.3112.78"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -67,6 +67,7 @@ dependencies {
     compile 'com.google.android.gms:play-services-identity:10.2.6'
     compile 'com.google.android.gms:play-services-nearby:10.2.6'
     compile 'com.google.android.gms:play-services-vision:10.2.6'
+    compile 'com.google.android.gms:play-services-location:10.2.6'
     compile 'com.google.code.findbugs:jsr305:2.0.1'
     compile 'com.google.vr:sdk-base:1.10.0'
     compile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.1'

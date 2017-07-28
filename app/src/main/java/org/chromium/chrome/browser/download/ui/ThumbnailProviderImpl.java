@@ -6,7 +6,7 @@ package org.chromium.chrome.browser.download.ui;
 
 import android.graphics.Bitmap;
 import android.os.Handler;
-import android.os.Looper;;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v4.util.LruCache;
 import android.text.TextUtils;
@@ -100,7 +100,8 @@ public class ThumbnailProviderImpl implements ThumbnailProvider {
         Pair<Bitmap, Integer> cachedBitmapPair = getBitmapCache().get(filePath);
         if (cachedBitmapPair == null) return null;
         Bitmap cachedBitmap = cachedBitmapPair.first;
-        if (cachedBitmap == null || cachedBitmap.isRecycled()) return null;
+        if (cachedBitmap == null) return null;
+        assert !cachedBitmap.isRecycled();
         return cachedBitmap;
     }
 

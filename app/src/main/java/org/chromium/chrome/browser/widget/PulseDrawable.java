@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.widget;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
@@ -16,6 +17,7 @@ import android.os.SystemClock;
 import android.support.annotation.ColorInt;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v4.view.animation.PathInterpolatorCompat;
+import android.util.TypedValue;
 import android.view.animation.Interpolator;
 
 import org.chromium.base.ApiCompatibilityUtils;
@@ -68,7 +70,7 @@ public class PulseDrawable extends Drawable implements Animatable {
         PulseDrawable.Painter painter = new PulseDrawable.Painter() {
             @Override
             public void modifyDrawable(PulseDrawable drawable, float interpolation) {
-                drawable.setAlpha((int) MathUtils.interpolate(12, 75, interpolation));
+                drawable.setAlpha((int) MathUtils.interpolate(12, 75, 1.f - interpolation));
             }
 
             @Override
@@ -85,7 +87,10 @@ public class PulseDrawable extends Drawable implements Animatable {
      * Creates a {@link PulseDrawable} that will draw a pulsing circle inside the bounds.
      * @return A new {@link PulseDrawable} instance.
      */
-    public static PulseDrawable createCircle() {
+    public static PulseDrawable createCircle(Context context) {
+        final int startingPulseRadiusPx = Math.round(TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 16.f, context.getResources().getDisplayMetrics()));
+
         PulseDrawable.Painter painter = new PulseDrawable.Painter() {
             @Override
             public void modifyDrawable(PulseDrawable drawable, float interpolation) {
@@ -96,8 +101,12 @@ public class PulseDrawable extends Drawable implements Animatable {
             public void draw(
                     PulseDrawable drawable, Paint paint, Canvas canvas, float interpolation) {
                 Rect bounds = drawable.getBounds();
-                float scale = MathUtils.interpolate(0.8f, 1.f, interpolation);
-                float radius = Math.min(bounds.width(), bounds.height()) * scale / 2.f;
+                float maxAvailRadiusPx = Math.min(bounds.width(), bounds.height()) / 2.f;
+
+                float minRadiusPx = Math.min(startingPulseRadiusPx, maxAvailRadiusPx);
+                float maxRadiusPx = Math.min(startingPulseRadiusPx * 1.2f, maxAvailRadiusPx);
+                float radius = MathUtils.interpolate(minRadiusPx, maxRadiusPx, interpolation);
+
                 canvas.drawCircle(bounds.exactCenterX(), bounds.exactCenterY(), radius, paint);
             }
         };

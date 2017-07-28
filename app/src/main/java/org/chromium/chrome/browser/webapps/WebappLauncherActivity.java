@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.text.TextUtils;
 import android.util.Base64;
 
@@ -79,7 +80,15 @@ public class WebappLauncherActivity extends Activity {
         // - the intent was sent by Chrome.
         if (validWebApk || isValidMacForUrl(webappUrl, webappMac)
                 || wasIntentFromChrome(intent)) {
-            LaunchMetrics.recordHomeScreenLaunchIntoStandaloneActivity(webappUrl, webappSource);
+            int source = webappSource;
+            // Retrieves the source of the WebAPK from WebappDataStorage if it is unknown. The
+            // {@link webappSource} will not be unknown in the case of an external intent or a
+            // notification that launches a WebAPK. Otherwise, it's not trustworthy and we must read
+            // the SharedPreference to get the installation source.
+            if (validWebApk && (webappSource == ShortcutSource.UNKNOWN)) {
+                source = getWebApkSource(webappInfo);
+            }
+            LaunchMetrics.recordHomeScreenLaunchIntoStandaloneActivity(webappUrl, source);
             Intent launchIntent = createWebappLaunchIntent(webappInfo, webappSource, validWebApk);
             startActivity(launchIntent);
             return;
@@ -90,6 +99,27 @@ public class WebappLauncherActivity extends Activity {
         // The shortcut data doesn't match the current encoding. Change the intent action to
         // launch the URL with a VIEW Intent in the regular browser.
         launchInTab(webappUrl, webappSource);
+    }
+
+    // Gets the source of a WebAPK from the WebappDataStorage if the source has been stored before.
+    private int getWebApkSource(WebappInfo webappInfo) {
+        WebappDataStorage storage = null;
+
+        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
+        try {
+            WebappRegistry.warmUpSharedPrefsForId(webappInfo.id());
+            storage = WebappRegistry.getInstance().getWebappDataStorage(webappInfo.id());
+        } finally {
+            StrictMode.setThreadPolicy(oldPolicy);
+        }
+
+        if (storage != null) {
+            int source = storage.getSource();
+            if (source != ShortcutSource.UNKNOWN) {
+                return source;
+            }
+        }
+        return ShortcutSource.WEBAPK_UNKNOWN;
     }
 
     private void launchInTab(String webappUrl, int webappSource) {

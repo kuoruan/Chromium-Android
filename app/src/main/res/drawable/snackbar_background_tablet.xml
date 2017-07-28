@@ -8,6 +8,8 @@
 
     <solid android:color="@color/snackbar_background_color" />
 
-    <corners android:radius="2dip" />
+    <corners
+        android:topLeftRadius="2dip"
+        android:topRightRadius="2dip"/>
 
 </shape>

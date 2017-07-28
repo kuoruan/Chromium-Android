@@ -71,7 +71,7 @@ public class MultiWindowUtils implements ActivityStateListener {
         if (mIsInMultiWindowModeForTesting) return true;
         if (activity == null) return false;
 
-        if (Build.VERSION.CODENAME.equals("N") || Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
                 Method isInMultiWindowModeMethod = Activity.class.getMethod("isInMultiWindowMode");
                 boolean isInMultiWindowMode = (boolean) isInMultiWindowModeMethod.invoke(activity);

@@ -50,6 +50,8 @@ public class ChromePreferenceManager {
 
     private static final String CHROME_DEFAULT_BROWSER = "applink.chrome_default_browser";
 
+    private static final String CONTENT_SUGGESTIONS_SHOWN_KEY = "content_suggestions_shown";
+
     private static final String NTP_SIGNIN_PROMO_DISMISSED = "ntp.signin_promo_dismissed";
     private static final String NTP_ANIMATION_RUN_COUNT = "ntp_recycler_view_animation_run_count";
 
@@ -352,16 +354,6 @@ public class ChromePreferenceManager {
         writeBoolean(WEBAPK_RUNTIME_KEY, isEnabled);
     }
 
-    /** Checks the cached value for the webapk any package name feature. */
-    public boolean getCachedWebApkAnyPackageName() {
-        return mSharedPreferences.getBoolean(WEBAPK_ANY_PACKAGE_KEY, false);
-    }
-
-    /** Writes the cached value for the webapk any package name feature is enabled. */
-    public void setCachedWebApkAnyPackageNameEnabled(boolean isEnabled) {
-        writeBoolean(WEBAPK_ANY_PACKAGE_KEY, isEnabled);
-    }
-
     public boolean getCachedChromeDefaultBrowser() {
         return mSharedPreferences.getBoolean(CHROME_DEFAULT_BROWSER, false);
     }
@@ -414,6 +406,16 @@ public class ChromePreferenceManager {
      */
     public boolean isChromeHomeEnabled() {
         return mSharedPreferences.getBoolean(CHROME_HOME_ENABLED_KEY, false);
+    }
+
+    /** Marks that the content suggestions surface has been shown. */
+    public void setSuggestionsSurfaceShown() {
+        writeBoolean(CONTENT_SUGGESTIONS_SHOWN_KEY, true);
+    }
+
+    /** Returns whether the content suggestions surface has ever been shown. */
+    public boolean getSuggestionsSurfaceShown() {
+        return mSharedPreferences.getBoolean(CONTENT_SUGGESTIONS_SHOWN_KEY, false);
     }
 
     /**

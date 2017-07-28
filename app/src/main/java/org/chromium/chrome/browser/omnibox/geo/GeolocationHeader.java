@@ -16,14 +16,20 @@ import android.provider.Settings;
 import android.support.annotation.IntDef;
 import android.util.Base64;
 
+import com.google.protobuf.nano.MessageNano;
+
 import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.base.CollectionUtil;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
+import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.UrlConstants;
+import org.chromium.chrome.browser.omnibox.geo.VisibleNetworks.VisibleCell;
+import org.chromium.chrome.browser.omnibox.geo.VisibleNetworks.VisibleWifi;
 import org.chromium.chrome.browser.preferences.website.ContentSetting;
 import org.chromium.chrome.browser.preferences.website.GeolocationInfo;
 import org.chromium.chrome.browser.preferences.website.WebsitePreferenceBridge;
@@ -33,7 +39,10 @@ import org.chromium.chrome.browser.util.UrlUtilities;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nullable;
 
 /**
  * Provides methods for building the X-Geo HTTP header, which provides device location to a server
@@ -146,10 +155,14 @@ public class GeolocationHeader {
             UMA_PERM_NOT_HTTPS})
     public @interface UmaPermission {}
 
-    private static final int LOCATION_SOURCE_HIGH_ACCURACY = 0;
-    private static final int LOCATION_SOURCE_BATTERY_SAVING = 1;
-    private static final int LOCATION_SOURCE_GPS_ONLY = 2;
-    private static final int LOCATION_SOURCE_MASTER_OFF = 3;
+    @VisibleForTesting
+    static final int LOCATION_SOURCE_HIGH_ACCURACY = 0;
+    @VisibleForTesting
+    static final int LOCATION_SOURCE_BATTERY_SAVING = 1;
+    @VisibleForTesting
+    static final int LOCATION_SOURCE_GPS_ONLY = 2;
+    @VisibleForTesting
+    static final int LOCATION_SOURCE_MASTER_OFF = 3;
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({LOCATION_SOURCE_HIGH_ACCURACY, LOCATION_SOURCE_BATTERY_SAVING,
             LOCATION_SOURCE_GPS_ONLY, LOCATION_SOURCE_MASTER_OFF})
@@ -183,8 +196,35 @@ public class GeolocationHeader {
     /** The maximum age in milliseconds of a location before we'll request a refresh. */
     private static final int REFRESH_LOCATION_AGE = 5 * 60 * 1000;  // 5 minutes
 
+    /** The X-Geo header prefix, preceding any location descriptors */
+    private static final String XGEO_HEADER_PREFIX = "X-Geo:";
+
+    /**
+     * The location descriptor separator used in the X-Geo header to separate encoding prefix, and
+     * encoded descriptors
+     */
+    private static final String LOCATION_SEPARATOR = " ";
+
+    /** The location descriptor prefix used in the X-Geo header to specify a proto wire encoding */
+    private static final String LOCATION_PROTO_PREFIX = "w";
+
+    /** The location descriptor prefix used in the X-Geo header to specify an ASCII encoding */
+    private static final String LOCATION_ASCII_PREFIX = "a";
+
     /** The time of the first location refresh. Contains Long.MAX_VALUE if not set. */
     private static long sFirstLocationTime = Long.MAX_VALUE;
+
+    /** Present in WiFi SSID that should not be mapped */
+    private static final String SSID_NOMAP = "_nomap";
+
+    /** Present in WiFi SSID that opted out */
+    private static final String SSID_OPTOUT = "_optout";
+
+    private static int sLocationSourceForTesting;
+    private static boolean sUseLocationSourceForTesting;
+
+    private static boolean sAppPermissionGrantedForTesting;
+    private static boolean sUseAppPermissionGrantedForTesting;
 
     /**
      * Requests a location refresh so that a valid location will be available for constructing
@@ -198,6 +238,11 @@ public class GeolocationHeader {
         }
         GeolocationTracker.refreshLastKnownLocation(
                 ContextUtils.getApplicationContext(), REFRESH_LOCATION_AGE);
+
+        // Only refresh visible networks if enabled.
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.XGEO_VISIBLE_NETWORKS)) {
+            VisibleNetworksTracker.refreshVisibleNetworks(ContextUtils.getApplicationContext());
+        }
     }
 
     /**
@@ -249,27 +294,46 @@ public class GeolocationHeader {
      * @return The X-Geo header string or null.
      */
     public static String getGeoHeader(String url, Tab tab) {
+        // TODO(lbargu): Refactor and simplify flow.
         boolean isIncognito = tab.isIncognito();
-        boolean locationAttached = true;
-        Location location = null;
+        Location locationToAttach = null;
+        VisibleNetworks visibleNetworksToAttach = null;
         long locationAge = Long.MAX_VALUE;
         @HeaderState int headerState = geoHeaderStateForUrl(url, isIncognito, true);
+        // XGEO_VISIBLE_NETWORKS
+        // When this feature is enabled, we will send visible WiFi and Cell Access Points as part of
+        // the X-GEO HTTP Header so that we can better position the client server side in the case
+        // where there is no lat/long or it's too old.
+        boolean isXGeoVisibleNetworksEnabled =
+                ChromeFeatureList.isEnabled(ChromeFeatureList.XGEO_VISIBLE_NETWORKS);
         if (headerState == HEADER_ENABLED) {
             // Only send X-Geo header if there's a fresh location available.
-            location =
-                    GeolocationTracker.getLastKnownLocation(ContextUtils.getApplicationContext());
-            if (location == null) {
+            // Use flag controlling visible network changes to decide whether GPS location should be
+            // included as a fallback.
+            // TODO(lbargu): Measure timing here and to get visible networks.
+            locationToAttach = GeolocationTracker.getLastKnownLocation(
+                    ContextUtils.getApplicationContext(), isXGeoVisibleNetworksEnabled);
+            if (locationToAttach == null) {
                 recordHistogram(UMA_LOCATION_NOT_AVAILABLE);
-                locationAttached = false;
             } else {
-                locationAge = GeolocationTracker.getLocationAge(location);
+                locationAge = GeolocationTracker.getLocationAge(locationToAttach);
                 if (locationAge > MAX_LOCATION_AGE) {
+                    // Do not attach the location
                     recordHistogram(UMA_LOCATION_STALE);
-                    locationAttached = false;
+                    locationToAttach = null;
+                } else {
+                    recordHistogram(UMA_HEADER_SENT);
                 }
             }
-        } else {
-            locationAttached = false;
+
+            // The header state is enabled, so this means we have app permissions, and the url is
+            // allowed to receive location. Before attempting to attach visible networks, check if
+            // network-based location is enabled.
+            if (isXGeoVisibleNetworksEnabled && isNetworkLocationEnabled()
+                    && !isLocationFresh(locationToAttach)) {
+                visibleNetworksToAttach = VisibleNetworksTracker.getLastKnownVisibleNetworks(
+                        ContextUtils.getApplicationContext());
+            }
         }
 
         @LocationSource int locationSource = getLocationSource();
@@ -277,8 +341,8 @@ public class GeolocationHeader {
         @Permission int domainPermission = getDomainPermission(url, isIncognito);
 
         // Record the permission state with a histogram.
-        recordPermissionHistogram(
-                locationSource, appPermission, domainPermission, locationAttached, headerState);
+        recordPermissionHistogram(locationSource, appPermission, domainPermission,
+                locationToAttach != null, headerState);
 
         if (locationSource != LOCATION_SOURCE_MASTER_OFF && appPermission != PERMISSION_BLOCKED
                 && domainPermission != PERMISSION_BLOCKED && !isIncognito) {
@@ -288,37 +352,38 @@ public class GeolocationHeader {
                     ? 0
                     : SystemClock.elapsedRealtime() - sFirstLocationTime;
             // Record the Time Listening with a histogram.
-            recordTimeListeningHistogram(locationSource, locationAttached, duration);
+            recordTimeListeningHistogram(locationSource, locationToAttach != null, duration);
         }
 
-        // Note that strictly speaking "location == null" is not needed here as the
-        // logic above prevents location being null when locationAttached is true.
-        // It is here to prevent problems if the logic above is changed.
-        if (!locationAttached || location == null) return null;
 
-        recordHistogram(UMA_HEADER_SENT);
+        if (!isXGeoVisibleNetworksEnabled) {
+            String locationAsciiEncoding = encodeAsciiLocation(locationToAttach);
+            if (locationAsciiEncoding == null) return null;
+            return XGEO_HEADER_PREFIX + LOCATION_SEPARATOR + LOCATION_ASCII_PREFIX
+                    + LOCATION_SEPARATOR + locationAsciiEncoding;
+        }
 
-        // Timestamp in microseconds since the UNIX epoch.
-        long timestamp = location.getTime() * 1000;
-        // Latitude times 1e7.
-        int latitude = (int) (location.getLatitude() * 10000000);
-        // Longitude times 1e7.
-        int longitude = (int) (location.getLongitude() * 10000000);
-        // Radius of 68% accuracy in mm.
-        int radius = (int) (location.getAccuracy() * 1000);
+        // Proto encoding
+        String locationProtoEncoding = encodeProtoLocation(locationToAttach);
+        String visibleNetworksProtoEncoding = encodeProtoVisibleNetworks(visibleNetworksToAttach);
 
-        // Encode location using ascii protobuf format followed by base64 encoding.
-        // https://goto.google.com/partner_location_proto
-        String locationAscii = String.format(Locale.US,
-                "role:1 producer:12 timestamp:%d latlng{latitude_e7:%d longitude_e7:%d} radius:%d",
-                timestamp, latitude, longitude, radius);
-        String locationBase64 = new String(Base64.encode(locationAscii.getBytes(), Base64.NO_WRAP));
+        if (locationProtoEncoding == null && visibleNetworksProtoEncoding == null) return null;
 
-        return "X-Geo: a " + locationBase64;
+        StringBuilder header = new StringBuilder(XGEO_HEADER_PREFIX);
+        if (locationProtoEncoding != null) {
+            header.append(LOCATION_SEPARATOR).append(LOCATION_PROTO_PREFIX)
+                    .append(LOCATION_SEPARATOR).append(locationProtoEncoding);
+        }
+        if (visibleNetworksProtoEncoding != null) {
+            header.append(LOCATION_SEPARATOR).append(LOCATION_PROTO_PREFIX)
+                    .append(LOCATION_SEPARATOR).append(visibleNetworksProtoEncoding);
+        }
+        return header.toString();
     }
 
     @CalledByNative
     static boolean hasGeolocationPermission() {
+        if (sUseAppPermissionGrantedForTesting) return sAppPermissionGrantedForTesting;
         int pid = Process.myPid();
         int uid = Process.myUid();
         if (ApiCompatibilityUtils.checkPermission(ContextUtils.getApplicationContext(),
@@ -346,6 +411,9 @@ public class GeolocationHeader {
      */
     @Permission
     static int getGeolocationPermission(Tab tab) {
+        if (sUseAppPermissionGrantedForTesting) {
+            return sAppPermissionGrantedForTesting ? PERMISSION_GRANTED : PERMISSION_BLOCKED;
+        }
         if (hasGeolocationPermission()) return PERMISSION_GRANTED;
         return tab.getWindowAndroid().canRequestPermission(
                        Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -378,6 +446,18 @@ public class GeolocationHeader {
         return locationPermission;
     }
 
+    @VisibleForTesting
+    static void setLocationSourceForTesting(int locationSourceForTesting) {
+        sLocationSourceForTesting = locationSourceForTesting;
+        sUseLocationSourceForTesting = true;
+    }
+
+    @VisibleForTesting
+    static void setAppPermissionGrantedForTesting(boolean appPermissionGrantedForTesting) {
+        sAppPermissionGrantedForTesting = appPermissionGrantedForTesting;
+        sUseAppPermissionGrantedForTesting = true;
+    }
+
     /** Records a data point for the Geolocation.HeaderSentOrNot histogram. */
     private static void recordHistogram(int result) {
         RecordHistogram.recordEnumeratedHistogram("Geolocation.HeaderSentOrNot", result, UMA_MAX);
@@ -388,6 +468,8 @@ public class GeolocationHeader {
     // We should replace our usage of LOCATION_PROVIDERS_ALLOWED when the min API is 19.
     @SuppressWarnings("deprecation")
     private static int getLocationSource() {
+        if (sUseLocationSourceForTesting) return sLocationSourceForTesting;
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             int locationMode;
             try {
@@ -422,6 +504,17 @@ public class GeolocationHeader {
                 return LOCATION_SOURCE_MASTER_OFF;
             }
         }
+    }
+
+    private static boolean isNetworkLocationEnabled() {
+        int locationSource = getLocationSource();
+        return locationSource == LOCATION_SOURCE_HIGH_ACCURACY
+                || locationSource == LOCATION_SOURCE_BATTERY_SAVING;
+    }
+
+    private static boolean isLocationFresh(@Nullable Location location) {
+        return location != null
+                && GeolocationTracker.getLocationAge(location) <= REFRESH_LOCATION_AGE;
     }
 
     /**
@@ -636,5 +729,211 @@ public class GeolocationHeader {
                                                                    : (int) durationSeconds;
         RecordHistogram.recordCustomCountHistogram(
                 name, duration, 1, LOCATION_AGE_HISTOGRAM_MAX_SECONDS, 50);
+    }
+
+    /**
+     * Encodes location into ascii encoding.
+     */
+    @Nullable
+    @VisibleForTesting
+    static String encodeAsciiLocation(@Nullable Location location) {
+        if (location == null) return null;
+
+        // Timestamp in microseconds since the UNIX epoch.
+        long timestamp = location.getTime() * 1000;
+        // Latitude times 1e7.
+        int latitudeE7 = (int) (location.getLatitude() * 10000000);
+        // Longitude times 1e7.
+        int longitudeE7 = (int) (location.getLongitude() * 10000000);
+        // Radius of 68% accuracy in mm.
+        int radius = (int) (location.getAccuracy() * 1000);
+
+        // Encode location using ascii protobuf format followed by base64 encoding.
+        // https://goto.google.com/partner_location_proto
+        String locationAscii = String.format(Locale.US,
+                "role:1 producer:12 timestamp:%d latlng{latitude_e7:%d longitude_e7:%d}"
+                        + " radius:%d",
+                timestamp, latitudeE7, longitudeE7, radius);
+        return new String(Base64.encode(locationAscii.getBytes(), Base64.NO_WRAP));
+    }
+
+    /**
+     * Encodes location into proto encoding.
+     */
+    @Nullable
+    @VisibleForTesting
+    static String encodeProtoLocation(@Nullable Location location) {
+        if (location == null) return null;
+
+        // Timestamp in microseconds since the UNIX epoch.
+        long timestamp = location.getTime() * 1000;
+        // Latitude times 1e7.
+        int latitudeE7 = (int) (location.getLatitude() * 10000000);
+        // Longitude times 1e7.
+        int longitudeE7 = (int) (location.getLongitude() * 10000000);
+        // Radius of 68% accuracy in mm.
+        int radius = (int) (location.getAccuracy() * 1000);
+
+        // Create a LatLng for the coordinates.
+        PartnerLocationDescriptor.LatLng latlng = new PartnerLocationDescriptor.LatLng();
+        latlng.latitudeE7 = latitudeE7;
+        latlng.longitudeE7 = longitudeE7;
+
+        // Populate a LocationDescriptor with the LatLng.
+        PartnerLocationDescriptor.LocationDescriptor locationDescriptor =
+                new PartnerLocationDescriptor.LocationDescriptor();
+        locationDescriptor.latlng = latlng;
+        // Include role, producer, timestamp and radius.
+        locationDescriptor.role = PartnerLocationDescriptor.CURRENT_LOCATION;
+        locationDescriptor.producer = PartnerLocationDescriptor.DEVICE_LOCATION;
+        locationDescriptor.timestamp = timestamp;
+        locationDescriptor.radius = (float) radius;
+        return encodeLocationDescriptor(locationDescriptor);
+    }
+
+    /**
+     * Encodes the given proto location descriptor into a BASE64 URL_SAFE encoding.
+     */
+    private static String encodeLocationDescriptor(
+            PartnerLocationDescriptor.LocationDescriptor locationDescriptor) {
+        return Base64.encodeToString(
+                MessageNano.toByteArray(locationDescriptor), Base64.NO_WRAP | Base64.URL_SAFE);
+    }
+
+    /**
+     * Encodes visible networks in proto encoding.
+     */
+    @Nullable
+    @VisibleForTesting
+    static String encodeProtoVisibleNetworks(@Nullable VisibleNetworks visibleNetworks) {
+        VisibleNetworks visibleNetworksToEncode = trimVisibleNetworks(visibleNetworks);
+        if (visibleNetworksToEncode == null) {
+            // No data to encode.
+            return null;
+        }
+        VisibleWifi connectedWifi = visibleNetworksToEncode.connectedWifi();
+        VisibleCell connectedCell = visibleNetworksToEncode.connectedCell();
+        Set<VisibleWifi> visibleWifis = visibleNetworksToEncode.allVisibleWifis();
+        Set<VisibleCell> visibleCells = visibleNetworksToEncode.allVisibleCells();
+
+        int numVisibleNetworks = (connectedWifi != null ? 1 : 0)
+                + (visibleWifis != null ? visibleWifis.size() : 0) + (connectedCell != null ? 1 : 0)
+                + (visibleCells != null ? visibleCells.size() : 0);
+        if (numVisibleNetworks == 0) {
+            // No data to encode.
+            return null;
+        }
+
+        int i = 0;
+        PartnerLocationDescriptor.VisibleNetwork[] protoNetworks =
+                new PartnerLocationDescriptor.VisibleNetwork[numVisibleNetworks];
+        if (connectedWifi != null) {
+            protoNetworks[i++] = connectedWifi.toProto(true);
+        }
+        if (visibleWifis != null) {
+            for (VisibleWifi visibleWifi : visibleWifis) {
+                protoNetworks[i++] = visibleWifi.toProto(false);
+            }
+        }
+        if (connectedCell != null) {
+            protoNetworks[i++] = connectedCell.toProto(true);
+        }
+        if (visibleCells != null) {
+            for (VisibleCell visibleCell : visibleCells) {
+                protoNetworks[i++] = visibleCell.toProto(false);
+            }
+        }
+
+        PartnerLocationDescriptor.LocationDescriptor locationDescriptor =
+                new PartnerLocationDescriptor.LocationDescriptor();
+        locationDescriptor.role = PartnerLocationDescriptor.CURRENT_LOCATION;
+        locationDescriptor.producer = PartnerLocationDescriptor.DEVICE_LOCATION;
+        locationDescriptor.visibleNetwork = protoNetworks;
+
+        return encodeLocationDescriptor(locationDescriptor);
+    }
+
+    @Nullable
+    @VisibleForTesting
+    static VisibleNetworks trimVisibleNetworks(@Nullable VisibleNetworks visibleNetworks) {
+        if (visibleNetworks == null || visibleNetworks.isEmpty()) {
+            return null;
+        }
+        // Trim visible networks to only include a limited number of visible not-conntected networks
+        // based on flag.
+        VisibleCell connectedCell = visibleNetworks.connectedCell();
+        VisibleWifi connectedWifi = visibleNetworks.connectedWifi();
+        Set<VisibleCell> visibleCells = visibleNetworks.allVisibleCells();
+        Set<VisibleWifi> visibleWifis = visibleNetworks.allVisibleWifis();
+        VisibleCell extraVisibleCell = null;
+        VisibleWifi extraVisibleWifi = null;
+        if (shouldExcludeVisibleWifi(connectedWifi)) {
+            // Trim the connected wifi.
+            connectedWifi = null;
+        }
+        // Select the extra visible cell.
+        if (visibleCells != null) {
+            for (VisibleCell candidateCell : visibleCells) {
+                if (ApiCompatibilityUtils.objectEquals(connectedCell, candidateCell)) {
+                    // Do not include this candidate cell, since its already the connected one.
+                    continue;
+                }
+                // Add it and since we only want one, stop iterating over other cells.
+                extraVisibleCell = candidateCell;
+                break;
+            }
+        }
+        // Select the extra visible wifi.
+        if (visibleWifis != null) {
+            for (VisibleWifi candidateWifi : visibleWifis) {
+                if (shouldExcludeVisibleWifi(candidateWifi)) {
+                    // Do not include this candidate wifi.
+                    continue;
+                }
+                if (ApiCompatibilityUtils.objectEquals(connectedWifi, candidateWifi)) {
+                    // Replace the connected, since the candidate will have level. This is because
+                    // the android APIs exposing connected WIFI do not expose level, while the ones
+                    // exposing visible wifis expose level.
+                    connectedWifi = candidateWifi;
+                    // Do not include this candidate wifi, since its already the connected one.
+                    continue;
+                }
+                // Keep the one with stronger level (since it's negative, this is the smaller value)
+                if (extraVisibleWifi == null || extraVisibleWifi.level() > candidateWifi.level()) {
+                    extraVisibleWifi = candidateWifi;
+                }
+            }
+        }
+
+        if (connectedCell == null && connectedWifi == null && extraVisibleCell == null
+                && extraVisibleWifi == null) {
+            return null;
+        }
+
+        return VisibleNetworks.create(connectedWifi, connectedCell,
+                extraVisibleWifi != null ? CollectionUtil.newHashSet(extraVisibleWifi) : null,
+                extraVisibleCell != null ? CollectionUtil.newHashSet(extraVisibleCell) : null);
+    }
+
+    /**
+     * Returns whether the provided {@link VisibleWifi} should be excluded. This can happen if the
+     * network is opted out (ssid contains "_nomap" or "_optout").
+     */
+    private static boolean shouldExcludeVisibleWifi(@Nullable VisibleWifi visibleWifi) {
+        if (visibleWifi == null || visibleWifi.bssid() == null) {
+            return true;
+        }
+        String ssid = visibleWifi.ssid();
+        if (ssid == null) {
+            // No ssid, so the networks is not opted out and should not be excluded.
+            return false;
+        }
+        // Optimization to avoid costly toLowerCase() in most cases.
+        if (ssid.indexOf('_') < 0) {
+            // No "_nomap" or "_optout".
+            return false;
+        }
+        String ssidLowerCase = ssid.toLowerCase(Locale.ENGLISH);
+        return ssidLowerCase.contains(SSID_NOMAP) || ssidLowerCase.contains(SSID_OPTOUT);
     }
 }

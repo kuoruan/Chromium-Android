@@ -37,8 +37,8 @@ public class TabSwitcherCallout {
         if (!isTabSwitcherCalloutNecessary()) return null;
         setIsTabSwitcherCalloutNecessary(false);
 
-        ViewAnchoredTextBubble bubble = new ViewAnchoredTextBubble(
-                context, tabSwitcherButton, R.string.tab_switcher_callout_body);
+        ViewAnchoredTextBubble bubble = new ViewAnchoredTextBubble(context, tabSwitcherButton,
+                R.string.tab_switcher_callout_body, R.string.tab_switcher_callout_body);
         bubble.setDismissOnTouchInteraction(true);
         bubble.setAutoDismissTimeout(TAB_SWITCHER_CALLOUT_DISMISS_MS);
         int yInsetPx = (int) (Y_OVERLAP_DP * context.getResources().getDisplayMetrics().density);

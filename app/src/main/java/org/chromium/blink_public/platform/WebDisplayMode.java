@@ -16,15 +16,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
-    WebDisplayMode.kUndefined, WebDisplayMode.kBrowser, WebDisplayMode.kMinimalUi,
-    WebDisplayMode.kStandalone, WebDisplayMode.kFullscreen, WebDisplayMode.kLast
+    WebDisplayMode.UNDEFINED, WebDisplayMode.BROWSER, WebDisplayMode.MINIMAL_UI,
+    WebDisplayMode.STANDALONE, WebDisplayMode.FULLSCREEN, WebDisplayMode.LAST
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface WebDisplayMode {
-  int kUndefined = 0;
-  int kBrowser = 1;
-  int kMinimalUi = 2;
-  int kStandalone = 3;
-  int kFullscreen = 4;
-  int kLast = 4;
+  int UNDEFINED = 0;
+  int BROWSER = 1;
+  int MINIMAL_UI = 2;
+  int STANDALONE = 3;
+  int FULLSCREEN = 4;
+  int LAST = 4;
 }

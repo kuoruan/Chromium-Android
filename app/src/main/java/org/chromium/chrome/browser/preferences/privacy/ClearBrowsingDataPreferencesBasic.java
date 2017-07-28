@@ -43,7 +43,7 @@ public class ClearBrowsingDataPreferencesBasic extends ClearBrowsingDataPreferen
         });
 
         if (ChromeSigninController.get().isSignedIn()) {
-            if (isHistorySyncEnabled()) { // is synced
+            if (isHistorySyncEnabled()) {
                 historyCheckbox.setSummary(R.string.clear_browsing_history_summary_synced);
             } else {
                 historyCheckbox.setSummary(R.string.clear_browsing_history_summary_signed_in);
@@ -57,7 +57,7 @@ public class ClearBrowsingDataPreferencesBasic extends ClearBrowsingDataPreferen
         boolean syncEnabled = AndroidSyncSettings.isSyncEnabled(getActivity());
         ProfileSyncService syncService = ProfileSyncService.get();
         return syncEnabled && syncService != null
-                && syncService.getPreferredDataTypes().contains(ModelType.TYPED_URLS);
+                && syncService.getActiveDataTypes().contains(ModelType.HISTORY_DELETE_DIRECTIVES);
     }
 
     @Override

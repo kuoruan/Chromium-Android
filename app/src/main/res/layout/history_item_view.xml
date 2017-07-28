@@ -61,7 +61,7 @@
             style="@style/HistoryEndIcon"
             android:contentDescription="@string/remove"
             android:src="@drawable/btn_trash"
-            chrome:tint="@color/dark_mode_tint" />
+            chrome:chrometint="@color/dark_mode_tint" />
     </LinearLayout>
 
 </org.chromium.chrome.browser.history.HistoryItemView>

@@ -59,32 +59,20 @@ public class AndroidPermissionRequester {
         return permissionsToRequest;
     }
 
-    private static int getDeniedPermissionResourceId(
+    private static int getContentSettingType(
             SparseArray<String[]> contentSettingsTypesToPermissionsMap, String permission) {
-        int contentSettingsType = 0;
         // SparseArray#indexOfValue uses == instead of .equals, so we need to manually iterate
         // over the list.
         for (int i = 0; i < contentSettingsTypesToPermissionsMap.size(); i++) {
             String[] contentSettingPermissions = contentSettingsTypesToPermissionsMap.valueAt(i);
             for (int j = 0; j < contentSettingPermissions.length; j++) {
                 if (permission.equals(contentSettingPermissions[j])) {
-                    contentSettingsType = contentSettingsTypesToPermissionsMap.keyAt(i);
-                    break;
+                    return contentSettingsTypesToPermissionsMap.keyAt(i);
                 }
             }
         }
 
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_GEOLOCATION) {
-            return R.string.infobar_missing_location_permission_text;
-        }
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_MIC) {
-            return R.string.infobar_missing_microphone_permission_text;
-        }
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA) {
-            return R.string.infobar_missing_camera_permission_text;
-        }
-        assert false : "Unexpected content setting type received: " + contentSettingsType;
-        return R.string.infobar_missing_multiple_permissions_text;
+        return -1;
     }
 
     /**
@@ -106,29 +94,50 @@ public class AndroidPermissionRequester {
 
         PermissionCallback callback = new PermissionCallback() {
             @Override
-            public void onRequestPermissionsResult(
-                    String[] permissions, int[] grantResults) {
-                int deniedCount = 0;
-                int requestableCount = 0;
-                int deniedStringId = R.string.infobar_missing_multiple_permissions_text;
+            public void onRequestPermissionsResult(String[] permissions, int[] grantResults) {
+                boolean allRequestable = true;
+                Set<Integer> deniedContentSettings = new HashSet<Integer>();
                 for (int i = 0; i < grantResults.length; i++) {
                     if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
-                        deniedCount++;
-                        if (deniedCount > 1) {
-                            deniedStringId = R.string.infobar_missing_multiple_permissions_text;
-                        } else {
-                            deniedStringId = getDeniedPermissionResourceId(
-                                    contentSettingsTypesToPermissionsMap, permissions[i]);
-                        }
+                        deniedContentSettings.add(getContentSettingType(
+                                contentSettingsTypesToPermissionsMap, permissions[i]));
 
-                        if (windowAndroid.canRequestPermission(permissions[i])) {
-                            requestableCount++;
+                        if (!windowAndroid.canRequestPermission(permissions[i])) {
+                            allRequestable = false;
                         }
                     }
                 }
 
                 Activity activity = windowAndroid.getActivity().get();
-                if (deniedCount > 0 && requestableCount > 0 && activity != null) {
+                if (allRequestable && !deniedContentSettings.isEmpty() && activity != null) {
+                    int deniedStringId = -1;
+                    if (deniedContentSettings.size() == 2
+                            && deniedContentSettings.contains(
+                                       ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_MIC)
+                            && deniedContentSettings.contains(
+                                       ContentSettingsType
+                                               .CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA)) {
+                        deniedStringId =
+                                R.string.infobar_missing_microphone_camera_permissions_text;
+                    } else if (deniedContentSettings.size() == 1) {
+                        if (deniedContentSettings.contains(
+                                    ContentSettingsType.CONTENT_SETTINGS_TYPE_GEOLOCATION)) {
+                            deniedStringId = R.string.infobar_missing_location_permission_text;
+                        } else if (deniedContentSettings.contains(
+                                           ContentSettingsType
+                                                   .CONTENT_SETTINGS_TYPE_MEDIASTREAM_MIC)) {
+                            deniedStringId = R.string.infobar_missing_microphone_permission_text;
+                        } else if (deniedContentSettings.contains(
+                                           ContentSettingsType
+                                                   .CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA)) {
+                            deniedStringId = R.string.infobar_missing_camera_permission_text;
+                        }
+                    }
+
+                    assert deniedStringId
+                            != -1 : "Invalid combination of missing content settings: "
+                                    + deniedContentSettings;
+
                     View view = activity.getLayoutInflater().inflate(
                             R.layout.update_permissions_dialog, null);
                     TextView dialogText = (TextView) view.findViewById(R.id.text);
@@ -151,10 +160,10 @@ public class AndroidPermissionRequester {
                         }
                     });
                     builder.create().show();
-                } else if (deniedCount > 0) {
-                    delegate.onAndroidPermissionCanceled();
-                } else {
+                } else if (deniedContentSettings.isEmpty()) {
                     delegate.onAndroidPermissionAccepted();
+                } else {
+                    delegate.onAndroidPermissionCanceled();
                 }
             }
         };

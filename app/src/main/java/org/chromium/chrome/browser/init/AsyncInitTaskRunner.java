@@ -38,9 +38,9 @@ public abstract class AsyncInitTaskRunner {
         return ChromeVersionInfo.isOfficialBuild();
     }
 
-    private class LoadTask extends AsyncTask<Boolean, Void, Boolean> {
+    private class LoadTask extends AsyncTask<Void, Void, Boolean> {
         @Override
-        protected Boolean doInBackground(Boolean... allocateChildConnection) {
+        protected Boolean doInBackground(Void... params) {
             try {
                 LibraryLoader libraryLoader = LibraryLoader.get(LibraryProcessType.PROCESS_BROWSER);
                 libraryLoader.ensureInitialized();
@@ -57,9 +57,6 @@ public abstract class AsyncInitTaskRunner {
                 libraryLoader.asyncPrefetchLibrariesToMemory();
             } catch (ProcessInitException e) {
                 return false;
-            }
-            if (allocateChildConnection[0]) {
-                ChildProcessLauncher.warmUp(ContextUtils.getApplicationContext());
             }
             return true;
         }
@@ -114,8 +111,11 @@ public abstract class AsyncInitTaskRunner {
             });
         }
 
+        if (allocateChildConnection) {
+            ChildProcessLauncher.warmUp(ContextUtils.getApplicationContext());
+        }
         mLoadTask = new LoadTask();
-        mLoadTask.executeOnExecutor(getExecutor(), allocateChildConnection);
+        mLoadTask.executeOnExecutor(getExecutor());
     }
 
     private void tasksPossiblyComplete(boolean result) {

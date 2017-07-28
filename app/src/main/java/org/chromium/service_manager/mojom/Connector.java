@@ -53,4 +53,9 @@ StartServiceWithProcessResponse callback);
 org.chromium.mojo.bindings.InterfaceRequest<Connector> request);
 
 
+
+    void filterInterfaces(
+String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<InterfaceProvider> sourceRequest, InterfaceProvider target);
+
+
 }

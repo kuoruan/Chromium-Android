@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.tab;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
@@ -33,6 +34,7 @@ public class TabIdManager {
             "org.chromium.chrome.browser.tab.TabIdManager.NEXT_ID";
 
     private static final Object INSTANCE_LOCK = new Object();
+    @SuppressLint("StaticFieldLeak")
     private static TabIdManager sInstance;
 
     private final Context mContext;

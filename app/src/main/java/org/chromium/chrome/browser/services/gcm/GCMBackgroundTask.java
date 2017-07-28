@@ -55,4 +55,10 @@ public class GCMBackgroundTask implements BackgroundTask {
         // The GCM Driver has no mechanism for aborting previously dispatched messages.
         return false;
     }
+
+    @MainThread
+    @Override
+    public void reschedule(Context context) {
+        // Needs appropriate implementation.
+    }
 }

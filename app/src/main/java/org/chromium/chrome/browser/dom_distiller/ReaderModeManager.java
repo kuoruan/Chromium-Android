@@ -17,7 +17,6 @@ import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.PanelState;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.StateChangeReason;
 import org.chromium.chrome.browser.compositor.bottombar.readermode.ReaderModePanel;
-import org.chromium.chrome.browser.device.DeviceClassManager;
 import org.chromium.chrome.browser.infobar.InfoBar;
 import org.chromium.chrome.browser.infobar.InfoBarContainer;
 import org.chromium.chrome.browser.infobar.InfoBarContainer.InfoBarContainerObserver;
@@ -27,6 +26,7 @@ import org.chromium.chrome.browser.tabmodel.TabCreatorManager;
 import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.TabModelSelectorTabObserver;
+import org.chromium.chrome.browser.util.AccessibilityUtil;
 import org.chromium.chrome.browser.widget.findinpage.FindToolbarObserver;
 import org.chromium.components.dom_distiller.content.DistillablePageUtils;
 import org.chromium.components.dom_distiller.core.DomDistillerUrlUtils;
@@ -156,6 +156,8 @@ public class ReaderModeManager extends TabModelSelectorTabObserver
 
     @Override
     public void onShown(Tab shownTab) {
+        if (mTabModelSelector == null) return;
+
         int shownTabId = shownTab.getId();
         Tab previousTab = mTabModelSelector.getTabById(mTabId);
         mTabId = shownTabId;
@@ -534,7 +536,7 @@ public class ReaderModeManager extends TabModelSelectorTabObserver
                 || mIsFindToolbarShowing
                 || mIsFullscreenModeEntered
                 || mIsKeyboardShowing
-                || DeviceClassManager.isAccessibilityModeEnabled(mChromeActivity)) {
+                || AccessibilityUtil.isAccessibilityEnabled()) {
             return;
         }
 
@@ -641,8 +643,8 @@ public class ReaderModeManager extends TabModelSelectorTabObserver
 
         boolean enabled = CommandLine.getInstance().hasSwitch(ChromeSwitches.ENABLE_DOM_DISTILLER)
                 && !CommandLine.getInstance().hasSwitch(
-                        ChromeSwitches.DISABLE_READER_MODE_BOTTOM_BAR)
-                && !DeviceFormFactor.isTablet(context)
+                           ChromeSwitches.DISABLE_READER_MODE_BOTTOM_BAR)
+                && !DeviceFormFactor.isTablet()
                 && DomDistillerTabUtils.isDistillerHeuristicsEnabled()
                 && !SysUtils.isLowEndDevice();
         return enabled;

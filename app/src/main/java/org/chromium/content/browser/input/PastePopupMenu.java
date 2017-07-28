@@ -4,6 +4,8 @@
 
 package org.chromium.content.browser.input;
 
+import android.graphics.Rect;
+
 /**
  * Paste popup implementation based on TextView.PastePopupMenu.
  */
@@ -16,6 +18,11 @@ public interface PastePopupMenu {
          * Called to initiate a paste after the paste option has been tapped.
          */
         void paste();
+
+        /**
+         * Called to initiate a paste as plain text after the popup has been tapped.
+         */
+        void pasteAsPlainText();
 
         /**
          * @return Whether clipboard is nonempty.
@@ -31,12 +38,17 @@ public interface PastePopupMenu {
          * @return Whether the select all option should be shown.
          */
         boolean canSelectAll();
+
+        /**
+         * @return Whether paste as plain text is needed.
+         */
+        boolean canPasteAsPlainText();
     }
 
     /**
-     * Shows the paste popup at an appropriate location relative to the specified position.
+     * Shows the paste popup at an appropriate location relative to the specified selection.
      */
-    public void show(int x, int y);
+    public void show(Rect selectionRect);
 
     /**
      * Hides the paste popup.

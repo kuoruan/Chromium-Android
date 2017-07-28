@@ -314,16 +314,13 @@ public class DocumentTabModelImpl extends TabModelJniBridge implements DocumentT
     }
 
     @Override
-    public void commitAllTabClosures() {
-    }
+    public void commitAllTabClosures() {}
 
     @Override
-    public void commitTabClosure(int tabId) {
-    }
+    public void commitTabClosure(int tabId) {}
 
     @Override
-    public void cancelTabClosure(int tabId) {
-    }
+    public void cancelTabClosure(int tabId) {}
 
     @Override
     public TabList getComprehensiveModel() {
@@ -331,14 +328,19 @@ public class DocumentTabModelImpl extends TabModelJniBridge implements DocumentT
     }
 
     @Override
-    public void addObserver(TabModelObserver observer) {
-    }
+    public void addObserver(TabModelObserver observer) {}
 
     @Override
-    public void removeObserver(TabModelObserver observer) {
-    }
+    public void removeObserver(TabModelObserver observer) {}
 
     @Override
-    public void openMostRecentlyClosedTab() {
+    public void openMostRecentlyClosedTab() {}
+
+    @Override
+    public void setIsPendingTabAdd(boolean isPendingTabAdd) {}
+
+    @Override
+    public boolean isPendingTabAdd() {
+        return false;
     }
 }

@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.preferences;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -29,12 +30,14 @@ public class AboutChromePreferences extends PreferenceFragment {
     private static final String PREF_OS_VERSION = "os_version";
     private static final String PREF_LEGAL_INFORMATION = "legal_information";
 
+    @SuppressLint("ObsoleteSdkInt")
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getActivity().setTitle(R.string.prefs_about_chrome);
         PreferenceUtils.addPreferencesFromResource(this, R.xml.about_chrome_preferences);
 
+        // TODO(crbug.com/635567): Fix this properly.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
             ChromeBasePreference deprecationWarning = new ChromeBasePreference(
                     new ContextThemeWrapper(getActivity(),

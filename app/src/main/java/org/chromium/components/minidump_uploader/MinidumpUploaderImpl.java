@@ -24,12 +24,8 @@ public class MinidumpUploaderImpl implements MinidumpUploader {
     /**
      * The delegate that performs embedder-specific behavior.
      */
-    private final MinidumpUploaderDelegate mDelegate;
-
-    /**
-     * Manages the set of pending and failed local minidump files.
-     */
-    private final CrashFileManager mFileManager;
+    @VisibleForTesting
+    protected final MinidumpUploaderDelegate mDelegate;
 
     /**
      * Whether the current job has been canceled. This is written to from the main thread, and read
@@ -48,10 +44,6 @@ public class MinidumpUploaderImpl implements MinidumpUploader {
     @VisibleForTesting
     public MinidumpUploaderImpl(MinidumpUploaderDelegate delegate) {
         mDelegate = delegate;
-        mFileManager = createCrashFileManager(mDelegate.getCrashParentDir());
-        if (!mFileManager.ensureCrashDirExists()) {
-            Log.e(TAG, "Crash directory doesn't exist!");
-        }
     }
 
     /**
@@ -88,12 +80,29 @@ public class MinidumpUploaderImpl implements MinidumpUploader {
 
         @Override
         public void run() {
-            File[] minidumps = mFileManager.getAllMinidumpFiles(MAX_UPLOAD_TRIES_ALLOWED);
+            // If the directory in where we store minidumps doesn't exist - then early out because
+            // there are no minidumps to upload.
+            File crashParentDir = mDelegate.getCrashParentDir();
+            if (!crashParentDir.isDirectory()) {
+                Log.e(TAG, "Parent crash directory doesn't exist!");
+                mUploadsFinishedCallback.uploadsFinished(false /* reschedule */);
+                return;
+            }
+
+            final CrashFileManager fileManager = createCrashFileManager(crashParentDir);
+            if (!fileManager.crashDirectoryExists()) {
+                Log.e(TAG, "Crash directory doesn't exist!");
+                mUploadsFinishedCallback.uploadsFinished(false /* reschedule */);
+                return;
+            }
+
+            File[] minidumps = fileManager.getMinidumpsReadyForUpload(MAX_UPLOAD_TRIES_ALLOWED);
+
             Log.i(TAG, "Attempting to upload %d minidumps.", minidumps.length);
             for (File minidump : minidumps) {
                 Log.i(TAG, "Attempting to upload " + minidump.getName());
-                MinidumpUploadCallable uploadCallable = createMinidumpUploadCallable(
-                        minidump, mFileManager.getCrashUploadLogFile());
+                MinidumpUploadCallable uploadCallable =
+                        createMinidumpUploadCallable(minidump, fileManager.getCrashUploadLogFile());
                 int uploadResult = uploadCallable.call();
 
                 // Record metrics about the upload.
@@ -134,13 +143,20 @@ public class MinidumpUploaderImpl implements MinidumpUploader {
                 }
             }
 
+            // Prior to M60, the ".tryN" suffix was optional for files ready to be uploaded; it is
+            // now required. Give clients a chance to migrate previously saved off minidumps to the
+            // new naming scheme, if necessary. Do this after attempting to upload existing crash
+            // dumps, to ensure that if the task is rescheduled, it has a chance to make progress on
+            // the most important task first.
+            mDelegate.migrateMinidumpFilenamesIfNeeded(fileManager);
+
             // Clean out old/uploaded minidumps. Note that this clean-up method is more strict than
             // our copying mechanism in the sense that it keeps fewer minidumps.
-            mFileManager.cleanOutAllNonFreshMinidumpFiles();
+            fileManager.cleanOutAllNonFreshMinidumpFiles();
 
             // Reschedule if there are still minidumps to upload.
             boolean reschedule =
-                    mFileManager.getAllMinidumpFiles(MAX_UPLOAD_TRIES_ALLOWED).length > 0;
+                    fileManager.getMinidumpsReadyForUpload(MAX_UPLOAD_TRIES_ALLOWED).length > 0;
             mUploadsFinishedCallback.uploadsFinished(reschedule);
         }
     }
@@ -181,8 +197,13 @@ public class MinidumpUploaderImpl implements MinidumpUploader {
     public boolean cancelUploads() {
         mCancelUpload = true;
 
-        // Reschedule if there are still minidumps to upload.
-        return mFileManager.getAllMinidumpFiles(MAX_UPLOAD_TRIES_ALLOWED).length > 0;
+        // We always return true here to reschedule the job even in cases where the are no minidumps
+        // left to upload. We choose to allow this minor inconsistency to avoid blocking the
+        // UI-thread on IO operations. The unnecessary rescheduling only happens if we cancel the
+        // job after it has attempted to upload all minidumps but before the job finishes.
+        // If a job is rescheduled unnecessarily, the next time it starts it will have no minidumps
+        // to upload and thus finish without yet another rescheduling.
+        return true;
     }
 
     @VisibleForTesting

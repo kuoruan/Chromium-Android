@@ -20,19 +20,46 @@ import java.lang.annotation.RetentionPolicy;
     ShortcutSource.BOOKMARK_NAVIGATOR_WIDGET, ShortcutSource.BOOKMARK_SHORTCUT_WIDGET,
     ShortcutSource.NOTIFICATION, ShortcutSource.ADD_TO_HOMESCREEN_PWA,
     ShortcutSource.ADD_TO_HOMESCREEN_STANDALONE, ShortcutSource.ADD_TO_HOMESCREEN_SHORTCUT,
-    ShortcutSource.EXTERNAL_INTENT, ShortcutSource.COUNT
+    ShortcutSource.EXTERNAL_INTENT, ShortcutSource.APP_BANNER_WEBAPK, ShortcutSource.WEBAPK_UNKNOWN,
+    ShortcutSource.COUNT
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface ShortcutSource {
   int UNKNOWN = 0;
   int ADD_TO_HOMESCREEN_DEPRECATED = 1;
+  /**
+   * Used for legacy PWAs added via the banner.
+   */
   int APP_BANNER = 2;
   int BOOKMARK_NAVIGATOR_WIDGET = 3;
   int BOOKMARK_SHORTCUT_WIDGET = 4;
+  /**
+   * Used for legacy and WebAPKs launched from a notification.
+   */
   int NOTIFICATION = 5;
+  /**
+   * Used for WebAPKs added via the menu item.
+   */
   int ADD_TO_HOMESCREEN_PWA = 6;
+  /**
+   * Used for legacy PWAs added via the menu item.
+   */
   int ADD_TO_HOMESCREEN_STANDALONE = 7;
+  /**
+   * Used for bookmark-type shortcuts that launch the tabbed browser.
+   */
   int ADD_TO_HOMESCREEN_SHORTCUT = 8;
+  /**
+   * Used for WebAPKs launched via an external intent.
+   */
   int EXTERNAL_INTENT = 9;
-  int COUNT = 10;
+  /**
+   * Used for WebAPK PWAs added via the banner.
+   */
+  int APP_BANNER_WEBAPK = 10;
+  /**
+   * Used for WebAPK PWAs whose install source info was lost.
+   */
+  int WEBAPK_UNKNOWN = 11;
+  int COUNT = 12;
 }

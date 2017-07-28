@@ -15,6 +15,7 @@ import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.banners.InstallerDelegate;
 import org.chromium.chrome.browser.browsing_data.UrlFilter;
 import org.chromium.chrome.browser.browsing_data.UrlFilterBridge;
+import org.chromium.webapk.lib.common.WebApkConstants;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -186,7 +187,11 @@ public class WebappRegistry {
             WebappDataStorage storage = entry.getValue();
             String webApkPackage = storage.getWebApkPackageName();
             if (webApkPackage != null) {
-                if (isWebApkInstalled(webApkPackage)) {
+                // Prefix check that the key matches the current scheme instead of an old
+                // deprecated naming scheme and that the WebApk is still installed. The former is
+                // necessary as we migrate away from the old naming scheme and garbage collect.
+                if (entry.getKey().startsWith(WebApkConstants.WEBAPK_ID_PREFIX)
+                        && isWebApkInstalled(webApkPackage)) {
                     continue;
                 }
             } else if ((currentTime - storage.getLastUsedTime())

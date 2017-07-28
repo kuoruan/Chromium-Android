@@ -38,12 +38,6 @@ public class FirstRunStatus {
                 .getBoolean(FIRST_RUN_FLOW_COMPLETE, false);
     }
 
-    // TODO(tedchoc): Remove once downstream callers migrate to non-param version.
-    public static boolean getFirstRunFlowComplete(
-            @SuppressWarnings("unused") android.content.Context context) {
-        return getFirstRunFlowComplete();
-    }
-
     /**
     * Sets the preference to skip the welcome page from the main First Run Experience.
      * @param isSkip Whether the welcome page should be skpped

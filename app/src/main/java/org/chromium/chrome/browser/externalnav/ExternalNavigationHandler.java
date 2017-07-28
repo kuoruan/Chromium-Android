@@ -429,15 +429,19 @@ public class ExternalNavigationHandler {
                 return OverrideUrlLoadingResult.NO_OVERRIDE;
             }
 
-            if (params.getReferrerUrl() != null && (isLink || isFormSubmit)) {
+            String delegatePreviousUrl = mDelegate.getPreviousUrl();
+            String previousUriString =
+                    delegatePreviousUrl != null ? delegatePreviousUrl : params.getReferrerUrl();
+            if (previousUriString != null && (isLink || isFormSubmit)) {
                 // Current URL has at least one specialized handler available. For navigations
                 // within the same host, keep the navigation inside the browser unless the set of
                 // available apps to handle the new navigation is different. http://crbug.com/463138
                 URI currentUri;
                 URI previousUri;
+
                 try {
                     currentUri = new URI(params.getUrl());
-                    previousUri = new URI(params.getReferrerUrl());
+                    previousUri = new URI(previousUriString);
                 } catch (Exception e) {
                     currentUri = null;
                     previousUri = null;
@@ -447,15 +451,15 @@ public class ExternalNavigationHandler {
                         && TextUtils.equals(currentUri.getHost(), previousUri.getHost())) {
                     Intent previousIntent;
                     try {
-                        previousIntent = Intent.parseUri(
-                                params.getReferrerUrl(), Intent.URI_INTENT_SCHEME);
+                        previousIntent =
+                                Intent.parseUri(previousUriString, Intent.URI_INTENT_SCHEME);
                     } catch (Exception e) {
                         previousIntent = null;
                     }
 
                     if (previousIntent != null
                             && resolversSubsetOf(resolvingInfos,
-                                    mDelegate.queryIntentActivities(previousIntent))) {
+                                       mDelegate.queryIntentActivities(previousIntent))) {
                         if (DEBUG) Log.i(TAG, "NO_OVERRIDE: Same host, no new resolvers");
                         return OverrideUrlLoadingResult.NO_OVERRIDE;
                     }

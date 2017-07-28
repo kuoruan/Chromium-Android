@@ -16,34 +16,34 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
-    WebRemotePlaybackAvailability.kUnknown, WebRemotePlaybackAvailability.kSourceNotSupported,
-    WebRemotePlaybackAvailability.kDeviceNotAvailable,
-    WebRemotePlaybackAvailability.kSourceNotCompatible,
-    WebRemotePlaybackAvailability.kDeviceAvailable, WebRemotePlaybackAvailability.kLast
+    WebRemotePlaybackAvailability.UNKNOWN, WebRemotePlaybackAvailability.SOURCE_NOT_SUPPORTED,
+    WebRemotePlaybackAvailability.DEVICE_NOT_AVAILABLE,
+    WebRemotePlaybackAvailability.SOURCE_NOT_COMPATIBLE,
+    WebRemotePlaybackAvailability.DEVICE_AVAILABLE, WebRemotePlaybackAvailability.LAST
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface WebRemotePlaybackAvailability {
   /**
    * The availability is unknown.
    */
-  int kUnknown = 0;
+  int UNKNOWN = 0;
   /**
    * The media source is not supported by the browser - device availability monitoring is
    * unnecessary.
    */
-  int kSourceNotSupported = 1;
+  int SOURCE_NOT_SUPPORTED = 1;
   /**
    * The media source is compatible with some supported device types but no devices were found.
    */
-  int kDeviceNotAvailable = 2;
+  int DEVICE_NOT_AVAILABLE = 2;
   /**
    * There're available devices but the current media source is not compatible with any of those.
    */
-  int kSourceNotCompatible = 3;
+  int SOURCE_NOT_COMPATIBLE = 3;
   /**
    * There're available remote playback devices and the media source is compatible with at least one
    * of them.
    */
-  int kDeviceAvailable = 4;
-  int kLast = 4;
+  int DEVICE_AVAILABLE = 4;
+  int LAST = 4;
 }

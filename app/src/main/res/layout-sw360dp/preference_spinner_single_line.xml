@@ -10,8 +10,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:paddingEnd="8dp"
-    android:paddingTop="22dp">
+    android:paddingEnd="@dimen/pref_spinner_padding_end"
+    android:paddingTop="12dp"
+    android:paddingBottom="6dp">
 
     <TextView
         android:id="@+id/title"
@@ -20,11 +21,15 @@
         android:textAlignment="viewStart"
         android:layout_height="wrap_content"
         android:layout_width="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"/>
 
     <Spinner
         android:id="@+id/spinner"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:gravity="end"/>
+        android:gravity="end"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"/>
 </LinearLayout>

@@ -45,7 +45,7 @@
             android:paddingEnd="16dp"
             android:paddingStart="16dp"
             android:src="@drawable/btn_menu"
-            chrome:tint="@color/dark_mode_tint" />
+            chrome:chrometint="@color/dark_mode_tint" />
     </LinearLayout>
 
 </merge>

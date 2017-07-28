@@ -92,8 +92,8 @@ public class CreditCardNumberFormattingTextWatcher implements TextWatcher {
     public static void insertSeparators(Editable s) {
         int[] positions;
         if (PersonalDataManager.getInstance()
-                    .getBasicCardPaymentType(s.toString(), false)
-                    .equals("amex")) {
+                        .getBasicCardIssuerNetwork(s.toString(), false)
+                        .equals("amex")) {
             positions = new int[2];
             positions[0] = 4;
             positions[1] = 11;

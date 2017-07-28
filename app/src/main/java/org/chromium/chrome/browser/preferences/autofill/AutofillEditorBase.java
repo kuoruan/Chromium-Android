@@ -26,7 +26,7 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.payments.ui.EditorView;
+import org.chromium.chrome.browser.payments.ui.EditorDialog;
 import org.chromium.chrome.browser.widget.FadingEdgeScrollView;
 
 /** Base class for Autofill editors (e.g. credit cards and profiles). */
@@ -84,7 +84,7 @@ public abstract class AutofillEditorBase
             getActivity().finish();
             return true;
         } else if (item.getItemId() == R.id.help_menu_id) {
-            EditorView.launchAutofillHelpPage(mContext);
+            EditorDialog.launchAutofillHelpPage(mContext);
             return true;
         }
 

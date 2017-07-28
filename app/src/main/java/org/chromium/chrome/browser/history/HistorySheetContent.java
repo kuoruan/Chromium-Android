@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.history;
 
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 
 import org.chromium.chrome.browser.ChromeActivity;
@@ -12,23 +11,30 @@ import org.chromium.chrome.browser.snackbar.SnackbarManager;
 import org.chromium.chrome.browser.toolbar.BottomToolbarPhone;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.BottomSheetContent;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheetContentController;
+import org.chromium.chrome.browser.widget.selection.SelectableListToolbar;
 
 /**
  * A {@link BottomSheetContent} holding a {@link HistoryManager} for display in the BottomSheet.
  */
 public class HistorySheetContent implements BottomSheetContent {
     private final View mContentView;
-    private final Toolbar mToolbarView;
+    private final SelectableListToolbar mToolbarView;
     private HistoryManager mHistoryManager;
 
     /**
      * @param activity The activity displaying the history manager UI.
      * @param snackbarManager The {@link SnackbarManager} used to display snackbars.
      */
-    public HistorySheetContent(ChromeActivity activity, SnackbarManager snackbarManager) {
+    public HistorySheetContent(final ChromeActivity activity, SnackbarManager snackbarManager) {
         mHistoryManager = new HistoryManager(activity, false, snackbarManager);
         mContentView = mHistoryManager.getView();
         mToolbarView = mHistoryManager.detachToolbarView();
+        mToolbarView.addObserver(new SelectableListToolbar.SelectableListToolbarObserver() {
+            @Override
+            public void onThemeColorChanged(boolean isLightTheme) {
+                activity.getBottomSheet().updateHandleTint();
+            }
+        });
         ((BottomToolbarPhone) activity.getToolbarManager().getToolbar())
                 .setOtherToolbarStyle(mToolbarView);
     }
@@ -41,6 +47,16 @@ public class HistorySheetContent implements BottomSheetContent {
     @Override
     public View getToolbarView() {
         return mToolbarView;
+    }
+
+    @Override
+    public boolean isUsingLightToolbarTheme() {
+        return mToolbarView.isLightTheme();
+    }
+
+    @Override
+    public boolean isIncognitoThemedContent() {
+        return false;
     }
 
     @Override

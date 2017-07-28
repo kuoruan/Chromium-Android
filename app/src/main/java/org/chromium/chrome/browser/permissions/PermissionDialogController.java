@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.permissions;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.support.annotation.IntDef;
@@ -55,6 +56,7 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
 
     // Static holder to ensure safe initialization of the singleton instance.
     private static class Holder {
+        @SuppressLint("StaticFieldLeak")
         private static final PermissionDialogController sInstance =
                 new PermissionDialogController();
     }

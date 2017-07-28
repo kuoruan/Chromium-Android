@@ -320,7 +320,7 @@ public class MinidumpUploadService extends IntentService {
         assert !shouldUseJobSchedulerForUploads();
         CrashFileManager fileManager =
                 new CrashFileManager(ContextUtils.getApplicationContext().getCacheDir());
-        File[] minidumps = fileManager.getAllMinidumpFiles(MAX_TRIES_ALLOWED);
+        File[] minidumps = fileManager.getMinidumpsReadyForUpload(MAX_TRIES_ALLOWED);
         Log.i(TAG, "Attempting to upload accumulated crash dumps.");
         for (File minidump : minidumps) {
             tryUploadCrashDump(minidump);

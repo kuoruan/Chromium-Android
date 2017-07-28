@@ -23,6 +23,7 @@ import org.chromium.chrome.browser.precache.PrecacheLauncher;
 import org.chromium.chrome.browser.preferences.ChromeBaseCheckBoxPreference;
 import org.chromium.chrome.browser.preferences.ManagedPreferenceDelegate;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
+import org.chromium.chrome.browser.preferences.PreferenceUtils;
 import org.chromium.chrome.browser.profiles.Profile;
 
 /**
@@ -51,7 +52,7 @@ public class PrivacyPreferences extends PreferenceFragment
         super.onCreate(savedInstanceState);
         PrivacyPreferencesManager privacyPrefManager = PrivacyPreferencesManager.getInstance();
         privacyPrefManager.migrateNetworkPredictionPreferences();
-        addPreferencesFromResource(R.xml.privacy_preferences);
+        PreferenceUtils.addPreferencesFromResource(this, R.xml.privacy_preferences);
         getActivity().setTitle(R.string.prefs_privacy);
         setHasOptionsMenu(true);
         PrefServiceBridge prefServiceBridge = PrefServiceBridge.getInstance();

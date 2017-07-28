@@ -13,14 +13,15 @@ import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
 import android.support.annotation.Nullable;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLayoutChangeListener;
 import android.view.ViewGroup;
-import android.view.ViewGroup.MarginLayoutParams;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -73,7 +74,7 @@ class SnackbarView {
     SnackbarView(Activity activity, OnClickListener listener, Snackbar snackbar,
             @Nullable ViewGroup parentView) {
         mActivity = activity;
-        mIsTablet = DeviceFormFactor.isTablet(activity);
+        mIsTablet = DeviceFormFactor.isTablet();
 
         if (parentView == null) {
             mOriginalParent = findParentView(activity);
@@ -144,16 +145,15 @@ class SnackbarView {
 
             int keyboardHeight = mParent.getHeight() - mCurrentVisibleRect.bottom
                     + mCurrentVisibleRect.top;
-            MarginLayoutParams lp = getLayoutParams();
+            FrameLayout.LayoutParams lp = getLayoutParams();
             lp.bottomMargin = keyboardHeight;
             if (mIsTablet) {
                 int margin = mParent.getResources()
                         .getDimensionPixelSize(R.dimen.snackbar_margin_tablet);
-                ApiCompatibilityUtils.setMarginStart(lp, margin);
-                lp.bottomMargin += margin;
                 int width = mParent.getResources()
                         .getDimensionPixelSize(R.dimen.snackbar_width_tablet);
                 lp.width = Math.min(width, mParent.getWidth() - 2 * margin);
+                lp.gravity = Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM;
             }
             mView.setLayoutParams(lp);
         }
@@ -267,8 +267,8 @@ class SnackbarView {
         }
     }
 
-    private MarginLayoutParams getLayoutParams() {
-        return (MarginLayoutParams) mView.getLayoutParams();
+    private FrameLayout.LayoutParams getLayoutParams() {
+        return (FrameLayout.LayoutParams) mView.getLayoutParams();
     }
 
     private void setViewText(TextView view, CharSequence text, boolean animate) {

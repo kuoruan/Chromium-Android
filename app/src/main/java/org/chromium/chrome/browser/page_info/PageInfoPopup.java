@@ -141,6 +141,9 @@ public class PageInfoPopup implements OnClickListener {
         // The maximum number of lines currently shown in the view
         private int mCurrentMaxLines = Integer.MAX_VALUE;
 
+        // Whether or not the full URL should always be shown.
+        private boolean mAlwaysShowFullUrl;
+
         /** Constructor for inflating from XML. */
         public ElidedUrlTextView(Context context, AttributeSet attrs) {
             super(context, attrs);
@@ -202,6 +205,13 @@ public class PageInfoPopup implements OnClickListener {
         }
 
         /**
+         * @param show Whether or not the full URL should always be shown on the page info dialog.
+         */
+        public void setAlwaysShowFullUrl(boolean show) {
+            mAlwaysShowFullUrl = show;
+        }
+
+        /**
          * Sets the profile to use when calculating the end index of the origin.
          * Must be called before layout.
          *
@@ -222,7 +232,9 @@ public class PageInfoPopup implements OnClickListener {
 
         private boolean updateMaxLines() {
             int maxLines = mFullLinesToDisplay;
-            if (mIsShowingTruncatedText) maxLines = mTruncatedUrlLinesToDisplay;
+            if (mIsShowingTruncatedText && !mAlwaysShowFullUrl) {
+                maxLines = mTruncatedUrlLinesToDisplay;
+            }
             if (maxLines != mCurrentMaxLines) {
                 setMaxLines(maxLines);
                 return true;
@@ -261,6 +273,9 @@ public class PageInfoPopup implements OnClickListener {
 
     // The dialog the container is placed in.
     private final Dialog mDialog;
+
+    // Whether or not the popup should appear at the bottom of the screen.
+    private final boolean mIsBottomPopup;
 
     // Animation which is currently running, if there is one.
     private AnimatorSet mCurrentAnimation;
@@ -306,6 +321,8 @@ public class PageInfoPopup implements OnClickListener {
             String publisher) {
         mContext = activity;
         mTab = tab;
+        mIsBottomPopup = mTab.getActivity().getBottomSheet() != null;
+
         if (offlinePageCreationDate != null) {
             mOfflinePageCreationDate = offlinePageCreationDate;
         }
@@ -330,6 +347,7 @@ public class PageInfoPopup implements OnClickListener {
 
         mUrlTitle = (ElidedUrlTextView) mContainer.findViewById(R.id.page_info_url);
         mUrlTitle.setProfile(mTab.getProfile());
+        mUrlTitle.setAlwaysShowFullUrl(mIsBottomPopup);
         mUrlTitle.setOnClickListener(this);
         // Long press the url text to copy it to the clipboard.
         mUrlTitle.setOnLongClickListener(new OnLongClickListener() {
@@ -415,7 +433,7 @@ public class PageInfoPopup implements OnClickListener {
 
             @Override
             public void dismiss() {
-                if (DeviceFormFactor.isTablet(mContext) || mDismissWithoutAnimation) {
+                if (DeviceFormFactor.isTablet() || mDismissWithoutAnimation) {
                     // Dismiss the dialog without any custom animations on tablet.
                     super.dismiss();
                 } else {
@@ -442,7 +460,7 @@ public class PageInfoPopup implements OnClickListener {
         mDialog.setCanceledOnTouchOutside(true);
 
         // On smaller screens, place the dialog at the top of the screen, and remove its border.
-        if (!DeviceFormFactor.isTablet(mContext)) {
+        if (!DeviceFormFactor.isTablet()) {
             Window window = mDialog.getWindow();
             window.setGravity(Gravity.TOP);
             window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -484,6 +502,10 @@ public class PageInfoPopup implements OnClickListener {
                 mNativePageInfoPopup = 0;
             }
         });
+
+        if (mIsBottomPopup) {
+            mDialog.getWindow().getAttributes().gravity = Gravity.BOTTOM | Gravity.END;
+        }
 
         showDialog();
     }
@@ -599,6 +621,14 @@ public class PageInfoPopup implements OnClickListener {
             }
         }
 
+        // The subresource filter permission requires an additional static subtitle.
+        if (permission.type == ContentSettingsType.CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER) {
+            TextView permissionSubtitle =
+                    (TextView) permissionRow.findViewById(R.id.page_info_permission_subtitle);
+            permissionSubtitle.setVisibility(View.VISIBLE);
+            permissionSubtitle.setText(R.string.page_info_permission_subresource_filter_subtitle);
+        }
+
         TextView permissionStatus = (TextView) permissionRow.findViewById(
                 R.id.page_info_permission_status);
         SpannableStringBuilder builder = new SpannableStringBuilder();
@@ -682,9 +712,24 @@ public class PageInfoPopup implements OnClickListener {
      * Displays the PageInfoPopup.
      */
     private void showDialog() {
-        if (!DeviceFormFactor.isTablet(mContext)) {
+        if (!DeviceFormFactor.isTablet()) {
             // On smaller screens, make the dialog fill the width of the screen.
-            ScrollView scrollView = new ScrollView(mContext);
+            ScrollView scrollView = new ScrollView(mContext) {
+                @Override
+                protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+                    int dialogMaxHeight = mTab.getHeight();
+                    if (mIsBottomPopup) {
+                        // In Chrome Home, the full URL is showing at all times; give the scroll
+                        // view a max height so long URLs don't consume the entire screen.
+                        dialogMaxHeight -=
+                                mContext.getResources().getDimension(R.dimen.min_touch_target_size);
+                    }
+
+                    heightMeasureSpec =
+                            MeasureSpec.makeMeasureSpec(dialogMaxHeight, MeasureSpec.AT_MOST);
+                    super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+                }
+            };
             scrollView.addView(mContainer);
             mDialog.addContentView(scrollView, new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -723,7 +768,7 @@ public class PageInfoPopup implements OnClickListener {
      */
     private void runAfterDismiss(Runnable task) {
         mDialog.dismiss();
-        if (DeviceFormFactor.isTablet(mContext)) {
+        if (DeviceFormFactor.isTablet()) {
             task.run();
         } else {
             mContainer.postDelayed(task, FADE_DURATION + CLOSE_CLEANUP_DELAY);
@@ -869,7 +914,7 @@ public class PageInfoPopup implements OnClickListener {
      * Create an animator to slide in the entire dialog from the top of the screen.
      */
     private Animator createDialogSlideAnimator(boolean isEnter) {
-        final float animHeight = -1f * mContainer.getHeight();
+        final float animHeight = (mIsBottomPopup ? 1f : -1f) * mContainer.getHeight();
         ObjectAnimator translateAnim;
         if (isEnter) {
             mContainer.setTranslationY(animHeight);
@@ -893,7 +938,7 @@ public class PageInfoPopup implements OnClickListener {
         AnimatorSet.Builder builder = null;
         Animator startAnim;
 
-        if (DeviceFormFactor.isTablet(mContext)) {
+        if (DeviceFormFactor.isTablet()) {
             // The start time of the entire AnimatorSet is the start time of the first animation
             // added to the Builder. We use a blank AnimatorSet on tablet as an easy way to
             // co-ordinate this start time.
@@ -958,7 +1003,7 @@ public class PageInfoPopup implements OnClickListener {
 
         String offlinePageCreationDate = null;
 
-        OfflinePageItem offlinePage = tab.getOfflinePage();
+        OfflinePageItem offlinePage = OfflinePageUtils.getOfflinePage(tab);
         if (offlinePage != null) {
             // Get formatted creation date of the offline page.
             Date creationDate = new Date(offlinePage.getCreationTimeMs());

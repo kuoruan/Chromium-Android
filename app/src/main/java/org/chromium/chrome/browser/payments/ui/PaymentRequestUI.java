@@ -305,8 +305,8 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
     private final boolean mShowDataSource;
 
     private final Dialog mDialog;
-    private final EditorView mEditorView;
-    private final EditorView mCardEditorView;
+    private final EditorDialog mEditorDialog;
+    private final EditorDialog mCardEditorDialog;
     private final ViewGroup mFullContainer;
     private final ViewGroup mRequestView;
     private final PaymentRequestUiErrorView mErrorView;
@@ -362,15 +362,16 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
      * @param title           The title to show at the top of the UI. This can be, for example, the
      *                        &lt;title&gt; of the merchant website. If the string is too long for
      *                        UI, it elides at the end.
-     * @param origin          The origin (part of URL) to show under the title. For example,
-     *                        "https://shop.momandpop.com". If the origin is too long for the UI, it
-     *                        should elide according to:
+     * @param origin          The origin (https://tools.ietf.org/html/rfc6454) to show under the
+     *                        title. For example, "https://shop.momandpop.com". If the origin is too
+     *                        long for the UI, it should elide according to:
      * https://www.chromium.org/Home/chromium-security/enamel#TOC-Eliding-Origin-Names-And-Hostnames
+     * @param securityLevel   The security level of the page that invoked PaymentRequest.
      * @param shippingStrings The string resource identifiers to use in the shipping sections.
      */
     public PaymentRequestUI(Activity activity, Client client, boolean requestShipping,
             boolean requestContact, boolean canAddCards, boolean showDataSource, String title,
-            String origin, ShippingStrings shippingStrings) {
+            String origin, int securityLevel, ShippingStrings shippingStrings) {
         mContext = activity;
         mClient = client;
         mRequestShipping = requestShipping;
@@ -381,7 +382,7 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
 
         mErrorView = (PaymentRequestUiErrorView) LayoutInflater.from(mContext).inflate(
                 R.layout.payment_request_error, null);
-        mErrorView.initialize(title, origin);
+        mErrorView.initialize(title, origin, securityLevel);
 
         mReadyToPayNotifierForTest = new NotifierForTest(new Runnable() {
             @Override
@@ -420,7 +421,7 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
 
         mRequestView =
                 (ViewGroup) LayoutInflater.from(mContext).inflate(R.layout.payment_request, null);
-        prepareRequestView(mContext, title, origin, canAddCards);
+        prepareRequestView(mContext, title, origin, securityLevel, canAddCards);
 
         // To handle the specced animations, the dialog is entirely contained within a translucent
         // FrameLayout.  This could eventually be converted to a real BottomSheetDialog, but that
@@ -434,12 +435,12 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
         bottomSheetParams.gravity = Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM;
         mFullContainer.addView(mRequestView, bottomSheetParams);
 
-        mEditorView = new EditorView(activity, sObserverForTest);
-        mCardEditorView = new EditorView(activity, sObserverForTest);
+        mEditorDialog = new EditorDialog(activity, sObserverForTest);
+        mCardEditorDialog = new EditorDialog(activity, sObserverForTest);
 
         // Allow screenshots of the credit card number in Canary, Dev, and developer builds.
         if (ChromeVersionInfo.isBetaBuild() || ChromeVersionInfo.isStableBuild()) {
-            mCardEditorView.disableScreenshots();
+            mCardEditorDialog.disableScreenshots();
         }
 
         // Set up the dialog.
@@ -500,13 +501,14 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
      * TODO(dfalcantara): Ideally, everything related to the request and its views would just be put
      *                    into its own class but that'll require yanking out a lot of this class.
      *
-     * @param context     The application context.
-     * @param title       Title of the page.
-     * @param origin      Host of the page.
-     * @param canAddCards Whether new cards can be added.
+     * @param context       The application context.
+     * @param title         Title of the page.
+     * @param origin        The RFC6454 origin of the page.
+     * @param securityLevel The security level of the page that invoked PaymentRequest.
+     * @param canAddCards   Whether new cards can be added.
      */
     private void prepareRequestView(
-            Context context, String title, String origin, boolean canAddCards) {
+            Context context, String title, String origin, int securityLevel, boolean canAddCards) {
         mSpinnyLayout = mRequestView.findViewById(R.id.payment_request_spinny);
         assert mSpinnyLayout.getVisibility() == View.VISIBLE;
         mIsShowingSpinner = true;
@@ -516,7 +518,7 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
         messageView.setText(R.string.payments_loading_message);
 
         ((PaymentRequestHeader) mRequestView.findViewById(R.id.header))
-                .setTitleAndOrigin(title, origin);
+                .setTitleAndOrigin(title, origin, securityLevel);
 
         // Set up the buttons.
         mCloseButton = mRequestView.findViewById(R.id.close_button);
@@ -768,14 +770,14 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
     }
 
     /** @return The common editor user interface. */
-    public EditorView getEditorView() {
-        return mEditorView;
+    public EditorDialog getEditorDialog() {
+        return mEditorDialog;
     }
 
     /** @return The card editor user interface. Distinct from the common editor user interface,
      * because the credit card editor can launch the address editor. */
-    public EditorView getCardEditorView() {
-        return mCardEditorView;
+    public EditorDialog getCardEditorDialog() {
+        return mCardEditorDialog;
     }
 
     /**
@@ -1121,8 +1123,8 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
     @Override
     public void onDismiss(DialogInterface dialog) {
         mIsClosing = true;
-        if (mEditorView.isShowing()) mEditorView.dismiss();
-        if (mCardEditorView.isShowing()) mCardEditorView.dismiss();
+        if (mEditorDialog.isShowing()) mEditorDialog.dismiss();
+        if (mCardEditorDialog.isShowing()) mCardEditorDialog.dismiss();
         if (sObserverForTest != null) sObserverForTest.onPaymentRequestDismiss();
         if (!mIsClientClosing) mClient.onDismiss();
     }
@@ -1355,6 +1357,11 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
     @VisibleForTesting
     public PaymentRequestSection getShippingSummarySectionForTest() {
         return mShippingSummarySection;
+    }
+
+    @VisibleForTesting
+    public TextView getOrderSummaryTotalTextViewForTest() {
+        return mOrderSummarySection.getSummaryRightTextView();
     }
 
     @VisibleForTesting

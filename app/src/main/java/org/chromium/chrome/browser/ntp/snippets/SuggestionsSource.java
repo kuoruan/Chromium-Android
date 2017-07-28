@@ -96,6 +96,13 @@ public interface SuggestionsSource {
     void fetchSuggestions(@CategoryInt int category, String[] displayedSuggestionIds);
 
     /**
+     * Fetches suggestions related to the provided URL.
+     * @param url The context (site URL) for which we want to have suggestions.
+     * @param callback The callback to run with the received suggestions.
+     */
+    void fetchContextualSuggestions(String url, Callback<List<SnippetArticle>> callback);
+
+    /**
      * Tells the source to dismiss the content suggestion.
      */
     void dismissSuggestion(SnippetArticle suggestion);
@@ -114,11 +121,4 @@ public interface SuggestionsSource {
      * Sets the recipient for update events from the source.
      */
     void setObserver(Observer observer);
-
-    /**
-     * Notifies the scheduler to adjust the plan due to a newly opened NTP.
-     */
-    // TODO(710268): This shouldn't have "NTP" in its name, as it's not specific to the NTP anymore.
-    // Maybe split this off into a new interface for the scheduler?
-    void onNtpInitialized();
 }

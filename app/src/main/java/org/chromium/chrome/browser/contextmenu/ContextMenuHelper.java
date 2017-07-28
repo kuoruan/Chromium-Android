@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.View.OnCreateContextMenuListener;
 
 import org.chromium.base.Callback;
+import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.metrics.RecordHistogram;
@@ -114,6 +115,10 @@ public class ContextMenuHelper implements OnCreateContextMenuListener {
         if (ChromeFeatureList.isEnabled(ChromeFeatureList.CUSTOM_CONTEXT_MENU)) {
             List<Pair<Integer, List<ContextMenuItem>>> items =
                     mPopulator.buildContextMenu(null, mActivity, mCurrentContextMenuParams);
+            if (items.isEmpty()) {
+                ThreadUtils.postOnUiThread(mOnMenuClosed);
+                return;
+            }
 
             final ContextMenuUi menuUi = new TabularContextMenuUi(new Runnable() {
                 @Override
@@ -218,6 +223,10 @@ public class ContextMenuHelper implements OnCreateContextMenuListener {
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
         List<Pair<Integer, List<ContextMenuItem>>> items =
                 mPopulator.buildContextMenu(menu, v.getContext(), mCurrentContextMenuParams);
+        if (items.isEmpty()) {
+            ThreadUtils.postOnUiThread(mOnMenuClosed);
+            return;
+        }
         ContextMenuUi menuUi = new PlatformContextMenuUi(menu);
         menuUi.displayMenu(mActivity, mCurrentContextMenuParams, items, mCallback, mOnMenuShown,
                 mOnMenuClosed);

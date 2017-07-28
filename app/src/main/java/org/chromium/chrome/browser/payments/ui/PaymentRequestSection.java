@@ -184,17 +184,11 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
      * Sets what logo should be displayed.
      *
      * @param logo       The logo to display.
-     * @param drawBorder Whether draw border background for the logo.
      */
-    protected void setLogoDrawable(Drawable logo, boolean drawBorder) {
+    protected void setLogoDrawable(Drawable logo) {
         assert isLogoNecessary();
         mLogo = logo;
-
-        if (drawBorder) {
-            mLogoView.setBackgroundResource(R.drawable.payments_ui_logo_bg);
-        } else {
-            mLogoView.setBackgroundResource(0);
-        }
+        mLogoView.setBackgroundResource(0);
         mLogoView.setImageDrawable(mLogo);
     }
 
@@ -930,14 +924,15 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
             private static final int OPTION_ROW_TYPE_WARNING = 3;
 
             private final int mRowType;
-            private final PaymentOption mOption;
+            @Nullable private final PaymentOption mOption;
             private final View mButton;
             private final TextView mLabel;
             private final View mOptionIcon;
             private final View mEditIcon;
 
-            public OptionRow(GridLayout parent, int rowIndex, int rowType, PaymentOption item,
-                    boolean isSelected) {
+            public OptionRow(GridLayout parent, int rowIndex, int rowType,
+                    @Nullable PaymentOption item, boolean isSelected) {
+                assert item != null || rowType != OPTION_ROW_TYPE_OPTION;
                 boolean optionIconExists = item != null && item.getDrawableIcon() != null;
                 boolean editIconExists = item != null && item.isEditable() && isSelected;
                 boolean isEnabled = item != null && item.isValid();
@@ -1111,8 +1106,6 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
                 ImageView optionIcon = new ImageView(parent.getContext());
                 optionIcon.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
                 if (mOption.isEditable()) {
-                    // Draw border background for the icon if the option is editable.
-                    optionIcon.setBackgroundResource(R.drawable.payments_ui_logo_bg);
                     optionIcon.setMaxWidth(mEditableOptionIconMaxWidth);
                 } else {
                     optionIcon.setMaxWidth(mNonEditableOptionIconMaxWidth);
@@ -1376,7 +1369,7 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
             }
 
             if (selectedItem == null) {
-                setLogoDrawable(null, false);
+                setLogoDrawable(null);
                 // Section summary should be displayed as R.style.PaymentsUiSectionDescriptiveText.
                 if (!mSummaryInDescriptiveText) {
                     ApiCompatibilityUtils.setTextAppearance(
@@ -1386,7 +1379,7 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
                 SectionUiUtils.showSectionSummaryInTextViewInSingeLine(
                         getContext(), mSectionInformation, getSummaryLeftTextView());
             } else {
-                setLogoDrawable(selectedItem.getDrawableIcon(), selectedItem.isEditable());
+                setLogoDrawable(selectedItem.getDrawableIcon());
                 // Selected item summary should be displayed as
                 // R.style.PaymentsUiSectionDefaultText.
                 if (mSummaryInDescriptiveText) {

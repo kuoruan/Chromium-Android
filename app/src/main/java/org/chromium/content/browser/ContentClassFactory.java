@@ -38,10 +38,10 @@ public class ContentClassFactory {
     protected ContentClassFactory() {}
 
     /**
-     * Creates ContextSelectorProvider object.
+     * Creates SmartSelectorProvider object.
      */
-    public ContextSelectionProvider createContextSelectionProvider(
-            ContextSelectionProvider.ResultCallback callback, WindowAndroid windowAndroid) {
+    public SmartSelectionProvider createSmartSelectionProvider(
+            SmartSelectionProvider.ResultCallback callback, WindowAndroid windowAndroid) {
         // Implemented by a subclass.
         return null;
     }

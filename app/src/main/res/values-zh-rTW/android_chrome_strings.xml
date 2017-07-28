@@ -9,7 +9,6 @@
 <string name="delete">"刪除"</string>
 <string name="remove">"移除"</string>
 <string name="reset">"重設"</string>
-<string name="choose">"選擇"</string>
 <string name="title">"標題"</string>
 <string name="text_on">"開啟"</string>
 <string name="text_off">"關閉"</string>
@@ -29,6 +28,8 @@
 <string name="add">"新增"</string>
 <string name="share">"分享"</string>
 <string name="search">"搜尋"</string>
+<string name="show_info">"顯示資訊"</string>
+<string name="hide_info">"隱藏資訊"</string>
 <string name="copy_link">"複製連結"</string>
 <string name="copied">"已複製"</string>
 <string name="retry">"重試"</string>
@@ -48,6 +49,7 @@
 <string name="notification_category_sites">"網站"</string>
 <string name="sign_in_to_chrome">"登入 Chrome"</string>
 <string name="sign_in_to_chrome_summary">"登入後，即可從任何裝置取得自己的書籤、歷史紀錄、密碼和其他設定"</string>
+<string name="sign_in_to_chrome_disabled_summary">"裝置管理員已停用"</string>
 <string name="sign_in_google_activity_controls">"Google 活動控制項"</string>
 <string name="sign_in_google_activity_controls_message">"控管 Google 使用您瀏覽紀錄的方式，針對 Google 所提供的個人化搜尋服務、廣告內容和其他各項 Google 服務調整相關設定。"</string>
 <string name="sign_in_google_activity_controls_message_child_account">"控制 Google 如何使用您的瀏覽紀錄，為您提供個人化的搜尋服務和其他各項 Google 服務。"</string>
@@ -56,6 +58,8 @@
 <string name="search_engine_location_allowed">"禁止存取位置資訊"</string>
 <string name="search_engine_location_blocked">"位置資訊遭到封鎖"</string>
 <string name="search_engine_recently_visited">"最近造訪過"</string>
+<string name="search_engine_dialog_title">"選擇搜尋引擎"</string>
+<string name="search_engine_dialog_footer">"日後可前往設定頁面進行變更"</string>
 <string name="prefs_autofill_and_payments">"自動填入和付費"</string>
 <string name="autofill_switch">"自動填入表單"</string>
 <string name="autofill_profiles_title">"地址"</string>
@@ -159,9 +163,9 @@
 <string name="clear_cookies_and_site_data_summary">"您會因此登出大多數網站。"</string>
 <string name="clear_cookies_and_site_data_summary_basic">"你會從大多數網站登出。"</string>
 <string name="clear_cookies_and_site_data_signed_in_summary_basic">"你會從大多數網站登出，但不會因此登出 Google 帳戶。"</string>
-<string name="clear_browsing_history_summary">"歷史紀錄和網址列建議會遭到清除。"</string>
-<string name="clear_browsing_history_summary_signed_in">"歷史紀錄和網址列建議會遭到清除。你可以前往 &lt;link&gt;myactivity.google.com&lt;/link&gt; 查看你 Google 帳戶的其他活動。"</string>
-<string name="clear_browsing_history_summary_synced">"所有已登入裝置上的歷史紀錄都會遭到清除。你可以前往 &lt;link&gt;myactivity.google.com&lt;/link&gt; 查看你 Google 帳戶的其他活動。"</string>
+<string name="clear_browsing_history_summary">"將歷史紀錄和自動即時查詢從網址列中清除。"</string>
+<string name="clear_browsing_history_summary_signed_in">"將歷史紀錄和自動即時查詢從網址列中清除。你的 Google 帳戶可能會儲存其他形式的瀏覽紀錄，請參閱 &lt;link&gt;myactivity.google.com&lt;/link&gt;。"</string>
+<string name="clear_browsing_history_summary_synced">"將歷史紀錄從所有登入帳戶的裝置上清除。你的 Google 帳戶可能會儲存其他形式的瀏覽紀錄，請參閱 &lt;link&gt;myactivity.google.com&lt;/link&gt;。"</string>
 <string name="clear_passwords_title">"已儲存的密碼"</string>
 <string name="clear_form_data_title">"自動填入表單資料"</string>
 <string name="clear_browsing_data_progress_title">"正在清除瀏覽資料"</string>
@@ -186,6 +190,7 @@
 <string name="android_history_no_synced_results">"目前顯示這個裝置的歷史紀錄。&lt;link&gt;瞭解詳情&lt;/link&gt;"</string>
 <string name="android_history_has_synced_results">"目前顯示的歷史紀錄來源包括您已登入帳戶的所有裝置。&lt;link&gt;瞭解詳情&lt;/link&gt;"</string>
 <string name="android_history_other_forms_of_history">"您仍可前往 &lt;link&gt;history.google.com&lt;/link&gt; 存取 Google 帳戶中保存的各種瀏覽紀錄。"</string>
+<string name="android_history_other_forms_of_history_new">"你的 Google 帳戶可能會儲存其他形式的瀏覽紀錄，請參閱 &lt;link&gt;myactivity.google.com&lt;/link&gt;。"</string>
 <string name="android_history_blocked_site">"已封鎖網站"</string>
 <string name="usage_and_crash_reports_title">"使用資料和當機報告"</string>
 <string name="usage_and_crash_reports_description">"自動傳送使用統計資料及當機報告給 Google"</string>
@@ -208,7 +213,7 @@
 <string name="javascript_permission_title">"JavaScript"</string>
 <string name="media_permission_title">"媒體"</string>
 <string name="popup_permission_title">"彈出式視窗"</string>
-<string name="subresource_filter_permission_title">"子資源篩選器"</string>
+<string name="subresource_filter_permission_title">"Subresource Filter"</string>
 <string name="push_notifications_permission_title">"通知"</string>
 <string name="enable_notifications_vibrate_title">"震動"</string>
 <string name="enable_notifications_vibrate_summary">"收到通知時裝置會震動"</string>
@@ -285,18 +290,19 @@
 <string name="website_settings_usb">"USB"</string>
 <string name="website_settings_revoke_device_permission">"撤銷裝置權限"</string>
 <string name="website_settings_usb_no_devices">"清單中沒有任何 USB 裝置"</string>
+<string name="iph_data_saver_preview_text">"Chrome 正以較少的數據用量顯示這個網頁"</string>
 <string name="data_reduction_title">"Data Saver"</string>
 <string name="data_reduction_saved_label">"已節省 %1$s"</string>
 <string name="data_reduction_date_label">"(%1$s起)"</string>
 <string name="data_reduction_description">"啟用這項功能後，Chrome 會先使用 Google 伺服器壓縮您要造訪的網頁資料，然後再下載這些網頁。使用私人連線 (HTTPS) 或無痕式分頁存取網頁時，Google 不會對這些網頁進行最佳化處理，也不會偵測到這些網頁。"</string>
 <string name="data_reduction_menu_item_summary">"節省 %1$s 的數據流量"</string>
-<string name="data_reduction_savings_label">"節省數據用量："</string>
+<string name="data_reduction_savings_label">"節省的流量："</string>
 <string name="data_reduction_usage_label">"數據用量："</string>
 <string name="data_reduction_proxy_unreachable_warn">"Chrome 無法連上 Google 的伺服器進行資料壓縮，這可能會導致您無法節省某些數據流量。"</string>
 <string name="data_reduction_data_usage_breakdown_title">"數據用量解析"</string>
 <string name="data_reduction_breakdown_site_title">"網站"</string>
-<string name="data_reduction_breakdown_used_title">"已使用"</string>
-<string name="data_reduction_breakdown_saved_title">"已儲存"</string>
+<string name="data_reduction_breakdown_used_title">"使用量"</string>
+<string name="data_reduction_breakdown_saved_title">"已節省"</string>
 <string name="data_reduction_breakdown_remaining_sites_label">"其餘網站 (%1$d)"</string>
 <string name="data_reduction_usage_reset_statistics_button">"重設統計資料"</string>
 <string name="safe_browsing_description">"Chrome 的安全瀏覽系統也會用於偵測惡意網頁，保護您不受網路釣魚、惡意軟體和有害下載內容的攻擊。"</string>
@@ -424,6 +430,10 @@
 <string name="bluetooth_need_location_permission_and_services_on">"Chrome 需要位置資訊存取權才能掃描裝置。&lt;permission_link&gt;更新權限&lt;/permission_link&gt;。此外，&lt;services_link&gt;這個裝置的位置資訊存取權已關閉&lt;/services_link&gt;。"</string>
 <string name="bluetooth_need_location_permission_help">"&lt;link&gt;取得說明&lt;/link&gt;"</string>
 <string name="bluetooth_device_connected">"連結的裝置"</string>
+<plurals name="signal_strength_level_n_bars">
+  <item quantity="one">"訊號強度等級：%d 格"</item>
+  <item quantity="other">"訊號強度等級：%d 格"</item>
+</plurals>
 <string name="sync_error_card_title">"同步處理功能無法正常運作"</string>
 <string name="hint_android_sync_disabled">"如要啟動 Chrome 同步功能，請開啟 Android 設定並重新啟用 Android 系統同步處理設定"</string>
 <string name="hint_sync_auth_error">"如要開始同步處理，請重新登入"</string>
@@ -468,6 +478,14 @@
 <string name="translate_button_done">"完成"</string>
 <string name="translate_never_translate_site">"一律不翻譯此網站"</string>
 <string name="translate_never_translate_language">"一律不翻譯%1$s"</string>
+<string name="translate_option_always_translate">"一律翻譯%1$s網頁"</string>
+<string name="translate_option_never_translate">"一律不翻譯%1$s網頁"</string>
+<string name="translate_option_more_language">"更多語言"</string>
+<string name="translate_option_not_source_language">"不是%1$s網頁嗎？"</string>
+<string name="translate_snackbar_always_translate">"從現在起，系統會將%1$s網頁內容翻譯成%2$s"</string>
+<string name="translate_snackbar_language_never">"系統將不會翻譯%1$s網頁"</string>
+<string name="translate_snackbar_site_never">"系統不會翻譯這個網站"</string>
+<string name="translate_snackbar_cancel">"取消"</string>
 <string name="menu_print">"列印…"</string>
 <string name="menu_share_page">"分享…"</string>
 <string name="share_link_chooser_title">"分享方式："</string>
@@ -477,10 +495,10 @@
 <string name="accessibility_menu_forward">"往前"</string>
 <string name="accessibility_menu_info">"查看網站資訊"</string>
 <string name="accessibility_content_view">"網頁檢視"</string>
-<string name="infobar_missing_camera_permission_text">"Chrome 需要存取攝影機，才能與這個網站分享。"</string>
-<string name="infobar_missing_microphone_permission_text">"Chrome 需要存取麥克風，才能與這個網站分享。"</string>
-<string name="infobar_missing_location_permission_text">"Chrome 需要存取位置資訊，才能與這個網站分享。"</string>
-<string name="infobar_missing_multiple_permissions_text">"Chrome 需要存取權限，才能與這個網站分享。"</string>
+<string name="infobar_missing_camera_permission_text">"Chrome 需要相關權限，才能讓這個網站使用你的攝影機。"</string>
+<string name="infobar_missing_microphone_permission_text">"Chrome 需要相關權限，才能讓這個網站使用你的麥克風。"</string>
+<string name="infobar_missing_microphone_camera_permissions_text">"Chrome 需要相關權限，才能讓這個網站使用你的攝影機和麥克風。"</string>
+<string name="infobar_missing_location_permission_text">"Chrome 需要位置資訊存取權，才能與這個網站分享你的位置資訊。"</string>
 <string name="missing_storage_permission_download_education_text">"Chrome 必須取得儲存空間的存取權才能下載檔案。"</string>
 <string name="omnibox_geolocation_disclosure">"%1$s 會使用您的位置資訊來顯示當地搜尋結果"</string>
 <string name="contextmenu_open_in_other_window">"在其他視窗中開啟"</string>
@@ -503,6 +521,11 @@
 <string name="contextmenu_open_in_new_chrome_tab">"在新的 Chrome 分頁中開啟"</string>
 <string name="contextmenu_open_in_chrome_incognito_tab">"在無痕式分頁中開啟"</string>
 <string name="accessibility_swipe_refresh">"重新整理網頁"</string>
+<string name="browser_actions_open_in_background">"在新的 Chrome 分頁中開啟"</string>
+<string name="browser_actions_open_in_incognito_tab">"在無痕式分頁中開啟"</string>
+<string name="browser_actions_save_link_as">"下載網頁"</string>
+<string name="browser_actions_copy_address">"複製連結"</string>
+<string name="browser_actions_share">"分享…"</string>
 <string name="app_banner_installing">"安裝中…"</string>
 <string name="app_banner_open">"開啟"</string>
 <string name="app_banner_installing_webapk">"新增中…"</string>
@@ -567,6 +590,8 @@
 <string name="download_succeeded_message_default">"%1$s 下載完成"</string>
 <string name="file_size_downloaded_kb">"已下載 %1$.1f KB"</string>
 <string name="file_size_downloaded_mb">"已下載 %1$.1f MB"</string>
+<string name="one_file_left">"還剩 1 個檔案"</string>
+<string name="files_left">"還剩 %1$d 個檔案"</string>
 <string name="file_size_downloaded_gb">"已下載 %1$.1f GB"</string>
 <string name="remaining_duration_days">"還剩 %1$d 天"</string>
 <string name="remaining_duration_one_day">"還剩 1 天"</string>
@@ -596,7 +621,7 @@
 <string name="download_manager_ui_space_used_kb">"下載內容佔 %1$3.2f KB"</string>
 <string name="download_manager_ui_space_used_mb">"下載內容佔 %1$3.2f MB"</string>
 <string name="download_manager_ui_space_used_gb">"下載內容佔 %1$3.2f GB"</string>
-<string name="download_manager_ui_all_downloads">"所有下載內容"</string>
+<string name="download_manager_ui_all_downloads">"全部"</string>
 <string name="download_manager_ui_pages">"頁數"</string>
 <string name="download_manager_ui_video">"影片"</string>
 <string name="download_manager_ui_audio">"音訊"</string>
@@ -636,8 +661,8 @@
 <string name="signin_open_add_google_account_page_failed">"在裝置的「設定」應用程式中，透過「帳戶」頁面新增 Google 帳戶。"</string>
 <string name="signin_open_settings_accounts">"開啟設定"</string>
 <string name="signin_hi_name">"%1$s，您好："</string>
-<string name="signin_signed_in_settings_description_child_account">"你和你的家長可以在&lt;LINK1&gt;設定&lt;/LINK1&gt;中管理這項功能的運作方式"</string>
-<string name="signin_signed_in_settings_description">"您可以在「&lt;LINK1&gt;設定&lt;/LINK1&gt;」頁面中管理這項功能的運作方式"</string>
+<string name="signin_signed_in_settings_description_child_account">"你和你的家長可前往&lt;LINK1&gt;設定&lt;/LINK1&gt;頁面管理 Chrome 同步功能和個人化設定"</string>
+<string name="signin_signed_in_settings_description">"前往&lt;LINK1&gt;設定&lt;/LINK1&gt;頁面管理 Chrome 同步功能和個人化設定"</string>
 <string name="signin_gms_updating">"正在等待 Google Play 服務完成更新"</string>
 <string name="external_app_leave_incognito_warning">"這個網站即將與外部應用程式分享資訊，分享時會自動退出無痕模式。"</string>
 <string name="external_app_leave_incognito_warning_title">"要退出無痕模式嗎？"</string>
@@ -691,10 +716,16 @@
 <string name="ntp_all_dismissed_refresh">"重新整理"</string>
 <string name="open_tabs">"開啟分頁"</string>
 <string name="button_new_tab">"新增分頁"</string>
+<string name="button_new_incognito_tab">"新增無痕式分頁"</string>
 <string name="menu_update">"更新 Chrome"</string>
 <string name="menu_update_summary_default">"已推出新版本"</string>
 <string name="menu_update_summary_new_features">"取得最新功能"</string>
 <string name="menu_move_to_other_window">"移至其他視窗"</string>
+<string name="menu_forward">"往前"</string>
+<string name="menu_bookmark">"書籤"</string>
+<string name="menu_download">"下載"</string>
+<string name="menu_page_info">"頁面資訊"</string>
+<string name="menu_refresh">"重新整理"</string>
 <string name="menu_new_tab">"新增分頁"</string>
 <string name="menu_new_incognito_tab">"新無痕式分頁"</string>
 <string name="menu_bookmarks">"書籤"</string>
@@ -715,7 +746,6 @@
 <string name="bookmark_page_saved_default">"已加入書籤"</string>
 <string name="bookmark_page_saved_folder">"已將書籤加入「%1$s」"</string>
 <string name="bookmark_page_failed">"無法加入書籤。"</string>
-<string name="bookmark_drawer_folders">"資料夾"</string>
 <string name="bookmark_parent_folder">"上層資料夾"</string>
 <string name="bookmark_item_select">"選取"</string>
 <string name="bookmark_item_edit">"編輯"</string>
@@ -752,7 +782,6 @@
 <string name="menu_open_in_product_default">"在瀏覽器中開啟"</string>
 <string name="reader_view_text">"讓網頁適合透過行動裝置瀏覽"</string>
 <string name="reader_mode_maximized_title">"適合透過行動裝置瀏覽的檢視模式"</string>
-<string name="fre_label">"初次使用體驗"</string>
 <string name="content_provider_search_description">"書籤與網頁紀錄"</string>
 <string name="url_copied">"已複製網址。"</string>
 <string name="accessibility_toolbar_btn_forward">"往前"</string>
@@ -772,6 +801,7 @@
 </plurals>
 <string name="accessibility_toolbar_btn_tabswitcher_toggle_default">"開啟的分頁"</string>
 <string name="accessibility_toolbar_btn_home">"首頁"</string>
+<string name="accessibility_toolbar_btn_expand">"展開"</string>
 <string name="accessibility_btn_refresh">"重新整理頁面"</string>
 <string name="accessibility_btn_stop_loading">"停止載入網頁"</string>
 <string name="accessibility_find_toolbar_btn_next">"繼續"</string>
@@ -802,9 +832,6 @@
   <item quantity="other">"移除 %d 個選取的項目"</item>
 </plurals>
 <string name="selected">"已選取"</string>
-<string name="video_call_notification_text_2">"正在存取視訊輸入"</string>
-<string name="audio_call_notification_text_2">"正在存取音訊輸入"</string>
-<string name="video_audio_call_notification_text_2">"正在存取音訊和視訊輸入"</string>
 <string name="media_notification_link_text">"輕觸即可返回 %1$s"</string>
 <string name="screen_capture_notification_text">"%1$s 正在共用你的畫面。"</string>
 <string name="new_tab_incognito_header">"你已啟用無痕模式。"</string>
@@ -867,6 +894,7 @@
 <string name="usb_chooser_dialog_no_devices_found_prompt">"找不到裝置"</string>
 <string name="usb_chooser_dialog_connect_button_text">"連線"</string>
 <string name="usb_chooser_dialog_footnote_text">"&lt;link&gt;取得說明&lt;/link&gt;"</string>
+<string name="decoder_description">"影像解碼器"</string>
 <string name="tab_switcher_callout_body">"輕觸這個按鈕即可快速存取分頁。"</string>
 <string name="search_with_sogou">"使用 Sogou 搜尋"</string>
 <string name="sogou_explanation">"Chrome 可以在中國使用 &lt;b&gt;Sogou&lt;/b&gt; 搜尋。你可以在&lt;link&gt;設定&lt;/link&gt;中變更這項設定。"</string>
@@ -900,6 +928,8 @@
 <string name="keyboard_shortcut_tab_group_header">"分頁與視窗快速鍵"</string>
 <string name="keyboard_shortcut_chrome_feature_group_header">"Google Chrome 功能快速鍵"</string>
 <string name="keyboard_shortcut_webpage_group_header">"網頁快速鍵"</string>
+<string name="vr_shell_feedback_infobar_description">"協助我們改善 Chrome 的 VR 體驗"</string>
+<string name="vr_shell_feedback_infobar_feedback_button">"提供意見"</string>
 <string name="vr_services_check_infobar_install_text">"如要查看虛擬實境內容，請安裝 Google VR 服務"</string>
 <string name="vr_services_check_infobar_update_text">"如要查看虛擬實境內容，請更新 Google VR 服務"</string>
 <string name="vr_services_check_infobar_install_button">"安裝"</string>
@@ -907,7 +937,22 @@
 <string name="contextmenu_image_title">"圖片"</string>
 <string name="contextmenu_link_title">"連結"</string>
 <string name="contextmenu_video_title">"影片"</string>
+<string name="iph_download_page_for_offline_usage_text">"下載網頁以便離線存取"</string>
+<string name="iph_download_page_for_offline_usage_accessibility_text">"透過「更多選項」按鈕下載網頁，以便離線存取"</string>
+<string name="iph_download_home_text">"前往「下載」主畫面尋找你的檔案和網頁"</string>
+<string name="iph_download_home_accessibility_text">"透過「更多選項」按鈕前往「下載」主畫面尋找你的檔案和網頁"</string>
 <string name="search_widget_default">"搜尋"</string>
 <string name="search_with_product">"使用 %1$s 搜尋"</string>
 <string name="disabled_incognito_launcher_shortcut_message">"移除這個捷徑後再重新建立"</string>
+<string name="bottom_sheet_help_bubble_message">"往上拉即可查看書籤和其他內容"</string>
+<string name="bottom_sheet_accessibility_help_bubble_message">"在網址列往上拉即可查看書籤、下載內容和歷史紀錄"</string>
+<string name="bottom_sheet_accessibility_toolbar">"網址列。往上拉即可查看書籤、下載內容和歷史紀錄。"</string>
+<string name="bottom_sheet_expand_button_help_bubble_message">"輕觸即可查看書籤和其他內容"</string>
+<string name="bottom_sheet_accessibility_expand_button_help_bubble_message">"輕觸即可查看書籤、下載內容和歷史紀錄"</string>
+<string name="bottom_sheet_opened">"導覽面版已開啟"</string>
+<string name="bottom_sheet_closed">"導覽面版已關閉"</string>
+<string name="bottom_sheet_bookmarks_tab">"已選取 [書籤] 標籤"</string>
+<string name="bottom_sheet_downloads_tab">"已選取 [下載] 標籤"</string>
+<string name="bottom_sheet_history_tab">"已選取 [歷史紀錄] 標籤"</string>
+<string name="bottom_sheet_home_tab">"已選取 [首頁] 標籤"</string>
 </resources>

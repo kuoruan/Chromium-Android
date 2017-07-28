@@ -10,6 +10,8 @@ import android.content.Context;
 
 import org.chromium.base.BuildInfo;
 import org.chromium.base.ContextUtils;
+import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
+import org.chromium.chrome.browser.notifications.channels.ChannelsInitializer;
 
 /**
  * Factory which supplies the appropriate type of notification builder based on Android version.
@@ -46,6 +48,6 @@ public class NotificationBuilderFactory {
         return new NotificationBuilderForO(context, channelId,
                 new ChannelsInitializer(new NotificationManagerProxyImpl(context.getSystemService(
                                                 NotificationManager.class)),
-                        new ChannelDefinitions()));
+                        context.getResources()));
     }
 }

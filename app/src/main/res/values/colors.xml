@@ -16,6 +16,7 @@
     <color name="descriptive_text_color">#646464</color>
     <color name="error_text_color">#c53929</color>
     <color name="google_blue_200">#90caf9</color>
+    <color name="google_blue_300">#7BAAF7</color>
     <color name="google_blue_500">#4285f4</color>
     <color name="google_blue_700">#3367d6</color>
     <color name="google_blue_grey_500">#607D8B</color>
@@ -29,11 +30,18 @@
     <color name="google_grey_600">#757575</color>
     <color name="toolbar_shadow_color">#1d000000</color>
     <color name="white_alpha_50">#80ffffff</color>
-    <color name="black_alpha_30">#4d000000</color>
-    <color name="black_alpha_40">#66000000</color>
+    <color name="white_alpha_70">#B3FFFFFF</color>
     <color name="toolbar_light_tint">#A3000000</color>
     <color name="light_grey">#ccc</color>
     <color name="modal_dialog_scrim_color">#7f000000</color>
+
+    <!-- New list of common text colors -->
+    <color name="black_alpha_20">#33000000</color>
+    <color name="black_alpha_30">#4d000000</color>
+    <color name="black_alpha_38">#61000000</color>
+    <color name="black_alpha_40">#66000000</color>
+    <color name="black_alpha_54">#8a000000</color>
+    <color name="black_alpha_87">#de000000</color>
 
     <!-- Infobar colors -->
     <color name="infobar_accent_blue">#4285f4</color>
@@ -99,7 +107,6 @@
     <!-- As in dimens.xml, signin uses values from the First Run Experience -->
     <color name="signin_head_background">#fff</color>
     <color name="signin_body_background">#fafafa</color>
-    <color name="signin_border_line_color">#000</color>
 
     <!-- Sad Tab colors -->
     <color name="sad_tab_header_text_color">#333333</color>
@@ -119,6 +126,11 @@
     <color name="snippets_text_color">#646464</color>
     <color name="snippets_list_header_text_color">#646464</color>
     <color name="snippets_headline_text_color">#333333</color>
+
+    <!-- Incognito NTP Colors. -->
+    <color name="incognito_text">#b3ffffff</color>
+    <color name="incognito_emphasis">@android:color/white</color>
+    <color name="incognito_header">#ccffffff</color>
 
     <!-- Site suggestion tile colors. -->
     <color name="tile_view_text">#6f6f6f</color>
@@ -141,7 +153,7 @@
 
     <!-- LocationBar colors -->
     <color name="locationbar_dark_hint_text">#969696</color>
-    <color name="locationbar_light_hint_text">#80ffffff</color>
+    <color name="locationbar_light_hint_text">@color/white_alpha_70</color>
     <color name="locationbar_light_selection_color">#cc5595fe</color>
     <color name="locationbar_status_color">@color/light_normal_color</color>
     <color name="locationbar_status_color_light">#ffffff</color>
@@ -172,13 +184,9 @@
     <color name="webapp_url_bar_bg">#fafafa</color>
     <color name="webapp_url_bar_separator">#e1e1e1</color>
 
-    <!-- Colors common to secondary activities like the BookmarkActivity and the DownloadManagerUi -->
-    <color name="appbar_background">@color/default_primary_color</color>
-
     <!-- Bookmark UI colors -->
     <color name="bookmark_detail_text">#212121</color>
     <color name="bookmark_detail_section">#7C7B79</color>
-    <color name="bookmark_drawer_selected_background_color">#F0F0F0</color>
 
     <!-- Favicon colors -->
     <color name="default_favicon_background_color">#ff787878</color>

@@ -151,8 +151,7 @@ public class UiUtils {
                                 Context.INPUT_METHOD_SERVICE);
                 // Third-party touches disk on showSoftInput call. http://crbug.com/619824,
                 // http://crbug.com/635118
-                StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-                StrictMode.allowThreadDiskWrites();
+                StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
                 try {
                     imm.showSoftInput(view, 0);
                 } catch (IllegalArgumentException e) {

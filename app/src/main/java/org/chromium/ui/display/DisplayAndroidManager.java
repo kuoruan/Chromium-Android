@@ -170,8 +170,11 @@ public class DisplayAndroidManager {
         public void onDisplayChanged(int sdkDisplayId) {
             PhysicalDisplayAndroid displayAndroid =
                     (PhysicalDisplayAndroid) mIdMap.get(sdkDisplayId);
-            if (displayAndroid != null) {
-                displayAndroid.updateFromDisplay(getDisplayManager().getDisplay(sdkDisplayId));
+            Display display = getDisplayManager().getDisplay(sdkDisplayId);
+            // Note display null check here is needed because there appear to be an edge case in
+            // android display code, similar to onDisplayAdded.
+            if (displayAndroid != null && display != null) {
+                displayAndroid.updateFromDisplay(display);
             }
         }
     }
@@ -309,15 +312,14 @@ public class DisplayAndroidManager {
     /* package */ void updateDisplayOnNativeSide(DisplayAndroid displayAndroid) {
         if (mNativePointer == 0) return;
         nativeUpdateDisplay(mNativePointer, displayAndroid.getDisplayId(),
-                displayAndroid.getPhysicalDisplayWidth(), displayAndroid.getPhysicalDisplayHeight(),
                 displayAndroid.getDisplayWidth(), displayAndroid.getDisplayHeight(),
                 displayAndroid.getDipScale(), displayAndroid.getRotationDegrees(),
                 displayAndroid.getBitsPerPixel(), displayAndroid.getBitsPerComponent());
     }
 
     private native void nativeUpdateDisplay(long nativeDisplayAndroidManager, int sdkDisplayId,
-            int physicalWidth, int physicalHeight, int width, int height, float dipScale,
-            int rotationDegrees, int bitsPerPixel, int bitsPerComponent);
+            int width, int height, float dipScale, int rotationDegrees, int bitsPerPixel,
+            int bitsPerComponent);
     private native void nativeRemoveDisplay(long nativeDisplayAndroidManager, int sdkDisplayId);
     private native void nativeSetPrimaryDisplayId(
             long nativeDisplayAndroidManager, int sdkDisplayId);

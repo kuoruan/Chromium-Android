@@ -26,7 +26,7 @@ public interface Service extends org.chromium.mojo.bindings.Interface {
 
 
     void onStart(
-ServiceInfo info, 
+Identity identity, 
 OnStartResponse callback);
 
     interface OnStartResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<org.chromium.mojo.bindings.InterfaceRequest<Connector>, org.chromium.mojo.bindings.AssociatedInterfaceRequestNotSupported> { }
@@ -34,7 +34,7 @@ OnStartResponse callback);
 
 
     void onBindInterface(
-ServiceInfo sourceInfo, String interfaceName, org.chromium.mojo.system.MessagePipeHandle interfacePipe, 
+BindSourceInfo source, String interfaceName, org.chromium.mojo.system.MessagePipeHandle interfacePipe, 
 OnBindInterfaceResponse callback);
 
     interface OnBindInterfaceResponse extends org.chromium.mojo.bindings.Callbacks.Callback0 { }

@@ -13,9 +13,12 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.chrome.R;
 import org.chromium.ui.text.NoUnderlineClickableSpan;
 import org.chromium.ui.text.SpanApplier;
 
@@ -82,6 +85,12 @@ public class ClearBrowsingDataTabCheckBoxPreference extends ClearBrowsingDataChe
     @Override
     protected void setupLayout(LinearLayout view) {
         // Override to remove layout customizations from super class.
+
+        // Adjust icon padding.
+        int padding = getContext().getResources().getDimensionPixelSize(R.dimen.pref_icon_padding);
+        ImageView icon = (ImageView) view.findViewById(android.R.id.icon);
+        ApiCompatibilityUtils.setPaddingRelative(
+                icon, padding, icon.getPaddingTop(), 0, icon.getPaddingBottom());
     }
 
     @Override

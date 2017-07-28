@@ -13,6 +13,7 @@ import android.util.Pair;
 import org.chromium.base.StreamUtil;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.components.sync.SyncConstants;
 import org.chromium.content.browser.crypto.CipherFactory;
 import org.chromium.content_public.browser.WebContents;
 
@@ -257,9 +258,9 @@ public class TabState {
             try {
                 tabState.syncId = stream.readLong();
             } catch (EOFException eof) {
-                tabState.syncId = 0;
+                tabState.syncId = SyncConstants.INVALID_TAB_NODE_ID;
                 // Could happen if reading a version of TabState without syncId.
-                Log.w(TAG, "Failed to read syncId from tab state. Assuming syncId is: 0");
+                Log.w(TAG, "Failed to read syncId from tab state. Assuming syncId is: -1");
             }
             try {
                 tabState.shouldPreserve = stream.readBoolean();

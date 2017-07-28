@@ -16,7 +16,7 @@ import org.chromium.chrome.R;
 
 /**
  * Implementation of BitmapDrawable that allows to tint the color of the drawable for all
- * bitmap drawable states using chrome:tint attribute in XML.
+ * bitmap drawable states.
  */
 public class TintedDrawable extends BitmapDrawable {
     /**

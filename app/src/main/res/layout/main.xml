@@ -20,6 +20,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 
+           <FrameLayout
+                android:id="@+id/overview_list_layout_holder"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
             <org.chromium.chrome.browser.snackbar.BottomContainer
                 android:id="@+id/bottom_container"
                 android:layout_width="match_parent"

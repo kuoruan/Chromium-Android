@@ -262,8 +262,7 @@ public class ExternalAuthUtils {
      */
     protected int checkGooglePlayServicesAvailable(final Context context) {
         // Temporarily allowing disk access. TODO: Fix. See http://crbug.com/577190
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-        StrictMode.allowThreadDiskWrites();
+        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
         try {
             long time = SystemClock.elapsedRealtime();
             int isAvailable =

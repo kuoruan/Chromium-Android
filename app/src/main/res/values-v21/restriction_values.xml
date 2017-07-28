@@ -3,9 +3,7 @@
 IT IS GENERATED FROM policy_templates.json.-->
 <resources>
   <string name="AllowedDomainsForAppsTitle">Define domains allowed to access Google Apps</string>
-  <string name="AllowedDomainsForAppsDesc">Enables Chromium\'s
-restricted log in feature in Google Apps and prevents users from
-changing this setting.
+  <string name="AllowedDomainsForAppsDesc">Enables Chromium\'s restricted log in feature in Google Apps and prevents users from changing this setting.
 
 If you define this setting, the user will only be able to access
 Google Apps (such as Gmail) using accounts from the specified domains.
@@ -307,9 +305,7 @@ If you disable this setting or leave it not set, the canonical name of the serve
 
 If this setting is disabled or not configured then users can choose to proceed to the flagged site after being shown the warning.</string>
   <string name="EditBookmarksEnabledTitle">Enables or disables bookmark editing</string>
-  <string name="EditBookmarksEnabledDesc">Enables or disables editing bookmarks in Chromium.
-
-If you enable this setting, bookmarks can be added, removed or modified. This is the default also when this policy is not set.
+  <string name="EditBookmarksEnabledDesc">If you enable this setting, bookmarks can be added, removed or modified. This is the default also when this policy is not set.
 
 If you disable this setting, bookmarks can not be added, removed or modified. Existing bookmarks are still available.</string>
   <string name="EnableCommonNameFallbackForLocalAnchorsTitle">Whether to allow certificates issued by local trust anchors that are missing the subjectAlternativeName extension</string>
@@ -414,15 +410,11 @@ If this policy is left not set the global default value will be used for all sit
   <string name="ManagedBookmarksTitle">Managed Bookmarks</string>
   <string name="ManagedBookmarksDesc">Configures a list of managed bookmarks.
 
-The policy consists of a list of bookmarks whereas each bookmark is a
-dictionary containing the keys \\&quot;name\\&quot; and \\&quot;url\\&quot; which hold the bookmark\'s name and its target. A
-subfolder may be configured by defining a bookmark without an \\&quot;url\\&quot; key but with an additional \\&quot;children\\&quot; key which itself contains a list of
-bookmarks as defined above (some of which may be folders again). Chromium amends incomplete URLs
-as if they were submitted via the Omnibox, for example \\&quot;google.com\\&quot; becomes \\&quot;https://google.com/\\&quot;.
+The policy consists of a list of bookmarks whereas each bookmark is a dictionary containing the keys \\&quot;name\\&quot; and \\&quot;url\\&quot; which hold the bookmark\'s name and its target. A subfolder may be configured by defining a bookmark without an \\&quot;url\\&quot; key but with an additional \\&quot;children\\&quot; key which itself contains a list of bookmarks as defined above (some of which may be folders again). Chromium amends incomplete URLs as if they were submitted via the Omnibox, for example \\&quot;google.com\\&quot; becomes \\&quot;https://google.com/\\&quot;.
 
-These bookmarks are placed in a \\&quot;Managed bookmarks\\&quot; folder that can\'t be modified by the user, but the user can choose to hide it from the bookmark bar. Managed bookmarks are not synced to the user account and can\'t be modified by extensions.
+These bookmarks are placed in a folder that can\'t be modified by the user (but the user can choose to hide it from the bookmark bar). By default the folder name is \\&quot;Managed bookmarks\\&quot; but it can be customized by adding to the list of bookmarks a dictionary containing the key \\&quot;toplevel_name\\&quot; with the desired folder name as the value.
 
-Starting with release 51, the folder name for the bookmarks is customizable by adding a {\\&quot;toplevel_name\\&quot;: \\&quot;some name\\&quot;} list item.</string>
+Managed bookmarks are not synced to the user account and can\'t be modified by extensions.</string>
   <string name="NTPContentSuggestionsEnabledTitle">Show content suggestions on the New Tab page</string>
   <string name="NTPContentSuggestionsEnabledDesc">If this is set to true or not set, the New Tab page may show content suggestions based on the user\'s browsing history, interests, or location.
 
@@ -447,17 +439,12 @@ If this policy is left not set, network prediction will be enabled but the user 
     <item>2</item>
   </string-array>
   <string name="PasswordManagerEnabledTitle">Enable saving passwords to the password manager</string>
-  <string name="PasswordManagerEnabledDesc">
-If this setting is enabled, users can have Chromium memorize passwords
-and provide them automatically the next time they log in to a site.
+  <string name="PasswordManagerEnabledDesc">If this setting is enabled, users can have Chromium memorize passwords and provide them automatically the next time they log in to a site.
 
 If this settings is disabled, users cannot save new passwords but they
 may still use passwords that have been saved previously.
 
-If this policy is enabled or disabled, users cannot change or override
-it in Chromium. If this
-policy is unset, password saving is allowed (but can be turned off by
-the user).</string>
+If this policy is enabled or disabled, users cannot change or override it in Chromium. If this policy is unset, password saving is allowed (but can be turned off by the user).</string>
   <string name="PopupsAllowedForUrlsTitle">Allow popups on these sites</string>
   <string name="PopupsAllowedForUrlsDesc">Allows you to set a list of url patterns that specify sites which are allowed to open popups.
 
@@ -590,9 +577,7 @@ If you enable or disable this setting, users cannot change or override this sett
 
 If this setting is left not set the user can decide to use this function or not.</string>
   <string name="URLBlacklistTitle">Block access to a list of URLs</string>
-  <string name="URLBlacklistDesc">Blocks access to the listed URLs.
-
-This policy prevents the user from loading web pages from blacklisted URLs. The blacklist provides a list of URL patterns that specify which URLs will be blacklisted.
+  <string name="URLBlacklistDesc">This policy prevents the user from loading web pages from blacklisted URLs. The blacklist provides a list of URL patterns that specify which URLs will be blacklisted.
 
 A URL pattern has to be formatted according to https://www.chromium.org/administrators/url-blacklist-filter-format.
 

@@ -172,9 +172,9 @@ public class AutofillLocalCardEditor extends AutofillCreditCardEditor {
         // Remove all spaces in editText.
         String cardNumber = mNumberText.getText().toString().replaceAll("\\s+", "");
         PersonalDataManager personalDataManager = PersonalDataManager.getInstance();
-        // Card Payment Type will be empty if credit card number is not valid.
-        if (TextUtils.isEmpty(personalDataManager.getBasicCardPaymentType(cardNumber,
-                true /* emptyIfInvalid */))) {
+        // Issuer network will be empty if credit card number is not valid.
+        if (TextUtils.isEmpty(personalDataManager.getBasicCardIssuerNetwork(
+                    cardNumber, true /* emptyIfInvalid */))) {
             mNumberLabel.setError(mContext.getString(
                     R.string.payments_card_number_invalid_validation_message));
             return false;

@@ -37,7 +37,7 @@ import org.chromium.chrome.browser.widget.displaystyle.UiConfig;
  * - Cards can peek above the fold if there is enough space.
  *
  * - When peeking, tapping on cards will make them request a scroll up (see
- *   {@link SuggestionsRecyclerView#scrollToFirstCard()}). Tap events in non-peeking state will be
+ *   {@link SuggestionsRecyclerView#interceptCardTapped}). Tap events in non-peeking state will be
  *   routed through {@link #onCardTapped()} for subclasses to override.
  *
  * - Cards will get some lateral margins when the viewport is sufficiently wide.

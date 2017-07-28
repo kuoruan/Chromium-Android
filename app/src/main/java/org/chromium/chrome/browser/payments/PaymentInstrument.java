@@ -73,6 +73,7 @@ public abstract class PaymentInstrument extends PaymentOption {
      *
      * The callback will be invoked with the resulting payment details or error.
      *
+     * @param id               The unique identifier of the PaymentRequest.
      * @param merchantName     The name of the merchant.
      * @param origin           The origin of this merchant.
      * @param iframeOrigin     The origin of the iframe that invoked PaymentRequest.
@@ -86,10 +87,11 @@ public abstract class PaymentInstrument extends PaymentOption {
      * @param modifiers        The relevant payment details modifiers.
      * @param callback         The object that will receive the instrument details.
      */
-    public abstract void invokePaymentApp(String merchantName, String origin, String iframeOrigin,
-            @Nullable byte[][] certificateChain, Map<String, PaymentMethodData> methodDataMap,
-            PaymentItem total, List<PaymentItem> displayItems,
-            Map<String, PaymentDetailsModifier> modifiers, InstrumentDetailsCallback callback);
+    public abstract void invokePaymentApp(String id, String merchantName, String origin,
+            String iframeOrigin, @Nullable byte[][] certificateChain,
+            Map<String, PaymentMethodData> methodDataMap, PaymentItem total,
+            List<PaymentItem> displayItems, Map<String, PaymentDetailsModifier> modifiers,
+            InstrumentDetailsCallback callback);
 
     /**
      * Cleans up any resources held by the payment instrument. For example, closes server

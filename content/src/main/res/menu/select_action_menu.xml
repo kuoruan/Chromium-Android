@@ -8,10 +8,12 @@
 
 <!--suppress AlwaysShowAction -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- The orderInCategory starts with 2 to give a room for
-         assist menu item. Remove the ordering when Android
-         can reorder the assist menu item itself.
-         -->
+    <!-- Remove the ordering when Android can reorder the assist menu item
+         itself. -->
+    <group
+        android:id="@+id/select_action_menu_assist_items"
+        android:orderInCategory="1">
+    </group>
     <group
         android:id="@+id/select_action_menu_default_items">
         <item
@@ -22,7 +24,7 @@
             android:alphabeticShortcut="x"
             android:orderInCategory="2"
             />
-       <item
+        <item
             android:id="@+id/select_action_menu_copy"
             android:icon="?android:attr/actionModeCopyDrawable"
             android:title="@android:string/copy"
@@ -30,7 +32,7 @@
             android:alphabeticShortcut="c"
             android:orderInCategory="3"
             />
-       <item
+        <item
             android:id="@+id/select_action_menu_paste"
             android:icon="?android:attr/actionModePasteDrawable"
             android:title="@android:string/paste"
@@ -38,14 +40,14 @@
             android:alphabeticShortcut="v"
             android:orderInCategory="4"
             />
-       <item
+        <item
             android:id="@+id/select_action_menu_share"
             android:title="@string/actionbar_share"
             android:showAsAction="always|withText"
             style="@style/SelectActionMenuShare"
             android:orderInCategory="5"
             />
-       <item
+        <item
             android:id="@+id/select_action_menu_select_all"
             android:icon="?android:attr/actionModeSelectAllDrawable"
             android:title="@android:string/selectAll"
@@ -53,16 +55,23 @@
             android:alphabeticShortcut="a"
             android:orderInCategory="6"
             />
-       <item
+        <!-- TODO(ctzsm): Change title to paste_as_plain_text after O SDK roll. -->
+        <item
+            android:id="@+id/select_action_menu_paste_as_plain_text"
+            android:title=""
+            android:showAsAction="always|withText"
+            android:orderInCategory="7"
+            />
+        <item
             android:id="@+id/select_action_menu_web_search"
             android:title="@string/actionbar_web_search"
             android:showAsAction="always|withText"
             style="@style/SelectActionMenuWebSearch"
-            android:orderInCategory="7"
+            android:orderInCategory="8"
             />
     </group>
     <group
         android:id="@+id/select_action_menu_text_processing_menus"
-        android:orderInCategory="8">
+        android:orderInCategory="9">
     </group>
 </menu>

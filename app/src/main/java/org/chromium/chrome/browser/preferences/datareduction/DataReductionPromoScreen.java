@@ -5,7 +5,6 @@
 package org.chromium.chrome.browser.preferences.datareduction;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.view.View;
 
@@ -42,10 +41,10 @@ public class DataReductionPromoScreen extends PromoDialog {
     /**
      * DataReductionPromoScreen constructor.
      *
-     * @param context An Android context.
+     * @param activity An Android activity to display the dialog.
      */
-    public DataReductionPromoScreen(Context context) {
-        super(context);
+    public DataReductionPromoScreen(Activity activity) {
+        super(activity);
         mState = DataReductionProxyUma.ACTION_DISMISSED;
     }
 

@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.ntp.snippets;
 import android.graphics.Bitmap;
 import android.support.annotation.Nullable;
 
+import org.chromium.base.DiscardableReferencePool.DiscardableReference;
 import org.chromium.chrome.browser.suggestions.OfflinableSuggestion;
 
 import java.io.File;
@@ -51,7 +52,7 @@ public class SnippetArticle implements OfflinableSuggestion {
     private int mGlobalRank = -1;
 
     /** Bitmap of the thumbnail, fetched lazily, when the RecyclerView wants to show the snippet. */
-    private Bitmap mThumbnailBitmap;
+    private DiscardableReference<Bitmap> mThumbnailBitmap;
 
     /** Stores whether impression of this article has been tracked already. */
     private boolean mImpressionTracked;
@@ -108,11 +109,11 @@ public class SnippetArticle implements OfflinableSuggestion {
      * initially unset.
      */
     public Bitmap getThumbnailBitmap() {
-        return mThumbnailBitmap;
+        return mThumbnailBitmap == null ? null : mThumbnailBitmap.get();
     }
 
     /** Sets the thumbnail bitmap for this article. */
-    public void setThumbnailBitmap(Bitmap bitmap) {
+    public void setThumbnailBitmap(DiscardableReference<Bitmap> bitmap) {
         mThumbnailBitmap = bitmap;
     }
 

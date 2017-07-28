@@ -109,6 +109,12 @@ public interface WebContents extends Parcelable {
 
     // TODO (amaralp): Only used in content. Should be moved out of public interface.
     /**
+     * Paste content from the clipboard without format.
+     */
+    void pasteAsPlainText();
+
+    // TODO (amaralp): Only used in content. Should be moved out of public interface.
+    /**
      * Replace the selected text with the {@code word}.
      */
     void replace(String word);
@@ -290,7 +296,15 @@ public interface WebContents extends Parcelable {
     void addMessageToDevToolsConsole(int level, String message);
 
     /**
-     * Dispatches a Message event to the specified frame.
+     * Post a message to a frame.
+     *
+     * @param frameName The name of the frame. If the name is null the message is posted
+     *                  to the main frame.
+     * @param message   The message
+     * @param targetOrigin  The target origin. If the target origin is a "*" or a
+     *                  empty string, it indicates a wildcard target origin.
+     * @param sentPorts The sent message ports, if any. Pass null if there is no
+     *                  message ports to pass.
      */
     void postMessageToFrame(String frameName, String message,
             String sourceOrigin, String targetOrigin, MessagePort[] ports);

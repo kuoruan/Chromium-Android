@@ -28,11 +28,13 @@ public class PaymentRequestUiErrorView extends BoundedLinearLayout {
     /**
      * Initializes the view with the correct strings.
      *
-     * @param title   Title of the webpage.
-     * @param origin  Origin of the webpage.
+     * @param title         Title of the webpage.
+     * @param origin        Origin of the webpage.
+     * @param securityLevel The security level of the page that invoked PaymentRequest.
      */
-    public void initialize(String title, String origin) {
-        ((PaymentRequestHeader) findViewById(R.id.header)).setTitleAndOrigin(title, origin);
+    public void initialize(String title, String origin, int securityLevel) {
+        ((PaymentRequestHeader) findViewById(R.id.header))
+                .setTitleAndOrigin(title, origin, securityLevel);
 
         // Remove the close button, then expand the page information to take up the space formerly
         // occupied by the X.

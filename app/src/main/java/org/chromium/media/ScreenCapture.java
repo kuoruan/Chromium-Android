@@ -28,6 +28,7 @@ import android.view.Surface;
 import android.view.WindowManager;
 
 import org.chromium.base.ApplicationStatus;
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -48,7 +49,6 @@ public class ScreenCapture extends Fragment {
 
     // Native callback context variable.
     private final long mNativeScreenCaptureMachineAndroid;
-    private final Context mContext;
 
     private static enum CaptureState { ATTACHED, ALLOWED, STARTED, STOPPING, STOPPED }
     private static enum DeviceOrientation { PORTRAIT, LANDSCAPE }
@@ -72,17 +72,15 @@ public class ScreenCapture extends Fragment {
     private int mFormat;
     private int mResultCode;
 
-    ScreenCapture(Context context, long nativeScreenCaptureMachineAndroid) {
-        mContext = context;
+    ScreenCapture(long nativeScreenCaptureMachineAndroid) {
         mNativeScreenCaptureMachineAndroid = nativeScreenCaptureMachineAndroid;
     }
 
     // Factory method.
     @CalledByNative
-    static ScreenCapture createScreenCaptureMachine(
-            Context context, long nativeScreenCaptureMachineAndroid) {
+    static ScreenCapture createScreenCaptureMachine(long nativeScreenCaptureMachineAndroid) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            return new ScreenCapture(context, nativeScreenCaptureMachineAndroid);
+            return new ScreenCapture(nativeScreenCaptureMachineAndroid);
         }
         return null;
     }
@@ -209,15 +207,17 @@ public class ScreenCapture extends Fragment {
         mWidth = width;
         mHeight = height;
 
-        mMediaProjectionManager = (MediaProjectionManager) mContext.getSystemService(
-                Context.MEDIA_PROJECTION_SERVICE);
+        mMediaProjectionManager =
+                (MediaProjectionManager) ContextUtils.getApplicationContext().getSystemService(
+                        Context.MEDIA_PROJECTION_SERVICE);
         if (mMediaProjectionManager == null) {
             Log.e(TAG, "mMediaProjectionManager is null");
             return false;
         }
 
         WindowManager windowManager =
-                (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+                (WindowManager) ContextUtils.getApplicationContext().getSystemService(
+                        Context.WINDOW_SERVICE);
         mDisplay = windowManager.getDefaultDisplay();
 
         DisplayMetrics metrics = new DisplayMetrics();
@@ -319,14 +319,16 @@ public class ScreenCapture extends Fragment {
             if (mMediaProjection != null && mCaptureState == CaptureState.STARTED) {
                 mMediaProjection.stop();
                 changeCaptureStateAndNotify(CaptureState.STOPPING);
-            }
 
-            while (mCaptureState != CaptureState.STOPPED) {
-                try {
-                    mCaptureStateLock.wait();
-                } catch (InterruptedException ex) {
-                    Log.e(TAG, "ScreenCaptureEvent: " + ex);
+                while (mCaptureState != CaptureState.STOPPED) {
+                    try {
+                        mCaptureStateLock.wait();
+                    } catch (InterruptedException ex) {
+                        Log.e(TAG, "ScreenCaptureEvent: " + ex);
+                    }
                 }
+            } else {
+                changeCaptureStateAndNotify(CaptureState.STOPPED);
             }
         }
     }

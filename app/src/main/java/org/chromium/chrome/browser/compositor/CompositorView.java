@@ -10,17 +10,13 @@ import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
-import android.view.Display;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.FrameLayout;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.base.TraceEvent;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -34,6 +30,7 @@ import org.chromium.chrome.browser.externalnav.IntentWithGesturesHandler;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.tabmodel.TabModelImpl;
 import org.chromium.chrome.browser.widget.ClipDrawableProgressBar.DrawingInfo;
+import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.base.WindowAndroid;
 import org.chromium.ui.resources.AndroidResourceType;
 import org.chromium.ui.resources.ResourceManager;
@@ -66,9 +63,6 @@ public class CompositorView
     private final LayoutRenderHost mRenderHost;
     private int mPreviousWindowTop = -1;
 
-    // A conservative estimate of when a frame is guaranteed to be presented after being submitted.
-    private long mFramePresentationDelay;
-
     // Resource Management
     private ResourceManager mResourceManager;
 
@@ -94,13 +88,11 @@ public class CompositorView
 
         mCompositorSurfaceManager = new CompositorSurfaceManager(this, this);
 
-        if (BuildInfo.isAtLeastO()) {
-            setBackgroundColor(Color.WHITE);
-            super.setVisibility(View.VISIBLE);
-            mCompositorSurfaceManager.setVisibility(View.INVISIBLE);
-        } else {
-            setVisibility(View.INVISIBLE);
-        }
+        // Cover the black surface before it has valid content.  Set this placeholder view to
+        // visible, but don't yet make SurfaceView visible, in order to delay
+        // surfaceCreate/surfaceChanged calls until the native library is loaded.
+        setBackgroundColor(Color.WHITE);
+        super.setVisibility(View.VISIBLE);
 
         // Request the opaque surface.  We might need the translucent one, but
         // we don't know yet.  We'll switch back later if we discover that
@@ -201,21 +193,7 @@ public class CompositorView
         // re-request the surface now.
         mCompositorSurfaceManager.requestSurface(getSurfacePixelFormat());
 
-        // Cover the black surface before it has valid content.
-        setBackgroundColor(Color.WHITE);
         setVisibility(View.VISIBLE);
-
-        mFramePresentationDelay = 0;
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
-            Display display =
-                    ((WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE))
-                    .getDefaultDisplay();
-            long presentationDeadline = display.getPresentationDeadlineNanos()
-                    / NANOSECONDS_PER_MILLISECOND;
-            long vsyncPeriod = mWindowAndroid.getVsyncPeriodInMillis();
-            mFramePresentationDelay = Math.min(3 * vsyncPeriod,
-                    ((presentationDeadline + vsyncPeriod - 1) / vsyncPeriod) * vsyncPeriod);
-        }
 
         // Grab the Resource Manager
         mResourceManager = nativeGetResourceManager(mNativeCompositorView);
@@ -268,7 +246,7 @@ public class CompositorView
         if (mNativeCompositorView == 0) return;
 
         nativeSurfaceChanged(mNativeCompositorView, format, width, height, holder.getSurface());
-        mRenderHost.onPhysicalBackingSizeChanged(width, height);
+        mRenderHost.onSurfaceResized(width, height);
     }
 
     @Override
@@ -299,6 +277,10 @@ public class CompositorView
         IntentWithGesturesHandler.getInstance().clear();
     }
 
+    void onPhysicalBackingSizeChanged(WebContents webContents, int width, int height) {
+        nativeOnPhysicalBackingSizeChanged(mNativeCompositorView, webContents, width, height);
+    }
+
     @CalledByNative
     private void onCompositorLayout() {
         mRenderHost.onCompositorLayout();
@@ -324,16 +306,6 @@ public class CompositorView
 
     @CalledByNative
     private void didSwapFrame(int pendingFrameCount) {
-        // Clear the color used to cover the uninitialized surface.
-        if (getBackground() != null) {
-            postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    setBackgroundResource(0);
-                }
-            }, mFramePresentationDelay);
-        }
-
         mRenderHost.didSwapFrame(pendingFrameCount);
     }
 
@@ -353,12 +325,7 @@ public class CompositorView
             mCompositorSurfaceManager.doneWithUnownedSurface();
         }
 
-        List<Runnable> runnables = mDrawingFinishedCallbacks;
-        mDrawingFinishedCallbacks = null;
-        if (runnables == null) return;
-        for (Runnable r : runnables) {
-            r.run();
-        }
+        runDrawFinishedCallbacks();
     }
 
     /**
@@ -422,6 +389,19 @@ public class CompositorView
         // the surface as well.  Otherwise, the surface is kept, which can
         // interfere with VR.
         mCompositorSurfaceManager.setVisibility(visibility);
+        // Clear out any outstanding callbacks that won't run if set to invisible.
+        if (visibility == View.INVISIBLE) {
+            runDrawFinishedCallbacks();
+        }
+    }
+
+    private void runDrawFinishedCallbacks() {
+        List<Runnable> runnables = mDrawingFinishedCallbacks;
+        mDrawingFinishedCallbacks = null;
+        if (runnables == null) return;
+        for (Runnable r : runnables) {
+            r.run();
+        }
     }
 
     // Implemented in native
@@ -433,6 +413,8 @@ public class CompositorView
     private native void nativeSurfaceDestroyed(long nativeCompositorView);
     private native void nativeSurfaceChanged(
             long nativeCompositorView, int format, int width, int height, Surface surface);
+    private native void nativeOnPhysicalBackingSizeChanged(
+            long nativeCompositorView, WebContents webContents, int width, int height);
     private native void nativeFinalizeLayers(long nativeCompositorView);
     private native void nativeSetNeedsComposite(long nativeCompositorView);
     private native void nativeSetLayoutBounds(long nativeCompositorView);

@@ -5,10 +5,15 @@
 package org.chromium.chrome.browser.photo_picker;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.AttributeSet;
+import android.widget.Button;
+import android.widget.TextView;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.widget.selection.SelectableListToolbar;
+
+import java.util.List;
 
 /**
  * Handles toolbar functionality for the Photo Picker class.
@@ -16,6 +21,35 @@ import org.chromium.chrome.browser.widget.selection.SelectableListToolbar;
 public class PhotoPickerToolbar extends SelectableListToolbar<PickerBitmap> {
     public PhotoPickerToolbar(Context context, AttributeSet attrs) {
         super(context, attrs);
-        inflateMenu(R.menu.photo_picker_menu);
+    }
+
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
+
+        setNavigationIcon(R.drawable.btn_close);
+        setNavigationContentDescription(R.string.close);
+
+        TextView up = (TextView) mNumberRollView.findViewById(R.id.up);
+        TextView down = (TextView) mNumberRollView.findViewById(R.id.down);
+        up.setTextColor(Color.BLACK);
+        down.setTextColor(Color.BLACK);
+    }
+
+    @Override
+    protected void setNavigationButton(int navigationButton) {}
+
+    @Override
+    protected void showSelectionView(
+            List<PickerBitmap> selectedItems, boolean wasSelectionEnabled) {
+        switchToNumberRollView(selectedItems, wasSelectionEnabled);
+    }
+
+    @Override
+    public void onSelectionStateChange(List<PickerBitmap> selectedItems) {
+        super.onSelectionStateChange(selectedItems);
+
+        Button done = (Button) findViewById(R.id.done);
+        done.setEnabled(selectedItems.size() > 0);
     }
 }

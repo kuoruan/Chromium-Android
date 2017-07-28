@@ -17,6 +17,8 @@ import android.speech.RecognitionService;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 
+import org.chromium.base.ContextUtils;
+import org.chromium.base.Log;
 import org.chromium.base.PackageUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -32,6 +34,7 @@ import java.util.List;
  */
 @JNINamespace("content")
 public class SpeechRecognition {
+    private static final String TAG = "SpeechRecog";
 
     // Constants describing the speech recognition provider we depend on.
     private static final String PROVIDER_PACKAGE_NAME = "com.google.android.googlequicksearchbox";
@@ -50,7 +53,6 @@ public class SpeechRecognition {
     // PROVIDER_MIN_VERSION as selected by initialize().
     private static ComponentName sRecognitionProvider;
 
-    private final Context mContext;
     private final Intent mIntent;
     private final RecognitionListener mListener;
     private SpeechRecognizer mRecognizer;
@@ -188,8 +190,10 @@ public class SpeechRecognition {
 
             if (!service.packageName.equals(PROVIDER_PACKAGE_NAME)) continue;
 
-            if (PackageUtils.getPackageVersion(context, service.packageName) < PROVIDER_MIN_VERSION)
+            if (PackageUtils.getPackageVersion(context, service.packageName)
+                    < PROVIDER_MIN_VERSION) {
                 continue;
+            }
 
             sRecognitionProvider = new ComponentName(service.packageName, service.name);
 
@@ -200,21 +204,22 @@ public class SpeechRecognition {
         return false;
     }
 
-    private SpeechRecognition(final Context context, long nativeSpeechRecognizerImplAndroid) {
-        mContext = context;
+    private SpeechRecognition(long nativeSpeechRecognizerImplAndroid) {
         mContinuous = false;
         mNativeSpeechRecognizerImplAndroid = nativeSpeechRecognizerImplAndroid;
         mListener = new Listener();
         mIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 
         if (sRecognitionProvider != null) {
-            mRecognizer = SpeechRecognizer.createSpeechRecognizer(mContext, sRecognitionProvider);
+            mRecognizer = SpeechRecognizer.createSpeechRecognizer(
+                    ContextUtils.getApplicationContext(), sRecognitionProvider);
         } else {
             // It is possible to force-enable the speech recognition web platform feature (using a
             // command-line flag) even if initialize() failed to find the PROVIDER_PACKAGE_NAME
             // provider, in which case the first available speech recognition provider is used.
             // Caveat: Continuous mode may not work as expected with a different provider.
-            mRecognizer = SpeechRecognizer.createSpeechRecognizer(mContext);
+            mRecognizer =
+                    SpeechRecognizer.createSpeechRecognizer(ContextUtils.getApplicationContext());
         }
 
         mRecognizer.setRecognitionListener(mListener);
@@ -236,7 +241,13 @@ public class SpeechRecognition {
             nativeOnRecognitionError(mNativeSpeechRecognizerImplAndroid, error);
         }
 
-        mRecognizer.destroy();
+        try {
+            mRecognizer.destroy();
+        } catch (IllegalArgumentException e) {
+            // Intentionally swallow exception. This incorrectly throws exception on some samsung
+            // devices, causing crashes.
+            Log.w(TAG, "Destroy threw exception " + mRecognizer, e);
+        }
         mRecognizer = null;
         nativeOnRecognitionEnd(mNativeSpeechRecognizerImplAndroid);
         mNativeSpeechRecognizerImplAndroid = 0;
@@ -244,8 +255,8 @@ public class SpeechRecognition {
 
     @CalledByNative
     private static SpeechRecognition createSpeechRecognition(
-            Context context, long nativeSpeechRecognizerImplAndroid) {
-        return new SpeechRecognition(context, nativeSpeechRecognizerImplAndroid);
+            long nativeSpeechRecognizerImplAndroid) {
+        return new SpeechRecognition(nativeSpeechRecognizerImplAndroid);
     }
 
     @CalledByNative

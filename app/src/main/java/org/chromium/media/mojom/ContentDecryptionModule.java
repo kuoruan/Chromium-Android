@@ -19,28 +19,6 @@ public interface ContentDecryptionModule extends org.chromium.mojo.bindings.Inte
 
 
 
-    public static final class SessionType {
-    
-    
-    
-        private static final boolean IS_EXTENSIBLE = false;
-    
-        public static boolean isKnownValue(int value) {
-            return false;
-        }
-    
-        public static void validate(int value) {
-            if (IS_EXTENSIBLE || isKnownValue(value))
-                return;
-    
-            throw new DeserializationException("Invalid enum value.");
-        }
-    
-        private SessionType() {}
-    
-    }
-
-
     public interface Proxy extends ContentDecryptionModule, org.chromium.mojo.bindings.Interface.Proxy {
     }
 

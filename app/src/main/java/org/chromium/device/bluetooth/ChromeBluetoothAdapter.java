@@ -29,7 +29,7 @@ import java.util.List;
  * Lifetime is controlled by device::BluetoothAdapterAndroid.
  */
 @JNINamespace("device")
-@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+@TargetApi(Build.VERSION_CODES.M)
 final class ChromeBluetoothAdapter extends BroadcastReceiver {
     private static final String TAG = "Bluetooth";
 

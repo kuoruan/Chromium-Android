@@ -49,6 +49,7 @@ public class ChromeFullscreenManager
     private final Window mWindow;
     private final BrowserStateBrowserControlsVisibilityDelegate mBrowserVisibilityDelegate;
     private final boolean mIsBottomControls;
+    private final boolean mExitFullscreenOnStop;
 
     private ControlContainer mControlContainer;
     private int mTopControlContainerHeight;
@@ -70,7 +71,7 @@ public class ChromeFullscreenManager
     private boolean mBrowserControlsPermanentlyHidden;
     private boolean mBrowserControlsAndroidViewHidden;
 
-    private final ArrayList<FullscreenListener> mListeners = new ArrayList<FullscreenListener>();
+    private final ArrayList<FullscreenListener> mListeners = new ArrayList<>();
 
     /**
      * A listener that gets notified of changes to the fullscreen state.
@@ -123,11 +124,24 @@ public class ChromeFullscreenManager
      * @param isBottomControls Whether or not the browser controls are at the bottom of the screen.
      */
     public ChromeFullscreenManager(Activity activity, boolean isBottomControls) {
+        this(activity, isBottomControls, true);
+    }
+
+    /**
+     * Creates an instance of the fullscreen mode manager.
+     * @param activity The activity that supports fullscreen.
+     * @param isBottomControls Whether or not the browser controls are at the bottom of the screen.
+     * @param exitFullscreenOnStop Whether fullscreen mode should exit on stop - should be
+     *                             true for Activities that are not always fullscreen.
+     */
+    public ChromeFullscreenManager(
+            Activity activity, boolean isBottomControls, boolean exitFullscreenOnStop) {
         super(activity.getWindow());
 
         mActivity = activity;
         mWindow = activity.getWindow();
         mIsBottomControls = isBottomControls;
+        mExitFullscreenOnStop = exitFullscreenOnStop;
         mBrowserVisibilityDelegate = new BrowserStateBrowserControlsVisibilityDelegate(
                 new Runnable() {
                     @Override
@@ -228,7 +242,7 @@ public class ChromeFullscreenManager
 
     @Override
     public void onActivityStateChange(Activity activity, int newState) {
-        if (newState == ActivityState.STOPPED) {
+        if (newState == ActivityState.STOPPED && mExitFullscreenOnStop) {
             // Exit fullscreen in onStop to ensure the system UI flags are set correctly when
             // showing again (on JB MR2+ builds, the omnibox would be covered by the
             // notification bar when this was done in onStart()).

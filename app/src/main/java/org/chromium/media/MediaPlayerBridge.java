@@ -4,7 +4,6 @@
 
 package org.chromium.media;
 
-import android.content.Context;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.TrackInfo;
 import android.net.Uri;
@@ -16,6 +15,7 @@ import android.util.Base64;
 import android.util.Base64InputStream;
 import android.view.Surface;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.StreamUtil;
 import org.chromium.base.annotations.CalledByNative;
@@ -177,7 +177,7 @@ public class MediaPlayerBridge {
 
     @CalledByNative
     protected boolean setDataSource(
-            Context context, String url, String cookies, String userAgent, boolean hideUrlLog) {
+            String url, String cookies, String userAgent, boolean hideUrlLog) {
         Uri uri = Uri.parse(url);
         HashMap<String, String> headersMap = new HashMap<String, String>();
         if (hideUrlLog) headersMap.put("x-hide-urls-from-log", "true");
@@ -190,7 +190,7 @@ public class MediaPlayerBridge {
             headersMap.put("allow-cross-domain-redirect", "false");
         }
         try {
-            getLocalPlayer().setDataSource(context, uri, headersMap);
+            getLocalPlayer().setDataSource(ContextUtils.getApplicationContext(), uri, headersMap);
             return true;
         } catch (Exception e) {
             return false;
@@ -211,7 +211,7 @@ public class MediaPlayerBridge {
     }
 
     @CalledByNative
-    protected boolean setDataUriDataSource(final Context context, final String url) {
+    protected boolean setDataUriDataSource(final String url) {
         if (mLoadDataUriTask != null) {
             mLoadDataUriTask.cancel(true);
             mLoadDataUriTask = null;
@@ -228,19 +228,17 @@ public class MediaPlayerBridge {
         if (headerInfo.length != 2) return false;
         if (!"base64".equals(headerInfo[1])) return false;
 
-        mLoadDataUriTask = new LoadDataUriTask(context, data);
+        mLoadDataUriTask = new LoadDataUriTask(data);
         mLoadDataUriTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         return true;
     }
 
     private class LoadDataUriTask extends AsyncTask<Void, Void, Boolean> {
         private final String mData;
-        private final Context mContext;
         private File mTempFile;
 
-        public LoadDataUriTask(Context context, String data) {
+        public LoadDataUriTask(String data) {
             mData = data;
-            mContext = context;
         }
 
         @Override
@@ -274,7 +272,8 @@ public class MediaPlayerBridge {
 
             if (result) {
                 try {
-                    getLocalPlayer().setDataSource(mContext, Uri.fromFile(mTempFile));
+                    getLocalPlayer().setDataSource(
+                            ContextUtils.getApplicationContext(), Uri.fromFile(mTempFile));
                 } catch (IOException e) {
                     result = false;
                 }

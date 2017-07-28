@@ -42,6 +42,11 @@ public class SpacingItem extends Leaf {
         // Nothing to do.
     }
 
+    @Override
+    public void visitItems(NodeVisitor visitor) {
+        visitor.visitSpacingItem();
+    }
+
     /** Schedules a recalculation of the space occupied by the item. */
     public void refresh() {
         notifyItemChanged(0);

@@ -3,56 +3,49 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
-<merge xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:chrome="http://schemas.android.com/apk/res-auto" >
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:chrome="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="11dp"
+        android:paddingBottom="6dp"
+        android:orientation="vertical" >
 
-    <!-- Widget style adapted from the UX spec:
-         https://bugs.chromium.org/p/chromium/issues/detail?id=658246&desc=2#c18
-    -->
-    <LinearLayout
+    <TextView
+            android:id="@+id/size_downloaded"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/drawer_margin_large"
-            android:layout_marginEnd="@dimen/drawer_margin_large"
-            android:paddingTop="26dp"
-            android:paddingBottom="24dp"
-            android:orientation="vertical" >
+            android:singleLine="true"
+            android:textAppearance="@style/RobotoMediumStyle"
+            android:textColor="@color/google_blue_500"
+            android:textSize="16sp" />
 
-        <TextView
-                android:id="@+id/size_downloaded"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:textColor="@color/light_active_color"
-                android:textSize="20sp" />
+    <!-- The progress bar uses 20dp of space, vertically, including spacing. -->
+    <org.chromium.chrome.browser.widget.MaterialProgressBar
+            android:id="@+id/space_bar"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            chrome:colorBackground="@color/black_alpha_38"
+            chrome:colorProgress="@color/google_blue_500"
+            chrome:colorSecondaryProgress="@color/black_alpha_87" />
 
-        <!-- The progress bar uses 32dp of space, vertically, including spacing. -->
-        <org.chromium.chrome.browser.widget.MaterialProgressBar
-                android:id="@+id/space_bar"
-                android:layout_width="match_parent"
-                android:layout_height="4dp"
-                android:layout_marginTop="14dp"
-                android:layout_marginBottom="14dp"
-                chrome:colorBackground="@color/google_grey_400"
-                chrome:colorProgress="@color/light_active_color"
-                chrome:colorSecondaryProgress="@color/google_grey_600" />
+    <TextView
+            android:id="@+id/size_other_apps"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:textColor="@color/black_alpha_87"
+            android:textSize="14sp" />
 
-        <TextView
-                android:id="@+id/size_other_apps"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:textColor="@color/google_grey_600"
-                android:textSize="12sp" />
+    <TextView
+            android:id="@+id/size_free"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:textColor="@color/black_alpha_54"
+            android:textSize="14sp" />
 
-        <TextView
-                android:id="@+id/size_free"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:textColor="@color/google_grey_400"
-                android:textSize="12sp" />
-
-    </LinearLayout>
-
-</merge>
+</LinearLayout>

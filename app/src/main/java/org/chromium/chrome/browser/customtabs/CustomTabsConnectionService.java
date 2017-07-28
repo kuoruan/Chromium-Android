@@ -28,6 +28,8 @@ public class CustomTabsConnectionService extends CustomTabsService {
     @Override
     public void onCreate() {
         ProcessInitializationHandler.getInstance().initializePreNative();
+        // Kick off the first access to avoid random StrictMode violations in clients.
+        RequestThrottler.loadInBackground(getApplication());
         super.onCreate();
     }
 

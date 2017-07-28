@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser.webapps;
 
+import static org.chromium.webapk.lib.common.WebApkConstants.WEBAPK_PACKAGE_PREFIX;
+
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -285,7 +287,15 @@ public class WebApkUpdateManager implements WebApkUpdateDataFetcher.Observer {
             return true;
         }
 
-        if (isShellApkVersionOutOfDate(info)) return true;
+        if (!info.webApkPackageName().startsWith(WEBAPK_PACKAGE_PREFIX)) {
+            return false;
+        }
+
+        if (isShellApkVersionOutOfDate(info)
+                && WebApkVersion.CURRENT_SHELL_APK_VERSION
+                        > mStorage.getLastRequestedShellApkVersion()) {
+            return true;
+        }
 
         return mStorage.shouldCheckForUpdate();
     }
@@ -363,6 +373,7 @@ public class WebApkUpdateManager implements WebApkUpdateDataFetcher.Observer {
         if (storage == null) return;
 
         recordUpdate(storage, result, relaxUpdates);
+        storage.updateLastRequestedShellApkVersion(WebApkVersion.CURRENT_SHELL_APK_VERSION);
     }
 
     private static native void nativeUpdateAsync(String id, String startUrl, String scope,

@@ -29,7 +29,8 @@ public class KitKatBrowserAccessibilityManager extends BrowserAccessibilityManag
 
     @Override
     protected void setAccessibilityNodeInfoKitKatAttributes(AccessibilityNodeInfo node,
-            boolean isRoot, boolean isEditableText, String roleDescription) {
+            boolean isRoot, boolean isEditableText, String roleDescription, int selectionStartIndex,
+            int selectionEndIndex) {
         Bundle bundle = node.getExtras();
         bundle.putCharSequence("AccessibilityNodeInfo.roleDescription", roleDescription);
         if (isRoot) {
@@ -38,6 +39,7 @@ public class KitKatBrowserAccessibilityManager extends BrowserAccessibilityManag
         }
         if (isEditableText) {
             node.setEditable(true);
+            node.setTextSelection(selectionStartIndex, selectionEndIndex);
         }
     }
 }

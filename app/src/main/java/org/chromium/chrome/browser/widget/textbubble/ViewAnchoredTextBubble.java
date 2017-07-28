@@ -38,9 +38,11 @@ public class ViewAnchoredTextBubble extends TextBubble
      * @param context    Context to draw resources from.
      * @param anchorView The {@link View} to anchor to.
      * @param stringId The id of the string resource for the text that should be shown.
+     * @param accessibilityStringId The id of the string resource of the accessibility text.
      */
-    public ViewAnchoredTextBubble(Context context, View anchorView, @StringRes int stringId) {
-        super(context, anchorView.getRootView(), stringId);
+    public ViewAnchoredTextBubble(Context context, View anchorView, @StringRes int stringId,
+            @StringRes int accessibilityStringId) {
+        super(context, anchorView.getRootView(), stringId, accessibilityStringId);
         mAnchorView = anchorView;
 
         mViewPositionObserver = new ViewPositionObserver(mAnchorView);
@@ -110,10 +112,15 @@ public class ViewAnchoredTextBubble extends TextBubble
 
     private void refreshAnchorBounds() {
         mAnchorView.getLocationOnScreen(mCachedScreenCoordinates);
-        mAnchorRect.left = mCachedScreenCoordinates[0] + mInsetRect.left;
-        mAnchorRect.top = mCachedScreenCoordinates[1] + mInsetRect.top;
-        mAnchorRect.right = mAnchorRect.left + mAnchorView.getWidth() - mInsetRect.right;
-        mAnchorRect.bottom = mAnchorRect.top + mAnchorView.getHeight() - mInsetRect.bottom;
+        mAnchorRect.left = mCachedScreenCoordinates[0];
+        mAnchorRect.top = mCachedScreenCoordinates[1];
+        mAnchorRect.right = mAnchorRect.left + mAnchorView.getWidth();
+        mAnchorRect.bottom = mAnchorRect.top + mAnchorView.getHeight();
+
+        mAnchorRect.left += mInsetRect.left;
+        mAnchorRect.top += mInsetRect.top;
+        mAnchorRect.right -= mInsetRect.right;
+        mAnchorRect.bottom -= mInsetRect.bottom;
 
         // Account for the padding.
         boolean isRtl = ApiCompatibilityUtils.isLayoutRtl(mAnchorView);

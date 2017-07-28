@@ -10,6 +10,7 @@ import android.webkit.MimeTypeMap;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -23,13 +24,12 @@ class MimeTypeFileFilter implements FileFilter {
 
     /**
      * Contructs a MimeTypeFileFilter object.
-     * @param acceptAttr A comma seperated list of MIME types this filter accepts.
-     *                   For example: images/gif, video/*.
+     * @param mimeTypes A list of MIME types this filter accepts.
+     *                  For example: images/gif, video/*.
      */
-    // TODO(finnur): Convert param to List.
-    public MimeTypeFileFilter(@NonNull String acceptAttr) {
-        for (String field : acceptAttr.toLowerCase(Locale.US).split(",")) {
-            field = field.trim();
+    public MimeTypeFileFilter(@NonNull List<String> mimeTypes) {
+        for (String field : mimeTypes) {
+            field = field.trim().toLowerCase(Locale.US);
             if (field.startsWith(".")) {
                 mExtensions.add(field.substring(1));
             } else if (field.endsWith("/*")) {

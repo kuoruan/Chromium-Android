@@ -212,9 +212,9 @@ public class LocationBarTablet extends LocationBarLayout {
         if (hasFocus) {
             if (mSecurityButton.getVisibility() == VISIBLE) mSecurityButton.setVisibility(GONE);
             if (getWindowDelegate().getWindowSoftInputMode()
-                    != WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING) {
+                    != WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN) {
                 getWindowDelegate().setWindowSoftInputMode(
-                        WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
+                        WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
             }
             UiUtils.showKeyboard(mUrlBar);
         } else {
@@ -265,7 +265,7 @@ public class LocationBarTablet extends LocationBarLayout {
 
     @Override
     public void updateButtonVisibility() {
-        updateDeleteButtonVisibility();
+        super.updateButtonVisibility();
 
         boolean showBookmarkButton =
                 mShouldShowButtonsWhenUnfocused && shouldShowPageActionButtons();

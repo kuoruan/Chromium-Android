@@ -29,6 +29,7 @@ import android.os.HandlerThread;
 import android.os.Process;
 import android.provider.Settings;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -159,7 +160,6 @@ class AudioManagerAndroid {
     private static final int DEFAULT_FRAME_PER_BUFFER = 256;
 
     private final AudioManager mAudioManager;
-    private final Context mContext;
     private final long mNativeAudioManagerAndroid;
 
     // Enabled during initialization if MODIFY_AUDIO_SETTINGS permission is
@@ -219,17 +219,17 @@ class AudioManagerAndroid {
     /** Construction */
     @CalledByNative
     private static AudioManagerAndroid createAudioManagerAndroid(
-            Context context,
             long nativeAudioManagerAndroid) {
-        return new AudioManagerAndroid(context, nativeAudioManagerAndroid);
+        return new AudioManagerAndroid(nativeAudioManagerAndroid);
     }
 
-    private AudioManagerAndroid(Context context, long nativeAudioManagerAndroid) {
-        mContext = context;
+    private AudioManagerAndroid(long nativeAudioManagerAndroid) {
         mNativeAudioManagerAndroid = nativeAudioManagerAndroid;
-        mAudioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
-        mContentResolver = mContext.getContentResolver();
-        mUsbManager = (UsbManager) mContext.getSystemService(Context.USB_SERVICE);
+        mAudioManager = (AudioManager) ContextUtils.getApplicationContext().getSystemService(
+                Context.AUDIO_SERVICE);
+        mContentResolver = ContextUtils.getApplicationContext().getContentResolver();
+        mUsbManager = (UsbManager) ContextUtils.getApplicationContext().getSystemService(
+                Context.USB_SERVICE);
     }
 
     /**
@@ -507,7 +507,7 @@ class AudioManagerAndroid {
 
     @CalledByNative
     private boolean isAudioLowLatencySupported() {
-        return mContext.getPackageManager().hasSystemFeature(
+        return ContextUtils.getApplicationContext().getPackageManager().hasSystemFeature(
                 PackageManager.FEATURE_AUDIO_LOW_LATENCY);
     }
 
@@ -610,8 +610,8 @@ class AudioManagerAndroid {
 
     /** Gets the current earpiece state. */
     private boolean hasEarpiece() {
-        return mContext.getPackageManager().hasSystemFeature(
-            PackageManager.FEATURE_TELEPHONY);
+        return ContextUtils.getApplicationContext().getPackageManager().hasSystemFeature(
+                PackageManager.FEATURE_TELEPHONY);
     }
 
     /**
@@ -628,10 +628,9 @@ class AudioManagerAndroid {
 
     /** Checks if the process has as specified permission or not. */
     private boolean hasPermission(String permission) {
-        return mContext.checkPermission(
-                permission,
-                Process.myPid(),
-                Process.myUid()) == PackageManager.PERMISSION_GRANTED;
+        return ContextUtils.getApplicationContext().checkPermission(
+                       permission, Process.myPid(), Process.myUid())
+                == PackageManager.PERMISSION_GRANTED;
     }
 
     /**
@@ -656,7 +655,7 @@ class AudioManagerAndroid {
             // Use BluetoothManager to get the BluetoothAdapter for
             // Android 4.3 and above.
             BluetoothManager btManager =
-                    (BluetoothManager) mContext.getSystemService(
+                    (BluetoothManager) ContextUtils.getApplicationContext().getSystemService(
                             Context.BLUETOOTH_SERVICE);
             btAdapter = btManager.getAdapter();
         } else {
@@ -784,12 +783,12 @@ class AudioManagerAndroid {
         // Note: the intent we register for here is sticky, so it'll tell us
         // immediately what the last action was (plugged or unplugged).
         // It will enable us to set the speakerphone correctly.
-        mContext.registerReceiver(mWiredHeadsetReceiver, filter);
+        ContextUtils.getApplicationContext().registerReceiver(mWiredHeadsetReceiver, filter);
     }
 
     /** Unregister receiver for broadcasted ACTION_HEADSET_PLUG intent. */
     private void unregisterForWiredHeadsetIntentBroadcast() {
-        mContext.unregisterReceiver(mWiredHeadsetReceiver);
+        ContextUtils.getApplicationContext().unregisterReceiver(mWiredHeadsetReceiver);
         mWiredHeadsetReceiver = null;
     }
 
@@ -852,11 +851,11 @@ class AudioManagerAndroid {
             }
         };
 
-        mContext.registerReceiver(mBluetoothHeadsetReceiver, filter);
+        ContextUtils.getApplicationContext().registerReceiver(mBluetoothHeadsetReceiver, filter);
     }
 
     private void unregisterForBluetoothHeadsetIntentBroadcast() {
-        mContext.unregisterReceiver(mBluetoothHeadsetReceiver);
+        ContextUtils.getApplicationContext().unregisterReceiver(mBluetoothHeadsetReceiver);
         mBluetoothHeadsetReceiver = null;
     }
 
@@ -908,11 +907,11 @@ class AudioManagerAndroid {
             }
         };
 
-        mContext.registerReceiver(mBluetoothScoReceiver, filter);
+        ContextUtils.getApplicationContext().registerReceiver(mBluetoothScoReceiver, filter);
     }
 
     private void unregisterForBluetoothScoIntentBroadcast() {
-        mContext.unregisterReceiver(mBluetoothScoReceiver);
+        ContextUtils.getApplicationContext().unregisterReceiver(mBluetoothScoReceiver);
         mBluetoothScoReceiver = null;
     }
 
@@ -1243,12 +1242,12 @@ class AudioManagerAndroid {
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
 
-        mContext.registerReceiver(mUsbAudioReceiver, filter);
+        ContextUtils.getApplicationContext().registerReceiver(mUsbAudioReceiver, filter);
     }
 
     /** Unregister receiver for broadcasted ACTION_USB_DEVICE_ATTACHED/DETACHED intent. */
     private void unregisterForUsbAudioIntentBroadcast() {
-        mContext.unregisterReceiver(mUsbAudioReceiver);
+        ContextUtils.getApplicationContext().unregisterReceiver(mUsbAudioReceiver);
         mUsbAudioReceiver = null;
     }
 

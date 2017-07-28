@@ -82,6 +82,9 @@ public class FindToolbar extends LinearLayout
     /** Whether the search key should trigger a new search. */
     private boolean mSearchKeyShouldTriggerSearch;
 
+    /** Whether startFinding() should also hide the keyboard. **/
+    private boolean mHideKeyboardWhileFinding;
+
     private boolean mActive;
 
     private Handler mHandler = new Handler();
@@ -124,7 +127,7 @@ public class FindToolbar extends LinearLayout
         public boolean onKeyDown(int keyCode, KeyEvent event) {
             if (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_F3
                     || (keyCode == KeyEvent.KEYCODE_G && event.isCtrlPressed())) {
-                mFindToolbar.hideKeyboardAndStartFinding(!event.isShiftPressed());
+                mFindToolbar.startFinding(!event.isShiftPressed());
                 return true;
             }
             return super.onKeyDown(keyCode, event);
@@ -204,6 +207,8 @@ public class FindToolbar extends LinearLayout
                 deactivate();
             }
         };
+
+        mHideKeyboardWhileFinding = true;
     }
 
     @Override
@@ -280,7 +285,7 @@ public class FindToolbar extends LinearLayout
                 // Otherwise just revisit the current active match.
                 if (mSearchKeyShouldTriggerSearch) {
                     mSearchKeyShouldTriggerSearch = false;
-                    hideKeyboardAndStartFinding(true);
+                    startFinding(true);
                 } else {
                     UiUtils.hideKeyboard(mFindQuery);
                     mFindInPageBridge.activateFindInPageResultForAccessibility();
@@ -296,7 +301,7 @@ public class FindToolbar extends LinearLayout
         mFindPrevButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                hideKeyboardAndStartFinding(false);
+                startFinding(false);
             }
         });
 
@@ -304,7 +309,7 @@ public class FindToolbar extends LinearLayout
         mFindNextButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                hideKeyboardAndStartFinding(true);
+                startFinding(true);
             }
         });
 
@@ -323,13 +328,13 @@ public class FindToolbar extends LinearLayout
     protected void findResultSelected(Rect rect) {
     }
 
-    private void hideKeyboardAndStartFinding(boolean forward) {
+    private void startFinding(boolean forward) {
         if (mFindInPageBridge == null) return;
 
         final String findQuery = mFindQuery.getText().toString();
         if (findQuery.length() == 0) return;
 
-        UiUtils.hideKeyboard(mFindQuery);
+        if (mHideKeyboardWhileFinding) UiUtils.hideKeyboard(mFindQuery);
         mFindInPageBridge.startFinding(findQuery, forward, false);
         mFindInPageBridge.activateFindInPageResultForAccessibility();
         mAccessibilityDidActivateResult = true;
@@ -501,6 +506,13 @@ public class FindToolbar extends LinearLayout
         mWindowAndroid = windowAndroid;
     }
 
+    /**
+     * By default the keyboard is hidden when the user arrows through results. Calling this method
+     * will disable keyboard hiding while finding.
+     */
+    public void disableHideKeyboardWhileFinding() {
+        mHideKeyboardWhileFinding = false;
+    }
     /**
      * Handles updating any visual elements of the find toolbar based on changes to the tab model.
      * @param isIncognito Whether the current tab model is incognito or not.

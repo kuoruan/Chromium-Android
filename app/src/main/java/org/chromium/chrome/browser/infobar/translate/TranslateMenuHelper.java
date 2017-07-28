@@ -5,10 +5,13 @@
 package org.chromium.chrome.browser.infobar.translate;
 
 import android.content.Context;
+import android.graphics.Rect;
+import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.MeasureSpec;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -16,112 +19,119 @@ import android.widget.ListPopupWindow;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.infobar.TranslateOptions;
+import org.chromium.chrome.browser.widget.TintedImageView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * A Helper class for managing the Translate Overflow Menu.
  */
 public class TranslateMenuHelper implements AdapterView.OnItemClickListener {
-    private static final String EMPTY_STRING = "";
-    private final TranslateMenuItemListener mItemListener;
-    private ContextThemeWrapper mWrapper;
-    private View mAnchorView;
+    private final TranslateMenuListener mMenuListener;
+    private final TranslateOptions mOptions;
+
+    private ContextThemeWrapper mContextWrapper;
     private TranslateMenuAdapter mAdapter;
+    private View mAnchorView;
     private ListPopupWindow mPopup;
-
-    /**
-     * Add a divider menu item to list.
-     * @param list The list of items to show in the menu.
-     */
-    public static void addDivider(List<TranslateMenuElement> list) {
-        list.add(new TranslateMenuElement(
-                EMPTY_STRING, EMPTY_STRING, TranslateMenuAdapter.MENU_DIVIDER));
-    }
-
-    /**
-     * Add an overflow menu item to list.
-     * @param title Title of the menu item
-     * @param code  Code of the menu item
-     * @param list  The list of items to show in the menu.
-     */
-    public static void addOverflowMenuItem(
-            String title, String code, List<TranslateMenuElement> list) {
-        list.add(new TranslateMenuElement(title, code, TranslateMenuAdapter.OVERFLOW_MENU_ITEM));
-    }
-
-    /**
-     * Add a source language menu item to list.
-     * @param title Title of the language
-     * @param code  ISO code of the language
-     * @param list  The list of items to show in the menu.
-     */
-    public static void addSourceLanguageMenuItem(
-            String title, String code, List<TranslateMenuElement> list) {
-        list.add(new TranslateMenuElement(
-                title, code, TranslateMenuAdapter.SOURCE_LANGUAGE_MENU_ITEM));
-    }
-
-    /**
-     * Add a target language menu item to list.
-     * @param title Title of the language
-     * @param code  ISO code of the language
-     * @param list  The list of items to show in the menu.
-     */
-    public static void addTargetLanguageMenuItem(
-            String title, String code, List<TranslateMenuElement> list) {
-        list.add(new TranslateMenuElement(
-                title, code, TranslateMenuAdapter.TARGET_LANGUAGE_MENU_ITEM));
-    }
 
     /**
      * Interface for receiving the click event of menu item.
      */
-    public interface TranslateMenuItemListener {
-        // return true if the menu is dismissed after clicking on the item;  return false otherwise.
-        // (when clicking on 'More languages' or 'Page not in this language', we show the language
-        // menu by keeping the menu but replace the items inside.)
-        boolean onTranslateMenuItemClicked(String code, int type);
+    public interface TranslateMenuListener {
+        void onOverflowMenuItemClicked(int itemId);
+        void onTargetMenuItemClicked(String code);
+        void onSourceMenuItemClicked(String code);
     }
 
-    public TranslateMenuHelper(
-            Context context, View anchorView, TranslateMenuItemListener itemListener) {
-        mWrapper = new ContextThemeWrapper(context, R.style.OverflowMenuTheme);
+    public TranslateMenuHelper(Context context, View anchorView, TranslateOptions options,
+            TranslateMenuListener itemListener) {
+        mContextWrapper = new ContextThemeWrapper(context, R.style.OverflowMenuTheme);
         mAnchorView = anchorView;
-        mItemListener = itemListener;
+        mOptions = options;
+        mMenuListener = itemListener;
+    }
+
+    /**
+     * Build translate menu by menu type.
+     */
+    private List<TranslateMenu.MenuItem> getMenuList(int menuType) {
+        List<TranslateMenu.MenuItem> menuList = new ArrayList<TranslateMenu.MenuItem>();
+        if (menuType == TranslateMenu.MENU_OVERFLOW) {
+            // TODO(googleo): Add language short list above static menu after its data is ready.
+            menuList.addAll(TranslateMenu.getOverflowMenu());
+        } else {
+            for (int i = 0; i < mOptions.allLanguages().size(); ++i) {
+                String code = mOptions.allLanguages().get(i).mLanguageCode;
+                // Don't show target or source language in the menu list.
+                if (code.equals(mOptions.targetLanguageCode())
+                        || code.equals(mOptions.sourceLanguageCode())) {
+                    continue;
+                }
+                menuList.add(new TranslateMenu.MenuItem(TranslateMenu.ITEM_LANGUAGE, i, code));
+            }
+        }
+        return menuList;
     }
 
     /**
      * Show the overflow menu.
-     * @param list List of menuitems.
      */
-    public void show(List<TranslateMenuElement> list) {
+    public void show(int menuType) {
         if (mPopup == null) {
-            mPopup = new ListPopupWindow(mWrapper, null, android.R.attr.popupMenuStyle);
+            mPopup = new ListPopupWindow(mContextWrapper, null, android.R.attr.popupMenuStyle);
             mPopup.setModal(true);
             mPopup.setAnchorView(mAnchorView);
             mPopup.setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
 
             // Need to explicitly set the background here.  Relying on it being set in the style
             // caused an incorrectly drawn background.
+            // TODO(martiw): We might need a new menu background here.
             mPopup.setBackgroundDrawable(
-                    ContextCompat.getDrawable(mWrapper, R.drawable.edge_menu_bg));
-
-            int popupWidth = mWrapper.getResources().getDimensionPixelSize(
-                    R.dimen.infobar_translate_menu_width);
-
-            // TODO (martiw) make the width dynamic to handle longer items.
-            mPopup.setWidth(popupWidth);
-
-            mAdapter = new TranslateMenuAdapter(
-                    mWrapper, R.id.menu_item_text, list, LayoutInflater.from(mWrapper));
-            mPopup.setAdapter(mAdapter);
+                    ContextCompat.getDrawable(mContextWrapper, R.drawable.edge_menu_bg));
 
             mPopup.setOnItemClickListener(this);
+
+            // The menu must be shifted down by the height of the anchor view in order to be
+            // displayed over and above it.
+            int anchorHeight = mAnchorView.getHeight();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                // Setting a positive offset here shifts the menu down.
+                mPopup.setVerticalOffset(anchorHeight);
+            } else {
+                // The framework's PopupWindow positioning changed between N and M.  Setting
+                // a negative offset here shifts the menu down rather than up.
+                mPopup.setVerticalOffset(-anchorHeight);
+            }
+
+            mAdapter = new TranslateMenuAdapter(menuType);
+            mPopup.setAdapter(mAdapter);
         } else {
-            mAdapter.clear();
-            mAdapter.addAll(list);
+            mAdapter.refreshMenu(menuType);
+        }
+
+        if (menuType == TranslateMenu.MENU_OVERFLOW) {
+            // Use measured width when it is a overflow menu.
+            Rect bgPadding = new Rect();
+            mPopup.getBackground().getPadding(bgPadding);
+            mPopup.setWidth(measureMenuWidth(mAdapter) + bgPadding.left + bgPadding.right);
+        } else {
+            // Use fixed width otherwise.
+            int popupWidth = mContextWrapper.getResources().getDimensionPixelSize(
+                    R.dimen.infobar_translate_menu_width);
+            mPopup.setWidth(popupWidth);
+        }
+
+        // When layout is RTL, set the horizontal offset to align the menu with the left side of the
+        // screen.
+        if (ApiCompatibilityUtils.isLayoutRtl(mAnchorView)) {
+            int[] tempLocation = new int[2];
+            mAnchorView.getLocationOnScreen(tempLocation);
+            mPopup.setHorizontalOffset(-tempLocation[0]);
         }
 
         if (!mPopup.isShowing()) {
@@ -130,18 +140,51 @@ public class TranslateMenuHelper implements AdapterView.OnItemClickListener {
         }
     }
 
+    private int measureMenuWidth(TranslateMenuAdapter adapter) {
+        final int widthMeasureSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
+        final int heightMeasureSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
+
+        final int count = adapter.getCount();
+        int width = 0;
+        int itemType = 0;
+        View itemView = null;
+        for (int i = 0; i < count; i++) {
+            final int positionType = adapter.getItemViewType(i);
+            if (positionType != itemType) {
+                itemType = positionType;
+                itemView = null;
+            }
+            itemView = adapter.getView(i, itemView, null);
+            itemView.measure(widthMeasureSpec, heightMeasureSpec);
+            width = Math.max(width, itemView.getMeasuredWidth());
+        }
+        return width;
+    }
+
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if (mItemListener.onTranslateMenuItemClicked(
-                    mAdapter.getItem(position).getCode(), mAdapter.getItemViewType(position))) {
-            dismiss();
+        dismiss();
+
+        TranslateMenu.MenuItem item = mAdapter.getItem(position);
+        switch (mAdapter.mMenuType) {
+            case TranslateMenu.MENU_OVERFLOW:
+                mMenuListener.onOverflowMenuItemClicked(item.mId);
+                return;
+            case TranslateMenu.MENU_TARGET_LANGUAGE:
+                mMenuListener.onTargetMenuItemClicked(item.mCode);
+                return;
+            case TranslateMenu.MENU_SOURCE_LANGUAGE:
+                mMenuListener.onSourceMenuItemClicked(item.mCode);
+                return;
+            default:
+                assert false : "Unsupported Menu Item Id";
         }
     }
 
     /**
-     * Dismisses the app menu.
+     * Dismisses the translate option menu.
      */
-    void dismiss() {
+    public void dismiss() {
         if (isShowing()) {
             mPopup.dismiss();
         }
@@ -150,7 +193,7 @@ public class TranslateMenuHelper implements AdapterView.OnItemClickListener {
     /**
      * @return Whether the app menu is currently showing.
      */
-    boolean isShowing() {
+    private boolean isShowing() {
         if (mPopup == null) {
             return false;
         }
@@ -160,81 +203,105 @@ public class TranslateMenuHelper implements AdapterView.OnItemClickListener {
     /**
      * The provides the views of the menu items and dividers.
      */
-    public static final class TranslateMenuAdapter extends ArrayAdapter<TranslateMenuElement> {
-        public static final int MENU_DIVIDER = 0;
-        public static final int OVERFLOW_MENU_ITEM = 1;
-        public static final int SOURCE_LANGUAGE_MENU_ITEM = 2;
-        public static final int TARGET_LANGUAGE_MENU_ITEM = 3;
-        // TODO(martiw) create OVERFLOW_MENU_ITEM_WITH_CHECKBOX_CHECKED and
-        // OVERFLOW_MENU_ITEM_WITH_CHECKBOX_UNCHECKED for "Always Translate Language"
+    private final class TranslateMenuAdapter extends ArrayAdapter<TranslateMenu.MenuItem> {
+        private final LayoutInflater mInflater;
+        private int mMenuType;
 
-        LayoutInflater mInflater;
+        public TranslateMenuAdapter(int menuType) {
+            super(mContextWrapper, R.layout.translate_menu_item, getMenuList(menuType));
+            mInflater = LayoutInflater.from(mContextWrapper);
+            mMenuType = menuType;
+        }
 
-        public TranslateMenuAdapter(Context context, int textViewResourceId,
-                List<TranslateMenuElement> items, LayoutInflater inflater) {
-            super(context, textViewResourceId, items);
-            mInflater = inflater;
+        private void refreshMenu(int menuType) {
+            // MENU_OVERFLOW is static and it should not reload.
+            if (menuType == TranslateMenu.MENU_OVERFLOW) return;
+
+            clear();
+
+            mMenuType = menuType;
+            addAll(getMenuList(menuType));
+            notifyDataSetChanged();
+        }
+
+        private String getItemViewText(TranslateMenu.MenuItem item) {
+            if (mMenuType == TranslateMenu.MENU_OVERFLOW) {
+                // Overflow menu items are manually defined one by one.
+                String source = mOptions.sourceLanguageName();
+                switch (item.mId) {
+                    case TranslateMenu.ID_OVERFLOW_ALWAYS_TRANSLATE:
+                        return mContextWrapper.getString(
+                                R.string.translate_option_always_translate, source);
+                    case TranslateMenu.ID_OVERFLOW_MORE_LANGUAGE:
+                        return mContextWrapper.getString(R.string.translate_option_more_language);
+                    case TranslateMenu.ID_OVERFLOW_NEVER_SITE:
+                        return mContextWrapper.getString(R.string.translate_never_translate_site);
+                    case TranslateMenu.ID_OVERFLOW_NEVER_LANGUAGE:
+                        return mContextWrapper.getString(
+                                R.string.translate_option_never_translate, source);
+                    case TranslateMenu.ID_OVERFLOW_NOT_THIS_LANGUAGE:
+                        return mContextWrapper.getString(
+                                R.string.translate_option_not_source_language, source);
+                    default:
+                        assert false : "Unexpected Overflow Item Id";
+                }
+            } else {
+                // Get source and target language menu items text by language code.
+                return mOptions.getRepresentationFromCode(item.mCode);
+            }
+            return "";
         }
 
         @Override
         public int getItemViewType(int position) {
-            return getItem(position).getType();
+            return getItem(position).mType;
         }
 
         @Override
-        public boolean isEnabled(int position) {
-            return getItemViewType(position) != MENU_DIVIDER;
+        public int getViewTypeCount() {
+            return TranslateMenu.MENU_ITEM_TYPE_COUNT;
+        }
+
+        private View getItemView(
+                View menuItemView, int position, ViewGroup parent, int resourceId) {
+            if (menuItemView == null) {
+                menuItemView = mInflater.inflate(resourceId, parent, false);
+            }
+            ((TextView) menuItemView.findViewById(R.id.menu_item_text))
+                    .setText(getItemViewText(getItem(position)));
+            return menuItemView;
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
+            View menuItemView = convertView;
             switch (getItemViewType(position)) {
-                case MENU_DIVIDER:
-                    convertView = mInflater.inflate(R.layout.translate_menu_divider, parent, false);
+                case TranslateMenu.ITEM_CHECKBOX_OPTION:
+                    menuItemView = getItemView(
+                            menuItemView, position, parent, R.layout.translate_menu_item_checked);
+
+                    TintedImageView checkboxIcon =
+                            (TintedImageView) menuItemView.findViewById(R.id.menu_item_icon);
+                    if (getItem(position).mId == TranslateMenu.ID_OVERFLOW_ALWAYS_TRANSLATE
+                            && mOptions.alwaysTranslateLanguageState()) {
+                        checkboxIcon.setVisibility(View.VISIBLE);
+                    } else {
+                        checkboxIcon.setVisibility(View.INVISIBLE);
+                    }
+
+                    View divider = (View) menuItemView.findViewById(R.id.menu_item_divider);
+                    if (getItem(position).mWithDivider) {
+                        divider.setVisibility(View.VISIBLE);
+                    }
                     break;
-                case OVERFLOW_MENU_ITEM:
-                case SOURCE_LANGUAGE_MENU_ITEM:
-                case TARGET_LANGUAGE_MENU_ITEM:
-                    convertView = mInflater.inflate(R.layout.translate_menu_item, parent, false);
-                    ((TextView) convertView.findViewById(R.id.menu_item_text))
-                            .setText(getItem(position).toString());
+                case TranslateMenu.ITEM_LANGUAGE:
+                    menuItemView = getItemView(
+                            menuItemView, position, parent, R.layout.translate_menu_item);
                     break;
-                // TODO(martiw) create the layout for OVERFLOW_MENU_ITEM_WITH_CHECKBOX_CHECKED and
-                // OVERFLOW_MENU_ITEM_WITH_CHECKBOX_UNCHECKED for "Always Translate Language"
                 default:
                     assert false : "Unexpected MenuItem type";
             }
-            return convertView;
-        }
-    }
-
-    /**
-     * The element that goes inside the menu.
-     */
-    public static final class TranslateMenuElement {
-        private final String mTitle;
-        private final String mCode;
-        private final int mType;
-
-        public TranslateMenuElement(String title, String code, int type) {
-            mTitle = title;
-            mCode = code;
-            mType = type;
-        }
-
-        public String getCode() {
-            return mCode;
-        }
-
-        public int getType() {
-            return mType;
-        }
-
-        /**
-         * This is the text displayed in the menu item.
-         */
-        public String toString() {
-            return mTitle;
+            return menuItemView;
         }
     }
 }

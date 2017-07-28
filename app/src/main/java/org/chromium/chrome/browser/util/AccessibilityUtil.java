@@ -10,10 +10,15 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.v7.app.AlertDialog;
+import android.view.Gravity;
+import android.view.View;
 import android.view.accessibility.AccessibilityManager;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.PackageUtils;
+import org.chromium.base.TraceEvent;
 import org.chromium.chrome.R;
+import org.chromium.ui.widget.Toast;
 
 import java.util.List;
 
@@ -40,13 +45,17 @@ public class AccessibilityUtil {
 
     /**
      * Checks to see that this device has accessibility and touch exploration enabled.
-     * @param context A {@link Context} instance.
      * @return        Whether or not accessibility and touch exploration are enabled.
      */
-    public static boolean isAccessibilityEnabled(Context context) {
-        AccessibilityManager manager = (AccessibilityManager)
-                context.getSystemService(Context.ACCESSIBILITY_SERVICE);
-        return manager != null && manager.isEnabled() && manager.isTouchExplorationEnabled();
+    public static boolean isAccessibilityEnabled() {
+        TraceEvent.begin("AccessibilityManager::isAccessibilityEnabled");
+        AccessibilityManager manager =
+                (AccessibilityManager) ContextUtils.getApplicationContext().getSystemService(
+                        Context.ACCESSIBILITY_SERVICE);
+        boolean retVal =
+                manager != null && manager.isEnabled() && manager.isTouchExplorationEnabled();
+        TraceEvent.end("AccessibilityManager::isAccessibilityEnabled");
+        return retVal;
     }
 
     /**
@@ -108,5 +117,31 @@ public class AccessibilityUtil {
                         });
         AlertDialog dialog = builder.create();
         dialog.show();
+    }
+
+    /**
+     * Shows the content description toast for items on the toolbar.
+     * @param context The context to use for the toast.
+     * @param view The view to anchor the toast.
+     * @param description The string shown in the toast.
+     * @return Whether a toast has been shown successfully.
+     */
+    public static boolean showAccessibilityToast(
+            Context context, View view, CharSequence description) {
+        if (description == null) return false;
+
+        final int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
+        final int screenHeight = context.getResources().getDisplayMetrics().heightPixels;
+        final int[] screenPos = new int[2];
+        view.getLocationOnScreen(screenPos);
+        final int width = view.getWidth();
+        final int height = view.getHeight();
+
+        Toast toast = Toast.makeText(context, description, Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.TOP | Gravity.END, screenWidth - screenPos[0] - width / 2,
+                (screenPos[1] < screenHeight / 2) ? screenPos[1] + height / 2
+                                                  : screenPos[1] - height * 3 / 2);
+        toast.show();
+        return true;
     }
 }

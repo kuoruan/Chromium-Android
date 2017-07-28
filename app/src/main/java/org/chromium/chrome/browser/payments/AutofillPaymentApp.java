@@ -12,6 +12,7 @@ import org.chromium.chrome.browser.autofill.PersonalDataManager.AutofillProfile;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.CreditCard;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.payments.mojom.BasicCardNetwork;
+import org.chromium.payments.mojom.PaymentItem;
 import org.chromium.payments.mojom.PaymentMethodData;
 
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ public class AutofillPaymentApp implements PaymentApp {
 
     @Override
     public void getInstruments(Map<String, PaymentMethodData> methodDataMap, String unusedOrigin,
-            String unusedIFRameOrigin, byte[][] unusedCertificateChain,
+            String unusedIFRameOrigin, byte[][] unusedCertificateChain, PaymentItem unusedTotal,
             final InstrumentsCallback callback) {
         PersonalDataManager pdm = PersonalDataManager.getInstance();
         List<CreditCard> cards = pdm.getCreditCardsToSuggest();
@@ -66,10 +67,10 @@ public class AutofillPaymentApp implements PaymentApp {
 
             String methodName = null;
             if (basicCardSupportedNetworks != null
-                    && basicCardSupportedNetworks.contains(card.getBasicCardPaymentType())) {
+                    && basicCardSupportedNetworks.contains(card.getBasicCardIssuerNetwork())) {
                 methodName = BASIC_CARD_METHOD_NAME;
-            } else if (methodDataMap.containsKey(card.getBasicCardPaymentType())) {
-                methodName = card.getBasicCardPaymentType();
+            } else if (methodDataMap.containsKey(card.getBasicCardIssuerNetwork())) {
+                methodName = card.getBasicCardIssuerNetwork();
             }
 
             if (methodName != null) {
@@ -128,8 +129,13 @@ public class AutofillPaymentApp implements PaymentApp {
 
     @Override
     public boolean supportsMethodsAndData(Map<String, PaymentMethodData> methodDataMap) {
-        assert methodDataMap != null;
+        return merchantSupportsAutofillPaymentInstruments(methodDataMap);
+    }
 
+    /** @return True if the merchant methodDataMap supports autofill payment instruments. */
+    public static boolean merchantSupportsAutofillPaymentInstruments(
+            Map<String, PaymentMethodData> methodDataMap) {
+        assert methodDataMap != null;
         PaymentMethodData basicCardData = methodDataMap.get(BASIC_CARD_METHOD_NAME);
         if (basicCardData != null) {
             Set<String> basicCardNetworks = convertBasicCardToNetworks(basicCardData);

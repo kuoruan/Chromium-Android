@@ -11,8 +11,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.os.Build;
-import android.util.Log;
 
+import org.chromium.base.ContextUtils;
+import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.device.mojom.BatteryStatus;
 
@@ -24,15 +25,12 @@ import javax.annotation.Nullable;
  * received.
  */
 class BatteryStatusManager {
-
     private static final String TAG = "BatteryStatusManager";
 
     interface BatteryStatusCallback {
         void onBatteryStatusChanged(BatteryStatus batteryStatus);
     }
 
-    // A reference to the application context in order to acquire the SensorService.
-    private final Context mAppContext;
     private final BatteryStatusCallback mCallback;
     private final IntentFilter mFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -58,27 +56,27 @@ class BatteryStatusManager {
             mBatteryManager = batteryManager;
         }
 
+        @TargetApi(Build.VERSION_CODES.LOLLIPOP)
         public int getIntProperty(int id) {
             return mBatteryManager.getIntProperty(id);
         }
     }
 
-    private BatteryStatusManager(Context context, BatteryStatusCallback callback,
-            boolean ignoreBatteryPresentState,
+    private BatteryStatusManager(BatteryStatusCallback callback, boolean ignoreBatteryPresentState,
             @Nullable AndroidBatteryManagerWrapper batteryManager) {
-        mAppContext = context.getApplicationContext();
         mCallback = callback;
         mIgnoreBatteryPresentState = ignoreBatteryPresentState;
         mAndroidBatteryManager = batteryManager;
     }
 
-    BatteryStatusManager(Context context, BatteryStatusCallback callback) {
+    BatteryStatusManager(BatteryStatusCallback callback) {
         // BatteryManager.EXTRA_PRESENT appears to be unreliable on Galaxy Nexus,
         // Android 4.2.1, it always reports false. See http://crbug.com/384348.
-        this(context, callback, Build.MODEL.equals("Galaxy Nexus"),
+        this(callback, Build.MODEL.equals("Galaxy Nexus"),
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
                         ? new AndroidBatteryManagerWrapper(
-                                (BatteryManager) context.getSystemService(Context.BATTERY_SERVICE))
+                                  (BatteryManager) ContextUtils.getApplicationContext()
+                                          .getSystemService(Context.BATTERY_SERVICE))
                         : null);
     }
 
@@ -88,7 +86,7 @@ class BatteryStatusManager {
      */
     static BatteryStatusManager createBatteryStatusManagerForTesting(Context context,
             BatteryStatusCallback callback, @Nullable AndroidBatteryManagerWrapper batteryManager) {
-        return new BatteryStatusManager(context, callback, false, batteryManager);
+        return new BatteryStatusManager(callback, false, batteryManager);
     }
 
     /**
@@ -96,7 +94,9 @@ class BatteryStatusManager {
      * @return True on success.
      */
     boolean start() {
-        if (!mEnabled && mAppContext.registerReceiver(mReceiver, mFilter) != null) {
+        if (!mEnabled
+                && ContextUtils.getApplicationContext().registerReceiver(mReceiver, mFilter)
+                        != null) {
             // success
             mEnabled = true;
         }
@@ -108,7 +108,7 @@ class BatteryStatusManager {
      */
     void stop() {
         if (mEnabled) {
-            mAppContext.unregisterReceiver(mReceiver);
+            ContextUtils.getApplicationContext().unregisterReceiver(mReceiver);
             mEnabled = false;
         }
     }
@@ -162,13 +162,13 @@ class BatteryStatusManager {
         mCallback.onBatteryStatusChanged(batteryStatus);
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void updateBatteryStatusForLollipop(BatteryStatus batteryStatus) {
         assert mAndroidBatteryManager != null;
 
         // On Lollipop we can provide a better estimate for chargingTime and dischargingTime.
-        double remainingCapacityRatio = mAndroidBatteryManager.getIntProperty(
-                BatteryManager.BATTERY_PROPERTY_CAPACITY) / 100.0;
+        double remainingCapacityRatio =
+                mAndroidBatteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+                / 100.0;
         double batteryCapacityMicroAh = mAndroidBatteryManager.getIntProperty(
                 BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
         double averageCurrentMicroA = mAndroidBatteryManager.getIntProperty(

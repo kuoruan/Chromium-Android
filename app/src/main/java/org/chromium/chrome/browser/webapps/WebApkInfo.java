@@ -331,19 +331,19 @@ public class WebApkInfo extends WebappInfo {
      */
     private static int displayModeFromString(String displayMode) {
         if (displayMode == null) {
-            return WebDisplayMode.kUndefined;
+            return WebDisplayMode.UNDEFINED;
         }
 
         if (displayMode.equals("fullscreen")) {
-            return WebDisplayMode.kFullscreen;
+            return WebDisplayMode.FULLSCREEN;
         } else if (displayMode.equals("standalone")) {
-            return WebDisplayMode.kStandalone;
+            return WebDisplayMode.STANDALONE;
         } else if (displayMode.equals("minimal-ui")) {
-            return WebDisplayMode.kMinimalUi;
+            return WebDisplayMode.MINIMAL_UI;
         } else if (displayMode.equals("browser")) {
-            return WebDisplayMode.kBrowser;
+            return WebDisplayMode.BROWSER;
         } else {
-            return WebDisplayMode.kUndefined;
+            return WebDisplayMode.UNDEFINED;
         }
     }
 

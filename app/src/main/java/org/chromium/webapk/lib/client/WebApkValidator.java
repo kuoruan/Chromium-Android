@@ -39,7 +39,6 @@ public class WebApkValidator {
     private static final String TAG = "WebApkValidator";
     private static final String KEY_FACTORY = "EC"; // aka "ECDSA"
 
-    private static boolean sAllWebApkPackageNames;
     private static byte[] sExpectedSignature;
     private static byte[] sCommentSignedPublicKeyBytes;
     private static PublicKey sCommentSignedPublicKey;
@@ -192,10 +191,6 @@ public class WebApkValidator {
     /** Verify that the comment signed webapk matches the public key. */
     private static boolean verifyCommentSignedWebApk(
             PackageInfo packageInfo, String webappPackageName) {
-        if (!sAllWebApkPackageNames && !webappPackageName.startsWith(WEBAPK_PACKAGE_PREFIX)) {
-            return false;
-        }
-
         PublicKey commentSignedPublicKey;
         try {
             commentSignedPublicKey = getCommentSignedPublicKey();
@@ -258,14 +253,11 @@ public class WebApkValidator {
 
     /**
      * Initializes the WebApkValidator.
-     * @param allWebApkPackageNames Whether we permit any package names for comment signed WebAPKs.
      * @param expectedSignature V1 WebAPK RSA signature.
      * @param v2PublicKeyBytes New comment signed public key bytes as x509 encoded public key.
      */
     @SuppressFBWarnings("EI_EXPOSE_STATIC_REP2")
-    public static void init(
-            boolean allWebApkPackageNames, byte[] expectedSignature, byte[] v2PublicKeyBytes) {
-        sAllWebApkPackageNames = allWebApkPackageNames;
+    public static void init(byte[] expectedSignature, byte[] v2PublicKeyBytes) {
         if (sExpectedSignature == null) {
             sExpectedSignature = expectedSignature;
         }

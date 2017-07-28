@@ -36,12 +36,19 @@ public abstract class BasicNativePage implements NativePage {
 
         Resources res = mActivity.getResources();
 
+        int topMargin = 0;
+        int bottomMargin = 0;
+        if (activity instanceof ChromeActivity
+                && ((ChromeActivity) activity).getBottomSheet() != null) {
+            bottomMargin = res.getDimensionPixelSize(R.dimen.bottom_control_container_height);
+        } else {
+            topMargin = res.getDimensionPixelSize(R.dimen.tab_strip_height)
+                    + res.getDimensionPixelSize(R.dimen.toolbar_height_no_shadow);
+        }
+
         LayoutParams layoutParams = new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT);
-        layoutParams.setMargins(0,
-                res.getDimensionPixelSize(R.dimen.tab_strip_height)
-                + res.getDimensionPixelSize(R.dimen.toolbar_height_no_shadow),
-                0, 0);
+        layoutParams.setMargins(0, topMargin, 0, bottomMargin);
         getView().setLayoutParams(layoutParams);
     }
 

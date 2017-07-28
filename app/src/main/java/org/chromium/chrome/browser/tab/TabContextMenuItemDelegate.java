@@ -38,7 +38,7 @@ import java.util.Locale;
  */
 public class TabContextMenuItemDelegate implements ContextMenuItemDelegate {
     public static final String PAGESPEED_PASSTHROUGH_HEADERS =
-            "Chrome-Proxy: pass-through\nCache-Control: no-cache";
+            "Chrome-Proxy-Accept-Transform: identity\nCache-Control: no-cache";
 
     private final Tab mTab;
     private boolean mLoadOriginalImageRequestedForPageLoad;
@@ -260,6 +260,7 @@ public class TabContextMenuItemDelegate implements ContextMenuItemDelegate {
             intent.putExtra(
                     Browser.EXTRA_APPLICATION_ID, mTab.getApplicationContext().getPackageName());
             IntentHandler.addTrustedIntentExtras(intent);
+            IntentHandler.setTabLaunchType(intent, TabLaunchType.FROM_EXTERNAL_APP);
         }
         IntentUtils.safeStartActivity(mTab.getActivity(), intent);
     }

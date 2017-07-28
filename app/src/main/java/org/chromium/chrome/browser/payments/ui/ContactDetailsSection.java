@@ -60,9 +60,13 @@ public class ContactDetailsSection extends SectionInformation {
         if (editedAddress == null) return;
 
         // If the profile is currently being displayed, update the items in anticipation of the
-        // contacts section refresh.
-        AutofillContact updatedContact =
+        // contacts section refresh. The updatedContact can be null when user has added a new
+        // shipping address without an email, but the contact info section requires only email
+        // address. Null updatedContact should not be added to the mItems list.
+        @Nullable AutofillContact updatedContact =
                 createAutofillContactFromProfile(editedAddress.getProfile());
+        if (null == updatedContact) return;
+
         if (mItems != null) {
             for (int i = 0; i < mItems.size(); i++) {
                 AutofillContact existingContact = (AutofillContact) mItems.get(i);

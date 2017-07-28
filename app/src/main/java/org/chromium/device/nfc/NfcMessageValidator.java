@@ -4,9 +4,9 @@
 
 package org.chromium.device.nfc;
 
-import org.chromium.device.nfc.mojom.NfcMessage;
-import org.chromium.device.nfc.mojom.NfcRecord;
-import org.chromium.device.nfc.mojom.NfcRecordType;
+import org.chromium.device.mojom.NfcMessage;
+import org.chromium.device.mojom.NfcRecord;
+import org.chromium.device.mojom.NfcRecordType;
 
 /**
  * Utility class that provides validation of NfcMessage.

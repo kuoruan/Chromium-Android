@@ -18,6 +18,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.widget.FrameLayout;
 
+import org.chromium.chrome.browser.util.MathUtils;
 import org.chromium.content.browser.ContentViewCore;
 import org.chromium.content_public.browser.GestureStateListener;
 
@@ -30,21 +31,6 @@ import org.chromium.content_public.browser.GestureStateListener;
  * This View is brought onto the screen by sliding upwards from the bottom of the screen.  Afterward
  * the View slides onto and off of the screen vertically as the user scrolls upwards or
  * downwards on the page.
- *
- * VERTICAL SCROLL CALCULATIONS
- * To determine how close the user is to the top of the page, the View must not only be informed of
- * page scroll position changes, but also of changes in the viewport size (which happens as the
- * omnibox appears and disappears, or as the page rotates e.g.).  When the viewport size gradually
- * shrinks, the user is most likely to be scrolling the page downwards while the omnibox comes back
- * into view.
- *
- * When the user first begins scrolling the page, both the scroll position and the viewport size are
- * summed and recorded together.  This is because a pixel change in the viewport height is
- * equivalent to a pixel change in the content's scroll offset:
- * - As the user scrolls the page downward, either the viewport height will increase (as the omnibox
- *   is slid off of the screen) or the content scroll offset will increase.
- * - As the user scrolls the page upward, either the viewport height will decrease (as the omnibox
- *   is brought back onto the screen) or the content scroll offset will decrease.
  *
  * As the scroll offset or the viewport height are updated via a scroll or fling, the difference
  * from the initial value is used to determine the View's Y-translation.  If a gesture is stopped,
@@ -62,40 +48,37 @@ public abstract class SwipableOverlayView extends FrameLayout {
 
     private static final long ANIMATION_DURATION_MS = 250;
 
-    // Detects when the user is dragging the ContentViewCore.
+    /** Detects when the user is dragging the ContentViewCore. */
     private final GestureStateListener mGestureStateListener;
 
-    // Listens for changes in the layout.
+    /** Listens for changes in the layout. */
     private final View.OnLayoutChangeListener mLayoutChangeListener;
 
-    // Monitors for animation completions and resets the state.
+    /** Monitors for animation completions and resets the state. */
     private final AnimatorListener mAnimatorListener;
 
-    // Interpolator used for the animation.
+    /** Interpolator used for the animation. */
     private final Interpolator mInterpolator;
 
-    // Tracks whether the user is scrolling or flinging.
+    /** Tracks whether the user is scrolling or flinging. */
     private int mGestureState;
 
-    // Animation currently being used to translate the View.
+    /** Animation currently being used to translate the View. */
     private Animator mCurrentAnimation;
 
-    // Used to determine when the layout has changed and the Viewport must be updated.
+    /** Used to determine when the layout has changed and the Viewport must be updated. */
     private int mParentHeight;
 
-    // Location of the View when the current gesture was first started.
-    private float mInitialTranslationY;
-
-    // Offset from the top of the page when the current gesture was first started.
+    /** Offset from the top of the page when the current gesture was first started. */
     private int mInitialOffsetY;
 
-    // How tall the View is, including its margins.
+    /** How tall the View is, including its margins. */
     private int mTotalHeight;
 
-    // Whether or not the View ever been fully displayed.
+    /** Whether or not the View ever been fully displayed. */
     private boolean mIsBeingDisplayedForFirstTime;
 
-    // The ContentViewCore to which the overlay is added.
+    /** The ContentViewCore to which the overlay is added. */
     private ContentViewCore mContentViewCore;
 
     /**
@@ -207,10 +190,19 @@ public abstract class SwipableOverlayView extends FrameLayout {
      */
     private GestureStateListener createGestureStateListener() {
         return new GestureStateListener() {
+            /** Tracks the previous event's scroll offset to determine if a scroll is up or down. */
+            private int mLastScrollOffsetY;
+
+            /** Location of the View when the current gesture was first started. */
+            private float mInitialTranslationY;
+
+            /** The initial extent of the scroll when triggered. */
+            private float mInitialExtentY;
+
             @Override
             public void onFlingStartGesture(int scrollOffsetY, int scrollExtentY) {
                 if (!isAllowedToAutoHide() || !cancelCurrentAnimation()) return;
-                beginGesture(scrollOffsetY, scrollExtentY);
+                resetInitialOffsets(scrollOffsetY, scrollExtentY);
                 mGestureState = GESTURE_FLINGING;
             }
 
@@ -219,34 +211,27 @@ public abstract class SwipableOverlayView extends FrameLayout {
                 if (mGestureState != GESTURE_FLINGING) return;
                 mGestureState = GESTURE_NONE;
 
-                int finalOffsetY = computeScrollDifference(scrollOffsetY, scrollExtentY);
                 updateTranslation(scrollOffsetY, scrollExtentY);
 
-                boolean isScrollingDownward = finalOffsetY > 0;
+                boolean isScrollingDownward = scrollOffsetY > mLastScrollOffsetY;
 
                 boolean isVisibleInitially = mInitialTranslationY < mTotalHeight;
                 float percentageVisible = 1.0f - (getTranslationY() / mTotalHeight);
                 float visibilityThreshold = isVisibleInitially
                         ? VERTICAL_FLING_HIDE_THRESHOLD : VERTICAL_FLING_SHOW_THRESHOLD;
                 boolean isVisibleEnough = percentageVisible > visibilityThreshold;
+                boolean isNearTopOfPage = scrollOffsetY < (mTotalHeight * FULL_THRESHOLD);
 
-                boolean show = !isScrollingDownward;
-                if (isVisibleInitially) {
-                    // Check if the View was moving off-screen.
-                    boolean isHiding = getTranslationY() > mInitialTranslationY;
-                    show &= isVisibleEnough || !isHiding;
-                } else {
-                    // When near the top of the page, there's not much room left to scroll.
-                    boolean isNearTopOfPage = finalOffsetY < (mTotalHeight * FULL_THRESHOLD);
-                    show &= isVisibleEnough || isNearTopOfPage;
-                }
+                boolean show = (!isScrollingDownward && isVisibleEnough) || isNearTopOfPage;
+
                 createVerticalSnapAnimation(show);
             }
 
             @Override
             public void onScrollStarted(int scrollOffsetY, int scrollExtentY) {
                 if (!isAllowedToAutoHide() || !cancelCurrentAnimation()) return;
-                beginGesture(scrollOffsetY, scrollExtentY);
+                resetInitialOffsets(scrollOffsetY, scrollExtentY);
+                mLastScrollOffsetY = scrollOffsetY;
                 mGestureState = GESTURE_SCROLLING;
             }
 
@@ -255,10 +240,9 @@ public abstract class SwipableOverlayView extends FrameLayout {
                 if (mGestureState != GESTURE_SCROLLING) return;
                 mGestureState = GESTURE_NONE;
 
-                int finalOffsetY = computeScrollDifference(scrollOffsetY, scrollExtentY);
                 updateTranslation(scrollOffsetY, scrollExtentY);
 
-                boolean isNearTopOfPage = finalOffsetY < (mTotalHeight * FULL_THRESHOLD);
+                boolean isNearTopOfPage = scrollOffsetY < (mTotalHeight * FULL_THRESHOLD);
                 boolean isVisibleEnough = getTranslationY() < mTotalHeight * FULL_THRESHOLD;
                 createVerticalSnapAnimation(isNearTopOfPage || isVisibleEnough);
             }
@@ -267,14 +251,30 @@ public abstract class SwipableOverlayView extends FrameLayout {
             public void onScrollOffsetOrExtentChanged(int scrollOffsetY, int scrollExtentY) {
                 // This function is called for both fling and scrolls.
                 if (mGestureState == GESTURE_NONE || !cancelCurrentAnimation()) return;
+                mLastScrollOffsetY = scrollOffsetY;
                 updateTranslation(scrollOffsetY, scrollExtentY);
             }
 
             private void updateTranslation(int scrollOffsetY, int scrollExtentY) {
-                float translation = mInitialTranslationY
-                        + computeScrollDifference(scrollOffsetY, scrollExtentY);
-                translation = Math.max(0.0f, Math.min(mTotalHeight, translation));
+                float scrollDiff =
+                        (scrollOffsetY - mInitialOffsetY) + (scrollExtentY - mInitialExtentY);
+                float translation =
+                        MathUtils.clamp(mInitialTranslationY + scrollDiff, mTotalHeight, 0);
+
+                // If the container has reached the completely shown position, reset the initial
+                // scroll so any movement will start hiding it again.
+                if (translation <= 0f) resetInitialOffsets(scrollOffsetY, scrollExtentY);
+
                 setTranslationY(translation);
+            }
+
+            /**
+             * Records the conditions of the page to handle scrolls appropriately.
+             */
+            private void resetInitialOffsets(int scrollOffsetY, int scrollExtentY) {
+                mInitialOffsetY = scrollOffsetY;
+                mInitialExtentY = scrollExtentY;
+                mInitialTranslationY = getTranslationY();
             }
         };
     }
@@ -317,10 +317,6 @@ public abstract class SwipableOverlayView extends FrameLayout {
         mCurrentAnimation.start();
     }
 
-    private int computeScrollDifference(int scrollOffsetY, int scrollExtentY) {
-        return scrollOffsetY + scrollExtentY - mInitialOffsetY;
-    }
-
     /**
      * Creates an AnimatorListenerAdapter that cleans up after an animation is completed.
      * @return {@link AnimatorListenerAdapter} to use for animations.
@@ -334,16 +330,6 @@ public abstract class SwipableOverlayView extends FrameLayout {
                 mIsBeingDisplayedForFirstTime = false;
             }
         };
-    }
-
-    /**
-     * Records the conditions of the page when a gesture is initiated.
-     */
-    private void beginGesture(int scrollOffsetY, int scrollExtentY) {
-        mInitialTranslationY = getTranslationY();
-        boolean isInitiallyVisible = mInitialTranslationY < mTotalHeight;
-        int startingY = isInitiallyVisible ? scrollOffsetY : Math.min(scrollOffsetY, mTotalHeight);
-        mInitialOffsetY = startingY + scrollExtentY;
     }
 
     /**

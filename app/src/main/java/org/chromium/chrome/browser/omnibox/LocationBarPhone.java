@@ -25,6 +25,9 @@ import org.chromium.chrome.browser.ntp.NewTabPage;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.toolbar.ToolbarDataProvider;
 import org.chromium.chrome.browser.util.MathUtils;
+import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
+import org.chromium.chrome.browser.widget.bottomsheet.BottomSheetContentController;
+import org.chromium.chrome.browser.widget.bottomsheet.EmptyBottomSheetObserver;
 import org.chromium.ui.UiUtils;
 
 /**
@@ -154,7 +157,6 @@ public class LocationBarPhone extends LocationBarLayout {
      * @param hasFocus Whether the URL field has gained focus.
      */
     public void finishUrlFocusChange(boolean hasFocus) {
-        final WindowDelegate windowDelegate = getWindowDelegate();
         if (!hasFocus) {
             // Remove the selection from the url text.  The ending selection position
             // will determine the scroll position when the url field is restored.  If
@@ -184,29 +186,15 @@ public class LocationBarPhone extends LocationBarLayout {
             }, KEYBOARD_HIDE_DELAY_MS);
             // Convert the keyboard back to resize mode (delay the change for an arbitrary amount
             // of time in hopes the keyboard will be completely hidden before making this change).
-            if (mKeyboardResizeModeTask == null
-                    && windowDelegate.getWindowSoftInputMode()
-                            != WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE) {
-                mKeyboardResizeModeTask = new Runnable() {
-                    @Override
-                    public void run() {
-                        windowDelegate.setWindowSoftInputMode(
-                                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-                        mKeyboardResizeModeTask = null;
-                    }
-                };
-                postDelayed(mKeyboardResizeModeTask, KEYBOARD_MODE_CHANGE_DELAY_MS);
+            // If Chrome Home is enabled, it will handle its own mode changes.
+            if (mBottomSheet == null) {
+                setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE, true);
             }
             mUrlActionsContainer.setVisibility(GONE);
         } else {
-            if (mKeyboardResizeModeTask != null) {
-                removeCallbacks(mKeyboardResizeModeTask);
-                mKeyboardResizeModeTask = null;
-            }
-            if (windowDelegate.getWindowSoftInputMode()
-                    != WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING) {
-                windowDelegate.setWindowSoftInputMode(
-                        WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
+            // If Chrome Home is enabled, it will handle its own mode changes.
+            if (mBottomSheet == null) {
+                setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN, false);
             }
             UiUtils.showKeyboard(mUrlBar);
             // As the position of the navigation icon has changed, ensure the suggestions are
@@ -226,12 +214,19 @@ public class LocationBarPhone extends LocationBarLayout {
 
     @Override
     protected void updateButtonVisibility() {
-        updateDeleteButtonVisibility();
+        super.updateButtonVisibility();
         updateMicButtonVisibility(mUrlFocusChangePercent);
         updateGoogleG();
     }
 
     private void updateGoogleG() {
+        // TODO(twellington): Show the Google G in the location bar on the redesigned Chrome Home
+        //                    NTP.
+        if (mBottomSheet != null) {
+            mGoogleGContainer.setVisibility(View.GONE);
+            return;
+        }
+
         // The toolbar data provider can be null during startup, before the ToolbarManager has been
         // initialized.
         ToolbarDataProvider toolbarDataProvider = getToolbarDataProvider();
@@ -312,5 +307,67 @@ public class LocationBarPhone extends LocationBarLayout {
     public void setLayoutDirection(int layoutDirection) {
         super.setLayoutDirection(layoutDirection);
         updateIncognitoBadgePadding();
+    }
+
+    /**
+     * @param softInputMode The software input resize mode.
+     * @param delay Delay the change in input mode.
+     */
+    private void setSoftInputMode(final int softInputMode, boolean delay) {
+        final WindowDelegate delegate = getWindowDelegate();
+
+        if (mKeyboardResizeModeTask != null) {
+            removeCallbacks(mKeyboardResizeModeTask);
+            mKeyboardResizeModeTask = null;
+        }
+
+        if (delegate == null || delegate.getWindowSoftInputMode() == softInputMode) return;
+
+        if (delay) {
+            mKeyboardResizeModeTask = new Runnable() {
+                @Override
+                public void run() {
+                    delegate.setWindowSoftInputMode(softInputMode);
+                    mKeyboardResizeModeTask = null;
+                }
+            };
+            postDelayed(mKeyboardResizeModeTask, KEYBOARD_MODE_CHANGE_DELAY_MS);
+        } else {
+            delegate.setWindowSoftInputMode(softInputMode);
+        }
+    }
+
+    @Override
+    public void setBottomSheet(BottomSheet sheet) {
+        super.setBottomSheet(sheet);
+
+        sheet.addObserver(new EmptyBottomSheetObserver() {
+            @Override
+            public void onSheetStateChanged(int state) {
+                switch (state) {
+                    case BottomSheet.SHEET_STATE_FULL:
+                        setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN, false);
+                        break;
+                    case BottomSheet.SHEET_STATE_PEEK:
+                        setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE, true);
+                        break;
+                    default:
+                        setSoftInputMode(
+                                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING, false);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void backKeyPressed() {
+        super.backKeyPressed();
+
+        // If the back button was pressed while the placeholder content was showing, hide the sheet.
+        if (mBottomSheet != null && mBottomSheet.getCurrentSheetContent() != null
+                && mBottomSheet.getCurrentSheetContent().getType()
+                        == BottomSheetContentController.TYPE_PLACEHOLDER) {
+            mBottomSheet.setSheetState(BottomSheet.SHEET_STATE_PEEK, true);
+        }
     }
 }

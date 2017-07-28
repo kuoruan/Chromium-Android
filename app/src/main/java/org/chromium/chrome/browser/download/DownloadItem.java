@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.download;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.components.offline_items_collection.ContentId;
+import org.chromium.components.offline_items_collection.OfflineItem.Progress;
 
 /**
  * A generic class representing a download item. The item can be either downloaded through the
@@ -15,7 +16,6 @@ import org.chromium.components.offline_items_collection.ContentId;
  * DownloadManager must be queried for the correct status.
  */
 public class DownloadItem {
-    public static final int INDETERMINATE_DOWNLOAD_PERCENTAGE = -1;
     static final long INVALID_DOWNLOAD_ID = -1L;
 
     private final ContentId mContentId = new ContentId();
@@ -143,6 +143,7 @@ public class DownloadItem {
      * @return Whether or not the download has an indeterminate percentage.
      */
     public boolean isIndeterminate() {
-        return getDownloadInfo().getPercentCompleted() == INDETERMINATE_DOWNLOAD_PERCENTAGE;
+        Progress progress = getDownloadInfo().getProgress();
+        return progress == null || progress.isIndeterminate();
     }
 }

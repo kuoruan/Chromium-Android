@@ -10,11 +10,14 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcel;
+import android.support.annotation.MainThread;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.ipc.invalidation.ticl.android2.channel.GcmUpstreamSenderService;
 
+import org.chromium.base.ThreadUtils;
+import org.chromium.chrome.browser.init.ProcessInitializationHandler;
 import org.chromium.chrome.browser.signin.OAuth2TokenService;
 import org.chromium.components.signin.AccountManagerHelper;
 import org.chromium.components.signin.ChromeSigninController;
@@ -36,6 +39,23 @@ public class InvalidationGcmUpstreamSender extends GcmUpstreamSenderService {
 
     @Override
     public void deliverMessage(final String to, final Bundle data) {
+        final Bundle dataToSend = createDeepCopy(data);
+        final Context applicationContext = getApplicationContext();
+
+        ThreadUtils.postOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                doDeliverMessage(applicationContext, to, dataToSend);
+            }
+        });
+    }
+
+    @MainThread
+    private void doDeliverMessage(
+            final Context applicationContext, final String to, final Bundle data) {
+        ThreadUtils.assertOnUiThread();
+        ProcessInitializationHandler.getInstance().initializePreNative();
+
         @Nullable
         Account account = ChromeSigninController.get().getSignedInUser();
         if (account == null) {
@@ -44,9 +64,6 @@ public class InvalidationGcmUpstreamSender extends GcmUpstreamSenderService {
             Log.w(TAG, "No signed-in user; cannot send message to data center");
             return;
         }
-
-        final Bundle dataToSend = createDeepCopy(data);
-        final Context applicationContext = getApplicationContext();
 
         // Attempt to retrieve a token for the user.
         OAuth2TokenService.getOAuth2AccessToken(this, account,
@@ -57,7 +74,7 @@ public class InvalidationGcmUpstreamSender extends GcmUpstreamSenderService {
                         new AsyncTask<Void, Void, Void>() {
                             @Override
                             protected Void doInBackground(Void... voids) {
-                                sendUpstreamMessage(to, dataToSend, token, applicationContext);
+                                sendUpstreamMessage(to, data, token, applicationContext);
                                 return null;
                             }
                         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);

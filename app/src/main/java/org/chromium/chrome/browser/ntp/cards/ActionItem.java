@@ -11,6 +11,7 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ntp.ContextMenuManager;
 import org.chromium.chrome.browser.ntp.snippets.CategoryInt;
 import org.chromium.chrome.browser.suggestions.ContentSuggestionsAdditionalAction;
+import org.chromium.chrome.browser.suggestions.SuggestionsMetrics;
 import org.chromium.chrome.browser.suggestions.SuggestionsRanker;
 import org.chromium.chrome.browser.suggestions.SuggestionsRecyclerView;
 import org.chromium.chrome.browser.suggestions.SuggestionsUiDelegate;
@@ -46,6 +47,11 @@ public class ActionItem extends OptionalLeaf {
         ((ViewHolder) holder).onBindViewHolder(this);
     }
 
+    @Override
+    public void visitOptionalItem(NodeVisitor visitor) {
+        visitor.visitActionItem(mCategoryInfo.getAdditionalAction());
+    }
+
     @CategoryInt
     public int getCategory() {
         return mCategoryInfo.getCategory();
@@ -61,10 +67,11 @@ public class ActionItem extends OptionalLeaf {
 
     @VisibleForTesting
     void performAction(SuggestionsUiDelegate uiDelegate) {
-        uiDelegate.getMetricsReporter().onMoreButtonClicked(this);
+        uiDelegate.getEventReporter().onMoreButtonClicked(this);
 
         switch (mCategoryInfo.getAdditionalAction()) {
             case ContentSuggestionsAdditionalAction.VIEW_ALL:
+                SuggestionsMetrics.recordActionViewAll();
                 mCategoryInfo.performViewAllAction(uiDelegate.getNavigationDelegate());
                 return;
             case ContentSuggestionsAdditionalAction.FETCH:
@@ -101,7 +108,7 @@ public class ActionItem extends OptionalLeaf {
                 public void onImpression() {
                     if (mActionListItem != null && !mActionListItem.mImpressionTracked) {
                         mActionListItem.mImpressionTracked = true;
-                        uiDelegate.getMetricsReporter().onMoreButtonShown(mActionListItem);
+                        uiDelegate.getEventReporter().onMoreButtonShown(mActionListItem);
                     }
                 }
             });

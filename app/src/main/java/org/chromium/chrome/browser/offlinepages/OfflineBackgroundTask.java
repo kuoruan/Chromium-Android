@@ -47,6 +47,11 @@ public class OfflineBackgroundTask implements BackgroundTask {
         return mBackgroundProcessor.stopScheduledProcessing();
     }
 
+    @Override
+    public void reschedule(Context context) {
+        BackgroundScheduler.getInstance(context).rescheduleOfflinePagesTasksOnUpgrade();
+    }
+
     /** Wraps the callback for code reuse */
     private Callback<Boolean> wrapCallback(final TaskFinishedCallback callback) {
         return new Callback<Boolean>() {

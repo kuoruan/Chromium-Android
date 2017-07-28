@@ -137,10 +137,9 @@ public class BrowserStartupController {
     }
 
     @VisibleForTesting
-    static BrowserStartupController overrideInstanceForTest(BrowserStartupController controller) {
-        if (sInstance == null) {
-            sInstance = controller;
-        }
+    public static BrowserStartupController overrideInstanceForTest(
+            BrowserStartupController controller) {
+        sInstance = controller;
         return sInstance;
     }
 

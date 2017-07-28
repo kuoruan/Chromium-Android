@@ -89,6 +89,13 @@ public final class ChildAccountInfoFetcher {
         nativeSetIsChildAccount(mNativeAccountFetcherService, mAccountId, isChildAccount);
     }
 
+    @CalledByNative
+    private static void initializeForTests() {
+        Context context = ContextUtils.getApplicationContext();
+        AccountManagerDelegate delegate = new SystemAccountManagerDelegate();
+        AccountManagerHelper.overrideAccountManagerHelperForTests(context, delegate);
+    }
+
     private static native void nativeSetIsChildAccount(
             long accountFetcherServicePtr, String accountId, boolean isChildAccount);
 }

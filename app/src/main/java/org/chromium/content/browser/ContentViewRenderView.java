@@ -71,8 +71,8 @@ public class ContentViewRenderView extends FrameLayout {
                 nativeSurfaceChanged(mNativeContentViewRenderView,
                         format, width, height, holder.getSurface());
                 if (mContentViewCore != null) {
-                    mContentViewCore.onPhysicalBackingSizeChanged(
-                            width, height);
+                    nativeOnPhysicalBackingSizeChanged(mNativeContentViewRenderView,
+                            mContentViewCore.getWebContents(), width, height);
                 }
             }
 
@@ -127,13 +127,12 @@ public class ContentViewRenderView extends FrameLayout {
         assert mNativeContentViewRenderView != 0;
         mContentViewCore = contentViewCore;
 
-        if (mContentViewCore != null) {
-            mContentViewCore.onPhysicalBackingSizeChanged(getWidth(), getHeight());
-            nativeSetCurrentWebContents(
-                    mNativeContentViewRenderView, mContentViewCore.getWebContents());
-        } else {
-            nativeSetCurrentWebContents(mNativeContentViewRenderView, null);
+        WebContents webContents = contentViewCore != null ? contentViewCore.getWebContents() : null;
+        if (webContents != null) {
+            nativeOnPhysicalBackingSizeChanged(
+                    mNativeContentViewRenderView, webContents, getWidth(), getHeight());
         }
+        nativeSetCurrentWebContents(mNativeContentViewRenderView, webContents);
     }
 
     /**
@@ -185,6 +184,8 @@ public class ContentViewRenderView extends FrameLayout {
     private native void nativeDestroy(long nativeContentViewRenderView);
     private native void nativeSetCurrentWebContents(
             long nativeContentViewRenderView, WebContents webContents);
+    private native void nativeOnPhysicalBackingSizeChanged(
+            long nativeContentViewRenderView, WebContents webContents, int width, int height);
     private native void nativeSurfaceCreated(long nativeContentViewRenderView);
     private native void nativeSurfaceDestroyed(long nativeContentViewRenderView);
     private native void nativeSurfaceChanged(long nativeContentViewRenderView,

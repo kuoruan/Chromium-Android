@@ -169,7 +169,7 @@ public class SectionInformation {
      */
     public int getAddStringId() {
         if (mDataType == PaymentRequestUI.TYPE_SHIPPING_ADDRESSES) {
-            return R.string.autofill_create_profile;
+            return R.string.payments_add_address;
         } else if (mDataType == PaymentRequestUI.TYPE_CONTACT_DETAILS) {
             return R.string.payments_add_contact;
         } else if (mDataType == PaymentRequestUI.TYPE_PAYMENT_METHODS) {

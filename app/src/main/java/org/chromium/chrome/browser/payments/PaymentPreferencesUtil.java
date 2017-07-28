@@ -15,9 +15,6 @@ public class PaymentPreferencesUtil {
     /** Preference to indicate whether payment request has been completed successfully once.*/
     private static final String PAYMENT_COMPLETE_ONCE = "payment_complete_once";
 
-    /** Prefix of the preferences to persist Android payment apps' status. */
-    public static final String PAYMENT_ANDROID_APP_ENABLED_ = "payment_android_app_enabled_";
-
     /** Prefix of the preferences to persist use count of the payment instruments. */
     public static final String PAYMENT_INSTRUMENT_USE_COUNT_ = "payment_instrument_use_count_";
 

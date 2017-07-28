@@ -29,6 +29,7 @@ import org.chromium.chrome.browser.contextualsearch.ContextualSearchManagementDe
 import org.chromium.chrome.browser.device.DeviceClassManager;
 import org.chromium.chrome.browser.dom_distiller.ReaderModeManagerDelegate;
 import org.chromium.chrome.browser.fullscreen.FullscreenManager;
+import org.chromium.chrome.browser.ntp.NewTabPage;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabCreatorManager;
 import org.chromium.chrome.browser.tabmodel.TabModel;
@@ -246,9 +247,11 @@ public class LayoutManagerDocument extends LayoutManager
         boolean canUseLiveTexture =
                 tab.getContentViewCore() != null && !tab.isShowingSadTab() && !isNativePage;
 
+        boolean isNtp = tab.getNativePage() instanceof NewTabPage;
         boolean needsUpdate = layoutTab.initFromHost(tab.getBackgroundColor(), tab.shouldStall(),
-                canUseLiveTexture, themeColor, ColorUtils.getTextBoxColorForToolbarBackground(
-                                                       mContext.getResources(), tab, themeColor),
+                canUseLiveTexture, themeColor,
+                ColorUtils.getTextBoxColorForToolbarBackground(
+                        mContext.getResources(), isNtp, themeColor),
                 ColorUtils.getTextBoxAlphaForToolbarBackground(tab));
         if (needsUpdate) requestUpdate();
 

@@ -103,7 +103,7 @@ public class VariationsSeedFetcher {
             // Note that VariationsSeedBridge.hasNativePref() is a pure Java function, reading an
             // Android preference that is set when the seed is fetched by the native code.
             if (prefs.getBoolean(VARIATIONS_INITIALIZED_PREF, false)
-                    || VariationsSeedBridge.hasNativePref(context)) {
+                    || VariationsSeedBridge.hasNativePref()) {
                 return;
             }
             downloadContent(context, restrictMode);
@@ -155,7 +155,7 @@ public class VariationsSeedFetcher {
             String date = getHeaderFieldOrEmpty(connection, "Date");
             boolean isGzipCompressed = getHeaderFieldOrEmpty(connection, "IM").equals("gzip");
             VariationsSeedBridge.setVariationsFirstRunSeed(
-                    context, rawSeed, signature, country, date, isGzipCompressed);
+                    rawSeed, signature, country, date, isGzipCompressed);
             recordSeedFetchTime(SystemClock.elapsedRealtime() - startTimeMillis);
         } catch (SocketTimeoutException e) {
             recordFetchResultOrCode(SEED_FETCH_RESULT_TIMEOUT);

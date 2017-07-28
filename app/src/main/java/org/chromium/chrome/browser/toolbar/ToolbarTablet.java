@@ -9,6 +9,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.Resources;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -18,13 +19,13 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.NavigationPopup;
-import org.chromium.chrome.browser.device.DeviceClassManager;
 import org.chromium.chrome.browser.download.DownloadUtils;
 import org.chromium.chrome.browser.ntp.NewTabPage;
 import org.chromium.chrome.browser.omnibox.LocationBar;
 import org.chromium.chrome.browser.omnibox.LocationBarTablet;
 import org.chromium.chrome.browser.partnercustomizations.HomepageManager;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.util.AccessibilityUtil;
 import org.chromium.chrome.browser.widget.TintedImageButton;
 import org.chromium.ui.base.DeviceFormFactor;
 
@@ -36,7 +37,8 @@ import java.util.Collection;
  */
 @SuppressLint("Instantiatable")
 
-public class ToolbarTablet extends ToolbarLayout implements OnClickListener {
+public class ToolbarTablet
+        extends ToolbarLayout implements OnClickListener, View.OnLongClickListener {
     // The number of toolbar buttons that can be hidden at small widths (reload, back, forward).
     public static final int HIDEABLE_BUTTON_COUNT = 3;
 
@@ -46,6 +48,7 @@ public class ToolbarTablet extends ToolbarLayout implements OnClickListener {
     private TintedImageButton mReloadButton;
     private TintedImageButton mBookmarkButton;
     private TintedImageButton mSaveOfflineButton;
+    private TintedImageButton mSecurityButton;
     private ImageButton mAccessibilitySwitcherButton;
 
     private OnClickListener mBookmarkListener;
@@ -94,7 +97,8 @@ public class ToolbarTablet extends ToolbarLayout implements OnClickListener {
         mBackButton = (TintedImageButton) findViewById(R.id.back_button);
         mForwardButton = (TintedImageButton) findViewById(R.id.forward_button);
         mReloadButton = (TintedImageButton) findViewById(R.id.refresh_button);
-        mShowTabStack = DeviceClassManager.isAccessibilityModeEnabled(getContext());
+        mSecurityButton = (TintedImageButton) findViewById(R.id.security_button);
+        mShowTabStack = AccessibilityUtil.isAccessibilityEnabled();
 
         mTabSwitcherButtonDrawable =
                 TabSwitcherDrawable.createTabSwitcherDrawable(getResources(), false);
@@ -201,6 +205,7 @@ public class ToolbarTablet extends ToolbarLayout implements OnClickListener {
         });
 
         mReloadButton.setOnClickListener(this);
+        mReloadButton.setOnLongClickListener(this);
         mReloadButton.setOnKeyListener(new KeyboardNavigationListener() {
             @Override
             public View getNextFocusForward() {
@@ -223,6 +228,7 @@ public class ToolbarTablet extends ToolbarLayout implements OnClickListener {
 
         mAccessibilitySwitcherButton.setOnClickListener(this);
         mBookmarkButton.setOnClickListener(this);
+        mBookmarkButton.setOnLongClickListener(this);
 
         mMenuButton.setOnKeyListener(new KeyboardNavigationListener() {
             @Override
@@ -245,6 +251,9 @@ public class ToolbarTablet extends ToolbarLayout implements OnClickListener {
         }
 
         mSaveOfflineButton.setOnClickListener(this);
+        mSaveOfflineButton.setOnLongClickListener(this);
+
+        mSecurityButton.setOnLongClickListener(this);
     }
 
     @Override
@@ -313,6 +322,24 @@ public class ToolbarTablet extends ToolbarLayout implements OnClickListener {
             DownloadUtils.downloadOfflinePage(getContext(), getToolbarDataProvider().getTab());
             RecordUserAction.record("MobileToolbarDownloadPage");
         }
+    }
+
+    @Override
+    public boolean onLongClick(View v) {
+        String description = null;
+        Context context = getContext();
+        Resources resources = context.getResources();
+
+        if (v == mReloadButton) {
+            description = resources.getString(R.string.menu_refresh);
+        } else if (v == mBookmarkButton) {
+            description = resources.getString(R.string.menu_bookmark);
+        } else if (v == mSaveOfflineButton) {
+            description = resources.getString(R.string.menu_download);
+        } else if (v == mSecurityButton) {
+            description = resources.getString(R.string.menu_page_info);
+        }
+        return AccessibilityUtil.showAccessibilityToast(context, v, description);
     }
 
     private void updateSwitcherButtonVisibility(boolean enabled) {

@@ -117,6 +117,12 @@ public class OmahaService extends OmahaBase implements BackgroundTask {
         return false;
     }
 
+    @Override
+    @TargetApi(Build.VERSION_CODES.M)
+    public void reschedule(Context context) {
+        // Needs appropriate implementation.
+    }
+
     /**
      * Schedules the Omaha code to run at the given time.
      * @param context Context to use.

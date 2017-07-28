@@ -4,10 +4,10 @@
 
 package org.chromium.components.background_task_scheduler;
 
-import android.annotation.TargetApi;
 import android.os.Build;
 
 import org.chromium.base.ThreadUtils;
+import org.chromium.base.VisibleForTesting;
 
 /**
  * A factory for {@link BackgroundTaskScheduler} that ensures there is only ever a single instance.
@@ -15,12 +15,11 @@ import org.chromium.base.ThreadUtils;
 public final class BackgroundTaskSchedulerFactory {
     private static BackgroundTaskScheduler sInstance;
 
-    @TargetApi(Build.VERSION_CODES.M)
-    private static BackgroundTaskSchedulerDelegate getSchedulerDelegate() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+    static BackgroundTaskSchedulerDelegate getSchedulerDelegateForSdk(int sdkInt) {
+        if (sdkInt >= Build.VERSION_CODES.M) {
             return new BackgroundTaskSchedulerJobService();
         } else {
-            throw new RuntimeException("Not able to schedule through GCM yet.");
+            return new BackgroundTaskSchedulerGcmNetworkManager();
         }
     }
 
@@ -30,8 +29,16 @@ public final class BackgroundTaskSchedulerFactory {
      */
     public static BackgroundTaskScheduler getScheduler() {
         ThreadUtils.assertOnUiThread();
-        if (sInstance == null) sInstance = new BackgroundTaskScheduler(getSchedulerDelegate());
+        if (sInstance == null) {
+            sInstance =
+                    new BackgroundTaskScheduler(getSchedulerDelegateForSdk(Build.VERSION.SDK_INT));
+        }
         return sInstance;
+    }
+
+    @VisibleForTesting
+    static void setSchedulerForTesting(BackgroundTaskScheduler scheduler) {
+        sInstance = scheduler;
     }
 
     // Do not instantiate.

@@ -23,6 +23,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.StrictMode;
 import android.os.SystemClock;
+import android.support.annotation.CallSuper;
 import android.support.v7.app.AlertDialog;
 import android.util.DisplayMetrics;
 import android.util.Pair;
@@ -45,6 +46,7 @@ import org.chromium.base.BaseSwitches;
 import org.chromium.base.Callback;
 import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
+import org.chromium.base.DiscardableReferencePool;
 import org.chromium.base.SysUtils;
 import org.chromium.base.TraceEvent;
 import org.chromium.base.VisibleForTesting;
@@ -85,6 +87,8 @@ import org.chromium.chrome.browser.help.HelpAndFeedback;
 import org.chromium.chrome.browser.history.HistoryManagerUtils;
 import org.chromium.chrome.browser.infobar.InfoBarContainer;
 import org.chromium.chrome.browser.init.AsyncInitializationActivity;
+import org.chromium.chrome.browser.init.ProcessInitializationHandler;
+import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.media.VideoPersister;
 import org.chromium.chrome.browser.metrics.LaunchMetrics;
 import org.chromium.chrome.browser.metrics.StartupMetrics;
@@ -130,6 +134,7 @@ import org.chromium.chrome.browser.tabmodel.TabWindowManager;
 import org.chromium.chrome.browser.toolbar.Toolbar;
 import org.chromium.chrome.browser.toolbar.ToolbarControlContainer;
 import org.chromium.chrome.browser.toolbar.ToolbarManager;
+import org.chromium.chrome.browser.util.AccessibilityUtil;
 import org.chromium.chrome.browser.util.ChromeFileProvider;
 import org.chromium.chrome.browser.util.ColorUtils;
 import org.chromium.chrome.browser.util.FeatureUtilities;
@@ -226,7 +231,12 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
 
     protected IntentHandler mIntentHandler;
 
+    /** Set if {@link #postDeferredStartupIfNeeded()} is called before native has loaded. */
+    private boolean mDeferredStartupQueued;
+
+    /** Whether or not {@link #postDeferredStartupIfNeeded()} has already successfully run. */
     private boolean mDeferredStartupPosted;
+
     private boolean mTabModelsInitialized;
     private boolean mNativeInitialized;
     private boolean mRemoveWindowBackgroundDone;
@@ -264,6 +274,8 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     private int mScreenWidthDp;
     private Runnable mRecordMultiWindowModeScreenWidthRunnable;
 
+    private final DiscardableReferencePool mReferencePool = new DiscardableReferencePool();
+
     private AssistStatusHandler mAssistStatusHandler;
 
     // A set of views obscuring all tabs. When this set is nonempty,
@@ -275,6 +287,9 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
 
     // Skips capturing screenshot for testing purpose.
     private boolean mScreenshotCaptureSkippedForTesting;
+
+    /** Whether or not a PolicyChangeListener was added. */
+    private boolean mDidAddPolicyChangeListener;
 
     /**
      * @param factory The {@link AppMenuHandlerFactory} for creating {@link mAppMenuHandler}
@@ -345,6 +360,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
 
         // Make the activity listen to policy change events
         CombinedPolicyProvider.get().addPolicyChangeListener(this);
+        mDidAddPolicyChangeListener = true;
 
         // Set up the animation placeholder to be the SurfaceView. This disables the
         // SurfaceView's 'hole' clipping during animations that are notified to the window.
@@ -445,7 +461,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
                 if (controlContainerLayoutId == R.layout.bottom_control_container) {
                     View coordinator = findViewById(R.id.coordinator);
                     mBottomSheet = (BottomSheet) findViewById(R.id.bottom_sheet);
-                    mBottomSheet.init(coordinator, controlContainer.getView());
+                    mBottomSheet.init(coordinator, controlContainer.getView(), this);
                 }
             } finally {
                 StrictMode.setThreadPolicy(oldPolicy);
@@ -597,7 +613,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
             @Override
             public void onPageLoadFinished(Tab tab) {
                 postDeferredStartupIfNeeded();
-                OfflinePageUtils.showOfflineSnackbarIfNecessary(ChromeActivity.this, tab);
+                OfflinePageUtils.showOfflineSnackbarIfNecessary(tab);
             }
 
             @Override
@@ -744,7 +760,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         mCompositorViewHolder.onNativeLibraryReady(getWindowAndroid(), getTabContentManager());
 
         if (isContextualSearchAllowed() && ContextualSearchFieldTrial.isEnabled()) {
-            mContextualSearchManager = new ContextualSearchManager(this, getWindowAndroid(), this);
+            mContextualSearchManager = new ContextualSearchManager(this, this);
         }
 
         if (ReaderModeManager.isEnabled(this)) {
@@ -760,6 +776,8 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
 
     @Override
     public void onStartWithNative() {
+        assert mNativeInitialized : "onStartWithNative was called before native was initialized.";
+
         super.onStartWithNative();
         UpdateMenuItemHelper.getInstance().onStart();
         ChromeActivitySessionTracker.getInstance().onStartWithNative();
@@ -775,7 +793,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         // #onPageLoadFinished() and #onCrash(). If we are not actively loading a tab (e.g.
         // in Android N multi-instance, which is created by re-parenting an existing tab),
         // ensure onDeferredStartup() gets called by calling postDeferredStartupIfNeeded() here.
-        if (getActivityTab() == null || !getActivityTab().isLoading()) {
+        if (mDeferredStartupQueued || getActivityTab() == null || !getActivityTab().isLoading()) {
             postDeferredStartupIfNeeded();
         }
     }
@@ -912,14 +930,16 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     }
 
     /**
+     * Actions that may be run at some point after startup. Place tasks that are not critical to the
+     * startup path here.  This method will be called automatically and should not be called
+     * directly by subclasses.
+     *
      * Overriding methods should queue tasks on the DeferredStartupHandler before or after calling
      * super depending on whether the tasks should run before or after these ones.
      */
-    @Override
     protected void onDeferredStartup() {
-        super.onDeferredStartup();
         initDeferredStartupForActivity();
-        DeferredStartupHandler.getInstance().initDeferredStartupForApp();
+        ProcessInitializationHandler.getInstance().initializeDeferredStartupTasks();
         DeferredStartupHandler.getInstance().queueDeferredTasksOnIdleHandler();
     }
 
@@ -960,6 +980,11 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
                 if (MultiWindowUtils.getInstance().isInMultiWindowMode(ChromeActivity.this)) {
                     onDeferredStartupForMultiWindowMode();
                 }
+
+                long intentTimestamp = IntentHandler.getTimestampFromIntent(getIntent());
+                if (intentTimestamp != -1) {
+                    recordIntentToCreationTime(getOnCreateTimestampMs() - intentTimestamp);
+                }
             }
         });
 
@@ -988,6 +1013,17 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         // width.
         recordMultiWindowModeChangedUserAction(true);
         recordMultiWindowModeScreenWidth();
+    }
+
+    /**
+     * Records the time it takes from creating an intent for {@link ChromeActivity} to activity
+     * creation, including time spent in the framework.
+     * @param timeMs The time from creating an intent to activity creation.
+     */
+    @CallSuper
+    protected void recordIntentToCreationTime(long timeMs) {
+        RecordHistogram.recordTimesHistogram(
+                "MobileStartup.IntentToCreationTime", timeMs, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -1094,7 +1130,10 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
             if (selector != null) selector.destroy();
         }
 
-        CombinedPolicyProvider.get().removePolicyChangeListener(this);
+        if (mDidAddPolicyChangeListener) {
+            CombinedPolicyProvider.get().removePolicyChangeListener(this);
+            mDidAddPolicyChangeListener = false;
+        }
 
         if (mTabContentManager != null) {
             mTabContentManager.destroy();
@@ -1146,7 +1185,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
 
         // The window background color is used as the resizing background color in Android N+
         // multi-window mode. See crbug.com/602366.
-        if (Build.VERSION.CODENAME.equals("N") || Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             getWindow().setBackgroundDrawable(new ColorDrawable(
                     ApiCompatibilityUtils.getColor(getResources(),
                             R.color.resizing_background_color)));
@@ -1246,7 +1285,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         WebContents webContents = currentTab.getWebContents();
 
         RecordHistogram.recordBooleanHistogram(
-                "OfflinePages.SharedPageWasOffline", currentTab.isOfflinePage());
+                "OfflinePages.SharedPageWasOffline", OfflinePageUtils.isOfflinePage(currentTab));
         boolean canShareOfflinePage = OfflinePageBridge.isPageSharingEnabled();
 
         // Share an empty blockingUri in place of screenshot file. The file ready notification is
@@ -1321,7 +1360,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
 
         boolean hasPermanentMenuKey = ViewConfiguration.get(this).hasPermanentMenuKey();
         getAppMenuHandler().showAppMenu(
-                hasPermanentMenuKey ? null : getToolbarManager().getMenuAnchor(), false);
+                hasPermanentMenuKey ? null : getToolbarManager().getMenuButton(), false);
     }
 
     /**
@@ -1335,9 +1374,16 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         return new IntentHandlerDelegate() {
             @Override
             public void processWebSearchIntent(String query) {
-                Intent searchIntent = new Intent(Intent.ACTION_WEB_SEARCH);
+                final Intent searchIntent = new Intent(Intent.ACTION_WEB_SEARCH);
                 searchIntent.putExtra(SearchManager.QUERY, query);
-                startActivity(searchIntent);
+                Callback<Boolean> callback = new Callback<Boolean>() {
+                    @Override
+                    public void onResult(Boolean result) {
+                        if (result != null && result) startActivity(searchIntent);
+                    }
+                };
+                LocaleManager.getInstance().showSearchEnginePromoIfNeeded(
+                        ChromeActivity.this, callback);
             }
 
             @Override
@@ -1362,7 +1408,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     }
 
     private void checkAccessibility() {
-        onAccessibilityModeChanged(DeviceClassManager.isAccessibilityModeEnabled(this));
+        onAccessibilityModeChanged(AccessibilityUtil.isAccessibilityEnabled());
     }
 
     /**
@@ -1743,6 +1789,16 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         super.onBackPressed();
     }
 
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        // The conditions are expressed using ranges to capture intermediate levels possibly added
+        // to the API in the future.
+        if ((level >= TRIM_MEMORY_RUNNING_LOW && level < TRIM_MEMORY_UI_HIDDEN)
+                || level >= TRIM_MEMORY_MODERATE) {
+            mReferencePool.drain();
+        }
+    }
 
     private ContentViewCore getContentViewCore() {
         Tab tab = getActivityTab();
@@ -2001,6 +2057,13 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     }
 
     protected final void postDeferredStartupIfNeeded() {
+        if (!mNativeInitialized) {
+            // Native hasn't loaded yet.  Queue it up for later.
+            mDeferredStartupQueued = true;
+            return;
+        }
+        mDeferredStartupQueued = false;
+
         if (!mDeferredStartupPosted) {
             mDeferredStartupPosted = true;
             RecordHistogram.recordLongTimesHistogram(
@@ -2119,7 +2182,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
      * is in Android N multi-window mode.
      */
     protected void recordMultiWindowModeScreenWidth() {
-        if (!DeviceFormFactor.isTablet(this)) return;
+        if (!DeviceFormFactor.isTablet()) return;
 
         RecordHistogram.recordBooleanHistogram(
                 "Android.MultiWindowMode.IsTabletScreenWidthBelow600",
@@ -2153,4 +2216,19 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
      * in this call, including showing 2D UI that was hidden.
      */
     public void onExitVr() {}
+
+    /**
+     * Whether this Activity supports moving a {@link Tab} to the
+     * {@link FullscreenWebContentsActivity} when it enters fullscreen.
+     */
+    public boolean supportsFullscreenActivity() {
+        return false;
+    }
+
+    /**
+     * @return the reference pool for this activity.
+     */
+    public DiscardableReferencePool getReferencePool() {
+        return mReferencePool;
+    }
 }

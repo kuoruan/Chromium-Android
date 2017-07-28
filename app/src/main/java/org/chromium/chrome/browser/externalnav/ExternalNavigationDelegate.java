@@ -155,4 +155,9 @@ interface ExternalNavigationDelegate {
      * @return whether this navigation is from the search results page.
      */
     boolean isSerpReferrer(Tab tab);
+
+    /**
+     * @return The previously committed URL from the WebContents.
+     */
+    String getPreviousUrl();
 }

@@ -68,9 +68,11 @@ public class ViewUtils {
         assert outPosition.length == 2;
         outPosition[0] = 0;
         outPosition[1] = 0;
-        while (childView != null && childView != rootView) {
+        if (rootView == null || childView == rootView) return;
+        while (childView != null) {
             outPosition[0] += childView.getLeft();
             outPosition[1] += childView.getTop();
+            if (childView.getParent() == rootView) break;
             childView = (View) childView.getParent();
         }
     }
@@ -87,9 +89,11 @@ public class ViewUtils {
         assert outPosition.length == 2;
         outPosition[0] = 0;
         outPosition[1] = 0;
-        while (childView != null && childView != rootView) {
+        if (rootView == null || childView == rootView) return;
+        while (childView != null) {
             outPosition[0] += childView.getX();
             outPosition[1] += childView.getY();
+            if (childView.getParent() == rootView) break;
             childView = (View) childView.getParent();
         }
     }

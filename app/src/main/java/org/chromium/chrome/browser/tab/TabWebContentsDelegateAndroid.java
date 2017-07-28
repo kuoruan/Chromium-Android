@@ -27,6 +27,8 @@ import org.chromium.blink_public.platform.WebDisplayMode;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.AppHooks;
 import org.chromium.chrome.browser.ChromeActivity;
+import org.chromium.chrome.browser.ChromeFeatureList;
+import org.chromium.chrome.browser.FullscreenWebContentsActivity;
 import org.chromium.chrome.browser.RepostFormWarningDialog;
 import org.chromium.chrome.browser.document.DocumentUtils;
 import org.chromium.chrome.browser.document.DocumentWebContentsDelegate;
@@ -79,7 +81,7 @@ public class TabWebContentsDelegateAndroid extends WebContentsDelegateAndroid {
 
     private FindMatchRectsListener mFindMatchRectsListener;
 
-    private int mDisplayMode = WebDisplayMode.kBrowser;
+    private int mDisplayMode = WebDisplayMode.BROWSER;
 
     protected Handler mHandler;
 
@@ -218,8 +220,14 @@ public class TabWebContentsDelegateAndroid extends WebContentsDelegateAndroid {
 
     @Override
     public void toggleFullscreenModeForTab(boolean enableFullscreen) {
-        if (!VideoPersister.getInstance().shouldDelayFullscreenModeChange(mTab, enableFullscreen)) {
-            mTab.toggleFullscreenMode(enableFullscreen);
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.FULLSCREEN_ACTIVITY)
+                && mTab.getActivity().supportsFullscreenActivity()) {
+            FullscreenWebContentsActivity.toggleFullscreenMode(enableFullscreen, mTab);
+        } else {
+            if (!VideoPersister.getInstance().shouldDelayFullscreenModeChange(
+                        mTab, enableFullscreen)) {
+                mTab.toggleFullscreenMode(enableFullscreen);
+            }
         }
     }
 
@@ -447,7 +455,7 @@ public class TabWebContentsDelegateAndroid extends WebContentsDelegateAndroid {
      */
     @TargetApi(19)
     private void handleMediaKey(KeyEvent e) {
-        if (Build.VERSION.SDK_INT < 19) return;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) return;
         switch (e.getKeyCode()) {
             case KeyEvent.KEYCODE_MUTE:
             case KeyEvent.KEYCODE_HEADSETHOOK:

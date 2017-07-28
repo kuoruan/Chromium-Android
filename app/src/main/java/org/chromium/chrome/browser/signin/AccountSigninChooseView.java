@@ -8,13 +8,12 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.firstrun.FirstRunChooserView;
 import org.chromium.chrome.browser.firstrun.ProfileDataCache;
 
 import java.util.List;
@@ -22,7 +21,7 @@ import java.util.List;
 /**
 * The view that allows the user to choose the sign in account.
 */
-public class AccountSigninChooseView extends ScrollView {
+public class AccountSigninChooseView extends FirstRunChooserView {
     private final LayoutInflater mInflater;
     private LinearLayout mRootChildView;
     private int mAccountViewStartIndex;
@@ -50,41 +49,6 @@ public class AccountSigninChooseView extends ScrollView {
         mRootChildView =
                 (LinearLayout) findViewById(R.id.account_signin_choose_view_root_child_view);
         mAccountViewStartIndex = mRootChildView.getChildCount();
-    }
-
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        // This assumes that view's layout_width and layout_height are set to match_parent.
-        assert MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.EXACTLY;
-        assert MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY;
-
-        int width = MeasureSpec.getSize(widthMeasureSpec);
-        int height = MeasureSpec.getSize(heightMeasureSpec);
-
-        View title = findViewById(R.id.signin_title);
-        ViewGroup.LayoutParams params = title.getLayoutParams();
-        if (height > width) {
-            // Sets the title aspect ratio to be 16:9.
-            params.height = width * 9 / 16;
-            title.setPadding(
-                    title.getPaddingLeft(), 0, title.getPaddingRight(), title.getPaddingBottom());
-        } else {
-            params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-
-            // Adds top padding.
-            title.setPadding(title.getPaddingLeft(),
-                    getResources().getDimensionPixelOffset(R.dimen.signin_screen_top_padding),
-                    title.getPaddingRight(), title.getPaddingBottom());
-        }
-        title.setLayoutParams(params);
-
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-    }
-
-    @Override
-    protected float getTopFadingEdgeStrength() {
-        // Disable fading out effect at the top of this ScrollView.
-        return 0;
     }
 
     /**

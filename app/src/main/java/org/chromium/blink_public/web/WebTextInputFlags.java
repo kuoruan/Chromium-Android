@@ -16,23 +16,23 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
-    WebTextInputFlags.kNone, WebTextInputFlags.kAutocompleteOn, WebTextInputFlags.kAutocompleteOff,
-    WebTextInputFlags.kAutocorrectOn, WebTextInputFlags.kAutocorrectOff,
-    WebTextInputFlags.kSpellcheckOn, WebTextInputFlags.kSpellcheckOff,
-    WebTextInputFlags.kAutocapitalizeNone, WebTextInputFlags.kAutocapitalizeCharacters,
-    WebTextInputFlags.kAutocapitalizeWords, WebTextInputFlags.kAutocapitalizeSentences
+    WebTextInputFlags.NONE, WebTextInputFlags.AUTOCOMPLETE_ON, WebTextInputFlags.AUTOCOMPLETE_OFF,
+    WebTextInputFlags.AUTOCORRECT_ON, WebTextInputFlags.AUTOCORRECT_OFF,
+    WebTextInputFlags.SPELLCHECK_ON, WebTextInputFlags.SPELLCHECK_OFF,
+    WebTextInputFlags.AUTOCAPITALIZE_NONE, WebTextInputFlags.AUTOCAPITALIZE_CHARACTERS,
+    WebTextInputFlags.AUTOCAPITALIZE_WORDS, WebTextInputFlags.AUTOCAPITALIZE_SENTENCES
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface WebTextInputFlags {
-  int kNone = 0;
-  int kAutocompleteOn = 1 << 0;
-  int kAutocompleteOff = 1 << 1;
-  int kAutocorrectOn = 1 << 2;
-  int kAutocorrectOff = 1 << 3;
-  int kSpellcheckOn = 1 << 4;
-  int kSpellcheckOff = 1 << 5;
-  int kAutocapitalizeNone = 1 << 6;
-  int kAutocapitalizeCharacters = 1 << 7;
-  int kAutocapitalizeWords = 1 << 8;
-  int kAutocapitalizeSentences = 1 << 9;
+  int NONE = 0;
+  int AUTOCOMPLETE_ON = 1 << 0;
+  int AUTOCOMPLETE_OFF = 1 << 1;
+  int AUTOCORRECT_ON = 1 << 2;
+  int AUTOCORRECT_OFF = 1 << 3;
+  int SPELLCHECK_ON = 1 << 4;
+  int SPELLCHECK_OFF = 1 << 5;
+  int AUTOCAPITALIZE_NONE = 1 << 6;
+  int AUTOCAPITALIZE_CHARACTERS = 1 << 7;
+  int AUTOCAPITALIZE_WORDS = 1 << 8;
+  int AUTOCAPITALIZE_SENTENCES = 1 << 9;
 }

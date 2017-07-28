@@ -12,6 +12,7 @@ import org.chromium.chrome.browser.compositor.layouts.eventfilter.ScrollDirectio
 import org.chromium.chrome.browser.compositor.layouts.phone.SimpleAnimationLayout;
 import org.chromium.chrome.browser.compositor.overlays.SceneOverlay;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchManagementDelegate;
+import org.chromium.chrome.browser.device.DeviceClassManager;
 import org.chromium.chrome.browser.dom_distiller.ReaderModeManagerDelegate;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabCreatorManager;
@@ -27,7 +28,7 @@ import org.chromium.ui.resources.dynamics.DynamicResourceLoader;
  */
 public class LayoutManagerChromePhone extends LayoutManagerChrome {
     // Layouts
-    private final Layout mSimpleAnimationLayout;
+    private final SimpleAnimationLayout mSimpleAnimationLayout;
 
     /**
      * Creates an instance of a {@link LayoutManagerChromePhone}.
@@ -104,7 +105,8 @@ public class LayoutManagerChromePhone extends LayoutManagerChrome {
     @Override
     protected void tabClosed(int id, int nextId, boolean incognito, boolean tabRemoved) {
         boolean showOverview = nextId == Tab.INVALID_TAB_ID;
-        Layout overviewLayout = useAccessibilityLayout() ? mOverviewListLayout : mOverviewLayout;
+        Layout overviewLayout = DeviceClassManager.enableAccessibilityLayout() ? mOverviewListLayout
+                                                                               : mOverviewLayout;
         if (getActiveLayout() != overviewLayout && showOverview) {
             // Since there will be no 'next' tab to display, switch to
             // overview mode when the animation is finished.
@@ -168,5 +170,14 @@ public class LayoutManagerChromePhone extends LayoutManagerChrome {
 
             return super.isSwipeEnabled(direction);
         }
+    }
+
+    /**
+     * Sets whether the foreground tab animation is disabled.
+     * TODO(twellington): Remove this after Chrome Home NTP animations are complete.
+     * @param disabled Whether the foreground tab animation should be disabled.
+     */
+    public void setForegroundTabAnimationDisabled(boolean disabled) {
+        mSimpleAnimationLayout.setForegroundTabAnimationDisabled(disabled);
     }
 }

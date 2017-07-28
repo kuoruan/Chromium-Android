@@ -21,6 +21,8 @@ public class AlwaysDismissedDialog
     public AlwaysDismissedDialog(Activity ownerActivity, int theme) {
         super(ownerActivity, theme);
         ApplicationStatus.registerStateListenerForActivity(this, ownerActivity);
+
+        setOwnerActivity(ownerActivity);
     }
 
     @Override

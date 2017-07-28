@@ -4,9 +4,12 @@
 
 package org.chromium.chrome.browser.widget;
 
-import android.app.Dialog;
-import android.content.Context;
+import android.app.Activity;
 import android.content.DialogInterface;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,18 +22,30 @@ import org.chromium.chrome.R;
 /**
  * Generic builder for promo dialogs.
  */
-public abstract class PromoDialog
-        extends Dialog implements View.OnClickListener, DialogInterface.OnDismissListener {
+public abstract class PromoDialog extends AlwaysDismissedDialog
+        implements View.OnClickListener, DialogInterface.OnDismissListener {
     /** Parameters that can be used to create a new PromoDialog. */
     public static class DialogParams {
-        /** Optional: Resource ID of the Drawable to use for the promo illustration. */
+        /**
+         * Optional: Resource ID of the Drawable to use for the promo illustration.
+         * This parameter and {@link #vectorDrawableResource} are mutually exclusive.
+         */
         public int drawableResource;
+
+        /**
+         * Optional: Resource ID of the VectorDrawable to use for the promo illustration.
+         * This parameter and {@link #drawableResource} are mutually exclusive.
+         */
+        public int vectorDrawableResource;
 
         /** Resource ID of the String to show as the promo title. */
         public int headerStringResource;
 
         /** Optional: Resource ID of the String to show as descriptive text. */
         public int subheaderStringResource;
+
+        /** Optional: Resource ID of the String to show as footer text. */
+        public int footerStringResource;
 
         /** Optional: Resource ID of the String to show on the primary/ok button. */
         public int primaryButtonStringResource;
@@ -44,16 +59,35 @@ public abstract class PromoDialog
     private final FrameLayout mScrimView;
     private final PromoDialogLayout mDialogLayout;
 
-    protected PromoDialog(Context context) {
-        super(context, R.style.PromoDialog);
+    protected PromoDialog(Activity activity) {
+        super(activity, R.style.PromoDialog);
 
-        mScrimView = new FrameLayout(context);
+        mScrimView = new FrameLayout(activity);
         mScrimView.setBackgroundColor(ApiCompatibilityUtils.getColor(
-                context.getResources(), R.color.modal_dialog_scrim_color));
-        LayoutInflater.from(context).inflate(R.layout.promo_dialog_layout, mScrimView, true);
+                activity.getResources(), R.color.modal_dialog_scrim_color));
+        LayoutInflater.from(activity).inflate(R.layout.promo_dialog_layout, mScrimView, true);
 
         mDialogLayout = (PromoDialogLayout) mScrimView.findViewById(R.id.promo_dialog_layout);
         mDialogLayout.initialize(getDialogParams());
+    }
+
+    /**
+     * Force the promo dialog to have a fully opaque background hiding any underlying content.
+     */
+    protected void forceOpaqueBackground() {
+        LayerDrawable background = new LayerDrawable(new Drawable[] {
+                new ColorDrawable(Color.WHITE),
+                new ColorDrawable(ApiCompatibilityUtils.getColor(
+                        getContext().getResources(), R.color.modal_dialog_scrim_color))});
+        mScrimView.setBackground(background);
+    }
+
+    /**
+     * Adds a View to the layout within the scrollable area.
+     * See {@link PromoDialogLayout#addControl}.
+     */
+    protected void addControl(View control) {
+        mDialogLayout.addControl(control);
     }
 
     @Override

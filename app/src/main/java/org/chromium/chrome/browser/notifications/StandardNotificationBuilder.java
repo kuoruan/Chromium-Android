@@ -8,14 +8,17 @@ import android.app.Notification;
 import android.content.Context;
 import android.os.Build;
 
+import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
+
 /**
  * Builds a notification using the standard Notification.BigTextStyle layout.
  */
 public class StandardNotificationBuilder extends NotificationBuilderBase {
     private final Context mContext;
 
-    public StandardNotificationBuilder(Context context) {
-        super(context.getResources());
+    public StandardNotificationBuilder(
+            Context context, @ChannelDefinitions.ChannelId String channelId) {
+        super(context.getResources(), channelId);
         mContext = context;
     }
 
@@ -26,7 +29,7 @@ public class StandardNotificationBuilder extends NotificationBuilderBase {
         // TODO(crbug.com/697104) We should probably use a Compat builder.
         ChromeNotificationBuilder builder =
                 NotificationBuilderFactory.createChromeNotificationBuilder(
-                        false /* preferCompat */, ChannelDefinitions.CHANNEL_ID_SITES);
+                        false /* preferCompat */, mChannelId);
 
         builder.setContentTitle(mTitle);
         builder.setContentText(mBody);
@@ -35,8 +38,7 @@ public class StandardNotificationBuilder extends NotificationBuilderBase {
         if (mImage != null) {
             Notification.BigPictureStyle style =
                     new Notification.BigPictureStyle().bigPicture(mImage);
-            if (Build.VERSION.CODENAME.equals("N")
-                    || Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 // Android N doesn't show content text when expanded, so duplicate body text as a
                 // summary for the big picture.
                 style.setSummaryText(mBody);

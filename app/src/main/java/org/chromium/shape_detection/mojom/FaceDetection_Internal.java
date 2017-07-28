@@ -276,7 +276,7 @@ DetectResponse callback) {
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public FaceDetectionResult result;
+        public FaceDetectionResult[] results;
     
         private FaceDetectionDetectResponseParams(int version) {
             super(STRUCT_SIZE, version);
@@ -316,7 +316,15 @@ DetectResponse callback) {
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                    result.result = FaceDetectionResult.decode(decoder1);
+                    {
+                        org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                        result.results = new FaceDetectionResult[si1.elementsOrVersion];
+                        for (int i1 = 0; i1 < si1.elementsOrVersion; ++i1) {
+                            
+                            org.chromium.mojo.bindings.Decoder decoder2 = decoder1.readPointer(org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i1, false);
+                            result.results[i1] = FaceDetectionResult.decode(decoder2);
+                        }
+                    }
                 }
             } finally {
                 decoder0.decreaseStackDepth();
@@ -329,7 +337,15 @@ DetectResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(result, 8, false);
+            if (results == null) {
+                encoder0.encodeNullPointer(8, false);
+            } else {
+                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(results.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                for (int i0 = 0; i0 < results.length; ++i0) {
+                    
+                    encoder1.encode(results[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                }
+            }
         }
     
         /**
@@ -344,7 +360,7 @@ DetectResponse callback) {
             if (getClass() != object.getClass())
                 return false;
             FaceDetectionDetectResponseParams other = (FaceDetectionDetectResponseParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.result, other.result))
+            if (!java.util.Arrays.deepEquals(this.results, other.results))
                 return false;
             return true;
         }
@@ -356,7 +372,7 @@ DetectResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(result);
+            result = prime * result + java.util.Arrays.deepHashCode(results);
             return result;
         }
     }
@@ -382,7 +398,7 @@ DetectResponse callback) {
 
                 FaceDetectionDetectResponseParams response = FaceDetectionDetectResponseParams.deserialize(messageWithHeader.getPayload());
 
-                mCallback.call(response.result);
+                mCallback.call(response.results);
                 return true;
             } catch (org.chromium.mojo.bindings.DeserializationException e) {
                 return false;
@@ -406,10 +422,10 @@ DetectResponse callback) {
         }
 
         @Override
-        public void call(FaceDetectionResult result) {
+        public void call(FaceDetectionResult[] results) {
             FaceDetectionDetectResponseParams _response = new FaceDetectionDetectResponseParams();
 
-            _response.result = result;
+            _response.results = results;
 
             org.chromium.mojo.bindings.ServiceMessage _message =
                     _response.serializeWithHeader(

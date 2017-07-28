@@ -9,6 +9,7 @@ import android.graphics.ImageFormat;
 import android.view.Surface;
 import android.view.WindowManager;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 
@@ -21,7 +22,7 @@ import java.util.List;
 /**
  * Video Capture Device base class, defines a set of methods that native code
  * needs to use to configure, start capture, and to be reached by callbacks and
- * provides some neccesary data type(s) with accessors.
+ * provides some necessary data type(s) with accessors.
  **/
 @JNINamespace("media")
 public abstract class VideoCapture {
@@ -46,15 +47,13 @@ public abstract class VideoCapture {
     protected boolean mInvertDeviceOrientationReadings;
 
     protected VideoCaptureFormat mCaptureFormat;
-    protected final Context mContext;
     protected final int mId;
     // Native callback context variable.
     protected final long mNativeVideoCaptureDeviceAndroid;
 
     protected boolean mUseBackgroundThreadForTesting;
 
-    VideoCapture(Context context, int id, long nativeVideoCaptureDeviceAndroid) {
-        mContext = context;
+    VideoCapture(int id, long nativeVideoCaptureDeviceAndroid) {
         mId = id;
         mNativeVideoCaptureDeviceAndroid = nativeVideoCaptureDeviceAndroid;
     }
@@ -144,9 +143,9 @@ public abstract class VideoCapture {
     }
 
     protected final int getDeviceRotation() {
-        if (mContext == null) return 0;
         final int orientation;
-        WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager wm = (WindowManager) ContextUtils.getApplicationContext().getSystemService(
+                Context.WINDOW_SERVICE);
         switch (wm.getDefaultDisplay().getRotation()) {
             case Surface.ROTATION_90:
                 orientation = 90;

@@ -24,6 +24,7 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
 import org.chromium.ui.base.LocalizationUtils;
 
 import java.util.Date;
@@ -78,8 +79,9 @@ public class CustomNotificationBuilder extends NotificationBuilderBase {
 
     private final Context mContext;
 
-    public CustomNotificationBuilder(Context context) {
-        super(context.getResources());
+    public CustomNotificationBuilder(
+            Context context, @ChannelDefinitions.ChannelId String channelId) {
+        super(context.getResources(), channelId);
         mContext = context;
     }
 
@@ -105,8 +107,7 @@ public class CustomNotificationBuilder extends NotificationBuilderBase {
         String formattedTime = "";
 
         // Temporarily allowing disk access. TODO: Fix. See http://crbug.com/577185
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-        StrictMode.allowThreadDiskWrites();
+        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
         try {
             long time = SystemClock.elapsedRealtime();
             formattedTime = DateFormat.getTimeFormat(mContext).format(new Date());
@@ -142,7 +143,7 @@ public class CustomNotificationBuilder extends NotificationBuilderBase {
         // TODO(crbug.com/697104) We should probably use a Compat builder.
         ChromeNotificationBuilder builder =
                 NotificationBuilderFactory.createChromeNotificationBuilder(
-                        false /* preferCompat */, ChannelDefinitions.CHANNEL_ID_SITES);
+                        false /* preferCompat */, mChannelId);
         builder.setTicker(mTickerText);
         builder.setContentIntent(mContentIntent);
         builder.setDeleteIntent(mDeleteIntent);
@@ -232,6 +233,12 @@ public class CustomNotificationBuilder extends NotificationBuilderBase {
 
     private void configureSettingsButton(RemoteViews bigView) {
         if (mSettingsAction == null) {
+            bigView.setViewVisibility(R.id.origin_settings_icon, View.GONE);
+            int rightPadding =
+                    dpToPx(BUTTON_ICON_PADDING_DP, mContext.getResources().getDisplayMetrics());
+            int leftPadding =
+                    Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP ? rightPadding : 0;
+            bigView.setViewPadding(R.id.origin, leftPadding, 0, rightPadding, 0);
             return;
         }
         bigView.setOnClickPendingIntent(R.id.origin, mSettingsAction.intent);

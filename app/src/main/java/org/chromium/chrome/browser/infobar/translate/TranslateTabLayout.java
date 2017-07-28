@@ -71,17 +71,6 @@ public class TranslateTabLayout extends TabLayout {
     }
 
     /**
-     * Select a tab.
-     * @param tabPos The position of the tab to select.
-     */
-    public void selectTab(int tabPos) {
-        if (tabPos < 0 || tabPos >= getTabCount() || mTabShowingProgressBar != null) {
-            return;
-        }
-        getTabAt(tabPos).select();
-    }
-
-    /**
      * Show the spinning progress bar on a specified tab.
      * @param tabPos The position of the tab to show the progress bar.
      */
@@ -107,24 +96,6 @@ public class TranslateTabLayout extends TabLayout {
         if (tabIsSupported(mTabShowingProgressBar)) {
             ((TranslateTabContent) mTabShowingProgressBar.getCustomView()).hideProgressBar();
         }
-
-        mTabShowingProgressBar = null;
-    }
-
-    /** Stop the spinning progress bar. */
-    public void stopProgressBarAndRevertBack() {
-        if (mTabShowingProgressBar == null) {
-            return;
-        }
-
-        // TODO(martiw) if we have setContentDescription at showProgressBarOnTab(), we need to
-        // revert it here.
-
-        if (tabIsSupported(mTabShowingProgressBar)) {
-            ((TranslateTabContent) mTabShowingProgressBar.getCustomView()).hideProgressBar();
-        }
-        // TODO(martiw) See if we need to prevent the following from triggering onTabSelected event.
-        selectTab(0); // switch the selection back to the first tab.
 
         mTabShowingProgressBar = null;
     }

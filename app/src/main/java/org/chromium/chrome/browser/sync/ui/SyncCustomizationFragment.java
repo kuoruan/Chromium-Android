@@ -35,10 +35,10 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.autofill.PersonalDataManager;
-import org.chromium.chrome.browser.childaccounts.ChildAccountService;
 import org.chromium.chrome.browser.invalidation.InvalidationController;
 import org.chromium.chrome.browser.preferences.ChromeSwitchPreference;
 import org.chromium.chrome.browser.preferences.SyncedAccountPreference;
+import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.signin.SigninManager;
 import org.chromium.chrome.browser.sync.GoogleServiceAuthError;
 import org.chromium.chrome.browser.sync.ProfileSyncService;
@@ -253,7 +253,7 @@ public class SyncCustomizationFragment extends PreferenceFragment
      * @return Whether Sync can be disabled.
      */
     private boolean canDisableSync() {
-        return !ChildAccountService.isChildAccount();
+        return !Profile.getLastUsedProfile().isChild();
     }
 
     private boolean isSyncTypePreference(Preference preference) {

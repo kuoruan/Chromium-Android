@@ -7,8 +7,20 @@
 
 <org.chromium.chrome.browser.photo_picker.PhotoPickerToolbar
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingStart="0dp"
-    android:paddingEnd="0dp" />
+    android:paddingEnd="0dp">
+    <Button
+        android:id="@+id/done"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:background="@null"
+        android:enabled="false"
+        android:text="@string/done"
+        android:textColor="@color/blue_when_enabled"
+        app:textAllCaps="true" />
+</org.chromium.chrome.browser.photo_picker.PhotoPickerToolbar>
+

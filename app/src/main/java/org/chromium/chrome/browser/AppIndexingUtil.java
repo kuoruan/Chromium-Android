@@ -8,8 +8,10 @@ import android.os.SystemClock;
 import android.util.LruCache;
 import android.webkit.URLUtil;
 
+import org.chromium.base.Callback;
 import org.chromium.base.SysUtils;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.blink.mojom.document_metadata.CopylessPaste;
 import org.chromium.blink.mojom.document_metadata.WebPage;
 import org.chromium.chrome.browser.historyreport.AppIndexingReporter;
@@ -28,6 +30,15 @@ public class AppIndexingUtil {
     // the parse was in the last CACHE_VISIT_CUTOFF_MS milliseconds, then we don't parse the page,
     // and instead just report the view (not the content) to App Indexing.
     private LruCache<String, CacheEntry> mPageCache;
+
+    private static Callback<WebPage> sCallbackForTesting;
+
+    // Constants used to log UMA "enum" histograms about the cache state.
+    // The values should not be changed or reused, and CACHE_HISTOGRAM_BOUNDARY should be the last.
+    private static final int CACHE_HIT_WITH_ENTITY = 0;
+    private static final int CACHE_HIT_WITHOUT_ENTITY = 1;
+    private static final int CACHE_MISS = 2;
+    private static final int CACHE_HISTOGRAM_BOUNDARY = 3;
 
     /**
      * Extracts entities from document metadata and reports it to on-device App Indexing.
@@ -49,11 +60,18 @@ public class AppIndexingUtil {
         if (wasPageVisitedRecently(url)) {
             if (lastPageVisitContainedEntity(url)) {
                 // Condition 1
+                RecordHistogram.recordEnumeratedHistogram(
+                        "CopylessPaste.CacheHit", CACHE_HIT_WITH_ENTITY, CACHE_HISTOGRAM_BOUNDARY);
                 getAppIndexingReporter().reportWebPageView(url, tab.getTitle());
+                return;
             }
             // Condition 2
+            RecordHistogram.recordEnumeratedHistogram(
+                    "CopylessPaste.CacheHit", CACHE_HIT_WITHOUT_ENTITY, CACHE_HISTOGRAM_BOUNDARY);
         } else {
             // Condition 3
+            RecordHistogram.recordEnumeratedHistogram(
+                    "CopylessPaste.CacheHit", CACHE_MISS, CACHE_HISTOGRAM_BOUNDARY);
             CopylessPaste copylessPaste = getCopylessPasteInterface(tab);
             if (copylessPaste == null) {
                 return;
@@ -62,11 +80,19 @@ public class AppIndexingUtil {
                 @Override
                 public void call(WebPage webpage) {
                     putCacheEntry(url, webpage != null);
+                    if (sCallbackForTesting != null) {
+                        sCallbackForTesting.onResult(webpage);
+                    }
                     if (webpage == null) return;
                     getAppIndexingReporter().reportWebPage(webpage);
                 }
             });
         }
+    }
+
+    @VisibleForTesting
+    public static void setCallbackForTesting(Callback<WebPage> callback) {
+        sCallbackForTesting = callback;
     }
 
     private boolean wasPageVisitedRecently(String url) {

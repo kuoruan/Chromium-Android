@@ -33,42 +33,38 @@ import javax.annotation.Nullable;
 
 /**
  * Finds installed native Android payment apps and verifies their signatures according to the
- * payment method manifests. The manifests are located based on the payment method name, which
- * is a URI that starts with "https://". The "basic-card" payment method is an exception: it's a
- * common payment method that does not have a manifest and can be used by any payment app.
+ * payment method manifests. The manifests are located based on the payment method name, which is a
+ * URI that starts with "https://". The W3C-published non-URI payment method names are exceptions:
+ * these are common payment method names that do not have a manifest and can be used by any payment
+ * app.
  */
 public class AndroidPaymentAppFinder implements ManifestVerifyCallback {
     private static final String TAG = "cr_PaymentAppFinder";
+
+    /** The maximum number of payment method manifests to download. */
+    private static final int MAX_NUMBER_OF_MANIFESTS = 10;
 
     /** The name of the intent for the service to check whether an app is ready to pay. */
     /* package */ static final String ACTION_IS_READY_TO_PAY =
                           "org.chromium.intent.action.IS_READY_TO_PAY";
 
     /**
-     * The basic-card payment method name used by merchant and defined by W3C:
-     * https://w3c.github.io/webpayments-methods-card/#method-id
-     */
-    /* package */ static final String BASIC_CARD_PAYMENT_METHOD = "basic-card";
-
-    /**
      * Meta data name of an app's supported payment method names.
      */
-    static final String META_DATA_NAME_OF_PAYMENT_METHOD_NAMES =
+    /* package */ static final String META_DATA_NAME_OF_PAYMENT_METHOD_NAMES =
             "org.chromium.payment_method_names";
 
     /**
      * Meta data name of an app's supported default payment method name.
      */
-    static final String META_DATA_NAME_OF_DEFAULT_PAYMENT_METHOD_NAME =
+    /* package */ static final String META_DATA_NAME_OF_DEFAULT_PAYMENT_METHOD_NAME =
             "org.chromium.default_payment_method_name";
 
-    /** The maximum number of payment method manifests to download. */
-    private static final int MAX_NUMBER_OF_MANIFESTS = 10;
-
     private final WebContents mWebContents;
-    private final boolean mQueryBasicCard;
-    private final Set<URI> mPaymentMethods;
+    private final Set<String> mNonUriPaymentMethods;
+    private final Set<URI> mUriPaymentMethods;
     private final PaymentManifestDownloader mDownloader;
+    private final PaymentManifestWebDataService mWebDataService;
     private final PaymentManifestParser mParser;
     private final PackageManagerDelegate mPackageManagerDelegate;
     private final PaymentAppCreatedCallback mCallback;
@@ -77,25 +73,19 @@ public class AndroidPaymentAppFinder implements ManifestVerifyCallback {
     /**
      * A map of payment method names to the list of (yet) unverified Android apps that claim to
      * handle these methods. Example payment method names in this data structure:
-     * "https://bobpay.com", "https://android.com/pay". Basic card is excluded.
+     * "https://bobpay.com", "https://android.com/pay". Items in the supportedNonUriPaymentMethods
+     * are excluded.
      */
     private final Map<URI, Set<ResolveInfo>> mPendingApps;
 
+    /**
+     * List of payment manifest verifiers. Note that each non basic card payment method has a
+     * dedicated payment manifest verifier.
+     */
+    private final List<PaymentManifestVerifier> mManifestVerifiers;
+
     /** A map of Android package name to the payment app. */
     private final Map<String, AndroidPaymentApp> mResult;
-
-    /**
-     * Whether payment apps are required to have an intent filter with a single PAY action and no
-     * additional data, i.e., whether payments apps are required to show up in "Autofill and
-     * Payments" settings.
-     */
-    private final boolean mRequireShowInSettings;
-
-    /**
-     * The intent filter for a single PAY action and no additional data. Used to filter out payment
-     * apps that don't show up in "Autofill and Payments" settings.
-     */
-    private final Intent mSettingsLookup;
 
     /**
      * Finds native Android payment apps.
@@ -104,8 +94,7 @@ public class AndroidPaymentAppFinder implements ManifestVerifyCallback {
      * @param methods                The list of payment methods requested by the merchant. For
      *                               example, "https://bobpay.com", "https://android.com/pay",
      *                               "basic-card".
-     * @param requireShowInSettings  Whether payment apps are required to show up in "autofill and
-     *                               Payments" settings.
+     * @param webDataService         The web data service to cache manifest.
      * @param downloader             The manifest downloader.
      * @param parser                 The manifest parser.
      * @param packageManagerDelegate The package information retriever.
@@ -113,52 +102,61 @@ public class AndroidPaymentAppFinder implements ManifestVerifyCallback {
      *                               all Android payment apps have been found.
      */
     public static void find(WebContents webContents, Set<String> methods,
-            boolean requireShowInSettings, PaymentManifestDownloader downloader,
+            PaymentManifestWebDataService webDataService, PaymentManifestDownloader downloader,
             PaymentManifestParser parser, PackageManagerDelegate packageManagerDelegate,
             PaymentAppCreatedCallback callback) {
-        new AndroidPaymentAppFinder(webContents, methods, requireShowInSettings, downloader, parser,
+        new AndroidPaymentAppFinder(webContents, methods, webDataService, downloader, parser,
                 packageManagerDelegate, callback)
                 .findAndroidPaymentApps();
     }
 
     private AndroidPaymentAppFinder(WebContents webContents, Set<String> methods,
-            boolean requireShowInSettings, PaymentManifestDownloader downloader,
+            PaymentManifestWebDataService webDataService, PaymentManifestDownloader downloader,
             PaymentManifestParser parser, PackageManagerDelegate packageManagerDelegate,
             PaymentAppCreatedCallback callback) {
         mWebContents = webContents;
-        mQueryBasicCard = methods.contains(BASIC_CARD_PAYMENT_METHOD);
-        mPaymentMethods = new HashSet<>();
+
+        // For non-URI payment method names, only names published by W3C should be supported.
+        Set<String> supportedNonUriPaymentMethods = new HashSet<>();
+        // https://w3c.github.io/webpayments-methods-card/
+        supportedNonUriPaymentMethods.add("basic-card");
+        // https://w3c.github.io/webpayments/proposals/interledger-payment-method.html
+        supportedNonUriPaymentMethods.add("interledger");
+
+        mNonUriPaymentMethods = new HashSet<>();
+        mUriPaymentMethods = new HashSet<>();
         for (String method : methods) {
             assert !TextUtils.isEmpty(method);
+            if (supportedNonUriPaymentMethods.contains(method)) {
+                mNonUriPaymentMethods.add(method);
+            } else if (method.startsWith(UrlConstants.HTTPS_URL_PREFIX)) {
+                URI uri;
+                try {
+                    // Don't use java.net.URL, because it performs a synchronous DNS lookup in
+                    // the constructor.
+                    uri = new URI(method);
+                } catch (URISyntaxException e) {
+                    continue;
+                }
 
-            if (!method.startsWith(UrlConstants.HTTPS_URL_PREFIX)) continue;
-
-            URI uri;
-            try {
-                // Don't use java.net.URL, because it performs a synchronous DNS lookup in
-                // the constructor.
-                uri = new URI(method);
-            } catch (URISyntaxException e) {
-                continue;
-            }
-
-            if (uri.isAbsolute()) {
-                assert UrlConstants.HTTPS_SCHEME.equals(uri.getScheme());
-                mPaymentMethods.add(uri);
+                if (uri.isAbsolute()) {
+                    assert UrlConstants.HTTPS_SCHEME.equals(uri.getScheme());
+                    mUriPaymentMethods.add(uri);
+                }
             }
         }
 
         mDownloader = downloader;
+        mWebDataService = webDataService;
         mParser = parser;
         mPackageManagerDelegate = packageManagerDelegate;
         mCallback = callback;
         mPendingApps = new HashMap<>();
+        mManifestVerifiers = new ArrayList<>();
         mResult = new HashMap<>();
         ChromeActivity activity = ChromeActivity.fromWebContents(mWebContents);
         mIsIncognito = activity != null && activity.getCurrentTabModel() != null
                 && activity.getCurrentTabModel().isIncognito();
-        mRequireShowInSettings = requireShowInSettings;
-        mSettingsLookup = new Intent(AndroidPaymentApp.ACTION_PAY);
     }
 
     private void findAndroidPaymentApps() {
@@ -170,96 +168,87 @@ public class AndroidPaymentAppFinder implements ManifestVerifyCallback {
             return;
         }
 
-        List<String[]> appSupportedMethods = new ArrayList<String[]>();
+        List<Set<String>> appSupportedMethods = new ArrayList<>();
         for (int i = 0; i < apps.size(); i++) {
             appSupportedMethods.add(getPaymentMethodNames(apps.get(i).activityInfo));
         }
 
-        List<String> appSupportedDefaultMethods = new ArrayList<String>();
-        for (int i = 0; i < apps.size(); i++) {
-            appSupportedDefaultMethods.add(getDefaultPaymentMethodName(apps.get(i).activityInfo));
-        }
-
-        List<PaymentManifestVerifier> verifiers = new ArrayList<>();
-        for (URI methodName : mPaymentMethods) {
-            List<ResolveInfo> supportedApps = filterAppsByMethodName(
-                    apps, appSupportedMethods, appSupportedDefaultMethods, methodName.toString());
+        for (URI uriMethodName : mUriPaymentMethods) {
+            List<ResolveInfo> supportedApps =
+                    filterAppsByMethodName(apps, appSupportedMethods, uriMethodName.toString());
             if (supportedApps.isEmpty()) continue;
 
             // Start the parser utility process as soon as possible, once we know that a
             // manifest file needs to be parsed. The startup can take up to 2 seconds.
             if (!mParser.isUtilityProcessRunning()) mParser.startUtilityProcess();
 
-            verifiers.add(new PaymentManifestVerifier(methodName, supportedApps, mDownloader,
-                    mParser, mPackageManagerDelegate, this /* callback */));
-            mPendingApps.put(methodName, new HashSet<>(supportedApps));
+            mManifestVerifiers.add(
+                    new PaymentManifestVerifier(uriMethodName, supportedApps, mWebDataService,
+                            mDownloader, mParser, mPackageManagerDelegate, this /* callback */));
+            mPendingApps.put(uriMethodName, new HashSet<>(supportedApps));
 
-            if (verifiers.size() == MAX_NUMBER_OF_MANIFESTS) {
+            if (mManifestVerifiers.size() == MAX_NUMBER_OF_MANIFESTS) {
                 Log.d(TAG, "Reached maximum number of allowed payment app manifests.");
                 break;
             }
         }
 
-        if (mQueryBasicCard) {
-            List<ResolveInfo> supportedApps = filterAppsByMethodName(apps, appSupportedMethods,
-                    appSupportedDefaultMethods, BASIC_CARD_PAYMENT_METHOD);
+        for (String nonUriMethodName : mNonUriPaymentMethods) {
+            List<ResolveInfo> supportedApps =
+                    filterAppsByMethodName(apps, appSupportedMethods, nonUriMethodName);
             for (int i = 0; i < supportedApps.size(); i++) {
-                // Chrome does not verify app manifests for "basic-card" support.
-                onValidPaymentApp(BASIC_CARD_PAYMENT_METHOD, supportedApps.get(i));
+                // Chrome does not verify app manifests for non-URI payment method support.
+                onValidPaymentApp(nonUriMethodName, supportedApps.get(i));
             }
         }
 
-        if (verifiers.isEmpty()) {
+        if (mManifestVerifiers.isEmpty()) {
             onSearchFinished();
             return;
         }
 
-        for (int i = 0; i < verifiers.size(); i++) {
-            verifiers.get(i).verify();
+        for (int i = 0; i < mManifestVerifiers.size(); i++) {
+            mManifestVerifiers.get(i).verify();
         }
     }
 
     @Nullable
-    private String[] getPaymentMethodNames(ActivityInfo activityInfo) {
-        if (activityInfo.metaData == null) return null;
+    private Set<String> getPaymentMethodNames(ActivityInfo activityInfo) {
+        Set<String> result = new HashSet<>();
+        if (activityInfo.metaData == null) return result;
+
+        String defaultMethodName =
+                activityInfo.metaData.getString(META_DATA_NAME_OF_DEFAULT_PAYMENT_METHOD_NAME);
+        if (!TextUtils.isEmpty(defaultMethodName)) result.add(defaultMethodName);
 
         int resId = activityInfo.metaData.getInt(META_DATA_NAME_OF_PAYMENT_METHOD_NAMES);
-        if (resId == 0) return null;
+        if (resId == 0) return result;
 
         Resources resources =
                 mPackageManagerDelegate.getResourcesForApplication(activityInfo.applicationInfo);
-        if (resources == null) return null;
-        return resources.getStringArray(resId);
+        if (resources == null) return result;
+
+        String[] methodNames = resources.getStringArray(resId);
+        if (methodNames == null) return result;
+
+        for (int i = 0; i < methodNames.length; i++) {
+            result.add(methodNames[i]);
+        }
+
+        return result;
     }
 
-    @Nullable
-    private String getDefaultPaymentMethodName(ActivityInfo activityInfo) {
-        if (activityInfo.metaData == null) return null;
+    private static List<ResolveInfo> filterAppsByMethodName(
+            List<ResolveInfo> apps, List<Set<String>> methodNames, String targetMethodName) {
+        assert apps.size() == methodNames.size();
 
-        return activityInfo.metaData.getString(META_DATA_NAME_OF_DEFAULT_PAYMENT_METHOD_NAME);
-    }
-
-    private static List<ResolveInfo> filterAppsByMethodName(List<ResolveInfo> apps,
-            List<String[]> appsMethods, List<String> appsDefaultMethods, String targetMethodName) {
-        assert apps.size() == appsMethods.size();
-        assert apps.size() == appsDefaultMethods.size();
-
-        // Note that apps, appsMethods and appsDefaultMethods must have the same size. And the
-        // information at the same index must correspond to the same app.
-        List<ResolveInfo> supportedApps = new ArrayList<ResolveInfo>();
+        // Note that apps and  methodNames must have the same size. The information at the same
+        // index must correspond to the same app.
+        List<ResolveInfo> supportedApps = new ArrayList<>();
         for (int i = 0; i < apps.size(); i++) {
-            if (targetMethodName.equals(appsDefaultMethods.get(i))) {
+            if (methodNames.get(i).contains(targetMethodName)) {
                 supportedApps.add(apps.get(i));
                 continue;
-            }
-
-            String[] methods = appsMethods.get(i);
-            if (methods == null) continue;
-            for (int j = 0; j < methods.length; j++) {
-                if (targetMethodName.equals(methods[j])) {
-                    supportedApps.add(apps.get(i));
-                    break;
-                }
             }
         }
         return supportedApps;
@@ -276,10 +265,6 @@ public class AndroidPaymentAppFinder implements ManifestVerifyCallback {
         String packageName = resolveInfo.activityInfo.packageName;
         AndroidPaymentApp app = mResult.get(packageName);
         if (app == null) {
-            if (mRequireShowInSettings) {
-                mSettingsLookup.setPackage(packageName);
-                if (mPackageManagerDelegate.resolveActivity(mSettingsLookup) == null) return;
-            }
             CharSequence label = mPackageManagerDelegate.getAppLabel(resolveInfo);
             if (TextUtils.isEmpty(label)) {
                 Log.d(TAG,
@@ -314,14 +299,22 @@ public class AndroidPaymentAppFinder implements ManifestVerifyCallback {
         if (mPendingApps.isEmpty()) onSearchFinished();
     }
 
+    @Override
+    public void onVerifyFinished(PaymentManifestVerifier verifier) {
+        mManifestVerifiers.remove(verifier);
+        if (!mManifestVerifiers.isEmpty()) return;
+
+        assert mPendingApps.isEmpty();
+        mWebDataService.destroy();
+        if (mParser.isUtilityProcessRunning()) mParser.stopUtilityProcess();
+    }
+
     /**
      * Checks for IS_READY_TO_PAY service in each valid payment app and returns the valid apps
      * to the caller. Called when finished verifying all payment methods and apps.
      */
     private void onSearchFinished() {
         assert mPendingApps.isEmpty();
-
-        if (mParser.isUtilityProcessRunning()) mParser.stopUtilityProcess();
 
         if (!mIsIncognito) {
             List<ResolveInfo> resolveInfos =

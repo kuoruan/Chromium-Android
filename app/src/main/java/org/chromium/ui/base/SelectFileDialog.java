@@ -5,6 +5,7 @@
 package org.chromium.ui.base;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ClipData;
@@ -17,11 +18,11 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.MediaStore;
 import android.text.TextUtils;
-import android.util.Log;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContentUriUtils;
 import org.chromium.base.ContextUtils;
+import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
@@ -37,7 +38,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A dialog that is triggered from a file input field that allows a user to select a file based on
@@ -55,6 +56,9 @@ public class SelectFileDialog implements WindowAndroid.IntentCallback,
     private static final String ALL_VIDEO_TYPES = VIDEO_TYPE + "*";
     private static final String ALL_AUDIO_TYPES = AUDIO_TYPE + "*";
     private static final String ANY_TYPES = "*/*";
+
+    // Duration before temporary camera file is cleaned up, in milliseconds.
+    private static final long DURATION_BEFORE_FILE_CLEAN_UP_IN_MILLIS = TimeUnit.HOURS.toMillis(1);
 
     // A list of some of the more popular image extensions. Not meant to be
     // exhaustive, but should cover the vast majority of image types.
@@ -84,6 +88,7 @@ public class SelectFileDialog implements WindowAndroid.IntentCallback,
     /**
      * If set, overrides the WindowAndroid passed in {@link selectFile()}.
      */
+    @SuppressLint("StaticFieldLeak")
     private static WindowAndroid sOverrideWindowAndroid;
 
     private final long mNativeSelectFileDialog;
@@ -167,7 +172,8 @@ public class SelectFileDialog implements WindowAndroid.IntentCallback,
         boolean hasCameraPermission = mWindowAndroid.hasPermission(Manifest.permission.CAMERA);
         if (mSupportsImageCapture && hasCameraPermission) {
             // GetCameraIntentTask will call LaunchSelectFileWithCameraIntent later.
-            new GetCameraIntentTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            new GetCameraIntentTask(false, mWindowAndroid, this)
+                    .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         } else {
             launchSelectFileWithCameraIntent(hasCameraPermission, null);
         }
@@ -270,28 +276,54 @@ public class SelectFileDialog implements WindowAndroid.IntentCallback,
                 break;
 
             case PHOTOS_SELECTED:
-                // TODO(finnur): Implement.
-                onFileNotSelected();
+                if (photos.length == 0) {
+                    onFileNotSelected();
+                    return;
+                }
+
+                if (photos.length == 1) {
+                    GetDisplayNameTask task =
+                            new GetDisplayNameTask(ContextUtils.getApplicationContext(), false);
+                    task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, Uri.parse(photos[0]));
+                    return;
+                } else {
+                    Uri[] filePathArray = new Uri[photos.length];
+                    for (int i = 0; i < photos.length; ++i) {
+                        filePathArray[i] = Uri.parse(photos[i]);
+                    }
+                    GetDisplayNameTask task =
+                            new GetDisplayNameTask(ContextUtils.getApplicationContext(), true);
+                    task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, filePathArray);
+                }
                 break;
 
             case LAUNCH_GALLERY:
-                // TODO(finnur): Implement.
-                onFileNotSelected();
+                Intent intent = new Intent();
+                intent.setType("image/*");
+                if (mAllowMultiple) intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                mWindowAndroid.showCancelableIntent(intent, this, R.string.low_memory_error);
                 break;
 
             case LAUNCH_CAMERA:
-                // TODO(finnur): Implement.
-                onFileNotSelected();
+                new GetCameraIntentTask(true, mWindowAndroid, this)
+                        .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 break;
         }
     }
 
-    @Override
-    public Map<String, Long> getFilesForTesting() {
-        return null;
-    }
-
     private class GetCameraIntentTask extends AsyncTask<Void, Void, Uri> {
+        private Boolean mDirectToCamera;
+        private WindowAndroid mWindow;
+        private WindowAndroid.IntentCallback mCallback;
+
+        public GetCameraIntentTask(Boolean directToCamera, WindowAndroid window,
+                WindowAndroid.IntentCallback callback) {
+            mDirectToCamera = directToCamera;
+            mWindow = window;
+            mCallback = callback;
+        }
+
         @Override
         public Uri doInBackground(Void...voids) {
             try {
@@ -321,7 +353,11 @@ public class SelectFileDialog implements WindowAndroid.IntentCallback,
                         mWindowAndroid.getApplicationContext().getContentResolver(),
                         UiUtils.IMAGE_FILE_PATH, mCameraOutputUri));
             }
-            launchSelectFileWithCameraIntent(true, camera);
+            if (mDirectToCamera) {
+                mWindow.showIntent(camera, mCallback, R.string.low_memory_error);
+            } else {
+                launchSelectFileWithCameraIntent(true, camera);
+            }
         }
     }
 
@@ -571,6 +607,32 @@ public class SelectFileDialog implements WindowAndroid.IntentCallback,
                 nativeOnFileSelected(mNativeSelectFileDialog, mFilePaths[0], result[0]);
             }
         }
+    }
+
+    /**
+     * Clears all captured camera files.
+     */
+    public static void clearCapturedCameraFiles() {
+        AsyncTask.THREAD_POOL_EXECUTOR.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    File path = UiUtils.getDirectoryForImageCapture(
+                            ContextUtils.getApplicationContext());
+                    if (!path.isDirectory()) return;
+                    File[] files = path.listFiles();
+                    if (files == null) return;
+                    long now = System.currentTimeMillis();
+                    for (File file : files) {
+                        if (now - file.lastModified() > DURATION_BEFORE_FILE_CLEAN_UP_IN_MILLIS) {
+                            if (!file.delete()) Log.e(TAG, "Failed to delete: " + file);
+                        }
+                    }
+                } catch (IOException e) {
+                    Log.w(TAG, "Failed to delete captured camera files.", e);
+                }
+            }
+        });
     }
 
     @VisibleForTesting

@@ -51,30 +51,22 @@
 
             <TextView
                 android:id="@+id/new_tab_incognito_message"
+                style="@style/IncognitoNewTabMessage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
                 android:layout_marginBottom="10dp"
-                android:maxWidth="660dp"
-                android:singleLine="false"
                 android:text="@null"
-                android:textColor="#bdbdbd"
-                android:textSize="14sp"
-                android:lineSpacingMultiplier="1.2" />
+                android:textColor="#bdbdbd" />
 
             <TextView
                 android:id="@+id/learn_more"
+                style="@style/IncognitoNewTabLearnMoreLink"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="?attr/listChoiceBackgroundIndicator"
-                android:clickable="true"
-                android:focusable="true"
                 android:fontFamily="sans-serif-medium"
-                android:padding="16dp"
                 android:text="@string/learn_more"
-                android:textAllCaps="true"
-                android:textColor="#03a9f4"
-                android:textSize="14sp" />
+                android:textColor="#03a9f4" />
 
         </LinearLayout>
 

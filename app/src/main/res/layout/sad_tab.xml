@@ -15,20 +15,19 @@
     android:fillViewport="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingStart="24dp"
-    android:paddingEnd="24dp"
-    android:paddingTop="24dp"
-    android:paddingBottom="24dp"
-    android:scrollbarStyle="outsideOverlay">
-
+    android:scrollbarStyle="outsideOverlay" >
 
     <LinearLayout
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp"
         android:orientation="vertical"
-        android:layout_gravity="center"
-        android:gravity="center">
-            
+        android:layout_gravity="center_horizontal"
+        android:gravity="center" >
+
         <ImageView
             android:id="@+id/sad_tab_image"
             android:layout_width="wrap_content"
@@ -36,36 +35,47 @@
             android:paddingBottom="26dp"
             android:src="@drawable/sad_tab"
             android:contentDescription="@null"
-            android:layout_gravity="start"/>
+            android:layout_gravity="start" />
 
         <TextView
             android:id="@+id/sad_tab_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingBottom="16dp"
-            android:text="@string/sad_tab_title"
             android:textColor="@color/sad_tab_header_text_color"
             android:textSize="23sp"
             android:lineSpacingMultiplier="1.4"
-            android:layout_gravity="start"/>
+            android:layout_gravity="start" />
+
+        <TextView
+            android:id="@+id/sad_tab_suggestions_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/SadTabBodyText"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/sad_tab_suggestions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            style="@style/SadTabBodyText"
+            android:visibility="gone" />
 
         <org.chromium.ui.widget.TextViewWithClickableSpans
             android:id="@+id/sad_tab_message"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingBottom="22dp"
-            android:textColor="@color/sad_tab_body_text_color"
-            android:textSize="14sp"
-            android:layout_gravity="start"/>
+            style="@style/SadTabBodyText" />
 
         <org.chromium.ui.widget.ButtonCompat
-            android:id="@+id/sad_tab_reload_button"
+            android:id="@+id/sad_tab_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/sad_tab_reload_label"
             android:textColor="#fff"
             android:minWidth="222dp"
             chrome:buttonColor="@color/light_active_color"
-            android:layout_gravity="end"/>
+            android:layout_gravity="end" />
     </LinearLayout>
 </org.chromium.chrome.browser.tab.SadTabView>

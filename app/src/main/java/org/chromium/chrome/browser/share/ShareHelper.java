@@ -119,7 +119,10 @@ public class ShareHelper {
     private static void deleteShareImageFiles(File file) {
         if (!file.exists()) return;
         if (file.isDirectory()) {
-            for (File f : file.listFiles()) deleteShareImageFiles(f);
+            File[] file_list = file.listFiles();
+            if (file_list != null) {
+                for (File f : file_list) deleteShareImageFiles(f);
+            }
         }
         if (!file.delete()) {
             Log.w(TAG, "Failed to delete share image file: %s", file.getAbsolutePath());
@@ -363,15 +366,19 @@ public class ShareHelper {
                 if (ApplicationStatus.getStateForApplication()
                         != ApplicationState.HAS_DESTROYED_ACTIVITIES) {
                     Uri imageUri = ApiCompatibilityUtils.getUriForImageCaptureFile(saveFile);
-
+                    Intent shareIntent = getShareImageIntent(imageUri);
                     if (name == null) {
-                        Intent chooserIntent = Intent.createChooser(getShareImageIntent(imageUri),
-                                activity.getString(R.string.share_link_chooser_title));
-                        fireIntent(activity, chooserIntent);
+                        if (TargetChosenReceiver.isSupported()) {
+                            TargetChosenReceiver.sendChooserIntent(
+                                    true, activity, shareIntent, null);
+                        } else {
+                            Intent chooserIntent = Intent.createChooser(shareIntent,
+                                    activity.getString(R.string.share_link_chooser_title));
+                            fireIntent(activity, chooserIntent);
+                        }
                     } else {
-                        Intent imageIntent = getShareImageIntent(imageUri);
-                        imageIntent.setComponent(name);
-                        fireIntent(activity, imageIntent);
+                        shareIntent.setComponent(name);
+                        fireIntent(activity, shareIntent);
                     }
                 }
             }
@@ -548,7 +555,8 @@ public class ShareHelper {
      * @param item The menu item that is used for direct share
      */
     public static void configureDirectShareMenuItem(Activity activity, MenuItem item) {
-        Pair<Drawable, CharSequence> directShare = getShareableIconAndName(activity);
+        Intent shareIntent = getShareIntent(activity, "", "", "", null, null);
+        Pair<Drawable, CharSequence> directShare = getShareableIconAndName(activity, shareIntent);
         Drawable directShareIcon = directShare.first;
         CharSequence directShareTitle = directShare.second;
 
@@ -562,19 +570,20 @@ public class ShareHelper {
     /**
      * Get the icon and name of the most recently shared app within chrome.
      * @param activity Activity that is used to access the package manager.
+     * @param shareIntent Intent used to get list of apps support sharing.
      * @return The Image and the String of the recently shared Icon.
      */
-    public static Pair<Drawable, CharSequence> getShareableIconAndName(Activity activity) {
+    public static Pair<Drawable, CharSequence> getShareableIconAndName(
+            Activity activity, Intent shareIntent) {
         Drawable directShareIcon = null;
         CharSequence directShareTitle = null;
 
         final ComponentName component = getLastShareComponentName();
         boolean isComponentValid = false;
         if (component != null) {
-            Intent intent = getShareIntent(activity, "", "", "", null, null);
-            intent.setPackage(component.getPackageName());
+            shareIntent.setPackage(component.getPackageName());
             PackageManager manager = activity.getPackageManager();
-            List<ResolveInfo> resolveInfoList = manager.queryIntentActivities(intent, 0);
+            List<ResolveInfo> resolveInfoList = manager.queryIntentActivities(shareIntent, 0);
             for (ResolveInfo info : resolveInfoList) {
                 ActivityInfo ai = info.activityInfo;
                 if (component.equals(new ComponentName(ai.applicationInfo.packageName, ai.name))) {
@@ -677,7 +686,12 @@ public class ShareHelper {
         return intent;
     }
 
-    private static Intent getShareImageIntent(Uri imageUri) {
+    /**
+     * Creates an Intent to share an image.
+     * @param imageUri The Uri of the image.
+     * @return The Intent used to share the image.
+     */
+    public static Intent getShareImageIntent(Uri imageUri) {
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.addFlags(ApiCompatibilityUtils.getActivityNewDocumentFlag());
         intent.setType("image/jpeg");

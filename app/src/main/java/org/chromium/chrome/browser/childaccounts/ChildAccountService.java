@@ -55,16 +55,6 @@ public class ChildAccountService {
     }
 
     /**
-     * Returns the previously determined value of whether there is a child account on the device.
-     * Should only be called after the native library and profile have been loaded.
-     *
-     * @return The previously determined value of whether there is a child account on the device.
-     */
-    public static boolean isChildAccount() {
-        return nativeIsChildAccount();
-    }
-
-    /**
      * Set a callback to be called the next time a child account status change is received
      * @param callback the callback to be called when the status changes.
      */
@@ -96,8 +86,6 @@ public class ChildAccountService {
             }
         });
     }
-
-    private static native boolean nativeIsChildAccount();
 
     private static native void nativeListenForChildStatusReceived(Callback<Boolean> callback);
 

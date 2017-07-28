@@ -16,13 +16,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
-    ConsumerType.MOTION, ConsumerType.ORIENTATION, ConsumerType.ORIENTATION_ABSOLUTE,
-    ConsumerType.LIGHT
+    ConsumerType.MOTION, ConsumerType.ORIENTATION, ConsumerType.ORIENTATION_ABSOLUTE
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface ConsumerType {
   int MOTION = 1 << 0;
   int ORIENTATION = 1 << 1;
   int ORIENTATION_ABSOLUTE = 1 << 2;
-  int LIGHT = 1 << 3;
 }

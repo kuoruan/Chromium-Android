@@ -153,7 +153,6 @@ public class TileGroupDelegateImpl implements TileGroup.Delegate {
     }
 
     private void recordOpenedTile(Tile tile) {
-        // TODO(mvanouwerkerk): Fix metrics to distinguish NTP from Home.
         NewTabPageUma.recordAction(NewTabPageUma.ACTION_OPENED_MOST_VISITED_TILE);
         RecordUserAction.record("MobileNTPMostVisited");
         NewTabPageUma.recordExplicitUserNavigation(

@@ -50,4 +50,14 @@
 
     <!-- Context Menu Dimensions -->
     <dimen name="context_menu_header_image_max_size">216dp</dimen>
+
+    <!-- Search widget dimensions -->
+    <dimen name="search_activity_location_bar_margin_start">0dp</dimen>
+    <dimen name="search_activity_location_bar_margin_end">4dp</dimen>
+
+    <!-- Clear browsing data preferences dimensions -->
+    <dimen name="clear_browsing_data_button_margin">16dp</dimen>
+
+    <!-- Preferences dimensions -->
+    <dimen name="pref_spinner_padding_end">16dp</dimen>
 </resources>

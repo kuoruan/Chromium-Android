@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.download.ui;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.text.format.Formatter;
@@ -82,8 +83,10 @@ public class OfflineGroupHeaderView
      * Updates the properties of this view.
      * @param header The associated {@link SubsectionHeader}.
      */
+    @SuppressLint("StringFormatMatches")
     public void displayHeader(SubsectionHeader header) {
         this.mHeader = header;
+        // TODO(crbug.com/635567): Fix lint properly.
         mPageCountHeader.setText(getResources().getString(
                 R.string.download_manager_offline_header_title, header.getItemCount()));
         mFileSizeView.setText(Formatter.formatFileSize(getContext(), header.getTotalFileSize()));

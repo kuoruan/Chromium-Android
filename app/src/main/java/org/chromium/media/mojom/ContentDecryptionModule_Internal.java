@@ -1122,7 +1122,7 @@ RemoveSessionResponse callback) {
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
                     result.sessionType = decoder0.readInt(8);
-                        ContentDecryptionModule.SessionType.validate(result.sessionType);
+                        CdmSessionType.validate(result.sessionType);
                 }
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
@@ -1401,7 +1401,7 @@ RemoveSessionResponse callback) {
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
                     result.sessionType = decoder0.readInt(8);
-                        ContentDecryptionModule.SessionType.validate(result.sessionType);
+                        CdmSessionType.validate(result.sessionType);
                 }
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     

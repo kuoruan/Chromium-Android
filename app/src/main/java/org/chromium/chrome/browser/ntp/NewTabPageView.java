@@ -17,8 +17,10 @@ import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -79,6 +81,16 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
      */
     private static final String PARAM_CONDENSED_TILE_LAYOUT_FOR_LARGE_SCREENS_ENABLED =
             "condensed_tile_layout_for_large_screens_enabled";
+
+    /**
+     * Experiment parameter for whether to show the logo in the condensed layout.
+     */
+    private static final String PARAM_CONDENSED_LAYOUT_SHOW_LOGO = "condensed_layout_show_logo";
+
+    /**
+     * Experiment parameter for the logo height in dp in the condensed layout.
+     */
+    private static final String PARAM_CONDENSED_LAYOUT_LOGO_HEIGHT = "condensed_layout_logo_height";
 
     private NewTabPageRecyclerView mRecyclerView;
 
@@ -244,7 +256,15 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
 
         mSearchProviderLogoView =
                 (LogoView) mNewTabPageLayout.findViewById(R.id.search_provider_logo);
+        int experimentalLogoHeightDp = ChromeFeatureList.getFieldTrialParamByFeatureAsInt(
+                ChromeFeatureList.NTP_CONDENSED_LAYOUT, PARAM_CONDENSED_LAYOUT_LOGO_HEIGHT, 0);
+        if (experimentalLogoHeightDp > 0) {
+            ViewGroup.LayoutParams logoParams = mSearchProviderLogoView.getLayoutParams();
+            logoParams.height = dpToPx(experimentalLogoHeightDp);
+            mSearchProviderLogoView.setLayoutParams(logoParams);
+        }
         mLogoDelegate = new LogoDelegateImpl(tab, mSearchProviderLogoView);
+
         mSearchBoxView = mNewTabPageLayout.findViewById(R.id.search_box);
         mNoSearchLogoSpacer = mNewTabPageLayout.findViewById(R.id.no_search_logo_spacer);
 
@@ -318,7 +338,7 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
         }
 
         String hintText = getResources().getString(R.string.search_or_type_url);
-        if (!DeviceFormFactor.isTablet(getContext())) {
+        if (!DeviceFormFactor.isTablet()) {
             searchBoxTextView.setHint(hintText);
         } else {
             searchBoxTextView.setContentDescription(hintText);
@@ -559,11 +579,9 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
     public void setSearchProviderHasLogo(boolean hasLogo) {
         if (hasLogo == mSearchProviderHasLogo && mInitialized) return;
         mSearchProviderHasLogo = hasLogo;
-        boolean showLogo = mSearchProviderHasLogo
-                && !ChromeFeatureList.isEnabled(ChromeFeatureList.NTP_CONDENSED_LAYOUT);
 
         // Set a bit more top padding on the tile grid if there is no logo.
-        int paddingTop = getResources().getDimensionPixelSize(showLogo
+        int paddingTop = getResources().getDimensionPixelSize(shouldShowLogo()
                         ? R.dimen.tile_grid_layout_padding_top
                         : R.dimen.tile_grid_layout_no_logo_padding_top);
         mTileGridLayout.setPadding(0, paddingTop, 0, mTileGridLayout.getPaddingBottom());
@@ -571,7 +589,7 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
         // Hide or show the views above the tile grid as needed, including logo, search box, and
         // spacers.
         int visibility = mSearchProviderHasLogo ? View.VISIBLE : View.GONE;
-        int logoVisibility = showLogo ? View.VISIBLE : View.GONE;
+        int logoVisibility = shouldShowLogo() ? View.VISIBLE : View.GONE;
         int childCount = mNewTabPageLayout.getChildCount();
         for (int i = 0; i < childCount; i++) {
             View child = mNewTabPageLayout.getChildAt(i);
@@ -850,6 +868,14 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
                 PARAM_CONDENSED_TILE_LAYOUT_FOR_LARGE_SCREENS_ENABLED, false);
     }
 
+    private boolean shouldShowLogo() {
+        boolean condensedLayoutEnabled =
+                ChromeFeatureList.isEnabled(ChromeFeatureList.NTP_CONDENSED_LAYOUT);
+        boolean showLogoInCondensedLayout = ChromeFeatureList.getFieldTrialParamByFeatureAsBoolean(
+                ChromeFeatureList.NTP_CONDENSED_LAYOUT, PARAM_CONDENSED_LAYOUT_SHOW_LOGO, false);
+        return mSearchProviderHasLogo && (!condensedLayoutEnabled || showLogoInCondensedLayout);
+    }
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         if (mNewTabPageLayout != null) {
@@ -928,5 +954,13 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
         public void run() {
             updateSearchBoxOnScroll();
         }
+    }
+
+    /**
+     * Converts a dp value to a px value.
+     */
+    private int dpToPx(int value) {
+        return Math.round(TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, value, getResources().getDisplayMetrics()));
     }
 }

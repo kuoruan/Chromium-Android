@@ -440,6 +440,7 @@ public class TileGroup implements MostVisitedSites.Observer {
             Tile tile = getTile(mUrl);
             if (tile == null) return;
 
+            SuggestionsMetrics.recordTileTapped();
             mTileGroupDelegate.openMostVisitedItem(WindowOpenDisposition.CURRENT_TAB, tile);
         }
 

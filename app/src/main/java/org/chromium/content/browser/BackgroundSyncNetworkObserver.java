@@ -5,11 +5,12 @@
 package org.chromium.content.browser;
 
 import android.Manifest;
-import android.content.Context;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.os.Process;
 
 import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.base.ContextUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -38,30 +39,30 @@ class BackgroundSyncNetworkObserver implements NetworkChangeNotifierAutoDetect.O
     private static final String TAG = "cr_BgSyncNetObserver";
 
     private NetworkChangeNotifierAutoDetect mNotifier;
-    private Context mContext;
 
     // The singleton instance.
+    @SuppressLint("StaticFieldLeak")
     private static BackgroundSyncNetworkObserver sInstance;
 
     // List of native observers. These are each called when the network state changes.
     private List<Long> mNativePtrs;
 
-    private BackgroundSyncNetworkObserver(Context ctx) {
+    private BackgroundSyncNetworkObserver() {
         ThreadUtils.assertOnUiThread();
-        mContext = ctx;
         mNativePtrs = new ArrayList<Long>();
     }
 
-    private static boolean canCreateObserver(Context ctx) {
-        return ApiCompatibilityUtils.checkPermission(ctx, Manifest.permission.ACCESS_NETWORK_STATE,
-                Process.myPid(), Process.myUid()) == PackageManager.PERMISSION_GRANTED;
+    private static boolean canCreateObserver() {
+        return ApiCompatibilityUtils.checkPermission(ContextUtils.getApplicationContext(),
+                       Manifest.permission.ACCESS_NETWORK_STATE, Process.myPid(), Process.myUid())
+                == PackageManager.PERMISSION_GRANTED;
     }
 
     @CalledByNative
-    private static BackgroundSyncNetworkObserver createObserver(Context ctx, long nativePtr) {
+    private static BackgroundSyncNetworkObserver createObserver(long nativePtr) {
         ThreadUtils.assertOnUiThread();
         if (sInstance == null) {
-            sInstance = new BackgroundSyncNetworkObserver(ctx);
+            sInstance = new BackgroundSyncNetworkObserver();
         }
         sInstance.registerObserver(nativePtr);
         return sInstance;
@@ -69,7 +70,7 @@ class BackgroundSyncNetworkObserver implements NetworkChangeNotifierAutoDetect.O
 
     private void registerObserver(final long nativePtr) {
         ThreadUtils.assertOnUiThread();
-        if (!canCreateObserver(mContext)) {
+        if (!canCreateObserver()) {
             RecordHistogram.recordBooleanHistogram(
                     "BackgroundSync.NetworkObserver.HasPermission", false);
             return;
@@ -77,16 +78,15 @@ class BackgroundSyncNetworkObserver implements NetworkChangeNotifierAutoDetect.O
 
         // Create the NetworkChangeNotifierAutoDetect if it does not exist already.
         if (mNotifier == null) {
-            mNotifier = new NetworkChangeNotifierAutoDetect(this, mContext,
-                                new RegistrationPolicyAlwaysRegister());
+            mNotifier = new NetworkChangeNotifierAutoDetect(
+                    this, new RegistrationPolicyAlwaysRegister());
             RecordHistogram.recordBooleanHistogram(
                     "BackgroundSync.NetworkObserver.HasPermission", true);
         }
         mNativePtrs.add(nativePtr);
 
         nativeNotifyConnectionTypeChanged(
-                nativePtr, NetworkChangeNotifierAutoDetect.convertToConnectionType(
-                                   mNotifier.getCurrentNetworkState()));
+                nativePtr, mNotifier.getCurrentNetworkState().getConnectionType());
     }
 
     @CalledByNative
@@ -109,7 +109,7 @@ class BackgroundSyncNetworkObserver implements NetworkChangeNotifierAutoDetect.O
     }
 
     @Override
-    public void onMaxBandwidthChanged(double maxBandwidthMbps) {}
+    public void onConnectionSubtypeChanged(int newConnectionSubtype) {}
     @Override
     public void onNetworkConnect(long netId, int connectionType) {}
     @Override

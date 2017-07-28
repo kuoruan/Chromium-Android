@@ -97,8 +97,29 @@ public class AutofillProfileBridge {
                 return result;
             }
         });
-
         return countries;
+    }
+
+    /** @return The list of admin areas sorted by their localized display names. */
+    public static List<DropdownKeyValue> getAdminAreaDropdownList(String[] keys) {
+        List<DropdownKeyValue> adminAreas = new ArrayList<>();
+
+        for (int i = 0; i < keys.length; ++i) {
+            // TODO (parastoog): show names, save keys. @crbug.com/691643
+            adminAreas.add(new DropdownKeyValue(keys[i], keys[i]));
+        }
+
+        final Collator collator = Collator.getInstance(Locale.getDefault());
+        collator.setStrength(Collator.PRIMARY);
+        Collections.sort(adminAreas, new Comparator<DropdownKeyValue>() {
+            @Override
+            public int compare(DropdownKeyValue lhs, DropdownKeyValue rhs) {
+                // Sorted according to the admin area values, such as Quebec,
+                // rather than the admin area keys, such as QC.
+                return collator.compare(lhs.getValue(), rhs.getValue());
+            }
+        });
+        return adminAreas;
     }
 
     /** @return The list of required fields. COUNTRY is always included. RECIPIENT often omitted. */

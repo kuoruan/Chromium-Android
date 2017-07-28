@@ -108,8 +108,7 @@ class BookmarkUIState {
         if (mUrl == null || mState == STATE_INVALID) return false;
 
         if (mState == STATE_FOLDER) {
-            return mFolder != null && bookmarkModel.doesBookmarkExist(mFolder)
-                    && !mFolder.equals(bookmarkModel.getRootFolderId());
+            return mFolder != null && bookmarkModel.doesBookmarkExist(mFolder);
         }
 
         return true;

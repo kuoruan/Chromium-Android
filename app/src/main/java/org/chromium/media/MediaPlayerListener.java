@@ -4,7 +4,6 @@
 
 package org.chromium.media;
 
-import android.content.Context;
 import android.media.MediaPlayer;
 
 import org.chromium.base.annotations.CalledByNative;
@@ -33,11 +32,9 @@ class MediaPlayerListener implements MediaPlayer.OnPreparedListener,
 
     // Used to determine the class instance to dispatch the native call to.
     private long mNativeMediaPlayerListener;
-    private final Context mContext;
 
-    private MediaPlayerListener(long nativeMediaPlayerListener, Context context) {
+    private MediaPlayerListener(long nativeMediaPlayerListener) {
         mNativeMediaPlayerListener = nativeMediaPlayerListener;
-        mContext = context;
     }
 
     @Override
@@ -101,10 +98,9 @@ class MediaPlayerListener implements MediaPlayer.OnPreparedListener,
     }
 
     @CalledByNative
-    private static MediaPlayerListener create(long nativeMediaPlayerListener,
-            Context context, MediaPlayerBridge mediaPlayerBridge) {
-        final MediaPlayerListener listener =
-                new MediaPlayerListener(nativeMediaPlayerListener, context);
+    private static MediaPlayerListener create(
+            long nativeMediaPlayerListener, MediaPlayerBridge mediaPlayerBridge) {
+        final MediaPlayerListener listener = new MediaPlayerListener(nativeMediaPlayerListener);
         if (mediaPlayerBridge != null) {
             mediaPlayerBridge.setOnBufferingUpdateListener(listener);
             mediaPlayerBridge.setOnCompletionListener(listener);

@@ -19,28 +19,6 @@ public interface ContentDecryptionModuleClient extends org.chromium.mojo.binding
 
 
 
-    public static final class MessageType {
-    
-    
-    
-        private static final boolean IS_EXTENSIBLE = false;
-    
-        public static boolean isKnownValue(int value) {
-            return false;
-        }
-    
-        public static void validate(int value) {
-            if (IS_EXTENSIBLE || isKnownValue(value))
-                return;
-    
-            throw new DeserializationException("Invalid enum value.");
-        }
-    
-        private MessageType() {}
-    
-    }
-
-
     public interface Proxy extends ContentDecryptionModuleClient, org.chromium.mojo.bindings.Interface.Proxy {
     }
 

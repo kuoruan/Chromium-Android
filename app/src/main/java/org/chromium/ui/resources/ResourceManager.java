@@ -70,13 +70,8 @@ public class ResourceManager implements ResourceLoaderCallback {
         }
 
         DisplayAndroid displayAndroid = windowAndroid.getDisplay();
-        int screenWidth = displayAndroid.getPhysicalDisplayWidth() != 0
-                ? displayAndroid.getPhysicalDisplayWidth()
-                : displayAndroid.getDisplayWidth();
-        int screenHeight = displayAndroid.getPhysicalDisplayHeight() != 0
-                ? displayAndroid.getPhysicalDisplayHeight()
-                : displayAndroid.getDisplayHeight();
-        int minScreenSideLength = Math.min(screenWidth, screenHeight);
+        int minScreenSideLength =
+                Math.min(displayAndroid.getDisplayWidth(), displayAndroid.getDisplayHeight());
 
         Resources resources = context.getResources();
         return new ResourceManager(resources, minScreenSideLength, staticResourceManagerPtr);

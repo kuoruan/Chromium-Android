@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.invalidation;
 
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +16,8 @@ import org.chromium.chrome.browser.init.ProcessInitializationHandler;
  * A Service that provides access to {@link ChromeBrowserSyncAdapter}.
  */
 public class ChromeBrowserSyncAdapterService extends Service {
+
+    @SuppressLint("StaticFieldLeak")
     private static ChromeBrowserSyncAdapter sSyncAdapter;
     private static final Object LOCK = new Object();
 

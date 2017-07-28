@@ -4,18 +4,16 @@
 
 package org.chromium.device.battery;
 
-import android.util.Log;
-
+import org.chromium.base.Log;
 import org.chromium.device.mojom.BatteryMonitor;
 import org.chromium.device.mojom.BatteryStatus;
 import org.chromium.mojo.system.MojoException;
 
 /**
- * Android implementation of the battery monitor service defined in
- * device/battery/battery_monitor.mojom.
+ * Android implementation of the battery monitor interface defined in
+ * services/device/public/interfaces/battery_monitor.mojom.
  */
 public class BatteryMonitorImpl implements BatteryMonitor {
-
     private static final String TAG = "BatteryMonitorImpl";
 
     // Factory that created this instance and notifies it about battery status changes.

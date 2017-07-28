@@ -11,7 +11,7 @@ public final class WebApkConstants {
     public static final String WEBAPK_PACKAGE_PREFIX = "org.chromium.webapk";
 
     // WebAPK id prefix. The id is used for storing WebAPK data in Chrome's SharedPreferences.
-    public static final String WEBAPK_ID_PREFIX = "webapk:";
+    public static final String WEBAPK_ID_PREFIX = "webapk-";
 
     // These EXTRA_* values must stay in sync with
     // {@link org.chromium.chrome.browser.ShortcutHelper}.

@@ -26,27 +26,35 @@ class ValidationMessageBubble {
     private PopupWindow mPopup;
 
     /**
-     * Creates a popup window to show the specified messages, and show it on
-     * the specified anchor rectangle.
+     * Creates a popup window to show the specified messages, and show it on the specified anchor
+     * rectangle.
      *
-     * @param contentViewCore The ContentViewCore object to provide various
-     *                        information.
+     * If the anchor view is not in a state where a popup can be shown, this will return null.
+     *
+     * @param contentViewCore The ContentViewCore object to provide various information.
      * @param anchorX Anchor position in the CSS unit.
      * @param anchorY Anchor position in the CSS unit.
      * @param anchorWidth Anchor size in the CSS unit.
      * @param anchorHeight Anchor size in the CSS unit.
-     * @param mainText The main message. It will shown at the top of the popup
-     *                 window, and its font size is larger.
-     * @param subText The sub message. It will shown below the main message, and
-     *                its font size is smaller.
+     * @param mainText The main message. It will shown at the top of the popup window, and its font
+     *                 size is larger.
+     * @param subText The sub message. It will shown below the main message, and its font size is
+     *                smaller.
      */
     @CalledByNative
-    private static ValidationMessageBubble createAndShow(
-            ContentViewCore contentViewCore, int anchorX, int anchorY,
-            int anchorWidth, int anchorHeight, String mainText, String subText) {
+    private static ValidationMessageBubble createAndShowIfApplicable(
+            ContentViewCore contentViewCore, int anchorX, int anchorY, int anchorWidth,
+            int anchorHeight, String mainText, String subText) {
+        if (!canShowBubble(contentViewCore)) return null;
+
         final RectF anchorPixInScreen = makePixRectInScreen(
                 contentViewCore, anchorX, anchorY, anchorWidth, anchorHeight);
         return new ValidationMessageBubble(contentViewCore, anchorPixInScreen, mainText, subText);
+    }
+
+    private static boolean canShowBubble(ContentViewCore contentViewCore) {
+        return contentViewCore.getContainerView() != null
+                && contentViewCore.getContainerView().getWindowToken() != null;
     }
 
     private ValidationMessageBubble(
@@ -72,8 +80,7 @@ class ValidationMessageBubble {
     /**
      * Moves the popup window on the specified anchor rectangle.
      *
-     * @param contentViewCore The ContentViewCore object to provide various
-     *                        information.
+     * @param contentViewCore The ContentViewCore object to provide various information.
      * @param anchorX Anchor position in the CSS unit.
      * @param anchorY Anchor position in the CSS unit.
      * @param anchorWidth Anchor size in the CSS unit.

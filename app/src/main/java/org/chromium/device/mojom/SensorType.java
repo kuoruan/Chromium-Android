@@ -35,7 +35,9 @@ public final class SensorType {
 
     public static final int ABSOLUTE_ORIENTATION = PRESSURE + 1;
 
-    public static final int LAST = (int) (SensorType.ABSOLUTE_ORIENTATION);
+    public static final int RELATIVE_ORIENTATION = ABSOLUTE_ORIENTATION + 1;
+
+    public static final int LAST = (int) (SensorType.RELATIVE_ORIENTATION);
 
 
     private static final boolean IS_EXTENSIBLE = false;
@@ -50,6 +52,7 @@ public final class SensorType {
             case 6:
             case 7:
             case 8:
+            case 9:
                 return true;
         }
         return false;

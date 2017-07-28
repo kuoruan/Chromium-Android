@@ -38,7 +38,7 @@ public class LogoDelegateImpl implements LogoView.Delegate {
     private String mOnLogoClickUrl;
     private String mAnimatedLogoUrl;
 
-    private boolean mHasRecordedLoadTime;
+    private boolean mShouldRecordLoadTime = true;
 
     private boolean mIsDestroyed;
 
@@ -94,13 +94,15 @@ public class LogoDelegateImpl implements LogoView.Delegate {
                 if (logo != null) {
                     RecordHistogram.recordSparseSlowlyHistogram(LOGO_SHOWN_UMA_NAME,
                             logo.animatedLogoUrl == null ? STATIC_LOGO_SHOWN : CTA_IMAGE_SHOWN);
-                    if (!mHasRecordedLoadTime) {
+                    if (mShouldRecordLoadTime) {
                         long loadTime = System.currentTimeMillis() - loadTimeStart;
                         RecordHistogram.recordMediumTimesHistogram(
                                 LOGO_SHOWN_TIME_UMA_NAME, loadTime, TimeUnit.MILLISECONDS);
-                        mHasRecordedLoadTime = true;
                     }
                 }
+                // If there currently is no Doodle, don't record the time if a refresh happens
+                // later.
+                mShouldRecordLoadTime = false;
                 logoObserver.onLogoAvailable(logo, fromCache);
             }
         };

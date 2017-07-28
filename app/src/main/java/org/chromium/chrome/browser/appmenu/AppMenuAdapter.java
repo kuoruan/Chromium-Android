@@ -298,6 +298,13 @@ class AppMenuAdapter extends BaseAdapter {
             }
         });
 
+        button.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                return mAppMenu.onItemLongClick(item, v);
+            }
+        });
+
         highlightItemIfNecessary(button, true, item.getItemId());
 
         // Menu items may be hidden by command line flags before they get to this point.
@@ -454,8 +461,8 @@ class AppMenuAdapter extends BaseAdapter {
         }
 
         if (mHighlightDrawableSource == null) {
-            mHighlightDrawableSource =
-                    isIcon ? PulseDrawable.createCircle() : PulseDrawable.createHighlight();
+            mHighlightDrawableSource = isIcon ? PulseDrawable.createCircle(view.getContext())
+                                              : PulseDrawable.createHighlight();
         }
 
         Resources resources = ContextUtils.getApplicationContext().getResources();

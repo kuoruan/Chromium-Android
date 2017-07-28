@@ -27,7 +27,7 @@
         android:layout_height="wrap_content"
         android:padding="8dp"
         android:minHeight="48dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="@dimen/clear_browsing_data_button_margin"
         android:focusable="true"
         android:text="@string/clear_data_delete" />
 

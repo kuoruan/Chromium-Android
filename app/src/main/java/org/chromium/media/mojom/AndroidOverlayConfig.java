@@ -17,11 +17,12 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class AndroidOverlayConfig extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 24;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+    private static final int STRUCT_SIZE = 32;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public org.chromium.mojo.common.mojom.UnguessableToken routingToken;
     public org.chromium.gfx.mojom.Rect rect;
+    public boolean secure;
 
     private AndroidOverlayConfig(int version) {
         super(STRUCT_SIZE, version);
@@ -68,6 +69,10 @@ public final class AndroidOverlayConfig extends org.chromium.mojo.bindings.Struc
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                 result.rect = org.chromium.gfx.mojom.Rect.decode(decoder1);
             }
+            if (mainDataHeader.elementsOrVersion >= 0) {
+                
+                result.secure = decoder0.readBoolean(24, 0);
+            }
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -82,6 +87,8 @@ public final class AndroidOverlayConfig extends org.chromium.mojo.bindings.Struc
         encoder0.encode(routingToken, 8, false);
         
         encoder0.encode(rect, 16, false);
+        
+        encoder0.encode(secure, 24, 0);
     }
 
     /**
@@ -100,6 +107,8 @@ public final class AndroidOverlayConfig extends org.chromium.mojo.bindings.Struc
             return false;
         if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.rect, other.rect))
             return false;
+        if (this.secure!= other.secure)
+            return false;
         return true;
     }
 
@@ -112,6 +121,7 @@ public final class AndroidOverlayConfig extends org.chromium.mojo.bindings.Struc
         int result = prime + getClass().hashCode();
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(routingToken);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(rect);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(secure);
         return result;
     }
 }

@@ -31,15 +31,27 @@ public interface FeatureEngagementTracker {
     boolean shouldTriggerHelpUI(String feature);
 
     /**
-     * Must be called after display of feature enlightenment finishes.
+     * Must be called after display of feature enlightenment finishes for a particular feature.
      */
-    void dismissed();
+    void dismissed(String feature);
 
     /**
-     * For features that trigger on startup, they register a callback to ensure that they are told
-     * when the tracker has been initialized. The callback will be invoked when the tracker has
-     * been initialized. The boolean parameter indicated whether the initialization was a success
-     * and that the tracker is ready to receive calls.
+     * Returns whether the tracker has been successfully initialized. During startup, this will be
+     * false until the internal model has been loaded at which point it is set to true if the
+     * initialization was successful. The state will never change from initialized to uninitialized.
+     * Callers can invoke AddOnInitializedCallback(...) to be notified when the result of the
+     * initialization is ready.
+     */
+    boolean isInitialized();
+
+    /**
+     * For features that trigger on startup, they can register a callback to ensure that they are
+     * informed when the tracker has finished the initialization. If the tracker has already been
+     * initialized, the callback will still be invoked with the result. The callback is guaranteed
+     * to be invoked exactly one time.
+     *
+     * The |result| parameter indicates whether the initialization was a success and the tracker is
+     * ready to receive calls.
      */
     void addOnInitializedCallback(Callback<Boolean> callback);
 }

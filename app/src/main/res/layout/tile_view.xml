@@ -39,7 +39,7 @@
         android:visibility="gone"
         android:background="@drawable/offline_badge_background"
         android:contentDescription="@string/accessibility_ntp_offline_badge"
-        chrome:tint="@color/tile_view_offline_badge_tint"
+        chrome:chrometint="@color/tile_view_offline_badge_tint"
         android:src="@drawable/offline_pin_round" />
 
     <!-- The title. -->

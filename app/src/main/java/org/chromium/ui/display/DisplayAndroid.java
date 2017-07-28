@@ -46,7 +46,6 @@ public class DisplayAndroid {
 
     private final int mDisplayId;
     private Point mSize;
-    private Point mPhysicalSize;
     private float mDipScale;
     private int mBitsPerPixel;
     private int mBitsPerComponent;
@@ -95,20 +94,6 @@ public class DisplayAndroid {
      */
     public int getDisplayWidth() {
         return mSize.x;
-    }
-
-    /**
-     * @return Real physical display height in physical pixels. Or 0 if not supported.
-     */
-    public int getPhysicalDisplayHeight() {
-        return mPhysicalSize.y;
-    }
-
-    /**
-     * @return Real physical display width in physical pixels. Or 0 if not supported.
-     */
-    public int getPhysicalDisplayWidth() {
-        return mPhysicalSize.x;
     }
 
     /**
@@ -195,7 +180,6 @@ public class DisplayAndroid {
         mDisplayId = displayId;
         mObservers = new WeakHashMap<>();
         mSize = new Point();
-        mPhysicalSize = new Point();
     }
 
     private DisplayAndroidObserver[] getObservers() {
@@ -206,24 +190,22 @@ public class DisplayAndroid {
     /**
      * Update the display to the provided parameters. Null values leave the parameter unchanged.
      */
-    protected void update(Point size, Point physicalSize, Float dipScale, Integer bitsPerPixel,
+    protected void update(Point size, Float dipScale, Integer bitsPerPixel,
             Integer bitsPerComponent, Integer rotation) {
         boolean sizeChanged = size != null && !mSize.equals(size);
-        boolean physicalSizeChanged = physicalSize != null && !mPhysicalSize.equals(physicalSize);
         // Intentional comparison of floats: we assume that if scales differ, they differ
         // significantly.
         boolean dipScaleChanged = dipScale != null && mDipScale != dipScale;
         boolean bitsPerPixelChanged = bitsPerPixel != null && mBitsPerPixel != bitsPerPixel;
-        boolean bitsPerComponentChanged = bitsPerComponent != null
-                && mBitsPerComponent != bitsPerComponent;
+        boolean bitsPerComponentChanged =
+                bitsPerComponent != null && mBitsPerComponent != bitsPerComponent;
         boolean rotationChanged = rotation != null && mRotation != rotation;
 
-        boolean changed = sizeChanged || physicalSizeChanged || dipScaleChanged
-                || bitsPerPixelChanged || bitsPerComponentChanged || rotationChanged;
+        boolean changed = sizeChanged || dipScaleChanged || bitsPerPixelChanged
+                || bitsPerComponentChanged || rotationChanged;
         if (!changed) return;
 
         if (sizeChanged) mSize = size;
-        if (physicalSizeChanged) mPhysicalSize = physicalSize;
         if (dipScaleChanged) mDipScale = dipScale;
         if (bitsPerPixelChanged) mBitsPerPixel = bitsPerPixel;
         if (bitsPerComponentChanged) mBitsPerComponent = bitsPerComponent;

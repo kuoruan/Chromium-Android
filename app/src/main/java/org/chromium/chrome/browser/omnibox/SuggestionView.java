@@ -35,6 +35,7 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.omnibox.OmniboxResultsAdapter.OmniboxResultItem;
 import org.chromium.chrome.browser.omnibox.OmniboxResultsAdapter.OmniboxSuggestionDelegate;
 import org.chromium.chrome.browser.omnibox.OmniboxSuggestion.MatchClassification;
+import org.chromium.chrome.browser.util.ViewUtils;
 import org.chromium.chrome.browser.widget.TintedDrawable;
 import org.chromium.ui.base.DeviceFormFactor;
 
@@ -511,7 +512,7 @@ class SuggestionView extends ViewGroup {
                 }
                 classifications.add(0, new MatchClassification(0, MatchClassificationStyle.NONE));
 
-                if (DeviceFormFactor.isTablet(getContext())) {
+                if (DeviceFormFactor.isTablet()) {
                     TextPaint tp = mContentsView.mTextLine1.getPaint();
                     mContentsView.mRequiredWidth =
                             tp.measureText(fillIntoEdit, 0, fillIntoEdit.length());
@@ -580,10 +581,8 @@ class SuggestionView extends ViewGroup {
             mContentsView.mAnswerImageMaxSize = imageSize;
 
             String url = "https:" + secondLine.getImage().replace("\\/", "/");
-            AnswersImage.requestAnswersImage(
-                    mLocationBar.getCurrentTab().getProfile(),
-                    url,
-                    new AnswersImage.AnswersImageObserver() {
+            AnswersImage.requestAnswersImage(mLocationBar.getToolbarDataProvider().getProfile(),
+                    url, new AnswersImage.AnswersImageObserver() {
                         @Override
                         public void onAnswersImageChanged(Bitmap bitmap) {
                             mContentsView.mAnswerImage.setImageBitmap(bitmap);
@@ -735,7 +734,7 @@ class SuggestionView extends ViewGroup {
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
 
-            if (DeviceFormFactor.isTablet(getContext())) {
+            if (DeviceFormFactor.isTablet()) {
                 // Use the same image transform matrix as the navigation icon to ensure the same
                 // scaling, which requires centering vertically based on the height of the
                 // navigation icon view and not the image itself.
@@ -821,7 +820,7 @@ class SuggestionView extends ViewGroup {
 
             // Align the text to be pixel perfectly aligned with the text in the url bar.
             boolean isRTL = ApiCompatibilityUtils.isLayoutRtl(this);
-            if (DeviceFormFactor.isTablet(getContext())) {
+            if (DeviceFormFactor.isTablet()) {
                 int textWidth = isRTL ? mTextRight : (r - l - mTextLeft);
                 final float maxRequiredWidth = mSuggestionDelegate.getMaxRequiredWidth();
                 final float maxMatchContentsWidth = mSuggestionDelegate.getMaxMatchContentsWidth();
@@ -860,7 +859,8 @@ class SuggestionView extends ViewGroup {
 
         private int getUrlBarLeftOffset() {
             if (mLocationBar.mustQueryUrlBarLocationForSuggestions()) {
-                mUrlBar.getLocationInWindow(mViewPositionHolder);
+                View contentView = getRootView().findViewById(android.R.id.content);
+                ViewUtils.getRelativeLayoutPosition(contentView, mUrlBar, mViewPositionHolder);
                 return mViewPositionHolder[0];
             } else {
                 return ApiCompatibilityUtils.isLayoutRtl(this) ? mPhoneUrlBarLeftOffsetRtlPx
@@ -875,7 +875,8 @@ class SuggestionView extends ViewGroup {
             if (mLocationBar == null) return 0;
 
             int leftOffset = getUrlBarLeftOffset();
-            getLocationInWindow(mViewPositionHolder);
+            View contentView = getRootView().findViewById(android.R.id.content);
+            ViewUtils.getRelativeLayoutPosition(contentView, this, mViewPositionHolder);
             return leftOffset + mUrlBar.getPaddingLeft() - mViewPositionHolder[0];
         }
 
@@ -886,7 +887,8 @@ class SuggestionView extends ViewGroup {
             if (mLocationBar == null) return 0;
 
             int leftOffset = getUrlBarLeftOffset();
-            getLocationInWindow(mViewPositionHolder);
+            View contentView = getRootView().findViewById(android.R.id.content);
+            ViewUtils.getRelativeLayoutPosition(contentView, this, mViewPositionHolder);
             return leftOffset + mUrlBar.getWidth() - mUrlBar.getPaddingRight()
                     - mViewPositionHolder[0];
         }

@@ -88,6 +88,8 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
     private final BlockingQueue<TextInputState> mQueue = new LinkedBlockingQueue<>();
     private int mPendingAccent;
     private TextInputState mCachedTextInputState;
+    private int mCurrentExtractedTextRequestToken;
+    private boolean mShouldUpdateExtractedText;
 
     ThreadedInputConnection(View view, ImeAdapter imeAdapter, Handler handler) {
         super(view, true);
@@ -99,8 +101,16 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
 
     void resetOnUiThread() {
         ImeUtils.checkOnUiThread();
-        mNumNestedBatchEdits = 0;
-        mPendingAccent = 0;
+
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                mNumNestedBatchEdits = 0;
+                mPendingAccent = 0;
+                mCurrentExtractedTextRequestToken = 0;
+                mShouldUpdateExtractedText = false;
+            }
+        });
     }
 
     @Override
@@ -183,6 +193,16 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
         if (mNumNestedBatchEdits != 0) return;
         Range selection = textInputState.selection();
         Range composition = textInputState.composition();
+        // As per Guidelines in
+        // https://developer.android.com/reference/android/view/inputmethod/InputConnection.html
+        // #getExtractedText(android.view.inputmethod.ExtractedTextRequest,%20int)
+        // States that if the GET_EXTRACTED_TEXT_MONITOR flag is set,
+        // you should be calling updateExtractedText(View, int, ExtractedText)
+        // whenever you call updateSelection(View, int, int, int, int).
+        if (mShouldUpdateExtractedText) {
+            final ExtractedText extractedText = convertToExtractedText(textInputState);
+            mImeAdapter.updateExtractedText(mCurrentExtractedTextRequestToken, extractedText);
+        }
         mImeAdapter.updateSelection(
                 selection.start(), selection.end(), composition.start(), composition.end());
     }
@@ -350,11 +370,23 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
     @Override
     public ExtractedText getExtractedText(ExtractedTextRequest request, int flags) {
         if (DEBUG_LOGS) Log.i(TAG, "getExtractedText");
+        assertOnImeThread();
+        mShouldUpdateExtractedText = (flags & GET_EXTRACTED_TEXT_MONITOR) > 0;
+        if (mShouldUpdateExtractedText) {
+            mCurrentExtractedTextRequestToken = request != null ? request.token : 0;
+        }
         TextInputState textInputState = requestAndWaitForTextInputState();
+        return convertToExtractedText(textInputState);
+    }
+
+    private ExtractedText convertToExtractedText(TextInputState textInputState) {
         if (textInputState == null) return null;
         ExtractedText extractedText = new ExtractedText();
         extractedText.text = textInputState.text();
         extractedText.partialEndOffset = textInputState.text().length();
+        // Set the partial start offset to -1 because the content is the full text.
+        // See: Android documentation for ExtractedText#partialStartOffset
+        extractedText.partialStartOffset = -1;
         extractedText.selectionStart = textInputState.selection().start();
         extractedText.selectionEnd = textInputState.selection().end();
         extractedText.flags = textInputState.singleLine() ? ExtractedText.FLAG_SINGLE_LINE : 0;

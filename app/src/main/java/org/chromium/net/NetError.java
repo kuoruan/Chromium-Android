@@ -167,7 +167,6 @@ public static final int ERR_PAC_SCRIPT_TERMINATED = -367;
 public static final int ERR_INVALID_HTTP_RESPONSE = -370;
 public static final int ERR_CONTENT_DECODING_INIT_FAILED = -371;
 public static final int ERR_SPDY_RST_STREAM_NO_ERROR_RECEIVED = -372;
-public static final int ERR_MISDIRECTED_REQUEST = -373;
 public static final int ERR_CACHE_MISS = -400;
 public static final int ERR_CACHE_READ_FAILURE = -401;
 public static final int ERR_CACHE_WRITE_FAILURE = -402;

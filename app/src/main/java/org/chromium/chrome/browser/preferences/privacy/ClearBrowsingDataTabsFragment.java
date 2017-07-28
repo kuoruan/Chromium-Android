@@ -17,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
@@ -31,7 +32,9 @@ public class ClearBrowsingDataTabsFragment extends Fragment {
     public static final int CBD_TAB_COUNT = 2;
 
     public ClearBrowsingDataTabsFragment() {
-        // TODO(dullweber): Remove this migration after after three milestones (probably M61)
+        // TODO(dullweber): Remove this migration after M62, most users should
+        // be migrated and the others will just get the default settings for
+        // the basic tab.
         PrefServiceBridge.getInstance().migrateBrowsingDataPreferences();
     }
 
@@ -45,6 +48,7 @@ public class ClearBrowsingDataTabsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        RecordUserAction.record("ClearBrowsingData_DialogCreated");
     }
 
     /*

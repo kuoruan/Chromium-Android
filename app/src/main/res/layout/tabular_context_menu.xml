@@ -20,5 +20,6 @@
         app:tabSelectedTextColor="@color/light_active_color"
         app:tabIndicatorColor="@color/light_active_color"
         app:tabGravity="fill"
+        app:tabMaxWidth="0dp"
         app:tabMode="fixed" />
 </org.chromium.chrome.browser.contextmenu.TabularContextMenuViewPager>

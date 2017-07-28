@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
+import android.support.v7.content.res.AppCompatResources;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
@@ -45,7 +46,8 @@ public class AutofillCreditCardsFragment
             Preference pref = new Preference(getActivity());
             pref.setTitle(card.getObfuscatedNumber());
             pref.setSummary(card.getFormattedExpirationDate(getActivity()));
-            pref.setIcon(card.getIssuerIconDrawableId());
+            pref.setIcon(
+                    AppCompatResources.getDrawable(getActivity(), card.getIssuerIconDrawableId()));
 
             if (card.getIsLocal()) {
                 pref.setFragment(AutofillLocalCardEditor.class.getName());

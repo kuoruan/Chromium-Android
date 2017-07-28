@@ -104,7 +104,7 @@ public class AccountSigninActivity extends AppCompatActivity
 
         mView = (AccountSigninView) LayoutInflater.from(this).inflate(
                 R.layout.account_signin_view, null);
-        mView.init(getProfileDataCache(), this, this);
+        mView.init(getProfileDataCache(), false, null, this, this);
 
         if (getAccessPoint() == SigninAccessPoint.BOOKMARK_MANAGER
                 || getAccessPoint() == SigninAccessPoint.RECENT_TABS) {
@@ -149,10 +149,10 @@ public class AccountSigninActivity extends AppCompatActivity
     }
 
     @Override
-    public void onAccountSelected(final String accountName, final boolean settingsClicked) {
+    public void onAccountSelected(
+            final String accountName, boolean isDefaultAccount, final boolean settingsClicked) {
         final Context context = this;
-        SigninManager.get(this).signIn(accountName, this, new SignInCallback(){
-
+        SigninManager.get(this).signIn(accountName, this, new SignInCallback() {
             @Override
             public void onSignInComplete() {
                 if (settingsClicked) {

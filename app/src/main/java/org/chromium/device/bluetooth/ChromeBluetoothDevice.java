@@ -6,9 +6,9 @@ package org.chromium.device.bluetooth;
 
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 import android.os.Build;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -23,7 +23,7 @@ import java.util.HashMap;
  * Lifetime is controlled by device::BluetoothDeviceAndroid.
  */
 @JNINamespace("device")
-@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+@TargetApi(Build.VERSION_CODES.M)
 final class ChromeBluetoothDevice {
     private static final String TAG = "Bluetooth";
 
@@ -100,15 +100,17 @@ final class ChromeBluetoothDevice {
 
     // Implements BluetoothDeviceAndroid::CreateGattConnectionImpl.
     @CalledByNative
-    private void createGattConnectionImpl(Context context) {
+    private void createGattConnectionImpl() {
         Log.i(TAG, "connectGatt");
 
         if (mBluetoothGatt != null) mBluetoothGatt.close();
 
         // autoConnect set to false as under experimentation using autoConnect failed to complete
         // connections.
-        mBluetoothGatt =
-                mDevice.connectGatt(context, false /* autoConnect */, mBluetoothGattCallbackImpl);
+        mBluetoothGatt = mDevice.connectGatt(ContextUtils.getApplicationContext(),
+                false /* autoConnect */, mBluetoothGattCallbackImpl,
+                // Prefer LE for dual-mode devices due to lower energy consumption.
+                BluetoothDevice.TRANSPORT_LE);
     }
 
     // Implements BluetoothDeviceAndroid::DisconnectGatt.

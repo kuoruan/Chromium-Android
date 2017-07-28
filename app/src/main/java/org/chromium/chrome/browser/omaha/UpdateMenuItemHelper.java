@@ -45,10 +45,6 @@ public class UpdateMenuItemHelper {
     // VariationsAssociatedData configs
     private static final String FIELD_TRIAL_NAME = "UpdateMenuItem";
     private static final String ENABLED_VALUE = "true";
-    private static final String ENABLE_UPDATE_MENU_ITEM = "enable_update_menu_item";
-    private static final String ENABLE_UPDATE_BADGE = "enable_update_badge";
-    private static final String SHOW_SUMMARY = "show_summary";
-    private static final String USE_NEW_FEATURES_SUMMARY = "use_new_features_summary";
     private static final String CUSTOM_SUMMARY = "custom_summary";
 
     // UMA constants for logging whether the menu item was clicked.
@@ -101,12 +97,6 @@ public class UpdateMenuItemHelper {
      * @param activity The current {@link ChromeActivity}.
      */
     public void checkForUpdateOnBackgroundThread(final ChromeActivity activity) {
-        if (!getBooleanParam(ENABLE_UPDATE_MENU_ITEM)
-                && !getBooleanParam(ChromeSwitches.FORCE_SHOW_UPDATE_MENU_ITEM)
-                && !getBooleanParam(ChromeSwitches.FORCE_SHOW_UPDATE_MENU_BADGE)) {
-            return;
-        }
-
         ThreadUtils.assertOnUiThread();
 
         if (mAlreadyCheckedForUpdates) {
@@ -160,10 +150,6 @@ public class UpdateMenuItemHelper {
             return true;
         }
 
-        if (!getBooleanParam(ENABLE_UPDATE_MENU_ITEM)) {
-            return false;
-        }
-
         return updateAvailable(activity);
     }
 
@@ -172,18 +158,9 @@ public class UpdateMenuItemHelper {
      * @return The string to use for summary text or the empty string if no summary should be shown.
      */
     public String getMenuItemSummaryText(Context context) {
-        if (!getBooleanParam(SHOW_SUMMARY) && !getBooleanParam(USE_NEW_FEATURES_SUMMARY)
-                && !getBooleanParam(CUSTOM_SUMMARY)) {
-            return "";
-        }
-
         String customSummary = getStringParamValue(CUSTOM_SUMMARY);
         if (!TextUtils.isEmpty(customSummary)) {
             return customSummary;
-        }
-
-        if (getBooleanParam(USE_NEW_FEATURES_SUMMARY)) {
-            return context.getResources().getString(R.string.menu_update_summary_new_features);
         }
 
         return context.getResources().getString(R.string.menu_update_summary_default);
@@ -202,8 +179,7 @@ public class UpdateMenuItemHelper {
         // even newer version of Chrome available.
         String latestVersionWhenClicked =
                 PrefServiceBridge.getInstance().getLatestVersionWhenClickedUpdateMenuItem();
-        if (!getBooleanParam(ENABLE_UPDATE_BADGE)
-                || TextUtils.equals(latestVersionWhenClicked, mLatestVersion)) {
+        if (TextUtils.equals(latestVersionWhenClicked, mLatestVersion)) {
             return false;
         }
 

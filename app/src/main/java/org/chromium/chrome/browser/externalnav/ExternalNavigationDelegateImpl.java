@@ -343,7 +343,6 @@ public class ExternalNavigationDelegateImpl implements ExternalNavigationDelegat
         boolean activityWasLaunched;
         // Only touches disk on Kitkat. See http://crbug.com/617725 for more context.
         StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
-        StrictMode.allowThreadDiskReads();
         try {
             forcePdfViewerAsIntentHandlerIfNeeded(intent);
             if (proxy) {
@@ -558,6 +557,8 @@ public class ExternalNavigationDelegateImpl implements ExternalNavigationDelegat
 
     @Override
     public boolean isSerpReferrer(Tab tab) {
+        // TODO (thildebr): Investigate whether or not we can use getLastCommittedUrl() instead of
+        // the NavigationController.
         if (tab == null || tab.getWebContents() == null) return false;
 
         NavigationController nController = tab.getWebContents().getNavigationController();
@@ -589,12 +590,16 @@ public class ExternalNavigationDelegateImpl implements ExternalNavigationDelegat
         } else if (!isIncomingRedirect) {
             // Check if the navigation is coming from SERP and skip instant app handling.
             if (isSerpReferrer(tab)) return false;
-            return handler.handleNavigation(
-                    getAvailableContext(), url,
-                    TextUtils.isEmpty(referrerUrl) ? null : Uri.parse(referrerUrl),
-                    tab.getWebContents());
+            return handler.handleNavigation(getAvailableContext(), url,
+                    TextUtils.isEmpty(referrerUrl) ? null : Uri.parse(referrerUrl), tab);
         }
         return false;
+    }
+
+    @Override
+    public String getPreviousUrl() {
+        if (mTab == null || mTab.getWebContents() == null) return null;
+        return mTab.getWebContents().getLastCommittedUrl();
     }
 
     /**

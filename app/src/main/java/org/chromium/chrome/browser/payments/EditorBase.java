@@ -7,7 +7,7 @@ package org.chromium.chrome.browser.payments;
 import android.content.Context;
 
 import org.chromium.base.Callback;
-import org.chromium.chrome.browser.payments.ui.EditorView;
+import org.chromium.chrome.browser.payments.ui.EditorDialog;
 import org.chromium.chrome.browser.payments.ui.PaymentOption;
 
 import javax.annotation.Nullable;
@@ -16,7 +16,8 @@ import javax.annotation.Nullable;
  * The base class for an editor controller.
  */
 abstract class EditorBase<T extends PaymentOption> {
-    @Nullable protected EditorView mEditorView;
+    @Nullable
+    protected EditorDialog mEditorDialog;
     @Nullable protected Context mContext;
 
     /**
@@ -24,10 +25,10 @@ abstract class EditorBase<T extends PaymentOption> {
      *
      * @param editorView The user interface to be used.
      */
-    public void setEditorView(EditorView editorView) {
-        assert editorView != null;
-        mEditorView = editorView;
-        mContext = mEditorView.getContext();
+    public void setEditorDialog(EditorDialog editorDialog) {
+        assert editorDialog != null;
+        mEditorDialog = editorDialog;
+        mContext = mEditorDialog.getContext();
     }
 
     /**
@@ -40,7 +41,7 @@ abstract class EditorBase<T extends PaymentOption> {
      */
     protected void edit(@Nullable T toEdit, Callback<T> callback) {
         assert callback != null;
-        assert mEditorView != null;
+        assert mEditorDialog != null;
         assert mContext != null;
     }
 }

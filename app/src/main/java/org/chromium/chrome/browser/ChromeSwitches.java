@@ -124,13 +124,6 @@ public abstract class ChromeSwitches {
     public static final String NTP_SWITCH_TO_EXISTING_TAB = "ntp-switch-to-existing-tab";
 
     /**
-     * Enable keyboard accessory view that shows autofill suggestions on top of the keyboard.
-     * Native switch - autofill::switches::kEnableAccessorySuggestionView
-     */
-    public static final String ENABLE_AUTOFILL_KEYBOARD_ACCESSORY =
-            "enable-autofill-keyboard-accessory-view";
-
-    /**
      * Enables overscroll of the on screen keyboard. With this flag on, the OSK will only resize the
      * visual viewport.
      * Native switch - switches::kEnableOSKOverscroll
@@ -181,9 +174,6 @@ public abstract class ChromeSwitches {
      */
     public static final String ALWAYS_EXTRACT_WEBAPK_RUNTIME_DEX_ON_STARTUP =
             "always-extract-webapk-dex-on-startup";
-
-    /** Enable non-'org.chromium.webapk' prefixed package names with proper signature. */
-    public static final String ENABLE_ANY_WEBAPK_PACKAGE_NAME = "any-webapk-package-name";
 
     /**
      * Forces a check for whether the WebAPK's Web Manifest has changed each time that a WebAPK is

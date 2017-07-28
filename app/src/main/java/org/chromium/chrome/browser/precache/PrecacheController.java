@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.precache;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -81,6 +82,7 @@ public class PrecacheController {
      * singleton so that there is a single handle by which to determine if
      * precaching is underway, and to cancel it if necessary.
      */
+    @SuppressLint("StaticFieldLeak")
     private static PrecacheController sInstance;
 
     /**

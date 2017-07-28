@@ -12,6 +12,7 @@ import android.media.midi.MidiManager;
 import android.os.Build;
 import android.os.Handler;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -54,22 +55,21 @@ class MidiManagerAndroid {
 
     /**
      * A creation function called by C++.
-     * @param context
      * @param nativeManagerPointer The native pointer to a midi::MidiManagerAndroid object.
      */
     @CalledByNative
-    static MidiManagerAndroid create(Context context, long nativeManagerPointer) {
-        return new MidiManagerAndroid(context, nativeManagerPointer);
+    static MidiManagerAndroid create(long nativeManagerPointer) {
+        return new MidiManagerAndroid(nativeManagerPointer);
     }
 
     /**
-     * @param context
      * @param nativeManagerPointer The native pointer to a midi::MidiManagerAndroid object.
      */
-    private MidiManagerAndroid(Context context, long nativeManagerPointer) {
+    private MidiManagerAndroid(long nativeManagerPointer) {
         assert !ThreadUtils.runningOnUiThread();
 
-        mManager = (MidiManager) context.getSystemService(Context.MIDI_SERVICE);
+        mManager = (MidiManager) ContextUtils.getApplicationContext().getSystemService(
+                Context.MIDI_SERVICE);
         mHandler = new Handler(ThreadUtils.getUiThreadLooper());
         mNativeManagerPointer = nativeManagerPointer;
     }

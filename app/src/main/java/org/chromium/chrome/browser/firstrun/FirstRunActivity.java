@@ -12,7 +12,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 
+import org.chromium.base.ActivityState;
 import org.chromium.base.ApplicationStatus;
+import org.chromium.base.ApplicationStatus.ActivityStateListener;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.CachedMetrics.EnumeratedHistogramSample;
@@ -27,6 +29,8 @@ import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
 import org.chromium.chrome.browser.preferences.datareduction.DataReductionPromoUtils;
 import org.chromium.chrome.browser.preferences.datareduction.DataReductionProxyUma;
 import org.chromium.chrome.browser.profiles.Profile;
+import org.chromium.chrome.browser.search_engines.TemplateUrlService;
+import org.chromium.chrome.browser.searchwidget.SearchWidgetProvider;
 import org.chromium.chrome.browser.util.IntentUtils;
 
 import java.lang.ref.WeakReference;
@@ -46,6 +50,24 @@ import java.util.concurrent.Callable;
  * The activity might be run more than once, e.g. 1) for ToS and sign-in, and 2) for intro.
  */
 public class FirstRunActivity extends AsyncInitializationActivity implements FirstRunPageDelegate {
+    /** Alerted about various events when FirstRunActivity performs them. */
+    public interface FirstRunActivityObserver {
+        /** See {@link #onFlowIsKnown}. */
+        void onFlowIsKnown(Bundle freProperties);
+
+        /** See {@link #acceptTermsOfService}. */
+        void onAcceptTermsOfService();
+
+        /** See {@link #jumpToPage}. */
+        void onJumpToPage(int position);
+
+        /** Called when First Run is completed. */
+        void onUpdateCachedEngineName();
+
+        /** See {@link #abortFirstRunExperience}. */
+        void onAbortFirstRunExperience();
+    }
+
     protected static final String TAG = "FirstRunActivity";
 
     // Incoming parameters:
@@ -56,8 +78,9 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
     public static final String EXTRA_FINISH_ON_TOUCH_OUTSIDE = "Extra.FreFinishOnTouchOutside";
 
     static final String SHOW_WELCOME_PAGE = "ShowWelcome";
-    static final String SHOW_SIGNIN_PAGE = "ShowSignIn";
     static final String SHOW_DATA_REDUCTION_PAGE = "ShowDataReduction";
+    static final String SHOW_SEARCH_ENGINE_PAGE = "ShowSearchEnginePage";
+    static final String SHOW_SIGNIN_PAGE = "ShowSignIn";
 
     static final String POST_NATIVE_SETUP_NEEDED = "PostNativeSetupNeeded";
 
@@ -86,7 +109,8 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
     private static final int FRE_PROGRESS_SIGNIN_SHOWN = 3;
     private static final int FRE_PROGRESS_COMPLETED_SIGNED_IN = 4;
     private static final int FRE_PROGRESS_COMPLETED_NOT_SIGNED_IN = 5;
-    private static final int FRE_PROGRESS_MAX = 6;
+    private static final int FRE_PROGRESS_DEFAULT_SEARCH_ENGINE_SHOWN = 6;
+    private static final int FRE_PROGRESS_MAX = 7;
     private static final EnumeratedHistogramSample sMobileFreProgressMainIntentHistogram =
             new EnumeratedHistogramSample("MobileFre.Progress.MainIntent", FRE_PROGRESS_MAX);
     private static final EnumeratedHistogramSample sMobileFreProgressViewIntentHistogram =
@@ -95,9 +119,12 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
     @VisibleForTesting
     static FirstRunGlue sGlue = new FirstRunGlueImpl();
 
+    private static FirstRunActivityObserver sObserver;
+
     private boolean mShowWelcomePage = true;
 
     private String mResultSignInAccountName;
+    private boolean mResultIsDefaultAccount;
     private boolean mResultShowSignInSettings;
 
     private boolean mFlowIsKnown;
@@ -154,6 +181,14 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
             notifyAdapter = true;
         }
 
+        // An optional page to select a default search engine.
+        if (mFreProperties.getBoolean(SHOW_SEARCH_ENGINE_PAGE)
+                && mFirstRunFlowSequencer.shouldShowSearchEnginePage()) {
+            mPages.add(pageOf(DefaultSearchEngineFirstRunFragment.class));
+            mFreProgressStates.add(FRE_PROGRESS_DEFAULT_SEARCH_ENGINE_SHOWN);
+            notifyAdapter = true;
+        }
+
         // An optional sign-in page.
         if (mFreProperties.getBoolean(SHOW_SIGNIN_PAGE)) {
             mPages.add(pageOf(AccountFirstRunFragment.class));
@@ -167,7 +202,11 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
         mPostNativePageSequenceCreated = true;
     }
 
-    // AsyncInitializationActivity:
+    @Override
+    protected boolean requiresFirstRunToBeCompleted(Intent intent) {
+        // The user is already in First Run.
+        return false;
+    }
 
     @Override
     protected Bundle transformSavedInstanceStateForOnCreate(Bundle savedInstanceState) {
@@ -200,6 +239,7 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
 
         mPager = new FirstRunViewPager(this);
         mPager.setId(R.id.fre_pager);
+        mPager.setOffscreenPageLimit(3);
         setContentView(mPager);
 
         mFirstRunFlowSequencer = new FirstRunFlowSequencer(this, mFreProperties) {
@@ -237,6 +277,7 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
                     skipPagesIfNecessary();
                 }
 
+                if (sObserver != null) sObserver.onFlowIsKnown(mFreProperties);
                 recordFreProgressHistogram(mFreProgressStates.get(0));
             }
         };
@@ -248,6 +289,17 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
     @Override
     public void finishNativeInitialization() {
         super.finishNativeInitialization();
+
+        Runnable onNativeFinished = new Runnable() {
+            @Override
+            public void run() {
+                onNativeDependenciesFullyInitialized();
+            }
+        };
+        TemplateUrlService.getInstance().runWhenLoaded(onNativeFinished);
+    }
+
+    private void onNativeDependenciesFullyInitialized() {
         mNativeSideIsInitialized = true;
         if (mDeferredCompleteFRE) {
             completeFirstRunExperience();
@@ -363,8 +415,8 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
     @Override
     public ProfileDataCache getProfileDataCache() {
         if (mProfileDataCache == null) {
-            mProfileDataCache = new ProfileDataCache(FirstRunActivity.this, null);
-            mProfileDataCache.setProfile(Profile.getLastUsedProfile());
+            mProfileDataCache =
+                    new ProfileDataCache(FirstRunActivity.this, Profile.getLastUsedProfile());
         }
         return mProfileDataCache;
     }
@@ -387,6 +439,7 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
         finishAllTheActivities(getLocalClassName(), Activity.RESULT_CANCELED, intent);
 
         sendPendingIntentIfNecessary(false);
+        if (sObserver != null) sObserver.onAbortFirstRunExperience();
     }
 
     @Override
@@ -396,21 +449,13 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
             return;
         }
         if (!TextUtils.isEmpty(mResultSignInAccountName)) {
-            boolean defaultAccountName =
-                    sGlue.isDefaultAccountName(getApplicationContext(), mResultSignInAccountName);
-            int choice;
+            final int choice;
             if (mResultShowSignInSettings) {
-                if (defaultAccountName) {
-                    choice = SIGNIN_SETTINGS_DEFAULT_ACCOUNT;
-                } else {
-                    choice = SIGNIN_SETTINGS_ANOTHER_ACCOUNT;
-                }
+                choice = mResultIsDefaultAccount ? SIGNIN_SETTINGS_DEFAULT_ACCOUNT
+                                                 : SIGNIN_SETTINGS_ANOTHER_ACCOUNT;
             } else {
-                if (defaultAccountName) {
-                    choice = SIGNIN_ACCEPT_DEFAULT_ACCOUNT;
-                } else {
-                    choice = SIGNIN_ACCEPT_ANOTHER_ACCOUNT;
-                }
+                choice = mResultIsDefaultAccount ? SIGNIN_ACCEPT_DEFAULT_ACCOUNT
+                                                 : SIGNIN_ACCEPT_ANOTHER_ACCOUNT;
             }
             sSigninChoiceHistogram.record(choice);
             recordFreProgressHistogram(FRE_PROGRESS_COMPLETED_SIGNED_IN);
@@ -434,11 +479,27 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
             }
         }
 
-        Intent resultData = new Intent();
-        resultData.putExtras(mFreProperties);
-        finishAllTheActivities(getLocalClassName(), Activity.RESULT_OK, resultData);
+        // Update the search engine name cached by the widget.
+        SearchWidgetProvider.updateCachedEngineName();
+        if (sObserver != null) sObserver.onUpdateCachedEngineName();
 
-        sendPendingIntentIfNecessary(true);
+        if (!sendPendingIntentIfNecessary(true)) {
+            Intent resultData = new Intent();
+            resultData.putExtras(mFreProperties);
+            finishAllTheActivities(getLocalClassName(), Activity.RESULT_OK, resultData);
+        } else {
+            ApplicationStatus.registerStateListenerForActivity(new ActivityStateListener() {
+                @Override
+                public void onActivityStateChange(Activity activity, int newState) {
+                    if (newState == ActivityState.STOPPED || newState == ActivityState.DESTROYED) {
+                        Intent resultData = new Intent();
+                        resultData.putExtras(mFreProperties);
+                        finishAllTheActivities(getLocalClassName(), Activity.RESULT_OK, resultData);
+                        ApplicationStatus.unregisterActivityStateListener(this);
+                    }
+                }
+            }, this);
+        }
     }
 
     @Override
@@ -449,8 +510,9 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
     }
 
     @Override
-    public void acceptSignIn(String accountName) {
+    public void acceptSignIn(String accountName, boolean isDefaultAccount) {
         mResultSignInAccountName = accountName;
+        mResultIsDefaultAccount = isDefaultAccount;
     }
 
     @Override
@@ -460,7 +522,9 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
 
     @Override
     public boolean didAcceptTermsOfService() {
-        return sGlue.didAcceptTermsOfService(getApplicationContext());
+        boolean result = sGlue.didAcceptTermsOfService(getApplicationContext());
+        if (sObserver != null) sObserver.onAcceptTermsOfService();
+        return result;
     }
 
     @Override
@@ -503,11 +567,12 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
     /**
      * Sends the PendingIntent included with the CHROME_LAUNCH_INTENT extra if it exists.
      * @param complete Whether first run completed successfully.
+     * @return Whether a pending intent was sent.
      */
-    protected void sendPendingIntentIfNecessary(final boolean complete) {
+    protected final boolean sendPendingIntentIfNecessary(final boolean complete) {
         PendingIntent pendingIntent = IntentUtils.safeGetParcelableExtra(getIntent(),
                 EXTRA_CHROME_LAUNCH_INTENT);
-        if (pendingIntent == null) return;
+        if (pendingIntent == null) return false;
 
         Intent extraDataIntent = new Intent();
         extraDataIntent.putExtra(FirstRunActivity.EXTRA_FIRST_RUN_ACTIVITY_RESULT, true);
@@ -531,9 +596,11 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
             // will go back to the ChromeLauncherActivity, which will route it accordingly.
             pendingIntent.send(this, complete ? Activity.RESULT_OK : Activity.RESULT_CANCELED,
                     extraDataIntent, onFinished, null);
+            return true;
         } catch (CanceledException e) {
             Log.e(TAG, "Unable to send PendingIntent.", e);
         }
+        return false;
     }
 
     /**
@@ -542,6 +609,8 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
      * @param position A page index to transition to.
      */
     private boolean jumpToPage(int position) {
+        if (sObserver != null) sObserver.onJumpToPage(position);
+
         if (mShowWelcomePage && !didAcceptTermsOfService()) {
             return position == 0;
         }
@@ -597,5 +666,11 @@ public class FirstRunActivity extends AsyncInitializationActivity implements Fir
     @Override
     public void showInfoPage(int url) {
         CustomTabActivity.showInfoPage(this, getString(url));
+    }
+
+    @VisibleForTesting
+    public static void setObserverForTest(FirstRunActivityObserver observer) {
+        assert sObserver == null;
+        sObserver = observer;
     }
 }

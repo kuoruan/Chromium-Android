@@ -6,17 +6,18 @@ package org.chromium.chrome.browser.widget.textbubble;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ColorFilter;
+import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RoundRectShape;
 import android.support.annotation.ColorInt;
 import android.support.v4.graphics.drawable.DrawableCompat;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 
 /**
@@ -26,23 +27,42 @@ class ArrowBubbleDrawable extends Drawable implements Drawable.Callback {
     private final Rect mCachedBubblePadding = new Rect();
 
     private final int mRadiusPx;
-    private final ShapeDrawable mBubbleDrawable;
-    private final BitmapDrawable mArrowDrawable;
+    private final int mArrowWidthPx;
+    private final int mArrowHeightPx;
+
+    private final Path mArrowPath;
+    private final Paint mArrowPaint;
+
+    private final Drawable mBubbleDrawable;
 
     private int mArrowXOffsetPx;
     private boolean mArrowOnTop;
 
     public ArrowBubbleDrawable(Context context) {
         mRadiusPx = context.getResources().getDimensionPixelSize(R.dimen.text_bubble_corner_radius);
-        mBubbleDrawable = new ShapeDrawable(
+        mArrowWidthPx =
+                context.getResources().getDimensionPixelSize(R.dimen.text_bubble_arrow_width);
+        mArrowHeightPx =
+                context.getResources().getDimensionPixelSize(R.dimen.text_bubble_arrow_height);
+
+        // Set up the arrow path and paint for drawing.
+        mArrowPath = new Path();
+        mArrowPath.setFillType(Path.FillType.EVEN_ODD);
+        mArrowPath.moveTo(-mArrowWidthPx / 2.f, mArrowHeightPx);
+        mArrowPath.lineTo(0, 0);
+        mArrowPath.lineTo(mArrowWidthPx / 2.f, mArrowHeightPx);
+        mArrowPath.lineTo(-mArrowWidthPx / 2.f, mArrowHeightPx);
+        mArrowPath.close();
+
+        mArrowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mArrowPaint.setColor(Color.WHITE);
+        mArrowPaint.setStyle(Paint.Style.FILL);
+
+        mBubbleDrawable = DrawableCompat.wrap(new ShapeDrawable(
                 new RoundRectShape(new float[] {mRadiusPx, mRadiusPx, mRadiusPx, mRadiusPx,
-                        mRadiusPx, mRadiusPx, mRadiusPx, mRadiusPx},
-                        null, null));
-        mArrowDrawable = (BitmapDrawable) ApiCompatibilityUtils.getDrawable(
-                context.getResources(), R.drawable.bubble_point_white);
+                    mRadiusPx, mRadiusPx, mRadiusPx, mRadiusPx}, null, null)));
 
         mBubbleDrawable.setCallback(this);
-        mArrowDrawable.setCallback(this);
     }
 
     /**
@@ -56,6 +76,7 @@ class ArrowBubbleDrawable extends Drawable implements Drawable.Callback {
         mArrowXOffsetPx = arrowXOffsetPx;
         mArrowOnTop = arrowOnTop;
         onBoundsChange(getBounds());
+        invalidateSelf();
     }
 
     /**
@@ -63,7 +84,7 @@ class ArrowBubbleDrawable extends Drawable implements Drawable.Callback {
      */
     public int getArrowLeftSpacing() {
         mBubbleDrawable.getPadding(mCachedBubblePadding);
-        return mRadiusPx + mCachedBubblePadding.left + mArrowDrawable.getIntrinsicWidth() / 2;
+        return mRadiusPx + mCachedBubblePadding.left + mArrowWidthPx / 2;
     }
 
     /**
@@ -71,7 +92,7 @@ class ArrowBubbleDrawable extends Drawable implements Drawable.Callback {
      */
     public int getArrowRightSpacing() {
         mBubbleDrawable.getPadding(mCachedBubblePadding);
-        return mRadiusPx + mCachedBubblePadding.right + mArrowDrawable.getIntrinsicWidth() / 2;
+        return mRadiusPx + mCachedBubblePadding.right + mArrowWidthPx / 2;
     }
 
     /**
@@ -86,7 +107,7 @@ class ArrowBubbleDrawable extends Drawable implements Drawable.Callback {
      */
     public void setBubbleColor(@ColorInt int color) {
         DrawableCompat.setTint(mBubbleDrawable, color);
-        DrawableCompat.setTint(mArrowDrawable, color);
+        mArrowPaint.setColor(color);
         invalidateSelf();
     }
 
@@ -111,14 +132,16 @@ class ArrowBubbleDrawable extends Drawable implements Drawable.Callback {
     public void draw(Canvas canvas) {
         mBubbleDrawable.draw(canvas);
 
+        canvas.save();
         // If the arrow is on the bottom, flip the arrow before drawing.
         if (!mArrowOnTop) {
-            canvas.save();
-            canvas.scale(1, -1, mArrowDrawable.getBounds().exactCenterX(),
-                    mArrowDrawable.getBounds().exactCenterY());
+            int arrowCenterYPx = getBounds().height() - mArrowHeightPx / 2;
+            canvas.scale(1, -1, mArrowXOffsetPx, arrowCenterYPx);
+            canvas.translate(0, arrowCenterYPx - mArrowHeightPx / 2);
         }
-        mArrowDrawable.draw(canvas);
-        if (!mArrowOnTop) canvas.restore();
+        canvas.translate(mArrowXOffsetPx, 0);
+        canvas.drawPath(mArrowPath, mArrowPaint);
+        canvas.restore();
     }
 
     @Override
@@ -126,26 +149,19 @@ class ArrowBubbleDrawable extends Drawable implements Drawable.Callback {
         super.onBoundsChange(bounds);
         if (bounds == null) return;
 
-        // Calculate the arrow bounds.
-        int halfArrowWidth = mArrowDrawable.getIntrinsicWidth() / 2;
-        int arrowHeight = mArrowDrawable.getIntrinsicHeight();
-        mArrowDrawable.setBounds(bounds.left + mArrowXOffsetPx - halfArrowWidth,
-                mArrowOnTop ? bounds.top : bounds.bottom - arrowHeight,
-                bounds.left + mArrowXOffsetPx + halfArrowWidth,
-                mArrowOnTop ? bounds.top + arrowHeight : bounds.bottom);
-
         // Calculate the bubble bounds.  Account for the arrow size requiring more space.
         mBubbleDrawable.getPadding(mCachedBubblePadding);
         mBubbleDrawable.setBounds(bounds.left,
-                bounds.top + (mArrowOnTop ? (arrowHeight - mCachedBubblePadding.top) : 0),
+                bounds.top + (mArrowOnTop ? (mArrowHeightPx - mCachedBubblePadding.top) : 0),
                 bounds.right,
-                bounds.bottom - (mArrowOnTop ? 0 : (arrowHeight - mCachedBubblePadding.bottom)));
+                bounds.bottom - (mArrowOnTop ? 0 : (mArrowHeightPx - mCachedBubblePadding.bottom)));
     }
 
     @Override
     public void setAlpha(int alpha) {
         mBubbleDrawable.setAlpha(alpha);
-        mArrowDrawable.setAlpha(alpha);
+        mArrowPaint.setAlpha(alpha);
+        invalidateSelf();
     }
 
     @Override
@@ -162,9 +178,8 @@ class ArrowBubbleDrawable extends Drawable implements Drawable.Callback {
     public boolean getPadding(Rect padding) {
         mBubbleDrawable.getPadding(padding);
 
-        int arrowHeight = mArrowDrawable.getIntrinsicHeight();
-        padding.set(padding.left, Math.max(padding.top, mArrowOnTop ? arrowHeight : 0),
-                padding.right, Math.max(padding.bottom, mArrowOnTop ? 0 : arrowHeight));
+        padding.set(padding.left, Math.max(padding.top, mArrowOnTop ? mArrowHeightPx : 0),
+                padding.right, Math.max(padding.bottom, mArrowOnTop ? 0 : mArrowHeightPx));
         return true;
     }
 }

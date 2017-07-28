@@ -16,31 +16,31 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
-    VideoCodec.kUnknownVideoCodec, VideoCodec.kCodecH264, VideoCodec.kCodecVC1,
-    VideoCodec.kCodecMPEG2, VideoCodec.kCodecMPEG4, VideoCodec.kCodecTheora, VideoCodec.kCodecVP8,
-    VideoCodec.kCodecVP9, VideoCodec.kCodecHEVC, VideoCodec.kCodecDolbyVision,
-    VideoCodec.kVideoCodecMax
+    VideoCodec.UNKNOWN_VIDEO_CODEC, VideoCodec.CODEC_H264, VideoCodec.CODEC_VC1,
+    VideoCodec.CODEC_MPEG2, VideoCodec.CODEC_MPEG4, VideoCodec.CODEC_THEORA, VideoCodec.CODEC_VP8,
+    VideoCodec.CODEC_VP9, VideoCodec.CODEC_HEVC, VideoCodec.CODEC_DOLBY_VISION,
+    VideoCodec.VIDEO_CODEC_MAX
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface VideoCodec {
   /**
    * These values are histogrammed over time; do not change their ordinal values.  When deleting a
    * codec replace it with a dummy value; when adding a codec, do so at the bottom (and update
-   * kVideoCodecMax).
+   * VIDEO_CODEC_MAX).
    */
-  int kUnknownVideoCodec = 0;
-  int kCodecH264 = 1;
-  int kCodecVC1 = 2;
-  int kCodecMPEG2 = 3;
-  int kCodecMPEG4 = 4;
-  int kCodecTheora = 5;
-  int kCodecVP8 = 6;
-  int kCodecVP9 = 7;
-  int kCodecHEVC = 8;
-  int kCodecDolbyVision = 9;
+  int UNKNOWN_VIDEO_CODEC = 0;
+  int CODEC_H264 = 1;
+  int CODEC_VC1 = 2;
+  int CODEC_MPEG2 = 3;
+  int CODEC_MPEG4 = 4;
+  int CODEC_THEORA = 5;
+  int CODEC_VP8 = 6;
+  int CODEC_VP9 = 7;
+  int CODEC_HEVC = 8;
+  int CODEC_DOLBY_VISION = 9;
   /**
    * DO NOT ADD RANDOM VIDEO CODECS! The only acceptable time to add a new codec is if there is
    * production code that uses said codec in the same CL.
    */
-  int kVideoCodecMax = 9;
+  int VIDEO_CODEC_MAX = 9;
 }

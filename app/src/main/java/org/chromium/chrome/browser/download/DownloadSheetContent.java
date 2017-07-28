@@ -5,7 +5,6 @@
 package org.chromium.chrome.browser.download;
 
 import android.app.Activity;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 
 import org.chromium.base.ActivityState;
@@ -18,13 +17,14 @@ import org.chromium.chrome.browser.snackbar.SnackbarManager;
 import org.chromium.chrome.browser.toolbar.BottomToolbarPhone;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.BottomSheetContent;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheetContentController;
+import org.chromium.chrome.browser.widget.selection.SelectableListToolbar;
 
 /**
  * A {@link BottomSheetContent} holding a {@link DownloadManagerUi} for display in the BottomSheet.
  */
 public class DownloadSheetContent implements BottomSheetContent {
     private final View mContentView;
-    private final Toolbar mToolbarView;
+    private final SelectableListToolbar mToolbarView;
     private final ActivityStateListener mActivityStateListener;
     private DownloadManagerUi mDownloadManager;
 
@@ -33,14 +33,20 @@ public class DownloadSheetContent implements BottomSheetContent {
      * @param isIncognito Whether the activity is currently displaying an incognito tab.
      * @param snackbarManager The {@link SnackbarManager} used to display snackbars.
      */
-    public DownloadSheetContent(
-            ChromeActivity activity, final boolean isIncognito, SnackbarManager snackbarManager) {
+    public DownloadSheetContent(final ChromeActivity activity, final boolean isIncognito,
+            SnackbarManager snackbarManager) {
         ThreadUtils.assertOnUiThread();
 
         mDownloadManager = new DownloadManagerUi(
                 activity, isIncognito, activity.getComponentName(), false, snackbarManager);
         mContentView = mDownloadManager.getView();
         mToolbarView = mDownloadManager.detachToolbarView();
+        mToolbarView.addObserver(new SelectableListToolbar.SelectableListToolbarObserver() {
+            @Override
+            public void onThemeColorChanged(boolean isLightTheme) {
+                activity.getBottomSheet().updateHandleTint();
+            }
+        });
         ((BottomToolbarPhone) activity.getToolbarManager().getToolbar())
                 .setOtherToolbarStyle(mToolbarView);
 
@@ -69,6 +75,16 @@ public class DownloadSheetContent implements BottomSheetContent {
     @Override
     public View getToolbarView() {
         return mToolbarView;
+    }
+
+    @Override
+    public boolean isUsingLightToolbarTheme() {
+        return mToolbarView.isLightTheme();
+    }
+
+    @Override
+    public boolean isIncognitoThemedContent() {
+        return false;
     }
 
     @Override

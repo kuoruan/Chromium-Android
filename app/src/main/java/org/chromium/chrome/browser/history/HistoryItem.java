@@ -18,8 +18,8 @@ public class HistoryItem extends TimedItem {
     private final String mDomain;
     private final String mTitle;
     private final boolean mWasBlockedVisit;
-    private final long mTimestamp;
-    private final long[] mTimestampList;
+    private final long mMostRecentJavaTimestamp;
+    private final long[] mNativeTimestampList;
     private Long mStableId;
 
     private HistoryManager mManager;
@@ -28,21 +28,20 @@ public class HistoryItem extends TimedItem {
      * @param url The url for this item.
      * @param domain The string to display for the item's domain.
      * @param title The string to display for the item's title.
-     * @param timestamps The list of timestamps for this item.
+     * @param mostRecentJavaTimestamp Most recent Java compatible navigation time.
+     * @param nativeTimestamps Microsecond resolution navigation times.
      * @param blockedVisit Whether the visit to this item was blocked when it was attempted.
      */
-    public HistoryItem(String url, String domain, String title, long[] timestamps,
-            boolean blockedVisit) {
+    public HistoryItem(String url, String domain, String title, long mostRecentJavaTimestamp,
+            long[] nativeTimestamps, boolean blockedVisit) {
         mUrl = url;
         mDomain = domain;
         mTitle = blockedVisit ? ContextUtils.getApplicationContext().getString(
                 R.string.android_history_blocked_site)
                 : TextUtils.isEmpty(title) ? url : title;
-        mTimestampList = Arrays.copyOf(timestamps, timestamps.length);
+        mMostRecentJavaTimestamp = mostRecentJavaTimestamp;
+        mNativeTimestampList = Arrays.copyOf(nativeTimestamps, nativeTimestamps.length);
         mWasBlockedVisit = blockedVisit;
-
-        // The last timestamp in the list is the most recent visit.
-        mTimestamp = mTimestampList[mTimestampList.length - 1];
     }
 
     /** @return The url for this item. */
@@ -67,14 +66,15 @@ public class HistoryItem extends TimedItem {
 
     @Override
     public long getTimestamp() {
-        return mTimestamp;
+        return mMostRecentJavaTimestamp;
     }
 
     /**
-     * @return An array of timestamps representing visits to this item's url.
+     * @return An array of timestamps representing visits to this item's url that matches the
+     * resolution used in native code.
      */
-    public long[] getTimestamps() {
-        return Arrays.copyOf(mTimestampList, mTimestampList.length);
+    public long[] getNativeTimestamps() {
+        return Arrays.copyOf(mNativeTimestampList, mNativeTimestampList.length);
     }
 
     @Override

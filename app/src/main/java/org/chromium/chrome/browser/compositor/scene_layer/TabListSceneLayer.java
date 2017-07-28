@@ -68,20 +68,28 @@ public class TabListSceneLayer extends SceneLayer {
                     ? ApiCompatibilityUtils.getColor(res, R.color.incognito_primary_color)
                     : ApiCompatibilityUtils.getColor(res, R.color.default_primary_color);
 
-            int closeButtonColor = ColorUtils.getThemedAssetColor(t.getToolbarBackgroundColor(),
-                        t.isIncognito());
+            int toolbarBackgroundColor = t.getToolbarBackgroundColor();
+            int textBoxBackgroundColor = t.getTextBoxBackgroundColor();
+            float textBoxAlpha = t.getTextBoxAlpha();
+            if (t.getForceDefaultThemeColor()) {
+                toolbarBackgroundColor = defaultThemeColor;
+                textBoxBackgroundColor = ColorUtils.getTextBoxColorForToolbarBackground(
+                        res, false, toolbarBackgroundColor);
+                textBoxAlpha = t.isIncognito() ? textBoxAlpha : 1f;
+            }
+
+            int closeButtonColor =
+                    ColorUtils.getThemedAssetColor(toolbarBackgroundColor, t.isIncognito());
 
             int borderColorResource =
                     t.isIncognito() ? R.color.tab_back_incognito : R.color.tab_back;
             // TODO(dtrainor, clholgat): remove "* dpToPx" once the native part fully supports dp.
             nativePutTabLayer(mNativePtr, t.getId(), R.id.control_container,
-                    R.drawable.btn_tab_close,
-                    R.drawable.tabswitcher_border_frame_shadow,
+                    R.drawable.btn_tab_close, R.drawable.tabswitcher_border_frame_shadow,
                     R.drawable.tabswitcher_border_frame_decoration, R.drawable.logo_card_back,
                     R.drawable.tabswitcher_border_frame,
-                    R.drawable.tabswitcher_border_frame_inner_shadow,
-                    t.canUseLiveTexture(), fullscreenManager.areBrowserControlsAtBottom(),
-                    t.getBackgroundColor(),
+                    R.drawable.tabswitcher_border_frame_inner_shadow, t.canUseLiveTexture(),
+                    fullscreenManager.areBrowserControlsAtBottom(), t.getBackgroundColor(),
                     ApiCompatibilityUtils.getColor(res, borderColorResource), t.isIncognito(),
                     layout.getOrientation() == Orientation.PORTRAIT, t.getRenderX() * dpToPx,
                     t.getRenderY() * dpToPx, t.getScaledContentWidth() * dpToPx,
@@ -96,9 +104,9 @@ public class TabListSceneLayer extends SceneLayer {
                     t.getShadowOpacity() * decoration, t.getBorderCloseButtonAlpha() * decoration,
                     LayoutTab.CLOSE_BUTTON_WIDTH_DP * dpToPx, t.getStaticToViewBlend(),
                     t.getBorderScale(), t.getSaturation(), t.getBrightness(), t.showToolbar(),
-                    defaultThemeColor, t.getToolbarBackgroundColor(), closeButtonColor,
+                    defaultThemeColor, toolbarBackgroundColor, closeButtonColor,
                     t.anonymizeToolbar(), t.isTitleNeeded(), R.drawable.card_single,
-                    t.getTextBoxBackgroundColor(), t.getTextBoxAlpha(), t.getToolbarAlpha(),
+                    textBoxBackgroundColor, textBoxAlpha, t.getToolbarAlpha(),
                     t.getToolbarYOffset() * dpToPx, t.getSideBorderScale(),
                     t.insetBorderVertical());
         }

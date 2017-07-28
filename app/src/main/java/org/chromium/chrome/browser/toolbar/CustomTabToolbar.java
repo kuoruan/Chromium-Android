@@ -41,6 +41,7 @@ import org.chromium.chrome.browser.dom_distiller.DomDistillerServiceFactory;
 import org.chromium.chrome.browser.dom_distiller.DomDistillerTabUtils;
 import org.chromium.chrome.browser.ntp.NativePageFactory;
 import org.chromium.chrome.browser.ntp.NewTabPage;
+import org.chromium.chrome.browser.offlinepages.OfflinePageUtils;
 import org.chromium.chrome.browser.omnibox.LocationBar;
 import org.chromium.chrome.browser.omnibox.LocationBarLayout;
 import org.chromium.chrome.browser.omnibox.UrlBar;
@@ -48,6 +49,7 @@ import org.chromium.chrome.browser.omnibox.UrlFocusChangeListener;
 import org.chromium.chrome.browser.page_info.PageInfoPopup;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.util.AccessibilityUtil;
 import org.chromium.chrome.browser.util.ColorUtils;
 import org.chromium.chrome.browser.widget.TintedDrawable;
 import org.chromium.chrome.browser.widget.TintedImageButton;
@@ -126,6 +128,8 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
     private int mState = STATE_DOMAIN_ONLY;
     private String mFirstUrl;
     private boolean mShowsOfflinePage;
+
+    protected ToolbarDataProvider mToolbarDataProvider;
 
     private Runnable mTitleAnimationStarter = new Runnable() {
         @Override
@@ -403,6 +407,16 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
     }
 
     @Override
+    public void setToolbarDataProvider(ToolbarDataProvider model) {
+        mToolbarDataProvider = model;
+    }
+
+    @Override
+    public ToolbarDataProvider getToolbarDataProvider() {
+        return mToolbarDataProvider;
+    }
+
+    @Override
     public void updateVisualsForState() {
         Resources resources = getResources();
         updateSecurityIcon(getSecurityLevel());
@@ -471,8 +485,9 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
 
         mSecurityIconType = securityLevel;
 
-        boolean isSmallDevice = !DeviceFormFactor.isTablet(getContext());
-        boolean isOfflinePage = getCurrentTab() != null && getCurrentTab().isOfflinePage();
+        boolean isSmallDevice = !DeviceFormFactor.isTablet();
+        boolean isOfflinePage =
+                getCurrentTab() != null && OfflinePageUtils.isOfflinePage(getCurrentTab());
 
         int id = LocationBarLayout.getSecurityIconResource(
                 securityLevel, isSmallDevice, isOfflinePage);
@@ -646,9 +661,11 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
     @Override
     public boolean onLongClick(View v) {
         if (v == mCloseButton) {
-            return showAccessibilityToast(v, getResources().getString(R.string.close_tab));
+            return AccessibilityUtil.showAccessibilityToast(
+                    getContext(), v, getResources().getString(R.string.close_tab));
         } else if (v == mCustomActionButton) {
-            return showAccessibilityToast(v, mCustomActionButton.getContentDescription());
+            return AccessibilityUtil.showAccessibilityToast(
+                    getContext(), v, mCustomActionButton.getContentDescription());
         } else if (v == mTitleUrlContainer) {
             ClipboardManager clipboard = (ClipboardManager) getContext()
                     .getSystemService(Context.CLIPBOARD_SERVICE);
@@ -679,10 +696,12 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
     // Toolbar and LocationBar calls that are not relevant here.
 
     @Override
-    public void setToolbarDataProvider(ToolbarDataProvider model) {}
+    public void onTextChangedForAutocomplete(boolean canInlineAutocomplete) {}
 
     @Override
-    public void onTextChangedForAutocomplete(boolean canInlineAutocomplete) {}
+    public void backKeyPressed() {
+        assert false : "The URL bar should never take focus in CCTs.";
+    }
 
     @Override
     public void setUrlFocusChangeListener(UrlFocusChangeListener listener) {}

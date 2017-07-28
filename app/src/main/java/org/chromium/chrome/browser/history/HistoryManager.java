@@ -9,7 +9,6 @@ import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Rect;
 import android.net.Uri;
 import android.provider.Browser;
 import android.support.annotation.VisibleForTesting;
@@ -17,14 +16,12 @@ import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.OnScrollListener;
-import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.Toolbar.OnMenuItemClickListener;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
@@ -41,6 +38,7 @@ import org.chromium.chrome.browser.snackbar.SnackbarManager;
 import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarController;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.chrome.browser.widget.selection.SelectableListLayout;
+import org.chromium.chrome.browser.widget.selection.SelectableListToolbar;
 import org.chromium.chrome.browser.widget.selection.SelectableListToolbar.SearchDelegate;
 import org.chromium.chrome.browser.widget.selection.SelectionDelegate;
 import org.chromium.chrome.browser.widget.selection.SelectionDelegate.SelectionObserver;
@@ -60,8 +58,6 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
     private static final String METRICS_PREFIX = "Android.HistoryPage.";
 
     private static HistoryProvider sProviderForTests;
-
-    private final int mListItemLateralShadowSizePx;
 
     private final Activity mActivity;
     private final boolean mIsSeparateActivity;
@@ -107,24 +103,12 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
         mToolbar = (HistoryManagerToolbar) mSelectableListLayout.initializeToolbar(
                 R.layout.history_toolbar, mSelectionDelegate, R.string.menu_history, null,
                 R.id.normal_menu_group, R.id.selection_mode_menu_group,
-                R.color.default_primary_color, false, this);
+                R.color.default_primary_color, this);
         mToolbar.setManager(this);
         mToolbar.initializeSearchView(this, R.string.history_manager_search, R.id.search_menu_id);
 
-        // 4. Configure values for HorizontalDisplayStyle.WIDE and HorizontalDisplayStyle.REGULAR.
-        // The list item shadow is part of the drawable nine-patch used as the list item background.
-        // Use the dimensions of the shadow (from the drawable's padding) to calculate the margins
-        // to use in the regular and wide display styles.
-        Rect listItemShadow = new Rect();
-        ApiCompatibilityUtils.getDrawable(
-                mActivity.getResources(), R.drawable.card_middle).getPadding(listItemShadow);
-
-        assert listItemShadow.left == listItemShadow.right;
-        // The list item shadow size is used in HorizontalDisplayStyle.WIDE to visually align other
-        // elements with the edge of the list items.
-        mListItemLateralShadowSizePx = listItemShadow.left;
-
-        mSelectableListLayout.setHasWideDisplayStyle(mListItemLateralShadowSizePx);
+        // 4. Width constrain the SelectableListLayout.
+        mSelectableListLayout.configureWideDisplayStyle();
 
         // 5. Initialize empty view.
         mEmptyView = mSelectableListLayout.initializeEmptyView(
@@ -227,7 +211,7 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
     /**
      * See {@link SelectableListLayout#detachToolbarView()}.
      */
-    public Toolbar detachToolbarView() {
+    public SelectableListToolbar<HistoryItem> detachToolbarView() {
         return mSelectableListLayout.detachToolbarView();
     }
 
@@ -284,7 +268,7 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
 
         // Determine component or class name.
         ComponentName component;
-        if (DeviceFormFactor.isTablet(mActivity)) {
+        if (DeviceFormFactor.isTablet()) {
             component = mActivity.getComponentName();
         } else {
             component = IntentUtils.safeGetParcelableExtra(
@@ -338,16 +322,6 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
      */
     public SelectableListLayout<HistoryItem> getSelectableListLayout() {
         return mSelectableListLayout;
-    }
-
-    /**
-     * @return The px size of the lateral shadow in the 9-patch used for the list item background.
-     *         This value should be used in the regular horizontal display style to visually align
-     *         elements with the edge of the list items.
-     * @see org.chromium.chrome.browser.widget.displaystyle.HorizontalDisplayStyle#REGULAR
-     */
-    public int getListItemLateralShadowSizePx() {
-        return mListItemLateralShadowSizePx;
     }
 
     private void openItemsInNewTabs(List<HistoryItem> items, boolean isIncognito) {

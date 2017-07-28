@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.StrictMode;
@@ -43,6 +44,7 @@ import java.util.Set;
 public final class WarmupManager {
     private static final String TAG = "WarmupManager";
 
+    @SuppressLint("StaticFieldLeak")
     private static WarmupManager sWarmupManager;
 
     private final Set<String> mDnsRequestsInFlight;

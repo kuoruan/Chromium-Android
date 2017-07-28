@@ -37,11 +37,13 @@ public class TaskParameters {
         return mExtras;
     }
 
-    static Builder create(int taskId) {
+    /** Creates a builder for task parameters. */
+    public static Builder create(int taskId) {
         return new Builder(taskId);
     }
 
-    static final class Builder {
+    /** Class for building a task parameters object. Public for testing */
+    public static final class Builder {
         private final int mTaskId;
         private Bundle mExtras;
 
@@ -49,12 +51,12 @@ public class TaskParameters {
             mTaskId = taskId;
         }
 
-        Builder addExtras(Bundle extras) {
+        public Builder addExtras(Bundle extras) {
             mExtras = extras;
             return this;
         }
 
-        TaskParameters build() {
+        public TaskParameters build() {
             return new TaskParameters(this);
         }
     }

@@ -5,9 +5,12 @@
 package org.chromium.chrome.browser.download.ui;
 
 import android.content.Context;
+import android.support.v7.widget.AppCompatSpinner;
 import android.util.AttributeSet;
 import android.view.View;
+import android.widget.Spinner;
 
+import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.download.ui.DownloadManagerUi.DownloadUiObserver;
@@ -20,11 +23,22 @@ import java.util.List;
  */
 public class DownloadManagerToolbar extends SelectableListToolbar<DownloadHistoryItemWrapper>
         implements DownloadUiObserver {
-    private int mFilter = DownloadFilter.FILTER_ALL;
+    private Spinner mSpinner;
 
     public DownloadManagerToolbar(Context context, AttributeSet attrs) {
         super(context, attrs);
         inflateMenu(R.menu.download_manager_menu);
+    }
+
+    /**
+     * Initializes the spinner for the download filter.
+     * @param adapter The adapter associated with the spinner.
+     */
+    public void initializeFilterSpinner(FilterAdapter adapter) {
+        mSpinner = new AppCompatSpinner(this.getContext());
+        mSpinner.setAdapter(adapter);
+        mSpinner.setOnItemSelectedListener(adapter);
+        addView(mSpinner);
     }
 
     /**
@@ -36,8 +50,7 @@ public class DownloadManagerToolbar extends SelectableListToolbar<DownloadHistor
 
     @Override
     public void onFilterChanged(int filter) {
-        mFilter = filter;
-        if (!mIsSelectionEnabled) updateTitle();
+        mSpinner.setSelection(filter);
     }
 
     @Override
@@ -45,9 +58,8 @@ public class DownloadManagerToolbar extends SelectableListToolbar<DownloadHistor
         boolean wasSelectionEnabled = mIsSelectionEnabled;
         super.onSelectionStateChange(selectedItems);
 
-        if (!mIsSelectionEnabled) {
-            updateTitle();
-        } else {
+        mSpinner.setVisibility((mIsSelectionEnabled || mIsSearching) ? GONE : VISIBLE);
+        if (mIsSelectionEnabled) {
             int numSelected = mSelectionDelegate.getSelectedItems().size();
 
             // If the share or delete menu items are shown in the overflow menu instead of as an
@@ -73,19 +85,31 @@ public class DownloadManagerToolbar extends SelectableListToolbar<DownloadHistor
     }
 
     @Override
-    public void onManagerDestroyed() { }
+    protected void onDataChanged(int numItems) {
+        super.onDataChanged(numItems);
+        getMenu().findItem(R.id.info_menu_id).setVisible(!mIsSearching && numItems > 0);
+    }
+
+    @Override
+    public void onManagerDestroyed() {
+        mSpinner.setAdapter(null);
+    }
+
+    @Override
+    public void showSearchView() {
+        super.showSearchView();
+        mSpinner.setVisibility(GONE);
+    }
 
     @Override
     public void hideSearchView() {
         super.hideSearchView();
-        updateTitle();
+        mSpinner.setVisibility(VISIBLE);
     }
 
-    private void updateTitle() {
-        if (mFilter == DownloadFilter.FILTER_ALL) {
-            setTitle(R.string.menu_downloads);
-        } else {
-            setTitle(DownloadFilter.getStringIdForFilter(mFilter));
-        }
+    /** Returns the {@link Spinner}. */
+    @VisibleForTesting
+    public Spinner getSpinnerForTests() {
+        return mSpinner;
     }
 }

@@ -11,6 +11,7 @@ import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.StateChangeReason;
 import org.chromium.chrome.browser.firstrun.FirstRunStatus;
+import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.search_engines.TemplateUrlService;
@@ -223,6 +224,7 @@ public class ContextualSearchTabHelper
                 && FirstRunStatus.getFirstRunFlowComplete()
                 && !PrefServiceBridge.getInstance().isContextualSearchDisabled()
                 && TemplateUrlService.getInstance().isDefaultSearchEngineGoogle()
+                && !LocaleManager.getInstance().needToCheckForSearchEnginePromo()
                 // Svelte and Accessibility devices are incompatible with the first-run flow and
                 // Talkback has poor interaction with tap to search (see http://crbug.com/399708 and
                 // http://crbug.com/396934).

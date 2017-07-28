@@ -91,23 +91,23 @@ import org.chromium.base.Log;
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     /* package */ void updateFromDisplay(Display display) {
         Point size = new Point();
-        Point physicalSize = new Point();
         DisplayMetrics displayMetrics = new DisplayMetrics();
         PixelFormat pixelFormat = new PixelFormat();
-        display.getSize(size);
-        display.getMetrics(displayMetrics);
-        if (hasForcedDIPScale()) displayMetrics.density = sForcedDIPScale.floatValue();
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            display.getRealSize(physicalSize);
+            display.getRealSize(size);
+            display.getRealMetrics(displayMetrics);
+        } else {
+            display.getSize(size);
+            display.getMetrics(displayMetrics);
         }
+        if (hasForcedDIPScale()) displayMetrics.density = sForcedDIPScale.floatValue();
 
         // JellyBean MR1 and later always uses RGBA_8888.
         int pixelFormatId = (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1)
                 ? display.getPixelFormat()
                 : PixelFormat.RGBA_8888;
         PixelFormat.getPixelFormatInfo(pixelFormatId, pixelFormat);
-        super.update(size, physicalSize, displayMetrics.density, pixelFormat.bitsPerPixel,
+        super.update(size, displayMetrics.density, pixelFormat.bitsPerPixel,
                 bitsPerComponent(pixelFormatId), display.getRotation());
     }
 }

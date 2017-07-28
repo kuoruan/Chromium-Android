@@ -45,6 +45,7 @@ import java.lang.annotation.RetentionPolicy;
     ContentSettingsType.CONTENT_SETTINGS_TYPE_IMPORTANT_SITE_INFO,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_PERMISSION_AUTOBLOCKER_DATA,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER,
+    ContentSettingsType.CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER_DATA,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_MIDI,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_PUSH_MESSAGING,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_PASSWORD_PROTECTION,
@@ -89,22 +90,27 @@ public @interface ContentSettingsType {
   int CONTENT_SETTINGS_TYPE_PERMISSION_AUTOBLOCKER_DATA = 26;
   int CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER = 27;
   /**
+   * Website setting which stores metadata for the subresource filter to aid in decisions for
+   * whether or not to show the UI.
+   */
+  int CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER_DATA = 28;
+  /**
    * This is special-cased in the permissions layer to always allow, and as such doesn't have
    * associated prefs data.
    */
-  int CONTENT_SETTINGS_TYPE_MIDI = 28;
+  int CONTENT_SETTINGS_TYPE_MIDI = 29;
   /**
    * This is only here temporarily and will be removed when we further unify it with notifications,
    * see crbug.com/563297. No prefs data is stored for this content type, we instead share values
    * with NOTIFICATIONS.
    */
-  int CONTENT_SETTINGS_TYPE_PUSH_MESSAGING = 29;
+  int CONTENT_SETTINGS_TYPE_PUSH_MESSAGING = 30;
   /**
    * This content setting type is for caching password protection service's verdicts of each origin.
    */
-  int CONTENT_SETTINGS_TYPE_PASSWORD_PROTECTION = 30;
+  int CONTENT_SETTINGS_TYPE_PASSWORD_PROTECTION = 31;
   /**
    * WARNING: This enum is going to be removed soon. Do not depend on NUM_TYPES.
    */
-  int CONTENT_SETTINGS_NUM_TYPES_DO_NOT_USE = 31;
+  int CONTENT_SETTINGS_NUM_TYPES_DO_NOT_USE = 32;
 }

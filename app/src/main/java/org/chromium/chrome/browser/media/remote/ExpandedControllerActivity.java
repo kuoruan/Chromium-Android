@@ -11,8 +11,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.media.TransportMediator;
-import android.support.v4.media.TransportPerformer;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
@@ -48,14 +47,13 @@ public class ExpandedControllerActivity
     private MediaRouteController mMediaRouteController;
     private RemoteVideoInfo mVideoInfo;
     private String mScreenName;
-    private TransportMediator mTransportMediator;
 
     /**
      * Handle actions from on-screen media controls.
      */
-    private TransportPerformer mTransportPerformer = new TransportPerformer() {
+    private MediaController.Delegate mControllerDelegate = new MediaController.Delegate() {
         @Override
-        public void onStart() {
+        public void play() {
             if (mMediaRouteController == null) return;
             mMediaRouteController.resume();
             RecordCastAction.recordFullscreenControlsAction(
@@ -64,14 +62,7 @@ public class ExpandedControllerActivity
         }
 
         @Override
-        public void onStop() {
-            if (mMediaRouteController == null) return;
-            onPause();
-            mMediaRouteController.release();
-        }
-
-        @Override
-        public void onPause() {
+        public void pause() {
             if (mMediaRouteController == null) return;
             mMediaRouteController.pause();
             RecordCastAction.recordFullscreenControlsAction(
@@ -80,19 +71,19 @@ public class ExpandedControllerActivity
         }
 
         @Override
-        public long onGetDuration() {
+        public long getDuration() {
             if (mMediaRouteController == null) return 0;
             return mMediaRouteController.getDuration();
         }
 
         @Override
-        public long onGetCurrentPosition() {
+        public long getPosition() {
             if (mMediaRouteController == null) return 0;
             return mMediaRouteController.getPosition();
         }
 
         @Override
-        public void onSeekTo(long pos) {
+        public void seekTo(long pos) {
             if (mMediaRouteController == null) return;
             mMediaRouteController.seekTo(pos);
             RecordCastAction.recordFullscreenControlsAction(
@@ -101,19 +92,19 @@ public class ExpandedControllerActivity
         }
 
         @Override
-        public boolean onIsPlaying() {
+        public boolean isPlaying() {
             if (mMediaRouteController == null) return false;
             return mMediaRouteController.isPlaying();
         }
 
         @Override
-        public int onGetTransportControlFlags() {
-            int flags = TransportMediator.FLAG_KEY_MEDIA_REWIND
-                    | TransportMediator.FLAG_KEY_MEDIA_FAST_FORWARD;
+        public long getActionFlags() {
+            long flags =
+                    PlaybackStateCompat.ACTION_REWIND | PlaybackStateCompat.ACTION_FAST_FORWARD;
             if (mMediaRouteController != null && mMediaRouteController.isPlaying()) {
-                flags |= TransportMediator.FLAG_KEY_MEDIA_PAUSE;
+                flags |= PlaybackStateCompat.ACTION_PAUSE;
             } else {
-                flags |= TransportMediator.FLAG_KEY_MEDIA_PLAY;
+                flags |= PlaybackStateCompat.ACTION_PLAY;
             }
             return flags;
         }
@@ -160,13 +151,9 @@ public class ExpandedControllerActivity
 
         mMediaRouteController.addUiListener(this);
 
-        // Create transport controller to control video, giving the callback
-        // interface to receive actions from.
-        mTransportMediator = new TransportMediator(this, mTransportPerformer);
-
         // Create and initialize the media control UI.
         mMediaController = (MediaController) findViewById(R.id.cast_media_controller);
-        mMediaController.setMediaPlayer(mTransportMediator);
+        mMediaController.setDelegate(mControllerDelegate);
 
         View button = getLayoutInflater().inflate(R.layout.cast_controller_media_route_button,
                 rootView, false);

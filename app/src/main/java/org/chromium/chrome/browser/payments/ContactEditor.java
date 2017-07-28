@@ -222,7 +222,7 @@ public class ContactEditor extends EditorBase<AutofillContact> {
             }
         });
 
-        mEditorView.show(editor);
+        mEditorDialog.show(editor);
     }
 
     private EditorFieldValidator getPhoneValidator() {

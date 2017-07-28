@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.IBinder;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.support.customtabs.CustomTabsCallback;
 import android.support.customtabs.CustomTabsService;
 import android.support.customtabs.CustomTabsSessionToken;
@@ -139,6 +140,7 @@ class ClientManager {
             packageName = getPackageName(context, uid);
             disconnectCallback = callback;
             this.postMessageHandler = postMessageHandler;
+            if (postMessageHandler != null) this.postMessageHandler.setPackageName(packageName);
             this.mSpeculationMode = CustomTabsConnection.SpeculationParams.PRERENDER;
         }
 
@@ -211,7 +213,7 @@ class ClientManager {
      * @return true for success.
      */
     public boolean newSession(CustomTabsSessionToken session, int uid,
-            DisconnectCallback onDisconnect, PostMessageHandler postMessageHandler) {
+            DisconnectCallback onDisconnect, @NonNull PostMessageHandler postMessageHandler) {
         if (session == null) return false;
         SessionParams params = new SessionParams(mContext, uid, onDisconnect, postMessageHandler);
         synchronized (this) {
@@ -338,6 +340,26 @@ class ClientManager {
         SessionParams params = mSessionParams.get(session);
         if (params == null) return;
         params.postMessageHandler.initializeWithOrigin(origin);
+    }
+
+    /**
+     * See {@link PostMessageHandler#verifyAndInitializeWithOrigin(Uri)}.
+     */
+    public synchronized void verifyAndInitializeWithPostMessageOriginForSession(
+            CustomTabsSessionToken session, Uri origin) {
+        SessionParams params = mSessionParams.get(session);
+        if (params == null) return;
+        params.postMessageHandler.verifyAndInitializeWithOrigin(origin);
+    }
+
+    /**
+     * @return The postMessage origin for the given session.
+     */
+    @VisibleForTesting
+    synchronized Uri getPostMessageOriginForSessionForTesting(CustomTabsSessionToken session) {
+        SessionParams params = mSessionParams.get(session);
+        if (params == null) return null;
+        return params.postMessageHandler.getOriginForTesting();
     }
 
     /**
@@ -543,7 +565,7 @@ class ClientManager {
         if (params == null) return;
         mSessionParams.remove(session);
         if (params.postMessageHandler != null) {
-            params.postMessageHandler.unbindFromContext(mContext);
+            params.postMessageHandler.cleanup(mContext);
         }
         if (params.disconnectCallback != null) params.disconnectCallback.run(session);
         mUidHasCalledWarmup.delete(params.uid);

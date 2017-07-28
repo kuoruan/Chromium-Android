@@ -51,6 +51,8 @@ class Connector_Internal {
 
     private static final int CLONE_ORDINAL = 3;
 
+    private static final int FILTER_INTERFACES_ORDINAL = 4;
+
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements Connector.Proxy {
 
@@ -151,6 +153,29 @@ org.chromium.mojo.bindings.InterfaceRequest<Connector> request) {
         }
 
 
+        @Override
+        public void filterInterfaces(
+String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<InterfaceProvider> sourceRequest, InterfaceProvider target) {
+
+            ConnectorFilterInterfacesParams _message = new ConnectorFilterInterfacesParams();
+
+            _message.spec = spec;
+
+            _message.source = source;
+
+            _message.sourceRequest = sourceRequest;
+
+            _message.target = target;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(FILTER_INTERFACES_ORDINAL)));
+
+        }
+
+
     }
 
     static final class Stub extends org.chromium.mojo.bindings.Interface.Stub<Connector> {
@@ -190,6 +215,19 @@ org.chromium.mojo.bindings.InterfaceRequest<Connector> request) {
                                 ConnectorCloneParams.deserialize(messageWithHeader.getPayload());
             
                         getImpl().clone(data.request);
+                        return true;
+                    }
+            
+            
+            
+            
+            
+                    case FILTER_INTERFACES_ORDINAL: {
+            
+                        ConnectorFilterInterfacesParams data =
+                                ConnectorFilterInterfacesParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().filterInterfaces(data.spec, data.source, data.sourceRequest, data.target);
                         return true;
                     }
             
@@ -262,6 +300,8 @@ org.chromium.mojo.bindings.InterfaceRequest<Connector> request) {
                         getImpl().startServiceWithProcess(data.target, data.service, data.pidReceiverRequest, new ConnectorStartServiceWithProcessResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
+            
+            
             
             
             
@@ -1185,6 +1225,129 @@ org.chromium.mojo.bindings.InterfaceRequest<Connector> request) {
             final int prime = 31;
             int result = prime + getClass().hashCode();
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(request);
+            return result;
+        }
+    }
+
+
+
+    
+    static final class ConnectorFilterInterfacesParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 40;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public String spec;
+        public Identity source;
+        public org.chromium.mojo.bindings.InterfaceRequest<InterfaceProvider> sourceRequest;
+        public InterfaceProvider target;
+    
+        private ConnectorFilterInterfacesParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public ConnectorFilterInterfacesParams() {
+            this(0);
+        }
+    
+        public static ConnectorFilterInterfacesParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static ConnectorFilterInterfacesParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static ConnectorFilterInterfacesParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            ConnectorFilterInterfacesParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new ConnectorFilterInterfacesParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.spec = decoder0.readString(8, false);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                    result.source = Identity.decode(decoder1);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.sourceRequest = decoder0.readInterfaceRequest(24, false);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.target = decoder0.readServiceInterface(28, false, InterfaceProvider.MANAGER);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(spec, 8, false);
+            
+            encoder0.encode(source, 16, false);
+            
+            encoder0.encode(sourceRequest, 24, false);
+            
+            encoder0.encode(target, 28, false, InterfaceProvider.MANAGER);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            ConnectorFilterInterfacesParams other = (ConnectorFilterInterfacesParams) object;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.spec, other.spec))
+                return false;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.source, other.source))
+                return false;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sourceRequest, other.sourceRequest))
+                return false;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.target, other.target))
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(spec);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(source);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sourceRequest);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(target);
             return result;
         }
     }

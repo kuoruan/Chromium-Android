@@ -6,6 +6,7 @@ package org.chromium.content.browser.input;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Rect;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -68,10 +69,10 @@ public class LegacyPastePopupMenu implements OnClickListener, PastePopupMenu {
     }
 
     @Override
-    public void show(int x, int y) {
+    public void show(Rect selectionRect) {
         hide();
         updateContent();
-        positionAt(x, y);
+        positionAt(selectionRect.left, selectionRect.bottom);
     }
 
     @Override

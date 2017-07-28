@@ -37,14 +37,13 @@
             android:background="@android:color/white"
             android:clickable="true" >
 
-        <!-- TODO(dfalcantara): Ask UX about what to do for tablets. -->
         <org.chromium.chrome.browser.searchwidget.SearchActivityLocationBarLayout
                 android:id="@+id/search_location_bar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:layout_marginStart="@dimen/tablet_toolbar_start_padding_no_buttons"
-                android:layout_marginEnd="@dimen/tablet_toolbar_start_padding_no_buttons" />
+                android:layout_marginStart="@dimen/search_activity_location_bar_margin_start"
+                android:layout_marginEnd="@dimen/search_activity_location_bar_margin_end" />
 
     </FrameLayout>
 

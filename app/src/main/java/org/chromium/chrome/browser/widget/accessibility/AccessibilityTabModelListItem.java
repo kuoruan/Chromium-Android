@@ -8,6 +8,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Handler;
@@ -27,6 +28,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.chromium.base.VisibleForTesting;
+import org.chromium.base.annotations.UsedByReflection;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
@@ -403,6 +405,8 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
      *
      * @param height The height of the current view.
      */
+    @SuppressLint("AnimatorKeep")
+    @UsedByReflection("")
     public void setHeight(int height) {
         AbsListView.LayoutParams params = (AbsListView.LayoutParams) getLayoutParams();
         if (params == null) {

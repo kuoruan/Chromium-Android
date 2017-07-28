@@ -4,10 +4,6 @@
 
 package org.chromium.ui;
 
-import android.support.annotation.Nullable;
-
-import java.util.Map;
-
 /**
  * The callback used to indicate what action the user took in the picker.
  */
@@ -34,13 +30,4 @@ public interface PhotoPickerListener {
      * @param photos The photos that were selected.
      */
     void onPickerUserAction(Action action, String[] photos);
-
-    /**
-     * Used during testing to provide pre-canned data to the dialog.
-     *
-     * @return The test files to use (Map<String, Long>, mapping file paths to creation times) or
-     *     null when run outside of a test.
-     */
-    @Nullable
-    Map<String, Long> getFilesForTesting();
 }

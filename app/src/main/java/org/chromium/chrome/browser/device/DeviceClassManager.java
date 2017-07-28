@@ -4,14 +4,10 @@
 
 package org.chromium.chrome.browser.device;
 
-import android.content.Context;
-import android.view.accessibility.AccessibilityManager;
-
 import org.chromium.base.CommandLine;
-import org.chromium.base.ContextUtils;
 import org.chromium.base.SysUtils;
-import org.chromium.base.TraceEvent;
 import org.chromium.chrome.browser.ChromeSwitches;
+import org.chromium.chrome.browser.util.AccessibilityUtil;
 import org.chromium.ui.base.DeviceFormFactor;
 
 /**
@@ -28,7 +24,6 @@ public class DeviceClassManager {
     private boolean mEnableAnimations;
     private boolean mEnablePrerendering;
     private boolean mEnableToolbarSwipe;
-    private boolean mDisableDomainReliability;
 
     private final boolean mEnableFullscreen;
 
@@ -52,7 +47,6 @@ public class DeviceClassManager {
             mEnableAnimations = false;
             mEnablePrerendering = false;
             mEnableToolbarSwipe = false;
-            mDisableDomainReliability = true;
         } else {
             mEnableSnapshots = true;
             mEnableLayerDecorationCache = true;
@@ -60,15 +54,15 @@ public class DeviceClassManager {
             mEnableAnimations = true;
             mEnablePrerendering = true;
             mEnableToolbarSwipe = true;
-            mDisableDomainReliability = false;
         }
 
-        if (DeviceFormFactor.isTablet(ContextUtils.getApplicationContext())) {
+        if (DeviceFormFactor.isTablet()) {
             mEnableAccessibilityLayout = false;
         }
 
         // Flag based configurations.
         CommandLine commandLine = CommandLine.getInstance();
+        assert commandLine.isNativeImplementation();
         mEnableAccessibilityLayout |= commandLine
                 .hasSwitch(ChromeSwitches.ENABLE_ACCESSIBILITY_TAB_SWITCHER);
         mEnableFullscreen =
@@ -98,7 +92,8 @@ public class DeviceClassManager {
      * @return Whether or not should use the accessibility tab switcher.
      */
     public static boolean enableAccessibilityLayout() {
-        return getInstance().mEnableAccessibilityLayout;
+        return getInstance().mEnableAccessibilityLayout
+                || AccessibilityUtil.isAccessibilityEnabled();
     }
 
     /**
@@ -109,11 +104,10 @@ public class DeviceClassManager {
     }
 
     /**
-     * @param context A {@link Context} instance.
-     * @return        Whether or not we are showing animations.
+     * @return Whether or not we are showing animations.
      */
-    public static boolean enableAnimations(Context context) {
-        return getInstance().mEnableAnimations && !isAccessibilityModeEnabled(context);
+    public static boolean enableAnimations() {
+        return getInstance().mEnableAnimations && !AccessibilityUtil.isAccessibilityEnabled();
     }
 
     /**
@@ -128,22 +122,5 @@ public class DeviceClassManager {
      */
     public static boolean enableToolbarSwipe() {
         return getInstance().mEnableToolbarSwipe;
-    }
-
-    /**
-     * @return Whether or not to disable domain reliability.
-     */
-    public static boolean disableDomainReliability() {
-        return getInstance().mDisableDomainReliability;
-    }
-
-    public static boolean isAccessibilityModeEnabled(Context context) {
-        TraceEvent.begin("DeviceClassManager::isAccessibilityModeEnabled");
-        AccessibilityManager manager = (AccessibilityManager)
-                context.getSystemService(Context.ACCESSIBILITY_SERVICE);
-        boolean enabled = manager != null && manager.isEnabled()
-                && manager.isTouchExplorationEnabled();
-        TraceEvent.end("DeviceClassManager::isAccessibilityModeEnabled");
-        return enabled;
     }
 }

@@ -4,22 +4,27 @@
 
 package org.chromium.chrome.browser.searchwidget;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Handler;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.chromium.base.Callback;
+import org.chromium.base.Log;
+import org.chromium.base.VisibleForTesting;
+import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.WebContentsFactory;
 import org.chromium.chrome.browser.WindowDelegate;
 import org.chromium.chrome.browser.customtabs.CustomTabsConnection;
+import org.chromium.chrome.browser.document.ChromeLauncherActivity;
 import org.chromium.chrome.browser.init.AsyncInitializationActivity;
-import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
+import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.omnibox.AutocompleteController;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;
 import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarManageable;
@@ -34,14 +39,49 @@ import org.chromium.ui.base.ActivityWindowAndroid;
 
 /** Queries the user's default search engine and shows autocomplete suggestions. */
 public class SearchActivity extends AsyncInitializationActivity
-        implements SnackbarManageable, SearchActivityLocationBarLayout.Delegate,
-                   View.OnLayoutChangeListener {
+        implements SnackbarManageable, SearchActivityLocationBarLayout.Delegate {
+    /** Notified about events happening inside a SearchActivity. */
+    public static class SearchActivityDelegate {
+        /**
+         * Called when {@link SearchActivity#setContentView} is deciding whether to continue loading
+         * the native library immediately.
+         * @return Whether or not native initialization should proceed immediately.
+         */
+        boolean shouldDelayNativeInitialization() {
+            return false;
+        }
+
+        /**
+         * Called to launch the search engine dialog if it's needed.
+         * @param activity Activity that is launching the dialog.
+         * @param onSearchEngineFinalized Called when the dialog has been dismissed.
+         */
+        void showSearchEngineDialogIfNeeded(
+                Activity activity, Callback<Boolean> onSearchEngineFinalized) {
+            LocaleManager.getInstance().showSearchEnginePromoIfNeeded(
+                    activity, onSearchEngineFinalized);
+        }
+
+        /** Called when {@link SearchActivity#finishDeferredInitialization} is done. */
+        void onFinishDeferredInitialization() {}
+
+        /** Returning true causes the Activity to finish itself immediately when starting up. */
+        boolean isActivityDisabledForTests() {
+            return false;
+        }
+    }
+
+    private static final String TAG = "searchwidget";
+    private static final Object DELEGATE_LOCK = new Object();
+
+    /** Notified about events happening for the SearchActivity. */
+    private static SearchActivityDelegate sDelegate;
 
     /** Main content view. */
     private ViewGroup mContentView;
 
-    /** Whether the native library has been loaded. */
-    private boolean mIsNativeReady;
+    /** Whether the user is now allowed to perform searches. */
+    private boolean mIsActivityUsable;
 
     /** Input submitted before before the native library was loaded. */
     private String mQueuedUrl;
@@ -52,6 +92,12 @@ public class SearchActivity extends AsyncInitializationActivity
     private SnackbarManager mSnackbarManager;
     private SearchBoxDataProvider mSearchBoxDataProvider;
     private Tab mTab;
+
+    @Override
+    protected boolean isStartedUpCorrectly(Intent intent) {
+        if (getActivityDelegate().isActivityDisabledForTests()) return false;
+        return super.isStartedUpCorrectly(intent);
+    }
 
     @Override
     public void backKeyPressed() {
@@ -74,6 +120,7 @@ public class SearchActivity extends AsyncInitializationActivity
         mSearchBoxDataProvider = new SearchBoxDataProvider();
 
         mContentView = createContentView();
+        setContentView(mContentView);
 
         // Build the search box.
         mSearchBox = (SearchActivityLocationBarLayout) mContentView.findViewById(
@@ -82,13 +129,24 @@ public class SearchActivity extends AsyncInitializationActivity
         mSearchBox.setToolbarDataProvider(mSearchBoxDataProvider);
         mSearchBox.initializeControls(new WindowDelegate(getWindow()), getWindowAndroid());
 
-        setContentView(mContentView);
+        // Kick off everything needed for the user to type into the box.
+        beginQuery();
+        mSearchBox.showCachedZeroSuggestResultsIfAvailable();
+
+        // Kick off loading of the native library.
+        if (!getActivityDelegate().shouldDelayNativeInitialization()) {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    startDelayedNativeInitialization();
+                }
+            });
+        }
     }
 
     @Override
     public void finishNativeInitialization() {
         super.finishNativeInitialization();
-        mIsNativeReady = true;
 
         mTab = new Tab(TabIdManager.getInstance().generateValidId(Tab.INVALID_TAB_ID),
                 Tab.INVALID_TAB_ID, false, this, getWindowAndroid(),
@@ -100,23 +158,42 @@ public class SearchActivity extends AsyncInitializationActivity
         mSearchBoxDataProvider.onNativeLibraryReady(mTab);
         mSearchBox.onNativeLibraryReady();
 
-        if (mQueuedUrl != null) loadUrl(mQueuedUrl);
-
-        new Handler().post(new Runnable() {
+        // Force the user to choose a search engine if they have to.
+        final Callback<Boolean> onSearchEngineFinalizedCallback = new Callback<Boolean>() {
             @Override
-            public void run() {
-                onDeferredStartup();
+            public void onResult(Boolean result) {
+                if (isActivityDestroyed()) return;
+
+                if (result == null || !result.booleanValue()) {
+                    Log.e(TAG, "User failed to select a default search engine.");
+                    finish();
+                    return;
+                }
+
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        finishDeferredInitialization();
+                    }
+                });
             }
-        });
+        };
+        getActivityDelegate().showSearchEngineDialogIfNeeded(
+                SearchActivity.this, onSearchEngineFinalizedCallback);
     }
 
-    @Override
-    public void onDeferredStartup() {
-        super.onDeferredStartup();
+    private void finishDeferredInitialization() {
+        assert !mIsActivityUsable
+                : "finishDeferredInitialization() incorrectly called multiple times";
+        mIsActivityUsable = true;
+        if (mQueuedUrl != null) loadUrl(mQueuedUrl);
 
         AutocompleteController.nativePrefetchZeroSuggestResults();
         CustomTabsConnection.getInstance(getApplication()).warmup(0);
         mSearchBox.onDeferredStartup(isVoiceSearchIntent());
+        RecordUserAction.record("SearchWidget.WidgetSelected");
+
+        getActivityDelegate().onFinishDeferredInitialization();
     }
 
     @Override
@@ -159,7 +236,7 @@ public class SearchActivity extends AsyncInitializationActivity
     @Override
     public void loadUrl(String url) {
         // Wait until native has loaded.
-        if (!mIsNativeReady) {
+        if (!mIsActivityUsable) {
             mQueuedUrl = url;
             return;
         }
@@ -172,12 +249,13 @@ public class SearchActivity extends AsyncInitializationActivity
         String fixedUrl = UrlFormatter.fixupUrl(url);
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(fixedUrl));
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
-        intent.setPackage(getPackageName());
+        intent.setClass(this, ChromeLauncherActivity.class);
         IntentHandler.addTrustedIntentExtras(intent);
         IntentUtils.safeStartActivity(this, intent,
                 ActivityOptionsCompat
                         .makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out)
                         .toBundle());
+        RecordUserAction.record("SearchWidget.SearchMade");
         finish();
     }
 
@@ -186,7 +264,6 @@ public class SearchActivity extends AsyncInitializationActivity
 
         ViewGroup contentView = (ViewGroup) LayoutInflater.from(this).inflate(
                 R.layout.search_activity, null, false);
-        contentView.addOnLayoutChangeListener(this);
         contentView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -196,27 +273,27 @@ public class SearchActivity extends AsyncInitializationActivity
         return contentView;
     }
 
-    @Override
-    public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft,
-            int oldTop, int oldRight, int oldBottom) {
-        mContentView.removeOnLayoutChangeListener(this);
-        beginLoadingLibrary();
-    }
-
-    private void beginLoadingLibrary() {
-        beginQuery();
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                mSearchBox.showCachedZeroSuggestResultsIfAvailable();
-            }
-        });
-        ChromeBrowserInitializer.getInstance(getApplicationContext())
-                .handlePreNativeStartup(SearchActivity.this);
-    }
-
     private void cancelSearch() {
         finish();
         overridePendingTransition(0, R.anim.activity_close_exit);
+    }
+
+    @Override
+    @VisibleForTesting
+    public final void startDelayedNativeInitialization() {
+        super.startDelayedNativeInitialization();
+    }
+
+    private static SearchActivityDelegate getActivityDelegate() {
+        synchronized (DELEGATE_LOCK) {
+            if (sDelegate == null) sDelegate = new SearchActivityDelegate();
+        }
+        return sDelegate;
+    }
+
+    /** See {@link #sDelegate}. */
+    @VisibleForTesting
+    static void setDelegateForTests(SearchActivityDelegate delegate) {
+        sDelegate = delegate;
     }
 }

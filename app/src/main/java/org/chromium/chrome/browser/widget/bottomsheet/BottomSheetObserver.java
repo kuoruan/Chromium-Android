@@ -45,6 +45,14 @@ public interface BottomSheetObserver {
     void onSheetOffsetChanged(float heightFraction);
 
     /**
+     * A notification that the dimensions of the sheet has changed. The container height will be
+     * different from the window height when the keyboard is showing.
+     * @param windowHeight The height of the window in px.
+     * @param containerHeight The height of the bottom sheet's container in px.
+     */
+    void onSheetLayout(int windowHeight, int containerHeight);
+
+    /**
      * An event for when the sheet is transitioning from the peeking state to the half expanded
      * state. Once the sheet is outside the peek-half range, this event will no longer be
      * called. This event is guaranteed to be called at least once with 0.0f in the peeking state

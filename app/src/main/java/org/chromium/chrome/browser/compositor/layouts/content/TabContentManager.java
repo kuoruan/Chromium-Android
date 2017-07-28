@@ -111,7 +111,7 @@ public class TabContentManager {
         float thumbnailScale = 1.f;
         boolean useApproximationThumbnails;
         float deviceDensity = mContext.getResources().getDisplayMetrics().density;
-        if (DeviceFormFactor.isTablet(mContext)) {
+        if (DeviceFormFactor.isTablet()) {
             // Scale all tablets to MDPI.
             thumbnailScale = 1.f / deviceDensity;
             useApproximationThumbnails = false;

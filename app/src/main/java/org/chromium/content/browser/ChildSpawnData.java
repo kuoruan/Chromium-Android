@@ -5,32 +5,29 @@
 package org.chromium.content.browser;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.os.IBinder;
 
 import org.chromium.base.process_launcher.ChildProcessCreationParams;
-import org.chromium.base.process_launcher.FileDescriptorInfo;
 import org.chromium.content.browser.ChildProcessLauncher.LaunchCallback;
 
 /** Contains the information necessary to start a child process. */
 class ChildSpawnData {
     private final Context mContext;
-    private final String[] mCommandLine;
-    private final int mChildProcessId;
-    private final FileDescriptorInfo[] mFilesToBeMapped;
+    private final Bundle mServiceBundle;
+    private final Bundle mConnectionBundle;
     private final LaunchCallback mLaunchCallback;
     private final IBinder mChildProcessCallback;
     private final boolean mInSandbox;
     private final boolean mAlwaysInForeground;
     private final ChildProcessCreationParams mCreationParams;
 
-    ChildSpawnData(Context context, String[] commandLine, int childProcessId,
-            FileDescriptorInfo[] filesToBeMapped, LaunchCallback launchCallback,
-            IBinder childProcessCallback, boolean inSandbox, boolean alwaysInForeground,
-            ChildProcessCreationParams creationParams) {
+    ChildSpawnData(Context context, Bundle serviceBundle, Bundle connectionBundle,
+            LaunchCallback launchCallback, IBinder childProcessCallback, boolean inSandbox,
+            boolean alwaysInForeground, ChildProcessCreationParams creationParams) {
         mContext = context;
-        mCommandLine = commandLine;
-        mChildProcessId = childProcessId;
-        mFilesToBeMapped = filesToBeMapped;
+        mServiceBundle = serviceBundle;
+        mConnectionBundle = connectionBundle;
         mLaunchCallback = launchCallback;
         mChildProcessCallback = childProcessCallback;
         mInSandbox = inSandbox;
@@ -42,16 +39,12 @@ class ChildSpawnData {
         return mContext;
     }
 
-    String[] getCommandLine() {
-        return mCommandLine;
+    Bundle getServiceBundle() {
+        return mServiceBundle;
     }
 
-    int getChildProcessId() {
-        return mChildProcessId;
-    }
-
-    FileDescriptorInfo[] getFilesToBeMapped() {
-        return mFilesToBeMapped;
+    Bundle getConnectionBundle() {
+        return mConnectionBundle;
     }
 
     LaunchCallback getLaunchCallback() {

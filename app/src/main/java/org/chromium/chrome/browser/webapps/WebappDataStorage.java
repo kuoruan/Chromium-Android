@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
+import android.text.TextUtils;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.base.ThreadUtils;
@@ -63,6 +64,9 @@ public class WebappDataStorage {
     // Whether to check updates less frequently.
     static final String KEY_RELAX_UPDATES = "relax_updates";
 
+    // The shell Apk version requested in the last update.
+    static final String KEY_LAST_REQUESTED_SHELL_APK_VERSION = "last_requested_shell_apk_version";
+
     // Number of milliseconds between checks for whether the WebAPK's Web Manifest has changed.
     public static final long UPDATE_INTERVAL = TimeUnit.DAYS.toMillis(3L);
 
@@ -73,6 +77,9 @@ public class WebappDataStorage {
     // Number of milliseconds to wait before re-requesting an updated WebAPK from the WebAPK
     // server if the previous update attempt failed.
     public static final long RETRY_UPDATE_DURATION = TimeUnit.HOURS.toMillis(12L);
+
+    // The default shell Apk version of WebAPKs.
+    static final int DEFAULT_SHELL_APK_VERSION = 1;
 
     // Unset/invalid constants for last used times and URLs. 0 is used as the null last used time as
     // WebappRegistry assumes that this is always a valid timestamp.
@@ -203,7 +210,7 @@ public class WebappDataStorage {
                 mPreferences.getString(KEY_SCOPE, null), mPreferences.getString(KEY_NAME, null),
                 mPreferences.getString(KEY_SHORT_NAME, null),
                 ShortcutHelper.decodeBitmapFromString(mPreferences.getString(KEY_ICON, null)),
-                version, mPreferences.getInt(KEY_DISPLAY_MODE, WebDisplayMode.kStandalone),
+                version, mPreferences.getInt(KEY_DISPLAY_MODE, WebDisplayMode.STANDALONE),
                 mPreferences.getInt(KEY_ORIENTATION, ScreenOrientationValues.DEFAULT),
                 mPreferences.getLong(
                         KEY_THEME_COLOR, ShortcutHelper.MANIFEST_COLOR_INVALID_OR_MISSING),
@@ -258,7 +265,7 @@ public class WebappDataStorage {
             // "Standalone" was the original assumed default for all web apps.
             editor.putInt(KEY_DISPLAY_MODE,
                     IntentUtils.safeGetIntExtra(shortcutIntent, ShortcutHelper.EXTRA_DISPLAY_MODE,
-                            WebDisplayMode.kStandalone));
+                            WebDisplayMode.STANDALONE));
             editor.putInt(KEY_ORIENTATION, IntentUtils.safeGetIntExtra(
                         shortcutIntent, ShortcutHelper.EXTRA_ORIENTATION,
                         ScreenOrientationValues.DEFAULT));
@@ -271,12 +278,16 @@ public class WebappDataStorage {
             editor.putBoolean(KEY_IS_ICON_GENERATED, IntentUtils.safeGetBooleanExtra(
                         shortcutIntent, ShortcutHelper.EXTRA_IS_ICON_GENERATED, false));
             editor.putString(KEY_ACTION, shortcutIntent.getAction());
-            editor.putInt(KEY_SOURCE, IntentUtils.safeGetIntExtra(
-                        shortcutIntent, ShortcutHelper.EXTRA_SOURCE,
-                        ShortcutSource.UNKNOWN));
-            editor.putString(KEY_WEBAPK_PACKAGE_NAME,
-                    IntentUtils.safeGetStringExtra(
-                            shortcutIntent, WebApkConstants.EXTRA_WEBAPK_PACKAGE_NAME));
+
+            String webApkPackageName = IntentUtils.safeGetStringExtra(
+                    shortcutIntent, WebApkConstants.EXTRA_WEBAPK_PACKAGE_NAME);
+            editor.putString(KEY_WEBAPK_PACKAGE_NAME, webApkPackageName);
+
+            if (TextUtils.isEmpty(webApkPackageName)) {
+                editor.putInt(KEY_SOURCE,
+                        IntentUtils.safeGetIntExtra(shortcutIntent, ShortcutHelper.EXTRA_SOURCE,
+                                ShortcutSource.UNKNOWN));
+            }
             updated = true;
         }
         if (updated) editor.apply();
@@ -332,6 +343,16 @@ public class WebappDataStorage {
      */
     public String getUrl() {
         return mPreferences.getString(KEY_URL, URL_INVALID);
+    }
+
+    /** Returns the source stored in this object, or ShortcutSource.UNKNOWN if it is not stored. */
+    public int getSource() {
+        return mPreferences.getInt(KEY_SOURCE, ShortcutSource.UNKNOWN);
+    }
+
+    /** Updates the source. */
+    public void updateSource(int source) {
+        mPreferences.edit().putInt(KEY_SOURCE, source).apply();
     }
 
     /**
@@ -435,6 +456,16 @@ public class WebappDataStorage {
         return mPreferences.getInt(KEY_UPDATE_REQUESTED, 0);
     }
 
+    /** Updates the shell Apk version requested in the last update. */
+    void updateLastRequestedShellApkVersion(int shellApkVersion) {
+        mPreferences.edit().putInt(KEY_LAST_REQUESTED_SHELL_APK_VERSION, shellApkVersion).apply();
+    }
+
+    /** Returns the shell Apk version requested in last update. */
+    int getLastRequestedShellApkVersion() {
+        return mPreferences.getInt(KEY_LAST_REQUESTED_SHELL_APK_VERSION, DEFAULT_SHELL_APK_VERSION);
+    }
+
     /**
      * Returns whether the previous WebAPK update attempt succeeded. Returns true if there has not
      * been any update attempts.
@@ -467,7 +498,7 @@ public class WebappDataStorage {
         if (sinceLastCheckDurationMs >= checkUpdatesInterval) return true;
 
         long sinceLastUpdateRequestDurationMs = now - getLastWebApkUpdateRequestCompletionTime();
-        return sinceLastUpdateRequestDurationMs >= WebappDataStorage.RETRY_UPDATE_DURATION
+        return sinceLastUpdateRequestDurationMs >= RETRY_UPDATE_DURATION
                 && !didPreviousUpdateSucceed();
     }
 

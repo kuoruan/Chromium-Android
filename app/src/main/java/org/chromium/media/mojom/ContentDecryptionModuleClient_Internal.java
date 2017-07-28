@@ -310,7 +310,7 @@ String sessionId, double newExpiryTimeSec) {
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
                     result.messageType = decoder0.readInt(16);
-                        ContentDecryptionModuleClient.MessageType.validate(result.messageType);
+                        CdmMessageType.validate(result.messageType);
                 }
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     

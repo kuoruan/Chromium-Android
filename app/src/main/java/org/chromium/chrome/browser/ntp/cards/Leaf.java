@@ -5,7 +5,6 @@
 package org.chromium.chrome.browser.ntp.cards;
 
 import org.chromium.base.Callback;
-import org.chromium.chrome.browser.ntp.snippets.SnippetArticle;
 
 import java.util.Collections;
 import java.util.Set;
@@ -38,13 +37,6 @@ public abstract class Leaf extends ChildNode {
     public void onBindViewHolder(NewTabPageViewHolder holder, int position) {
         if (position != 0) throw new IndexOutOfBoundsException();
         onBindViewHolder(holder);
-    }
-
-    @Override
-    public SnippetArticle getSuggestionAt(int position) {
-        if (position != 0) throw new IndexOutOfBoundsException();
-
-        return null;
     }
 
     @Override

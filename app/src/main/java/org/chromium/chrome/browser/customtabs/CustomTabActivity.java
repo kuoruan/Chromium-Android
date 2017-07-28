@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.customtabs;
 
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -73,6 +74,7 @@ import org.chromium.chrome.browser.tabmodel.TabModelSelectorImpl;
 import org.chromium.chrome.browser.tabmodel.TabReparentingParams;
 import org.chromium.chrome.browser.toolbar.ToolbarControlContainer;
 import org.chromium.chrome.browser.util.ColorUtils;
+import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.chrome.browser.util.UrlUtilities;
 import org.chromium.chrome.browser.widget.findinpage.FindToolbarManager;
 import org.chromium.components.dom_distiller.core.DomDistillerUrlUtils;
@@ -80,6 +82,8 @@ import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.base.PageTransition;
 import org.chromium.ui.base.WindowAndroid;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * The activity for custom tabs. It will be launched on top of a client's task.
@@ -131,19 +135,19 @@ public class CustomTabActivity extends ChromeActivity {
     private static class PageLoadMetricsObserver implements PageLoadMetrics.Observer {
         private final CustomTabsConnection mConnection;
         private final CustomTabsSessionToken mSession;
-        private final Tab mTab;
+        private final WebContents mWebContents;
 
         public PageLoadMetricsObserver(CustomTabsConnection connection,
                 CustomTabsSessionToken session, Tab tab) {
             mConnection = connection;
             mSession = session;
-            mTab = tab;
+            mWebContents = tab.getWebContents();
         }
 
         @Override
         public void onFirstContentfulPaint(
                 WebContents webContents, long navigationStartTick, long firstContentfulPaintMs) {
-            if (webContents != mTab.getWebContents()) return;
+            if (webContents != mWebContents) return;
 
             mConnection.notifyPageLoadMetric(mSession, PageLoadMetrics.FIRST_CONTENTFUL_PAINT,
                     navigationStartTick, firstContentfulPaintMs);
@@ -152,7 +156,7 @@ public class CustomTabActivity extends ChromeActivity {
         @Override
         public void onLoadEventStart(
                 WebContents webContents, long navigationStartTick, long loadEventStartMs) {
-            if (webContents != mTab.getWebContents()) return;
+            if (webContents != mWebContents) return;
 
             mConnection.notifyPageLoadMetric(mSession, PageLoadMetrics.LOAD_EVENT_START,
                     navigationStartTick, loadEventStartMs);
@@ -291,6 +295,14 @@ public class CustomTabActivity extends ChromeActivity {
     @Override
     public boolean isCustomTab() {
         return true;
+    }
+
+    @Override
+    protected void recordIntentToCreationTime(long timeMs) {
+        super.recordIntentToCreationTime(timeMs);
+
+        RecordHistogram.recordTimesHistogram(
+                "MobileStartup.IntentToCreationTime.CustomTabs", timeMs, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -1017,8 +1029,7 @@ public class CustomTabActivity extends ChromeActivity {
         intent.putExtra(ChromeLauncherActivity.EXTRA_IS_ALLOWED_TO_RETURN_TO_PARENT, false);
 
         boolean willChromeHandleIntent = getIntentDataProvider().isOpenedByChrome();
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-        StrictMode.allowThreadDiskWrites();
+        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
         try {
             willChromeHandleIntent |= ExternalNavigationDelegateImpl
                     .willChromeHandleIntent(intent, true);
@@ -1044,7 +1055,6 @@ public class CustomTabActivity extends ChromeActivity {
             tab.detachAndStartReparenting(intent, startActivityOptions, finalizeCallback);
         } else {
             // Temporarily allowing disk access while fixing. TODO: http://crbug.com/581860
-            StrictMode.allowThreadDiskReads();
             StrictMode.allowThreadDiskWrites();
             try {
                 if (mIntentDataProvider.isInfoPage()) {
@@ -1144,8 +1154,21 @@ public class CustomTabActivity extends ChromeActivity {
         intent.setPackage(context.getPackageName());
         intent.putExtra(CustomTabIntentDataProvider.EXTRA_IS_INFO_PAGE, true);
         intent.putExtra(Browser.EXTRA_APPLICATION_ID, context.getPackageName());
+        if (!(context instanceof Activity)) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         IntentHandler.addTrustedIntentExtras(intent);
 
         context.startActivity(intent);
+    }
+
+    @Override
+    protected boolean requiresFirstRunToBeCompleted(Intent intent) {
+        // Custom Tabs can be used to open Chrome help pages before the ToS has been accepted.
+        if (IntentHandler.isIntentChromeOrFirstParty(intent)
+                && IntentUtils.safeGetBooleanExtra(
+                           intent, CustomTabIntentDataProvider.EXTRA_IS_INFO_PAGE, false)) {
+            return false;
+        }
+
+        return super.requiresFirstRunToBeCompleted(intent);
     }
 }

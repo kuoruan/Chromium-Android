@@ -5,6 +5,8 @@
 package org.chromium.chrome.browser.download.items;
 
 import org.chromium.base.ThreadUtils;
+import org.chromium.chrome.browser.download.DownloadManagerService;
+import org.chromium.chrome.browser.download.DownloadNotifier;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.components.offline_items_collection.OfflineContentProvider;
 
@@ -24,8 +26,10 @@ public class OfflineContentAggregatorNotificationBridgeUiFactory {
         if (sBridgeUi == null) {
             Profile profile = Profile.getLastUsedProfile();
             OfflineContentProvider provider = OfflineContentAggregatorFactory.forProfile(profile);
+            DownloadNotifier ui =
+                    DownloadManagerService.getDownloadManagerService().getDownloadNotifier();
 
-            sBridgeUi = new OfflineContentAggregatorNotificationBridgeUi(provider);
+            sBridgeUi = new OfflineContentAggregatorNotificationBridgeUi(provider, ui);
         }
 
         return sBridgeUi;

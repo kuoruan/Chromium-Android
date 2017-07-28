@@ -9,7 +9,7 @@
         android:inflatedId="@+id/action_bar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/appbar_background" />
+        android:background="@color/default_primary_color" />
 
     <FrameLayout
         android:id="@+id/list_content"

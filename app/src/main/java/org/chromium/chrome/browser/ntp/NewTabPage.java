@@ -18,6 +18,7 @@ import android.view.View;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.CommandLine;
+import org.chromium.base.DiscardableReferencePool;
 import org.chromium.base.Log;
 import org.chromium.base.TraceEvent;
 import org.chromium.base.VisibleForTesting;
@@ -39,7 +40,9 @@ import org.chromium.chrome.browser.ntp.snippets.SuggestionsSource;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.search_engines.TemplateUrlService;
 import org.chromium.chrome.browser.search_engines.TemplateUrlService.TemplateUrlServiceObserver;
-import org.chromium.chrome.browser.suggestions.SuggestionsMetricsReporter;
+import org.chromium.chrome.browser.suggestions.SuggestionsEventReporter;
+import org.chromium.chrome.browser.suggestions.SuggestionsEventReporterBridge;
+import org.chromium.chrome.browser.suggestions.SuggestionsMetrics;
 import org.chromium.chrome.browser.suggestions.SuggestionsNavigationDelegate;
 import org.chromium.chrome.browser.suggestions.SuggestionsNavigationDelegateImpl;
 import org.chromium.chrome.browser.suggestions.SuggestionsUiDelegateImpl;
@@ -55,6 +58,7 @@ import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.TabModelUtils;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.UrlUtilities;
+import org.chromium.chrome.browser.vr_shell.VrShellDelegate;
 import org.chromium.content_public.browser.NavigationController;
 import org.chromium.content_public.browser.NavigationEntry;
 import org.chromium.net.NetworkChangeNotifier;
@@ -174,10 +178,11 @@ public class NewTabPage
     private class NewTabPageManagerImpl
             extends SuggestionsUiDelegateImpl implements NewTabPageManager {
         public NewTabPageManagerImpl(SuggestionsSource suggestionsSource,
-                SuggestionsMetricsReporter metricsReporter,
+                SuggestionsEventReporter eventReporter,
                 SuggestionsNavigationDelegate navigationDelegate, Profile profile,
-                NativePageHost nativePageHost) {
-            super(suggestionsSource, metricsReporter, navigationDelegate, profile, nativePageHost);
+                NativePageHost nativePageHost, DiscardableReferencePool referencePool) {
+            super(suggestionsSource, eventReporter, navigationDelegate, profile, nativePageHost,
+                    referencePool);
         }
 
         @Override
@@ -224,6 +229,7 @@ public class NewTabPage
         @Override
         public void focusSearchBox(boolean beginVoiceSearch, String pastedText) {
             if (mIsDestroyed) return;
+            if (VrShellDelegate.isInVr()) return;
             if (mFakeboxDelegate != null) {
                 if (beginVoiceSearch) {
                     mFakeboxDelegate.startVoiceRecognition();
@@ -315,12 +321,13 @@ public class NewTabPage
         Profile profile = mTab.getProfile();
 
         mSnippetsBridge = new SnippetsBridge(profile);
+        SuggestionsEventReporter eventReporter = new SuggestionsEventReporterBridge();
 
         SuggestionsNavigationDelegateImpl navigationDelegate =
                 new SuggestionsNavigationDelegateImpl(
                         activity, profile, nativePageHost, tabModelSelector);
-        mNewTabPageManager = new NewTabPageManagerImpl(
-                mSnippetsBridge, mSnippetsBridge, navigationDelegate, profile, nativePageHost);
+        mNewTabPageManager = new NewTabPageManagerImpl(mSnippetsBridge, eventReporter,
+                navigationDelegate, profile, nativePageHost, activity.getReferencePool());
         mTileGroupDelegate = new NewTabPageTileGroupDelegate(
                 activity, profile, tabModelSelector, navigationDelegate);
 
@@ -341,7 +348,7 @@ public class NewTabPage
 
             @Override
             public void onHidden(Tab tab) {
-                if (mIsLoaded) recordNTPInteractionTime();
+                if (mIsLoaded) recordNTPHidden();
             }
 
             @Override
@@ -375,9 +382,7 @@ public class NewTabPage
         mNewTabPageView.initialize(mNewTabPageManager, mTab, mTileGroupDelegate,
                 mSearchProviderHasLogo, getScrollPositionFromNavigationEntry());
 
-        if (mSnippetsBridge != null) {
-            mSnippetsBridge.onNtpInitialized();
-        }
+        eventReporter.onSurfaceOpened();
 
         DownloadManagerService.getDownloadManagerService().checkForExternallyRemovedDownloads(
                 /*isOffRecord=*/false);
@@ -403,7 +408,7 @@ public class NewTabPage
     }
 
     private boolean isInSingleUrlBarMode(Context context) {
-        if (DeviceFormFactor.isTablet(context)) return false;
+        if (DeviceFormFactor.isTablet()) return false;
         if (FeatureUtilities.isChromeHomeEnabled()) return false;
         return mSearchProviderHasLogo;
     }
@@ -496,11 +501,14 @@ public class NewTabPage
     private void recordNTPShown() {
         mLastShownTimeNs = System.nanoTime();
         RecordUserAction.record("MobileNTPShown");
+        SuggestionsMetrics.recordSurfaceVisible();
     }
 
-    private void recordNTPInteractionTime() {
+    /** Records UMA for the NTP being hidden and the time spent on it. */
+    private void recordNTPHidden() {
         RecordHistogram.recordMediumTimesHistogram(
                 "NewTabPage.TimeSpent", System.nanoTime() - mLastShownTimeNs, TimeUnit.NANOSECONDS);
+        SuggestionsMetrics.recordSurfaceHidden();
     }
 
     /**
@@ -548,7 +556,7 @@ public class NewTabPage
         assert !mIsDestroyed;
         assert !ViewCompat
                 .isAttachedToWindow(getView()) : "Destroy called before removed from window";
-        if (mIsLoaded && !mTab.isHidden()) recordNTPInteractionTime();
+        if (mIsLoaded && !mTab.isHidden()) recordNTPHidden();
 
         if (mSnippetsBridge != null) {
             mSnippetsBridge.onDestroy();
@@ -611,5 +619,10 @@ public class NewTabPage
     @Override
     public void captureThumbnail(Canvas canvas) {
         mNewTabPageView.captureThumbnail(canvas);
+    }
+
+    @VisibleForTesting
+    public NewTabPageManager getManagerForTesting() {
+        return mNewTabPageManager;
     }
 }

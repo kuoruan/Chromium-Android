@@ -6,6 +6,7 @@ package org.chromium.content_public.browser;
 
 import android.content.Context;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.services.service_manager.InterfaceRegistry;
 
 import java.util.ArrayList;
@@ -30,12 +31,12 @@ public interface InterfaceRegistrar<ParamType> {
         private List<InterfaceRegistrar<ParamType>> mRegistrars =
                 new ArrayList<InterfaceRegistrar<ParamType>>();
 
-        public static void applyContextRegistrars(
-                InterfaceRegistry interfaceRegistry, Context context) {
+        public static void applyContextRegistrars(InterfaceRegistry interfaceRegistry) {
             if (sContextRegistry == null) {
                 return;
             }
-            sContextRegistry.applyRegistrars(interfaceRegistry, context);
+            sContextRegistry.applyRegistrars(
+                    interfaceRegistry, ContextUtils.getApplicationContext());
         }
 
         public static void applyWebContentsRegistrars(

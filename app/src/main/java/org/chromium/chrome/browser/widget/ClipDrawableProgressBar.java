@@ -39,7 +39,6 @@ public class ClipDrawableProgressBar extends ImageView {
     private final ColorDrawable mForegroundDrawable;
     private int mBackgroundColor = Color.TRANSPARENT;
     private float mProgress;
-    private int mProgressUpdateCount;
     private int mDesiredVisibility;
 
     /**
@@ -84,7 +83,6 @@ public class ClipDrawableProgressBar extends ImageView {
         if (mProgress == progress) return;
 
         mProgress = progress;
-        mProgressUpdateCount += 1;
         getDrawable().setLevel(Math.round(progress * CLIP_DRAWABLE_MAX));
     }
 
@@ -128,20 +126,6 @@ public class ClipDrawableProgressBar extends ImageView {
                     drawingInfoOut.progressBarRect.left,
                     getBottom());
         }
-    }
-
-    /**
-     * Resets progress update count to 0.
-     */
-    public void resetProgressUpdateCount() {
-        mProgressUpdateCount = 0;
-    }
-
-    /**
-     * @return Progress update count since reset.
-     */
-    public int getProgressUpdateCount() {
-        return mProgressUpdateCount;
     }
 
     private void updateInternalVisibility() {

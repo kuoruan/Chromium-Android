@@ -197,7 +197,7 @@ abstract class OverlayPanelBase {
     private float mMaximumHeight;
 
     private boolean mIsFullWidthSizePanelForTesting;
-    private boolean mOverrideIsFullWidthSizePanelForTesting;
+    protected boolean mOverrideIsFullWidthSizePanelForTesting;
 
     /**
      * Called when the layout has changed.
@@ -1154,7 +1154,6 @@ abstract class OverlayPanelBase {
         mBarHeightPeeking = barHeightPx * mPxToDp;
         mBarHeightMaximized = mBarHeightPeeking;
         mBarHeightExpanded = mBarHeightPeeking;
-        mHeight = mBarHeightPeeking;
     }
 
     /**

@@ -4,12 +4,12 @@
 
 package org.chromium.components.gcm_driver.instance_id;
 
-import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
 import com.google.android.gms.iid.InstanceID;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 
@@ -22,7 +22,6 @@ import java.util.concurrent.ExecutionException;
  */
 @JNINamespace("instance_id")
 public class InstanceIDBridge {
-    private final Context mContext;
     private final String mSubtype;
     private long mNativeInstanceIDAndroid;
     /**
@@ -33,9 +32,7 @@ public class InstanceIDBridge {
 
     private static boolean sBlockOnAsyncTasksForTesting;
 
-    private InstanceIDBridge(
-            long nativeInstanceIDAndroid, Context context, String subtype) {
-        mContext = context.getApplicationContext(); // Storing activity context would leak activity.
+    private InstanceIDBridge(long nativeInstanceIDAndroid, String subtype) {
         mSubtype = subtype;
         mNativeInstanceIDAndroid = nativeInstanceIDAndroid;
     }
@@ -45,9 +42,8 @@ public class InstanceIDBridge {
      * share an underlying InstanceIDWithSubtype.
      */
     @CalledByNative
-    public static InstanceIDBridge create(
-            long nativeInstanceIDAndroid, Context context, String subtype) {
-        return new InstanceIDBridge(nativeInstanceIDAndroid, context, subtype);
+    public static InstanceIDBridge create(long nativeInstanceIDAndroid, String subtype) {
+        return new InstanceIDBridge(nativeInstanceIDAndroid, subtype);
     }
 
     /**
@@ -198,7 +194,8 @@ public class InstanceIDBridge {
                 protected Result doInBackground(Void... params) {
                     synchronized (InstanceIDBridge.this) {
                         if (mInstanceID == null) {
-                            mInstanceID = InstanceIDWithSubtype.getInstance(mContext, mSubtype);
+                            mInstanceID = InstanceIDWithSubtype.getInstance(
+                                    ContextUtils.getApplicationContext(), mSubtype);
                         }
                     }
                     return doBackgroundWork();

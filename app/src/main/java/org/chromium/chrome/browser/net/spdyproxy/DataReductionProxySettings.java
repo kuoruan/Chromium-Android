@@ -61,9 +61,10 @@ public class DataReductionProxySettings {
     @VisibleForTesting
     public static final String DATA_REDUCTION_PROXY_ENABLED_KEY = "Data Reduction Proxy Enabled";
 
-    private static DataReductionProxySettings sSettings;
+    // Visible for backup and restore
+    public static final String DATA_REDUCTION_ENABLED_PREF = "BANDWIDTH_REDUCTION_PROXY_ENABLED";
 
-    private static final String DATA_REDUCTION_ENABLED_PREF = "BANDWIDTH_REDUCTION_PROXY_ENABLED";
+    private static DataReductionProxySettings sSettings;
 
     private static final String DATA_REDUCTION_HAS_EVER_BEEN_ENABLED_PREF =
             "BANDWIDTH_REDUCTION_PROXY_HAS_EVER_BEEN_ENABLED";

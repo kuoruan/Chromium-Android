@@ -17,10 +17,11 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class FaceDetectionResult extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 16;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+    private static final int STRUCT_SIZE = 24;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    public org.chromium.gfx.mojom.RectF[] boundingBoxes;
+    public org.chromium.gfx.mojom.RectF boundingBox;
+    public Landmark[] landmarks;
 
     private FaceDetectionResult(int version) {
         super(STRUCT_SIZE, version);
@@ -60,13 +61,18 @@ public final class FaceDetectionResult extends org.chromium.mojo.bindings.Struct
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                result.boundingBox = org.chromium.gfx.mojom.RectF.decode(decoder1);
+            }
+            if (mainDataHeader.elementsOrVersion >= 0) {
+                
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                 {
                     org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                    result.boundingBoxes = new org.chromium.gfx.mojom.RectF[si1.elementsOrVersion];
+                    result.landmarks = new Landmark[si1.elementsOrVersion];
                     for (int i1 = 0; i1 < si1.elementsOrVersion; ++i1) {
                         
                         org.chromium.mojo.bindings.Decoder decoder2 = decoder1.readPointer(org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i1, false);
-                        result.boundingBoxes[i1] = org.chromium.gfx.mojom.RectF.decode(decoder2);
+                        result.landmarks[i1] = Landmark.decode(decoder2);
                     }
                 }
             }
@@ -81,13 +87,15 @@ public final class FaceDetectionResult extends org.chromium.mojo.bindings.Struct
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        if (boundingBoxes == null) {
-            encoder0.encodeNullPointer(8, false);
+        encoder0.encode(boundingBox, 8, false);
+        
+        if (landmarks == null) {
+            encoder0.encodeNullPointer(16, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(boundingBoxes.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < boundingBoxes.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(landmarks.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < landmarks.length; ++i0) {
                 
-                encoder1.encode(boundingBoxes[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                encoder1.encode(landmarks[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
     }
@@ -104,7 +112,9 @@ public final class FaceDetectionResult extends org.chromium.mojo.bindings.Struct
         if (getClass() != object.getClass())
             return false;
         FaceDetectionResult other = (FaceDetectionResult) object;
-        if (!java.util.Arrays.deepEquals(this.boundingBoxes, other.boundingBoxes))
+        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.boundingBox, other.boundingBox))
+            return false;
+        if (!java.util.Arrays.deepEquals(this.landmarks, other.landmarks))
             return false;
         return true;
     }
@@ -116,7 +126,8 @@ public final class FaceDetectionResult extends org.chromium.mojo.bindings.Struct
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + java.util.Arrays.deepHashCode(boundingBoxes);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(boundingBox);
+        result = prime * result + java.util.Arrays.deepHashCode(landmarks);
         return result;
     }
 }

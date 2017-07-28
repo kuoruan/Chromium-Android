@@ -17,7 +17,6 @@ import android.support.v7.widget.RecyclerView.Adapter;
 import android.support.v7.widget.RecyclerView.AdapterDataObserver;
 import android.support.v7.widget.RecyclerView.ItemAnimator;
 import android.support.v7.widget.RecyclerView.OnScrollListener;
-import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.Toolbar.OnMenuItemClickListener;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -38,7 +37,6 @@ import org.chromium.chrome.browser.widget.displaystyle.HorizontalDisplayStyle;
 import org.chromium.chrome.browser.widget.displaystyle.UiConfig;
 import org.chromium.chrome.browser.widget.displaystyle.UiConfig.DisplayStyle;
 import org.chromium.chrome.browser.widget.selection.SelectionDelegate.SelectionObserver;
-import org.chromium.ui.base.DeviceFormFactor;
 
 import java.util.List;
 
@@ -63,24 +61,43 @@ public class SelectableListLayout<E>
      */
     public static int getDefaultListItemLateralMarginPx(Resources res) {
         if (sDefaultListItemLateralMarginPx == -1) {
-            Rect listItemShadow = new Rect();
-            ApiCompatibilityUtils.getDrawable(res, R.drawable.card_middle)
-                    .getPadding(listItemShadow);
             int cardCornerRadius = res.getDimensionPixelSize(R.dimen.list_item_corner_radius);
-
-            assert listItemShadow.left == listItemShadow.right;
 
             // A negative margin is used in HorizontalDisplayStyle#REGULAR to hide the lateral
             // shadow.
-            sDefaultListItemLateralMarginPx = -(listItemShadow.left + cardCornerRadius);
+            sDefaultListItemLateralMarginPx =
+                    -(getDefaultListItemLateralShadowSizePx(res) + cardCornerRadius);
         }
 
         return sDefaultListItemLateralMarginPx;
     }
 
+    /**
+     * Returns the list_item* 9-patch shadow size for use in {@link HorizontalDisplayStyle#WIDE} to
+     * align items that don't use the list_item* 9-patches as a background with items that do.
+     *
+     * @param res Resources used to retrieve drawables and dimensions.
+     * @return The default list item shadow size in pixels.
+     */
+    public static int getDefaultListItemLateralShadowSizePx(Resources res) {
+        if (sDefaultListItemLateralShadowSizePx == -1) {
+            // Retrieve the size of the nine-patch shadow from the drawable's padding.
+            Rect listItemShadow = new Rect();
+            ApiCompatibilityUtils.getDrawable(res, R.drawable.card_middle)
+                    .getPadding(listItemShadow);
+
+            assert listItemShadow.left == listItemShadow.right;
+
+            sDefaultListItemLateralShadowSizePx = listItemShadow.left;
+        }
+
+        return sDefaultListItemLateralShadowSizePx;
+    }
+
     private static final int WIDE_DISPLAY_MIN_PADDING_DP = 16;
 
     private static int sDefaultListItemLateralMarginPx = -1;
+    private static int sDefaultListItemLateralShadowSizePx = -1;
 
     private Adapter<RecyclerView.ViewHolder> mAdapter;
     private ViewStub mToolbarStub;
@@ -91,7 +108,6 @@ public class SelectableListLayout<E>
     SelectableListToolbar<E> mToolbar;
     private FadingShadowView mToolbarShadow;
 
-    private boolean mToolbarPermanentlyHidden;
     private int mEmptyStringResId;
     private int mSearchEmptyStringResId;
     private int mChromeHomeEmptyAndLoadingViewTopPadding;
@@ -207,14 +223,13 @@ public class SelectableListLayout<E>
      * @param normalBackgroundColorResId The resource id of the color to use as the background color
      *                                   when selection is not enabled. If null the default appbar
      *                                   background color will be used.
-     * @param hideShadowOnLargeTablets Whether the toolbar shadow should be hidden on large tablets.
      * @param listener The OnMenuItemClickListener to set on the toolbar.
      * @return The initialized SelectionToolbar.
      */
     public SelectableListToolbar<E> initializeToolbar(int toolbarLayoutId,
             SelectionDelegate<E> delegate, int titleResId, @Nullable DrawerLayout drawerLayout,
             int normalGroupResId, int selectedGroupResId,
-            @Nullable Integer normalBackgroundColorResId, boolean hideShadowOnLargeTablets,
+            @Nullable Integer normalBackgroundColorResId,
             @Nullable OnMenuItemClickListener listener) {
         mToolbarStub.setLayoutResource(toolbarLayoutId);
         @SuppressWarnings("unchecked")
@@ -228,16 +243,11 @@ public class SelectableListLayout<E>
         }
 
         mToolbarShadow = (FadingShadowView) findViewById(R.id.shadow);
-        if (hideShadowOnLargeTablets && DeviceFormFactor.isLargeTablet(getContext())) {
-            mToolbarPermanentlyHidden = true;
-            mToolbarShadow.setVisibility(View.GONE);
-        } else {
-            mToolbarShadow.init(
-                    ApiCompatibilityUtils.getColor(getResources(), R.color.toolbar_shadow_color),
-                    FadingShadow.POSITION_TOP);
-            delegate.addObserver(this);
-            setToolbarShadowVisibility();
-        }
+        mToolbarShadow.init(
+                ApiCompatibilityUtils.getColor(getResources(), R.color.toolbar_shadow_color),
+                FadingShadow.POSITION_TOP);
+        delegate.addObserver(this);
+        setToolbarShadowVisibility();
 
         return mToolbar;
     }
@@ -272,6 +282,14 @@ public class SelectableListLayout<E>
     }
 
     /**
+     * Calls {@link #configureWideDisplayStyle(int)} using the default list item lateral shadow
+     * defined by {@link #getDefaultListItemLateralShadowSizePx(Resources)}.
+     */
+    public void configureWideDisplayStyle() {
+        configureWideDisplayStyle(getDefaultListItemLateralShadowSizePx(getResources()));
+    }
+
+    /**
      * When this layout has a wide display style, it will be width constrained to
      * {@link UiConfig#WIDE_DISPLAY_STYLE_MIN_WIDTH_DP}. If the current screen width is greater than
      * UiConfig#WIDE_DISPLAY_STYLE_MIN_WIDTH_DP, the SelectableListLayout will be visually centered
@@ -282,9 +300,9 @@ public class SelectableListLayout<E>
      * @param wideDisplayToolbarLateralOffsetPx The offset to use for the toolbar's lateral padding
      *                                          when in {@link HorizontalDisplayStyle#WIDE}.
      */
-    public void setHasWideDisplayStyle(int wideDisplayToolbarLateralOffsetPx) {
+    public void configureWideDisplayStyle(int wideDisplayToolbarLateralOffsetPx) {
         mUiConfig = new UiConfig(this);
-        mToolbar.setHasWideDisplayStyle(wideDisplayToolbarLateralOffsetPx, mUiConfig);
+        mToolbar.configureWideDisplayStyle(wideDisplayToolbarLateralOffsetPx, mUiConfig);
         mUiConfig.addObserver(this);
     }
 
@@ -315,7 +333,7 @@ public class SelectableListLayout<E>
      * elsewhere.
      * @return The toolbar view.
      */
-    public Toolbar detachToolbarView() {
+    public SelectableListToolbar<E> detachToolbarView() {
         removeView(mToolbar);
 
         // The top margin for the content and shadow needs to be removed now that the toolbar
@@ -363,7 +381,7 @@ public class SelectableListLayout<E>
     }
 
     private void setToolbarShadowVisibility() {
-        if (mToolbarPermanentlyHidden || mToolbar == null || mRecyclerView == null) return;
+        if (mToolbar == null || mRecyclerView == null) return;
 
         boolean showShadow = mRecyclerView.canScrollVertically(-1) || mToolbar.isSearching()
                 || mToolbar.getSelectionDelegate().isSelectionEnabled();

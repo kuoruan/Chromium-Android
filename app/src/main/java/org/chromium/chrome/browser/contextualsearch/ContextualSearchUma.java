@@ -10,7 +10,6 @@ import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.PanelState;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.StateChangeReason;
-import org.chromium.chrome.browser.contextualsearch.ContextualSearchBlacklist.BlacklistReason;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 
 import java.util.Collections;
@@ -711,21 +710,6 @@ public class ContextualSearchUma {
     }
 
     /**
-     * Logs whether search results were seen when the selection was part of a URL.
-     * Unlike ContextualSearchResultsSeen, this histogram is logged for both decided and undecided
-     * users.
-     * @param wasPanelSeen Whether the panel was seen.
-     * @param wasTap Whether the gesture that originally caused the panel to show was a Tap.
-     */
-    public static void logResultsSeenSelectionIsUrl(boolean wasPanelSeen, boolean wasTap) {
-        int result = wasPanelSeen ? (wasTap ? RESULTS_SEEN_FROM_TAP : RESULTS_SEEN_FROM_LONG_PRESS)
-                : (wasTap ? RESULTS_NOT_SEEN_FROM_TAP : RESULTS_NOT_SEEN_FROM_LONG_PRESS);
-        RecordHistogram.recordEnumeratedHistogram(
-                "Search.ContextualSearchResultsSeenSelectionWasUrl", result,
-                RESULTS_BY_GESTURE_BOUNDARY);
-    }
-
-    /**
      * Logs the whether the panel was seen and the type of the trigger and if Bar nearly overlapped.
      * @param wasPanelSeen Whether the panel was seen.
      * @param wasTap Whether the gesture was a Tap or not.
@@ -816,28 +800,6 @@ public class ContextualSearchUma {
                     wasSearchContentViewSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN,
                     RESULTS_SEEN_BOUNDARY);
         }
-    }
-
-    /**
-     * Logs whether results were seen when the selected text consisted of all capital letters.
-     * @param wasSearchContentViewSeen If the panel was opened.
-     */
-    public static void logAllCapsResultsSeen(boolean wasSearchContentViewSeen) {
-        RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchAllCapsResultsSeen",
-                wasSearchContentViewSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN,
-                RESULTS_SEEN_BOUNDARY);
-    }
-
-    /**
-     * Logs whether results were seen when the selected text started with a capital letter but was
-     * not all capital letters.
-     * @param wasSearchContentViewSeen If the panel was opened.
-     */
-    public static void logStartedWithCapitalResultsSeen(boolean wasSearchContentViewSeen) {
-        RecordHistogram.recordEnumeratedHistogram(
-                "Search.ContextualSearchStartedWithCapitalResultsSeen",
-                wasSearchContentViewSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN,
-                RESULTS_SEEN_BOUNDARY);
     }
 
     /**
@@ -1158,19 +1120,6 @@ public class ContextualSearchUma {
         int code = didForceTranslate ? DID_FORCE_TRANSLATE : WOULD_FORCE_TRANSLATE;
         RecordHistogram.recordEnumeratedHistogram(
                 "Search.ContextualSearchShouldTranslate", code, FORCE_TRANSLATE_BOUNDARY);
-    }
-
-    /**
-     * Logs whether a certain category of a blacklisted term resulted in the search results
-     * being seen.
-     * @param reason The given reason.
-     * @param wasSeen Whether the search results were seen.
-     */
-    public static void logBlacklistSeen(BlacklistReason reason, boolean wasSeen) {
-        if (reason == null) reason = BlacklistReason.NONE;
-        int code = ContextualSearchBlacklist.getBlacklistMetricsCode(reason, wasSeen);
-        RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchBlacklistSeen",
-                code, ContextualSearchBlacklist.BLACKLIST_BOUNDARY);
     }
 
     /**

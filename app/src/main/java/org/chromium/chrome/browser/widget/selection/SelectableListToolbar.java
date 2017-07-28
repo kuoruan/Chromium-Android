@@ -27,6 +27,7 @@ import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 
 import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.base.ObserverList;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.widget.NumberRollView;
@@ -68,14 +69,29 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
         void onEndSearch();
     }
 
+    /**
+     * An interface to observe events on this toolbar.
+     */
+    public interface SelectableListToolbarObserver {
+        /**
+         * A notification that the theme color of the toolbar has changed.
+         * @param isLightTheme Whether or not the toolbar is using a light theme. When this
+         *                     parameter is true, it indicates that dark drawables should be used.
+         */
+        void onThemeColorChanged(boolean isLightTheme);
+    }
+
     /** No navigation button is displayed. **/
-    protected static final int NAVIGATION_BUTTON_NONE = 0;
+    public static final int NAVIGATION_BUTTON_NONE = 0;
     /** Button to open the DrawerLayout. Only valid if mDrawerLayout is set. **/
-    protected static final int NAVIGATION_BUTTON_MENU = 1;
+    public static final int NAVIGATION_BUTTON_MENU = 1;
     /** Button to navigate back. This calls {@link #onNavigationBack()}. **/
-    protected static final int NAVIGATION_BUTTON_BACK = 2;
+    public static final int NAVIGATION_BUTTON_BACK = 2;
     /** Button to clear the selection. **/
-    protected static final int NAVIGATION_BUTTON_SELECTION_BACK = 3;
+    public static final int NAVIGATION_BUTTON_SELECTION_BACK = 3;
+
+    /** An observer list for this toolbar. */
+    private final ObserverList<SelectableListToolbarObserver> mObservers = new ObserverList<>();
 
     protected boolean mIsSelectionEnabled;
     protected SelectionDelegate<E> mSelectionDelegate;
@@ -86,6 +102,7 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
     private EditText mSearchEditText;
     private TintedImageButton mClearTextButton;
     private SearchDelegate mSearchDelegate;
+    private boolean mIsLightTheme = true;
 
     protected NumberRollView mNumberRollView;
     private DrawerLayout mDrawerLayout;
@@ -128,6 +145,7 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
     void destroy() {
         mIsDestroyed = true;
         if (mSelectionDelegate != null) mSelectionDelegate.removeObserver(this);
+        mObservers.clear();
         UiUtils.hideKeyboard(mSearchEditText);
     }
 
@@ -159,8 +177,9 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
 
         if (mDrawerLayout != null) initActionBarDrawerToggle();
 
-        normalBackgroundColorResId = normalBackgroundColorResId != null ? normalBackgroundColorResId
-                : R.color.appbar_background;
+        normalBackgroundColorResId = normalBackgroundColorResId != null
+                ? normalBackgroundColorResId
+                : R.color.default_primary_color;
         mNormalBackgroundColor =
                 ApiCompatibilityUtils.getColor(getResources(), normalBackgroundColorResId);
         setBackgroundColor(mNormalBackgroundColor);
@@ -344,6 +363,8 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
             setNavigationIcon(iconResId);
         }
         setNavigationContentDescription(contentDescriptionId);
+
+        updateDisplayStyleIfNecessary();
     }
 
     /**
@@ -368,8 +389,9 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
     public void hideSearchView() {
         assert mHasSearchView;
 
-        mIsSearching = false;
+        if (!mIsSearching) return;
 
+        mIsSearching = false;
         mSearchEditText.setText("");
         UiUtils.hideKeyboard(mSearchEditText);
         showNormalView();
@@ -415,8 +437,9 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
      *
      * @param wideDisplayLateralOffsetPx The offset to use for the lateral padding when in
      *                                   {@link HorizontalDisplayStyle#WIDE}.
+     * @param uiConfig The UiConfig used to observe display style changes.
      */
-    public void setHasWideDisplayStyle(int wideDisplayLateralOffsetPx, UiConfig uiConfig) {
+    public void configureWideDisplayStyle(int wideDisplayLateralOffsetPx, UiConfig uiConfig) {
         mWideDisplayLateralOffsetPx = wideDisplayLateralOffsetPx;
         mDefaultTitleMarginStartPx = getTitleMarginStart();
         mWideDisplayNavButtonOffsetPx =
@@ -445,7 +468,8 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
 
             // The title and nav buttons are inset in the normal display style. In the wide display
             // style they should be aligned with the starting edge of the list elements.
-            if (mIsSearching || mIsSelectionEnabled) {
+            if (mIsSearching || mIsSelectionEnabled
+                    || mNavigationButton != NAVIGATION_BUTTON_NONE) {
                 paddingStartOffset += mWideDisplayNavButtonOffsetPx;
             } else {
                 paddingStartOffset -= mDefaultTitleMarginStartPx;
@@ -483,6 +507,20 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
     }
 
     /**
+     * @return Whether or not the toolbar is currently using a light theme.
+     */
+    public boolean isLightTheme() {
+        return mIsLightTheme;
+    }
+
+    /**
+     * @param observer The observer to add to this toolbar.
+     */
+    public void addObserver(SelectableListToolbarObserver observer) {
+        mObservers.addObserver(observer);
+    }
+
+    /**
      * Set up ActionBarDrawerToggle, a.k.a. hamburger button.
      */
     private void initActionBarDrawerToggle() {
@@ -509,10 +547,11 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
         mNumberRollView.setVisibility(View.GONE);
         mNumberRollView.setNumber(0, false);
 
+        onThemeChanged(true);
         updateDisplayStyleIfNecessary();
     }
 
-    private void showSelectionView(List<E> selectedItems, boolean wasSelectionEnabled) {
+    protected void showSelectionView(List<E> selectedItems, boolean wasSelectionEnabled) {
         getMenu().setGroupVisible(mNormalGroupResId, false);
         getMenu().setGroupVisible(mSelectedGroupResId, true);
         if (mHasSearchView) mSearchView.setVisibility(View.GONE);
@@ -520,14 +559,12 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
         setNavigationButton(NAVIGATION_BUTTON_SELECTION_BACK);
         setBackgroundColor(mSelectionBackgroundColor);
         setOverflowIcon(mSelectionMenuButton);
-        setTitle(null);
 
-        mNumberRollView.setVisibility(View.VISIBLE);
-        if (!wasSelectionEnabled) mNumberRollView.setNumber(0, false);
-        mNumberRollView.setNumber(selectedItems.size(), true);
+        switchToNumberRollView(selectedItems, wasSelectionEnabled);
 
         if (mIsSearching) UiUtils.hideKeyboard(mSearchEditText);
 
+        onThemeChanged(false);
         updateDisplayStyleIfNecessary();
     }
 
@@ -539,7 +576,24 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
         setNavigationButton(NAVIGATION_BUTTON_BACK);
         setBackgroundColor(mSearchBackgroundColor);
 
+        onThemeChanged(true);
         updateDisplayStyleIfNecessary();
+    }
+
+    protected void switchToNumberRollView(List<E> selectedItems, boolean wasSelectionEnabled) {
+        setTitle(null);
+        mNumberRollView.setVisibility(View.VISIBLE);
+        if (!wasSelectionEnabled) mNumberRollView.setNumber(0, false);
+        mNumberRollView.setNumber(selectedItems.size(), true);
+    }
+
+    /**
+     * Update internal state and notify observers that the theme color changed.
+     * @param isLightTheme Whether or not the theme color is light.
+     */
+    private void onThemeChanged(boolean isLightTheme) {
+        mIsLightTheme = isLightTheme;
+        for (SelectableListToolbarObserver o : mObservers) o.onThemeColorChanged(isLightTheme);
     }
 
     private void updateDisplayStyleIfNecessary() {
@@ -549,5 +603,10 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
     @VisibleForTesting
     public View getSearchViewForTests() {
         return mSearchView;
+    }
+
+    @VisibleForTesting
+    public int getNavigationButtonForTests() {
+        return mNavigationButton;
     }
 }

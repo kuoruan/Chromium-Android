@@ -9,7 +9,6 @@
 <string name="delete">"Delete"</string>
 <string name="remove">"Remove"</string>
 <string name="reset">"Reset"</string>
-<string name="choose">"Choose"</string>
 <string name="title">"Title"</string>
 <string name="text_on">"On"</string>
 <string name="text_off">"Off"</string>
@@ -29,6 +28,8 @@
 <string name="add">"Add"</string>
 <string name="share">"Share"</string>
 <string name="search">"Search"</string>
+<string name="show_info">"Show Info"</string>
+<string name="hide_info">"Hide Info"</string>
 <string name="copy_link">"Copy link"</string>
 <string name="copied">"Copied"</string>
 <string name="retry">"Retry"</string>
@@ -48,6 +49,7 @@
 <string name="notification_category_sites">"Sites"</string>
 <string name="sign_in_to_chrome">"Sign in to Chrome"</string>
 <string name="sign_in_to_chrome_summary">"Sign in to get your bookmarks, history, passwords, and other settings on all your devices"</string>
+<string name="sign_in_to_chrome_disabled_summary">"Disabled by the administrator of this device"</string>
 <string name="sign_in_google_activity_controls">"Google Activity Controls"</string>
 <string name="sign_in_google_activity_controls_message">"Control how Google uses your browsing history to personalize Search, ads, and other Google services."</string>
 <string name="sign_in_google_activity_controls_message_child_account">"Control how Google uses your browsing history to personalize Search and other Google services."</string>
@@ -56,6 +58,8 @@
 <string name="search_engine_location_allowed">"Location is allowed"</string>
 <string name="search_engine_location_blocked">"Location is blocked"</string>
 <string name="search_engine_recently_visited">"Recently visited"</string>
+<string name="search_engine_dialog_title">"Choose your search engine"</string>
+<string name="search_engine_dialog_footer">"You can change this later in Settings"</string>
 <string name="prefs_autofill_and_payments">"Autofill and payments"</string>
 <string name="autofill_switch">"Autofill forms"</string>
 <string name="autofill_profiles_title">"Addresses"</string>
@@ -159,9 +163,9 @@ Your Google account may have other forms of browsing history like searches and a
 <string name="clear_cookies_and_site_data_summary">"This will sign you out of most websites."</string>
 <string name="clear_cookies_and_site_data_summary_basic">"Signs you out of most sites."</string>
 <string name="clear_cookies_and_site_data_signed_in_summary_basic">"Signs you out of most sites. You won\'t be signed out of you Google Account."</string>
-<string name="clear_browsing_history_summary">"Clears history and address bar suggestions."</string>
-<string name="clear_browsing_history_summary_signed_in">"Clears history and address bar suggestions. View other activity from your Google Account at &lt;link&gt;myactivity.google.com&lt;/link&gt;."</string>
-<string name="clear_browsing_history_summary_synced">"Clears history from all signed-in devices. View other activity from your Google Account at &lt;link&gt;myactivity.google.com&lt;/link&gt;."</string>
+<string name="clear_browsing_history_summary">"Clears history and autocompletions in the address bar."</string>
+<string name="clear_browsing_history_summary_signed_in">"Clears history and autocompletions in the address bar. Your Google Account may have other forms of browsing history at &lt;link&gt;myactivity.google.com&lt;/link&gt;."</string>
+<string name="clear_browsing_history_summary_synced">"Clears history from all signed-in devices. Your Google Account may have other forms of browsing history at &lt;link&gt;myactivity.google.com&lt;/link&gt;."</string>
 <string name="clear_passwords_title">"Saved passwords"</string>
 <string name="clear_form_data_title">"Autofill form data"</string>
 <string name="clear_browsing_data_progress_title">"Clearing browsing data"</string>
@@ -186,6 +190,7 @@ Your Google account may have other forms of browsing history like searches and a
 <string name="android_history_no_synced_results">"Showing history from this device. &lt;link&gt;Learn more&lt;/link&gt;."</string>
 <string name="android_history_has_synced_results">"Showing history from your signed-in devices. &lt;link&gt;Learn more&lt;/link&gt;."</string>
 <string name="android_history_other_forms_of_history">"Your Google Account may have other forms of browsing history at &lt;link&gt;history.google.com&lt;/link&gt;."</string>
+<string name="android_history_other_forms_of_history_new">"Your Google Account may have other forms of browsing history at &lt;link&gt;myactivity.google.com&lt;/link&gt;."</string>
 <string name="android_history_blocked_site">"Blocked site"</string>
 <string name="usage_and_crash_reports_title">"Usage and crash reports"</string>
 <string name="usage_and_crash_reports_description">"Automatically send usage statistics and crash reports to Google"</string>
@@ -285,6 +290,7 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="website_settings_usb">"USB"</string>
 <string name="website_settings_revoke_device_permission">"Revoke device permission"</string>
 <string name="website_settings_usb_no_devices">"No USB devices here"</string>
+<string name="iph_data_saver_preview_text">"Chrome is using less data to show you this page"</string>
 <string name="data_reduction_title">"Data Saver"</string>
 <string name="data_reduction_saved_label">"%1$s saved"</string>
 <string name="data_reduction_date_label">"since %1$s"</string>
@@ -424,6 +430,10 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="bluetooth_need_location_permission_and_services_on">"Chrome needs location access to scan for devices. &lt;permission_link&gt;Update permissions&lt;/permission_link&gt;. Location access is also &lt;services_link&gt;turned off for this device&lt;/services_link&gt;."</string>
 <string name="bluetooth_need_location_permission_help">"&lt;link&gt;Get help&lt;/link&gt;"</string>
 <string name="bluetooth_device_connected">"Connected Device"</string>
+<plurals name="signal_strength_level_n_bars">
+  <item quantity="one">"Signal Strength Level: %d bar"</item>
+  <item quantity="other">"Signal Strength Level: %d bars"</item>
+</plurals>
 <string name="sync_error_card_title">"Sync isn\'t working"</string>
 <string name="hint_android_sync_disabled">"Open Android settings and re-enable Android system sync to start Chrome sync"</string>
 <string name="hint_sync_auth_error">"Sign in again to start sync"</string>
@@ -468,6 +478,14 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="translate_button_done">"Done"</string>
 <string name="translate_never_translate_site">"Never translate this site"</string>
 <string name="translate_never_translate_language">"Never translate %1$s"</string>
+<string name="translate_option_always_translate">"Always translate pages in %1$s"</string>
+<string name="translate_option_never_translate">"Never translate pages in %1$s"</string>
+<string name="translate_option_more_language">"More languages"</string>
+<string name="translate_option_not_source_language">"Page is not in %1$s?"</string>
+<string name="translate_snackbar_always_translate">"Pages in %1$s will be translated to %2$s from now on"</string>
+<string name="translate_snackbar_language_never">"Pages in %1$s will not be translated"</string>
+<string name="translate_snackbar_site_never">"This site will not be translated"</string>
+<string name="translate_snackbar_cancel">"Cancel"</string>
 <string name="menu_print">"Print…"</string>
 <string name="menu_share_page">"Share…"</string>
 <string name="share_link_chooser_title">"Share via"</string>
@@ -477,10 +495,10 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="accessibility_menu_forward">"Go forward"</string>
 <string name="accessibility_menu_info">"View site information"</string>
 <string name="accessibility_content_view">"Web View"</string>
-<string name="infobar_missing_camera_permission_text">"Chrome needs camera access to share it with this site."</string>
-<string name="infobar_missing_microphone_permission_text">"Chrome needs microphone access to share it with this site."</string>
-<string name="infobar_missing_location_permission_text">"Chrome needs location access to share it with this site."</string>
-<string name="infobar_missing_multiple_permissions_text">"Chrome needs permissions access to share them with this site."</string>
+<string name="infobar_missing_camera_permission_text">"Chrome needs permission to access your camera for this site."</string>
+<string name="infobar_missing_microphone_permission_text">"Chrome needs permission to access your microphone for this site."</string>
+<string name="infobar_missing_microphone_camera_permissions_text">"Chrome needs permission to access your camera and microphone for this site."</string>
+<string name="infobar_missing_location_permission_text">"Chrome needs access to your location to share your location with this site."</string>
 <string name="missing_storage_permission_download_education_text">"Chrome needs storage access to download files."</string>
 <string name="omnibox_geolocation_disclosure">"%1$s uses your location to show local search results"</string>
 <string name="contextmenu_open_in_other_window">"Open in other window"</string>
@@ -503,6 +521,11 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="contextmenu_open_in_new_chrome_tab">"Open in new Chrome tab"</string>
 <string name="contextmenu_open_in_chrome_incognito_tab">"Open in incognito tab"</string>
 <string name="accessibility_swipe_refresh">"Refreshing page"</string>
+<string name="browser_actions_open_in_background">"Open in new Chrome tab"</string>
+<string name="browser_actions_open_in_incognito_tab">"Open in incognito tab"</string>
+<string name="browser_actions_save_link_as">"Download page"</string>
+<string name="browser_actions_copy_address">"Copy link"</string>
+<string name="browser_actions_share">"Share…"</string>
 <string name="app_banner_installing">"Installing…"</string>
 <string name="app_banner_open">"Open"</string>
 <string name="app_banner_installing_webapk">"Adding…"</string>
@@ -567,6 +590,8 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="download_succeeded_message_default">"%1$s downloaded"</string>
 <string name="file_size_downloaded_kb">"Downloaded %1$.1f KB"</string>
 <string name="file_size_downloaded_mb">"Downloaded %1$.1f MB"</string>
+<string name="one_file_left">"1 file left"</string>
+<string name="files_left">"%1$d files left"</string>
 <string name="file_size_downloaded_gb">"Downloaded %1$.1f GB"</string>
 <string name="remaining_duration_days">"%1$d days left"</string>
 <string name="remaining_duration_one_day">"1 day left"</string>
@@ -596,7 +621,7 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="download_manager_ui_space_used_kb">"%1$3.2f KB downloaded"</string>
 <string name="download_manager_ui_space_used_mb">"%1$3.2f MB downloaded"</string>
 <string name="download_manager_ui_space_used_gb">"%1$3.2f GB downloaded"</string>
-<string name="download_manager_ui_all_downloads">"All downloads"</string>
+<string name="download_manager_ui_all_downloads">"All"</string>
 <string name="download_manager_ui_pages">"Pages"</string>
 <string name="download_manager_ui_video">"Video"</string>
 <string name="download_manager_ui_audio">"Audio"</string>
@@ -636,8 +661,8 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="signin_open_add_google_account_page_failed">"Add a Google Account from the Accounts page in your device’s Settings app."</string>
 <string name="signin_open_settings_accounts">"Open settings"</string>
 <string name="signin_hi_name">"Hi, %1$s"</string>
-<string name="signin_signed_in_settings_description_child_account">"You and your parents can control how this works in &lt;LINK1&gt;Settings&lt;/LINK1&gt;"</string>
-<string name="signin_signed_in_settings_description">"Control how this works in &lt;LINK1&gt;Settings&lt;/LINK1&gt;"</string>
+<string name="signin_signed_in_settings_description_child_account">"You and your parents can manage Chrome Sync and personalization in &lt;LINK1&gt;Settings&lt;/LINK1&gt;"</string>
+<string name="signin_signed_in_settings_description">"Manage Chrome Sync and personalization in &lt;LINK1&gt;Settings&lt;/LINK1&gt;"</string>
 <string name="signin_gms_updating">"Waiting for Google Play Services to finish updating"</string>
 <string name="external_app_leave_incognito_warning">"This site is about to share information with an app outside of incognito mode."</string>
 <string name="external_app_leave_incognito_warning_title">"Leave incognito mode?"</string>
@@ -691,10 +716,16 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="ntp_all_dismissed_refresh">"Refresh"</string>
 <string name="open_tabs">"Open tabs"</string>
 <string name="button_new_tab">"New tab"</string>
+<string name="button_new_incognito_tab">"New incognito tab"</string>
 <string name="menu_update">"Update Chrome"</string>
 <string name="menu_update_summary_default">"Newer version is available"</string>
 <string name="menu_update_summary_new_features">"Get the latest features"</string>
 <string name="menu_move_to_other_window">"Move to other window"</string>
+<string name="menu_forward">"Forward"</string>
+<string name="menu_bookmark">"Bookmark"</string>
+<string name="menu_download">"Download"</string>
+<string name="menu_page_info">"Page info"</string>
+<string name="menu_refresh">"Refresh"</string>
 <string name="menu_new_tab">"New tab"</string>
 <string name="menu_new_incognito_tab">"New incognito tab"</string>
 <string name="menu_bookmarks">"Bookmarks"</string>
@@ -715,7 +746,6 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="bookmark_page_saved_default">"Bookmarked"</string>
 <string name="bookmark_page_saved_folder">"Bookmarked to %1$s"</string>
 <string name="bookmark_page_failed">"Failed to add bookmark."</string>
-<string name="bookmark_drawer_folders">"Folders"</string>
 <string name="bookmark_parent_folder">"Parent folder"</string>
 <string name="bookmark_item_select">"Select"</string>
 <string name="bookmark_item_edit">"Edit"</string>
@@ -752,7 +782,6 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="menu_open_in_product_default">"Open in browser"</string>
 <string name="reader_view_text">"Make page mobile-friendly"</string>
 <string name="reader_mode_maximized_title">"Mobile-friendly view"</string>
-<string name="fre_label">"First Run Experience"</string>
 <string name="content_provider_search_description">"Bookmarks and web history"</string>
 <string name="url_copied">"URL copied."</string>
 <string name="accessibility_toolbar_btn_forward">"Go forward"</string>
@@ -772,6 +801,7 @@ To obtain new licenses, connect to the internet and play your downloaded content
 </plurals>
 <string name="accessibility_toolbar_btn_tabswitcher_toggle_default">"open tabs"</string>
 <string name="accessibility_toolbar_btn_home">"Home"</string>
+<string name="accessibility_toolbar_btn_expand">"Expand"</string>
 <string name="accessibility_btn_refresh">"Refresh page"</string>
 <string name="accessibility_btn_stop_loading">"Stop page loading"</string>
 <string name="accessibility_find_toolbar_btn_next">"Next"</string>
@@ -802,9 +832,6 @@ To obtain new licenses, connect to the internet and play your downloaded content
   <item quantity="other">"Remove %d selected items"</item>
 </plurals>
 <string name="selected">"selected"</string>
-<string name="video_call_notification_text_2">"Accessing video input"</string>
-<string name="audio_call_notification_text_2">"Accessing audio input"</string>
-<string name="video_audio_call_notification_text_2">"Accessing audio and video input"</string>
 <string name="media_notification_link_text">"Touch to return to %1$s"</string>
 <string name="screen_capture_notification_text">"%1$s is sharing your screen"</string>
 <string name="new_tab_incognito_header">"You’ve gone incognito."</string>
@@ -867,6 +894,7 @@ You must have Bluetooth and Location turned on in order to use the Physical Web.
 <string name="usb_chooser_dialog_no_devices_found_prompt">"No devices found"</string>
 <string name="usb_chooser_dialog_connect_button_text">"Connect"</string>
 <string name="usb_chooser_dialog_footnote_text">"&lt;link&gt;Get help&lt;/link&gt;"</string>
+<string name="decoder_description">"Image decoder"</string>
 <string name="tab_switcher_callout_body">"Tap this button for quick access to your tabs."</string>
 <string name="search_with_sogou">"Search with Sogou"</string>
 <string name="sogou_explanation">"Chrome can use &lt;b&gt;Sogou&lt;/b&gt; for search in China. You can change this in &lt;link&gt;Settings&lt;/link&gt;."</string>
@@ -900,6 +928,8 @@ You must have Bluetooth and Location turned on in order to use the Physical Web.
 <string name="keyboard_shortcut_tab_group_header">"Tab and window shortcuts"</string>
 <string name="keyboard_shortcut_chrome_feature_group_header">"Google Chrome feature shortcuts"</string>
 <string name="keyboard_shortcut_webpage_group_header">"Webpage shortcuts"</string>
+<string name="vr_shell_feedback_infobar_description">"Help improve the VR experience in Chrome"</string>
+<string name="vr_shell_feedback_infobar_feedback_button">"Provide feedback"</string>
 <string name="vr_services_check_infobar_install_text">"To view virtual reality content, install Google VR Services"</string>
 <string name="vr_services_check_infobar_update_text">"To view virtual reality content, update Google VR Services"</string>
 <string name="vr_services_check_infobar_install_button">"Install"</string>
@@ -907,7 +937,22 @@ You must have Bluetooth and Location turned on in order to use the Physical Web.
 <string name="contextmenu_image_title">"IMAGE"</string>
 <string name="contextmenu_link_title">"LINK"</string>
 <string name="contextmenu_video_title">"VIDEO"</string>
+<string name="iph_download_page_for_offline_usage_text">"Download pages to use them offline"</string>
+<string name="iph_download_page_for_offline_usage_accessibility_text">"Download pages from the More options button to use them offline"</string>
+<string name="iph_download_home_text">"Find your files and pages in Downloads"</string>
+<string name="iph_download_home_accessibility_text">"Find your files and pages in Downloads from the More Options button"</string>
 <string name="search_widget_default">"Search"</string>
 <string name="search_with_product">"Search with %1$s"</string>
 <string name="disabled_incognito_launcher_shortcut_message">"Remove and recreate this shortcut"</string>
+<string name="bottom_sheet_help_bubble_message">"Pull up to see bookmarks and more"</string>
+<string name="bottom_sheet_accessibility_help_bubble_message">"Pull up on the address bar to see bookmarks, downloads, and history"</string>
+<string name="bottom_sheet_accessibility_toolbar">"Address bar. Pull up to see bookmarks, downloads, and history."</string>
+<string name="bottom_sheet_expand_button_help_bubble_message">"Tap to see bookmarks and more"</string>
+<string name="bottom_sheet_accessibility_expand_button_help_bubble_message">"Tap to see bookmarks, downloads, and history"</string>
+<string name="bottom_sheet_opened">"Navigation panel opened"</string>
+<string name="bottom_sheet_closed">"Navigation panel closed"</string>
+<string name="bottom_sheet_bookmarks_tab">"Bookmarks tab selected"</string>
+<string name="bottom_sheet_downloads_tab">"Downloads tab selected"</string>
+<string name="bottom_sheet_history_tab">"History tab selected"</string>
+<string name="bottom_sheet_home_tab">"Home tab selected"</string>
 </resources>

@@ -21,9 +21,7 @@ import org.chromium.chrome.browser.favicon.LargeIconBridge.LargeIconCallback;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.widget.RoundedIconGenerator;
 import org.chromium.chrome.browser.widget.TintedImageButton;
-import org.chromium.chrome.browser.widget.displaystyle.MarginResizer;
 import org.chromium.chrome.browser.widget.selection.SelectableItemView;
-import org.chromium.chrome.browser.widget.selection.SelectableListLayout;
 
 /**
  * The SelectableItemView for items displayed in the browsing history UI.
@@ -125,10 +123,6 @@ public class HistoryItemView extends SelectableItemView<HistoryItem> implements 
 
         mHistoryManager = manager;
         if (!getItem().wasBlockedVisit()) requestIcon();
-
-        MarginResizer.createWithViewAdapter(this,
-                mHistoryManager.getSelectableListLayout().getUiConfig(),
-                SelectableListLayout.getDefaultListItemLateralMarginPx(getResources()), 0);
     }
 
     /**

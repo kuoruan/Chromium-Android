@@ -123,6 +123,17 @@ public abstract class ViewAndroidDelegate {
     public void onBottomControlsChanged(float bottomControlsOffsetY, float bottomContentOffsetY) {}
 
     /**
+     * Returns the bottom system window inset in pixels. The system window inset represents the area
+     * of a full-screen window that is partially or fully obscured by the status bar, navigation
+     * bar, IME or other system windows.
+     * @return The bottom system window inset.
+     */
+    @CalledByNative
+    public int getSystemWindowInsetBottom() {
+        return 0;
+    }
+
+    /**
      * @return container view that the anchor views are added to. May be null.
      */
     @CalledByNative

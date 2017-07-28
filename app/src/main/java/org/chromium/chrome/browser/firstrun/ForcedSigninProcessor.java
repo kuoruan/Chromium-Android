@@ -86,8 +86,7 @@ public final class ForcedSigninProcessor {
                     @Override
                     public void onSignInComplete() {
                         // Since this is a forced signin, signout is not allowed.
-                        AccountManagementFragment.setSignOutAllowedPreferenceValue(
-                                appContext, false);
+                        AccountManagementFragment.setSignOutAllowedPreferenceValue(false);
                         if (onComplete != null) {
                             onComplete.run();
                         }

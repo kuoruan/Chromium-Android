@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.download;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 
@@ -24,6 +25,7 @@ public class DownloadResumptionScheduler {
     private static final String TAG = "DownloadScheduler";
     private static final int ONE_DAY_IN_SECONDS = 24 * 60 * 60;
     private final Context mContext;
+    @SuppressLint("StaticFieldLeak")
     private static DownloadResumptionScheduler sDownloadResumptionScheduler;
 
     @SuppressFBWarnings("LI_LAZY_INIT")

@@ -16,38 +16,38 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * This instrument class represents a single payment option for a service
+ * This instrument class represents a single payment instrument for a service
  * worker based payment app.
  *
  * @see org.chromium.chrome.browser.payments.ServiceWorkerPaymentApp
  *
- * @see https://w3c.github.io/webpayments-payment-apps-api/
+ * @see https://w3c.github.io/webpayments-payment-handler/
  */
 public class ServiceWorkerPaymentInstrument extends PaymentInstrument {
     private final WebContents mWebContents;
-    private final long mAppRegistrationId;
-    private final ServiceWorkerPaymentAppBridge.Option mOption;
+    private final long mSWRegistrationId;
+    private final String mInstrumentId;
     private final Set<String> mMethodNames;
 
     /**
-     * Build a service worker based payment instrument based on a single payment option
-     * of an installed payment app.
+     * Build a service worker based payment instrument.
      *
      * @see https://w3c.github.io/webpayments-payment-apps-api/#payment-app-options
      *
      * @param webContents       The web contents where PaymentRequest was invoked.
-     * @param appRegistrationId The registration id of the corresponding service worker payment app.
-     * @param option            A payment app option from the payment app.
+     * @param swRegistrationId  The registration id of the corresponding service worker payment app.
+     * @param instrumentId      The unique id of the payment instrument.
+     * @param label             The label of the payment instrument.
+     * @param methodNames       A set of payment method names supported by the payment instrument.
      */
-    public ServiceWorkerPaymentInstrument(WebContents webContents, long appRegistrationId,
-            ServiceWorkerPaymentAppBridge.Option option) {
-        super(Long.toString(appRegistrationId) + "#" + option.id, option.label, null /* icon */,
-                option.icon);
+    public ServiceWorkerPaymentInstrument(WebContents webContents, long swRegistrationId,
+            String instrumentId, String label, Set<String> methodNames) {
+        super(Long.toString(swRegistrationId) + "#" + instrumentId, label, null /* sublabel */,
+                null /* icon */);
         mWebContents = webContents;
-        mAppRegistrationId = appRegistrationId;
-        mOption = option;
-
-        mMethodNames = new HashSet<String>(option.enabledMethods);
+        mSWRegistrationId = swRegistrationId;
+        mInstrumentId = instrumentId;
+        mMethodNames = methodNames;
     }
 
     @Override
@@ -56,13 +56,13 @@ public class ServiceWorkerPaymentInstrument extends PaymentInstrument {
     }
 
     @Override
-    public void invokePaymentApp(String merchantName, String origin, String iframeOrigin,
+    public void invokePaymentApp(String id, String merchantName, String origin, String iframeOrigin,
             byte[][] unusedCertificateChain, Map<String, PaymentMethodData> methodData,
             PaymentItem total, List<PaymentItem> displayItems,
             Map<String, PaymentDetailsModifier> modifiers, InstrumentDetailsCallback callback) {
-        ServiceWorkerPaymentAppBridge.invokePaymentApp(mWebContents, mAppRegistrationId, mOption.id,
-                origin, iframeOrigin, new HashSet<>(methodData.values()), total, displayItems,
-                new HashSet<>(modifiers.values()), callback);
+        ServiceWorkerPaymentAppBridge.invokePaymentApp(mWebContents, mSWRegistrationId, origin,
+                iframeOrigin, id, new HashSet<>(methodData.values()), total,
+                new HashSet<>(modifiers.values()), mInstrumentId, callback);
     }
 
     @Override

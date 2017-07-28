@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.toolbar;
 
 import org.chromium.chrome.browser.ntp.NewTabPage;
+import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.tab.Tab;
 
 /**
@@ -30,6 +31,11 @@ public interface ToolbarDataProvider {
      * @return Whether the toolbar is currently being displayed for incognito.
      */
     boolean isIncognito();
+
+    /**
+     * @return The current {@link Profile}.
+     */
+    Profile getProfile();
 
     /**
      * @return The formatted text (URL or search terms) for display.

@@ -10,6 +10,7 @@ import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ResourceId;
 import org.chromium.chrome.browser.preferences.autofill.AutofillAndPaymentsPreferences;
@@ -18,6 +19,7 @@ import org.chromium.content_public.browser.WebContents;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Android wrapper of the PersonalDataManager which provides access from the Java
@@ -59,6 +61,20 @@ public class PersonalDataManager {
          */
         @CalledByNative("FullCardRequestDelegate")
         void onFullCardError();
+    }
+
+    /**
+     * Callback for subKeys request.
+     */
+    public interface GetSubKeysRequestDelegate {
+        /**
+         * Called when the subkeys are received sucessfully.
+         * Here the subkeys are admin areas.
+         *
+         * @param subKeys The subKeys.
+         */
+        @CalledByNative("GetSubKeysRequestDelegate")
+        void onSubKeysReceived(String[] subKeys);
     }
 
     /**
@@ -346,7 +362,7 @@ public class PersonalDataManager {
         private String mObfuscatedNumber;
         private String mMonth;
         private String mYear;
-        private String mBasicCardPaymentType;
+        private String mBasicCardIssuerNetwork;
         private int mIssuerIconDrawableId;
         private String mBillingAddressId;
         private String mServerId;
@@ -354,16 +370,16 @@ public class PersonalDataManager {
         @CalledByNative("CreditCard")
         public static CreditCard create(String guid, String origin, boolean isLocal,
                 boolean isCached, String name, String number, String obfuscatedNumber, String month,
-                String year, String basicCardPaymentType, int enumeratedIconId,
+                String year, String basicCardIssuerNetwork, int enumeratedIconId,
                 String billingAddressId, String serverId) {
             return new CreditCard(guid, origin, isLocal, isCached, name, number, obfuscatedNumber,
-                    month, year, basicCardPaymentType, ResourceId.mapToDrawableId(enumeratedIconId),
-                    billingAddressId, serverId);
+                    month, year, basicCardIssuerNetwork,
+                    ResourceId.mapToDrawableId(enumeratedIconId), billingAddressId, serverId);
         }
 
         public CreditCard(String guid, String origin, boolean isLocal, boolean isCached,
                 String name, String number, String obfuscatedNumber, String month, String year,
-                String basicCardPaymentType, int issuerIconDrawableId, String billingAddressId,
+                String basicCardIssuerNetwork, int issuerIconDrawableId, String billingAddressId,
                 String serverId) {
             mGUID = guid;
             mOrigin = origin;
@@ -374,7 +390,7 @@ public class PersonalDataManager {
             mObfuscatedNumber = obfuscatedNumber;
             mMonth = month;
             mYear = year;
-            mBasicCardPaymentType = basicCardPaymentType;
+            mBasicCardIssuerNetwork = basicCardIssuerNetwork;
             mIssuerIconDrawableId = issuerIconDrawableId;
             mBillingAddressId = billingAddressId;
             mServerId = serverId;
@@ -384,7 +400,7 @@ public class PersonalDataManager {
             this("" /* guid */, AutofillAndPaymentsPreferences.SETTINGS_ORIGIN /*origin */,
                     true /* isLocal */, false /* isCached */, "" /* name */, "" /* number */,
                     "" /* obfuscatedNumber */, "" /* month */, "" /* year */,
-                    "" /* basicCardPaymentType */, 0 /* issuerIconDrawableId */,
+                    "" /* basicCardIssuerNetwork */, 0 /* issuerIconDrawableId */,
                     "" /* billingAddressId */, "" /* serverId */);
         }
 
@@ -393,7 +409,7 @@ public class PersonalDataManager {
         public CreditCard(String guid, String origin, String name, String number,
                 String obfuscatedNumber, String month, String year) {
             this(guid, origin, true /* isLocal */, false /* isCached */, name, number,
-                    obfuscatedNumber, month, year, "" /* basicCardPaymentType */,
+                    obfuscatedNumber, month, year, "" /* basicCardIssuerNetwork */,
                     0 /* issuerIconDrawableId */, "" /* billingAddressId */, "" /* serverId */);
         }
 
@@ -448,8 +464,8 @@ public class PersonalDataManager {
         }
 
         @CalledByNative("CreditCard")
-        public String getBasicCardPaymentType() {
-            return mBasicCardPaymentType;
+        public String getBasicCardIssuerNetwork() {
+            return mBasicCardIssuerNetwork;
         }
 
         public int getIssuerIconDrawableId() {
@@ -497,8 +513,8 @@ public class PersonalDataManager {
             mYear = year;
         }
 
-        public void setBasicCardPaymentType(String type) {
-            mBasicCardPaymentType = type;
+        public void setBasicCardIssuerNetwork(String network) {
+            mBasicCardIssuerNetwork = network;
         }
 
         public void setIssuerIconDrawableId(int id) {
@@ -512,6 +528,8 @@ public class PersonalDataManager {
 
     private static PersonalDataManager sManager;
 
+    // Suppress FindBugs warning, since |sManager| is only used on the UI thread.
+    @SuppressFBWarnings("LI_LAZY_INIT_STATIC")
     public static PersonalDataManager getInstance() {
         ThreadUtils.assertOnUiThread();
         if (sManager == null) {
@@ -520,7 +538,7 @@ public class PersonalDataManager {
         return sManager;
     }
 
-    private static int sNormalizationTimeoutSeconds = 5;
+    private static int sRequestTimeoutSeconds = 5;
 
     private final long mPersonalDataManagerAndroid;
     private final List<PersonalDataManagerObserver> mDataObservers =
@@ -692,9 +710,9 @@ public class PersonalDataManager {
         nativeUpdateServerCardBillingAddress(mPersonalDataManagerAndroid, card);
     }
 
-    public String getBasicCardPaymentType(String cardNumber, boolean emptyIfInvalid) {
+    public String getBasicCardIssuerNetwork(String cardNumber, boolean emptyIfInvalid) {
         ThreadUtils.assertOnUiThread();
-        return nativeGetBasicCardPaymentType(
+        return nativeGetBasicCardIssuerNetwork(
                 mPersonalDataManagerAndroid, cardNumber, emptyIfInvalid);
     }
 
@@ -805,17 +823,49 @@ public class PersonalDataManager {
      *
      * @param regionCode The code of the region for which to load the rules.
      */
-    public void loadRulesForRegion(String regionCode) {
+    public void loadRulesForAddressNormalization(String regionCode) {
         ThreadUtils.assertOnUiThread();
-        nativeLoadRulesForRegion(mPersonalDataManagerAndroid, regionCode);
+        nativeLoadRulesForAddressNormalization(mPersonalDataManagerAndroid, regionCode);
     }
 
     /**
-     * Normalizes the address of the {@code profile} if the rules associated with the
-     * {@code regionCode} are done loading. Otherwise sets up the callback to start normalizing the
-     * address when the rules are loaded. The normalized profile will be sent to the
-     * {@code delegate}. If the profile is not normalized in the specified
-     * {@code sNormalizationTimeoutSeconds}, the {@code delegate} will be notified.
+     * Starts loading the sub-key request rules for the specified {@code regionCode}.
+     *
+     * @param regionCode The code of the region for which to load the rules.
+     */
+    public void loadRulesForSubKeys(String regionCode) {
+        ThreadUtils.assertOnUiThread();
+        nativeLoadRulesForSubKeys(mPersonalDataManagerAndroid, regionCode);
+    }
+
+    /**
+     * Starts requesting the subkeys for the specified {@code regionCode}, if the rules
+     * associated with the {@code regionCode} are done loading. Otherwise sets up the callback to
+     * start loading the subkeys when the rules are loaded. The received subkeys will be sent
+     * to the {@code delegate}. If the subkeys are not received in the specified
+     * {@code sRequestTimeoutSeconds}, the {@code delegate} will be notified.
+     *
+     * @param regionCode The code of the region for which to load the subkeys.
+     * @param delegate The object requesting the subkeys.
+     */
+    public void getRegionSubKeys(String regionCode, GetSubKeysRequestDelegate delegate) {
+        ThreadUtils.assertOnUiThread();
+        nativeStartRegionSubKeysRequest(
+                mPersonalDataManagerAndroid, regionCode, sRequestTimeoutSeconds, delegate);
+    }
+
+    /** Cancels the pending subkeys request. */
+    public void cancelPendingGetSubKeys() {
+        ThreadUtils.assertOnUiThread();
+        nativeCancelPendingGetSubKeys(mPersonalDataManagerAndroid);
+    }
+
+    /**
+     * Normalizes the address of the profile associated with the {@code guid} if the rules
+     * associated with the {@code regionCode} are done loading. Otherwise sets up the callback to
+     * start normalizing the address when the rules are loaded. The normalized profile will be sent
+     * to the {@code delegate}. If the profile is not normalized in the specified
+     * {@code sRequestTimeoutSeconds}, the {@code delegate} will be notified.
      *
      * @param profile The profile to normalize.
      * @param regionCode The region code indicating which rules to use for normalization.
@@ -824,8 +874,8 @@ public class PersonalDataManager {
     public void normalizeAddress(
             AutofillProfile profile, String regionCode, NormalizedAddressRequestDelegate delegate) {
         ThreadUtils.assertOnUiThread();
-        nativeStartAddressNormalization(mPersonalDataManagerAndroid, profile, regionCode,
-                sNormalizationTimeoutSeconds, delegate);
+        nativeStartAddressNormalization(
+                mPersonalDataManagerAndroid, profile, regionCode, sRequestTimeoutSeconds, delegate);
     }
 
     /**
@@ -884,8 +934,15 @@ public class PersonalDataManager {
     }
 
     @VisibleForTesting
-    public static void setNormalizationTimeoutForTesting(int timeout) {
-        sNormalizationTimeoutSeconds = timeout;
+    public static void setRequestTimeoutForTesting(int timeout) {
+        sRequestTimeoutSeconds = timeout;
+    }
+
+    /**
+     * @return The sub-key request timeout in milliseconds.
+     */
+    public static long getRequestTimeoutMS() {
+        return TimeUnit.SECONDS.toMillis(sRequestTimeoutSeconds);
     }
 
     private native long nativeInit();
@@ -921,7 +978,7 @@ public class PersonalDataManager {
             CreditCard card);
     private native void nativeUpdateServerCardBillingAddress(long nativePersonalDataManagerAndroid,
             CreditCard card);
-    private native String nativeGetBasicCardPaymentType(
+    private native String nativeGetBasicCardIssuerNetwork(
             long nativePersonalDataManagerAndroid, String cardNumber, boolean emptyIfInvalid);
     private native void nativeAddServerCreditCardForTest(long nativePersonalDataManagerAndroid,
             CreditCard card);
@@ -947,11 +1004,15 @@ public class PersonalDataManager {
             long nativePersonalDataManagerAndroid, String guid);
     private native void nativeGetFullCardForPaymentRequest(long nativePersonalDataManagerAndroid,
             WebContents webContents, CreditCard card, FullCardRequestDelegate delegate);
-    private native void nativeLoadRulesForRegion(
+    private native void nativeLoadRulesForAddressNormalization(
+            long nativePersonalDataManagerAndroid, String regionCode);
+    private native void nativeLoadRulesForSubKeys(
             long nativePersonalDataManagerAndroid, String regionCode);
     private native void nativeStartAddressNormalization(long nativePersonalDataManagerAndroid,
             AutofillProfile profile, String regionCode, int timeoutSeconds,
             NormalizedAddressRequestDelegate delegate);
+    private native void nativeStartRegionSubKeysRequest(long nativePersonalDataManagerAndroid,
+            String regionCode, int timeoutSeconds, GetSubKeysRequestDelegate delegate);
     private static native boolean nativeHasProfiles(long nativePersonalDataManagerAndroid);
     private static native boolean nativeHasCreditCards(long nativePersonalDataManagerAndroid);
     private static native boolean nativeIsAutofillEnabled();
@@ -960,4 +1021,5 @@ public class PersonalDataManager {
     private static native boolean nativeIsPaymentsIntegrationEnabled();
     private static native void nativeSetPaymentsIntegrationEnabled(boolean enable);
     private static native String nativeToCountryCode(String countryName);
+    private static native void nativeCancelPendingGetSubKeys(long nativePersonalDataManagerAndroid);
 }

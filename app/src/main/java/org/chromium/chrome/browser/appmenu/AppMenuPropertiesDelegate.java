@@ -9,8 +9,10 @@ import android.content.pm.ResolveInfo;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
+import android.support.annotation.Nullable;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.CommandLine;
@@ -44,14 +46,17 @@ public class AppMenuPropertiesDelegate {
     // Indices for different levels in drawable.btn_reload_stop.
     // Used only when preparing menu and refresh reload button in menu when tab
     // page load status changes.
-    private static final int RELOAD_BUTTON_LEVEL_RELOAD = 0;
-    private static final int RELOAD_BUTTON_LEVEL_STOP_LOADING = 1;
+    static final int RELOAD_BUTTON_LEVEL_RELOAD = 0;
+    static final int RELOAD_BUTTON_LEVEL_STOP_LOADING = 1;
 
     protected MenuItem mReloadMenuItem;
 
     protected final ChromeActivity mActivity;
 
     protected BookmarkBridge mBookmarkBridge;
+
+    @Nullable
+    private AppMenuIconRowFooter mAppMenuIconRowFooter;
 
     public AppMenuPropertiesDelegate(ChromeActivity activity) {
         mActivity = activity;
@@ -102,9 +107,13 @@ public class AppMenuPropertiesDelegate {
                     || url.startsWith(UrlConstants.CHROME_NATIVE_URL_PREFIX);
             boolean isFileScheme = url.startsWith(UrlConstants.FILE_URL_PREFIX);
             boolean isContentScheme = url.startsWith(UrlConstants.CONTENT_URL_PREFIX);
-            boolean shouldShowIconRow = !mActivity.isTablet()
-                    || mActivity.getWindow().getDecorView().getWidth()
-                            < DeviceFormFactor.getMinimumTabletWidthPx(mActivity);
+
+            // If the BottomSheet is not null, the icon row will be displayed using
+            // AppMenuIconRowFooter as a prompt view.
+            boolean shouldShowIconRow = mActivity.getBottomSheet() == null
+                    && (!mActivity.isTablet()
+                               || mActivity.getWindow().getDecorView().getWidth()
+                                       < DeviceFormFactor.getMinimumTabletWidthPx(mActivity));
 
             // Update the icon row items (shown in narrow form factors).
             menu.findItem(R.id.icon_row_menu_id).setVisible(shouldShowIconRow);
@@ -222,6 +231,21 @@ public class AppMenuPropertiesDelegate {
     }
 
     /**
+     * Called after the menu has been shown to finish initializing views.
+     * @param menu The {@link AppMenu} that was shown.
+     */
+    public void onShow(final AppMenu menu) {
+        View promptView = menu.getPromptView();
+        if (!(promptView instanceof AppMenuIconRowFooter)) {
+            mAppMenuIconRowFooter = null;
+            return;
+        }
+
+        mAppMenuIconRowFooter = (AppMenuIconRowFooter) promptView;
+        mAppMenuIconRowFooter.initialize(mActivity, menu, mBookmarkBridge);
+    }
+
+    /**
      * Sets the visibility and labels of the "Add to Home screen" and "Open WebAPK" menu items.
      */
     protected void prepareAddToHomescreenMenuItem(
@@ -271,6 +295,8 @@ public class AppMenuPropertiesDelegate {
                     ? RELOAD_BUTTON_LEVEL_STOP_LOADING : RELOAD_BUTTON_LEVEL_RELOAD);
             mReloadMenuItem.setTitle(isLoading
                     ? R.string.accessibility_btn_stop_loading : R.string.accessibility_btn_refresh);
+        } else if (mAppMenuIconRowFooter != null) {
+            mAppMenuIconRowFooter.loadingStateChanged(isLoading);
         }
     }
 

@@ -4,12 +4,15 @@
 
 package org.chromium.chrome.browser.notifications;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
 
 import org.chromium.base.BuildInfo;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
+import org.chromium.chrome.browser.notifications.channels.Channel;
+import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -44,16 +47,19 @@ public class NotificationManagerProxyImpl implements NotificationManagerProxy {
         mNotificationManager.cancelAll();
     }
 
+    @SuppressLint("NewApi")
     @Override
-    public void createNotificationChannel(ChannelDefinitions.Channel channel) {
+    public void createNotificationChannel(Channel channel) {
         assert BuildInfo.isAtLeastO();
         /*
         The code in the try-block uses reflection in order to compile as it calls APIs newer than
         our compileSdkVersion of Android. The equivalent code without reflection looks like this:
 
-            channel.setGroup(channelGroupId);
-            channel.setShowBadge(false);
-            mNotificationManager.createNotificationChannel(channel);
+            NotificationChannel nc = new NotificationChannel(channel.getId(), channel.getName(),
+                    channel.getImportance());
+            nc.setGroup(channel.getGroupId());
+            nc.setShowBadge(false);
+            mNotificationManager.createNotificationChannel(nc);
          */
         // TODO(crbug.com/707804) Stop using reflection once compileSdkVersion is high enough.
         try {
@@ -61,13 +67,12 @@ public class NotificationManagerProxyImpl implements NotificationManagerProxy {
             Class<?> channelClass = Class.forName("android.app.NotificationChannel");
             Constructor<?> channelConstructor = channelClass.getDeclaredConstructor(
                     String.class, CharSequence.class, int.class);
-            Object channelObject = channelConstructor.newInstance(channel.mId,
-                    ContextUtils.getApplicationContext().getString(channel.mNameResId),
-                    channel.mImportance);
+            Object channelObject = channelConstructor.newInstance(
+                    channel.getId(), channel.getName(), channel.getImportance());
 
             // Set group on channel
             Method setGroupMethod = channelClass.getMethod("setGroup", String.class);
-            setGroupMethod.invoke(channelObject, channel.mGroupId);
+            setGroupMethod.invoke(channelObject, channel.getGroupId());
 
             // Set channel to not badge on app icon
             Method setShowBadgeMethod = channelClass.getMethod("setShowBadge", boolean.class);
@@ -84,6 +89,7 @@ public class NotificationManagerProxyImpl implements NotificationManagerProxy {
         }
     }
 
+    @SuppressLint("NewApi")
     @Override
     public void createNotificationChannelGroup(ChannelDefinitions.ChannelGroup channelGroup) {
         assert BuildInfo.isAtLeastO();
@@ -113,17 +119,19 @@ public class NotificationManagerProxyImpl implements NotificationManagerProxy {
         }
     }
 
+    @SuppressLint("NewApi")
     @Override
-    public List<String> getNotificationChannelIds() {
+    public List<Channel> getNotificationChannels() {
         assert BuildInfo.isAtLeastO();
-        List<String> channelIds = new ArrayList<>();
+        List<Channel> channels = new ArrayList<>();
         /*
         The code in the try-block uses reflection in order to compile as it calls APIs newer than
         our compileSdkVersion of Android. The equivalent code without reflection looks like this:
 
             List<NotificationChannel> list = mNotificationManager.getNotificationChannels();
-            for (NotificationChannel channel : list) {
-                channelIds.add(channel.getId());
+            for (NotificationChannel nc : list) {
+                list.add(new Channel(
+                        nc.getId(), nc.getName(), nc.getImportance(), nc.getGroupId()));
             }
          */
         // TODO(crbug.com/707804) Stop using reflection once compileSdkVersion is high enough.
@@ -132,16 +140,24 @@ public class NotificationManagerProxyImpl implements NotificationManagerProxy {
             List channelsList = (List) method.invoke(mNotificationManager);
             for (Object o : channelsList) {
                 Method getId = o.getClass().getMethod("getId");
-                channelIds.add((String) getId.invoke(o));
+                Method getName = o.getClass().getMethod("getName");
+                Method getImportance = o.getClass().getMethod("getImportance");
+                Method getGroup = o.getClass().getMethod("getGroup");
+                String channelId = (String) getId.invoke(o);
+                String name = (String) getName.invoke(o);
+                int importance = (int) getImportance.invoke(o);
+                String groupId = (String) getGroup.invoke(o);
+                channels.add(new Channel(channelId, name, importance, groupId));
             }
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             Log.e(TAG, "Error getting notification channels:", e);
         }
-        return channelIds;
+        return channels;
     }
 
+    @SuppressLint("NewApi")
     @Override
-    public void deleteNotificationChannel(@ChannelDefinitions.ChannelId String id) {
+    public void deleteNotificationChannel(String id) {
         assert BuildInfo.isAtLeastO();
         /*
         The code in the try-block uses reflection in order to compile as it calls APIs newer than

@@ -10,6 +10,7 @@ import android.os.SystemClock;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.base.library_loader.LibraryProcessType;
+import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.process_launcher.ChildProcessCreationParams;
 import org.chromium.chrome.browser.externalnav.ExternalNavigationParams;
 import org.chromium.chrome.browser.metrics.WebApkUma;
@@ -20,6 +21,8 @@ import org.chromium.chrome.browser.tab.TabDelegateFactory;
 import org.chromium.chrome.browser.tab.TabRedirectHandler;
 import org.chromium.components.navigation_interception.NavigationParams;
 import org.chromium.webapk.lib.client.WebApkServiceConnectionManager;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * An Activity is designed for WebAPKs (native Android apps) and displays a webapp in a nearly
@@ -131,21 +134,30 @@ public class WebApkActivity extends WebappActivity {
     }
 
     @Override
+    protected void recordIntentToCreationTime(long timeMs) {
+        super.recordIntentToCreationTime(timeMs);
+
+        RecordHistogram.recordTimesHistogram(
+                "MobileStartup.IntentToCreationTime.WebApk", timeMs, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
     protected void onDeferredStartupWithStorage(WebappDataStorage storage) {
         super.onDeferredStartupWithStorage(storage);
 
+        WebApkInfo info = (WebApkInfo) mWebappInfo;
+        WebApkUma.recordShellApkVersion(info.shellApkVersion(), info.webApkPackageName());
+
         mUpdateManager = new WebApkUpdateManager(WebApkActivity.this, storage);
-        mUpdateManager.updateIfNeeded(getActivityTab(),
-                (WebApkInfo) mWebappInfo);
+        mUpdateManager.updateIfNeeded(getActivityTab(), info);
     }
 
     @Override
     protected void onDeferredStartupWithNullStorage() {
         super.onDeferredStartupWithNullStorage();
 
-        // Register the WebAPK. The WebAPK is not registered when it is created so it has to be
-        // registered now. The WebAPK may also become unregistered after a user clears Chrome's
-        // data.
+        // Register the WebAPK. The WebAPK was registered when it was created, but may also become
+        // unregistered after a user clears Chrome's data.
         WebappRegistry.getInstance().register(
                 mWebappInfo.id(), new WebappRegistry.FetchWebappDataStorageCallback() {
                     @Override

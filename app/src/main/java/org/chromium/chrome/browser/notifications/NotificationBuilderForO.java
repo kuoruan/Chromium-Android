@@ -10,6 +10,8 @@ import android.content.Context;
 
 import org.chromium.base.BuildInfo;
 import org.chromium.base.Log;
+import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
+import org.chromium.chrome.browser.notifications.channels.ChannelsInitializer;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -25,6 +27,11 @@ public class NotificationBuilderForO extends NotificationBuilder {
             ChannelsInitializer channelsInitializer) {
         super(context);
         assert BuildInfo.isAtLeastO();
+        if (channelId == null) {
+            // The channelId may be null if the notification will be posted by another app that
+            // does not target O or sets its own channels. E.g. Web apk notifications.
+            return;
+        }
         channelsInitializer.ensureInitialized(channelId);
         // TODO(crbug.com/707804) Stop using reflection once compileSdkVersion is high enough.
         try {

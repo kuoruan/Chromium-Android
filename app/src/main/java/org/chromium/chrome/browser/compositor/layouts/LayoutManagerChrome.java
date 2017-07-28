@@ -35,6 +35,7 @@ import org.chromium.chrome.browser.tabmodel.TabModelSelector.CloseAllTabsDelegat
 import org.chromium.chrome.browser.tabmodel.TabModelSelectorObserver;
 import org.chromium.chrome.browser.tabmodel.TabModelSelectorTabObserver;
 import org.chromium.chrome.browser.tabmodel.TabModelUtils;
+import org.chromium.chrome.browser.util.AccessibilityUtil;
 import org.chromium.chrome.browser.widget.OverviewListLayout;
 import org.chromium.ui.base.LocalizationUtils;
 import org.chromium.ui.resources.dynamics.DynamicResourceLoader;
@@ -545,20 +546,12 @@ public class LayoutManagerChrome
     }
 
     /**
-     * @return Whether or not to use the accessibility layout.
-     */
-    protected boolean useAccessibilityLayout() {
-        return DeviceClassManager.isAccessibilityModeEnabled(mHost.getContext())
-                || DeviceClassManager.enableAccessibilityLayout();
-    }
-
-    /**
      * Show the overview {@link Layout}.  This is generally a {@link Layout} that visibly represents
      * all of the {@link Tab}s opened by the user.
      * @param animate Whether or not to animate the transition to overview mode.
      */
     public void showOverview(boolean animate) {
-        boolean useAccessibility = useAccessibilityLayout();
+        boolean useAccessibility = DeviceClassManager.enableAccessibilityLayout();
 
         boolean accessibilityIsVisible =
                 useAccessibility && getActiveLayout() == mOverviewListLayout;
@@ -656,8 +649,7 @@ public class LayoutManagerChrome
             }
 
             if (direction == ScrollDirection.DOWN) {
-                boolean isAccessibility =
-                        DeviceClassManager.isAccessibilityModeEnabled(mHost.getContext());
+                boolean isAccessibility = AccessibilityUtil.isAccessibilityEnabled();
                 return mOverviewLayout != null && !isAccessibility;
             }
 

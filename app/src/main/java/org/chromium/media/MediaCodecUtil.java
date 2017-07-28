@@ -12,6 +12,7 @@ import android.media.MediaCodecInfo.CodecCapabilities;
 import android.media.MediaCodecInfo.CodecProfileLevel;
 import android.media.MediaCodecInfo.VideoCapabilities;
 import android.media.MediaCodecList;
+import android.media.MediaFormat;
 import android.os.Build;
 
 import org.chromium.base.Log;
@@ -86,7 +87,13 @@ class MediaCodecUtil {
         @SuppressWarnings("deprecation")
         private int getCodecCount() {
             if (hasNewMediaCodecList()) return mCodecList.length;
-            return MediaCodecList.getCodecCount();
+            try {
+                return MediaCodecList.getCodecCount();
+            } catch (RuntimeException e) {
+                // Swallow the exception due to bad Android implementation and pretend
+                // MediaCodecList is not supported.
+                return 0;
+            }
         }
 
         @SuppressWarnings("deprecation")
@@ -228,7 +235,7 @@ class MediaCodecUtil {
             if (videoCapabilities.getBitrateRange().contains(bitrate)) {
                 // Assume all platforms before N only support VP9 profile 0.
                 profileLevels.addCodecProfileLevel(
-                        VideoCodec.kCodecVP9, VideoCodecProfile.VP9PROFILE_PROFILE0, level);
+                        VideoCodec.CODEC_VP9, VideoCodecProfile.VP9PROFILE_PROFILE0, level);
             }
         }
     }
@@ -248,7 +255,7 @@ class MediaCodecUtil {
                 // https://developer.android.com/reference/android/media/MediaCodecInfo.CodecProfileLevel.html
                 CodecCapabilities codecCapabilities = info.getCapabilitiesForType(mime);
                 if (mime.endsWith("vp9") && Build.VERSION_CODES.LOLLIPOP <= Build.VERSION.SDK_INT
-                        && Build.VERSION.SDK_INT <= 23) {
+                        && Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
                     addVp9CodecProfileLevels(profileLevels, codecCapabilities);
                     continue;
                 }
@@ -308,6 +315,8 @@ class MediaCodecUtil {
                     String decoderName = getDefaultCodecName(
                             mime, MediaCodecDirection.DECODER, requireSoftwareCodec);
                     result.mediaCodec = MediaCodec.createByCodecName(decoderName);
+                } else if (mime.equals(MediaFormat.MIMETYPE_AUDIO_RAW)) {
+                    result.mediaCodec = MediaCodec.createByCodecName("OMX.google.raw.decoder");
                 } else {
                     result.mediaCodec = MediaCodec.createDecoderByType(mime);
                 }

@@ -14,6 +14,7 @@ import android.text.style.ClickableSpan;
 import android.view.View;
 
 import org.chromium.base.annotations.CalledByNative;
+import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
 import org.chromium.ui.base.DeviceFormFactor;
 
@@ -42,6 +43,8 @@ public class TranslateInfoBar extends InfoBar implements SubPanelListener {
     private TranslateSubPanel mSubPanel;
     private final boolean mShouldShowNeverBar;
 
+    private static final String INFOBAR_IMPRESSION_HISTOGRAM = "Translate.InfobarShown";
+
     @CalledByNative
     private static InfoBar show(int translateBarType, String sourceLanguageCode,
             String targetLanguageCode, boolean alwaysTranslate, boolean showNeverInfobar,
@@ -56,7 +59,7 @@ public class TranslateInfoBar extends InfoBar implements SubPanelListener {
         super(R.drawable.infobar_translate, null, null);
 
         mOptions = TranslateOptions.create(sourceLanguageCode, targetLanguageCode, languages, codes,
-                alwaysTranslate, triggeredFromMenu);
+                alwaysTranslate, triggeredFromMenu, null);
         mInfoBarType = infoBarType;
         mShouldShowNeverBar = shouldShowNeverBar;
         mOptionsPanelViewType = NO_PANEL;
@@ -173,6 +176,16 @@ public class TranslateInfoBar extends InfoBar implements SubPanelListener {
 
     @Override
     public void createContent(InfoBarLayout layout) {
+        // Log infobar impression only when the infobar shown is either in step: before translate
+        // or in step: translating and always enabled is true. This is to remove duplicate
+        // impressions.
+        int infoBarType = getInfoBarType();
+        if (infoBarType == BEFORE_TRANSLATE_INFOBAR
+                || (mOptions.alwaysTranslateLanguageState()
+                           && infoBarType == TRANSLATING_INFOBAR)) {
+            RecordHistogram.recordBooleanHistogram(INFOBAR_IMPRESSION_HISTOGRAM, true);
+        }
+
         if (mOptionsPanelViewType == NO_PANEL) {
             mSubPanel = null;
         } else {
@@ -238,8 +251,7 @@ public class TranslateInfoBar extends InfoBar implements SubPanelListener {
 
     private boolean needsAlwaysPanel() {
         return (getInfoBarType() == TranslateInfoBar.AFTER_TRANSLATE_INFOBAR
-                && mOptions.alwaysTranslateLanguageState()
-                && !DeviceFormFactor.isTablet(getContext()));
+                && mOptions.alwaysTranslateLanguageState() && !DeviceFormFactor.isTablet());
     }
 
     /**

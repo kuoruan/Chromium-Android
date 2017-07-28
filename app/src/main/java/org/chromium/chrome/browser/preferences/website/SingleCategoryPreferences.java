@@ -165,6 +165,12 @@ public class SingleCategoryPreferences extends PreferenceFragment
                         }
                     }
 
+                    // For the subresource filter permission, the Allowed list should appear first.
+                    // Default collapsed settings should not change.
+                    if (mCategory.showSubresourceFilterSites()) {
+                        blockedGroup.setOrder(allowedGroup.getOrder() + 1);
+                    }
+
                     // The default, when the two lists are shown for the first time, is for the
                     // Blocked list to be collapsed and Allowed expanded -- because the data in
                     // the Allowed list is normally more useful than the data in the Blocked

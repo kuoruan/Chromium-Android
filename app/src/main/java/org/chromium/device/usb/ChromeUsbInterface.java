@@ -4,8 +4,10 @@
 
 package org.chromium.device.usb;
 
+import android.annotation.TargetApi;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
+import android.os.Build;
 
 import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
@@ -38,6 +40,7 @@ final class ChromeUsbInterface {
         return mInterface.getId();
     }
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @CalledByNative
     private int getAlternateSetting() {
         return mInterface.getAlternateSetting();
