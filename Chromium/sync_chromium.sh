@@ -26,6 +26,7 @@ sync_components() {
 	cp -r ${components}/autofill/android/java/src/* \
 		${components}/background_task_scheduler/android/java/src/* \
 		${components}/bookmarks/common/android/java/src/* \
+		${components}/crash/android/java/src/* \
 		${components}/dom_distiller/content/browser/android/java/src/* \
 		${components}/dom_distiller/core/android/java/src/* \
 		${components}/feature_engagement_tracker/internal/android/java/src/* \
@@ -114,16 +115,13 @@ sync_chrome() {
 		${BASE_DIR}/chrome/android/webapk/libs/client/src/* \
 		${BASE_DIR}/chrome/android/webapk/libs/common/src/* \
 		${BASE_DIR}/chrome/android/webapk/libs/runtime_library/src/* \
-		${BASE_DIR}/device/battery/android/java/src/* \
 		${BASE_DIR}/device/bluetooth/android/java/src/* \
 		${BASE_DIR}/device/gamepad/android/java/src/* \
 		${BASE_DIR}/device/generic_sensor/android/java/src/* \
 		${BASE_DIR}/device/geolocation/android/java/src/* \
-		${BASE_DIR}/device/nfc/android/java/src/* \
 		${BASE_DIR}/device/power_save_blocker/android/java/src/* \
 		${BASE_DIR}/device/sensors/android/java/src/* \
 		${BASE_DIR}/device/usb/android/java/src/* \
-		${BASE_DIR}/device/vibration/android/java/src/* \
 		${BASE_DIR}/media/base/android/java/src/* \
 		${BASE_DIR}/media/capture/content/android/java/src/* \
 		${BASE_DIR}/media/capture/video/android/java/src/* \
@@ -134,8 +132,14 @@ sync_chrome() {
 		${BASE_DIR}/net/android/java/src/* \
 		${BASE_DIR}/printing/android/java/src/* \
 		${BASE_DIR}/services/device/android/java/src/* \
+		${BASE_DIR}/services/device/battery/android/java/src/* \
+		${BASE_DIR}/services/device/nfc/android/java/src/* \
+		${BASE_DIR}/services/device/public/java/src/* \
+		${BASE_DIR}/services/device/screen_orientation/android/java/src/* \
 		${BASE_DIR}/services/device/time_zone_monitor/android/java/src/* \
+		${BASE_DIR}/services/device/vibration/android/java/src/* \
 		${BASE_DIR}/services/service_manager/public/java/src/* \
+		${BASE_DIR}/services/shape_detection/android/java/src/* \
 		${BASE_DIR}/third_party/android_protobuf/src/java/src/device/main/java/* \
 		${BASE_DIR}/third_party/android_protobuf/src/java/src/main/java/* \
 		${BASE_DIR}/third_party/android_swipe_refresh/java/src/* \
