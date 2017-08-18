@@ -6,7 +6,7 @@ package org.chromium.chrome.browser;
 
 class ChromeVersionConstants {
     static final String PRODUCT_NAME = "Chromium";
-    static final String PRODUCT_VERSION = "60.0.3112.90";
+    static final String PRODUCT_VERSION = "60.0.3112.101";
     static final boolean IS_OFFICIAL_BUILD = 1 == 1;
 
     static final int PRODUCT_MAJOR_VERSION = 60;
