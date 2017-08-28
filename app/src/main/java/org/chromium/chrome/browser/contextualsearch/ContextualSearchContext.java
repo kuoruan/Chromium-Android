@@ -162,7 +162,7 @@ public abstract class ContextualSearchContext {
         if (TextUtils.isEmpty(mInitialSelectedWord) && !TextUtils.isEmpty(mSurroundingText)) {
             // TODO(donnd): investigate the root cause of crbug.com/725027 that requires this
             // additional validation to prevent this substring call from crashing!
-            if (mSelectionEndOffset < mSelectionStartOffset
+            if (mSelectionEndOffset < mSelectionStartOffset || mSelectionStartOffset < 0
                     || mSelectionEndOffset > mSurroundingText.length()) {
                 return;
             }

@@ -251,7 +251,12 @@ public class LocaleManager {
                 if (result != null && result) {
                     mSearchEnginePromoCheckedThisSession = true;
                 } else {
-                    onUserLeavePromoDialogWithNoConfirmedChoice(getSearchEnginePromoShowType());
+                    @SearchEnginePromoType
+                    int promoType = getSearchEnginePromoShowType();
+                    if (promoType == SEARCH_ENGINE_PROMO_SHOW_EXISTING
+                            || promoType == SEARCH_ENGINE_PROMO_SHOW_NEW) {
+                        onUserLeavePromoDialogWithNoConfirmedChoice(promoType);
+                    }
                 }
                 if (onSearchEngineFinalized != null) onSearchEngineFinalized.onResult(result);
             }

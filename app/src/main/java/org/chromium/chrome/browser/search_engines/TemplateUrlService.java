@@ -194,6 +194,18 @@ public class TemplateUrlService {
     }
 
     /**
+     * Sets whether filtering of the search engines is enabled.  Filtering ensures the list of
+     * search engines is appropriate for displaying in settings, but can cause issues if you expect
+     * the list of search engines returned here to match the underlying TemplateUrlService in
+     * native.
+     *
+     * @param disableFiltering Whether to disable filtering.
+     */
+    public void setFilteringDisabled(boolean disableFiltering) {
+        nativeSetFilteringDisabled(mNativeTemplateUrlServiceAndroid, disableFiltering);
+    }
+
+    /**
      * Returns a list of the prepopulated search engines.
      *
      * Warning: TemplateUrl.getIndex() is *not* an index into this list, since this list contains
@@ -433,6 +445,8 @@ public class TemplateUrlService {
     private native long nativeInit();
     private native void nativeLoad(long nativeTemplateUrlServiceAndroid);
     private native boolean nativeIsLoaded(long nativeTemplateUrlServiceAndroid);
+    private native void nativeSetFilteringDisabled(
+            long nativeTemplateUrlServiceAndroid, boolean disableFiltering);
     private native int nativeGetTemplateUrlCount(long nativeTemplateUrlServiceAndroid);
     private native TemplateUrl nativeGetTemplateUrlAt(long nativeTemplateUrlServiceAndroid, int i);
     private native void nativeSetUserSelectedDefaultSearchProvider(
