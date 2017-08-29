@@ -34,9 +34,16 @@ android {
             java.filter.exclude(
                     "com/google/protobuf/*.java",
                     "com/google/protobuf/micro/*.java",
+                    "com/google/protobuf/nano/*.java",
+                    "com/google/protobuf/nano/android/*.java",
                     "org/chromium/chrome/browser/offlinepages/evaluation/*.java",
             )
         }
+    }
+    lintOptions {
+        abortOnError false
+        checkReleaseBuilds false
+        disable 'MissingTranslation'
     }
 }
 
