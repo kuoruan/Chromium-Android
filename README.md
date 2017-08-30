@@ -2,6 +2,8 @@
 
 # Chromium Android
 
+[![Build Status](https://travis-ci.org/kuoruan/Chromium-Android.svg?branch=master)](https://travis-ci.org/kuoruan/Chromium-Android) [![Release Version](https://img.shields.io/github/release/kuoruan/Chromium-Android.svg)](https://github.com/kuoruan/Chromium-Android/releases/latest) [![Latest Release Download](https://img.shields.io/github/downloads/kuoruan/Chromium-Android/latest/total.svg)](https://github.com/kuoruan/Chromium-Android/releases/latest)
+
 ### Introduction
 
 - This is the source code of Chromium Android app.
