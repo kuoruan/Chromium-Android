@@ -2,6 +2,8 @@
 
 package com.google.protos.ipc.invalidation;
 
+// @@protoc_insertion_point(imports_scope)
+
 @SuppressWarnings("hiding")
 public interface NanoAndroidService {
 
@@ -25,6 +27,8 @@ public interface NanoAndroidService {
         return _emptyArray;
       }
 
+      // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ClientDowncall.StartDowncall)
+
       public StartDowncall() {
         clear();
       }
@@ -45,7 +49,7 @@ public interface NanoAndroidService {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
@@ -83,6 +87,8 @@ public interface NanoAndroidService {
         return _emptyArray;
       }
 
+      // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ClientDowncall.StopDowncall)
+
       public StopDowncall() {
         clear();
       }
@@ -103,7 +109,7 @@ public interface NanoAndroidService {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
@@ -143,6 +149,8 @@ public interface NanoAndroidService {
 
       // optional bytes ack_handle = 1;
       public byte[] ackHandle;
+
+      // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ClientDowncall.AckDowncall)
 
       public AckDowncall() {
         clear();
@@ -184,7 +192,7 @@ public interface NanoAndroidService {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
@@ -231,6 +239,8 @@ public interface NanoAndroidService {
 
       // repeated .com.google.protos.ipc.invalidation.ObjectIdP unregistrations = 2;
       public com.google.protos.ipc.invalidation.nano.NanoClientProtocol.ObjectIdP[] unregistrations;
+
+      // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ClientDowncall.RegistrationDowncall)
 
       public RegistrationDowncall() {
         clear();
@@ -300,7 +310,7 @@ public interface NanoAndroidService {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
@@ -393,6 +403,8 @@ public interface NanoAndroidService {
     // optional .com.google.protos.ipc.invalidation.ClientDowncall.RegistrationDowncall registrations = 6;
     public com.google.protos.ipc.invalidation.NanoAndroidService.ClientDowncall.RegistrationDowncall registrations;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ClientDowncall)
+
     public ClientDowncall() {
       clear();
     }
@@ -473,7 +485,7 @@ public interface NanoAndroidService {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -556,6 +568,8 @@ public interface NanoAndroidService {
       // optional bytes data = 1;
       public byte[] data;
 
+      // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.InternalDowncall.ServerMessage)
+
       public ServerMessage() {
         clear();
       }
@@ -596,7 +610,7 @@ public interface NanoAndroidService {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
@@ -641,6 +655,8 @@ public interface NanoAndroidService {
       // optional bool is_online = 1;
       public java.lang.Boolean isOnline;
 
+      // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.InternalDowncall.NetworkStatus)
+
       public NetworkStatus() {
         clear();
       }
@@ -681,7 +697,7 @@ public interface NanoAndroidService {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
@@ -734,6 +750,8 @@ public interface NanoAndroidService {
 
       // optional bool skip_start_for_test = 4;
       public java.lang.Boolean skipStartForTest;
+
+      // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.InternalDowncall.CreateClient)
 
       public CreateClient() {
         clear();
@@ -799,7 +817,7 @@ public interface NanoAndroidService {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
@@ -867,6 +885,8 @@ public interface NanoAndroidService {
 
     // optional .com.google.protos.ipc.invalidation.InternalDowncall.CreateClient create_client = 5;
     public com.google.protos.ipc.invalidation.NanoAndroidService.InternalDowncall.CreateClient createClient;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.InternalDowncall)
 
     public InternalDowncall() {
       clear();
@@ -940,7 +960,7 @@ public interface NanoAndroidService {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -1013,6 +1033,8 @@ public interface NanoAndroidService {
         return _emptyArray;
       }
 
+      // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ListenerUpcall.ReadyUpcall)
+
       public ReadyUpcall() {
         clear();
       }
@@ -1033,7 +1055,7 @@ public interface NanoAndroidService {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
@@ -1082,6 +1104,8 @@ public interface NanoAndroidService {
 
       // optional bool invalidate_all = 4;
       public java.lang.Boolean invalidateAll;
+
+      // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ListenerUpcall.InvalidateUpcall)
 
       public InvalidateUpcall() {
         clear();
@@ -1147,7 +1171,7 @@ public interface NanoAndroidService {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
@@ -1213,6 +1237,8 @@ public interface NanoAndroidService {
       // optional bool is_registered = 2;
       public java.lang.Boolean isRegistered;
 
+      // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ListenerUpcall.RegistrationStatusUpcall)
+
       public RegistrationStatusUpcall() {
         clear();
       }
@@ -1261,7 +1287,7 @@ public interface NanoAndroidService {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
@@ -1319,6 +1345,8 @@ public interface NanoAndroidService {
       // optional string message = 3;
       public java.lang.String message;
 
+      // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ListenerUpcall.RegistrationFailureUpcall)
+
       public RegistrationFailureUpcall() {
         clear();
       }
@@ -1375,7 +1403,7 @@ public interface NanoAndroidService {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
@@ -1434,6 +1462,8 @@ public interface NanoAndroidService {
       // optional int32 length = 2;
       public java.lang.Integer length;
 
+      // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ListenerUpcall.ReissueRegistrationsUpcall)
+
       public ReissueRegistrationsUpcall() {
         clear();
       }
@@ -1482,7 +1512,7 @@ public interface NanoAndroidService {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
@@ -1536,6 +1566,8 @@ public interface NanoAndroidService {
 
       // optional bool is_transient = 3;
       public java.lang.Boolean isTransient;
+
+      // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ListenerUpcall.ErrorUpcall)
 
       public ErrorUpcall() {
         clear();
@@ -1593,7 +1625,7 @@ public interface NanoAndroidService {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
@@ -1663,6 +1695,8 @@ public interface NanoAndroidService {
 
     // optional .com.google.protos.ipc.invalidation.ListenerUpcall.ErrorUpcall error = 8;
     public com.google.protos.ipc.invalidation.NanoAndroidService.ListenerUpcall.ErrorUpcall error;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ListenerUpcall)
 
     public ListenerUpcall() {
       clear();
@@ -1760,7 +1794,7 @@ public interface NanoAndroidService {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -1860,6 +1894,8 @@ public interface NanoAndroidService {
     // optional int64 ticl_id = 3;
     public java.lang.Long ticlId;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.AndroidSchedulerEvent)
+
     public AndroidSchedulerEvent() {
       clear();
     }
@@ -1916,7 +1952,7 @@ public interface NanoAndroidService {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -1975,6 +2011,8 @@ public interface NanoAndroidService {
     // optional int64 execute_time_ms = 2;
     public java.lang.Long executeTimeMs;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ScheduledTask)
+
     public ScheduledTask() {
       clear();
     }
@@ -2023,7 +2061,7 @@ public interface NanoAndroidService {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -2075,6 +2113,8 @@ public interface NanoAndroidService {
     // optional bytes message = 2;
     public byte[] message;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.AndroidNetworkSendRequest)
+
     public AndroidNetworkSendRequest() {
       clear();
     }
@@ -2123,7 +2163,7 @@ public interface NanoAndroidService {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -2186,6 +2226,8 @@ public interface NanoAndroidService {
 
       // optional .com.google.protos.ipc.invalidation.ClientConfigP client_config = 4;
       public com.google.protos.ipc.invalidation.nano.NanoClientProtocol.ClientConfigP clientConfig;
+
+      // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.AndroidTiclState.Metadata)
 
       public Metadata() {
         clear();
@@ -2251,7 +2293,7 @@ public interface NanoAndroidService {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
@@ -2316,6 +2358,8 @@ public interface NanoAndroidService {
 
     // repeated .com.google.protos.ipc.invalidation.ScheduledTask scheduled_task = 4;
     public com.google.protos.ipc.invalidation.NanoAndroidService.ScheduledTask[] scheduledTask;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.AndroidTiclState)
 
     public AndroidTiclState() {
       clear();
@@ -2391,7 +2435,7 @@ public interface NanoAndroidService {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -2476,6 +2520,8 @@ public interface NanoAndroidService {
     // optional bytes digest = 2;
     public byte[] digest;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.AndroidTiclStateWithDigest)
+
     public AndroidTiclStateWithDigest() {
       clear();
     }
@@ -2524,7 +2570,7 @@ public interface NanoAndroidService {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;

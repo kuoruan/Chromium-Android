@@ -9,13 +9,13 @@ import android.support.v7.content.res.AppCompatResources;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
+import android.widget.BaseAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
+
+import java.util.List;
 
 /**
  * Helper class for creating a horizontal list of icons with a title.
@@ -38,29 +38,62 @@ class EditorIconsField {
 
         ((TextView) mLayout.findViewById(R.id.label)).setText(fieldModel.getLabel());
 
-        LinearLayout container = (LinearLayout) mLayout.findViewById(R.id.icons_container);
-        int size =
-                context.getResources().getDimensionPixelSize(R.dimen.payments_section_logo_width);
-        int margin = context.getResources().getDimensionPixelSize(
-                R.dimen.payments_section_small_spacing);
-        LinearLayout.LayoutParams layoutParams =
-                new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        ApiCompatibilityUtils.setMarginEnd(layoutParams, margin);
-        for (int i = 0; i < fieldModel.getIconResourceIds().size(); i++) {
-            ImageView icon = new ImageView(context);
-            icon.setImageDrawable(AppCompatResources.getDrawable(
-                    context, fieldModel.getIconResourceIds().get(i)));
-            icon.setContentDescription(context.getString(
-                    fieldModel.getIconDescriptionsForAccessibility().get(i)));
-            icon.setAdjustViewBounds(true);
-            icon.setMaxWidth(size);
-            icon.setMaxHeight(size);
-            container.addView(icon, layoutParams);
-        }
+        ExpandableGridView iconsContainer =
+                (ExpandableGridView) mLayout.findViewById(R.id.icons_container);
+        iconsContainer.setAdapter(new IconListAdapter(context, fieldModel.getIconResourceIds(),
+                fieldModel.getIconDescriptionsForAccessibility()));
     }
 
     /** @return The View containing everything. */
     public View getLayout() {
         return mLayout;
+    }
+
+    /**
+     * An instance of a {@link BaseAdapter} that provides a list of card icon views.
+     */
+    private static class IconListAdapter extends BaseAdapter {
+        private Context mContext;
+        private List<Integer> mIconResourceIds;
+        private List<Integer> mIconDescriptionIds;
+        private int mIconSize;
+
+        public IconListAdapter(
+                Context context, List<Integer> iconResourceIds, List<Integer> iconDescriptionIds) {
+            mContext = context;
+            mIconResourceIds = iconResourceIds;
+            mIconDescriptionIds = iconDescriptionIds;
+            mIconSize = mContext.getResources().getDimensionPixelSize(
+                    R.dimen.payments_section_logo_width);
+            assert mIconResourceIds.size() == mIconDescriptionIds.size();
+        }
+
+        @Override
+        public int getCount() {
+            return mIconResourceIds.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return mIconResourceIds.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            ImageView iconView = (ImageView) convertView;
+            if (iconView == null) iconView = new ImageView(mContext);
+            iconView.setImageDrawable(
+                    AppCompatResources.getDrawable(mContext, mIconResourceIds.get(position)));
+            iconView.setContentDescription(mContext.getString(mIconDescriptionIds.get(position)));
+            iconView.setAdjustViewBounds(true);
+            iconView.setMaxWidth(mIconSize);
+            iconView.setMaxHeight(mIconSize);
+            return iconView;
+        }
     }
 }

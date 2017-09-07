@@ -113,6 +113,8 @@ public final class NfcTypeConverter {
             case NfcRecordType.JSON:
             case NfcRecordType.OPAQUE_RECORD:
                 return NdefRecord.createMime(record.mediaType, record.data);
+            case NfcRecordType.EMPTY:
+                return new NdefRecord(NdefRecord.TNF_EMPTY, null, null, null);
             default:
                 throw new InvalidNfcMessageException();
         }

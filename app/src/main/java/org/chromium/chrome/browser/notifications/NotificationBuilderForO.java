@@ -10,7 +10,6 @@ import android.content.Context;
 
 import org.chromium.base.BuildInfo;
 import org.chromium.base.Log;
-import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
 import org.chromium.chrome.browser.notifications.channels.ChannelsInitializer;
 
 import java.lang.reflect.InvocationTargetException;
@@ -23,8 +22,8 @@ import java.lang.reflect.Method;
 public class NotificationBuilderForO extends NotificationBuilder {
     private static final String TAG = "NotifBuilderForO";
 
-    public NotificationBuilderForO(Context context, @ChannelDefinitions.ChannelId String channelId,
-            ChannelsInitializer channelsInitializer) {
+    public NotificationBuilderForO(
+            Context context, String channelId, ChannelsInitializer channelsInitializer) {
         super(context);
         assert BuildInfo.isAtLeastO();
         if (channelId == null) {

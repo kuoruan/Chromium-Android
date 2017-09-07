@@ -42,7 +42,7 @@ public class ChromeSigninController {
         if (syncAccountName == null) {
             return null;
         }
-        return AccountManagerHelper.createAccountFromName(syncAccountName);
+        return AccountManagerFacade.createAccountFromName(syncAccountName);
     }
 
     public boolean isSignedIn() {

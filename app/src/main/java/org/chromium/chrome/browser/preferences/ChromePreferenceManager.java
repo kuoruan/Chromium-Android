@@ -43,9 +43,6 @@ public class ChromePreferenceManager {
     private static final String CONTEXTUAL_SEARCH_CURRENT_WEEK_NUMBER =
             "contextual_search_current_week_number";
     private static final String HERB_FLAVOR_KEY = "herb_flavor";
-    private static final String WEBAPK_COMMAND_LINE_KEY = "webapk.command_line_enabled";
-    private static final String WEBAPK_RUNTIME_KEY = "webapk.runtime_enabled";
-    private static final String WEBAPK_ANY_PACKAGE_KEY = "webapk.any_package_name";
     private static final String CHROME_HOME_ENABLED_KEY = "chrome_home_enabled";
 
     private static final String CHROME_DEFAULT_BROWSER = "applink.chrome_default_browser";
@@ -57,6 +54,8 @@ public class ChromePreferenceManager {
 
     private static final String SUCCESS_UPLOAD_SUFFIX = "_crash_success_upload";
     private static final String FAILURE_UPLOAD_SUFFIX = "_crash_failure_upload";
+
+    private static final String OMNIBOX_PLACEHOLDER_GROUP = "omnibox-placeholder-group";
 
     private static ChromePreferenceManager sPrefs;
 
@@ -344,16 +343,6 @@ public class ChromePreferenceManager {
         writeString(HERB_FLAVOR_KEY, flavor);
     }
 
-    /** Checks the cached value for the webapk feature. */
-    public boolean getCachedWebApkRuntimeEnabled() {
-        return mSharedPreferences.getBoolean(WEBAPK_RUNTIME_KEY, false);
-    }
-
-    /** Writes the cached value for the webapk feature is enabled. */
-    public void setCachedWebApkRuntimeEnabled(boolean isEnabled) {
-        writeBoolean(WEBAPK_RUNTIME_KEY, isEnabled);
-    }
-
     public boolean getCachedChromeDefaultBrowser() {
         return mSharedPreferences.getBoolean(CHROME_DEFAULT_BROWSER, false);
     }
@@ -416,6 +405,22 @@ public class ChromePreferenceManager {
     /** Returns whether the content suggestions surface has ever been shown. */
     public boolean getSuggestionsSurfaceShown() {
         return mSharedPreferences.getBoolean(CONTENT_SUGGESTIONS_SHOWN_KEY, false);
+    }
+
+    /**
+     * Set group of omnibox placeholder experiment
+     * @param group group name of omnibox placeholder experiment
+     */
+    public void setOmniboxPlaceholderGroup(String group) {
+        writeString(OMNIBOX_PLACEHOLDER_GROUP, group);
+    }
+
+    /**
+     * Get group of omnibox placeholder experiment
+     * @return String of omnibox placeholder experiment group name, empty string if not set
+     */
+    public String getOmniboxPlaceholderGroup() {
+        return mSharedPreferences.getString(OMNIBOX_PLACEHOLDER_GROUP, "");
     }
 
     /**

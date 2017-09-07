@@ -50,7 +50,6 @@ import org.chromium.chrome.browser.invalidation.UniqueIdInvalidationClientNameGe
 import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.media.MediaCaptureNotificationService;
 import org.chromium.chrome.browser.metrics.LaunchMetrics;
-import org.chromium.chrome.browser.metrics.UmaUtils;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
 import org.chromium.chrome.browser.notifications.channels.ChannelsUpdater;
@@ -61,7 +60,6 @@ import org.chromium.chrome.browser.partnercustomizations.HomepageManager;
 import org.chromium.chrome.browser.partnercustomizations.PartnerBrowserCustomizations;
 import org.chromium.chrome.browser.photo_picker.PhotoPickerDialog;
 import org.chromium.chrome.browser.physicalweb.PhysicalWeb;
-import org.chromium.chrome.browser.precache.PrecacheLauncher;
 import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.rlz.RevenueStats;
@@ -70,12 +68,12 @@ import org.chromium.chrome.browser.services.AccountsChangedReceiver;
 import org.chromium.chrome.browser.services.GoogleServicesManager;
 import org.chromium.chrome.browser.share.ShareHelper;
 import org.chromium.chrome.browser.sync.SyncController;
-import org.chromium.chrome.browser.webapps.ChromeWebApkHost;
 import org.chromium.chrome.browser.webapps.WebApkVersionManager;
 import org.chromium.chrome.browser.webapps.WebappRegistry;
+import org.chromium.components.background_task_scheduler.BackgroundTaskSchedulerFactory;
 import org.chromium.components.minidump_uploader.CrashFileManager;
-import org.chromium.components.signin.AccountManagerHelper;
-import org.chromium.content.browser.ChildProcessLauncher;
+import org.chromium.components.signin.AccountManagerFacade;
+import org.chromium.content.browser.ChildProcessLauncherHelper;
 import org.chromium.content.common.ContentSwitches;
 import org.chromium.device.geolocation.LocationProviderFactory;
 import org.chromium.printing.PrintDocumentAdapterWrapper;
@@ -163,10 +161,10 @@ public class ProcessInitializationHandler {
             }
         });
 
-        // Initialize the AccountManagerHelper with the correct AccountManagerDelegate. Must be done
+        // Initialize the AccountManagerFacade with the correct AccountManagerDelegate. Must be done
         // only once and before AccountMangerHelper.get(...) is called to avoid using the
         // default AccountManagerDelegate.
-        AccountManagerHelper.initializeAccountManagerHelper(
+        AccountManagerFacade.initializeAccountManagerFacade(
                 AppHooks.get().createAccountManagerDelegate());
 
         // Set the unique identification generator for invalidations.  The
@@ -206,7 +204,7 @@ public class ProcessInitializationHandler {
         final ChromeApplication application =
                 (ChromeApplication) ContextUtils.getApplicationContext();
 
-        DataReductionProxySettings.reconcileDataReductionProxyEnabledState(application);
+        DataReductionProxySettings.handlePostNativeInitialization();
         ChromeActivitySessionTracker.getInstance().initializeWithNative();
         ChromeApplication.removeSessionCookies();
         AppBannerManager.setAppDetailsDelegate(AppHooks.get().createAppDetailsDelegate());
@@ -219,9 +217,9 @@ public class ProcessInitializationHandler {
                 private PhotoPickerDialog mDialog;
 
                 @Override
-                public void showPhotoPicker(
-                        Context context, PhotoPickerListener listener, boolean allowMultiple) {
-                    mDialog = new PhotoPickerDialog(context, listener, allowMultiple);
+                public void showPhotoPicker(Context context, PhotoPickerListener listener,
+                        boolean allowMultiple, List<String> mimeTypes) {
+                    mDialog = new PhotoPickerDialog(context, listener, allowMultiple, mimeTypes);
                     mDialog.getWindow().getAttributes().windowAnimations =
                             R.style.PhotoPickerDialogAnimation;
                     mDialog.show();
@@ -251,10 +249,6 @@ public class ProcessInitializationHandler {
         ThreadUtils.checkUiThread();
         if (mInitializedDeferredStartupTasks) return;
         mInitializedDeferredStartupTasks = true;
-
-        RecordHistogram.recordLongTimesHistogram("UMA.Debug.EnableCrashUpload.DeferredStartUptime2",
-                SystemClock.uptimeMillis() - UmaUtils.getForegroundStartTime(),
-                TimeUnit.MILLISECONDS);
 
         handleDeferredStartupTasksInitialization();
     }
@@ -400,6 +394,13 @@ public class ProcessInitializationHandler {
                 }
             }
         });
+
+        deferredStartupHandler.addDeferredTask(new Runnable() {
+            @Override
+            public void run() {
+                BackgroundTaskSchedulerFactory.getScheduler().checkForOSUpgrade(application);
+            }
+        });
     }
 
     private void initChannelsAsync() {
@@ -449,12 +450,7 @@ public class ProcessInitializationHandler {
                     // killed.
                     BookmarkWidgetProvider.refreshAllWidgets(context);
 
-                    // Initialize whether or not precaching is enabled.
-                    PrecacheLauncher.updatePrecachingEnabled(context);
-
-                    if (ChromeWebApkHost.isEnabled()) {
-                        WebApkVersionManager.updateWebApksIfNeeded();
-                    }
+                    WebApkVersionManager.updateWebApksIfNeeded();
 
                     removeSnapshotDatabase(context);
 
@@ -485,10 +481,6 @@ public class ProcessInitializationHandler {
              * minidump storage directory.
              */
             private void initCrashReporting() {
-                RecordHistogram.recordLongTimesHistogram("UMA.Debug.EnableCrashUpload.Uptime3",
-                        mAsyncTaskStartTime - UmaUtils.getForegroundStartTime(),
-                        TimeUnit.MILLISECONDS);
-
                 // Crash reports can be uploaded as part of a background service even while the main
                 // Chrome activity is not running, and hence regular metrics reporting is not
                 // possible. Instead, metrics are temporarily written to prefs; export those prefs
@@ -619,7 +611,7 @@ public class ProcessInitializationHandler {
     private void startModerateBindingManagementIfNeeded(Context context) {
         // Moderate binding doesn't apply to low end devices.
         if (SysUtils.isLowEndDevice()) return;
-        ChildProcessLauncher.startModerateBindingManagement(context);
+        ChildProcessLauncherHelper.startModerateBindingManagement(context);
     }
 
     @SuppressWarnings("deprecation") // InputMethodSubtype.getLocale() deprecated in API 24

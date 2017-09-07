@@ -31,6 +31,7 @@ import org.chromium.base.TraceEvent;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.blink_public.web.WebFocusType;
 import org.chromium.blink_public.web.WebInputEventModifier;
 import org.chromium.blink_public.web.WebInputEventType;
 import org.chromium.blink_public.web.WebTextInputMode;
@@ -633,16 +634,30 @@ public class ImeAdapter {
 
     boolean performEditorAction(int actionCode) {
         if (!isValid()) return false;
-        if (actionCode == EditorInfo.IME_ACTION_NEXT) {
-            sendSyntheticKeyPress(KeyEvent.KEYCODE_TAB,
-                    KeyEvent.FLAG_SOFT_KEYBOARD | KeyEvent.FLAG_KEEP_TOUCH_MODE
-                    | KeyEvent.FLAG_EDITOR_ACTION);
-        } else {
-            sendSyntheticKeyPress(KeyEvent.KEYCODE_ENTER,
-                    KeyEvent.FLAG_SOFT_KEYBOARD | KeyEvent.FLAG_KEEP_TOUCH_MODE
-                    | KeyEvent.FLAG_EDITOR_ACTION);
+        switch (actionCode) {
+            case EditorInfo.IME_ACTION_NEXT:
+                advanceFocusInForm(WebFocusType.FORWARD);
+                break;
+            case EditorInfo.IME_ACTION_PREVIOUS:
+                advanceFocusInForm(WebFocusType.BACKWARD);
+                break;
+            default:
+                sendSyntheticKeyPress(KeyEvent.KEYCODE_ENTER,
+                        KeyEvent.FLAG_SOFT_KEYBOARD | KeyEvent.FLAG_KEEP_TOUCH_MODE
+                                | KeyEvent.FLAG_EDITOR_ACTION);
+                break;
         }
         return true;
+    }
+
+    /**
+     * Advances the focus to next input field in the current form.
+     *
+     * @param focusType indicates whether to advance forward or backward direction.
+     */
+    private void advanceFocusInForm(int focusType) {
+        if (mNativeImeAdapterAndroid == 0) return;
+        nativeAdvanceFocusInForm(mNativeImeAdapterAndroid, focusType);
     }
 
     void notifyUserAction() {
@@ -920,4 +935,5 @@ public class ImeAdapter {
     private native boolean nativeRequestTextInputStateUpdate(long nativeImeAdapterAndroid);
     private native void nativeRequestCursorUpdate(long nativeImeAdapterAndroid,
             boolean immediateRequest, boolean monitorRequest);
+    private native void nativeAdvanceFocusInForm(long nativeImeAdapterAndroid, int focusType);
 }

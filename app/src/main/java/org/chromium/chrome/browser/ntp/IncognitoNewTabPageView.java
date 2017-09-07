@@ -75,6 +75,11 @@ public class IncognitoNewTabPageView extends FrameLayout {
         mManager = manager;
     }
 
+    /** @return The IncognitoNewTabPageManager associated with this IncognitoNewTabPageView. */
+    protected IncognitoNewTabPageManager getManager() {
+        return mManager;
+    }
+
     /**
      * @see org.chromium.chrome.browser.compositor.layouts.content.
      *         InvalidationAwareThumbnailProvider#shouldCaptureThumbnail()

@@ -55,6 +55,8 @@ public class AutofillKeyboardAccessory extends LinearLayout
     private int mSeparatorPosition;
     private Animator mAnimator;
     private Runnable mReverseAnimationRunnable;
+    // Boolean to track if the keyboard accessory has just popped up or has already been showing.
+    private boolean mFirstAppearance;
 
     /**
      * Creates an AutofillKeyboardAccessory with specified parameters.
@@ -84,6 +86,7 @@ public class AutofillKeyboardAccessory extends LinearLayout
         mAnimationDurationMillis = animationDurationMillis;
         mStartAnimationTranslationPx = getResources().getDimensionPixelSize(
                 R.dimen.keyboard_accessory_start_animation_translation);
+        mFirstAppearance = true;
     }
 
     /**
@@ -192,7 +195,7 @@ public class AutofillKeyboardAccessory extends LinearLayout
             container.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED);
         }
 
-        if (mAnimationDurationMillis > 0) {
+        if (mAnimationDurationMillis > 0 && mFirstAppearance) {
             cancelAnimations(container);
             mAnimator = ObjectAnimator.ofFloat(
                     this, View.TRANSLATION_X, -mStartAnimationTranslationPx, 0);
@@ -205,6 +208,7 @@ public class AutofillKeyboardAccessory extends LinearLayout
                         // finished the reverse animation and removed the first suggestion. This
                         // prevents a sudden movement of these suggestions when the container view
                         // is redrawn. See |scheduleReverseAnimation|.
+                        // TODO(jsaul): Doesn't work properly; investigate animate+hint variation.
                         for (int i = mSeparatorPosition + 1; i < getChildCount(); ++i) {
                             getChildAt(i).setAlpha(0);
                         }
@@ -223,13 +227,17 @@ public class AutofillKeyboardAccessory extends LinearLayout
         container.post(new Runnable() {
             @Override
             public void run() {
-                if (mAnimationDurationMillis > 0) {
+                if (mAnimationDurationMillis > 0 && mFirstAppearance) {
                     mAnimator.start();
                 } else {
                     container.scrollTo(isRtl ? getRight() : 0, 0);
                 }
+                mFirstAppearance = false;
             }
         });
+        if (mFirstAppearance) {
+            announceForAccessibility(container.getContentDescription());
+        }
     }
 
     /**
@@ -241,6 +249,8 @@ public class AutofillKeyboardAccessory extends LinearLayout
         container.setVisibility(View.GONE);
         mWindowAndroid.removeKeyboardVisibilityListener(this);
         ((View) container.getParent()).requestLayout();
+        // Next time the keyboard accessory appears, do animations/accessibility work if applicable.
+        mFirstAppearance = true;
     }
 
     @Override

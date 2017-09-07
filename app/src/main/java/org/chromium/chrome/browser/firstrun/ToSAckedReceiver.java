@@ -14,7 +14,7 @@ import android.os.Bundle;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.chrome.browser.init.ProcessInitializationHandler;
-import org.chromium.components.signin.AccountManagerHelper;
+import org.chromium.components.signin.AccountManagerFacade;
 
 import java.util.HashSet;
 import java.util.List;
@@ -25,8 +25,8 @@ import java.util.Set;
  * the Chrome ToS so that we don't show the ToS string during our first run.
  */
 public class ToSAckedReceiver extends BroadcastReceiver {
-    private static final String TOS_ACKED_ACCOUNTS = "ToS acknowledged accounts";
-    private static final String EXTRA_ACCOUNT_NAME = "TosAckedReceiver.account";
+    static final String TOS_ACKED_ACCOUNTS = "ToS acknowledged accounts";
+    static final String EXTRA_ACCOUNT_NAME = "TosAckedReceiver.account";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -64,8 +64,8 @@ public class ToSAckedReceiver extends BroadcastReceiver {
                 ProcessInitializationHandler.getInstance().initializePreNative();
             }
         });
-        AccountManagerHelper accountHelper = AccountManagerHelper.get();
-        List<String> accountNames = accountHelper.getGoogleAccountNames();
+        AccountManagerFacade accountHelper = AccountManagerFacade.get();
+        List<String> accountNames = accountHelper.tryGetGoogleAccountNames();
         if (accountNames.isEmpty()) return false;
         for (int k = 0; k < accountNames.size(); k++) {
             if (toSAckedAccounts.contains(accountNames.get(k))) return true;

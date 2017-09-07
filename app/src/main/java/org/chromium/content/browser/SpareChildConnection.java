@@ -6,9 +6,12 @@ package org.chromium.content.browser;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 
 import org.chromium.base.Log;
-import org.chromium.base.process_launcher.ChildProcessCreationParams;
+import org.chromium.base.VisibleForTesting;
+import org.chromium.base.process_launcher.ChildConnectionAllocator;
+import org.chromium.base.process_launcher.ChildProcessConnection;
 
 /**
  * This class is used to create a single spare ChildProcessConnection (usually early on during
@@ -17,40 +20,34 @@ import org.chromium.base.process_launcher.ChildProcessCreationParams;
 public class SpareChildConnection {
     private static final String TAG = "SpareChildConn";
 
+    // The allocator used to create the connection.
+    private final ChildConnectionAllocator mConnectionAllocator;
+
     // The actual spare connection.
     private ChildProcessConnection mConnection;
 
     // True when there is a spare connection and it is bound.
     private boolean mConnectionReady;
 
-    // The callback that should be called when the connection becomes bound. Only non null when the
-    // connection was retrieved but was not bound yet.
-    private ChildProcessConnection.StartCallback mConnectionStartCallback;
-
-    // Properties of the spare connection.
-    private boolean mSandboxed;
-    private boolean mAlwaysInForegound;
-    private ChildProcessCreationParams mCreationParams;
-
-    // An interface used to abstract connection creation so tests can use custom connections.
-    interface ConnectionFactory {
-        ChildProcessConnection allocateBoundConnection(ChildSpawnData spawnData,
-                ChildProcessConnection.StartCallback startCallback, boolean queueIfNoneAvailable);
-    }
+    // The callback that should be called when the connection becomes bound. Set when the connection
+    // is retrieved.
+    private ChildProcessConnection.ServiceCallback mConnectionServiceCallback;
 
     /** Creates and binds a ChildProcessConnection using the specified parameters. */
-    public SpareChildConnection(Context context, ConnectionFactory connectionFactory,
-            Bundle serviceBundle, boolean sandboxed, boolean alwaysInForeground,
-            ChildProcessCreationParams creationParams) {
+    public SpareChildConnection(
+            Context context, ChildConnectionAllocator connectionAllocator, Bundle serviceBundle) {
         assert LauncherThread.runningOnLauncherThread();
-        ChildProcessConnection.StartCallback startCallback =
-                new ChildProcessConnection.StartCallback() {
+
+        mConnectionAllocator = connectionAllocator;
+
+        ChildProcessConnection.ServiceCallback serviceCallback =
+                new ChildProcessConnection.ServiceCallback() {
                     @Override
                     public void onChildStarted() {
                         assert LauncherThread.runningOnLauncherThread();
                         mConnectionReady = true;
-                        if (mConnectionStartCallback != null) {
-                            mConnectionStartCallback.onChildStarted();
+                        if (mConnectionServiceCallback != null) {
+                            mConnectionServiceCallback.onChildStarted();
                             clearConnection();
                         }
                         // If there is no chained callback, that means the spare connection has not
@@ -61,77 +58,74 @@ public class SpareChildConnection {
                     public void onChildStartFailed() {
                         assert LauncherThread.runningOnLauncherThread();
                         Log.e(TAG, "Failed to warm up the spare sandbox service");
-                        if (mConnectionStartCallback != null) {
-                            mConnectionStartCallback.onChildStartFailed();
+                        if (mConnectionServiceCallback != null) {
+                            mConnectionServiceCallback.onChildStartFailed();
                         }
                         clearConnection();
                     }
+
+                    @Override
+                    public void onChildProcessDied(ChildProcessConnection connection) {
+                        if (mConnectionServiceCallback != null) {
+                            mConnectionServiceCallback.onChildProcessDied(connection);
+                        }
+                        if (mConnection != null) {
+                            assert connection == mConnection;
+                            clearConnection();
+                        }
+                    }
                 };
 
-        mSandboxed = sandboxed;
-        mAlwaysInForegound = alwaysInForeground;
-        mCreationParams = creationParams;
-        ChildSpawnData spawnData = new ChildSpawnData(context, serviceBundle, null /* connection */,
-                null /* launchCallback */, null /* child process callback */, sandboxed,
-                alwaysInForeground, creationParams);
-        mConnection = connectionFactory.allocateBoundConnection(
-                spawnData, startCallback, false /* queueIfNoneAvailable */);
+        mConnection = mConnectionAllocator.allocate(context, serviceBundle, serviceCallback);
     }
 
     /**
-     * @return a connection that has been bound or is being bound matching the given paramters, null
-     * otherwise.
+     * @return a connection that has been bound or is being bound if one was created with the same
+     * allocator as the one provided, null otherwise.
      */
-    public ChildProcessConnection getConnection(Context context, boolean sandboxed,
-            boolean alwaysInForeground, ChildProcessCreationParams creationParams,
-            final ChildProcessConnection.StartCallback startCallback) {
+    public ChildProcessConnection getConnection(ChildConnectionAllocator allocator,
+            @NonNull final ChildProcessConnection.ServiceCallback serviceCallback) {
         assert LauncherThread.runningOnLauncherThread();
-        if (mConnection == null || mSandboxed != sandboxed
-                || mAlwaysInForegound != alwaysInForeground || mCreationParams != creationParams
-                || mConnectionStartCallback != null
-                || !mConnection.getPackageName().equals(
-                           ChildProcessLauncher.getPackageNameFromCreationParams(
-                                   context, mCreationParams, sandboxed))) {
+        if (isEmpty() || mConnectionAllocator != allocator || mConnectionServiceCallback != null) {
             return null;
         }
 
+        mConnectionServiceCallback = serviceCallback;
+
         ChildProcessConnection connection = mConnection;
         if (mConnectionReady) {
-            if (startCallback != null) {
+            // onChildStarted was already run. Call it explicitly on the passed serviceCallback.
+            if (serviceCallback != null) {
                 // Post a task so the callback happens after the caller has retrieved the
                 // connection.
                 LauncherThread.post(new Runnable() {
                     @Override
                     public void run() {
-                        startCallback.onChildStarted();
+                        serviceCallback.onChildStarted();
                     }
                 });
             }
             clearConnection();
-        } else {
-            mConnectionStartCallback = startCallback;
         }
         return connection;
     }
 
-    /**
-     * Called when a connection is freed to give an opportunity to this class to clean up its
-     * connection if it's the one that's been freed.
-     * TODO(jcivelli): use the ChildProcessConnection.DeathCallback of the actuall connection so we
-     * don't need this anymore once the CPL has been simplified.
-     */
-    public boolean onConnectionFreed(ChildProcessConnection connection) {
-        if (mConnection != connection) {
-            return false;
-        }
-        clearConnection();
-        return true;
+    /** Returns true if no connection is available (so getConnection will always return null), */
+    public boolean isEmpty() {
+        // Note that if the connection was retrieved but was not yet ready mConnection is non null
+        // but that connection is already used and will be cleared when it becomes ready. In that
+        // case mConnectionServiceCallback is non null.
+        return mConnection == null || mConnectionServiceCallback != null;
     }
 
     private void clearConnection() {
         assert LauncherThread.runningOnLauncherThread();
         mConnection = null;
         mConnectionReady = false;
-        mConnectionStartCallback = null;
+    }
+
+    @VisibleForTesting
+    public ChildProcessConnection getConnection() {
+        return mConnection;
     }
 }

@@ -84,7 +84,7 @@ public abstract class AutofillEditorBase
             getActivity().finish();
             return true;
         } else if (item.getItemId() == R.id.help_menu_id) {
-            EditorDialog.launchAutofillHelpPage(mContext);
+            EditorDialog.launchAutofillHelpPage(getActivity());
             return true;
         }
 

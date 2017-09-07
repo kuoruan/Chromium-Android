@@ -19,7 +19,7 @@ import android.provider.Browser;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.base.library_loader.LibraryLoader;
+import org.chromium.base.library_loader.LibraryProcessType;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.ShortcutHelper;
@@ -30,6 +30,8 @@ import org.chromium.chrome.browser.notifications.NotificationUmaTracker;
 import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
 import org.chromium.chrome.browser.ntp.snippets.ContentSuggestionsNotificationAction;
 import org.chromium.chrome.browser.ntp.snippets.ContentSuggestionsNotificationOptOut;
+import org.chromium.content.browser.BrowserStartupController;
+import org.chromium.content.browser.BrowserStartupController.StartupCallback;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -417,19 +419,31 @@ public class ContentSuggestionsNotificationHelper {
                 .putInt(PREF_CACHED_CONSECUTIVE_IGNORED, consecutiveIgnored)
                 .apply();
 
-        if (LibraryLoader.isInitialized()) {
-            flushCachedMetrics();
-        }
+        flushCachedMetrics();
     }
 
     /**
      * Invokes nativeReceiveFlushedMetrics() with cached metrics and resets them.
      *
-     * It may be called from either native or Java code, as long as the native libray is loaded.
+     * It may be called from either native or Java code. If the browser has not been started-up, or
+     * startup has not completed (as when the native component flushes metrics during creation of
+     * the keyed service) the flush will be deferred until startup is complete.
      */
     @CalledByNative
     private static void flushCachedMetrics() {
-        assert LibraryLoader.isInitialized();
+        BrowserStartupController browserStartup =
+                BrowserStartupController.get(LibraryProcessType.PROCESS_BROWSER);
+        if (!browserStartup.isStartupSuccessfullyCompleted()) {
+            browserStartup.addStartupCompletedObserver(new StartupCallback() {
+                @Override
+                public void onSuccess(boolean alreadyStarted) {
+                    flushCachedMetrics();
+                }
+                @Override
+                public void onFailure() {}
+            });
+            return;
+        }
 
         SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
         int tapCount = prefs.getInt(PREF_CACHED_ACTION_TAP, 0);

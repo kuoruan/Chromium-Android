@@ -107,4 +107,12 @@ public interface TabModelObserver {
      * @param tab The tab that has been removed.
      */
     void tabRemoved(Tab tab);
+
+    /**
+     * Called when a new tab may be added to the model soon and after a new tab is no longer
+     * pending addition.
+     *
+     * @param isPendingTabAdd Whether a new tab is pending addition to this model.
+     */
+    void pendingTabAdd(boolean isPendingTabAdd);
 }

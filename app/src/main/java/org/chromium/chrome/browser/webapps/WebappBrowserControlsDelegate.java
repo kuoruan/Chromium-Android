@@ -20,16 +20,16 @@ class WebappBrowserControlsDelegate extends TabStateBrowserControlsVisibilityDel
     }
 
     @Override
-    public boolean isShowingBrowserControlsEnabled() {
-        if (!super.isShowingBrowserControlsEnabled()) return false;
+    public boolean canShowBrowserControls() {
+        if (!super.canShowBrowserControls()) return false;
 
         return shouldShowBrowserControls(
                 mActivity.getWebappInfo(), mTab.getUrl(), mTab.getSecurityLevel());
     }
 
     @Override
-    public boolean isHidingBrowserControlsEnabled() {
-        return !isShowingBrowserControlsEnabled();
+    public boolean canAutoHideBrowserControls() {
+        return false;
     }
 
     /**

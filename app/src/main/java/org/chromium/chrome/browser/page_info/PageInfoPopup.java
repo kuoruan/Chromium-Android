@@ -90,11 +90,12 @@ import java.util.List;
  */
 public class PageInfoPopup implements OnClickListener {
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({OPENED_FROM_MENU, OPENED_FROM_TOOLBAR})
+    @IntDef({OPENED_FROM_MENU, OPENED_FROM_TOOLBAR, OPENED_FROM_VR})
     private @interface OpenedFromSource {}
 
     public static final int OPENED_FROM_MENU = 1;
     public static final int OPENED_FROM_TOOLBAR = 2;
+    public static final int OPENED_FROM_VR = 3;
 
     /**
      * An entry in the settings dropdown for a given permission. There are two options for each
@@ -387,7 +388,11 @@ public class PageInfoPopup implements OnClickListener {
         setVisibilityOfPermissionsList(false);
 
         // Work out the URL and connection message and status visibility.
-        mFullUrl = mTab.getWebContents().getVisibleUrl();
+        mFullUrl = mTab.getOriginalUrl();
+
+        // This can happen if an invalid chrome-distiller:// url was entered.
+        if (mFullUrl == null) mFullUrl = "";
+
         if (isShowingOfflinePage()) {
             mFullUrl = OfflinePageUtils.stripSchemeFromOnlineUrl(mFullUrl);
         }
@@ -621,12 +626,12 @@ public class PageInfoPopup implements OnClickListener {
             }
         }
 
-        // The subresource filter permission requires an additional static subtitle.
-        if (permission.type == ContentSettingsType.CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER) {
+        // The ads permission requires an additional static subtitle.
+        if (permission.type == ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS) {
             TextView permissionSubtitle =
                     (TextView) permissionRow.findViewById(R.id.page_info_permission_subtitle);
             permissionSubtitle.setVisibility(View.VISIBLE);
-            permissionSubtitle.setText(R.string.page_info_permission_subresource_filter_subtitle);
+            permissionSubtitle.setText(R.string.page_info_permission_ads_subtitle);
         }
 
         TextView permissionStatus = (TextView) permissionRow.findViewById(
@@ -997,6 +1002,8 @@ public class PageInfoPopup implements OnClickListener {
             RecordUserAction.record("MobileWebsiteSettingsOpenedFromMenu");
         } else if (source == OPENED_FROM_TOOLBAR) {
             RecordUserAction.record("MobileWebsiteSettingsOpenedFromToolbar");
+        } else if (source == OPENED_FROM_VR) {
+            RecordUserAction.record("MobileWebsiteSettingsOpenedFromVR");
         } else {
             assert false : "Invalid source passed";
         }

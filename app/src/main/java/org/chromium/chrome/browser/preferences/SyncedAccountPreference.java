@@ -11,7 +11,7 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 
 import org.chromium.chrome.R;
-import org.chromium.components.signin.AccountManagerHelper;
+import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.components.signin.ChromeSigninController;
 import org.chromium.components.sync.AndroidSyncSettings;
 
@@ -47,7 +47,7 @@ public class SyncedAccountPreference extends ListPreference {
             // signed in account
         }
 
-        Account[] accounts = AccountManagerHelper.get().getGoogleAccounts();
+        Account[] accounts = AccountManagerFacade.get().tryGetGoogleAccounts();
         String[] accountNames = new String[accounts.length];
         String[] accountValues = new String[accounts.length];
 

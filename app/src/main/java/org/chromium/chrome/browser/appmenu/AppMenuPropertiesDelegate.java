@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.appmenu;
 
 import android.content.Context;
 import android.content.pm.ResolveInfo;
+import android.content.res.Resources;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
@@ -43,12 +44,6 @@ import java.util.concurrent.TimeUnit;
  * App Menu helper that handles hiding and showing menu items based on activity state.
  */
 public class AppMenuPropertiesDelegate {
-    // Indices for different levels in drawable.btn_reload_stop.
-    // Used only when preparing menu and refresh reload button in menu when tab
-    // page load status changes.
-    static final int RELOAD_BUTTON_LEVEL_RELOAD = 0;
-    static final int RELOAD_BUTTON_LEVEL_STOP_LOADING = 1;
-
     protected MenuItem mReloadMenuItem;
 
     protected final ChromeActivity mActivity;
@@ -80,6 +75,8 @@ public class AppMenuPropertiesDelegate {
         boolean isPageMenu;
         boolean isOverviewMenu;
         boolean isTabletEmptyModeMenu;
+        boolean isBottomSheetNtpMenu =
+                mActivity.getBottomSheet() != null && mActivity.getBottomSheet().isShowingNewTab();
 
         boolean isOverview = mActivity.isInOverviewMode();
         boolean isIncognito = mActivity.getCurrentTabModel().isIncognito();
@@ -92,13 +89,14 @@ public class AppMenuPropertiesDelegate {
             isOverviewMenu = hasTabs && isOverview;
             isTabletEmptyModeMenu = !hasTabs;
         } else {
-            isPageMenu = !isOverview;
-            isOverviewMenu = isOverview;
+            isPageMenu = !isBottomSheetNtpMenu && !isOverview;
+            isOverviewMenu = !isBottomSheetNtpMenu && isOverview;
             isTabletEmptyModeMenu = false;
         }
 
         menu.setGroupVisible(R.id.PAGE_MENU, isPageMenu);
         menu.setGroupVisible(R.id.OVERVIEW_MODE_MENU, isOverviewMenu);
+        menu.setGroupVisible(R.id.BOTTOM_SHEET_NTP_MENU, isBottomSheetNtpMenu);
         menu.setGroupVisible(R.id.TABLET_EMPTY_MODE_MENU, isTabletEmptyModeMenu);
 
         if (isPageMenu && currentTab != null) {
@@ -183,10 +181,7 @@ public class AppMenuPropertiesDelegate {
                     && !isChromeScheme && !isFileScheme && !isContentScheme && !isIncognito;
             prepareAddToHomescreenMenuItem(menu, currentTab, canShowHomeScreenMenuItem);
 
-            // Hide request desktop site on all chrome:// pages except for the NTP. Check request
-            // desktop site if it's activated on this page.
-            MenuItem requestItem = menu.findItem(R.id.request_desktop_site_id);
-            updateRequestDesktopSiteMenuItem(requestItem, currentTab);
+            updateRequestDesktopSiteMenuItem(menu, currentTab);
 
             // Only display reader mode settings menu option if the current page is in reader mode.
             menu.findItem(R.id.reader_mode_prefs_id)
@@ -219,12 +214,17 @@ public class AppMenuPropertiesDelegate {
             }
         }
 
+        if (isBottomSheetNtpMenu) {
+            disableEnableMenuItem(menu, R.id.recent_tabs_menu_id, !isIncognito, true, false);
+            disableEnableMenuItem(menu, R.id.new_tab_menu_id, isIncognito, true, false);
+        }
+
+        boolean incognitoMenuItemVisible = !isBottomSheetNtpMenu || !isIncognito;
         // Disable new incognito tab when it is blocked (e.g. by a policy).
         // findItem(...).setEnabled(...)" is not enough here, because of the inflated
         // main_menu.xml contains multiple items with the same id in different groups
         // e.g.: new_incognito_tab_menu_id.
-        disableEnableMenuItem(menu, R.id.new_incognito_tab_menu_id,
-                true,
+        disableEnableMenuItem(menu, R.id.new_incognito_tab_menu_id, incognitoMenuItemVisible,
                 PrefServiceBridge.getInstance().isIncognitoModeEnabled(),
                 PrefServiceBridge.getInstance().isIncognitoModeManaged());
         mActivity.prepareMenu(menu);
@@ -235,13 +235,13 @@ public class AppMenuPropertiesDelegate {
      * @param menu The {@link AppMenu} that was shown.
      */
     public void onShow(final AppMenu menu) {
-        View promptView = menu.getPromptView();
-        if (!(promptView instanceof AppMenuIconRowFooter)) {
+        View footerView = menu.getFooterView();
+        if (!(footerView instanceof AppMenuIconRowFooter)) {
             mAppMenuIconRowFooter = null;
             return;
         }
 
-        mAppMenuIconRowFooter = (AppMenuIconRowFooter) promptView;
+        mAppMenuIconRowFooter = (AppMenuIconRowFooter) footerView;
         mAppMenuIconRowFooter.initialize(mActivity, menu, mBookmarkBridge);
     }
 
@@ -291,8 +291,10 @@ public class AppMenuPropertiesDelegate {
      */
     public void loadingStateChanged(boolean isLoading) {
         if (mReloadMenuItem != null) {
+            Resources resources = mActivity.getResources();
             mReloadMenuItem.getIcon().setLevel(isLoading
-                    ? RELOAD_BUTTON_LEVEL_STOP_LOADING : RELOAD_BUTTON_LEVEL_RELOAD);
+                            ? resources.getInteger(R.integer.reload_button_level_stop)
+                            : resources.getInteger(R.integer.reload_button_level_reload));
             mReloadMenuItem.setTitle(isLoading
                     ? R.string.accessibility_btn_stop_loading : R.string.accessibility_btn_refresh);
         } else if (mAppMenuIconRowFooter != null) {
@@ -370,20 +372,29 @@ public class AppMenuPropertiesDelegate {
     }
 
     /**
-     * Updates the request desktop site item's visibility
+     * Updates the request desktop site item's state.
      *
      * @param requstMenuItem {@link MenuItem} for request desktop site.
      * @param currentTab      Current tab being displayed.
      */
-    protected void updateRequestDesktopSiteMenuItem(
-            MenuItem requstMenuItem, Tab currentTab) {
+    protected void updateRequestDesktopSiteMenuItem(Menu menu, Tab currentTab) {
+        MenuItem requestMenuRow = menu.findItem(R.id.request_desktop_site_row_menu_id);
+        MenuItem requestMenuLabel = menu.findItem(R.id.request_desktop_site_id);
+        MenuItem requestMenuCheck = menu.findItem(R.id.request_desktop_site_check_id);
+
+        // Hide request desktop site on all chrome:// pages except for the NTP.
         String url = currentTab.getUrl();
         boolean isChromeScheme = url.startsWith(UrlConstants.CHROME_URL_PREFIX)
                 || url.startsWith(UrlConstants.CHROME_NATIVE_URL_PREFIX);
-        requstMenuItem.setVisible(!isChromeScheme || currentTab.isNativePage());
-        requstMenuItem.setChecked(currentTab.getUseDesktopUserAgent());
-        requstMenuItem.setTitleCondensed(requstMenuItem.isChecked()
-                ? mActivity.getString(R.string.menu_request_desktop_site_on)
-                : mActivity.getString(R.string.menu_request_desktop_site_off));
+        requestMenuRow.setVisible(!isChromeScheme || currentTab.isNativePage());
+
+        // Mark the checkbox if RDS is activated on this page.
+        requestMenuCheck.setChecked(currentTab.getUseDesktopUserAgent());
+
+        // This title doesn't seem to be displayed by Android, but it is used to set up
+        // accessibility text in {@link AppMenuAdapter#setupMenuButton}.
+        requestMenuLabel.setTitleCondensed(requestMenuLabel.isChecked()
+                        ? mActivity.getString(R.string.menu_request_desktop_site_on)
+                        : mActivity.getString(R.string.menu_request_desktop_site_off));
     }
 }

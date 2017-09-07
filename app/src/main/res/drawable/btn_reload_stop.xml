@@ -4,6 +4,10 @@
      found in the LICENSE file. -->
 
 <level-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:maxLevel="0" android:drawable="@drawable/btn_toolbar_reload" />
-    <item android:maxLevel="1" android:drawable="@drawable/btn_close" />
+    <item
+        android:maxLevel="@integer/reload_button_level_reload"
+        android:drawable="@drawable/btn_toolbar_reload" />
+    <item
+        android:maxLevel="@integer/reload_button_level_stop"
+        android:drawable="@drawable/btn_close" />
 </level-list>

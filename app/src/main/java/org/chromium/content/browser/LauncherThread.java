@@ -42,6 +42,10 @@ public final class LauncherThread {
         return sHandler.getLooper() == Looper.myLooper();
     }
 
+    public static Handler getHandler() {
+        return sHandler;
+    }
+
     @VisibleForTesting
     public static void setCurrentThreadAsLauncherThread() {
         sHandler = new Handler();

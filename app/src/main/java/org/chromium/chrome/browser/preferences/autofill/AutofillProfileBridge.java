@@ -101,12 +101,12 @@ public class AutofillProfileBridge {
     }
 
     /** @return The list of admin areas sorted by their localized display names. */
-    public static List<DropdownKeyValue> getAdminAreaDropdownList(String[] keys) {
+    public static List<DropdownKeyValue> getAdminAreaDropdownList(
+            String[] adminAreaCodes, String[] adminAreaNames) {
         List<DropdownKeyValue> adminAreas = new ArrayList<>();
 
-        for (int i = 0; i < keys.length; ++i) {
-            // TODO (parastoog): show names, save keys. @crbug.com/691643
-            adminAreas.add(new DropdownKeyValue(keys[i], keys[i]));
+        for (int i = 0; i < adminAreaCodes.length; ++i) {
+            adminAreas.add(new DropdownKeyValue(adminAreaCodes[i], adminAreaNames[i]));
         }
 
         final Collator collator = Collator.getInstance(Locale.getDefault());

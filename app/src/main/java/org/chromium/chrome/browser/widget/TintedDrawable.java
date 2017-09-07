@@ -69,13 +69,6 @@ public class TintedDrawable extends BitmapDrawable {
         return drawable;
     }
 
-    /**
-     * Factory method for creating a {@link TintedDrawable} with a {@link Bitmap} icon.
-     */
-    public static TintedDrawable constructTintedDrawable(Resources res, Bitmap icon) {
-        return new TintedDrawable(res, icon);
-    }
-
     private boolean updateTintColor() {
         if (mTint == null) return false;
         setColorFilter(mTint.getColorForState(getState(), 0), PorterDuff.Mode.SRC_IN);

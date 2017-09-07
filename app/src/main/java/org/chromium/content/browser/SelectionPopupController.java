@@ -93,6 +93,9 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
     private final RenderCoordinates mRenderCoordinates;
     private ActionMode.Callback mCallback;
 
+    // Used to customize PastePopupMenu
+    private ActionMode.Callback mNonSelectionCallback;
+
     // Selection rectangle in DIP.
     private final Rect mSelectionRect = new Rect();
 
@@ -111,15 +114,14 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
 
     private boolean mEditable;
     private boolean mIsPasswordType;
-    private boolean mIsInsertion;
+    private boolean mIsInsertionForTesting;
     private boolean mCanSelectAllForPastePopup;
-    private boolean mCanEditRichlyForPastePopup;
+    private boolean mCanEditRichly;
 
     private boolean mUnselectAllOnDismiss;
     private String mLastSelectedText;
 
-    // Tracks whether a selection is currently active.  When applied to selected text, indicates
-    // whether the last selected text is still highlighted.
+    // Tracks whether a touch selection is currently active.
     private boolean mHasSelection;
 
     // Lazily created paste popup menu, triggered either via long press in an
@@ -176,6 +178,7 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         mSelectionClient =
                 SmartSelectionClient.create(new SmartSelectionCallback(), window, webContents);
 
+        mLastSelectedText = "";
         // TODO(timav): Use android.R.id.textAssist for the Assist item id once we switch to
         // Android O SDK and remove |mAssistMenuItemId|.
         if (BuildInfo.isAtLeastO()) {
@@ -208,6 +211,10 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         mCallback = callback;
     }
 
+    void setNonSelectionCallback(ActionMode.Callback callback) {
+        mNonSelectionCallback = callback;
+    }
+
     @Override
     public boolean isActionModeValid() {
         return mActionMode != null;
@@ -221,6 +228,33 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
     @Override
     public void setAllowedMenuItems(int allowedMenuItems) {
         mAllowedMenuItems = allowedMenuItems;
+    }
+
+    @CalledByNative
+    private void showSelectionMenu(int left, int top, int right, int bottom, boolean isEditable,
+            boolean isPasswordType, String selectionText, boolean canSelectAll,
+            boolean canRichlyEdit, boolean shouldSuggest) {
+        mSelectionRect.set(left, top, right, bottom);
+        mEditable = isEditable;
+        mLastSelectedText = selectionText;
+        mHasSelection = selectionText.length() != 0;
+        mIsPasswordType = isPasswordType;
+        mCanSelectAllForPastePopup = canSelectAll;
+        mCanEditRichly = canRichlyEdit;
+        mUnselectAllOnDismiss = true;
+        if (hasSelection()) {
+            if (mSelectionClient != null
+                    && mSelectionClient.requestSelectionPopupUpdates(shouldSuggest)) {
+                // Rely on |mSelectionClient| sending a classification request and the request
+                // always calling onClassified() callback.
+                mPendingShowActionMode = true;
+            } else {
+                showActionModeOrClearOnFailure();
+            }
+
+        } else {
+            createAndShowPastePopup();
+        }
     }
 
     /**
@@ -268,17 +302,13 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         return actionMode;
     }
 
-    void createAndShowPastePopup(
-            int left, int top, int right, int bottom, boolean canSelectAll, boolean canEditRichly) {
+    private void createAndShowPastePopup() {
         if (mView.getParent() == null || mView.getVisibility() != View.VISIBLE) {
             return;
         }
 
-        if (!supportsFloatingActionMode() && !canPaste()) return;
+        if (!supportsFloatingActionMode() && !canPaste() && mNonSelectionCallback == null) return;
         destroyPastePopup();
-        mSelectionRect.set(left, top, right, bottom);
-        mCanSelectAllForPastePopup = canSelectAll;
-        mCanEditRichlyForPastePopup = canEditRichly;
         PastePopupMenuDelegate delegate = new PastePopupMenuDelegate() {
             @Override
             public void paste() {
@@ -315,7 +345,8 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         Context windowContext = mWindowAndroid.getContext().get();
         if (windowContext == null) return;
         if (supportsFloatingActionMode()) {
-            mPastePopupMenu = new FloatingPastePopupMenu(windowContext, mView, delegate);
+            mPastePopupMenu = new FloatingPastePopupMenu(
+                    windowContext, mView, delegate, mNonSelectionCallback);
         } else {
             mPastePopupMenu = new LegacyPastePopupMenu(windowContext, mView, delegate);
         }
@@ -476,7 +507,14 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         mActionMenuDescriptor = createActionMenuDescriptor();
         mActionMenuDescriptor.apply(menu);
 
-        if (isInsertion() || isSelectionPassword()) return;
+        // TODO(ctzsm): Remove runtime title set after O SDK rolls.
+        MenuItem item = menu.findItem(R.id.select_action_menu_paste_as_plain_text);
+        if (item != null) {
+            item.setTitle(mContext.getResources().getIdentifier(
+                    "paste_as_plain_text", "string", "android"));
+        }
+
+        if (!hasSelection() || isSelectionPassword()) return;
 
         initializeTextProcessingMenu(menu);
     }
@@ -486,15 +524,16 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
 
         updateAssistMenuItem(descriptor);
 
-        // TODO(ctzsm): Remove "paste as plain text" for now, need to add it back when
-        // crrev.com/2785853002 landed.
-        descriptor.removeItem(R.id.select_action_menu_paste_as_plain_text);
-
         if (!isSelectionEditable() || !canPaste()) {
             descriptor.removeItem(R.id.select_action_menu_paste);
+            descriptor.removeItem(R.id.select_action_menu_paste_as_plain_text);
         }
 
-        if (isInsertion()) {
+        if (!canPasteAsPlainText()) {
+            descriptor.removeItem(R.id.select_action_menu_paste_as_plain_text);
+        }
+
+        if (!hasSelection()) {
             descriptor.removeItem(R.id.select_action_menu_select_all);
             descriptor.removeItem(R.id.select_action_menu_cut);
             descriptor.removeItem(R.id.select_action_menu_copy);
@@ -556,7 +595,7 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         // String resource "paste_as_plain_text" only exist in O.
         // Also this is an O feature, we need to make it consistant with TextView.
         if (!BuildInfo.isAtLeastO()) return false;
-        if (!mCanEditRichlyForPastePopup) return false;
+        if (!mCanEditRichly) return false;
         ClipboardManager clipMgr =
                 (ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
         if (!clipMgr.hasPrimaryClip()) return false;
@@ -647,6 +686,9 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         } else if (id == R.id.select_action_menu_paste) {
             paste();
             mode.finish();
+        } else if (BuildInfo.isAtLeastO() && id == R.id.select_action_menu_paste_as_plain_text) {
+            pasteAsPlainText();
+            mode.finish();
         } else if (id == R.id.select_action_menu_share) {
             share();
             mode.finish();
@@ -731,8 +773,6 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
     void selectAll() {
         mWebContents.selectAll();
         mClassificationResult = null;
-        if (needsActionMenuUpdate()) showActionModeOrClearOnFailure();
-
         // Even though the above statement logged a SelectAll user action, we want to
         // track whether the focus was in an editable field, so log that too.
         if (isSelectionEditable()) {
@@ -860,8 +900,8 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
      * @return true if the current selection is an insertion point.
      */
     @VisibleForTesting
-    public boolean isInsertion() {
-        return mIsInsertion;
+    public boolean isInsertionForTesting() {
+        return mIsInsertionForTesting;
     }
 
     /**
@@ -934,17 +974,6 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         if (top == bottom) ++bottom;
         switch (eventType) {
             case SelectionEventType.SELECTION_HANDLES_SHOWN:
-                mSelectionRect.set(left, top, right, bottom);
-                mHasSelection = true;
-                mUnselectAllOnDismiss = true;
-                if (mSelectionClient != null
-                        && mSelectionClient.requestSelectionPopupUpdates(true /* suggest */)) {
-                    // Rely on |mSelectionClient| sending a classification request and the request
-                    // always calling onClassified() callback.
-                    mPendingShowActionMode = true;
-                } else {
-                    showActionModeOrClearOnFailure();
-                }
                 break;
 
             case SelectionEventType.SELECTION_HANDLES_MOVED:
@@ -957,6 +986,7 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
                 break;
 
             case SelectionEventType.SELECTION_HANDLES_CLEARED:
+                mLastSelectedText = "";
                 mHasSelection = false;
                 mUnselectAllOnDismiss = false;
                 mSelectionRect.setEmpty();
@@ -969,18 +999,12 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
                 break;
 
             case SelectionEventType.SELECTION_HANDLE_DRAG_STOPPED:
-                if (mSelectionClient != null
-                        && mSelectionClient.requestSelectionPopupUpdates(false /* suggest */)) {
-                    // Rely on |mSelectionClient| sending a classification request and the request
-                    // always calling onClassified() callback.
-                } else {
-                    hideActionMode(false);
-                }
+                mWebContents.showContextMenuAtTouchHandle(left, bottom);
                 break;
 
             case SelectionEventType.INSERTION_HANDLE_SHOWN:
                 mSelectionRect.set(left, top, right, bottom);
-                mIsInsertion = true;
+                mIsInsertionForTesting = true;
                 break;
 
             case SelectionEventType.INSERTION_HANDLE_MOVED:
@@ -996,14 +1020,15 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
                 if (mWasPastePopupShowingOnInsertionDragStart) {
                     destroyPastePopup();
                 } else {
-                    mWebContents.showContextMenuAtPoint(mSelectionRect.left, mSelectionRect.bottom);
+                    mWebContents.showContextMenuAtTouchHandle(
+                            mSelectionRect.left, mSelectionRect.bottom);
                 }
                 mWasPastePopupShowingOnInsertionDragStart = false;
                 break;
 
             case SelectionEventType.INSERTION_HANDLE_CLEARED:
                 destroyPastePopup();
-                mIsInsertion = false;
+                mIsInsertionForTesting = false;
                 mSelectionRect.setEmpty();
                 break;
 
@@ -1014,7 +1039,8 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
 
             case SelectionEventType.INSERTION_HANDLE_DRAG_STOPPED:
                 if (mWasPastePopupShowingOnInsertionDragStart) {
-                    mWebContents.showContextMenuAtPoint(mSelectionRect.left, mSelectionRect.bottom);
+                    mWebContents.showContextMenuAtTouchHandle(
+                            mSelectionRect.left, mSelectionRect.bottom);
                 }
                 mWasPastePopupShowingOnInsertionDragStart = false;
                 break;
@@ -1059,13 +1085,15 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         assert !mHidden;
     }
 
-    void onShowUnhandledTapUIIfNeeded(int x, int y) {
+    @CalledByNative
+    private void onShowUnhandledTapUIIfNeeded(int x, int y) {
         if (mSelectionClient != null) {
             mSelectionClient.showUnhandledTapUIIfNeeded(x, y);
         }
     }
 
-    void onSelectWordAroundCaretAck(boolean didSelect, int startAdjust, int endAdjust) {
+    @CalledByNative
+    private void onSelectWordAroundCaretAck(boolean didSelect, int startAdjust, int endAdjust) {
         if (mSelectionClient != null) {
             mSelectionClient.selectWordAroundCaretAck(didSelect, startAdjust, endAdjust);
         }
@@ -1100,7 +1128,7 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
 
     @Override
     public String getSelectedText() {
-        return hasSelection() ? mLastSelectedText : "";
+        return mLastSelectedText;
     }
 
     private boolean isShareAvailable() {

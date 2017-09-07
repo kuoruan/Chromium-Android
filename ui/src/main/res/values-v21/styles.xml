@@ -11,4 +11,8 @@
     <style name="ButtonCompatBorderless" parent="ButtonCompat">
         <item name="android:background">@drawable/button_borderless_compat</item>
     </style>
+
+    <style name="RobotoMediumStyle">
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
 </resources>

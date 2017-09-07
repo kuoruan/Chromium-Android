@@ -67,6 +67,7 @@
                   android:width="50sp"
                   android:maxLength="2"
                   android:gravity="center_horizontal"
+                  android:imeOptions="actionNext"
                   android:inputType="number"
                   android:hint="@string/card_unmask_month_hint" />
 
@@ -82,6 +83,7 @@
                   android:width="50sp"
                   android:maxLength="2"
                   android:gravity="center_horizontal"
+                  android:imeOptions="actionNext"
                   android:inputType="number"
                   android:hint="@string/card_unmask_year_hint" />
             </LinearLayout>
@@ -93,6 +95,7 @@
                 android:layout_width="wrap_content"
                 android:layout_marginStart="16dp"
                 android:ems="5"
+                android:imeOptions="actionDone"
                 android:hint="@string/card_unmask_input_hint" />
 
             <ImageView

@@ -33,12 +33,12 @@ public class BottomSheetMetrics extends EmptyBottomSheetObserver {
     private static final int OPENED_BY_BOUNDARY = 4;
 
     /** The different ways that the bottom sheet can be closed. */
-    @IntDef({CLOSED_BY_NONE, CLOSED_BY_SWIPE, CLOSED_BY_NTP_CLOSE_BUTTON, CLOSED_BY_TAP_SCRIM,
+    @IntDef({CLOSED_BY_NONE, CLOSED_BY_SWIPE, CLOSED_BY_BACK_PRESS, CLOSED_BY_TAP_SCRIM,
             CLOSED_BY_NAVIGATION})
     public @interface SheetCloseReason {}
     private static final int CLOSED_BY_NONE = -1;
     public static final int CLOSED_BY_SWIPE = 0;
-    public static final int CLOSED_BY_NTP_CLOSE_BUTTON = 1;
+    public static final int CLOSED_BY_BACK_PRESS = 1;
     public static final int CLOSED_BY_TAP_SCRIM = 2;
     public static final int CLOSED_BY_NAVIGATION = 3;
 
@@ -176,8 +176,8 @@ public class BottomSheetMetrics extends EmptyBottomSheetObserver {
             case CLOSED_BY_SWIPE:
                 RecordUserAction.record("Android.ChromeHome.ClosedBySwipe");
                 break;
-            case CLOSED_BY_NTP_CLOSE_BUTTON:
-                RecordUserAction.record("Android.ChromeHome.ClosedByNTPCloseButton");
+            case CLOSED_BY_BACK_PRESS:
+                RecordUserAction.record("Android.ChromeHome.ClosedByBackPress");
                 break;
             case CLOSED_BY_TAP_SCRIM:
                 RecordUserAction.record("Android.ChromeHome.ClosedByTapScrim");
@@ -191,5 +191,13 @@ public class BottomSheetMetrics extends EmptyBottomSheetObserver {
             default:
                 assert false;
         }
+    }
+
+    /**
+     * Records that a user navigation instructed the NativePageFactory to create a native page for
+     * the NTP. This may occur if the user has NTP URLs in a tab's navigation history.
+     */
+    public void recordNativeNewTabPageShown() {
+        RecordUserAction.record("Android.ChromeHome.NativeNTPShown");
     }
 }

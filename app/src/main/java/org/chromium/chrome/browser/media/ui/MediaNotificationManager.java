@@ -853,6 +853,7 @@ public class MediaNotificationManager {
         manager.cancel(mMediaNotificationInfo.id);
 
         if (mMediaSession != null) {
+            mMediaSession.setMediaButtonReceiver(null);
             mMediaSession.setCallback(null);
             mMediaSession.setActive(false);
             mMediaSession.release();

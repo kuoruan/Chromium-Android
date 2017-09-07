@@ -187,16 +187,16 @@ public final class CodedInputByteBufferNano {
   /** Read a {@code string} field value from the stream. */
   public String readString() throws IOException {
     final int size = readRawVarint32();
-    if (size <= (bufferSize - bufferPos) && size > 0) {
-      // Fast path:  We already have the bytes in a contiguous buffer, so
-      //   just copy directly from it.
-      final String result = new String(buffer, bufferPos, size, "UTF-8");
-      bufferPos += size;
-      return result;
-    } else {
-      // Slow path:  Build a byte array first then copy it.
-      return new String(readRawBytes(size), "UTF-8");
+    if (size < 0) {
+      throw InvalidProtocolBufferNanoException.negativeSize();
     }
+    if (size > (bufferSize - bufferPos)) {
+      throw InvalidProtocolBufferNanoException.truncatedMessage();
+    }
+
+    final String result = new String(buffer, bufferPos, size, "UTF-8");
+    bufferPos += size;
+    return result;
   }
 
   /** Read a {@code group} field value from the stream. */
@@ -229,19 +229,20 @@ public final class CodedInputByteBufferNano {
   /** Read a {@code bytes} field value from the stream. */
   public byte[] readBytes() throws IOException {
     final int size = readRawVarint32();
-    if (size <= (bufferSize - bufferPos) && size > 0) {
-      // Fast path:  We already have the bytes in a contiguous buffer, so
-      //   just copy directly from it.
-      final byte[] result = new byte[size];
-      System.arraycopy(buffer, bufferPos, result, 0, size);
-      bufferPos += size;
-      return result;
-    } else if (size == 0) {
-      return WireFormatNano.EMPTY_BYTES;
-    } else {
-      // Slow path:  Build a byte array first then copy it.
-      return readRawBytes(size);
+    if (size < 0) {
+      throw InvalidProtocolBufferNanoException.negativeSize();
     }
+    if (size == 0) {
+      return WireFormatNano.EMPTY_BYTES;
+    }
+    if (size > (bufferSize - bufferPos)) {
+      throw InvalidProtocolBufferNanoException.truncatedMessage();
+    }
+
+    final byte[] result = new byte[size];
+    System.arraycopy(buffer, bufferPos, result, 0, size);
+    bufferPos += size;
+    return result;
   }
 
   /** Read a {@code uint32} field value from the stream. */

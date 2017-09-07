@@ -180,8 +180,9 @@ public interface NavigationController {
     /**
      * Copies the navigation state from the given controller to this one. This one should be empty.
      * @param source A source of the navigation state
+     * @param needsReload Indicates whether a reload needs to happen when activated.
      */
-    public void copyStateFrom(NavigationController source);
+    public void copyStateFrom(NavigationController source, boolean needsReload);
 
     /**
      * A variant of CopyStateFrom. Removes all entries from this except the last committed entry,

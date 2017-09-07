@@ -12,6 +12,8 @@ import android.widget.TextView;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel;
+import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.StateChangeReason;
 import org.chromium.chrome.browser.dom_distiller.ReaderModeManager;
 import org.chromium.chrome.browser.tab.Tab;
 
@@ -20,8 +22,19 @@ import org.chromium.chrome.browser.tab.Tab;
  * {@link OverlayPanel} implementation when Chrome Home is enabled.
  */
 public class ReaderModeInfoBar extends InfoBar {
-    /** A handle to the {@link ReaderModeManager} to trigger page navigations. */
-    private static ReaderModeManager sManager;
+    /** If the infobar has started hiding. */
+    private boolean mIsHiding;
+
+    /**
+     * Navigate to Reader Mode when the icon or the message text is clicked.
+     */
+    private View.OnClickListener mNavigateListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (getReaderModeManager() == null || mIsHiding) return;
+            getReaderModeManager().navigateToReaderMode();
+        }
+    };
 
     /**
      * Default constructor.
@@ -36,40 +49,53 @@ public class ReaderModeInfoBar extends InfoBar {
     }
 
     @Override
+    protected void onStartedHiding() {
+        mIsHiding = true;
+    }
+
+    @Override
     protected void createCompactLayoutContent(InfoBarCompactLayout layout) {
         TextView prompt = new TextView(getContext());
         prompt.setText(R.string.reader_view_text);
-        prompt.setSingleLine();
         prompt.setTextSize(TypedValue.COMPLEX_UNIT_PX,
                 getContext().getResources().getDimension(R.dimen.infobar_text_size));
         prompt.setTextColor(
                 ApiCompatibilityUtils.getColor(layout.getResources(), R.color.default_text_color));
         prompt.setGravity(Gravity.CENTER_VERTICAL);
+        prompt.setOnClickListener(mNavigateListener);
 
-        prompt.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // TODO(mdjones): Trigger navigation from manager.
-            }
-        });
-
+        layout.findViewById(R.id.infobar_icon).setOnClickListener(mNavigateListener);
+        final int messagePadding = getContext().getResources().getDimensionPixelOffset(
+                R.dimen.reader_mode_infobar_text_padding);
+        prompt.setPadding(0, messagePadding, 0, messagePadding);
         layout.addContent(prompt, 1f);
     }
 
+    @Override
     public void onCloseButtonClicked() {
+        if (getReaderModeManager() != null) {
+            getReaderModeManager().onClosed(StateChangeReason.CLOSE_BUTTON);
+        }
         super.onCloseButtonClicked();
-
-        // TODO(mdjones): Notifiy the manager that the infobar was closed.
     }
 
     /**
      * Create and show the Reader Mode {@link InfoBar}.
      * @param tab The tab that the {@link InfoBar} should be shown in.
-     * @param manager The {@link ReaderModeManager} for this instance of Chrome.
      */
-    public static void showReaderModeInfoBar(Tab tab, ReaderModeManager manager) {
-        sManager = manager;
+    public static void showReaderModeInfoBar(Tab tab) {
         nativeCreate(tab);
+    }
+
+    /**
+     * @return The {@link ReaderModeManager} for this infobar.
+     */
+    private ReaderModeManager getReaderModeManager() {
+        if (getNativeInfoBarPtr() == 0) return null;
+        Tab tab = nativeGetTab(getNativeInfoBarPtr());
+
+        if (tab == null || tab.getActivity() == null) return null;
+        return tab.getActivity().getReaderModeManager();
     }
 
     /**
@@ -81,4 +107,5 @@ public class ReaderModeInfoBar extends InfoBar {
     }
 
     private static native void nativeCreate(Tab tab);
+    private native Tab nativeGetTab(long nativeReaderModeInfoBar);
 }

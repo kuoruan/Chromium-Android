@@ -6,9 +6,10 @@ package org.chromium.chrome.browser.partnerbookmarks;
 
 import android.content.ContentResolver;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteException;
 import android.net.Uri;
-import android.util.Log;
 
+import org.chromium.base.Log;
 import org.chromium.chrome.browser.UrlConstants;
 
 import java.util.NoSuchElementException;
@@ -17,8 +18,7 @@ import java.util.NoSuchElementException;
  * Imports bookmarks from partner content provider using the private provider API.
  */
 public class PartnerBookmarksProviderIterator implements PartnerBookmarksReader.BookmarkIterator {
-
-    private static final String TAG = "PartnerBookmarksProviderIterator";
+    private static final String TAG = "cr_PartnerBookmarks";
     private static final String PROVIDER_AUTHORITY = "com.android.partnerbookmarks";
     private static final Uri CONTENT_URI = new Uri.Builder()
                                                    .scheme(UrlConstants.CONTENT_SCHEME)
@@ -64,10 +64,15 @@ public class PartnerBookmarksProviderIterator implements PartnerBookmarksReader.
      */
     public static PartnerBookmarksProviderIterator createIfAvailable(
             ContentResolver contentResolver) {
-        Cursor cursor = contentResolver.query(BOOKMARKS_CONTENT_URI,
-                BOOKMARKS_PROJECTION, null, null, BOOKMARKS_SORT_ORDER);
-        if (cursor == null) return null;
-        return new PartnerBookmarksProviderIterator(cursor);
+        try {
+            Cursor cursor = contentResolver.query(
+                    BOOKMARKS_CONTENT_URI, BOOKMARKS_PROJECTION, null, null, BOOKMARKS_SORT_ORDER);
+            if (cursor == null) return null;
+            return new PartnerBookmarksProviderIterator(cursor);
+        } catch (SQLiteException ex) {
+            Log.e(TAG, "Unable to read partner bookmark database", ex);
+            return null;
+        }
     }
 
     private PartnerBookmarksProviderIterator(Cursor cursor) {

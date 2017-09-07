@@ -8,16 +8,13 @@ import android.app.Notification;
 import android.content.Context;
 import android.os.Build;
 
-import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
-
 /**
  * Builds a notification using the standard Notification.BigTextStyle layout.
  */
 public class StandardNotificationBuilder extends NotificationBuilderBase {
     private final Context mContext;
 
-    public StandardNotificationBuilder(
-            Context context, @ChannelDefinitions.ChannelId String channelId) {
+    public StandardNotificationBuilder(Context context, String channelId) {
         super(context.getResources(), channelId);
         mContext = context;
     }
@@ -58,8 +55,9 @@ public class StandardNotificationBuilder extends NotificationBuilderBase {
         if (mSettingsAction != null) {
             addActionToBuilder(builder, mSettingsAction);
         }
+        builder.setPriority(mPriority);
         builder.setDefaults(mDefaults);
-        builder.setVibrate(mVibratePattern);
+        if (mVibratePattern != null) builder.setVibrate(mVibratePattern);
         builder.setWhen(mTimestamp);
         builder.setOnlyAlertOnce(!mRenotify);
         setGroupOnBuilder(builder, mOrigin);

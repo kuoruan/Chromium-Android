@@ -7,7 +7,6 @@ package org.chromium.chrome.browser.payments.ui;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
@@ -37,6 +36,7 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.widget.DualControlLayout;
 import org.chromium.chrome.browser.widget.TintedDrawable;
+import org.chromium.ui.UiUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -479,120 +479,6 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
             ((ViewGroup.MarginLayoutParams) mTitleView.getLayoutParams()).bottomMargin =
                     newMargin;
             requestLayout();
-        }
-    }
-
-    /**
-     * Section with three extra TextViews beneath the summary to show additional shipping details.
-     *
-     * ............................................................................
-     * . TITLE                                                          |         .
-     * .................................................................|         .
-     * . LEFT SUMMARY TEXT                        |  RIGHT SUMMARY TEXT | CHEVRON .
-     * .................................................................|    or   .
-     * . EXTRA TEXT ONE                                                 |   ADD   .
-     * .................................................................|    or   .
-     * . EXTRA TEXT TWO                                                 |  CHOOSE .
-     * .................................................................|         .
-     * . EXTRA TEXT THREE                                               |         .
-     * ............................................................................
-     */
-    public static class ShippingSummarySection extends PaymentRequestSection {
-        private TextView[] mExtraTextViews;
-        private int mEditButtonState = EDIT_BUTTON_GONE;
-
-        public ShippingSummarySection(
-                Context context, String sectionName, SectionDelegate delegate) {
-            super(context, sectionName, delegate);
-            setExtraTexts(new String[] {null, null, null});
-        }
-
-        @Override
-        protected void createMainSectionContent(LinearLayout mainSectionLayout) {
-            Context context = mainSectionLayout.getContext();
-
-            mExtraTextViews = new TextView[3];
-            for (int i = 0; i < mExtraTextViews.length; i++) {
-                mExtraTextViews[i] = new TextView(context);
-                ApiCompatibilityUtils.setTextAppearance(
-                        mExtraTextViews[i], R.style.PaymentsUiSectionDefaultText);
-                mainSectionLayout.addView(
-                        mExtraTextViews[i], new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
-                                                    LayoutParams.WRAP_CONTENT));
-            }
-        }
-
-        /**
-         * Updates the View to account for the new {@link ShippingSummaryInformation} being passed
-         * in.
-         */
-        public void update(ShippingSummaryInformation info) {
-            String selectedShippingName = info.getSelectedShippingAddressLabel();
-            String selectedShippingAddress = info.getSelectedShippingAddressSublabel();
-            String selectedShippingPhone = info.getSelectedShippingAddressTertiaryLabel();
-            String selectedShippingOptionLabel = info.getSelectedShippingOptionLabel();
-
-            // Display the summary in a single line.
-            setSummaryProperties(TruncateAt.END, true /* leftIsSingleLine */,
-                    null /* rightTruncate */, false /* rightIsSingleLine */);
-            if (selectedShippingAddress == null || selectedShippingOptionLabel == null) {
-                ApiCompatibilityUtils.setTextAppearance(
-                        getSummaryLeftTextView(), R.style.PaymentsUiSectionDescriptiveText);
-                SectionUiUtils.showSectionSummaryInTextViewInSingeLine(getContext(),
-                        info.getShippingAddressSectionInfo(), getSummaryLeftTextView());
-            } else {
-                // Show the shipping name in the summary section.
-                setSummaryText(selectedShippingName, null);
-
-                // Show the shipping address, phone and option below the summary.
-                setExtraTextsProperties(
-                        new TruncateAt[] {TruncateAt.MIDDLE, TruncateAt.END, TruncateAt.END},
-                        new boolean[] {true, true, true});
-                setExtraTexts(new String[] {selectedShippingAddress, selectedShippingPhone,
-                        selectedShippingOptionLabel});
-            }
-        }
-
-        /**
-         * Sets the CharSequences that are displayed in the extra TextViews.
-         *
-         * @param extraTexts Texts to display in the extra TextViews.
-         */
-        private void setExtraTexts(CharSequence[] extraTexts) {
-            assert extraTexts.length == mExtraTextViews.length;
-
-            for (int i = 0; i < mExtraTextViews.length; i++) {
-                mExtraTextViews[i].setText(extraTexts[i]);
-                mExtraTextViews[i].setVisibility(TextUtils.isEmpty(extraTexts[i]) ? GONE : VISIBLE);
-            }
-        }
-
-        /**
-         * Sets how the extra texts should be displayed.
-         *
-         * @param textsTruncate How to truncate the extra texts. Set the element to null to clear.
-         * @param textsAreSingleLine Whether the extra texts should be displayed in a single line.
-         */
-        private void setExtraTextsProperties(
-                TruncateAt[] textsTruncate, boolean[] textsAreSingleLine) {
-            assert textsTruncate.length == mExtraTextViews.length;
-            assert textsAreSingleLine.length == mExtraTextViews.length;
-
-            for (int i = 0; i < mExtraTextViews.length; i++) {
-                mExtraTextViews[i].setEllipsize(textsTruncate[i]);
-                mExtraTextViews[i].setSingleLine(textsAreSingleLine[i]);
-            }
-        }
-
-        /** Sets the state of the edit button. */
-        public void setEditButtonState(int state) {
-            mEditButtonState = state;
-            updateControlLayout();
-        }
-
-        @Override
-        public int getEditButtonState() {
-            return mEditButtonState;
         }
     }
 
@@ -1050,14 +936,12 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
                     ApiCompatibilityUtils.setTextAppearance(labelView, isEnabled
                             ? R.style.PaymentsUiSectionDefaultText
                             : R.style.PaymentsUiSectionDisabledText);
-                    labelView.setText(convertOptionToString(mOption,
+                    labelView.setText(convertOptionToString(mOption, false, /* excludeMainLabel */
                             mDelegate.isBoldLabelNeeded(OptionSection.this),
                             false /* singleLine */));
                     labelView.setEnabled(isEnabled);
                 } else if (mRowType == OPTION_ROW_TYPE_ADD) {
                     // Shows string saying that the user can add a new option, e.g. credit card no.
-                    String typeface = resources.getString(R.string.roboto_medium_typeface);
-                    int textStyle = resources.getInteger(R.integer.roboto_medium_textstyle);
                     int buttonHeight = resources.getDimensionPixelSize(
                             R.dimen.payments_section_add_button_height);
 
@@ -1065,7 +949,7 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
                             labelView, R.style.PaymentsUiSectionAddButtonLabel);
                     labelView.setMinimumHeight(buttonHeight);
                     labelView.setGravity(Gravity.CENTER_VERTICAL);
-                    labelView.setTypeface(Typeface.create(typeface, textStyle));
+                    labelView.setTypeface(UiUtils.createRobotoMediumTypeface());
                 } else if (mRowType == OPTION_ROW_TYPE_DESCRIPTION) {
                     // The description spans all the columns.
                     columnStart = 0;
@@ -1168,8 +1052,20 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
         /** SectionInformation that is used to populate the views in this section. */
         private SectionInformation mSectionInformation;
 
-        /** Indicates whether the summary should be a single line. */
+        /** Indicates whether the summary is displayed in a single line. */
         private boolean mSummaryInSingleLine;
+
+        /**
+         * Indicates whether the summary is set to display in a single line in DISPLAY_MODE_NORMAL
+         * by caller.
+         */
+        private boolean mSetDisplaySummaryInSingleLineInNormalMode = true;
+
+        /**
+         * Indicates whether the summary should be split to display in left and right summary
+         * text views in {@link DISPLAY_MODE_NORMAL}.
+         */
+        private boolean mSplitSummaryInDisplayModeNormal;
 
         /** Indicates whether the summary is set to R.style.PaymentsUiSectionDescriptiveText. */
         private boolean mSummaryInDescriptiveText;
@@ -1274,6 +1170,27 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
             mCanAddItems = canAddItems;
         }
 
+        /**
+         * @param singleLine If true, sets the summary text to display in a single line
+         *                   in {@link #DISPLAY_MODE_NORMAL} when there is a valid selected
+         *                   option, otherwise sets the summary text to display in multiple lines.
+         */
+        public void setDisplaySummaryInSingleLineInNormalMode(boolean singleLine) {
+            mSetDisplaySummaryInSingleLineInNormalMode = singleLine;
+        }
+
+        /**
+         * Specify whether the summary should be split to display under DISPLAY_MODE_NORMAL.
+         *
+         * @param splitSummary If true split the display of summary in the left and right
+         *                     text views in {@link DISPLAY_MODE_NORMAL}, the summary is
+         *                     split into 'label' and the rest('sublabel', 'Tertiary label').
+         *                     Otherwise the entire summary is displayed in the left text view.
+         */
+        public void setSplitSummaryInDisplayModeNormal(boolean splitSummary) {
+            mSplitSummaryInDisplayModeNormal = splitSummary;
+        }
+
         /** Updates the View to account for the new {@link SectionInformation} being passed in. */
         public void update(SectionInformation information) {
             mSectionInformation = information;
@@ -1354,9 +1271,13 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
 
         private void updateSelectedItem(PaymentOption selectedItem) {
             // Only left TextView in the summary section is used in this section.
-            // Set the summary to display in a single line when there is no selected item in this
-            // section or the display mode is DISPLAY_MODE_NORMAL.
-            if (selectedItem == null || mDisplayMode == DISPLAY_MODE_NORMAL) {
+            // Summary is displayed in multiple lines by default unless:
+            // 1. nothing is selected or
+            // 2. the display mode is DISPLAY_MODE_NORMAL without caller explicitly set to display
+            //    summary in multiple lines.
+            if (selectedItem == null
+                    || (mDisplayMode == DISPLAY_MODE_NORMAL
+                               && mSetDisplaySummaryInSingleLineInNormalMode)) {
                 if (!mSummaryInSingleLine) {
                     setSummaryProperties(TruncateAt.END, true /* leftIsSingleLine */,
                             null /* rightTruncate */, false /* rightIsSingleLine */);
@@ -1387,10 +1308,20 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
                             getSummaryLeftTextView(), R.style.PaymentsUiSectionDefaultText);
                     mSummaryInDescriptiveText = false;
                 }
-                setSummaryText(
-                        convertOptionToString(selectedItem, false /* useBoldLabel */,
-                                mSummaryInSingleLine),
-                        null);
+                // Split summary in DISPLAY_MODE_NORMAL if caller specified. The first part is
+                // displayed on the left summary text view aligned to the left. The second part is
+                // displayed on the right summary text view aligned to the right.
+                boolean splitSummary =
+                        mSplitSummaryInDisplayModeNormal && (mDisplayMode == DISPLAY_MODE_NORMAL);
+                if (splitSummary) {
+                    setSummaryText(selectedItem.getLabel(),
+                            convertOptionToString(selectedItem, true /* excludeMainLabel */,
+                                    false /* useBoldLabel */, mSummaryInSingleLine));
+                } else {
+                    setSummaryText(convertOptionToString(selectedItem, false /* excludeMainLabel */,
+                                           false /* useBoldLabel */, mSummaryInSingleLine),
+                            null);
+                }
             }
 
             updateControlLayout();
@@ -1445,17 +1376,20 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
             }
         }
 
-        private CharSequence convertOptionToString(
-                PaymentOption item, boolean useBoldLabel, boolean singleLine) {
-            SpannableStringBuilder builder = new SpannableStringBuilder(item.getLabel());
+        private CharSequence convertOptionToString(PaymentOption item, boolean excludeMainLabel,
+                boolean useBoldLabel, boolean singleLine) {
+            SpannableStringBuilder builder = new SpannableStringBuilder();
+            if (!excludeMainLabel) {
+                builder.append(item.getLabel());
+                if (useBoldLabel) {
+                    builder.setSpan(
+                            new StyleSpan(android.graphics.Typeface.BOLD), 0, builder.length(), 0);
+                }
+            }
+
             String labelSeparator = singleLine
                     ? getContext().getString(R.string.autofill_address_summary_separator)
                     : "\n";
-            if (useBoldLabel) {
-                builder.setSpan(
-                        new StyleSpan(android.graphics.Typeface.BOLD), 0, builder.length(), 0);
-            }
-
             if (!TextUtils.isEmpty(item.getSublabel())) {
                 if (builder.length() > 0) builder.append(labelSeparator);
                 builder.append(item.getSublabel());
@@ -1488,6 +1422,22 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
         @VisibleForTesting
         public TextView getOptionLabelsForTest(int labelIndex) {
             return mLabelsForTest.get(labelIndex);
+        }
+
+        /**
+         * Returns the label of the section summary.
+         */
+        @VisibleForTesting
+        public TextView getLeftSummaryLabelForTest() {
+            return getSummaryLeftTextView();
+        }
+
+        /**
+         * Returns the right summary text view.
+         */
+        @VisibleForTesting
+        public TextView getRightSummaryLabelForTest() {
+            return getSummaryRightTextView();
         }
 
         /** Returns the number of option labels. */

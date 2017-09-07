@@ -106,6 +106,7 @@ public class SpellCheckerSessionBridge implements SpellCheckerSessionListener {
 
         ArrayList<Integer> offsets = new ArrayList<Integer>();
         ArrayList<Integer> lengths = new ArrayList<Integer>();
+        ArrayList<String[]> suggestions = new ArrayList<String[]>();
 
         for (SentenceSuggestionsInfo result : results) {
             if (result == null) {
@@ -121,11 +122,24 @@ public class SpellCheckerSessionBridge implements SpellCheckerSessionListener {
                         == SuggestionsInfo.RESULT_ATTR_LOOKS_LIKE_TYPO) {
                     offsets.add(result.getOffsetAt(i));
                     lengths.add(result.getLengthAt(i));
+                    SuggestionsInfo info = result.getSuggestionsInfoAt(i);
+                    ArrayList<String> suggestions_for_word = new ArrayList<String>();
+                    for (int j = 0; j < info.getSuggestionsCount(); ++j) {
+                        String suggestion = info.getSuggestionAt(j);
+                        // Remove zero-length space from end of suggestion, if any
+                        if (suggestion.charAt(suggestion.length() - 1) == 0x200b) {
+                            suggestion = suggestion.substring(0, suggestion.length() - 1);
+                        }
+                        suggestions_for_word.add(suggestion);
+                    }
+                    suggestions.add(
+                            suggestions_for_word.toArray(new String[suggestions_for_word.size()]));
                 }
             }
         }
         nativeProcessSpellCheckResults(mNativeSpellCheckerSessionBridge,
-                convertListToArray(offsets), convertListToArray(lengths));
+                convertListToArray(offsets), convertListToArray(lengths),
+                suggestions.toArray(new String[suggestions.size()][]));
 
         RecordHistogram.recordTimesHistogram("SpellCheck.Android.Latency",
                 mStopMs - mStartMs, TimeUnit.MILLISECONDS);
@@ -147,6 +161,6 @@ public class SpellCheckerSessionBridge implements SpellCheckerSessionListener {
     @Override
     public void onGetSuggestions(SuggestionsInfo[] results) {}
 
-    private native void nativeProcessSpellCheckResults(
-            long nativeSpellCheckerSessionBridge, int[] offsets, int[] lengths);
+    private native void nativeProcessSpellCheckResults(long nativeSpellCheckerSessionBridge,
+            int[] offsets, int[] lengths, String[][] suggestions);
 }

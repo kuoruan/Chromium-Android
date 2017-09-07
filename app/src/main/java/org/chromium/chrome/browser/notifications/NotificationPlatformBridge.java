@@ -29,16 +29,17 @@ import org.chromium.base.library_loader.ProcessInitException;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
 import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
+import org.chromium.chrome.browser.notifications.channels.SiteChannelsManager;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.preferences.Preferences;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
 import org.chromium.chrome.browser.preferences.website.SingleCategoryPreferences;
 import org.chromium.chrome.browser.preferences.website.SingleWebsitePreferences;
 import org.chromium.chrome.browser.preferences.website.SiteSettingsCategory;
-import org.chromium.chrome.browser.webapps.ChromeWebApkHost;
 import org.chromium.components.url_formatter.UrlFormatter;
 import org.chromium.webapk.lib.client.WebApkValidator;
 
@@ -153,8 +154,6 @@ public class NotificationPlatformBridge {
      */
     @CalledByNative
     private String queryWebApkPackage(String url) {
-        if (!ChromeWebApkHost.isEnabled()) return "";
-
         String webApkPackage =
                 WebApkValidator.queryWebApkPackage(ContextUtils.getApplicationContext(), url);
         return webApkPackage == null ? "" : webApkPackage;
@@ -189,13 +188,10 @@ public class NotificationPlatformBridge {
         Log.i(TAG, "Dispatching notification event to native: " + notificationId);
 
         if (NotificationConstants.ACTION_CLICK_NOTIFICATION.equals(intent.getAction())) {
-            String webApkPackage = "";
-            if (ChromeWebApkHost.isEnabled()) {
-                webApkPackage = intent.getStringExtra(
+            String webApkPackage = intent.getStringExtra(
                     NotificationConstants.EXTRA_NOTIFICATION_INFO_WEBAPK_PACKAGE);
-                if (webApkPackage == null) {
-                    webApkPackage = "";
-                }
+            if (webApkPackage == null) {
+                webApkPackage = "";
             }
             int actionIndex = intent.getIntExtra(
                     NotificationConstants.EXTRA_NOTIFICATION_INFO_ACTION_INDEX, -1);
@@ -266,8 +262,7 @@ public class NotificationPlatformBridge {
 
         // If we can read an origin from the intent, use it to open the settings screen for that
         // origin.
-        String origin = getOriginFromTag(
-                incomingIntent.getStringExtra(NotificationConstants.EXTRA_NOTIFICATION_TAG));
+        String origin = getOriginFromIntent(incomingIntent);
         boolean launchSingleWebsitePreferences = origin != null;
 
         String fragmentName = launchSingleWebsitePreferences
@@ -390,17 +385,37 @@ public class NotificationPlatformBridge {
     }
 
     /**
-     * Attempts to extract an origin from the tag extra in the given intent.
+     * Attempts to extract an origin from the tag extras in the given intent.
      *
-     * See {@link #makePlatformTag} for details about the format of the tag.
+     * There are two tags that are relevant, either or none of them may be set, but not both:
+     *   1. Notification.EXTRA_CHANNEL_ID - set by Android on the 'Additional settings in the app'
+     *      button intent from individual channel settings screens in Android O.
+     *   2. NotificationConstants.EXTRA_NOTIFICATION_TAG - set by us on browser UI that should
+     *     launch specific site settings, e.g. the web notifications Site Settings button.
      *
-     * @param tag The tag from the intent extra. May be null.
-     * @return The origin string. Returns null if there was no tag extra in the given intent, or if
-     *         the tag value did not match the expected format.
+     * See {@link SiteChannelsManager#createChannelId} and {@link SiteChannelsManager#toSiteOrigin}
+     * for how we convert origins to and from channel ids.
+     *
+     * See {@link #makePlatformTag} for details about the format of the EXTRA_NOTIFICATION tag.
+     *
+     * @param intent The incoming intent.
+     * @return The origin string. Returns null if there was no relevant tag extra in the given
+     * intent, or if a relevant notification tag value did not match the expected format.
      */
     @Nullable
+    private static String getOriginFromIntent(Intent intent) {
+        // TODO(crbug.com/707804): Refer to this extra by name once we compile against O, i.e.:
+        // intent.getStringExtra(Notification.EXTRA_CHANNEL_ID);
+        String originFromChannelId =
+                getOriginFromChannelId(intent.getStringExtra("android.intent.extra.CHANNEL_ID"));
+        return originFromChannelId != null ? originFromChannelId
+                                           : getOriginFromNotificationTag(intent.getStringExtra(
+                                                     NotificationConstants.EXTRA_NOTIFICATION_TAG));
+    }
+
+    @Nullable
     @VisibleForTesting
-    static String getOriginFromTag(@Nullable String tag) {
+    static String getOriginFromNotificationTag(@Nullable String tag) {
         // If the user touched the settings cog on a flipped notification originating from this
         // class, there will be a notification tag extra in a specific format. From the tag we can
         // read the origin of the notification.
@@ -416,6 +431,16 @@ public class NotificationPlatformBridge {
             return null;
         }
         return null;
+    }
+
+    @Nullable
+    @VisibleForTesting
+    static String getOriginFromChannelId(@Nullable String channelId) {
+        if (channelId == null
+                || !channelId.startsWith(ChannelDefinitions.CHANNEL_ID_PREFIX_SITES)) {
+            return null;
+        }
+        return SiteChannelsManager.toSiteOrigin(channelId);
     }
 
     /**
@@ -515,7 +540,7 @@ public class NotificationPlatformBridge {
         boolean hasImage = image != null;
         boolean forWebApk = !webApkPackage.isEmpty();
         NotificationBuilderBase notificationBuilder =
-                createNotificationBuilder(context, forWebApk, hasImage)
+                createNotificationBuilder(context, forWebApk, hasImage, origin)
                         .setTitle(title)
                         .setBody(body)
                         .setImage(image)
@@ -594,11 +619,17 @@ public class NotificationPlatformBridge {
     }
 
     private NotificationBuilderBase createNotificationBuilder(
-            Context context, boolean forWebApk, boolean hasImage) {
+            Context context, boolean forWebApk, boolean hasImage, String origin) {
         // Don't set a channelId for web apk notifications because the channel won't be
         // initialized for the web apk and it will crash on notify - see crbug.com/727178.
         // (It's okay to not set a channel on them because web apks don't target O yet.)
-        String channelId = forWebApk ? null : ChannelDefinitions.CHANNEL_ID_SITES;
+        // TODO(crbug.com/700377): Channel ID should be retrieved from cache in native and passed
+        // through to here with other notification parameters.
+        String channelId = forWebApk
+                ? null
+                : ChromeFeatureList.isEnabled(ChromeFeatureList.SITE_NOTIFICATION_CHANNELS)
+                        ? SiteChannelsManager.getInstance().getChannelIdForOrigin(origin)
+                        : ChannelDefinitions.CHANNEL_ID_SITES;
         if (useCustomLayouts(hasImage)) {
             return new CustomNotificationBuilder(context, channelId);
         }

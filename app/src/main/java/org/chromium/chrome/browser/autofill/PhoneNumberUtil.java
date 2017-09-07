@@ -9,6 +9,8 @@ import android.text.TextWatcher;
 
 import org.chromium.base.annotations.JNINamespace;
 
+import javax.annotation.Nullable;
+
 /**
  * Android wrapper of i18n::phonenumbers::PhoneNumberUtil which provides convenient methods to
  * format and validate phone number.
@@ -18,16 +20,29 @@ public class PhoneNumberUtil {
     // Avoid instantiation by accident.
     private PhoneNumberUtil() {}
 
-    /** TextWatcher to watch phone number changes so as to format it dynamically */
-    public static class FormatTextWatcher implements TextWatcher {
+    /**
+     * TextWatcher to watch phone number changes so as to format it based on country code.
+     */
+    public static class CountryAwareFormatTextWatcher implements TextWatcher {
         /** Indicates the change was caused by ourselves. */
         private boolean mSelfChange;
+        @Nullable
+        private String mCountryCode;
+
+        /**
+         * Updates the country code used to format phone numbers.
+         *
+         * @param countryCode The given country code.
+         */
+        public void setCountryCode(@Nullable String countryCode) {
+            mCountryCode = countryCode;
+        }
 
         @Override
         public void afterTextChanged(Editable s) {
             if (mSelfChange) return;
 
-            String formattedNumber = formatForDisplay(s.toString());
+            String formattedNumber = formatForDisplay(s.toString(), mCountryCode);
             mSelfChange = true;
             s.replace(0, s.length(), formattedNumber, 0, formattedNumber.length());
             mSelfChange = false;
@@ -42,15 +57,21 @@ public class PhoneNumberUtil {
 
     /**
      * Formats the given phone number in INTERNATIONAL format
-     * [i18n::phonenumbers::PhoneNumberUtil::PhoneNumberFormat::INTERNATIONAL], returning the
-     * original number if no formatting can be made. For example, the number of the Google Zürich
-     * office will be formatted as "+41 44 668 1800" in INTERNATIONAL format.
+     * [i18n::phonenumbers::PhoneNumberUtil::PhoneNumberFormat::INTERNATIONAL] based
+     * on region code, returning the original number if no formatting can be made.
+     * For example, the number of the Google Zürich office will be formatted as
+     * "+41 44 668 1800" in INTERNATIONAL format.
+     *
+     * Note that the region code is from the given phone number if it starts with
+     * '+', otherwise the region code is deduced from the given country code or
+     * from application locale if the given country code is null.
      *
      * @param phoneNumber The given phone number.
+     * @param countryCode The given country code.
      * @return Formatted phone number.
      */
-    public static String formatForDisplay(String phoneNumber) {
-        return nativeFormatForDisplay(phoneNumber);
+    public static String formatForDisplay(String phoneNumber, @Nullable String countryCode) {
+        return nativeFormatForDisplay(phoneNumber, countryCode);
     }
 
     /**
@@ -68,18 +89,22 @@ public class PhoneNumberUtil {
     }
 
     /**
-     * Checks whether the given phone number matches a valid pattern according to region code. The
-     * region code is from the given phone number if it starts with '+', otherwise application
-     * locale is used to figure out the region code.
+     * Checks whether the given phone number is a possible number according to
+     * region code.
+     * The region code is from the given phone number if it starts with '+',
+     * otherwise the region code is deduced from the given country code or from
+     * application locale if the given country code is null.
      *
      * @param phoneNumber The given phone number.
-     * @return True if the given number is valid, otherwise return false.
+     * @param countryCode The given country code.
+     *
+     * @return True if the given number is a possible number, otherwise return false.
      */
-    public static boolean isValidNumber(String phoneNumber) {
-        return nativeIsValidNumber(phoneNumber);
+    public static boolean isPossibleNumber(String phoneNumber, @Nullable String countryCode) {
+        return nativeIsPossibleNumber(phoneNumber, countryCode);
     }
 
-    private static native String nativeFormatForDisplay(String phoneNumber);
+    private static native String nativeFormatForDisplay(String phoneNumber, String countryCode);
     private static native String nativeFormatForResponse(String phoneNumber);
-    private static native boolean nativeIsValidNumber(String phoneNumber);
+    private static native boolean nativeIsPossibleNumber(String phoneNumber, String countryCode);
 }

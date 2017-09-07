@@ -37,7 +37,7 @@ public final class BackgroundTaskSchedulerFactory {
     }
 
     @VisibleForTesting
-    static void setSchedulerForTesting(BackgroundTaskScheduler scheduler) {
+    public static void setSchedulerForTesting(BackgroundTaskScheduler scheduler) {
         sInstance = scheduler;
     }
 

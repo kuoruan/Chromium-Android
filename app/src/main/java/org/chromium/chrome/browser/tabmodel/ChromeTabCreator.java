@@ -32,9 +32,9 @@ import org.chromium.ui.base.WindowAndroid;
 public class ChromeTabCreator extends TabCreatorManager.TabCreator {
 
     private final ChromeActivity mActivity;
-    private final WindowAndroid mNativeWindow;
     private final boolean mIncognito;
 
+    private WindowAndroid mNativeWindow;
     private TabModel mTabModel;
     private TabContentManager mTabContentManager;
     private TabModelOrderController mOrderController;
@@ -334,4 +334,10 @@ public class ChromeTabCreator extends TabCreatorManager.TabCreator {
         return new TabDelegateFactory();
     }
 
+    /**
+     * Sets the window to create tabs for.
+     */
+    public void setWindowAndroid(WindowAndroid window) {
+        mNativeWindow = window;
+    }
 }

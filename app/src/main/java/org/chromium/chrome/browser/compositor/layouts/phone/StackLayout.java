@@ -11,6 +11,7 @@ import android.os.SystemClock;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
+import android.view.animation.Interpolator;
 import android.widget.FrameLayout;
 
 import org.chromium.base.VisibleForTesting;
@@ -39,6 +40,7 @@ import org.chromium.chrome.browser.tabmodel.TabModelUtils;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.MathUtils;
 import org.chromium.ui.base.LocalizationUtils;
+import org.chromium.ui.interpolators.BakedBezierInterpolator;
 import org.chromium.ui.resources.ResourceManager;
 
 import java.io.Serializable;
@@ -71,6 +73,7 @@ public class StackLayout extends Layout implements Animatable<StackLayout.Proper
 
     private static final float THRESHOLD_TO_SWITCH_STACK = 0.4f;
     private static final float THRESHOLD_TIME_TO_SWITCH_STACK_INPUT_MODE = 200;
+    private static final int NEW_TAB_ANIMATION_DURATION_MS = 300;
 
     /**
      * The delta time applied on the velocity from the fling. This is to compute the kick to help
@@ -139,6 +142,15 @@ public class StackLayout extends Layout implements Animatable<StackLayout.Proper
     private final TabListSceneLayer mSceneLayer;
 
     private StackLayoutGestureHandler mGestureHandler;
+
+    /** A {@link LayoutTab} used for new tab animations. */
+    private LayoutTab mNewTabLayoutTab;
+
+    /**
+     * Whether or not the new layout tab has been properly initialized (a frame can occur between
+     * creation and initialization).
+     */
+    private boolean mIsNewTabInitialized;
 
     private class StackLayoutGestureHandler implements GestureHandler {
         @Override
@@ -484,14 +496,24 @@ public class StackLayout extends Layout implements Animatable<StackLayout.Proper
                 time, id, tabIndex, sourceId, newIsIncognito, background, originX, originY);
         startHiding(id, false);
         mStacks[getTabStackIndex(id)].tabCreated(time, id);
-        startMarginAnimation(false);
-        uiPreemptivelySelectTabModel(newIsIncognito);
 
-        // TODO(twellington): Add a proper tab creation animation rather than disabling the current
-        //                    animation.
         if (FeatureUtilities.isChromeHomeEnabled()) {
-            onUpdateAnimation(System.currentTimeMillis(), true);
+            mNewTabLayoutTab = createLayoutTab(id, newIsIncognito, NO_CLOSE_BUTTON, NO_TITLE);
+            mNewTabLayoutTab.setScale(1.f);
+            mNewTabLayoutTab.setBorderScale(1.f);
+            mNewTabLayoutTab.setDecorationAlpha(0.f);
+            mNewTabLayoutTab.setY(getHeight() / 2);
+
+            mIsNewTabInitialized = true;
+
+            Interpolator interpolator = BakedBezierInterpolator.TRANSFORM_CURVE;
+            addToAnimation(mNewTabLayoutTab, LayoutTab.Property.Y, mNewTabLayoutTab.getY(), 0.f,
+                    NEW_TAB_ANIMATION_DURATION_MS, 0, false, interpolator);
+        } else {
+            startMarginAnimation(false);
         }
+
+        uiPreemptivelySelectTabModel(newIsIncognito);
     }
 
     @Override
@@ -504,10 +526,6 @@ public class StackLayout extends Layout implements Animatable<StackLayout.Proper
 
     @Override
     public void onTabModelSwitched(boolean toIncognitoTabModel) {
-        // There is no need to respond to the tab model switch if the stack for the newly selected
-        // tab model is already showing.
-        if ((toIncognitoTabModel ? 1 : 0) == getTabStackIndex()) return;
-
         flingStacks(toIncognitoTabModel);
         mFlingFromModelChange = true;
     }
@@ -544,6 +562,10 @@ public class StackLayout extends Layout implements Animatable<StackLayout.Proper
             mTemporarySelectedStack = null;
         }
         if (mStackAnimationCount == 0) super.onAnimationFinished();
+        if (mNewTabLayoutTab != null) {
+            mIsNewTabInitialized = false;
+            mNewTabLayoutTab = null;
+        }
     }
 
     /**
@@ -1044,10 +1066,12 @@ public class StackLayout extends Layout implements Animatable<StackLayout.Proper
         // computeTabPositionAndAppendLayoutTabs.
         final int tabVisibleCount = mStacks[0].getVisibleCount() + mStacks[1].getVisibleCount();
 
-        if (tabVisibleCount == 0) {
+        int layoutTabCount = tabVisibleCount + (mNewTabLayoutTab == null ? 0 : 1);
+
+        if (layoutTabCount == 0) {
             mLayoutTabs = null;
-        } else if (mLayoutTabs == null || mLayoutTabs.length != tabVisibleCount) {
-            mLayoutTabs = new LayoutTab[tabVisibleCount];
+        } else if (mLayoutTabs == null || mLayoutTabs.length != layoutTabCount) {
+            mLayoutTabs = new LayoutTab[layoutTabCount];
         }
 
         int index = 0;
@@ -1063,6 +1087,11 @@ public class StackLayout extends Layout implements Animatable<StackLayout.Proper
         // Update tab snapping
         for (int i = 0; i < tabVisibleCount; i++) {
             if (mLayoutTabs[i].updateSnap(dt)) needUpdate = true;
+        }
+
+        if (mNewTabLayoutTab != null && mIsNewTabInitialized) {
+            mLayoutTabs[mLayoutTabs.length - 1] = mNewTabLayoutTab;
+            if (mNewTabLayoutTab.updateSnap(dt)) needUpdate = true;
         }
 
         if (needUpdate) requestUpdate();

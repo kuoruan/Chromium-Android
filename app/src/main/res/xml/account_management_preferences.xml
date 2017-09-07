@@ -6,48 +6,79 @@
 <PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orderingFromXml="false">
+    xmlns:aapt="http://schemas.android.com/aapt">
 
     <PreferenceCategory
-        android:title="@string/account_management_title"
-        android:order="0" />
+        android:key="accounts_category"
+        android:title="@string/account_management_title"/>
 
-    <!-- Google accounts will be inserted here, using order values starting at 100 -->
-
-    <org.chromium.chrome.browser.preferences.ChromeBasePreference
-        android:key="add_account"
-        android:icon="@drawable/add_circle_blue"
-        android:order="1000" />
+    <Preference
+        android:layout="@layout/divider_preference"/>
 
     <PreferenceCategory
         android:key="parental_settings"
-        android:title="@string/account_management_parental_settings"
-        android:order="1001" />
+        android:title="@string/account_management_parental_settings"/>
 
-    <org.chromium.chrome.browser.preferences.ChromeBasePreference
-        android:key="parent_accounts"
-        android:order="1002" />
+    <Preference
+        android:key="parent_accounts">
+        <aapt:attr name="android:layout">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
+
+                <TextView android:id="@android:id/title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"/>
+
+                <TextView android:id="@android:id/summary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="?android:attr/textColorSecondary"/>
+
+                <LinearLayout android:id="@android:id/widget_frame"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"/>
+            </LinearLayout>
+        </aapt:attr>
+    </Preference>
 
     <Preference
         android:key="child_content"
-        android:title="@string/account_management_child_content_title"
-        android:order="1003" />
+        android:title="@string/account_management_child_content_title"/>
+
+    <Preference
+        android:key="child_content_divider"
+        android:layout="@layout/divider_preference"/>
 
     <org.chromium.chrome.browser.preferences.SyncPreference
         android:key="sync_settings"
-        android:title="@string/sign_in_sync"
-        android:order="1005"/>
+        android:title="@string/sign_in_sync"/>
+
+    <Preference
+        android:layout="@layout/divider_preference"/>
 
     <Preference
         android:key="google_activity_controls"
         android:icon="@drawable/googleg"
         android:title="@string/sign_in_google_activity_controls"
-        android:summary="@string/sign_in_google_activity_controls_message"
-        android:order="1006" />
+        android:summary="@string/sign_in_google_activity_controls_message"/>
+
+    <Preference
+        android:layout="@layout/divider_preference"/>
 
     <Preference
         android:key="sign_out"
-        android:title="@string/account_management_sign_out"
-        android:order="1007"/>
+        android:title="@string/account_management_sign_out"/>
+
+    <Preference
+        android:key="sign_out_divider"
+        android:layout="@layout/divider_preference"/>
 
 </PreferenceScreen>

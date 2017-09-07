@@ -2,6 +2,8 @@
 
 package com.google.protos.ipc.invalidation;
 
+// @@protoc_insertion_point(imports_scope)
+
 @SuppressWarnings("hiding")
 public interface NanoJavaClient {
 
@@ -39,6 +41,8 @@ public interface NanoJavaClient {
 
     // optional .com.google.protos.ipc.invalidation.InfoMessage info_message = 6;
     public com.google.protos.ipc.invalidation.nano.NanoClientProtocol.InfoMessage infoMessage;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.BatcherState)
 
     public BatcherState() {
       clear();
@@ -160,7 +164,7 @@ public interface NanoJavaClient {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -304,6 +308,8 @@ public interface NanoJavaClient {
     // optional .com.google.protos.ipc.invalidation.BatcherState batcher_state = 4;
     public com.google.protos.ipc.invalidation.NanoJavaClient.BatcherState batcherState;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ProtocolHandlerState)
+
     public ProtocolHandlerState() {
       clear();
     }
@@ -368,7 +374,7 @@ public interface NanoJavaClient {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -433,6 +439,8 @@ public interface NanoJavaClient {
 
     // repeated .com.google.protos.ipc.invalidation.RegistrationP pending_operations = 3;
     public com.google.protos.ipc.invalidation.nano.NanoClientProtocol.RegistrationP[] pendingOperations;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.RegistrationManagerStateP)
 
     public RegistrationManagerStateP() {
       clear();
@@ -510,7 +518,7 @@ public interface NanoJavaClient {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -607,6 +615,8 @@ public interface NanoJavaClient {
     // optional .com.google.protos.ipc.invalidation.ExponentialBackoffState backoff_state = 4;
     public com.google.protos.ipc.invalidation.nano.NanoClient.ExponentialBackoffState backoffState;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.RecurringTaskState)
+
     public RecurringTaskState() {
       clear();
     }
@@ -671,7 +681,7 @@ public interface NanoJavaClient {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -731,6 +741,8 @@ public interface NanoJavaClient {
     // repeated .com.google.protos.ipc.invalidation.PropertyRecord counter = 1;
     public com.google.protos.ipc.invalidation.nano.NanoClientProtocol.PropertyRecord[] counter;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.StatisticsState)
+
     public StatisticsState() {
       clear();
     }
@@ -781,7 +793,7 @@ public interface NanoJavaClient {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -883,6 +895,8 @@ public interface NanoJavaClient {
 
     // optional .com.google.protos.ipc.invalidation.StatisticsState statistics_state = 15;
     public com.google.protos.ipc.invalidation.NanoJavaClient.StatisticsState statisticsState;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.InvalidationClientState)
 
     public InvalidationClientState() {
       clear();
@@ -1036,7 +1050,7 @@ public interface NanoJavaClient {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;

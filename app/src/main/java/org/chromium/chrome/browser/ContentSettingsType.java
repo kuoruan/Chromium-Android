@@ -44,12 +44,13 @@ import java.lang.annotation.RetentionPolicy;
     ContentSettingsType.CONTENT_SETTINGS_TYPE_PROMPT_NO_DECISION_COUNT,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_IMPORTANT_SITE_INFO,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_PERMISSION_AUTOBLOCKER_DATA,
-    ContentSettingsType.CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER,
-    ContentSettingsType.CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER_DATA,
+    ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS,
+    ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS_DATA,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_MIDI,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_PUSH_MESSAGING,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_PASSWORD_PROTECTION,
-    ContentSettingsType.CONTENT_SETTINGS_NUM_TYPES_DO_NOT_USE
+    ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIA_ENGAGEMENT,
+    ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND, ContentSettingsType.CONTENT_SETTINGS_NUM_TYPES
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface ContentSettingsType {
@@ -88,12 +89,12 @@ public @interface ContentSettingsType {
   int CONTENT_SETTINGS_TYPE_PROMPT_NO_DECISION_COUNT = 24;
   int CONTENT_SETTINGS_TYPE_IMPORTANT_SITE_INFO = 25;
   int CONTENT_SETTINGS_TYPE_PERMISSION_AUTOBLOCKER_DATA = 26;
-  int CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER = 27;
+  int CONTENT_SETTINGS_TYPE_ADS = 27;
   /**
    * Website setting which stores metadata for the subresource filter to aid in decisions for
    * whether or not to show the UI.
    */
-  int CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER_DATA = 28;
+  int CONTENT_SETTINGS_TYPE_ADS_DATA = 28;
   /**
    * This is special-cased in the permissions layer to always allow, and as such doesn't have
    * associated prefs data.
@@ -110,7 +111,13 @@ public @interface ContentSettingsType {
    */
   int CONTENT_SETTINGS_TYPE_PASSWORD_PROTECTION = 31;
   /**
-   * WARNING: This enum is going to be removed soon. Do not depend on NUM_TYPES.
+   * Website setting which stores engagement data for media related to a specific origin.
    */
-  int CONTENT_SETTINGS_NUM_TYPES_DO_NOT_USE = 32;
+  int CONTENT_SETTINGS_TYPE_MEDIA_ENGAGEMENT = 32;
+  /**
+   * Website setting which stores whether or not the site can play audible sound. This will not
+   * block playback but instead the user will not hear it.
+   */
+  int CONTENT_SETTINGS_TYPE_SOUND = 33;
+  int CONTENT_SETTINGS_NUM_TYPES = 34;
 }

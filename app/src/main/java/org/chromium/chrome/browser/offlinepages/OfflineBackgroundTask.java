@@ -5,51 +5,74 @@
 package org.chromium.chrome.browser.offlinepages;
 
 import android.content.Context;
+import android.os.Bundle;
 
+import org.chromium.base.ApplicationStatus;
 import org.chromium.base.Callback;
 import org.chromium.base.Log;
-import org.chromium.base.library_loader.LibraryProcessType;
-import org.chromium.base.library_loader.ProcessInitException;
-import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
-import org.chromium.chrome.browser.offlinepages.interfaces.BackgroundSchedulerProcessor;
-import org.chromium.components.background_task_scheduler.BackgroundTask;
+import org.chromium.base.SysUtils;
+import org.chromium.base.VisibleForTesting;
+import org.chromium.chrome.browser.background_task_scheduler.NativeBackgroundTask;
 import org.chromium.components.background_task_scheduler.BackgroundTask.TaskFinishedCallback;
 import org.chromium.components.background_task_scheduler.TaskIds;
 import org.chromium.components.background_task_scheduler.TaskParameters;
-import org.chromium.content.browser.BrowserStartupController;
 
 /**
- * Handles servicing background offlining requests coming via background_task_scheduler component.
+ * Handles servicing of background offlining requests coming via background_task_scheduler
+ * component.
  */
-public class OfflineBackgroundTask implements BackgroundTask {
-    private static final String TAG = "OPBackgroundTask";
-
-    BackgroundSchedulerProcessor mBackgroundProcessor;
-
-    public OfflineBackgroundTask() {
-        mBackgroundProcessor = new BackgroundSchedulerProcessorImpl();
-    }
+public class OfflineBackgroundTask extends NativeBackgroundTask {
+    private static final String TAG = "OfflineBkgrndTask";
 
     @Override
-    public boolean onStartTask(
+    @StartBeforeNativeResult
+    protected int onStartTaskBeforeNativeLoaded(
             Context context, TaskParameters taskParameters, TaskFinishedCallback callback) {
         assert taskParameters.getTaskId() == TaskIds.OFFLINE_PAGES_BACKGROUND_JOB_ID;
 
-        // Ensuring that native potion of the browser is launched.
-        launchBrowserIfNecessary(context);
+        if (!checkConditions(context, taskParameters.getExtras())) {
+            return RESCHEDULE;
+        }
 
-        return BackgroundOfflinerTask.startBackgroundRequestsImpl(
-                mBackgroundProcessor, context, taskParameters.getExtras(), wrapCallback(callback));
+        return LOAD_NATIVE;
     }
 
     @Override
-    public boolean onStopTask(Context context, TaskParameters taskParameters) {
-        return mBackgroundProcessor.stopScheduledProcessing();
+    protected void onStartTaskWithNative(
+            Context context, TaskParameters taskParameters, TaskFinishedCallback callback) {
+        assert taskParameters.getTaskId() == TaskIds.OFFLINE_PAGES_BACKGROUND_JOB_ID;
+
+        if (!startScheduledProcessing(BackgroundSchedulerProcessor.getInstance(), context,
+                    taskParameters.getExtras(), wrapCallback(callback))) {
+            callback.taskFinished(true);
+            return;
+        }
+
+        // Set up backup scheduled task in case processing is killed before RequestCoordinator
+        // has a chance to reschedule base on remaining work.
+        BackgroundScheduler.getInstance().scheduleBackup(
+                TaskExtrasPacker.unpackTriggerConditionsFromBundle(taskParameters.getExtras()),
+                BackgroundScheduler.FIVE_MINUTES_IN_MILLISECONDS);
+    }
+
+    @Override
+    protected boolean onStopTaskBeforeNativeLoaded(Context context, TaskParameters taskParameters) {
+        assert taskParameters.getTaskId() == TaskIds.OFFLINE_PAGES_BACKGROUND_JOB_ID;
+
+        // Native didn't complete loading, but it was supposed to. Presume we need to reschedule.
+        return true;
+    }
+
+    @Override
+    protected boolean onStopTaskWithNative(Context context, TaskParameters taskParameters) {
+        assert taskParameters.getTaskId() == TaskIds.OFFLINE_PAGES_BACKGROUND_JOB_ID;
+
+        return BackgroundSchedulerProcessor.getInstance().stopScheduledProcessing();
     }
 
     @Override
     public void reschedule(Context context) {
-        BackgroundScheduler.getInstance(context).rescheduleOfflinePagesTasksOnUpgrade();
+        BackgroundScheduler.getInstance().reschedule();
     }
 
     /** Wraps the callback for code reuse */
@@ -62,21 +85,56 @@ public class OfflineBackgroundTask implements BackgroundTask {
         };
     }
 
-    private static void launchBrowserIfNecessary(Context context) {
-        if (BrowserStartupController.get(LibraryProcessType.PROCESS_BROWSER)
-                        .isStartupSuccessfullyCompleted()) {
-            return;
+    /**
+     * Starts scheduled processing and reports UMA. This method does not check for current
+     * conditions and should be used together with {@link #checkConditions} to ensure that it
+     * performs the tasks only when it is supposed to.
+     *
+     * @returns Whether processing will be carried out and completion will be indicated through a
+     *     callback.
+     */
+    @VisibleForTesting
+    static boolean startScheduledProcessing(BackgroundSchedulerProcessor bridge, Context context,
+            Bundle taskExtras, Callback<Boolean> callback) {
+        // Gather UMA data to measure how often the user's machine is amenable to background
+        // loading when we wake to do a task.
+        long taskScheduledTimeMillis = TaskExtrasPacker.unpackTimeFromBundle(taskExtras);
+        OfflinePageUtils.recordWakeupUMA(context, taskScheduledTimeMillis);
+
+        DeviceConditions deviceConditions = DeviceConditions.getCurrentConditions(context);
+        return bridge.startScheduledProcessing(deviceConditions, callback);
+    }
+
+    /** @returns Whether conditions for running the tasks are met. */
+    @VisibleForTesting
+    static boolean checkConditions(Context context, Bundle taskExtras) {
+        TriggerConditions triggerConditions =
+                TaskExtrasPacker.unpackTriggerConditionsFromBundle(taskExtras);
+
+        DeviceConditions deviceConditions = DeviceConditions.getCurrentConditions(context);
+        if (!areBatteryConditionsMet(deviceConditions, triggerConditions)) {
+            Log.d(TAG, "Battery percentage is lower than minimum to start processing");
+            return false;
         }
 
-        // TODO(fgorski): This method is taken from ChromeBackgroundService as a local fix and will
-        // be removed with BackgroundTaskScheduler supporting GcmNetworkManager scheduling.
-        try {
-            ChromeBrowserInitializer.getInstance(context).handleSynchronousStartup();
-        } catch (ProcessInitException e) {
-            Log.e(TAG, "ProcessInitException while starting the browser process.");
-            // Since the library failed to initialize nothing in the application can work, so kill
-            // the whole application not just the activity.
-            System.exit(-1);
+        if (!isSvelteConditionsMet()) {
+            Log.d(TAG, "Application visible on low-end device so deferring background processing");
+            return false;
         }
+
+        return true;
+    }
+
+    /** Whether battery conditions (on power and enough battery percentage) are met. */
+    private static boolean areBatteryConditionsMet(
+            DeviceConditions deviceConditions, TriggerConditions triggerConditions) {
+        return deviceConditions.isPowerConnected()
+                || (deviceConditions.getBatteryPercentage()
+                           >= triggerConditions.getMinimumBatteryPercentage());
+    }
+
+    /** Whether there are no visible activities when on Svelte. */
+    private static boolean isSvelteConditionsMet() {
+        return !SysUtils.isLowEndDevice() || !ApplicationStatus.hasVisibleActivities();
     }
 }

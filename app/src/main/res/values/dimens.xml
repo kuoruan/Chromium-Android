@@ -184,9 +184,14 @@
     <!-- Account Signin dimensions -->
     <!-- The Account Signin page appears in the First Run Experience (amongst other places), so uses
     a lot of the fre_* dimensions for consistency. -->
+    <dimen name="signin_account_image_size">64dp</dimen>
     <dimen name="signin_image_carousel_width">240dp</dimen>
     <dimen name="signin_chooser_padding">16dp</dimen>
     <dimen name="signin_screen_top_padding">50dp</dimen>
+
+    <!-- Signin promo dimensions -->
+    <dimen name="signin_promo_account_image_size">48dp</dimen>
+    <dimen name="signin_promo_cold_state_image_size">24dp</dimen>
 
     <!-- Autofill card unmasking prompt dimensions -->
     <dimen name="autofill_card_unmask_tooltip_horizontal_padding">16dp</dimen>
@@ -204,7 +209,7 @@
     <dimen name="control_container_height">56dp</dimen>
     <dimen name="bottom_control_container_height">56dp</dimen>
     <dimen name="bottom_toolbar_top_margin">2dp</dimen>
-    <dimen name="bottom_toolbar_url_bar_top_margin">4dp</dimen>
+    <dimen name="bottom_toolbar_url_bar_top_margin">3.5dp</dimen>
     <dimen name="custom_tabs_control_container_height">56dp</dimen>
     <dimen name="webapp_control_container_height">22dp</dimen>
 
@@ -254,6 +259,7 @@
 
     <dimen name="toolbar_edge_padding">8dp</dimen>
     <dimen name="location_bar_google_g_width">24dp</dimen>
+    <dimen name="location_bar_google_g_width_bottom_sheet">20dp</dimen>
     <dimen name="location_bar_google_g_margin">8dp</dimen>
     <!-- location_bar_google_g_width + 2 * location_bar_google_g_margin -->
     <dimen name="location_bar_google_g_container_width">40dp</dimen>
@@ -273,8 +279,8 @@
     <dimen name="omnibox_suggestion_height">60dp</dimen>
     <dimen name="omnibox_suggestion_answer_height">72dp</dimen>
     <dimen name="omnibox_suggestion_definition_height">95dp</dimen>
-    <dimen name="omnibox_suggestion_list_padding_top">0dp</dimen>
-    <dimen name="omnibox_suggestion_list_padding_bottom">0dp</dimen>
+    <dimen name="omnibox_suggestion_list_padding_top">8dp</dimen>
+    <dimen name="omnibox_suggestion_list_padding_bottom">8dp</dimen>
     <dimen name="omnibox_suggestion_first_line_text_size">16sp</dimen>
     <dimen name="omnibox_suggestion_second_line_text_size">14sp</dimen>
     <dimen name="omnibox_suggestion_answer_line2_vertical_spacing">3dp</dimen>
@@ -299,8 +305,10 @@
     <dimen name="tile_view_width">80dp</dimen>
     <dimen name="tile_view_width_condensed">64dp</dimen>
     <dimen name="tile_view_icon_size">48dp</dimen>
+    <dimen name="tile_view_icon_size_modern">28dp</dimen>
     <dimen name="tile_view_icon_margin_top">12dp</dimen>
     <dimen name="tile_view_icon_margin_top_condensed">8dp</dimen>
+    <dimen name="tile_view_icon_margin_top_modern">22dp</dimen>
     <dimen name="tile_view_offline_badge_size">24dp</dimen>
     <dimen name="tile_view_title_margin_top">66dp</dimen>
     <dimen name="tile_view_title_margin_top_condensed">62dp</dimen>
@@ -308,6 +316,7 @@
     <dimen name="ntp_search_box_height">62dp</dimen>
     <dimen name="ntp_search_box_shadow_width">4dp</dimen>
     <dimen name="ntp_search_box_transition_length">16dp</dimen>
+    <dimen name="ntp_search_box_logo_padding">8dp</dimen>
     <dimen name="ntp_wide_card_lateral_margins">48dp</dimen>
     <dimen name="ntp_list_item_min_height">48dp</dimen>
     <dimen name="ntp_list_item_text_size">16sp</dimen>
@@ -315,6 +324,7 @@
     <dimen name="ntp_sign_in_promo_margin_top">20dp</dimen>
     <dimen name="ntp_progress_indicator_diameter">56dp</dimen>
     <dimen name="snippets_thumbnail_size">72dp</dimen>
+    <dimen name="snippets_thumbnail_size_large">124dp</dimen>
     <dimen name="snippets_thumbnail_margin">16dp</dimen>
     <!-- The default padding for the peeking card and the amount the card peeks by in the current
          peeking card animation (the calculations assume this is the same). -->
@@ -329,6 +339,16 @@
     <dimen name="snippets_publisher_margin_top_without_article_snippet">8dp</dimen>
     <!-- This is in sp because we want the icon to scale with the TextView it sits alongside. -->
     <dimen name="snippets_offline_icon_size">18sp</dimen>
+    <dimen name="ntp_suggestions_footer_padding_top">40dp</dimen>
+    <dimen name="ntp_suggestions_footer_padding_bottom">18dp</dimen>
+    <dimen name="chrome_home_suggestions_footer_padding_top">24dp</dimen>
+    <dimen name="chrome_home_suggestions_footer_padding_bottom">24dp</dimen>
+    <dimen name="content_suggestions_card_modern_margin">16dp</dimen>
+    <dimen name="content_suggestions_card_modern_corner_radius">10dp</dimen>
+    <dimen name="content_suggestions_card_video_overlay_size">48dp</dimen>
+    <dimen name="content_suggestions_card_video_overlay_margin_start">38dp</dimen>
+    <dimen name="content_suggestions_card_video_overlay_margin_top">38dp</dimen>
+    <dimen name="contextual_carousel_space_between_cards">8dp</dimen>
 
     <!-- Recent tabs page -->
     <dimen name="recent_tabs_visible_separator_padding">8dp</dimen>
@@ -337,11 +357,6 @@
     <dimen name="snackbar_min_height">48dp</dimen>
     <dimen name="snackbar_width_tablet">450dp</dimen>
     <dimen name="snackbar_margin_tablet">24dp</dimen>
-
-    <!-- Drawers -->
-    <dimen name="drawer_width">240dp</dimen>
-    <dimen name="drawer_drawable_padding">32dp</dimen>
-    <dimen name="drawer_margin_large">16dp</dimen>
 
     <!-- Bookmarks dimensions -->
     <dimen name="bookmark_item_popup_width">140dp</dimen>
@@ -371,7 +386,6 @@
 
     <!-- Photo Picker dimensions -->
     <dimen name="photo_picker_selected_padding">12dp</dimen>
-    <dimen name="photo_picker_special_icon_size">48dp</dimen>
     <dimen name="photo_picker_label_gap">10dp</dimen>
     <dimen name="photo_picker_tile_min_size">100dp</dimen>
     <dimen name="photo_picker_tile_gap">4dp</dimen>
@@ -422,7 +436,6 @@
          is doubled. -->
     <dimen name="pref_autofill_dropdown_bottom_margin">16dp</dimen>
     <dimen name="pref_autofill_touch_target_padding">15dp</dimen>
-    <dimen name="pref_child_account_reduced_padding">4dp</dimen>
 
     <dimen name="pref_icon_padding">4.6dp</dimen>
     <dimen name="pref_spinner_padding_end">8dp</dimen>
@@ -437,7 +450,6 @@
     <dimen name="downloads_item_icon_size">48dp</dimen>
 
     <!-- SelectableListLayout dimensions -->
-    <dimen name="selectable_list_layout_end_icon">24dp</dimen>
     <dimen name="selectable_list_layout_row_end_padding">16dp</dimen>
     <dimen name="selectable_list_layout_start_icon_width">56dp</dimen>
     <dimen name="toolbar_wide_display_nav_icon_offset">-18dp</dimen>
@@ -477,6 +489,8 @@
     <!-- Context Menu Dimensions -->
     <dimen name="context_menu_header_image_min_size">56dp</dimen>
     <dimen name="context_menu_header_image_max_size">56dp</dimen>
+    <dimen name="context_menu_max_width">500dp</dimen>
+    <dimen name="context_menu_min_padding">20dp</dimen>
 
     <!-- Divider Dimensions -->
     <dimen name="divider_height">1dp</dimen>
@@ -484,4 +498,8 @@
     <!-- Search widget dimensions -->
     <dimen name="search_activity_location_bar_margin_start">16dp</dimen>
     <dimen name="search_activity_location_bar_margin_end">8dp</dimen>
+
+    <!-- Reader Mode dimensions -->
+    <!-- Padding surrounding the message. -->
+    <dimen name="reader_mode_infobar_text_padding">8dp</dimen>
 </resources>

@@ -37,13 +37,18 @@ public class ChromeMediaRouterDialogController implements MediaRouteDialogDelega
 
     /**
      * Shows the {@link MediaRouteChooserDialogFragment} if it's not shown yet.
-     * @param sourceUrn the URN identifying the media source to filter the devices with.
+     * @param sourceUrns the URNs identifying the media sources to filter the devices with.
      */
     @CalledByNative
-    public void openRouteChooserDialog(String sourceUrn) {
+    public void openRouteChooserDialog(String[] sourceUrns) {
         if (isShowingDialog()) return;
 
-        MediaSource source = MediaSource.from(sourceUrn);
+        MediaSource source = null;
+        for (String sourceUrn : sourceUrns) {
+            source = MediaSource.from(sourceUrn);
+            if (source != null) break;
+        }
+
         if (source == null) {
             nativeOnMediaSourceNotSupported(mNativeDialogController);
             return;
@@ -92,9 +97,9 @@ public class ChromeMediaRouterDialogController implements MediaRouteDialogDelega
     }
 
     @Override
-    public void onSinkSelected(MediaSink sink) {
+    public void onSinkSelected(String sourceUrn, MediaSink sink) {
         mDialogManager = null;
-        nativeOnSinkSelected(mNativeDialogController, sink.getId());
+        nativeOnSinkSelected(mNativeDialogController, sourceUrn, sink.getId());
     }
 
     @Override
@@ -121,7 +126,7 @@ public class ChromeMediaRouterDialogController implements MediaRouteDialogDelega
 
     native void nativeOnDialogCancelled(long nativeMediaRouterDialogControllerAndroid);
     native void nativeOnSinkSelected(
-            long nativeMediaRouterDialogControllerAndroid, String sinkId);
+            long nativeMediaRouterDialogControllerAndroid, String sourceUrn, String sinkId);
     native void nativeOnRouteClosed(long nativeMediaRouterDialogControllerAndroid, String routeId);
     native void nativeOnMediaSourceNotSupported(long nativeMediaRouterDialogControllerAndroid);
 }

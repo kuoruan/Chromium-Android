@@ -154,6 +154,17 @@ public class TextBubble implements OnTouchListener {
         createContentView();
         updateBubbleLayout();
         mPopupWindow.showAtLocation(mRootView, Gravity.TOP | Gravity.START, mX, mY);
+
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (!mPopupWindow.isShowing() || mPopupWindow.getContentView() == null) return;
+
+                mPopupWindow.getContentView().announceForAccessibility(
+                        mContext.getString(mAccessibilityStringId));
+            }
+        });
+
     }
 
     /**
@@ -309,9 +320,9 @@ public class TextBubble implements OnTouchListener {
             } finally {
                 mIgnoreDismissal = false;
             }
-        } else {
-            mPopupWindow.update(mX, mY, mWidth, mHeight);
         }
+
+        mPopupWindow.update(mX, mY, mWidth, mHeight);
     }
 
     private void createContentView() {

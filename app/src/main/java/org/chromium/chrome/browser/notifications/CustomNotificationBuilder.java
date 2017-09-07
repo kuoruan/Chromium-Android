@@ -24,7 +24,6 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
 import org.chromium.ui.base.LocalizationUtils;
 
 import java.util.Date;
@@ -79,8 +78,7 @@ public class CustomNotificationBuilder extends NotificationBuilderBase {
 
     private final Context mContext;
 
-    public CustomNotificationBuilder(
-            Context context, @ChannelDefinitions.ChannelId String channelId) {
+    public CustomNotificationBuilder(Context context, String channelId) {
         super(context.getResources(), channelId);
         mContext = context;
     }
@@ -147,8 +145,9 @@ public class CustomNotificationBuilder extends NotificationBuilderBase {
         builder.setTicker(mTickerText);
         builder.setContentIntent(mContentIntent);
         builder.setDeleteIntent(mDeleteIntent);
+        builder.setPriority(mPriority);
         builder.setDefaults(mDefaults);
-        builder.setVibrate(mVibratePattern);
+        if (mVibratePattern != null) builder.setVibrate(mVibratePattern);
         builder.setWhen(mTimestamp);
         builder.setOnlyAlertOnce(!mRenotify);
         builder.setContent(compactView);

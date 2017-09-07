@@ -14,6 +14,7 @@ import org.chromium.base.SysUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.base.process_launcher.ChildProcessConnection;
 
 import java.util.LinkedList;
 

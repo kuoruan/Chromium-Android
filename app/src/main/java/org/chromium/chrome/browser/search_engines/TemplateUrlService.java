@@ -309,6 +309,10 @@ public class TemplateUrlService {
         return nativeIsDefaultSearchEngineGoogle(mNativeTemplateUrlServiceAndroid);
     }
 
+    public boolean doesDefaultSearchEngineHaveLogo() {
+        return nativeDoesDefaultSearchEngineHaveLogo(mNativeTemplateUrlServiceAndroid);
+    }
+
     /**
      * Checks whether a search result page is from a default search provider.
      * @param url The url for the search result page.
@@ -457,6 +461,8 @@ public class TemplateUrlService {
             long nativeTemplateUrlServiceAndroid, String url);
     private native boolean nativeIsSearchByImageAvailable(long nativeTemplateUrlServiceAndroid);
     private native boolean nativeIsDefaultSearchEngineGoogle(long nativeTemplateUrlServiceAndroid);
+    private native boolean nativeDoesDefaultSearchEngineHaveLogo(
+            long nativeTemplateUrlServiceAndroid);
     private native String nativeGetUrlForSearchQuery(long nativeTemplateUrlServiceAndroid,
             String query);
     private native String nativeGetUrlForVoiceSearchQuery(long nativeTemplateUrlServiceAndroid,

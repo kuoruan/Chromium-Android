@@ -13,14 +13,14 @@
     android:paddingBottom="24dp">
 
     <ImageView
-        android:id="@+android:id/icon"
+        android:id="@android:id/icon"
         android:contentDescription="@null"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="top" />
 
     <org.chromium.ui.widget.TextViewWithClickableSpans
-        android:id="@+android:id/title"
+        android:id="@android:id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toEndOf="@android:id/icon"
@@ -29,7 +29,7 @@
         style="@style/PreferenceTitle" />
 
     <org.chromium.ui.widget.TextViewWithClickableSpans
-        android:id="@+android:id/summary"
+        android:id="@android:id/summary"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@android:id/title"

@@ -43,9 +43,9 @@ public class InstalledAppProviderImpl implements InstalledAppProvider {
     @VisibleForTesting
     public static final String RELATED_APP_PLATFORM_ANDROID = "play";
     @VisibleForTesting
-    public static final String RELATED_APP_PLATFORM_INSTANT_APP = "instant-app";
+    public static final String INSTANT_APP_ID_STRING = "instantapp";
     @VisibleForTesting
-    public static final String HOLDBACK_STRING = "holdback";
+    public static final String INSTANT_APP_HOLDBACK_ID_STRING = "instantapp:holdback";
 
     private static final String TAG = "InstalledAppProvider";
 
@@ -142,13 +142,16 @@ public class InstalledAppProviderImpl implements InstalledAppProvider {
             // (otherwise, arbitrary websites would be able to test whether un-associated apps are
             // installed on the user's device).
             if (app.platform.equals(RELATED_APP_PLATFORM_ANDROID) && app.id != null) {
+                if (isInstantAppId(app.id)) {
+                    if (mInstantAppsHandler.isInstantAppAvailable(frameUrl.toString(),
+                                INSTANT_APP_HOLDBACK_ID_STRING.equals(app.id))) {
+                        installedApps.add(app);
+                    }
+                    continue;
+                }
+
                 delayMillis += calculateDelayForPackageMs(app.id);
                 if (isAppInstalledAndAssociatedWithOrigin(app.id, frameUrl, pm)) {
-                    installedApps.add(app);
-                }
-            } else if (app.platform.equals(RELATED_APP_PLATFORM_INSTANT_APP) && app.url != null) {
-                boolean checkHoldback = HOLDBACK_STRING.equals(app.id);
-                if (mInstantAppsHandler.isInstantAppAvailable(app.url, checkHoldback)) {
                     installedApps.add(app);
                 }
             }
@@ -157,6 +160,13 @@ public class InstalledAppProviderImpl implements InstalledAppProvider {
         RelatedApplication[] installedAppsArray = new RelatedApplication[installedApps.size()];
         installedApps.toArray(installedAppsArray);
         return Pair.create(installedAppsArray, delayMillis);
+    }
+
+    /**
+     * Returns whether or not the app ID is for an instant app/instant app holdback.
+     */
+    private boolean isInstantAppId(String appId) {
+        return INSTANT_APP_ID_STRING.equals(appId) || INSTANT_APP_HOLDBACK_ID_STRING.equals(appId);
     }
 
     /**

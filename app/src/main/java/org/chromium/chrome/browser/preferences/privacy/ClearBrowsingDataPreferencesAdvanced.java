@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser.preferences.privacy;
 
+import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.browser.browsing_data.ClearBrowsingDataTab;
 
 /**
@@ -24,5 +26,13 @@ public class ClearBrowsingDataPreferencesAdvanced extends ClearBrowsingDataPrefe
                 DialogOption.CLEAR_COOKIES_AND_SITE_DATA, DialogOption.CLEAR_CACHE,
                 DialogOption.CLEAR_PASSWORDS, DialogOption.CLEAR_FORM_DATA,
                 DialogOption.CLEAR_SITE_SETTINGS};
+    }
+
+    @Override
+    protected void onClearBrowsingData() {
+        super.onClearBrowsingData();
+        RecordHistogram.recordEnumeratedHistogram("History.ClearBrowsingData.UserDeletedFromTab",
+                ClearBrowsingDataTab.ADVANCED, ClearBrowsingDataTab.NUM_TYPES);
+        RecordUserAction.record("ClearBrowsingData_AdvancedTab");
     }
 }

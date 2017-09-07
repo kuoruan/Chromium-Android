@@ -6,6 +6,8 @@ package org.chromium.chrome.browser.preferences.privacy;
 
 import android.os.Bundle;
 
+import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.browsing_data.ClearBrowsingDataTab;
 import org.chromium.chrome.browser.preferences.ClearBrowsingDataTabCheckBoxPreference;
@@ -69,5 +71,13 @@ public class ClearBrowsingDataPreferencesBasic extends ClearBrowsingDataPreferen
     @Override
     protected int getPreferenceType() {
         return ClearBrowsingDataTab.BASIC;
+    }
+
+    @Override
+    protected void onClearBrowsingData() {
+        super.onClearBrowsingData();
+        RecordHistogram.recordEnumeratedHistogram("History.ClearBrowsingData.UserDeletedFromTab",
+                ClearBrowsingDataTab.BASIC, ClearBrowsingDataTab.NUM_TYPES);
+        RecordUserAction.record("ClearBrowsingData_BasicTab");
     }
 }

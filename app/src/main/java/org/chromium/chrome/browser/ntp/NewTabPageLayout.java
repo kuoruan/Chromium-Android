@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.ntp;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 import android.util.AttributeSet;
@@ -87,9 +88,9 @@ public class NewTabPageLayout extends LinearLayout {
         mBottomSpacer = findViewById(R.id.ntp_bottom_spacer);
         mLogoSpacer = findViewById(R.id.search_provider_logo_spacer);
         mSearchBoxSpacer = findViewById(R.id.search_box_spacer);
-        mSearchProviderLogoView = (LogoView) findViewById(R.id.search_provider_logo);
+        mSearchProviderLogoView = findViewById(R.id.search_provider_logo);
         mSearchBoxView = findViewById(R.id.search_box);
-        mTileGridLayout = (TileGridLayout) findViewById(R.id.tile_grid_layout);
+        mTileGridLayout = findViewById(R.id.tile_grid_layout);
     }
 
     /**
@@ -117,6 +118,8 @@ public class NewTabPageLayout extends LinearLayout {
      * - If our contents can fit on the screen, increase the spacing to fill the space (minus space
      *   for the CardsUI Peeking card).
      */
+    @SuppressLint("WrongCall") // We explicitly call super.onMeasure() as we have multiple measuring
+                               // passes and adjust the UI depending on the result of the previous.
     private void calculateVerticalSpacing(int widthMeasureSpec, int heightMeasureSpec) {
         mLogoSpacer.setVisibility(View.GONE);
         mSearchBoxSpacer.setVisibility(View.GONE);

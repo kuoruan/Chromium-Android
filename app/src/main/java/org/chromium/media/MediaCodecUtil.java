@@ -35,7 +35,7 @@ class MediaCodecUtil {
     private static final String TAG = "cr_MediaCodecUtil";
 
     /**
-     * Class to pass parameters from createDecoder()
+     * Information returned by createDecoder()
      */
     public static class CodecCreationInfo {
         public MediaCodec mediaCodec;
@@ -204,7 +204,7 @@ class MediaCodecUtil {
     @CalledByNative
     private static boolean canDecode(String mime, boolean isSecure) {
         // TODO(liberato): Should we insist on software here?
-        CodecCreationInfo info = createDecoder(mime, isSecure, false);
+        CodecCreationInfo info = createDecoder(mime, isSecure ? CodecType.SECURE : CodecType.ANY);
         if (info.mediaCodec == null) return false;
 
         try {
@@ -270,12 +270,10 @@ class MediaCodecUtil {
     /**
      * Creates MediaCodec decoder.
      * @param mime MIME type of the media.
-     * @param secure Whether secure decoder is required.
-     * @param requireSoftwareCodec Whether a software decoder is required.
+     * @param codecType Type of codec to create.
      * @return CodecCreationInfo object
      */
-    static CodecCreationInfo createDecoder(
-            String mime, boolean isSecure, boolean requireSoftwareCodec) {
+    static CodecCreationInfo createDecoder(String mime, int codecType) {
         // Always return a valid CodecCreationInfo, its |mediaCodec| field will be null
         // if we cannot create the codec.
         CodecCreationInfo result = new CodecCreationInfo();
@@ -284,7 +282,10 @@ class MediaCodecUtil {
 
         // Creation of ".secure" codecs sometimes crash instead of throwing exceptions
         // on pre-JBMR2 devices.
-        if (isSecure && Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) return result;
+        if (codecType == CodecType.SECURE
+                && Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            return result;
+        }
 
         // Do not create codec for blacklisted devices.
         if (!isDecoderSupportedForDevice(mime)) {
@@ -293,17 +294,21 @@ class MediaCodecUtil {
         }
 
         try {
-            // |isSecure| only applies to video decoders.
-            if (mime.startsWith("video") && isSecure) {
-                String decoderName = getDefaultCodecName(
-                        mime, MediaCodecDirection.DECODER, requireSoftwareCodec);
+            // "SECURE" only applies to video decoders.
+            if (mime.startsWith("video") && codecType == CodecType.SECURE) {
+                // Creating secure codecs is not supported directly on older
+                // versions of Android. Therefore, always get the non-secure
+                // codec name and append ".secure" to get the secure codec name.
+                // TODO(xhwang): Now b/15587335 is fixed, we should have better
+                // API support.
+                String decoderName = getDefaultCodecName(mime, MediaCodecDirection.DECODER, false);
                 if (decoderName.equals("")) return null;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    // To work around an issue that we cannot get the codec info from the secure
-                    // decoder, create an insecure decoder first so that we can query its codec
-                    // info. http://b/15587335.
-                    // Futhermore, it is impossible to create an insecure decoder if the secure
-                    // one is already created.
+                    // To work around an issue that we cannot get the codec info
+                    // from the secure decoder, create an insecure decoder first
+                    // so that we can query its codec info. http://b/15587335.
+                    // Futhermore, it is impossible to create an insecure
+                    // decoder if the secure one is already created.
                     MediaCodec insecureCodec = MediaCodec.createByCodecName(decoderName);
                     result.supportsAdaptivePlayback =
                             codecSupportsAdaptivePlayback(insecureCodec, mime);
@@ -311,9 +316,9 @@ class MediaCodecUtil {
                 }
                 result.mediaCodec = MediaCodec.createByCodecName(decoderName + ".secure");
             } else {
-                if (requireSoftwareCodec) {
-                    String decoderName = getDefaultCodecName(
-                            mime, MediaCodecDirection.DECODER, requireSoftwareCodec);
+                if (codecType == CodecType.SOFTWARE) {
+                    String decoderName =
+                            getDefaultCodecName(mime, MediaCodecDirection.DECODER, true);
                     result.mediaCodec = MediaCodec.createByCodecName(decoderName);
                 } else if (mime.equals(MediaFormat.MIMETYPE_AUDIO_RAW)) {
                     result.mediaCodec = MediaCodec.createByCodecName("OMX.google.raw.decoder");
@@ -324,8 +329,7 @@ class MediaCodecUtil {
                         codecSupportsAdaptivePlayback(result.mediaCodec, mime);
             }
         } catch (Exception e) {
-            Log.e(TAG, "Failed to create MediaCodec: %s, isSecure: %s, requireSoftwareCodec: %s",
-                    mime, isSecure, requireSoftwareCodec ? "yes" : "no", e);
+            Log.e(TAG, "Failed to create MediaCodec: %s, codecType: %d", mime, codecType, e);
             result.mediaCodec = null;
         }
         return result;
@@ -627,14 +631,14 @@ class MediaCodecUtil {
     }
 
     /**
-     * Returns true if and only if the platform we are running on supports the 'cbcs'
-     * encryption scheme, specifically AES CBC encryption with possibility of pattern
-     * encryption.
+     * Returns true if and only if a platform with the given SDK API level supports the 'cbcs'
+     * encryption scheme, specifically AES CBC encryption with possibility of pattern encryption.
      * While 'cbcs' scheme was originally implemented in N, there was a bug (in the
-     * DRM code) which means that it didn't really work properly until post-N).
+     * DRM code) which means that it didn't really work properly until N-MR1).
      */
-    static boolean platformSupportsCbcsEncryption() {
-        return Build.VERSION.SDK_INT > Build.VERSION_CODES.N;
+    @CalledByNative
+    static boolean platformSupportsCbcsEncryption(int sdk) {
+        return sdk >= Build.VERSION_CODES.N_MR1;
     }
 
     /**

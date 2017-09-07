@@ -9,12 +9,13 @@ package org.chromium.chrome.browser.tab;
  */
 public interface BrowserControlsVisibilityDelegate {
     /**
-     * @return Whether hiding browser controls is enabled or not.
+     * @return Whether browser controls can be shown.
      */
-    boolean isHidingBrowserControlsEnabled();
+    boolean canShowBrowserControls();
 
     /**
-     * @return Whether showing browser controls is enabled or not.
+     * @return Whether browser controls can be auto-hidden
+     *         (e.g. in response to user scroll).
      */
-    boolean isShowingBrowserControlsEnabled();
+    boolean canAutoHideBrowserControls();
 }

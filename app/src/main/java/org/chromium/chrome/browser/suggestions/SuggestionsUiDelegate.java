@@ -5,9 +5,6 @@
 package org.chromium.chrome.browser.suggestions;
 
 import org.chromium.base.DiscardableReferencePool;
-import org.chromium.chrome.browser.favicon.FaviconHelper.FaviconImageCallback;
-import org.chromium.chrome.browser.favicon.FaviconHelper.IconAvailabilityCallback;
-import org.chromium.chrome.browser.favicon.LargeIconBridge.LargeIconCallback;
 import org.chromium.chrome.browser.ntp.snippets.SuggestionsSource;
 
 /**
@@ -30,45 +27,21 @@ public interface SuggestionsUiDelegate {
     /** Convenience method to access the {@link SuggestionsNavigationDelegate}. */
     SuggestionsNavigationDelegate getNavigationDelegate();
 
+    /** Convenience method to access the {@link ImageFetcher} */
+    ImageFetcher getImageFetcher();
+
     /**
      * @return The reference pool to use for large objects that should be dropped under
      * memory pressure.
      */
     DiscardableReferencePool getReferencePool();
 
-    // Favicons
-
-    /**
-     * Checks if an icon with the given URL is available. If not,
-     * downloads it and stores it as a favicon/large icon for the given {@code pageUrl}.
-     * @param pageUrl The URL of the site whose icon is being requested.
-     * @param iconUrl The URL of the favicon/large icon.
-     * @param isLargeIcon Whether the {@code iconUrl} represents a large icon or favicon.
-     * @param callback The callback to be notified when the favicon has been checked.
-     */
-    void ensureIconIsAvailable(String pageUrl, String iconUrl, boolean isLargeIcon,
-            boolean isTemporary, IconAvailabilityCallback callback);
-
-    /**
-     * Gets the large icon (e.g. favicon or touch icon) for a given URL.
-     * @param url The URL of the site whose icon is being requested.
-     * @param size The desired size of the icon in pixels.
-     * @param callback The callback to be notified when the icon is available.
-     */
-    void getLargeIconForUrl(String url, int size, LargeIconCallback callback);
-
-    /**
-     * Gets the favicon image for a given URL.
-     * @param url The URL of the site whose favicon is being requested.
-     * @param size The desired size of the favicon in pixels.
-     * @param faviconCallback The callback to be notified when the favicon is available.
-     */
-    void getLocalFaviconImageForURL(String url, int size, FaviconImageCallback faviconCallback);
-
     // Feature/State checks
 
     /**
-     * Registers a {@link DestructionObserver}, notified when the New Tab Page goes away.
+     * Registers a {@link DestructionObserver}, notified when the delegate's host goes away. It is
+     * guaranteed that the observer will be called before the {@link SuggestionsSource} is
+     * destroyed, but there is no destruction order guarantee otherwise.
      */
     void addDestructionObserver(DestructionObserver destructionObserver);
 

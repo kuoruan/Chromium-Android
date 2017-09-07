@@ -4,17 +4,21 @@
 
 package org.chromium.chrome.browser.payments;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.SuppressFBWarnings;
+import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.payments.mojom.PaymentDetailsModifier;
 import org.chromium.payments.mojom.PaymentItem;
 import org.chromium.payments.mojom.PaymentMethodData;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 /**
  * Native bridge for interacting with service worker based payment apps.
@@ -43,32 +47,15 @@ public class ServiceWorkerPaymentAppBridge implements PaymentAppFactory.PaymentA
      *                         app.
      * @param total            The PaymentItem that represents the total cost of the payment.
      * @param modifiers        Payment method specific modifiers to the payment items and the total.
-     * @param instrumentId     The ID of the PaymentInstrument that was selected by the user.
      * @param callback         Called after the payment app is finished running.
      */
     public static void invokePaymentApp(WebContents webContents, long registrationId, String origin,
             String iframeOrigin, String paymentRequestId, Set<PaymentMethodData> methodData,
-            PaymentItem total, Set<PaymentDetailsModifier> modifiers, String instrumentId,
+            PaymentItem total, Set<PaymentDetailsModifier> modifiers,
             PaymentInstrument.InstrumentDetailsCallback callback) {
         nativeInvokePaymentApp(webContents, registrationId, origin, iframeOrigin, paymentRequestId,
                 methodData.toArray(new PaymentMethodData[0]), total,
-                modifiers.toArray(new PaymentDetailsModifier[0]), instrumentId, callback);
-    }
-
-    @CalledByNative
-    private static List<PaymentInstrument> createInstrumentList() {
-        return new ArrayList<PaymentInstrument>();
-    }
-
-    @CalledByNative
-    private static void addInstrument(List<PaymentInstrument> instruments, WebContents webContents,
-            long swRegistrationId, String instrumentId, String label, String[] methodNameArray) {
-        Set<String> methodNames = new HashSet<String>();
-        for (int i = 0; i < methodNameArray.length; i++) {
-            methodNames.add(methodNameArray[i]);
-        }
-        instruments.add(new ServiceWorkerPaymentInstrument(
-                webContents, swRegistrationId, instrumentId, label, methodNames));
+                modifiers.toArray(new PaymentDetailsModifier[0]), callback);
     }
 
     @CalledByNative
@@ -107,11 +94,22 @@ public class ServiceWorkerPaymentAppBridge implements PaymentAppFactory.PaymentA
     }
 
     @CalledByNative
-    private static void onPaymentAppCreated(
-            List<PaymentInstrument> instruments, WebContents webContents, Object callback) {
+    private static String getCurrencySystemFromPaymentItem(PaymentItem item) {
+        return item.amount.currencySystem;
+    }
+
+    @CalledByNative
+    private static void onPaymentAppCreated(long registrationId, String label,
+            @Nullable String sublabel, @Nullable Bitmap icon, String[] methodNameArray,
+            WebContents webContents, Object callback) {
         assert callback instanceof PaymentAppFactory.PaymentAppCreatedCallback;
+        Context context = ChromeActivity.fromWebContents(webContents);
+        if (context == null) return;
         ((PaymentAppFactory.PaymentAppCreatedCallback) callback)
-                .onPaymentAppCreated(new ServiceWorkerPaymentApp(webContents, instruments));
+                .onPaymentAppCreated(new ServiceWorkerPaymentApp(webContents, registrationId, label,
+                        sublabel,
+                        icon == null ? null : new BitmapDrawable(context.getResources(), icon),
+                        methodNameArray));
     }
 
     @CalledByNative
@@ -147,5 +145,5 @@ public class ServiceWorkerPaymentAppBridge implements PaymentAppFactory.PaymentA
     private static native void nativeInvokePaymentApp(WebContents webContents, long registrationId,
             String topLevelOrigin, String paymentRequestOrigin, String paymentRequestId,
             PaymentMethodData[] methodData, PaymentItem total, PaymentDetailsModifier[] modifiers,
-            String instrumentKey, Object callback);
+            Object callback);
 }

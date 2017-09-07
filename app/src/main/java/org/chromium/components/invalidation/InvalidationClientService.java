@@ -27,7 +27,7 @@ import org.chromium.base.CollectionUtil;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.components.signin.AccountManagerHelper;
+import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.components.signin.ChromeSigninController;
 import org.chromium.components.sync.AndroidSyncSettings;
 import org.chromium.components.sync.ModelTypeHelper;
@@ -253,8 +253,8 @@ public class InvalidationClientService extends AndroidListener {
 
         // Attempt to retrieve a token for the user. This method will also invalidate
         // invalidAuthToken if it is non-null.
-        AccountManagerHelper.get().getNewAuthToken(account, invalidAuthToken,
-                getOAuth2ScopeWithType(), new AccountManagerHelper.GetAuthTokenCallback() {
+        AccountManagerFacade.get().getNewAuthToken(account, invalidAuthToken,
+                getOAuth2ScopeWithType(), new AccountManagerFacade.GetAuthTokenCallback() {
                     @Override
                     public void tokenAvailable(String token) {
                         setAuthToken(InvalidationClientService.this.getApplicationContext(),

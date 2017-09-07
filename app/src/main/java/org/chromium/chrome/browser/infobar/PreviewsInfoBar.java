@@ -4,7 +4,10 @@
 
 package org.chromium.chrome.browser.infobar;
 
+import android.widget.TextView;
+
 import org.chromium.base.annotations.CalledByNative;
+import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ResourceId;
 
 /**
@@ -25,6 +28,11 @@ public class PreviewsInfoBar extends ConfirmInfoBar {
             int iconDrawbleId, String message, String linkText, String timestampText) {
         super(iconDrawbleId, null, message, linkText, null, null);
         mTimestampText = timestampText;
+    }
+
+    @Override
+    protected CharSequence getAccessibilityMessage(TextView messageView) {
+        return getContext().getString(R.string.previews_infobar_accessibility_title);
     }
 
     @Override

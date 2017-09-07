@@ -49,4 +49,7 @@ public class EmptyTabModelObserver implements TabModelObserver {
 
     @Override
     public void tabRemoved(Tab tab) {}
+
+    @Override
+    public void pendingTabAdd(boolean isPendingTabAdd) {}
 }

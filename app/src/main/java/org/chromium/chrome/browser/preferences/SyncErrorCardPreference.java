@@ -5,7 +5,6 @@
 package org.chromium.chrome.browser.preferences;
 
 import android.content.Context;
-import android.graphics.Typeface;
 import android.preference.Preference;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -15,6 +14,7 @@ import android.widget.TextView;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
+import org.chromium.ui.UiUtils;
 
 /**
  * A preference that displays hint message to resolve sync error. Click of it navigates user to
@@ -33,7 +33,7 @@ public class SyncErrorCardPreference extends Preference {
         View view = super.onCreateView(parent);
         TextView title = (TextView) view.findViewById(android.R.id.title);
         title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-        title.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        title.setTypeface(UiUtils.createRobotoMediumTypeface());
         title.setTextColor(ApiCompatibilityUtils.getColor(
                 getContext().getResources(), R.color.input_underline_error_color));
         return view;

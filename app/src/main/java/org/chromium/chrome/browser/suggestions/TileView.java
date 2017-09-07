@@ -24,6 +24,7 @@ public class TileView extends FrameLayout {
     private String mUrl;
 
     private TextView mTitleView;
+    private View mIconBackgroundView;
     private ImageView mIconView;
     private ImageView mBadgeView;
 
@@ -39,6 +40,7 @@ public class TileView extends FrameLayout {
         super.onFinishInflate();
 
         mTitleView = (TextView) findViewById(R.id.tile_view_title);
+        mIconBackgroundView = (View) findViewById(R.id.tile_view_icon_background);
         mIconView = (ImageView) findViewById(R.id.tile_view_icon);
         mBadgeView = (ImageView) findViewById(R.id.offline_badge);
     }
@@ -54,10 +56,18 @@ public class TileView extends FrameLayout {
         mTitleView.setLines(titleLines);
         mUrl = tile.getUrl();
 
-        // TODO(mvanouwerkerk): Move this code to xml - https://crbug.com/695817.
-        if (condensed) {
-            Resources res = getResources();
+        Resources res = getResources();
 
+        if (SuggestionsConfig.useModern()) {
+            mIconBackgroundView.setVisibility(View.VISIBLE);
+            LayoutParams iconParams = (LayoutParams) mIconView.getLayoutParams();
+            iconParams.width = res.getDimensionPixelOffset(R.dimen.tile_view_icon_size_modern);
+            iconParams.height = res.getDimensionPixelOffset(R.dimen.tile_view_icon_size_modern);
+            iconParams.setMargins(
+                    0, res.getDimensionPixelOffset(R.dimen.tile_view_icon_margin_top_modern), 0, 0);
+            mIconView.setLayoutParams(iconParams);
+        } else if (condensed) {
+            // TODO(mvanouwerkerk): Move this code to xml - https://crbug.com/695817.
             setPadding(0, 0, 0, 0);
             LayoutParams tileParams = (LayoutParams) getLayoutParams();
             tileParams.width = res.getDimensionPixelOffset(R.dimen.tile_view_width_condensed);
@@ -110,8 +120,8 @@ public class TileView extends FrameLayout {
         assert mUrl.equals(tile.getUrl());
 
         if (tile.getIcon() != mIconView.getDrawable()) return false;
+        if (!tile.getTitle().equals(mTitleView.getText())) return false;
         if (tile.isOfflineAvailable() != (mBadgeView.getVisibility() == VISIBLE)) return false;
-        // We don't check the title since it's not likely to change, but that could also be done.
         return true;
     }
 

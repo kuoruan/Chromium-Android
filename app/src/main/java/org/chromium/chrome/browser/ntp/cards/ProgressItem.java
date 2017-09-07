@@ -28,4 +28,8 @@ class ProgressItem extends OptionalLeaf {
     protected void visitOptionalItem(NodeVisitor visitor) {
         visitor.visitProgressItem();
     }
+
+    public void setVisible(boolean visible) {
+        setVisibilityInternal(visible);
+    }
 }

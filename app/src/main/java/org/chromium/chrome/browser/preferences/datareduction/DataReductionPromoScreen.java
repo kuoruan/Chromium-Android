@@ -22,20 +22,24 @@ public class DataReductionPromoScreen extends PromoDialog {
 
     /**
      * Launch the data reduction promo, if it needs to be displayed.
+     * @return Whether the data reduction promo was displayed.
      */
-    public static void launchDataReductionPromo(Activity parentActivity) {
+    public static boolean launchDataReductionPromo(Activity parentActivity, boolean isIncognito) {
         // The promo is displayed if Chrome is launched directly (i.e., not with the intent to
         // navigate to and view a URL on startup), the instance is part of the field trial,
         // and the promo has not been displayed before.
-        if (!DataReductionPromoUtils.canShowPromos()) return;
-        if (DataReductionPromoUtils.getDisplayedFreOrSecondRunPromo()) return;
+        if (isIncognito) return false;
+        if (!DataReductionPromoUtils.canShowPromos()) return false;
+        if (DataReductionPromoUtils.getDisplayedFreOrSecondRunPromo()) return false;
         // Showing the promo dialog in multiwindow mode is broken on Galaxy Note devices:
         // http://crbug.com/354696. If we're in multiwindow mode, save the dialog for later.
-        if (MultiWindowUtils.getInstance().isLegacyMultiWindow(parentActivity)) return;
+        if (MultiWindowUtils.getInstance().isLegacyMultiWindow(parentActivity)) return false;
 
         DataReductionPromoScreen promoScreen = new DataReductionPromoScreen(parentActivity);
         promoScreen.setOnDismissListener(promoScreen);
         promoScreen.show();
+
+        return true;
     }
 
     /**

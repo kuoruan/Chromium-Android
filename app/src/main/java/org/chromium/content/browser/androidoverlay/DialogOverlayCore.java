@@ -53,6 +53,9 @@ class DialogOverlayCore {
     // Most recent layout parameters.
     private WindowManager.LayoutParams mLayoutParams;
 
+    // If true, then we'll be a panel rather than media overlay.  This is for testing.
+    private boolean mAsPanel;
+
     /**
      * Construction may be called from a random thread, for simplicity.  Call initialize from the
      * proper thread before doing anything else.
@@ -64,9 +67,12 @@ class DialogOverlayCore {
      * @param dialog the dialog, which uses our current thread as the UI thread.
      * @param config initial config.
      * @param host host interface, for sending messages that (probably) need to thread hop.
+     * @param asPanel if true, then we'll be a panel.  This is intended for tests only.
      */
-    public void initialize(Context context, AndroidOverlayConfig config, Host host) {
+    public void initialize(
+            Context context, AndroidOverlayConfig config, Host host, boolean asPanel) {
         mHost = host;
+        mAsPanel = asPanel;
 
         mDialog = new Dialog(context, android.R.style.Theme_NoDisplay);
         mDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -184,7 +190,8 @@ class DialogOverlayCore {
         // Use a media surface, which is what SurfaceView uses by default.  For
         // debugging overlay drawing, consider using TYPE_APPLICATION_PANEL to
         // move the dialog over the CompositorView.
-        layoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_MEDIA;
+        layoutParams.type = mAsPanel ? WindowManager.LayoutParams.TYPE_APPLICATION_PANEL
+                                     : WindowManager.LayoutParams.TYPE_APPLICATION_MEDIA;
 
         layoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                 | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE

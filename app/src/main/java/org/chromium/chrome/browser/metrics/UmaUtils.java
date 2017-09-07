@@ -52,14 +52,10 @@ public class UmaUtils {
     }
 
     /**
-     * Whether the application is in the early stage since the browser process start. The
-     * "application start" ends right after the last histogram related to browser startup is
-     * recorded. Currently, the very first navigation commit in the lifetime of the process ends the
-     * "application start".
-     * Must only be called on the UI thread.
+     * Determines if Chrome was brought to foreground.
      */
-    public static boolean isRunningApplicationStart() {
-        return sRunningApplicationStart;
+    public static boolean hasComeToForeground() {
+        return sForegroundStartTimeMs != 0;
     }
 
     /**

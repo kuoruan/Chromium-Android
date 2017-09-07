@@ -7,7 +7,6 @@ package org.chromium.chrome.browser.payments;
 import android.content.pm.PackageInfo;
 import android.content.pm.ResolveInfo;
 import android.content.pm.Signature;
-import android.support.annotation.Nullable;
 
 import org.chromium.base.Log;
 import org.chromium.chrome.browser.UrlConstants;
@@ -256,8 +255,8 @@ public class PaymentManifestVerifier
         }
 
         mPendingWebAppManifestsCount = matchingApps.size();
-        for (int i = 0; i < appPackageNames.length; i++) {
-            if (!mWebDataService.getPaymentWebAppManifest(appPackageNames[i], this)) {
+        for (String matchingAppPackageName : matchingApps) {
+            if (!mWebDataService.getPaymentWebAppManifest(matchingAppPackageName, this)) {
                 mIsManifestCacheStaleOrUnusable = true;
                 mPendingWebAppManifestsCount = 0;
                 mDownloader.downloadPaymentMethodManifest(mMethodName, this);
@@ -277,12 +276,9 @@ public class PaymentManifestVerifier
             return;
         }
 
-        String verifiedAppPackageName = verifyAppWithWebAppManifest(manifest);
-        if (verifiedAppPackageName != null) {
-            // Do not notify onValidPaymentApp immediately in case of fetching the other web app's
-            // manifest failed. Switch to download manifest online in that case immediately.
-            mVerifiedAppPackageNamesByCachedManifest.add(verifiedAppPackageName);
-        }
+        // Do not notify onValidPaymentApp immediately in case of fetching the other web app's
+        // manifest failed. Switch to download manifest online in that case immediately.
+        mVerifiedAppPackageNamesByCachedManifest.addAll(verifyAppWithWebAppManifest(manifest));
 
         mPendingWebAppManifestsCount--;
         if (mPendingWebAppManifestsCount != 0) return;
@@ -341,11 +337,11 @@ public class PaymentManifestVerifier
 
         // Do not verify payment app if it has already been verified by cached manifest.
         if (mIsManifestCacheStaleOrUnusable) {
-            String verifiedAppPackageName = verifyAppWithWebAppManifest(manifest);
-            if (verifiedAppPackageName != null) {
+            Set<String> verifiedAppPackageNames = verifyAppWithWebAppManifest(manifest);
+            for (String packageName : verifiedAppPackageNames) {
                 mCallback.onValidPaymentApp(
-                        mMethodName, mMatchingApps.get(verifiedAppPackageName).resolveInfo);
-                mMatchingApps.remove(verifiedAppPackageName);
+                        mMethodName, mMatchingApps.get(packageName).resolveInfo);
+                mMatchingApps.remove(packageName);
             }
         }
 
@@ -372,8 +368,11 @@ public class PaymentManifestVerifier
         mCallback.onVerifyFinished(this);
     }
 
-    @Nullable
-    private String verifyAppWithWebAppManifest(WebAppManifestSection[] manifest) {
+    /**
+     * @return The set of package names of payment apps that match the manifest. Could be empty,
+     * but never null.
+     */
+    private Set<String> verifyAppWithWebAppManifest(WebAppManifestSection[] manifest) {
         List<Set<String>> sectionsFingerprints = new ArrayList<>();
         for (int i = 0; i < manifest.length; i++) {
             WebAppManifestSection section = manifest[i];
@@ -384,17 +383,18 @@ public class PaymentManifestVerifier
             sectionsFingerprints.add(fingerprints);
         }
 
+        Set<String> packageNames = new HashSet<>();
         for (int i = 0; i < manifest.length; i++) {
             WebAppManifestSection section = manifest[i];
             AppInfo appInfo = mMatchingApps.get(section.id);
             if (appInfo != null && appInfo.version >= section.minVersion
                     && appInfo.sha256CertFingerprints != null
                     && appInfo.sha256CertFingerprints.equals(sectionsFingerprints.get(i))) {
-                return section.id;
+                packageNames.add(section.id);
             }
         }
 
-        return null;
+        return packageNames;
     }
 
     @Override

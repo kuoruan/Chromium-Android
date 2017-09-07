@@ -2,6 +2,8 @@
 
 package com.google.protos.ipc.invalidation.nano;
 
+// @@protoc_insertion_point(imports_scope)
+
 @SuppressWarnings("hiding")
 public interface NanoClientProtocol {
 
@@ -27,6 +29,8 @@ public interface NanoClientProtocol {
 
     // optional int32 minor_version = 2;
     public java.lang.Integer minorVersion;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.Version)
 
     public Version() {
       clear();
@@ -76,7 +80,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -125,6 +129,8 @@ public interface NanoClientProtocol {
     // optional .com.google.protos.ipc.invalidation.Version version = 1;
     public com.google.protos.ipc.invalidation.nano.NanoClientProtocol.Version version;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ProtocolVersion)
+
     public ProtocolVersion() {
       clear();
     }
@@ -165,7 +171,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -221,6 +227,8 @@ public interface NanoClientProtocol {
 
     // optional string application_info = 4;
     public java.lang.String applicationInfo;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ClientVersion)
 
     public ClientVersion() {
       clear();
@@ -286,7 +294,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -354,6 +362,8 @@ public interface NanoClientProtocol {
     // optional string description = 2;
     public java.lang.String description;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.StatusP)
+
     public StatusP() {
       clear();
     }
@@ -402,18 +412,23 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
           }
           case 8: {
+            int initialPos = input.getPosition();
             int value = input.readInt32();
             switch (value) {
               case com.google.protos.ipc.invalidation.nano.NanoClientProtocol.StatusP.SUCCESS:
               case com.google.protos.ipc.invalidation.nano.NanoClientProtocol.StatusP.TRANSIENT_FAILURE:
               case com.google.protos.ipc.invalidation.nano.NanoClientProtocol.StatusP.PERMANENT_FAILURE:
                 this.code = value;
+                break;
+              default:
+                input.rewindToPosition(initialPos);
+                storeUnknownField(input, tag);
                 break;
             }
             break;
@@ -460,6 +475,8 @@ public interface NanoClientProtocol {
 
     // optional bytes name = 2;
     public byte[] name;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ObjectIdP)
 
     public ObjectIdP() {
       clear();
@@ -509,7 +526,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -561,6 +578,8 @@ public interface NanoClientProtocol {
     // optional bytes client_name = 2;
     public byte[] clientName;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ApplicationClientIdP)
+
     public ApplicationClientIdP() {
       clear();
     }
@@ -609,7 +628,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -669,6 +688,8 @@ public interface NanoClientProtocol {
 
     // optional bytes payload = 4;
     public byte[] payload;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.InvalidationP)
 
     public InvalidationP() {
       clear();
@@ -742,7 +763,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -813,6 +834,8 @@ public interface NanoClientProtocol {
     // optional .com.google.protos.ipc.invalidation.RegistrationP.OpType op_type = 2;
     public java.lang.Integer opType;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.RegistrationP)
+
     public RegistrationP() {
       clear();
     }
@@ -861,7 +884,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -874,11 +897,16 @@ public interface NanoClientProtocol {
             break;
           }
           case 16: {
+            int initialPos = input.getPosition();
             int value = input.readInt32();
             switch (value) {
               case com.google.protos.ipc.invalidation.nano.NanoClientProtocol.RegistrationP.REGISTER:
               case com.google.protos.ipc.invalidation.nano.NanoClientProtocol.RegistrationP.UNREGISTER:
                 this.opType = value;
+                break;
+              default:
+                input.rewindToPosition(initialPos);
+                storeUnknownField(input, tag);
                 break;
             }
             break;
@@ -921,6 +949,8 @@ public interface NanoClientProtocol {
 
     // optional bytes registration_digest = 2;
     public byte[] registrationDigest;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.RegistrationSummary)
 
     public RegistrationSummary() {
       clear();
@@ -970,7 +1000,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -1036,6 +1066,8 @@ public interface NanoClientProtocol {
 
     // optional int32 client_type = 7;
     public java.lang.Integer clientType;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ClientHeader)
 
     public ClientHeader() {
       clear();
@@ -1125,7 +1157,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -1215,6 +1247,8 @@ public interface NanoClientProtocol {
     // optional .com.google.protos.ipc.invalidation.InfoMessage info_message = 6;
     public com.google.protos.ipc.invalidation.nano.NanoClientProtocol.InfoMessage infoMessage;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ClientToServerMessage)
+
     public ClientToServerMessage() {
       clear();
     }
@@ -1295,7 +1329,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -1391,6 +1425,8 @@ public interface NanoClientProtocol {
     // optional .com.google.protos.ipc.invalidation.InitializeMessage.DigestSerializationType digest_serialization_type = 4;
     public java.lang.Integer digestSerializationType;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.InitializeMessage)
+
     public InitializeMessage() {
       clear();
     }
@@ -1455,7 +1491,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -1476,11 +1512,16 @@ public interface NanoClientProtocol {
             break;
           }
           case 32: {
+            int initialPos = input.getPosition();
             int value = input.readInt32();
             switch (value) {
               case com.google.protos.ipc.invalidation.nano.NanoClientProtocol.InitializeMessage.BYTE_BASED:
               case com.google.protos.ipc.invalidation.nano.NanoClientProtocol.InitializeMessage.NUMBER_BASED:
                 this.digestSerializationType = value;
+                break;
+              default:
+                input.rewindToPosition(initialPos);
+                storeUnknownField(input, tag);
                 break;
             }
             break;
@@ -1520,6 +1561,8 @@ public interface NanoClientProtocol {
 
     // repeated .com.google.protos.ipc.invalidation.RegistrationP registration = 1;
     public com.google.protos.ipc.invalidation.nano.NanoClientProtocol.RegistrationP[] registration;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.RegistrationMessage)
 
     public RegistrationMessage() {
       clear();
@@ -1571,7 +1614,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -1632,6 +1675,8 @@ public interface NanoClientProtocol {
     // repeated .com.google.protos.ipc.invalidation.RegistrationSubtree subtree = 1;
     public com.google.protos.ipc.invalidation.nano.NanoClientProtocol.RegistrationSubtree[] subtree;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.RegistrationSyncMessage)
+
     public RegistrationSyncMessage() {
       clear();
     }
@@ -1682,7 +1727,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -1743,6 +1788,8 @@ public interface NanoClientProtocol {
     // repeated .com.google.protos.ipc.invalidation.ObjectIdP registered_object = 1;
     public com.google.protos.ipc.invalidation.nano.NanoClientProtocol.ObjectIdP[] registeredObject;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.RegistrationSubtree)
+
     public RegistrationSubtree() {
       clear();
     }
@@ -1793,7 +1840,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -1865,6 +1912,8 @@ public interface NanoClientProtocol {
 
     // optional .com.google.protos.ipc.invalidation.ClientConfigP client_config = 5;
     public com.google.protos.ipc.invalidation.nano.NanoClientProtocol.ClientConfigP clientConfig;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.InfoMessage)
 
     public InfoMessage() {
       clear();
@@ -1958,7 +2007,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -2060,6 +2109,8 @@ public interface NanoClientProtocol {
     // optional int32 value = 2;
     public java.lang.Integer value;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.PropertyRecord)
+
     public PropertyRecord() {
       clear();
     }
@@ -2108,7 +2159,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -2168,6 +2219,8 @@ public interface NanoClientProtocol {
 
     // optional string message_id = 5;
     public java.lang.String messageId;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ServerHeader)
 
     public ServerHeader() {
       clear();
@@ -2241,7 +2294,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -2328,6 +2381,8 @@ public interface NanoClientProtocol {
 
     // optional .com.google.protos.ipc.invalidation.ErrorMessage error_message = 8;
     public com.google.protos.ipc.invalidation.nano.NanoClientProtocol.ErrorMessage errorMessage;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ServerToClientMessage)
 
     public ServerToClientMessage() {
       clear();
@@ -2425,7 +2480,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -2522,6 +2577,8 @@ public interface NanoClientProtocol {
     // optional bytes new_token = 1;
     public byte[] newToken;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.TokenControlMessage)
+
     public TokenControlMessage() {
       clear();
     }
@@ -2562,7 +2619,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -2609,6 +2666,8 @@ public interface NanoClientProtocol {
 
     // optional .com.google.protos.ipc.invalidation.StatusP status = 2;
     public com.google.protos.ipc.invalidation.nano.NanoClientProtocol.StatusP status;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.RegistrationStatus)
 
     public RegistrationStatus() {
       clear();
@@ -2658,7 +2717,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -2713,6 +2772,8 @@ public interface NanoClientProtocol {
     // repeated .com.google.protos.ipc.invalidation.RegistrationStatus registration_status = 1;
     public com.google.protos.ipc.invalidation.nano.NanoClientProtocol.RegistrationStatus[] registrationStatus;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.RegistrationStatusMessage)
+
     public RegistrationStatusMessage() {
       clear();
     }
@@ -2763,7 +2824,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -2821,6 +2882,8 @@ public interface NanoClientProtocol {
       return _emptyArray;
     }
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.RegistrationSyncRequestMessage)
+
     public RegistrationSyncRequestMessage() {
       clear();
     }
@@ -2841,7 +2904,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -2881,6 +2944,8 @@ public interface NanoClientProtocol {
 
     // repeated .com.google.protos.ipc.invalidation.InvalidationP invalidation = 1;
     public com.google.protos.ipc.invalidation.nano.NanoClientProtocol.InvalidationP[] invalidation;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.InvalidationMessage)
 
     public InvalidationMessage() {
       clear();
@@ -2932,7 +2997,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -2996,6 +3061,8 @@ public interface NanoClientProtocol {
     // repeated .com.google.protos.ipc.invalidation.InfoRequestMessage.InfoType info_type = 1;
     public int[] infoType;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.InfoRequestMessage)
+
     public InfoRequestMessage() {
       clear();
     }
@@ -3044,7 +3111,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -3058,10 +3125,15 @@ public interface NanoClientProtocol {
               if (i != 0) { // tag for first value already consumed.
                 input.readTag();
               }
+              int initialPos = input.getPosition();
               int value = input.readInt32();
               switch (value) {
                 case com.google.protos.ipc.invalidation.nano.NanoClientProtocol.InfoRequestMessage.GET_PERFORMANCE_COUNTERS:
                   validValues[validCount++] = value;
+                  break;
+                default:
+                  input.rewindToPosition(initialPos);
+                  storeUnknownField(input, tag);
                   break;
               }
             }
@@ -3101,10 +3173,15 @@ public interface NanoClientProtocol {
                 java.lang.System.arraycopy(this.infoType, 0, newArray, 0, i);
               }
               while (input.getBytesUntilLimit() > 0) {
+                int initialPos = input.getPosition();
                 int value = input.readInt32();
                 switch (value) {
                   case com.google.protos.ipc.invalidation.nano.NanoClientProtocol.InfoRequestMessage.GET_PERFORMANCE_COUNTERS:
                     newArray[i++] = value;
+                    break;
+                  default:
+                    input.rewindToPosition(initialPos);
+                    storeUnknownField(input, 8);
                     break;
                 }
               }
@@ -3151,6 +3228,8 @@ public interface NanoClientProtocol {
 
     // optional int32 count = 2;
     public java.lang.Integer count;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.RateLimitP)
 
     public RateLimitP() {
       clear();
@@ -3200,7 +3279,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -3251,6 +3330,8 @@ public interface NanoClientProtocol {
 
     // repeated .com.google.protos.ipc.invalidation.RateLimitP rate_limit = 2;
     public com.google.protos.ipc.invalidation.nano.NanoClientProtocol.RateLimitP[] rateLimit;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ProtocolHandlerConfigP)
 
     public ProtocolHandlerConfigP() {
       clear();
@@ -3310,7 +3391,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -3410,6 +3491,8 @@ public interface NanoClientProtocol {
 
     // optional bool allow_suppression = 13 [default = true];
     public java.lang.Boolean allowSuppression;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ClientConfigP)
 
     public ClientConfigP() {
       clear();
@@ -3547,7 +3630,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -3646,6 +3729,8 @@ public interface NanoClientProtocol {
     // optional int64 next_message_delay_ms = 1;
     public java.lang.Long nextMessageDelayMs;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ConfigChangeMessage)
+
     public ConfigChangeMessage() {
       clear();
     }
@@ -3686,7 +3771,7 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -3738,6 +3823,8 @@ public interface NanoClientProtocol {
     // optional string description = 2;
     public java.lang.String description;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ErrorMessage)
+
     public ErrorMessage() {
       clear();
     }
@@ -3786,17 +3873,22 @@ public interface NanoClientProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
           }
           case 8: {
+            int initialPos = input.getPosition();
             int value = input.readInt32();
             switch (value) {
               case com.google.protos.ipc.invalidation.nano.NanoClientProtocol.ErrorMessage.AUTH_FAILURE:
               case com.google.protos.ipc.invalidation.nano.NanoClientProtocol.ErrorMessage.UNKNOWN_FAILURE:
                 this.code = value;
+                break;
+              default:
+                input.rewindToPosition(initialPos);
+                storeUnknownField(input, tag);
                 break;
             }
             break;

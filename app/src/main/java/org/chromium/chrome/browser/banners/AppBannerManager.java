@@ -156,8 +156,8 @@ public class AppBannerManager {
 
     /** Returns whether the native AppBannerManager is working. */
     @VisibleForTesting
-    public boolean isActiveForTesting() {
-        return nativeIsActiveForTesting(mNativePointer);
+    public boolean isRunningForTesting() {
+        return nativeIsRunningForTesting(mNativePointer);
     }
 
     /** Signal to native that the add to homescreen menu item was tapped for metrics purposes. */
@@ -202,7 +202,7 @@ public class AppBannerManager {
             AppData data, String title, String packageName, String imageUrl);
 
     // Testing methods.
-    private native boolean nativeIsActiveForTesting(long nativeAppBannerManagerAndroid);
+    private native boolean nativeIsRunningForTesting(long nativeAppBannerManagerAndroid);
     private static native void nativeSetDaysAfterDismissAndIgnoreToTrigger(
             int dismissDays, int ignoreDays);
     private static native void nativeSetTimeDeltaForTesting(int days);

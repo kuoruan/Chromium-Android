@@ -194,21 +194,19 @@ public class WebappLauncherActivity extends Activity {
         // Activity.
         launchIntent.setAction(Intent.ACTION_VIEW);
         launchIntent.setData(Uri.parse(WebappActivity.WEBAPP_SCHEME + "://" + info.id()));
-        launchIntent.setFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK | ApiCompatibilityUtils.getActivityNewDocumentFlag());
-
-        if (!isWebApk) {
-            // If this is launching from a notification, we want to ensure that the URL being
-            // launched is the URL in the intent. If a paused WebappActivity exists for this id,
-            // then by default it will be focused and we have no way of sending the desired URL to
-            // it (the intent is swallowed). As a workaround, set the CLEAR_TOP flag to ensure that
-            // the existing Activity is cleared and relaunched with this intent.
-            // TODO(dominickn): ideally, we want be able to route an intent to
-            // WebappActivity.onNewIntent instead of restarting the Activity.
-            if (source == ShortcutSource.NOTIFICATION) {
-                launchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            }
-        }
+        // Setting FLAG_ACTIVITY_CLEAR_TOP handles 2 edge cases:
+        // - If a legacy PWA is launching from a notification, we want to ensure that the URL being
+        // launched is the URL in the intent. If a paused WebappActivity exists for this id,
+        // then by default it will be focused and we have no way of sending the desired URL to
+        // it (the intent is swallowed). As a workaround, set the CLEAR_TOP flag to ensure that
+        // the existing Activity handles an update via onNewIntent().
+        // - If a WebAPK is having a CustomTabActivity on top of it in the same Task, and user
+        // clicks a link to takes them back to the scope of a WebAPK, we want to destroy the
+        // CustomTabActivity activity and go back to the WebAPK activity. It is intentional that
+        // Custom Tab will not be reachable with a back button.
+        launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | ApiCompatibilityUtils.getActivityNewDocumentFlag()
+                | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         return launchIntent;
     }
 
@@ -244,8 +242,6 @@ public class WebappLauncherActivity extends Activity {
      * @return true iff all validation criteria are met.
      */
     private boolean isValidWebApk(Intent intent) {
-        if (!ChromeWebApkHost.isEnabled()) return false;
-
         String webApkPackage =
                 IntentUtils.safeGetStringExtra(intent, WebApkConstants.EXTRA_WEBAPK_PACKAGE_NAME);
         if (TextUtils.isEmpty(webApkPackage)) return false;
@@ -253,7 +249,7 @@ public class WebappLauncherActivity extends Activity {
         String url = IntentUtils.safeGetStringExtra(intent, ShortcutHelper.EXTRA_URL);
         if (TextUtils.isEmpty(url)) return false;
 
-        if (!webApkPackage.equals(WebApkValidator.queryWebApkPackage(this, url))) {
+        if (!WebApkValidator.canWebApkHandleUrl(this, webApkPackage, url)) {
             Log.d(TAG, "%s is not within scope of %s WebAPK", url, webApkPackage);
             return false;
         }

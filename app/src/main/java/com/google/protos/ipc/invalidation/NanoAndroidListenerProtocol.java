@@ -2,6 +2,8 @@
 
 package com.google.protos.ipc.invalidation;
 
+// @@protoc_insertion_point(imports_scope)
+
 @SuppressWarnings("hiding")
 public interface NanoAndroidListenerProtocol {
 
@@ -30,6 +32,8 @@ public interface NanoAndroidListenerProtocol {
 
       // optional .com.google.protos.ipc.invalidation.ExponentialBackoffState exponential_backoff_state = 2;
       public com.google.protos.ipc.invalidation.nano.NanoClient.ExponentialBackoffState exponentialBackoffState;
+
+      // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.AndroidListenerState.RetryRegistrationState)
 
       public RetryRegistrationState() {
         clear();
@@ -79,7 +83,7 @@ public interface NanoAndroidListenerProtocol {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
@@ -137,6 +141,8 @@ public interface NanoAndroidListenerProtocol {
       // optional int64 execute_time_ms = 2;
       public java.lang.Long executeTimeMs;
 
+      // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.AndroidListenerState.ScheduledRegistrationRetry)
+
       public ScheduledRegistrationRetry() {
         clear();
       }
@@ -185,7 +191,7 @@ public interface NanoAndroidListenerProtocol {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
@@ -245,6 +251,8 @@ public interface NanoAndroidListenerProtocol {
 
     // repeated .com.google.protos.ipc.invalidation.AndroidListenerState.ScheduledRegistrationRetry registration_retry = 5;
     public com.google.protos.ipc.invalidation.NanoAndroidListenerProtocol.AndroidListenerState.ScheduledRegistrationRetry[] registrationRetry;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.AndroidListenerState)
 
     public AndroidListenerState() {
       clear();
@@ -348,7 +356,7 @@ public interface NanoAndroidListenerProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -466,6 +474,8 @@ public interface NanoAndroidListenerProtocol {
     // optional bool is_delayed = 4;
     public java.lang.Boolean isDelayed;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.RegistrationCommand)
+
     public RegistrationCommand() {
       clear();
     }
@@ -540,7 +550,7 @@ public interface NanoAndroidListenerProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -619,6 +629,8 @@ public interface NanoAndroidListenerProtocol {
     // optional bool allow_suppression = 3;
     public java.lang.Boolean allowSuppression;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.StartCommand)
+
     public StartCommand() {
       clear();
     }
@@ -675,7 +687,7 @@ public interface NanoAndroidListenerProtocol {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;

@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.browseractions;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.customtabs.browseractions.BrowserActionItem;
@@ -88,7 +89,7 @@ public class BrowserActionActivity extends AsyncInitializationActivity {
     @Override
     public void openContextMenu(View view) {
         ContextMenuParams params = createContextMenuParams();
-        mHelper = new BrowserActionsContextMenuHelper(this, params, mActions);
+        mHelper = new BrowserActionsContextMenuHelper(this, params, mActions, mCreatorPackageName);
         mHelper.displayBrowserActionsMenu(view);
         return;
     }
@@ -99,9 +100,16 @@ public class BrowserActionActivity extends AsyncInitializationActivity {
      */
     private ContextMenuParams createContextMenuParams() {
         Referrer referrer = IntentHandler.constructValidReferrerForAuthority(mCreatorPackageName);
+
+        Point displaySize = new Point();
+        getWindowManager().getDefaultDisplay().getSize(displaySize);
+        float density = getResources().getDisplayMetrics().density;
+        int touchX = (int) ((displaySize.x / 2f) / density);
+        int touchY = (int) ((displaySize.y / 2f) / density);
+
         return new ContextMenuParams(mType, mUri.toString(), mUri.toString(), mUri.toString(),
                 mUri.toString(), mUri.toString(), mUri.toString(), false /* imageWasFetchedLoFi */,
-                referrer, false /* canSaveMedia */);
+                referrer, false /* canSaveMedia */, touchX, touchY);
     }
 
     @Override
@@ -154,5 +162,12 @@ public class BrowserActionActivity extends AsyncInitializationActivity {
         if (mHelper != null) {
             mHelper.onContextMenuClosed();
         }
+    }
+
+    /**
+     * @return the package name of the requesting app.
+     */
+    public String getCreatorPackageName() {
+        return mCreatorPackageName;
     }
 }

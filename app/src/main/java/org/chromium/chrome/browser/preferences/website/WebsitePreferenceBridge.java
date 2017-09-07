@@ -187,8 +187,8 @@ public abstract class WebsitePreferenceBridge {
         return managedExceptions;
     }
 
-    public static void fetchLocalStorageInfo(Callback<HashMap> callback) {
-        nativeFetchLocalStorageInfo(callback);
+    public static void fetchLocalStorageInfo(Callback<HashMap> callback, boolean fetchImportant) {
+        nativeFetchLocalStorageInfo(callback, fetchImportant);
     }
 
     public static void fetchStorageInfo(Callback<ArrayList> callback) {
@@ -240,6 +240,14 @@ public abstract class WebsitePreferenceBridge {
         nativeSetDSEGeolocationSetting(setting);
     }
 
+    /**
+     * Returns whether this origin is activated for ad blocking, and will have resources blocked
+     * unless they are explicitly allowed via a permission.
+     */
+    public static boolean getAdBlockingActivated(String origin) {
+        return nativeGetAdBlockingActivated(origin);
+    }
+
     private static native void nativeGetGeolocationOrigins(Object list, boolean managedOnly);
     static native int nativeGetGeolocationSettingForOrigin(
             String origin, String embedder, boolean isIncognito);
@@ -273,7 +281,8 @@ public abstract class WebsitePreferenceBridge {
     static native void nativeClearCookieData(String path);
     static native void nativeClearLocalStorageData(String path);
     static native void nativeClearStorageData(String origin, int type, Object callback);
-    private static native void nativeFetchLocalStorageInfo(Object callback);
+    private static native void nativeFetchLocalStorageInfo(
+            Object callback, boolean includeImportant);
     private static native void nativeFetchStorageInfo(Object callback);
     static native boolean nativeIsContentSettingsPatternValid(String pattern);
     static native boolean nativeUrlMatchesContentSettingsPattern(String url, String pattern);
@@ -284,4 +293,5 @@ public abstract class WebsitePreferenceBridge {
             String origin, boolean isIncognito);
     private static native boolean nativeGetDSEGeolocationSetting();
     private static native void nativeSetDSEGeolocationSetting(boolean setting);
+    private static native boolean nativeGetAdBlockingActivated(String origin);
 }

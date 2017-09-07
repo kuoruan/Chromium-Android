@@ -40,6 +40,11 @@ Identity identity, int pid);
 
 
 
+    void onServicePidReceived(
+Identity identity, int pid);
+
+
+
     void onServiceFailedToStart(
 Identity identity);
 

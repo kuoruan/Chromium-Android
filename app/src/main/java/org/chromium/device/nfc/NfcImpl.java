@@ -38,6 +38,8 @@ import org.chromium.mojo.system.MojoException;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,6 +47,7 @@ import java.util.List;
  */
 public class NfcImpl implements Nfc {
     private static final String TAG = "NfcImpl";
+    private static final String ANY_PATH = "/*";
 
     private final int mHostId;
 
@@ -580,10 +583,8 @@ public class NfcImpl implements Nfc {
             return false;
         }
 
-        // Filter by NfcMessage.url
-        if (options.url != null && !options.url.isEmpty() && !options.url.equals(message.url)) {
-            return false;
-        }
+        // Filter by WebNfc watch Id.
+        if (!matchesWebNfcId(message.url, options.url)) return false;
 
         // Matches any record / media type.
         if ((options.mediaType == null || options.mediaType.isEmpty())
@@ -614,6 +615,33 @@ public class NfcImpl implements Nfc {
         }
 
         return false;
+    }
+
+    /**
+     * WebNfc Id match algorithm.
+     * https://w3c.github.io/web-nfc/#url-pattern-match-algorithm
+     */
+    private boolean matchesWebNfcId(String id, String pattern) {
+        if (id != null && !id.isEmpty() && pattern != null && !pattern.isEmpty()) {
+            try {
+                URL id_url = new URL(id);
+                URL pattern_url = new URL(pattern);
+
+                if (!id_url.getProtocol().equals(pattern_url.getProtocol())) return false;
+                if (!id_url.getHost().endsWith("." + pattern_url.getHost())
+                        && !id_url.getHost().equals(pattern_url.getHost())) {
+                    return false;
+                }
+                if (pattern_url.getPath().equals(ANY_PATH)) return true;
+                if (id_url.getPath().startsWith(pattern_url.getPath())) return true;
+                return false;
+
+            } catch (MalformedURLException e) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

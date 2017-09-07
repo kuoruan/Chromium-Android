@@ -208,11 +208,10 @@ public class InvalidHandle implements UntypedHandle, MessagePipeHandle, Consumer
     }
 
     /**
-     * @see MessagePipeHandle#readMessage(java.nio.ByteBuffer, int, MessagePipeHandle.ReadFlags)
+     * @see MessagePipeHandle#readMessage(MessagePipeHandle.ReadFlags)
      */
     @Override
-    public ResultAnd<ReadMessageResult> readMessage(
-            ByteBuffer bytes, int maxNumberOfHandles, ReadFlags flags) {
+    public ResultAnd<ReadMessageResult> readMessage(ReadFlags flags) {
         throw new MojoException(MojoResult.INVALID_ARGUMENT);
     }
 

@@ -18,6 +18,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.webkit.MimeTypeMap;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContentUriUtils;
@@ -156,6 +157,10 @@ public class SelectFileDialog implements WindowAndroid.IntentCallback,
                 && !window.hasPermission(Manifest.permission.RECORD_AUDIO)) {
             missingPermissions.add(Manifest.permission.RECORD_AUDIO);
         }
+        if (UiUtils.shouldShowPhotoPicker()
+                && !window.hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            missingPermissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+        }
 
         if (missingPermissions.isEmpty()) {
             launchSelectFileIntent();
@@ -187,6 +192,9 @@ public class SelectFileDialog implements WindowAndroid.IntentCallback,
      * @param camera Intent for selecting files from camera.
      */
     private void launchSelectFileWithCameraIntent(boolean hasCameraPermission, Intent camera) {
+        RecordHistogram.recordEnumeratedHistogram("Android.SelectFileDialogScope",
+                determineSelectFileDialogScope(), SELECT_FILE_DIALOG_SCOPE_COUNT);
+
         Intent camcorder = null;
         if (mSupportsVideoCapture && hasCameraPermission) {
             camcorder = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
@@ -210,14 +218,19 @@ public class SelectFileDialog implements WindowAndroid.IntentCallback,
             if (mWindowAndroid.showIntent(soundRecorder, this, R.string.low_memory_error)) return;
         }
 
+        // Use the new photo picker, if available.
+        Activity activity = mWindowAndroid.getActivity().get();
+        List<String> imageMimeTypes = convertToImageMimeTypes(mFileTypes);
+        if (activity != null && imageMimeTypes != null
+                && UiUtils.showPhotoPicker(activity, this, mAllowMultiple, imageMimeTypes)) {
+            return;
+        }
+
         Intent getContentIntent = new Intent(Intent.ACTION_GET_CONTENT);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 && mAllowMultiple) {
             getContentIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         }
-
-        RecordHistogram.recordEnumeratedHistogram("Android.SelectFileDialogScope",
-                determineSelectFileDialogScope(), SELECT_FILE_DIALOG_SCOPE_COUNT);
 
         ArrayList<Intent> extraIntents = new ArrayList<Intent>();
         if (!noSpecificType()) {
@@ -248,12 +261,6 @@ public class SelectFileDialog implements WindowAndroid.IntentCallback,
             if (soundRecorder != null) extraIntents.add(soundRecorder);
         }
 
-        // Use new photo picker, if available.
-        Activity activity = mWindowAndroid.getActivity().get();
-        if (activity != null && UiUtils.showPhotoPicker(activity, this, mAllowMultiple)) {
-            return;
-        }
-
         Intent chooser = new Intent(Intent.ACTION_CHOOSER);
         if (!extraIntents.isEmpty()) {
             chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS,
@@ -264,6 +271,49 @@ public class SelectFileDialog implements WindowAndroid.IntentCallback,
         if (!mWindowAndroid.showIntent(chooser, this, R.string.low_memory_error)) {
             onFileNotSelected();
         }
+    }
+
+    /**
+     * Converts a list of extensions and Mime types to a list of de-duped Mime types containing
+     * image types only. If the input list contains a non-image type, then null is returned.
+     * @param fileTypes the list of filetypes (extensions and Mime types) to convert.
+     * @return A de-duped list of Image Mime types only, or null if one or more non-image types were
+     *         given as input.
+     */
+    @VisibleForTesting
+    public static List<String> convertToImageMimeTypes(List<String> fileTypes) {
+        if (fileTypes.size() == 0) return null;
+        List<String> mimeTypes = new ArrayList<>();
+        for (String type : fileTypes) {
+            String mimeType = ensureMimeType(type);
+            if (!mimeType.startsWith("image/")) {
+                return null;
+            }
+            if (!mimeTypes.contains(mimeType)) mimeTypes.add(mimeType);
+        }
+        return mimeTypes;
+    }
+
+    /**
+     * Convert |type| to MIME type (known types only).
+     * @param type The type to convert. Can be either a MIME type or an extension (should include
+     *             the leading dot). If an extension is passed in, it is converted to the
+     *             corresponding MIME type (via {@link MimeTypeMap}), or "application/octet-stream"
+     *             if the MIME type is not known.
+     * @return The MIME type, if known, or "application/octet-stream" otherwise (or blank if input
+     *         is blank).
+     */
+    @VisibleForTesting
+    public static String ensureMimeType(String type) {
+        if (type.length() == 0) return "";
+
+        String extension = MimeTypeMap.getFileExtensionFromUrl(type);
+        if (extension.length() > 0) {
+            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+            if (mimeType != null) return mimeType;
+            return "application/octet-stream";
+        }
+        return type;
     }
 
     @Override

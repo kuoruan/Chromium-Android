@@ -22,6 +22,7 @@ import org.chromium.content.browser.AppWebMessagePort;
 import org.chromium.content.browser.MediaSessionImpl;
 import org.chromium.content.browser.RenderCoordinates;
 import org.chromium.content.browser.framehost.RenderFrameHostDelegate;
+import org.chromium.content.browser.framehost.RenderFrameHostImpl;
 import org.chromium.content_public.browser.AccessibilitySnapshotCallback;
 import org.chromium.content_public.browser.AccessibilitySnapshotNode;
 import org.chromium.content_public.browser.ContentBitmapCallback;
@@ -95,9 +96,13 @@ import java.util.UUID;
                 }
             };
 
+    // Note this list may be incomplete. Frames that never had to initialize java side would
+    // not have an entry here. This is here mainly to keep the java RenderFrameHosts alive, since
+    // native side generally cannot safely hold strong references to them.
+    private final List<RenderFrameHostImpl> mFrames = new ArrayList<>();
+
     private long mNativeWebContentsAndroid;
     private NavigationController mNavigationController;
-    private RenderFrameHost mMainFrame;
 
     // Lazily created proxy observer for handling all Java-based WebContentsObservers.
     private WebContentsObserverProxy mObserverProxy;
@@ -157,6 +162,20 @@ import java.util.UUID;
         }
     }
 
+    // =================== RenderFrameHostDelegate overrides ===================
+    @Override
+    public void renderFrameCreated(RenderFrameHostImpl host) {
+        assert !mFrames.contains(host);
+        mFrames.add(host);
+    }
+
+    @Override
+    public void renderFrameDeleted(RenderFrameHostImpl host) {
+        assert mFrames.contains(host);
+        mFrames.remove(host);
+    }
+    // ================= end RenderFrameHostDelegate overrides =================
+
     @Override
     public int describeContents() {
         return 0;
@@ -204,10 +223,7 @@ import java.util.UUID;
 
     @Override
     public RenderFrameHost getMainFrame() {
-        if (mMainFrame == null) {
-            mMainFrame = nativeGetMainFrame(mNativeWebContentsAndroid);
-        }
-        return mMainFrame;
+        return nativeGetMainFrame(mNativeWebContentsAndroid);
     }
 
     @Override
@@ -349,12 +365,6 @@ import java.util.UUID;
     public void adjustSelectionByCharacterOffset(int startAdjust, int endAdjust) {
         nativeAdjustSelectionByCharacterOffset(
                 mNativeWebContentsAndroid, startAdjust, endAdjust);
-    }
-
-    @Override
-    public String getUrl() {
-        if (isDestroyed()) return null;
-        return nativeGetURL(mNativeWebContentsAndroid);
     }
 
     @Override
@@ -568,8 +578,8 @@ import java.util.UUID;
     }
 
     @Override
-    public void showContextMenuAtPoint(int x, int y) {
-        nativeShowContextMenuAtPoint(mNativeWebContentsAndroid, x, y);
+    public void showContextMenuAtTouchHandle(int x, int y) {
+        nativeShowContextMenuAtTouchHandle(mNativeWebContentsAndroid, x, y);
     }
 
     @Override
@@ -580,6 +590,11 @@ import java.util.UUID;
     @Override
     public boolean hasActiveEffectivelyFullscreenVideo() {
         return nativeHasActiveEffectivelyFullscreenVideo(mNativeWebContentsAndroid);
+    }
+
+    @Override
+    public List<Rect> getCurrentlyPlayingVideoSizes() {
+        return nativeGetCurrentlyPlayingVideoSizes(mNativeWebContentsAndroid);
     }
 
     @CalledByNative
@@ -643,7 +658,6 @@ import java.util.UUID;
     private native void nativeSelectWordAroundCaret(long nativeWebContentsAndroid);
     private native void nativeAdjustSelectionByCharacterOffset(
             long nativeWebContentsAndroid, int startAdjust, int endAdjust);
-    private native String nativeGetURL(long nativeWebContentsAndroid);
     private native String nativeGetLastCommittedURL(long nativeWebContentsAndroid);
     private native boolean nativeIsIncognito(long nativeWebContentsAndroid);
     private native void nativeResumeLoadingCreatedWebContents(long nativeWebContentsAndroid);
@@ -671,8 +685,10 @@ import java.util.UUID;
             String url, boolean isFavicon, int maxBitmapSize,
             boolean bypassCache, ImageDownloadCallback callback);
     private native void nativeDismissTextHandles(long nativeWebContentsAndroid);
-    private native void nativeShowContextMenuAtPoint(long nativeWebContentsAndroid, int x, int y);
+    private native void nativeShowContextMenuAtTouchHandle(
+            long nativeWebContentsAndroid, int x, int y);
     private native void nativeSetHasPersistentVideo(long nativeWebContentsAndroid, boolean value);
     private native boolean nativeHasActiveEffectivelyFullscreenVideo(long nativeWebContentsAndroid);
+    private native List<Rect> nativeGetCurrentlyPlayingVideoSizes(long nativeWebContentsAndroid);
     private native EventForwarder nativeGetOrCreateEventForwarder(long nativeWebContentsAndroid);
 }

@@ -8,20 +8,14 @@ import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.PanelState;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.StateChangeReason;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchHeuristics;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchRankerLogger;
-import org.chromium.chrome.browser.contextualsearch.ContextualSearchRankerLoggerImpl;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchUma;
 import org.chromium.chrome.browser.contextualsearch.QuickActionCategory;
-
-import java.net.URL;
 
 /**
  * This class is responsible for all the logging related to Contextual Search.
  */
 public class ContextualSearchPanelMetrics {
     private static final int MILLISECONDS_TO_NANOSECONDS = 1000000;
-
-    // The Ranker logger to use to write Tap Suppression Ranker logs to UMA.
-    private final ContextualSearchRankerLogger mTapSuppressionRankerLogger;
 
     // Flags for logging.
     private boolean mDidSearchInvolvePromo;
@@ -58,14 +52,7 @@ public class ContextualSearchPanelMetrics {
     private ContextualSearchHeuristics mResultsSeenExperiments;
     // The current set of heuristics to be logged through ranker with results seen when the panel
     // closes.
-    private ContextualSearchHeuristics mRankerLogExperiments;
-
-    /**
-     * Constructs an object to track metrics for the Contextual Search Overlay Panel.
-     */
-    ContextualSearchPanelMetrics() {
-        mTapSuppressionRankerLogger = new ContextualSearchRankerLoggerImpl();
-    }
+    private ContextualSearchRankerLogger mRankerLogger;
 
     /**
      * Log information when the panel's state has changed.
@@ -97,8 +84,6 @@ public class ContextualSearchPanelMetrics {
                     (System.nanoTime() - mPanelTriggerTimeFromTapNs) / MILLISECONDS_TO_NANOSECONDS;
             ContextualSearchUma.logDurationBetweenTriggerAndScroll(
                     durationMs, mWasSearchContentViewSeen);
-            mTapSuppressionRankerLogger.log(
-                    ContextualSearchRankerLogger.Feature.DURATION_BEFORE_SCROLL_MS, durationMs);
         }
 
         if (isEndingSearch) {
@@ -118,19 +103,29 @@ public class ContextualSearchPanelMetrics {
             if (mWasContextualCardsDataShown) {
                 ContextualSearchUma.logContextualCardsResultsSeen(mWasSearchContentViewSeen);
             }
+            if (mRankerLogger != null) {
+                mRankerLogger.logOutcome(
+                        ContextualSearchRankerLogger.Feature.OUTCOME_WAS_CARDS_DATA_SHOWN,
+                        mWasContextualCardsDataShown);
+            }
             if (mWasQuickActionShown) {
                 ContextualSearchUma.logQuickActionResultsSeen(mWasSearchContentViewSeen,
                         mQuickActionCategory);
                 ContextualSearchUma.logQuickActionClicked(mWasQuickActionClicked,
                         mQuickActionCategory);
-                mTapSuppressionRankerLogger.logOutcome(
-                        ContextualSearchRankerLogger.Feature.OUTCOME_WAS_QUICK_ACTION_CLICKED,
-                        mWasQuickActionClicked);
+                if (mRankerLogger != null) {
+                    mRankerLogger.logOutcome(
+                            ContextualSearchRankerLogger.Feature.OUTCOME_WAS_QUICK_ACTION_CLICKED,
+                            mWasQuickActionClicked);
+                }
             }
 
             if (mResultsSeenExperiments != null) {
                 mResultsSeenExperiments.logResultsSeen(
                         mWasSearchContentViewSeen, mWasActivatedByTap);
+                if (mRankerLogger != null) {
+                    mResultsSeenExperiments.logRankerTapSuppressionOutcome(mRankerLogger);
+                }
                 mResultsSeenExperiments = null;
             }
 
@@ -138,21 +133,22 @@ public class ContextualSearchPanelMetrics {
                 boolean wasAnySuppressionHeuristicSatisfied = mWasAnyHeuristicSatisfiedOnPanelShow;
                 ContextualSearchUma.logAnyTapSuppressionHeuristicSatisfied(
                         mWasSearchContentViewSeen, wasAnySuppressionHeuristicSatisfied);
-                // Log all the experiments to the Ranker logger.
-                if (mRankerLogExperiments != null) {
-                    mTapSuppressionRankerLogger.logOutcome(
+                // Update The Ranker logger.
+                if (mRankerLogger != null) {
+                    // Tell Ranker about the primary outcome.
+                    mRankerLogger.logOutcome(
                             ContextualSearchRankerLogger.Feature.OUTCOME_WAS_PANEL_OPENED,
                             mWasSearchContentViewSeen);
-                    mRankerLogExperiments.logRankerTapSuppression(mTapSuppressionRankerLogger);
-                    mRankerLogExperiments = null;
+                    // TODO(donnd): UMA-Log the Ranker inference signal once we're running a model.
                 }
-                // Reset writing to Ranker so whatever interactions occurred are recorded as a
-                // complete record.
-                mTapSuppressionRankerLogger.writeLogAndReset();
-
                 ContextualSearchUma.logSelectionLengthResultsSeen(
                         mWasSearchContentViewSeen, mSelectionLength);
             }
+
+            // Reset writing to Ranker so whatever interactions occurred are recorded as a
+            // complete record.
+            if (mRankerLogger != null) mRankerLogger.writeLogAndReset();
+            mRankerLogger = null;
         }
 
         if (isExitingPanelOpenedBeyondPeeked) {
@@ -329,15 +325,12 @@ public class ContextualSearchPanelMetrics {
     }
 
     /**
-     * Sets the experiments to log through Ranker with results seen.
-     * @param rankerLogExperiments The experiments to log through Ranker when the panel results
-     *        are known.
-     * @param basePageUrl The URL of the base page to log along with Ranker data.
+     * Sets up logging through Ranker for outcomes.
+     * @param rankerLogger The {@link ContextualSearchRankerLogger} currently being used to measure
+     *                     or suppress the UI by Ranker.
      */
-    public void setRankerLogExperiments(
-            ContextualSearchHeuristics rankerLogExperiments, URL basePageUrl) {
-        mRankerLogExperiments = rankerLogExperiments;
-        mTapSuppressionRankerLogger.setupLoggingForPage(basePageUrl);
+    public void setRankerLogger(ContextualSearchRankerLogger rankerLogger) {
+        mRankerLogger = rankerLogger;
     }
 
     /**

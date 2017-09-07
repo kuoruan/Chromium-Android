@@ -87,7 +87,7 @@ public class DuplicateDownloadInfoBar extends ConfirmInfoBar {
                     @Override
                     protected void onPostExecute(Boolean fileExists) {
                         if (fileExists) {
-                            DownloadUtils.openFile(file, mimeType, null, mIsIncognito);
+                            DownloadUtils.openFile(file, mimeType, null, mIsIncognito, null, null);
                         } else {
                             DownloadManagerService.openDownloadsPage(
                                     ContextUtils.getApplicationContext());

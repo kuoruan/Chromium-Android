@@ -85,6 +85,9 @@ public class ToolbarProgressBar extends ClipDrawableProgressBar {
 
     private ToolbarProgressBarAnimatingView mAnimatingView;
 
+    /** Whether or not the progress bar is attached to the window. */
+    private boolean mIsAttachedToWindow;
+
     private final Runnable mHideRunnable = new Runnable() {
         @Override
         public void run() {
@@ -163,15 +166,24 @@ public class ToolbarProgressBar extends ClipDrawableProgressBar {
     public void setTopMargin(int topMargin) {
         mMarginTop = topMargin;
 
-        assert getLayoutParams() != null;
-        ((ViewGroup.MarginLayoutParams) getLayoutParams()).topMargin = mMarginTop;
+        if (mIsAttachedToWindow) {
+            assert getLayoutParams() != null;
+            ((ViewGroup.MarginLayoutParams) getLayoutParams()).topMargin = mMarginTop;
+        }
     }
 
     @Override
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
+        mIsAttachedToWindow = true;
 
         ((ViewGroup.MarginLayoutParams) getLayoutParams()).topMargin = mMarginTop;
+    }
+
+    @Override
+    public void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mIsAttachedToWindow = false;
     }
 
     /**
@@ -234,12 +246,6 @@ public class ToolbarProgressBar extends ClipDrawableProgressBar {
                 setForegroundColor(getForegroundColor());
             }
             UiUtils.insertAfter(mProgressBarContainer, mAnimatingView, this);
-        } else if (TextUtils.equals(animation, "fast-start")) {
-            mAnimationLogic = new ProgressAnimationFastStart();
-        } else if (TextUtils.equals(animation, "linear")) {
-            mAnimationLogic = new ProgressAnimationLinear();
-        } else {
-            assert TextUtils.isEmpty(animation) || TextUtils.equals(animation, "disabled");
         }
     }
 

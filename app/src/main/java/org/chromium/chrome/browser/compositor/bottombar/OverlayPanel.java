@@ -54,7 +54,6 @@ public class OverlayPanel extends OverlayPanelAnimation implements ActivityState
 
     /**
      * The reason for a change in the Overlay Panel's state.
-     * TODO(mdjones): Separate generic reasons from Contextual Search reasons.
      */
     public enum StateChangeReason {
         UNKNOWN,
@@ -76,15 +75,7 @@ public class OverlayPanel extends OverlayPanelAnimation implements ActivityState
         OPTOUT,
         CLOSE_BUTTON,
         SUPPRESS,
-        UNSUPPRESS,
-        FULLSCREEN_ENTERED,
-        FULLSCREEN_EXITED,
-        INFOBAR_SHOWN,
-        INFOBAR_HIDDEN,
-        CONTENT_CHANGED,
-        KEYBOARD_SHOWN,
-        KEYBOARD_HIDDEN,
-        TAB_NAVIGATION
+        UNSUPPRESS
     }
 
     /** The activity this panel is in. */

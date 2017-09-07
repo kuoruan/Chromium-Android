@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.signin;
 import android.accounts.Account;
 import android.content.Context;
 import android.os.StrictMode;
+import android.support.annotation.MainThread;
 import android.util.Log;
 
 import org.chromium.base.ContextUtils;
@@ -15,7 +16,7 @@ import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.profiles.Profile;
-import org.chromium.components.signin.AccountManagerHelper;
+import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.components.signin.ChromeSigninController;
 
 import java.util.Arrays;
@@ -29,7 +30,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * Java instance for the native OAuth2TokenService.
  * <p/>
  * This class forwards calls to request or invalidate access tokens made by native code to
- * AccountManagerHelper and forwards callbacks to native code.
+ * AccountManagerFacade and forwards callbacks to native code.
  * <p/>
  */
 public final class OAuth2TokenService
@@ -92,8 +93,8 @@ public final class OAuth2TokenService
             return null;
         }
 
-        AccountManagerHelper accountManagerHelper = AccountManagerHelper.get();
-        Account account = accountManagerHelper.getAccountFromName(username);
+        AccountManagerFacade accountManagerFacade = AccountManagerFacade.get();
+        Account account = accountManagerFacade.getAccountFromName(username);
         if (account == null) {
             Log.e(TAG, "Account not found for provided username.");
             return null;
@@ -107,8 +108,8 @@ public final class OAuth2TokenService
     @VisibleForTesting
     @CalledByNative
     public static String[] getSystemAccountNames() {
-        AccountManagerHelper accountManagerHelper = AccountManagerHelper.get();
-        java.util.List<String> accountNames = accountManagerHelper.getGoogleAccountNames();
+        AccountManagerFacade accountManagerFacade = AccountManagerFacade.get();
+        java.util.List<String> accountNames = accountManagerFacade.tryGetGoogleAccountNames();
         return accountNames.toArray(new String[accountNames.size()]);
     }
 
@@ -129,6 +130,7 @@ public final class OAuth2TokenService
      * @param scope The scope to get an auth token for (without Android-style 'oauth2:' prefix).
      * @param nativeCallback The pointer to the native callback that should be run upon completion.
      */
+    @MainThread
     @CalledByNative
     public static void getOAuth2AuthToken(
             String username, String scope, final long nativeCallback) {
@@ -144,9 +146,9 @@ public final class OAuth2TokenService
         }
         String oauth2Scope = OAUTH2_SCOPE_PREFIX + scope;
 
-        AccountManagerHelper accountManagerHelper = AccountManagerHelper.get();
-        accountManagerHelper.getAuthToken(
-                account, oauth2Scope, new AccountManagerHelper.GetAuthTokenCallback() {
+        AccountManagerFacade accountManagerFacade = AccountManagerFacade.get();
+        accountManagerFacade.getAuthToken(
+                account, oauth2Scope, new AccountManagerFacade.GetAuthTokenCallback() {
                     @Override
                     public void tokenAvailable(String token) {
                         nativeOAuth2TokenFetched(token, false, nativeCallback);
@@ -166,10 +168,11 @@ public final class OAuth2TokenService
      * @param scope The scope to get an auth token for (without Android-style 'oauth2:' prefix).
      * @param callback called on successful and unsuccessful fetching of auth token.
      */
+    @MainThread
     public static void getOAuth2AccessToken(Context context, Account account, String scope,
-            AccountManagerHelper.GetAuthTokenCallback callback) {
+            AccountManagerFacade.GetAuthTokenCallback callback) {
         String oauth2Scope = OAUTH2_SCOPE_PREFIX + scope;
-        AccountManagerHelper.get().getAuthToken(account, oauth2Scope, callback);
+        AccountManagerFacade.get().getAuthToken(account, oauth2Scope, callback);
     }
 
     /**
@@ -190,7 +193,7 @@ public final class OAuth2TokenService
         final AtomicReference<String> result = new AtomicReference<String>();
         final Semaphore semaphore = new Semaphore(0);
         getOAuth2AccessToken(
-                context, account, scope, new AccountManagerHelper.GetAuthTokenCallback() {
+                context, account, scope, new AccountManagerFacade.GetAuthTokenCallback() {
                     @Override
                     public void tokenAvailable(String token) {
                         result.set(token);
@@ -227,7 +230,7 @@ public final class OAuth2TokenService
         // expected to be called in the UI thread synchronously.
         StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
         try {
-            return AccountManagerHelper.get().hasAccountForName(accountName);
+            return AccountManagerFacade.get().hasAccountForName(accountName);
         } finally {
             StrictMode.setThreadPolicy(oldPolicy);
         }
@@ -239,7 +242,7 @@ public final class OAuth2TokenService
     @CalledByNative
     public static void invalidateOAuth2AuthToken(String accessToken) {
         if (accessToken != null) {
-            AccountManagerHelper.get().invalidateAuthToken(accessToken);
+            AccountManagerFacade.get().invalidateAuthToken(accessToken);
         }
     }
 
@@ -317,7 +320,7 @@ public final class OAuth2TokenService
     @CalledByNative
     private void notifyRefreshTokenAvailable(String accountName) {
         assert accountName != null;
-        Account account = AccountManagerHelper.createAccountFromName(accountName);
+        Account account = AccountManagerFacade.createAccountFromName(accountName);
         for (OAuth2TokenServiceObserver observer : mObservers) {
             observer.onRefreshTokenAvailable(account);
         }
@@ -338,7 +341,7 @@ public final class OAuth2TokenService
     @CalledByNative
     public void notifyRefreshTokenRevoked(String accountName) {
         assert accountName != null;
-        Account account = AccountManagerHelper.createAccountFromName(accountName);
+        Account account = AccountManagerFacade.createAccountFromName(accountName);
         for (OAuth2TokenServiceObserver observer : mObservers) {
             observer.onRefreshTokenRevoked(account);
         }

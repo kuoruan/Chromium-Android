@@ -15,17 +15,21 @@ public interface ThumbnailProvider {
 
         /** Called when a thumbnail is ready. */
         void onThumbnailRetrieved(String filePath, Bitmap thumbnail);
+
+        /** The size of the thumbnail to be retrieved. */
+        int getIconSize();
     }
 
     /** Destroys the class. */
     void destroy();
 
     /**
-     * Synchronously returns a thumbnail if it is cached. Otherwise, asynchronously returns a
-     * thumbnail via {@link ThumbnailRequest#onThumbnailRetrieved}.
+     * Calls {@link ThumbnailRequest#onThumbnailRetrieved} immediately if the thumbnail is cached.
+     * Otherwise, asynchronously fetches the thumbnail from the provider and calls
+     * {@link ThumbnailRequest#onThumbnailRetrieved} when the result is ready.
      * @param request Parameters that describe the thumbnail being retrieved.
      */
-    Bitmap getThumbnail(ThumbnailRequest request);
+    void getThumbnail(ThumbnailRequest request);
 
     /** Removes a particular request from the pending queue. */
     void cancelRetrieval(ThumbnailRequest request);

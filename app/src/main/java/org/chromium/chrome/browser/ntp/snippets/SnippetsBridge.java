@@ -7,11 +7,11 @@ package org.chromium.chrome.browser.ntp.snippets;
 import android.graphics.Bitmap;
 
 import org.chromium.base.Callback;
+import org.chromium.base.ObserverList;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.ntp.cards.SuggestionsCategoryInfo;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.suggestions.ContentSuggestionsAdditionalAction;
-import org.chromium.chrome.browser.suggestions.DestructionObserver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,15 +19,19 @@ import java.util.List;
 /**
  * Provides access to the snippets to display on the NTP using the C++ ContentSuggestionsService.
  */
-public class SnippetsBridge implements SuggestionsSource, DestructionObserver {
+public class SnippetsBridge implements SuggestionsSource {
     private static final String TAG = "SnippetsBridge";
 
     private long mNativeSnippetsBridge;
-    private SuggestionsSource.Observer mObserver;
+    private final ObserverList<Observer> mObserverList = new ObserverList<>();
 
     public static boolean isCategoryStatusAvailable(@CategoryStatus int status) {
-        // Note: This code is duplicated in content_suggestions_category_status.cc.
+        // Note: This code is duplicated in category_status.cc.
         return status == CategoryStatus.AVAILABLE_LOADING || status == CategoryStatus.AVAILABLE;
+    }
+
+    public static boolean isCategoryRemote(@CategoryInt int category) {
+        return category > KnownCategories.REMOTE_CATEGORIES_OFFSET;
     }
 
     /** Returns whether the category is considered "enabled", and can show content suggestions. */
@@ -54,38 +58,36 @@ public class SnippetsBridge implements SuggestionsSource, DestructionObserver {
         mNativeSnippetsBridge = nativeInit(profile);
     }
 
-    /**
-     * Destroys the native bridge. This object can no longer be used to send native commands, and
-     * any observer is nulled out and will stop receiving updates. This object should be discarded.
-     */
     @Override
-    public void onDestroy() {
+    public void destroy() {
         assert mNativeSnippetsBridge != 0;
         nativeDestroy(mNativeSnippetsBridge);
         mNativeSnippetsBridge = 0;
-        mObserver = null;
+        mObserverList.clear();
     }
 
     /**
-     * Reschedules the fetching of snippets.
+     * Notifies that Chrome on Android has been upgraded.
      */
-    public static void rescheduleFetching() {
-        nativeRemoteSuggestionsSchedulerRescheduleFetching();
+    public static void onBrowserUpgraded() {
+        nativeRemoteSuggestionsSchedulerOnBrowserUpgraded();
     }
 
     /**
-     * Fetches remote suggestions in background.
+     * Notifies that the persistent fetching scheduler woke up.
      */
-    public static void fetchRemoteSuggestionsFromBackground() {
-        nativeRemoteSuggestionsSchedulerOnFetchDue();
+    public static void onPersistentSchedulerWakeUp() {
+        nativeRemoteSuggestionsSchedulerOnPersistentSchedulerWakeUp();
     }
 
     public static void setRemoteSuggestionsEnabled(boolean enabled) {
         nativeSetRemoteSuggestionsEnabled(enabled);
     }
 
-    public static boolean areRemoteSuggestionsEnabled() {
-        return nativeAreRemoteSuggestionsEnabled();
+    @Override
+    public boolean areRemoteSuggestionsEnabled() {
+        assert mNativeSnippetsBridge != 0;
+        return nativeAreRemoteSuggestionsEnabled(mNativeSnippetsBridge);
     }
 
     public static boolean areRemoteSuggestionsManaged() {
@@ -106,6 +108,7 @@ public class SnippetsBridge implements SuggestionsSource, DestructionObserver {
 
     @Override
     public void fetchRemoteSuggestions() {
+        assert mNativeSnippetsBridge != 0;
         nativeReloadSuggestions(mNativeSnippetsBridge);
     }
 
@@ -175,14 +178,21 @@ public class SnippetsBridge implements SuggestionsSource, DestructionObserver {
     }
 
     @Override
-    public void setObserver(Observer observer) {
+    public void addObserver(Observer observer) {
         assert observer != null;
-        mObserver = observer;
+        mObserverList.addObserver(observer);
     }
 
     @Override
-    public void fetchSuggestions(@CategoryInt int category, String[] displayedSuggestionIds) {
-        nativeFetch(mNativeSnippetsBridge, category, displayedSuggestionIds);
+    public void removeObserver(Observer observer) {
+        mObserverList.removeObserver(observer);
+    }
+
+    @Override
+    public void fetchSuggestions(@CategoryInt int category, String[] displayedSuggestionIds,
+            Callback<List<SnippetArticle>> callback) {
+        assert mNativeSnippetsBridge != 0;
+        nativeFetch(mNativeSnippetsBridge, category, displayedSuggestionIds, callback);
     }
 
     @CalledByNative
@@ -193,10 +203,10 @@ public class SnippetsBridge implements SuggestionsSource, DestructionObserver {
     @CalledByNative
     private static SnippetArticle addSuggestion(List<SnippetArticle> suggestions, int category,
             String id, String title, String publisher, String previewText, String url,
-            long timestamp, float score, long fetchTime) {
+            long timestamp, float score, long fetchTime, boolean isVideoSuggestion) {
         int position = suggestions.size();
-        suggestions.add(new SnippetArticle(
-                category, id, title, publisher, previewText, url, timestamp, score, fetchTime));
+        suggestions.add(new SnippetArticle(category, id, title, publisher, previewText, url,
+                timestamp, score, fetchTime, isVideoSuggestion));
         return suggestions.get(position);
     }
 
@@ -229,36 +239,35 @@ public class SnippetsBridge implements SuggestionsSource, DestructionObserver {
 
     @CalledByNative
     private void onNewSuggestions(@CategoryInt int category) {
-        if (mObserver != null) mObserver.onNewSuggestions(category);
-    }
-
-    @CalledByNative
-    private void onMoreSuggestions(@CategoryInt int category, List<SnippetArticle> suggestions) {
-        if (mObserver != null) mObserver.onMoreSuggestions(category, suggestions);
+        for (Observer observer : mObserverList) observer.onNewSuggestions(category);
     }
 
     @CalledByNative
     private void onCategoryStatusChanged(@CategoryInt int category, @CategoryStatus int newStatus) {
-        if (mObserver != null) mObserver.onCategoryStatusChanged(category, newStatus);
+        for (Observer observer : mObserverList) {
+            observer.onCategoryStatusChanged(category, newStatus);
+        }
     }
 
     @CalledByNative
     private void onSuggestionInvalidated(@CategoryInt int category, String idWithinCategory) {
-        if (mObserver != null) mObserver.onSuggestionInvalidated(category, idWithinCategory);
+        for (Observer observer : mObserverList) {
+            observer.onSuggestionInvalidated(category, idWithinCategory);
+        }
     }
 
     @CalledByNative
     private void onFullRefreshRequired() {
-        if (mObserver != null) mObserver.onFullRefreshRequired();
+        for (Observer observer : mObserverList) observer.onFullRefreshRequired();
     }
 
     private native long nativeInit(Profile profile);
     private native void nativeDestroy(long nativeNTPSnippetsBridge);
     private native void nativeReloadSuggestions(long nativeNTPSnippetsBridge);
-    private static native void nativeRemoteSuggestionsSchedulerOnFetchDue();
-    private static native void nativeRemoteSuggestionsSchedulerRescheduleFetching();
+    private static native void nativeRemoteSuggestionsSchedulerOnPersistentSchedulerWakeUp();
+    private static native void nativeRemoteSuggestionsSchedulerOnBrowserUpgraded();
     private static native void nativeSetRemoteSuggestionsEnabled(boolean enabled);
-    private static native boolean nativeAreRemoteSuggestionsEnabled();
+    private native boolean nativeAreRemoteSuggestionsEnabled(long nativeNTPSnippetsBridge);
     private static native boolean nativeAreRemoteSuggestionsManaged();
     private static native boolean nativeAreRemoteSuggestionsManagedByCustodian();
     private static native void nativeSetContentSuggestionsNotificationsEnabled(boolean enabled);
@@ -274,8 +283,8 @@ public class SnippetsBridge implements SuggestionsSource, DestructionObserver {
     private native void nativeFetchSuggestionFavicon(long nativeNTPSnippetsBridge, int category,
             String idWithinCategory, int minimumSizePx, int desiredSizePx,
             Callback<Bitmap> callback);
-    private native void nativeFetch(
-            long nativeNTPSnippetsBridge, int category, String[] knownSuggestions);
+    private native void nativeFetch(long nativeNTPSnippetsBridge, int category,
+            String[] knownSuggestions, Callback<List<SnippetArticle>> callback);
     private native void nativeFetchContextualSuggestions(
             long nativeNTPSnippetsBridge, String url, Callback<List<SnippetArticle>> callback);
     private native void nativeDismissSuggestion(long nativeNTPSnippetsBridge, String url,

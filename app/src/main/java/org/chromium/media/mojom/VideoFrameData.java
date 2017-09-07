@@ -18,11 +18,13 @@ import org.chromium.mojo.bindings.DeserializationException;
 public final class VideoFrameData extends org.chromium.mojo.bindings.Union {
 
     public static final class Tag {
-        public static final int SharedBufferData = 0;
-        public static final int MailboxData = 1;
+        public static final int EosData = 0;
+        public static final int SharedBufferData = 1;
+        public static final int MailboxData = 2;
     };
 
     private int mTag_ = -1;
+    private EosVideoFrameData mEosData;
     private SharedBufferVideoFrameData mSharedBufferData;
     private MailboxVideoFrameData mMailboxData;
 
@@ -32,6 +34,22 @@ public final class VideoFrameData extends org.chromium.mojo.bindings.Union {
 
     public boolean isUnknown() {
       return mTag_ == -1;
+    }
+
+    // TODO(rockot): Fix the findbugs error and remove this suppression.
+    // See http://crbug.com/570386.
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public void setEosData(EosVideoFrameData eosData) {
+        mTag_ = Tag.EosData;
+        mEosData = eosData;
+    }
+
+    // TODO(rockot): Fix the findbugs error and remove this suppression.
+    // See http://crbug.com/570386.
+    @SuppressFBWarnings("EI_EXPOSE_REP")
+    public EosVideoFrameData getEosData() {
+        assert mTag_ == Tag.EosData;
+        return mEosData;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
@@ -72,6 +90,11 @@ public final class VideoFrameData extends org.chromium.mojo.bindings.Union {
         encoder0.encode(org.chromium.mojo.bindings.BindingsHelper.UNION_SIZE, offset);
         encoder0.encode(mTag_, offset + 4);
         switch (mTag_) {
+            case Tag.EosData: {
+                
+                encoder0.encode(mEosData, offset + 8, false);
+                break;
+            }
             case Tag.SharedBufferData: {
                 
                 encoder0.encode(mSharedBufferData, offset + 8, false);
@@ -99,6 +122,13 @@ public final class VideoFrameData extends org.chromium.mojo.bindings.Union {
         }
         VideoFrameData result = new VideoFrameData();
         switch (dataHeader.elementsOrVersion) {
+            case Tag.EosData: {
+                
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(offset + org.chromium.mojo.bindings.DataHeader.HEADER_SIZE, false);
+                result.mEosData = EosVideoFrameData.decode(decoder1);
+                result.mTag_ = Tag.EosData;
+                break;
+            }
             case Tag.SharedBufferData: {
                 
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(offset + org.chromium.mojo.bindings.DataHeader.HEADER_SIZE, false);
@@ -135,6 +165,8 @@ public final class VideoFrameData extends org.chromium.mojo.bindings.Union {
         if (mTag_ != other.mTag_)
             return false;
         switch (mTag_) {
+            case Tag.EosData:
+                return org.chromium.mojo.bindings.BindingsHelper.equals(mEosData, other.mEosData);
             case Tag.SharedBufferData:
                 return org.chromium.mojo.bindings.BindingsHelper.equals(mSharedBufferData, other.mSharedBufferData);
             case Tag.MailboxData:
@@ -154,6 +186,10 @@ public final class VideoFrameData extends org.chromium.mojo.bindings.Union {
         int result = prime + getClass().hashCode();
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mTag_);
         switch (mTag_) {
+            case Tag.EosData: {
+                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mEosData);
+                break;
+            }
             case Tag.SharedBufferData: {
                 result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mSharedBufferData);
                 break;

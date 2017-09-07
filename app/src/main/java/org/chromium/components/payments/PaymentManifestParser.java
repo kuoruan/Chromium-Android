@@ -4,6 +4,7 @@
 
 package org.chromium.components.payments;
 
+import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.payments.mojom.WebAppManifestSection;
@@ -42,6 +43,7 @@ public class PaymentManifestParser {
 
     /** Starts the utility process. */
     public void startUtilityProcess() {
+        ThreadUtils.assertOnUiThread();
         assert mNativePaymentManifestParserAndroid == 0;
         mNativePaymentManifestParserAndroid = nativeCreatePaymentManifestParserAndroid();
         nativeStartUtilityProcess(mNativePaymentManifestParserAndroid);
@@ -49,6 +51,7 @@ public class PaymentManifestParser {
 
     /** Stops the utility process. */
     public void stopUtilityProcess() {
+        ThreadUtils.assertOnUiThread();
         assert mNativePaymentManifestParserAndroid != 0;
         nativeStopUtilityProcess(mNativePaymentManifestParserAndroid);
         mNativePaymentManifestParserAndroid = 0;
@@ -56,6 +59,7 @@ public class PaymentManifestParser {
 
     /** @return Whether the utility process is running. */
     public boolean isUtilityProcessRunning() {
+        ThreadUtils.assertOnUiThread();
         return mNativePaymentManifestParserAndroid != 0;
     }
 
@@ -66,6 +70,8 @@ public class PaymentManifestParser {
      * @param callback The callback to invoke when finished parsing.
      */
     public void parsePaymentMethodManifest(String content, ManifestParseCallback callback) {
+        ThreadUtils.assertOnUiThread();
+        assert mNativePaymentManifestParserAndroid != 0;
         nativeParsePaymentMethodManifest(mNativePaymentManifestParserAndroid, content, callback);
     }
 
@@ -76,6 +82,8 @@ public class PaymentManifestParser {
      * @param callback The callback to invoke when finished parsing.
      */
     public void parseWebAppManifest(String content, ManifestParseCallback callback) {
+        ThreadUtils.assertOnUiThread();
+        assert mNativePaymentManifestParserAndroid != 0;
         nativeParseWebAppManifest(mNativePaymentManifestParserAndroid, content, callback);
     }
 

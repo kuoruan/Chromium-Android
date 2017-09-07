@@ -10,10 +10,10 @@ import android.os.Build;
 
 import org.chromium.base.Callback;
 import org.chromium.base.CommandLine;
-import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.ntp.NewTabPageUma;
 import org.chromium.chrome.browser.profiles.Profile;
@@ -33,7 +33,6 @@ import org.chromium.ui.mojom.WindowOpenDisposition;
  * the {@link TileGroup} should not know about.
  */
 public class TileGroupDelegateImpl implements TileGroup.Delegate {
-    private static MostVisitedSites sMostVisitedSitesForTests;
 
     private final Context mContext;
     private final SnackbarManager mSnackbarManager;
@@ -51,7 +50,8 @@ public class TileGroupDelegateImpl implements TileGroup.Delegate {
         mSnackbarManager = snackbarManager;
         mTabModelSelector = tabModelSelector;
         mNavigationDelegate = navigationDelegate;
-        mMostVisitedSites = buildMostVisitedSites(profile);
+        mMostVisitedSites =
+                SuggestionsDependencyFactory.getInstance().createMostVisitedSites(profile);
     }
 
     @Override
@@ -90,19 +90,24 @@ public class TileGroupDelegateImpl implements TileGroup.Delegate {
 
     @Override
     public void onLoadingComplete(Tile[] tiles) {
-        assert !mIsDestroyed;
-
-        int types[] = new int[tiles.length];
-        int sources[] = new int[tiles.length];
-        String urls[] = new String[tiles.length];
+        // This method is called after network calls complete. It could happen after the suggestions
+        // surface is destroyed.
+        if (mIsDestroyed) return;
 
         for (int i = 0; i < tiles.length; i++) {
-            types[i] = tiles[i].getType();
-            sources[i] = tiles[i].getSource();
-            urls[i] = tiles[i].getUrl();
+            mMostVisitedSites.recordTileImpression(
+                    i, tiles[i].getType(), tiles[i].getSource(), tiles[i].getUrl());
         }
 
-        mMostVisitedSites.recordPageImpression(types, sources, urls);
+        mMostVisitedSites.recordPageImpression(tiles.length);
+
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.NTP_OFFLINE_PAGES_FEATURE_NAME)) {
+            for (int i = 0; i < tiles.length; i++) {
+                if (tiles[i].isOfflineAvailable()) {
+                    SuggestionsMetrics.recordTileOfflineAvailability(i);
+                }
+            }
+        }
     }
 
     @Override
@@ -114,19 +119,6 @@ public class TileGroupDelegateImpl implements TileGroup.Delegate {
             mSnackbarManager.dismissSnackbars(mTileRemovedSnackbarController);
         }
         mMostVisitedSites.destroy();
-    }
-
-    private static MostVisitedSites buildMostVisitedSites(Profile profile) {
-        if (sMostVisitedSitesForTests != null) {
-            return sMostVisitedSitesForTests;
-        } else {
-            return new MostVisitedSitesBridge(profile);
-        }
-    }
-
-    @VisibleForTesting
-    public static void setMostVisitedSitesForTests(MostVisitedSites mostVisitedSitesForTests) {
-        sMostVisitedSitesForTests = mostVisitedSitesForTests;
     }
 
     private void showTileRemovedSnackbar(String url, final Callback<String> removalUndoneCallback) {

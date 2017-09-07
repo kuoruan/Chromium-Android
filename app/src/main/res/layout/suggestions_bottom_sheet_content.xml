@@ -6,8 +6,7 @@
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/ntp_bg" >
+    android:layout_height="match_parent">
 
     <org.chromium.chrome.browser.suggestions.SuggestionsRecyclerView
         android:id="@+id/recycler_view"

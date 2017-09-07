@@ -19,11 +19,15 @@
             android:layout_height="wrap_content"
             android:textAppearance="@style/PreferenceFloatLabelTextAppearance" />
 
-    <LinearLayout
+    <org.chromium.chrome.browser.payments.ui.ExpandableGridView
             android:id="@+id/icons_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:columnWidth="@dimen/payments_section_logo_width"
             android:layout_marginTop="@dimen/payments_section_small_spacing"
-            android:orientation="horizontal" />
+            android:verticalSpacing="@dimen/payments_section_small_spacing"
+            android:horizontalSpacing="@dimen/payments_section_small_spacing"
+            android:stretchMode="none"
+            android:numColumns="auto_fit" />
 
 </LinearLayout>

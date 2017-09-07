@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.widget.selection;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.CallSuper;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -18,6 +19,7 @@ import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
@@ -30,6 +32,8 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ObserverList;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.toolbar.ActionModeController;
+import org.chromium.chrome.browser.toolbar.ToolbarActionModeCallback;
 import org.chromium.chrome.browser.widget.NumberRollView;
 import org.chromium.chrome.browser.widget.TintedDrawable;
 import org.chromium.chrome.browser.widget.TintedImageButton;
@@ -79,6 +83,11 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
          *                     parameter is true, it indicates that dark drawables should be used.
          */
         void onThemeColorChanged(boolean isLightTheme);
+
+        /**
+         * A notification that search mode has been activated for this toolbar.
+         */
+        void onStartSearch();
     }
 
     /** No navigation button is displayed. **/
@@ -99,6 +108,7 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
 
     private boolean mHasSearchView;
     private LinearLayout mSearchView;
+    private EditText mSearchText;
     private EditText mSearchEditText;
     private TintedImageButton mClearTextButton;
     private SearchDelegate mSearchDelegate;
@@ -113,6 +123,7 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
     private int mNavigationButton;
     private int mTitleResId;
     private int mSearchMenuItemId;
+    private int mInfoMenuItemId;
     private int mNormalGroupResId;
     private int mSelectedGroupResId;
 
@@ -215,6 +226,7 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
         LayoutInflater.from(getContext()).inflate(R.layout.search_toolbar, this);
 
         mSearchView = (LinearLayout) findViewById(R.id.search_view);
+        mSearchText = (EditText) mSearchView.findViewById(R.id.search_text);
 
         mSearchEditText = (EditText) findViewById(R.id.search_text);
         mSearchEditText.setHint(hintStringResId);
@@ -249,7 +261,7 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
 
         LayoutInflater.from(getContext()).inflate(R.layout.number_roll_view, this);
         mNumberRollView = (NumberRollView) findViewById(R.id.selection_mode_number);
-        mNumberRollView.setContentDescriptionString(R.plurals.accessibility_selected_items);
+        mNumberRollView.setString(R.plurals.selected_items);
 
         mOriginalContentInsetStart = getContentInsetStart();
         mOriginalContentInsetEnd = getContentInsetEnd();
@@ -377,10 +389,21 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
         mSelectionDelegate.clearSelection();
 
         showSearchViewInternal();
+        for (SelectableListToolbarObserver o : mObservers) o.onStartSearch();
 
         mSearchEditText.requestFocus();
         UiUtils.showKeyboard(mSearchEditText);
         setTitle(null);
+    }
+
+    /**
+     * Set a custom delegate for when the action mode starts showing for the search view.
+     * @param delegate The delegate to use.
+     */
+    public void setActionBarDelegate(ActionModeController.ActionBarDelegate delegate) {
+        ToolbarActionModeCallback callback = new ToolbarActionModeCallback();
+        callback.setActionModeController(new ActionModeController(getContext(), delegate));
+        mSearchText.setCustomSelectionActionModeCallback(callback);
     }
 
     /**
@@ -534,7 +557,7 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
         mActionBarDrawerToggle.syncState();
     }
 
-    private void showNormalView() {
+    protected void showNormalView() {
         getMenu().setGroupVisible(mNormalGroupResId, true);
         getMenu().setGroupVisible(mSelectedGroupResId, false);
         if (mHasSearchView) mSearchView.setVisibility(View.GONE);
@@ -571,6 +594,7 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
     private void showSearchViewInternal() {
         getMenu().setGroupVisible(mNormalGroupResId, false);
         getMenu().setGroupVisible(mSelectedGroupResId, false);
+        mNumberRollView.setVisibility(View.GONE);
         mSearchView.setVisibility(View.VISIBLE);
 
         setNavigationButton(NAVIGATION_BUTTON_BACK);
@@ -598,6 +622,32 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
 
     private void updateDisplayStyleIfNecessary() {
         if (mUiConfig != null) onDisplayStyleChanged(mUiConfig.getCurrentDisplayStyle());
+    }
+
+    /**
+     * Set info menu item used to toggle info header.
+     * @param infoMenuItemId The menu item to show or hide information.
+     */
+    public void setInfoMenuItem(int infoMenuItemId) {
+        mInfoMenuItemId = infoMenuItemId;
+    }
+
+    /**
+     * Update icon, title, and visibility of info menu item.
+     * @param showItem Whether or not info menu item should show.
+     * @param infoShowing Whether or not info header is currently showing.
+     */
+    public void updateInfoMenuItem(boolean showItem, boolean infoShowing) {
+        MenuItem infoMenuItem = getMenu().findItem(mInfoMenuItemId);
+        if (infoMenuItem != null) {
+            Drawable iconDrawable =
+                    TintedDrawable.constructTintedDrawable(getResources(), R.drawable.btn_info,
+                            infoShowing ? R.color.light_active_color : R.color.light_normal_color);
+
+            infoMenuItem.setIcon(iconDrawable);
+            infoMenuItem.setTitle(infoShowing ? R.string.hide_info : R.string.show_info);
+            infoMenuItem.setVisible(showItem);
+        }
     }
 
     @VisibleForTesting

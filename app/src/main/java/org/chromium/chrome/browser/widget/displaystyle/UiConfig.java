@@ -54,8 +54,18 @@ public class UiConfig {
      * display style.
      */
     public void addObserver(DisplayStyleObserver observer) {
+        assert !mObservers.contains(observer);
         mObservers.add(observer);
         observer.onDisplayStyleChanged(mCurrentDisplayStyle);
+    }
+
+    /**
+     * Unregisters a previously registered {@link DisplayStyleObserver}.
+     * @param observer The {@link DisplayStyleObserver} to be unregistered.
+     */
+    public void removeObserver(DisplayStyleObserver observer) {
+        boolean success = mObservers.remove(observer);
+        assert success;
     }
 
     /**

@@ -7,6 +7,8 @@ package org.chromium.chrome.browser.omnibox.geo;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
@@ -53,10 +55,28 @@ class PlatformNetworksManager {
     static final String UNKNOWN_SSID = "<unknown ssid>";
 
     static VisibleWifi getConnectedWifi(Context context, WifiManager wifiManager) {
-        if (!hasLocationAndWifiPermission(context)) {
-            return VisibleWifi.NO_WIFI_INFO;
+        if (hasLocationAndWifiPermission(context)) {
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            return connectedWifiInfoToVisibleWifi(wifiInfo);
         }
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        if (hasLocationPermission(context)) {
+            // Only location permission, so fallback to pre-marshmallow.
+            return getConnectedWifiPreMarshmallow(context);
+        }
+        return VisibleWifi.NO_WIFI_INFO;
+    }
+
+    static VisibleWifi getConnectedWifiPreMarshmallow(Context context) {
+        Intent intent = context.getApplicationContext().registerReceiver(
+                null, new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION));
+        if (intent != null) {
+            WifiInfo wifiInfo = intent.getParcelableExtra(WifiManager.EXTRA_WIFI_INFO);
+            return connectedWifiInfoToVisibleWifi(wifiInfo);
+        }
+        return VisibleWifi.NO_WIFI_INFO;
+    }
+
+    private static VisibleWifi connectedWifiInfoToVisibleWifi(@Nullable WifiInfo wifiInfo) {
         if (wifiInfo == null) {
             return VisibleWifi.NO_WIFI_INFO;
         }

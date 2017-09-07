@@ -45,11 +45,17 @@
         <item android:id="@+id/open_webapk_id"
             android:title="@string/menu_open_webapk"
             android:orderInCategory="2" />
-        <item android:id="@+id/request_desktop_site_id"
-            android:title="@string/menu_request_desktop_site"
-            android:checkable="true"
-            android:icon="?android:attr/listChoiceIndicatorMultiple"
-            android:orderInCategory="2" />
+        <item android:id="@+id/request_desktop_site_row_menu_id"
+            android:title="@null"
+            android:orderInCategory="2">
+          <menu>
+              <item android:id="@+id/request_desktop_site_id"
+                  android:title="@string/menu_request_desktop_site" />
+              <item android:id="@+id/request_desktop_site_check_id"
+                  android:title="@null"
+                  android:checkable="true" />
+          </menu>
+        </item>
         <item android:id="@+id/open_in_browser_id"
             android:title=""
             android:orderInCategory="2" />

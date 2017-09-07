@@ -21,8 +21,9 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.WindowDelegate;
+import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.ntp.NewTabPage;
-import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.search_engines.TemplateUrlService;
 import org.chromium.chrome.browser.toolbar.ToolbarDataProvider;
 import org.chromium.chrome.browser.util.MathUtils;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
@@ -220,23 +221,27 @@ public class LocationBarPhone extends LocationBarLayout {
     }
 
     private void updateGoogleG() {
-        // TODO(twellington): Show the Google G in the location bar on the redesigned Chrome Home
-        //                    NTP.
-        if (mBottomSheet != null) {
-            mGoogleGContainer.setVisibility(View.GONE);
-            return;
-        }
-
         // The toolbar data provider can be null during startup, before the ToolbarManager has been
         // initialized.
         ToolbarDataProvider toolbarDataProvider = getToolbarDataProvider();
         if (toolbarDataProvider == null) return;
 
-        NewTabPage ntp = toolbarDataProvider.getNewTabPageForCurrentTab();
+        if (LocaleManager.getInstance().hasShownSearchEnginePromo()) {
+            mGoogleGContainer.setVisibility(View.GONE);
+            return;
+        }
 
-        // If the default search engine is not Google, isLocationBarShownInNTP() will return false.
-        if (ntp == null || !ntp.isLocationBarShownInNTP()
-                || !ChromeFeatureList.isEnabled(ChromeFeatureList.NTP_SHOW_GOOGLE_G_IN_OMNIBOX)) {
+        // Only access ChromeFeatureList and TemplateUrlService after the NTP check,
+        // to prevent native method calls before the native side has been initialized.
+        NewTabPage ntp = toolbarDataProvider.getNewTabPageForCurrentTab();
+        boolean isShownInRegularNtp = ntp != null && ntp.isLocationBarShownInNTP()
+                && ChromeFeatureList.isEnabled(ChromeFeatureList.NTP_SHOW_GOOGLE_G_IN_OMNIBOX)
+                && TemplateUrlService.getInstance().isDefaultSearchEngineGoogle();
+
+        boolean isShownInBottomSheetNtp =
+                mBottomSheet != null && mBottomSheet.shouldShowGoogleGInLocationBar();
+
+        if (!isShownInRegularNtp && !isShownInBottomSheetNtp) {
             mGoogleGContainer.setVisibility(View.GONE);
             return;
         }
@@ -292,8 +297,8 @@ public class LocationBarPhone extends LocationBarLayout {
     public void updateVisualsForState() {
         super.updateVisualsForState();
 
-        Tab tab = getCurrentTab();
-        boolean isIncognito = tab != null && tab.isIncognito();
+        boolean isIncognito =
+                getToolbarDataProvider() != null && getToolbarDataProvider().isIncognito();
         mIncognitoBadge.setVisibility(isIncognito ? VISIBLE : GONE);
         updateIncognitoBadgePadding();
     }
@@ -357,6 +362,10 @@ public class LocationBarPhone extends LocationBarLayout {
                 }
             }
         });
+
+        mGoogleGWidth = getResources().getDimensionPixelSize(
+                R.dimen.location_bar_google_g_width_bottom_sheet);
+        mGoogleG.getLayoutParams().width = mGoogleGWidth;
     }
 
     @Override

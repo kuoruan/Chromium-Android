@@ -159,7 +159,7 @@ class IPHInfoBarSupport implements OnDismissListener, InfoBarContainer.InfoBarAn
     private TrackerParameters getTrackerParameters(Item infoBar) {
         switch (infoBar.getInfoBarIdentifier()) {
             case InfoBarIdentifier.DATA_REDUCTION_PROXY_PREVIEW_INFOBAR_DELEGATE:
-                return new TrackerParameters(FeatureConstants.DATA_SAVER_PREVIEW,
+                return new TrackerParameters(FeatureConstants.DATA_SAVER_PREVIEW_FEATURE,
                         R.string.iph_data_saver_preview_text, R.string.iph_data_saver_preview_text);
             default:
                 return null;

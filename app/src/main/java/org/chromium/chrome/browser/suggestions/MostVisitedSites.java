@@ -6,10 +6,12 @@ package org.chromium.chrome.browser.suggestions;
 
 import org.chromium.base.annotations.CalledByNative;
 
+import javax.annotation.Nullable;
+
 /**
  * Methods to provide most recent urls, titles and thumbnails.
  */
-interface MostVisitedSites {
+public interface MostVisitedSites {
     /**
      * An interface for handling events in {@link MostVisitedSites}.
      */
@@ -41,6 +43,30 @@ interface MostVisitedSites {
     }
 
     /**
+     * An interface to provide {@link MostVisitedSites} with platform-specific home page data.
+     */
+    interface HomePageClient {
+        /**
+         * @return True if a home page is active and set.
+         */
+        @CalledByNative("HomePageClient")
+        boolean isHomePageEnabled();
+
+        /**
+         * @return True if the new tab page was set as home page.
+         */
+        @CalledByNative("HomePageClient")
+        boolean isNewTabPageUsedAsHomePage();
+
+        /**
+         * @return The raw URL of the currently set home page.
+         */
+        @CalledByNative("HomePageClient")
+        @Nullable
+        String getHomePageUrl();
+    }
+
+    /**
      * This instance must not be used after calling destroy().
      */
     void destroy();
@@ -64,15 +90,21 @@ interface MostVisitedSites {
     void removeBlacklistedUrl(String url);
 
     /**
-     * Records metrics about an impression, including the sources (local, server, ...) and visual
-     * types of the tiles that are shown.
-     * @param tileTypes An array of values from {@link TileVisualType} indicating the type of each
-     *                  tile that's currently showing.
-     * @param sources An array of values from {@link TileSource} indicating the source of each tile
-     *                that's currently showing.
-     * @param tileUrls An array of strings indicating the URL of each tile.
+     * Records metrics about an impression of the surface with tiles.
+     * @param tilesCount Count of tiles available on the surface at the moment.
      */
-    void recordPageImpression(int[] tileTypes, int[] sources, String[] tileUrls);
+    void recordPageImpression(int tilesCount);
+
+    /**
+     * Records metrics about an impression of a tile including its source (local, server, ...) and
+     * its visual type.
+     * @param index The index of the tile that was impressed (0-based).
+     * @param type The visual type of the item as defined in {@link TileVisualType}.
+     * @param source The {@link TileSource} that generated this item.
+     * @param url The URL of the tile.
+     */
+    void recordTileImpression(
+            int index, @TileVisualType int type, @TileSource int source, String url);
 
     /**
      * Records the opening of a Most Visited Item.

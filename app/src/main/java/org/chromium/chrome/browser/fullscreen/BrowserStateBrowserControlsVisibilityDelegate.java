@@ -141,12 +141,12 @@ public class BrowserStateBrowserControlsVisibilityDelegate
     }
 
     @Override
-    public boolean isShowingBrowserControlsEnabled() {
+    public boolean canShowBrowserControls() {
         return true;
     }
 
     @Override
-    public boolean isHidingBrowserControlsEnabled() {
+    public boolean canAutoHideBrowserControls() {
         return sDisableOverridesForTesting || mPersistentControlTokens.isEmpty();
     }
 

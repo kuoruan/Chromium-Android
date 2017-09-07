@@ -289,10 +289,12 @@ ParseWebAppManifestResponse callback) {
     
     static final class PaymentManifestParserParsePaymentMethodManifestResponseParams extends org.chromium.mojo.bindings.Struct {
     
-        private static final int STRUCT_SIZE = 16;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final int STRUCT_SIZE = 32;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.url.mojom.Url[] webAppManifestUrls;
+        public org.chromium.url.mojom.Origin[] supportedOrigins;
+        public boolean allOriginsSupported;
     
         private PaymentManifestParserParsePaymentMethodManifestResponseParams(int version) {
             super(STRUCT_SIZE, version);
@@ -342,6 +344,23 @@ ParseWebAppManifestResponse callback) {
                         }
                     }
                 }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                    {
+                        org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                        result.supportedOrigins = new org.chromium.url.mojom.Origin[si1.elementsOrVersion];
+                        for (int i1 = 0; i1 < si1.elementsOrVersion; ++i1) {
+                            
+                            org.chromium.mojo.bindings.Decoder decoder2 = decoder1.readPointer(org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i1, false);
+                            result.supportedOrigins[i1] = org.chromium.url.mojom.Origin.decode(decoder2);
+                        }
+                    }
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.allOriginsSupported = decoder0.readBoolean(24, 0);
+                }
             } finally {
                 decoder0.decreaseStackDepth();
             }
@@ -362,6 +381,18 @@ ParseWebAppManifestResponse callback) {
                     encoder1.encode(webAppManifestUrls[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
                 }
             }
+            
+            if (supportedOrigins == null) {
+                encoder0.encodeNullPointer(16, false);
+            } else {
+                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(supportedOrigins.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                for (int i0 = 0; i0 < supportedOrigins.length; ++i0) {
+                    
+                    encoder1.encode(supportedOrigins[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                }
+            }
+            
+            encoder0.encode(allOriginsSupported, 24, 0);
         }
     
         /**
@@ -378,6 +409,10 @@ ParseWebAppManifestResponse callback) {
             PaymentManifestParserParsePaymentMethodManifestResponseParams other = (PaymentManifestParserParsePaymentMethodManifestResponseParams) object;
             if (!java.util.Arrays.deepEquals(this.webAppManifestUrls, other.webAppManifestUrls))
                 return false;
+            if (!java.util.Arrays.deepEquals(this.supportedOrigins, other.supportedOrigins))
+                return false;
+            if (this.allOriginsSupported!= other.allOriginsSupported)
+                return false;
             return true;
         }
     
@@ -389,6 +424,8 @@ ParseWebAppManifestResponse callback) {
             final int prime = 31;
             int result = prime + getClass().hashCode();
             result = prime * result + java.util.Arrays.deepHashCode(webAppManifestUrls);
+            result = prime * result + java.util.Arrays.deepHashCode(supportedOrigins);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(allOriginsSupported);
             return result;
         }
     }
@@ -414,7 +451,7 @@ ParseWebAppManifestResponse callback) {
 
                 PaymentManifestParserParsePaymentMethodManifestResponseParams response = PaymentManifestParserParsePaymentMethodManifestResponseParams.deserialize(messageWithHeader.getPayload());
 
-                mCallback.call(response.webAppManifestUrls);
+                mCallback.call(response.webAppManifestUrls, response.supportedOrigins, response.allOriginsSupported);
                 return true;
             } catch (org.chromium.mojo.bindings.DeserializationException e) {
                 return false;
@@ -438,10 +475,14 @@ ParseWebAppManifestResponse callback) {
         }
 
         @Override
-        public void call(org.chromium.url.mojom.Url[] webAppManifestUrls) {
+        public void call(org.chromium.url.mojom.Url[] webAppManifestUrls, org.chromium.url.mojom.Origin[] supportedOrigins, Boolean allOriginsSupported) {
             PaymentManifestParserParsePaymentMethodManifestResponseParams _response = new PaymentManifestParserParsePaymentMethodManifestResponseParams();
 
             _response.webAppManifestUrls = webAppManifestUrls;
+
+            _response.supportedOrigins = supportedOrigins;
+
+            _response.allOriginsSupported = allOriginsSupported;
 
             org.chromium.mojo.bindings.ServiceMessage _message =
                     _response.serializeWithHeader(

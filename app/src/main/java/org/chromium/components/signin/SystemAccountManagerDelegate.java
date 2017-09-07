@@ -13,6 +13,10 @@ import android.accounts.AuthenticatorDescription;
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -27,6 +31,7 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
+import org.chromium.base.ObserverList;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.MainDex;
 import org.chromium.base.library_loader.LibraryLoader;
@@ -42,38 +47,65 @@ import java.util.concurrent.TimeUnit;
 @MainDex
 public class SystemAccountManagerDelegate implements AccountManagerDelegate {
     private final AccountManager mAccountManager;
+    private final ObserverList<AccountsChangeObserver> mObservers = new ObserverList<>();
+
     private static final String TAG = "Auth";
 
     public SystemAccountManagerDelegate() {
         mAccountManager = AccountManager.get(ContextUtils.getApplicationContext());
+
+        BroadcastReceiver accountsChangedBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(final Context context, final Intent intent) {
+                fireOnAccountsChangedNotification();
+            }
+        };
+        IntentFilter accountsChangedIntentFilter = new IntentFilter();
+        accountsChangedIntentFilter.addAction(AccountManager.LOGIN_ACCOUNTS_CHANGED_ACTION);
+        ContextUtils.getApplicationContext().registerReceiver(
+                accountsChangedBroadcastReceiver, accountsChangedIntentFilter);
     }
 
     @Override
-    public Account[] getAccountsByType(String type) {
+    public void addObserver(AccountsChangeObserver observer) {
+        mObservers.addObserver(observer);
+    }
+
+    @Override
+    public void removeObserver(AccountsChangeObserver observer) {
+        mObservers.removeObserver(observer);
+    }
+
+    @Override
+    public Account[] getAccountsSync() throws AccountManagerDelegateException {
         if (!hasGetAccountsPermission()) {
             return new Account[] {};
         }
         long now = SystemClock.elapsedRealtime();
-        Account[] accounts = mAccountManager.getAccountsByType(type);
+        Account[] accounts = mAccountManager.getAccountsByType(GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE);
         long elapsed = SystemClock.elapsedRealtime() - now;
         recordElapsedTimeHistogram("Signin.AndroidGetAccountsTime_AccountManager", elapsed);
+        if (ThreadUtils.runningOnUiThread()) {
+            recordElapsedTimeHistogram(
+                    "Signin.AndroidGetAccountsTimeUiThread_AccountManager", elapsed);
+        }
         return accounts;
     }
 
     @Override
     public String getAuthToken(Account account, String authTokenScope) throws AuthException {
         assert !ThreadUtils.runningOnUiThread();
-        assert AccountManagerHelper.GOOGLE_ACCOUNT_TYPE.equals(account.type);
+        assert AccountManagerFacade.GOOGLE_ACCOUNT_TYPE.equals(account.type);
         try {
             return GoogleAuthUtil.getTokenWithNotification(
                     ContextUtils.getApplicationContext(), account, authTokenScope, null);
         } catch (GoogleAuthException ex) {
             // This case includes a UserRecoverableNotifiedException, but most clients will have
             // their own retry mechanism anyway.
-            // TODO(bauerb): Investigate integrating the callback with ConnectionRetry.
-            throw new AuthException(false /* isTransientError */, ex);
+            throw new AuthException(AuthException.NONTRANSIENT,
+                    "Error while getting token for scope '" + authTokenScope + "'", ex);
         } catch (IOException ex) {
-            throw new AuthException(true /* isTransientError */, ex);
+            throw new AuthException(AuthException.TRANSIENT, ex);
         }
     }
 
@@ -82,11 +114,11 @@ public class SystemAccountManagerDelegate implements AccountManagerDelegate {
         try {
             GoogleAuthUtil.clearToken(ContextUtils.getApplicationContext(), authToken);
         } catch (GooglePlayServicesAvailabilityException ex) {
-            throw new AuthException(false /* isTransientError */, ex);
+            throw new AuthException(AuthException.NONTRANSIENT, ex);
         } catch (GoogleAuthException ex) {
-            throw new AuthException(false /* isTransientError */, ex);
+            throw new AuthException(AuthException.NONTRANSIENT, ex);
         } catch (IOException ex) {
-            throw new AuthException(true /* isTransientError */, ex);
+            throw new AuthException(AuthException.TRANSIENT, ex);
         }
     }
 
@@ -176,5 +208,11 @@ public class SystemAccountManagerDelegate implements AccountManagerDelegate {
         return ApiCompatibilityUtils.checkPermission(ContextUtils.getApplicationContext(),
                        "android.permission.MANAGE_ACCOUNTS", Process.myPid(), Process.myUid())
                 == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void fireOnAccountsChangedNotification() {
+        for (AccountsChangeObserver observer : mObservers) {
+            observer.onAccountsChanged();
+        }
     }
 }

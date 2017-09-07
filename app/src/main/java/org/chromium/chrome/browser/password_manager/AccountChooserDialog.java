@@ -9,7 +9,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.content.res.AppCompatResources;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextUtils;
@@ -119,12 +121,12 @@ public class AccountChooserDialog
                 Credential credential = getItem(position);
 
                 ImageView avatarView = (ImageView) convertView.findViewById(R.id.profile_image);
-                Bitmap avatar = credential.getAvatar();
-                if (avatar != null) {
-                    avatarView.setImageBitmap(avatar);
-                } else {
-                    avatarView.setImageResource(R.drawable.account_management_no_picture);
+                Drawable avatar = credential.getAvatar();
+                if (avatar == null) {
+                    avatar = AppCompatResources.getDrawable(
+                            getContext(), R.drawable.logo_avatar_anonymous);
                 }
+                avatarView.setImageDrawable(avatar);
 
                 TextView mainNameView = (TextView) convertView.findViewById(R.id.main_name);
                 TextView secondaryNameView =
@@ -271,15 +273,15 @@ public class AccountChooserDialog
         if (mIsDestroyed) return;
         assert index >= 0 && index < mCredentials.length;
         assert mCredentials[index] != null;
-        avatarBitmap = AccountManagementFragment.makeRoundUserPicture(avatarBitmap);
-        mCredentials[index].setBitmap(avatarBitmap);
+        Drawable avatar = AccountManagementFragment.makeRoundUserPicture(mContext, avatarBitmap);
+        mCredentials[index].setAvatar(avatar);
         ListView view = mDialog.getListView();
         if (index >= view.getFirstVisiblePosition() && index <= view.getLastVisiblePosition()) {
             // Profile image is in the visible range.
             View credentialView = view.getChildAt(index - view.getFirstVisiblePosition());
             if (credentialView == null) return;
-            ImageView avatar = (ImageView) credentialView.findViewById(R.id.profile_image);
-            avatar.setImageBitmap(avatarBitmap);
+            ImageView avatarView = (ImageView) credentialView.findViewById(R.id.profile_image);
+            avatarView.setImageDrawable(avatar);
         }
     }
 

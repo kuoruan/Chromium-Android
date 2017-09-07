@@ -53,6 +53,7 @@
                     android:id="@+id/default_search_engine_dialog_options"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
                     android:layout_marginStart="12dp"
                     android:layout_marginEnd="@dimen/signin_chooser_padding" />
             </LinearLayout>

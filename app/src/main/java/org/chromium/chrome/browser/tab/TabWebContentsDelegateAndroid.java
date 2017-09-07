@@ -28,7 +28,7 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.AppHooks;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.ChromeFeatureList;
-import org.chromium.chrome.browser.FullscreenWebContentsActivity;
+import org.chromium.chrome.browser.FullscreenActivity;
 import org.chromium.chrome.browser.RepostFormWarningDialog;
 import org.chromium.chrome.browser.document.DocumentUtils;
 import org.chromium.chrome.browser.document.DocumentWebContentsDelegate;
@@ -36,7 +36,6 @@ import org.chromium.chrome.browser.findinpage.FindMatchRectsDetails;
 import org.chromium.chrome.browser.findinpage.FindNotificationDetails;
 import org.chromium.chrome.browser.fullscreen.FullscreenManager;
 import org.chromium.chrome.browser.media.MediaCaptureNotificationService;
-import org.chromium.chrome.browser.media.VideoPersister;
 import org.chromium.chrome.browser.policy.PolicyAuditor;
 import org.chromium.chrome.browser.policy.PolicyAuditor.AuditEvent;
 import org.chromium.chrome.browser.tabmodel.TabCreatorManager.TabCreator;
@@ -222,12 +221,9 @@ public class TabWebContentsDelegateAndroid extends WebContentsDelegateAndroid {
     public void toggleFullscreenModeForTab(boolean enableFullscreen) {
         if (ChromeFeatureList.isEnabled(ChromeFeatureList.FULLSCREEN_ACTIVITY)
                 && mTab.getActivity().supportsFullscreenActivity()) {
-            FullscreenWebContentsActivity.toggleFullscreenMode(enableFullscreen, mTab);
+            FullscreenActivity.toggleFullscreenMode(enableFullscreen, mTab);
         } else {
-            if (!VideoPersister.getInstance().shouldDelayFullscreenModeChange(
-                        mTab, enableFullscreen)) {
-                mTab.toggleFullscreenMode(enableFullscreen);
-            }
+            mTab.toggleFullscreenMode(enableFullscreen);
         }
     }
 

@@ -2,6 +2,8 @@
 
 package org.chromium.chrome.browser.tabmodel.document;
 
+// @@protoc_insertion_point(imports_scope)
+
 @SuppressWarnings("hiding")
 public interface DocumentTabModelInfo {
 
@@ -30,6 +32,8 @@ public interface DocumentTabModelInfo {
 
     // optional bool is_covered_by_child_activity = 6;
     public java.lang.Boolean isCoveredByChildActivity;
+
+    // @@protoc_insertion_point(class_scope:org.chromium.chrome.browser.tabmodel.document.DocumentEntry)
 
     public DocumentEntry() {
       clear();
@@ -83,7 +87,7 @@ public interface DocumentTabModelInfo {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -136,6 +140,8 @@ public interface DocumentTabModelInfo {
     // repeated .org.chromium.chrome.browser.tabmodel.document.DocumentEntry entries = 1;
     public org.chromium.chrome.browser.tabmodel.document.DocumentTabModelInfo.DocumentEntry[] entries;
 
+    // @@protoc_insertion_point(class_scope:org.chromium.chrome.browser.tabmodel.document.DocumentList)
+
     public DocumentList() {
       clear();
     }
@@ -186,7 +192,7 @@ public interface DocumentTabModelInfo {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;

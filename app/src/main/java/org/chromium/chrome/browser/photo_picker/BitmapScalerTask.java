@@ -6,9 +6,13 @@ package org.chromium.chrome.browser.photo_picker;
 
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
+import android.os.SystemClock;
 import android.util.LruCache;
 
 import org.chromium.base.ThreadUtils;
+import org.chromium.base.metrics.RecordHistogram;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * A worker task to scale bitmaps in the background.
@@ -38,7 +42,12 @@ class BitmapScalerTask extends AsyncTask<Bitmap, Void, Bitmap> {
 
         if (isCancelled()) return null;
 
-        return BitmapUtils.scale(bitmaps[0], mSize, false);
+        long begin = SystemClock.elapsedRealtime();
+        Bitmap bitmap = BitmapUtils.scale(bitmaps[0], mSize, false);
+        long scaleTime = SystemClock.elapsedRealtime() - begin;
+        RecordHistogram.recordTimesHistogram(
+                "Android.PhotoPicker.BitmapScalerTask", scaleTime, TimeUnit.MILLISECONDS);
+        return bitmap;
     }
 
     /**

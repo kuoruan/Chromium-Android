@@ -114,7 +114,7 @@ return _result;
 }
 // Sets up the initial IPC channel.
 
-@Override public void setupConnection(android.os.Bundle args, org.chromium.base.process_launcher.ICallbackInt pidCallback, android.os.IBinder gpuCallback) throws android.os.RemoteException
+@Override public void setupConnection(android.os.Bundle args, org.chromium.base.process_launcher.ICallbackInt pidCallback, android.os.IBinder callback) throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
 try {
@@ -127,7 +127,7 @@ else {
 _data.writeInt(0);
 }
 _data.writeStrongBinder((((pidCallback!=null))?(pidCallback.asBinder()):(null)));
-_data.writeStrongBinder(gpuCallback);
+_data.writeStrongBinder(callback);
 mRemote.transact(Stub.TRANSACTION_setupConnection, _data, null, android.os.IBinder.FLAG_ONEWAY);
 }
 finally {
@@ -159,7 +159,7 @@ static final int TRANSACTION_crashIntentionallyForTesting = (android.os.IBinder.
 public boolean bindToCaller() throws android.os.RemoteException;
 // Sets up the initial IPC channel.
 
-public void setupConnection(android.os.Bundle args, org.chromium.base.process_launcher.ICallbackInt pidCallback, android.os.IBinder gpuCallback) throws android.os.RemoteException;
+public void setupConnection(android.os.Bundle args, org.chromium.base.process_launcher.ICallbackInt pidCallback, android.os.IBinder callback) throws android.os.RemoteException;
 // Asks the child service to crash so that we can test the termination logic.
 
 public void crashIntentionallyForTesting() throws android.os.RemoteException;

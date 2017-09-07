@@ -26,12 +26,14 @@ import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.FrameLayout;
 import android.widget.FrameLayout.LayoutParams;
+import android.widget.PopupWindow.OnDismissListener;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.ObserverList;
 import org.chromium.base.ObserverList.RewindableIterator;
+import org.chromium.base.ThreadUtils;
 import org.chromium.base.TraceEvent;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
@@ -59,10 +61,12 @@ import org.chromium.chrome.browser.contextualsearch.ContextualSearchTabHelper;
 import org.chromium.chrome.browser.customtabs.CustomTabActivity;
 import org.chromium.chrome.browser.document.ChromeLauncherActivity;
 import org.chromium.chrome.browser.download.ChromeDownloadDelegate;
+import org.chromium.chrome.browser.feature_engagement_tracker.FeatureEngagementTrackerFactory;
 import org.chromium.chrome.browser.fullscreen.FullscreenManager;
 import org.chromium.chrome.browser.help.HelpAndFeedback;
 import org.chromium.chrome.browser.infobar.InfoBarContainer;
 import org.chromium.chrome.browser.media.ui.MediaSessionTabHelper;
+import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
 import org.chromium.chrome.browser.ntp.NativePageAssassin;
 import org.chromium.chrome.browser.ntp.NativePageFactory;
 import org.chromium.chrome.browser.offlinepages.OfflinePageUtils;
@@ -83,7 +87,11 @@ import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.TabReparentingParams;
 import org.chromium.chrome.browser.util.ColorUtils;
 import org.chromium.chrome.browser.util.FeatureUtilities;
+import org.chromium.chrome.browser.widget.textbubble.ViewAnchoredTextBubble;
 import org.chromium.components.dom_distiller.core.DomDistillerUrlUtils;
+import org.chromium.components.feature_engagement_tracker.EventConstants;
+import org.chromium.components.feature_engagement_tracker.FeatureConstants;
+import org.chromium.components.feature_engagement_tracker.FeatureEngagementTracker;
 import org.chromium.components.navigation_interception.InterceptNavigationDelegate;
 import org.chromium.components.security_state.ConnectionSecurityLevel;
 import org.chromium.components.sync.SyncConstants;
@@ -359,6 +367,15 @@ public class Tab
      * successful page load.
      */
     private int mSadTabSuccessiveRefreshCounter;
+
+    /**
+     * Stores total data saved at the start of a page load. Used to calculate delta at the end of
+     * page load, which is just an estimate of the data saved for the current page load since there
+     * may be multiple pages loading at the same time. This estimate is used to get an idea of how
+     * widely used the data saver feature is for a particular user at a time (i.e. not since the
+     * user started using Chrome).
+     */
+    private long mDataSavedOnStartPageLoad;
 
     private final int mDefaultThemeColor;
     private int mThemeColor;
@@ -815,18 +832,18 @@ public class Tab
      *
      * @return Whether the printing process is started successfully.
      **/
-    public boolean print() {
+    public boolean print(int renderProcessId, int renderFrameId) {
         assert mNativeTabAndroid != 0;
-        return nativePrint(mNativeTabAndroid);
+        return nativePrint(mNativeTabAndroid, renderProcessId, renderFrameId);
     }
 
     @CalledByNative
-    public void setPendingPrint() {
+    public void setPendingPrint(int renderProcessId, int renderFrameId) {
         PrintingController printingController = PrintingControllerImpl.getInstance();
         if (printingController == null) return;
 
         printingController.setPendingPrint(new TabPrinter(this),
-                new PrintManagerDelegateImpl(getActivity()));
+                new PrintManagerDelegateImpl(getActivity()), renderProcessId, renderFrameId);
     }
 
     /**
@@ -956,6 +973,7 @@ public class Tab
     /**
      * @return The web contents associated with this tab.
      */
+    @Nullable
     public WebContents getWebContents() {
         return mContentViewCore != null ? mContentViewCore.getWebContents() : null;
     }
@@ -1295,7 +1313,7 @@ public class Tab
             });
 
             if (!creatingWebContents && webContents.isLoadingToDifferentDocument()) {
-                didStartPageLoad(webContents.getUrl(), false);
+                didStartPageLoad(webContents.getVisibleUrl(), false);
             }
 
             getAppBannerManager().setIsEnabledForTab(mDelegateFactory.canShowAppBanners(this));
@@ -1498,6 +1516,9 @@ public class Tab
         updateTitle();
         removeSadTabIfPresent();
 
+        mDataSavedOnStartPageLoad =
+                DataReductionProxySettings.getInstance().getContentLengthSavedInHistorySummary();
+
         if (mIsRendererUnresponsive) handleRendererResponsive();
 
         if (mTabUma != null) mTabUma.onPageLoadStarted();
@@ -1524,6 +1545,50 @@ public class Tab
 
         for (TabObserver observer : mObservers) observer.onPageLoadFinished(this);
         mIsBeingRestored = false;
+
+        long dataSaved =
+                DataReductionProxySettings.getInstance().getContentLengthSavedInHistorySummary()
+                - mDataSavedOnStartPageLoad;
+
+        FeatureEngagementTracker tracker =
+                FeatureEngagementTrackerFactory.getFeatureEngagementTrackerForProfile(
+                        Profile.getLastUsedProfile());
+        if (dataSaved > 0L) {
+            tracker.notifyEvent(EventConstants.DATA_SAVED_ON_PAGE_LOAD);
+        }
+
+        // Don't show data saver footer if Chrome Home is enabled (temporary fix for M61)
+        if (FeatureUtilities.isChromeHomeEnabled()) return;
+
+        maybeShowDataSaverInProductHelp(tracker);
+    }
+
+    private void maybeShowDataSaverInProductHelp(final FeatureEngagementTracker tracker) {
+        if (!tracker.shouldTriggerHelpUI(FeatureConstants.DATA_SAVER_DETAIL_FEATURE)) return;
+
+        ViewAnchoredTextBubble textBubble = new ViewAnchoredTextBubble(getActivity(),
+                getActivity().getToolbarManager().getMenuButton(),
+                R.string.iph_data_saver_detail_text,
+                R.string.iph_data_saver_detail_accessibility_text);
+        textBubble.setDismissOnTouchInteraction(true);
+        getActivity().getAppMenuHandler().setMenuHighlight(R.id.app_menu_footer);
+        textBubble.addOnDismissListener(new OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                ThreadUtils.postOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        tracker.dismissed(FeatureConstants.DATA_SAVER_DETAIL_FEATURE);
+                        getActivity().getAppMenuHandler().setMenuHighlight(null);
+                    }
+                });
+            }
+        });
+        int yInsetPx = mThemedApplicationContext.getResources().getDimensionPixelOffset(
+                R.dimen.text_bubble_menu_anchor_y_inset);
+        textBubble.setInsetPx(0, FeatureUtilities.isChromeHomeEnabled() ? yInsetPx : 0, 0,
+                FeatureUtilities.isChromeHomeEnabled() ? 0 : yInsetPx);
+        textBubble.show();
     }
 
     /**
@@ -1714,7 +1779,8 @@ public class Tab
                 @Override
                 public void run() {
                     if (showSendFeedbackView) {
-                        getActivity().startHelpAndFeedback(Tab.this, "MobileSadTabFeedback");
+                        getActivity().startHelpAndFeedback(
+                                getUrl(), "MobileSadTabFeedback", getProfile());
                     } else {
                         reload();
                     }
@@ -1826,11 +1892,12 @@ public class Tab
     }
 
     /**
-     * @return The URL associated with the tab.
+     * @return The URL that is currently visible in the location bar. This may not be the same as
+     *         the last committed URL if a new navigation is in progress.
      */
     @CalledByNative
     public String getUrl() {
-        String url = getWebContents() != null ? getWebContents().getUrl() : "";
+        String url = getWebContents() != null ? getWebContents().getVisibleUrl() : "";
 
         // If we have a ContentView, or a NativePage, or the url is not empty, we have a WebContents
         // so cache the WebContent's url. If not use the cached version.
@@ -2444,6 +2511,11 @@ public class Tab
             mFullscreenManager.setPersistentFullscreenMode(enableFullscreen);
         }
 
+        // When going into fullscreen, we want to remove any cached thumbnail of the Tab.
+        if (enableFullscreen && mNativeTabAndroid != 0) {
+            nativeClearThumbnailPlaceholder(mNativeTabAndroid);
+        }
+
         RewindableIterator<TabObserver> observers = getTabObservers();
         while (observers.hasNext()) {
             observers.next().onToggleFullscreenMode(this, enableFullscreen);
@@ -2535,8 +2607,8 @@ public class Tab
     /**
      * @return Whether hiding browser controls is enabled or not.
      */
-    private boolean isHidingBrowserControlsEnabled() {
-        return mBrowserControlsVisibilityDelegate.isHidingBrowserControlsEnabled();
+    private boolean canAutoHideBrowserControls() {
+        return mBrowserControlsVisibilityDelegate.canAutoHideBrowserControls();
     }
 
     /**
@@ -2558,8 +2630,8 @@ public class Tab
     /**
      * @return Whether showing browser controls is enabled or not.
      */
-    public boolean isShowingBrowserControlsEnabled() {
-        return mBrowserControlsVisibilityDelegate.isShowingBrowserControlsEnabled();
+    public boolean canShowBrowserControls() {
+        return mBrowserControlsVisibilityDelegate.canShowBrowserControls();
     }
 
     /**
@@ -2569,9 +2641,9 @@ public class Tab
     @BrowserControlsState
     public int getBrowserControlsStateConstraints() {
         int constraints = BrowserControlsState.BOTH;
-        if (!isShowingBrowserControlsEnabled()) {
+        if (!canShowBrowserControls()) {
             constraints = BrowserControlsState.HIDDEN;
-        } else if (!isHidingBrowserControlsEnabled()) {
+        } else if (!canAutoHideBrowserControls()) {
             constraints = BrowserControlsState.SHOWN;
         }
         return constraints;
@@ -2729,8 +2801,7 @@ public class Tab
     /**
      * See {@link #mInterceptNavigationDelegate}.
      */
-    @VisibleForTesting
-    protected void setInterceptNavigationDelegate(InterceptNavigationDelegateImpl delegate) {
+    public void setInterceptNavigationDelegate(InterceptNavigationDelegateImpl delegate) {
         mInterceptNavigationDelegate = delegate;
         nativeSetInterceptNavigationDelegate(mNativeTabAndroid, delegate);
     }
@@ -3057,7 +3128,8 @@ public class Tab
             long intentReceivedTimestamp, boolean hasUserGesture);
     private native void nativeSetActiveNavigationEntryTitleForUrl(long nativeTabAndroid, String url,
             String title);
-    private native boolean nativePrint(long nativeTabAndroid);
+    private native boolean nativePrint(
+            long nativeTabAndroid, int renderProcessId, int renderFrameId);
     private native Bitmap nativeGetFavicon(long nativeTabAndroid);
     private native void nativeCreateHistoricalTab(long nativeTabAndroid);
     private native void nativeUpdateBrowserControlsState(
@@ -3068,6 +3140,7 @@ public class Tab
             InterceptNavigationDelegate delegate);
     private native void nativeAttachToTabContentManager(long nativeTabAndroid,
             TabContentManager tabContentManager);
+    private native void nativeClearThumbnailPlaceholder(long nativeTabAndroid);
     private native boolean nativeHasPrerenderedUrl(long nativeTabAndroid, String url);
     private native void nativeSetWebappManifestScope(long nativeTabAndroid, String scope);
     private native void nativeEnableEmbeddedMediaExperience(long nativeTabAndroid, boolean enabled);

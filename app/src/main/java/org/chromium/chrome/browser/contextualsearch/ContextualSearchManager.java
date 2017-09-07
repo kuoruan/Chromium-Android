@@ -98,6 +98,8 @@ public class ContextualSearchManager implements ContextualSearchManagementDelega
     // an existing tap-selection.
     private static final int TAP_ON_TAP_SELECTION_DELAY_MS = 100;
 
+    private static final int NANOSECONDS_IN_A_MILLISECOND = 1000000;
+
     private final ObserverList<ContextualSearchObserver> mObservers =
             new ObserverList<ContextualSearchObserver>();
 
@@ -105,6 +107,9 @@ public class ContextualSearchManager implements ContextualSearchManagementDelega
     private final ContextualSearchTabPromotionDelegate mTabPromotionDelegate;
     private final ViewTreeObserver.OnGlobalFocusChangeListener mOnFocusChangeListener;
     private final TabModelObserver mTabModelObserver;
+
+    // The Ranker logger to use to write Tap Suppression Ranker logs to UMA.
+    private final ContextualSearchRankerLogger mTapSuppressionRankerLogger;
 
     private ContextualSearchSelectionController mSelectionController;
     private ContextualSearchNetworkCommunicator mNetworkCommunicator;
@@ -228,15 +233,12 @@ public class ContextualSearchManager implements ContextualSearchManagementDelega
         };
 
         mSelectionController = new ContextualSearchSelectionController(activity, this);
-
         mNetworkCommunicator = this;
-
         mPolicy = new ContextualSearchPolicy(mSelectionController, mNetworkCommunicator);
-
         mTranslateController = new ContextualSearchTranslateController(activity, mPolicy, this);
-
         mInternalStateController = new ContextualSearchInternalStateController(
                 mPolicy, getContextualSearchInternalStateHandler());
+        mTapSuppressionRankerLogger = new ContextualSearchRankerLoggerImpl();
     }
 
     /**
@@ -433,9 +435,9 @@ public class ContextualSearchManager implements ContextualSearchManagementDelega
         if (isTap && mPolicy.shouldPreviousTapResolve()) {
             // Cache the native translate data, so JNI calls won't be made when time-critical.
             mTranslateController.cacheNativeTranslateData();
-        } else {
+        } else if (!TextUtils.isEmpty(selection)) {
             boolean shouldPrefetch = mPolicy.shouldPrefetchSearchResult();
-            mSearchRequest = createContextualSearchRequest(selection, null, null, shouldPrefetch);
+            mSearchRequest = new ContextualSearchRequest(selection, null, null, shouldPrefetch);
             mTranslateController.forceAutoDetectTranslateUnlessDisabled(mSearchRequest);
             mDidStartLoadingResolvedSearchRequest = false;
             mSearchPanel.setSearchTerm(selection);
@@ -449,6 +451,10 @@ public class ContextualSearchManager implements ContextualSearchManagementDelega
                 RecordUserAction.record(isSingleWord ? "ContextualSearch.ManualRefineSingleWord"
                                                      : "ContextualSearch.ManualRefineMultiWord");
             }
+        } else {
+            // The selection is no longer valid, so we can't build a request.  Don't show the UX.
+            hideContextualSearch(StateChangeReason.UNKNOWN);
+            return;
         }
         mWereSearchResultsSeen = false;
 
@@ -499,22 +505,10 @@ public class ContextualSearchManager implements ContextualSearchManagementDelega
         if (baseWebContents == null) return null;
 
         try {
-            return new URL(baseWebContents.getUrl());
+            return new URL(baseWebContents.getLastCommittedUrl());
         } catch (MalformedURLException e) {
             return null;
         }
-    }
-
-    /**
-     * A method that can override the creation of a standard search request. This should only be
-     * used for testing.
-     * @param term The search term to create the request with.
-     * @param altTerm An alternate search term.
-     * @param isLowPriorityEnabled Whether the request can be made at low priority.
-     */
-    protected ContextualSearchRequest createContextualSearchRequest(
-            String term, String altTerm, String mid, boolean isLowPriorityEnabled) {
-        return new ContextualSearchRequest(term, altTerm, mid, isLowPriorityEnabled);
     }
 
     /** Accessor for the {@code InfoBarContainer} currently attached to the {@code Tab}. */
@@ -712,7 +706,7 @@ public class ContextualSearchManager implements ContextualSearchManagementDelega
             // appear in the user's history until the user views it).  See crbug.com/406446.
             boolean shouldPreload = !doPreventPreload && mPolicy.shouldPrefetchSearchResult();
             mSearchRequest =
-                    createContextualSearchRequest(searchTerm, alternateTerm, mid, shouldPreload);
+                    new ContextualSearchRequest(searchTerm, alternateTerm, mid, shouldPreload);
             // Trigger translation, if enabled.
             mTranslateController.forceTranslateIfNeeded(mSearchRequest, contextLanguage);
             mDidStartLoadingResolvedSearchRequest = false;
@@ -729,8 +723,9 @@ public class ContextualSearchManager implements ContextualSearchManagementDelega
         if ((selectionStartAdjust != 0 || selectionEndAdjust != 0)
                 && mSelectionController.getSelectionType() == SelectionType.TAP) {
             String originalSelection = mContext == null ? null : mContext.getInitialSelectedWord();
-            if (originalSelection != null
-                    && originalSelection.equals(mSelectionController.getSelectedText())) {
+            String currentSelection = mSelectionController.getSelectedText();
+            if (currentSelection != null) currentSelection = currentSelection.trim();
+            if (originalSelection != null && originalSelection.trim().equals(currentSelection)) {
                 mSelectionController.adjustSelection(selectionStartAdjust, selectionEndAdjust);
                 mContext.onSelectionAdjusted(selectionStartAdjust, selectionEndAdjust);
             }
@@ -948,8 +943,9 @@ public class ContextualSearchManager implements ContextualSearchManagementDelega
                 mWereSearchResultsSeen = true;
                 // If there's no current request, then either a search term resolution
                 // is in progress or we should do a verbatim search now.
-                if (mSearchRequest == null && mPolicy.shouldCreateVerbatimRequest()) {
-                    mSearchRequest = createContextualSearchRequest(
+                if (mSearchRequest == null && mPolicy.shouldCreateVerbatimRequest()
+                        && !TextUtils.isEmpty(mSelectionController.getSelectedText())) {
+                    mSearchRequest = new ContextualSearchRequest(
                             mSelectionController.getSelectedText(), null, null, false);
                     mDidStartLoadingResolvedSearchRequest = false;
                 }
@@ -1167,7 +1163,7 @@ public class ContextualSearchManager implements ContextualSearchManagementDelega
     }
 
     /**
-     * Gets the current loaded URL in a ContentViewCore.
+     * Gets the currently loading or loaded URL in a ContentViewCore.
      *
      * @param searchContentViewCore The given ContentViewCore.
      * @return The current loaded URL.
@@ -1177,8 +1173,8 @@ public class ContextualSearchManager implements ContextualSearchManagementDelega
         // not yet committed being processed. Otherwise, get the URL from the WebContents.
         NavigationEntry entry =
                 searchContentViewCore.getWebContents().getNavigationController().getPendingEntry();
-        String url =
-                entry != null ? entry.getUrl() : searchContentViewCore.getWebContents().getUrl();
+        String url = entry != null ? entry.getUrl()
+                                   : searchContentViewCore.getWebContents().getLastCommittedUrl();
         return url;
     }
 
@@ -1295,10 +1291,40 @@ public class ContextualSearchManager implements ContextualSearchManagementDelega
     }
 
     @Override
-    public void handleNonSuppressedTap() {
+    public void handleNonSuppressedTap(long tapTimeNanoseconds) {
         if (mIsAccessibilityModeEnabled) return;
 
-        mInternalStateController.notifyFinishedWorkOn(InternalState.DECIDING_SUPPRESSION);
+        // If there's a wait-after-tap experiment then we may want to delay a bit longer for
+        // the user to take an action like scrolling that will reset our internal state.
+        long delayBeforeFinishingWorkMs = 0;
+        if (ContextualSearchFieldTrial.getWaitAfterTapDelayMs() > 0 && tapTimeNanoseconds > 0) {
+            delayBeforeFinishingWorkMs = ContextualSearchFieldTrial.getWaitAfterTapDelayMs()
+                    - (System.nanoTime() - tapTimeNanoseconds) / NANOSECONDS_IN_A_MILLISECOND;
+        }
+
+        // Finish work on the current state, either immediately or with a delay.
+        if (delayBeforeFinishingWorkMs <= 0) {
+            finishSuppressionDecision();
+        } else {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    finishSuppressionDecision();
+                }
+            }, delayBeforeFinishingWorkMs);
+        }
+    }
+
+    /**
+     * Finishes work on the suppression decision if that work is still in progress.
+     * If no longer working on the suppression decision then resets the Ranker-logger.
+     */
+    private void finishSuppressionDecision() {
+        if (mInternalStateController.isStillWorkingOn(InternalState.DECIDING_SUPPRESSION)) {
+            mInternalStateController.notifyFinishedWorkOn(InternalState.DECIDING_SUPPRESSION);
+        } else {
+            mTapSuppressionRankerLogger.reset();
+        }
     }
 
     @Override
@@ -1312,7 +1338,7 @@ public class ContextualSearchManager implements ContextualSearchManagementDelega
         mHeuristics.add(mQuickAnswersHeuristic);
 
         mSearchPanel.getPanelMetrics().setResultsSeenExperiments(mHeuristics);
-        mSearchPanel.getPanelMetrics().setRankerLogExperiments(mHeuristics, getBasePageUrl());
+        mSearchPanel.getPanelMetrics().setRankerLogger(mTapSuppressionRankerLogger);
     }
 
     @Override
@@ -1446,7 +1472,14 @@ public class ContextualSearchManager implements ContextualSearchManagementDelega
             @Override
             public void decideSuppression() {
                 mInternalStateController.notifyStartingWorkOn(InternalState.DECIDING_SUPPRESSION);
-                mSelectionController.handleShouldSuppressTap();
+
+                // Ranker will handle the suppression, but our legacy implementation uses
+                // TapSuppressionHeuristics (run from the ContextualSearchSelectionConroller).
+                // Usage includes tap-far-from-previous suppression.
+                mTapSuppressionRankerLogger.setupLoggingForPage(getBasePageUrl());
+
+                // TODO(donnd): Move handleShouldSuppressTap out of the Selection Controller.
+                mSelectionController.handleShouldSuppressTap(mContext, mTapSuppressionRankerLogger);
             }
 
             /** Starts showing the Tap UI by selecting a word around the current caret. */
@@ -1609,6 +1642,11 @@ public class ContextualSearchManager implements ContextualSearchManagementDelega
     @VisibleForTesting
     protected ContextualSearchInternalStateController getContextualSearchInternalStateController() {
         return mInternalStateController;
+    }
+
+    @VisibleForTesting
+    ContextualSearchRankerLogger getRankerLogger() {
+        return mTapSuppressionRankerLogger;
     }
 
     // ============================================================================================

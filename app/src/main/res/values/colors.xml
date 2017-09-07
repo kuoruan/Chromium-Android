@@ -5,7 +5,7 @@
 
 <resources>
     <!-- Common colors -->
-    <color name="default_text_color">#333</color>
+    <color name="default_text_color">@color/black_alpha_87</color>
     <color name="default_primary_color">#f2f2f2</color>
     <color name="light_normal_color">#5A5A5A</color>
     <color name="light_active_color">#4285F4</color>
@@ -15,7 +15,6 @@
     <color name="dark_action_bar_color">#263238</color>
     <color name="descriptive_text_color">#646464</color>
     <color name="error_text_color">#c53929</color>
-    <color name="google_blue_200">#90caf9</color>
     <color name="google_blue_300">#7BAAF7</color>
     <color name="google_blue_500">#4285f4</color>
     <color name="google_blue_700">#3367d6</color>
@@ -73,9 +72,15 @@
     <color name="url_emphasis_light_non_emphasized_text">#80ffffff</color>
     <color name="url_emphasis_domain_and_registry">#333333</color>
     <color name="url_emphasis_light_domain_and_registry">#ffffff</color>
-    <color name="url_emphasis_default_text">#333333</color>
+    <color name="url_emphasis_default_text">@color/black_alpha_87</color>
     <!--suppress UnusedResources -->
     <color name="url_emphasis_light_default_text">#ffffff</color>
+
+    <!-- Omnibox Suggestion colors -->
+    <color name="suggestion_url">#5595fe</color>
+    <color name="answers_description_text_negative">@color/google_red_700</color>
+    <color name="answers_description_text_positive">@color/google_green_700</color>
+    <color name="answers_answer_text">#8a8a8a</color>
 
     <!--  Distilled Page Prefs colors -->
     <color name="distilled_page_prefs_selected">#999999</color>
@@ -96,7 +101,7 @@
     <color name="data_reduction_breakdown_light_text_color">#737373</color>
 
     <!-- Compositor Tab Title Colors -->
-    <color name="compositor_tab_title_bar_text">#A3000000</color>
+    <color name="compositor_tab_title_bar_text">@color/black_alpha_87</color>
     <color name="compositor_tab_title_bar_text_incognito">#FFFFFFFF</color>
 
     <!-- First Run Experience Colors -->
@@ -115,17 +120,16 @@
     <!-- NTP Colors. Used on the bookmarks and recent tabs pages. -->
     <color name="ntp_bg">#f2f2f2</color>
     <color name="ntp_bg_incognito">#222</color>
-    <color name="ntp_search_box_hint">#969696</color>
+    <color name="ntp_search_box_hint">@color/black_alpha_54</color>
     <color name="ntp_list_item_text">#333</color>
     <color name="ntp_list_header_text">#333</color>
     <color name="ntp_list_header_subtext">#969696</color>
     <color name="ntp_list_header_subtext_active">#7cadff</color>
-    <color name="snippets_thumbnail_placeholder_bg">#f2f2f2</color>
-    <color name="snippets_thumbnail_placeholder_fg">#757575</color>
     <color name="snippets_publisher_name_color">#646464</color>
     <color name="snippets_text_color">#646464</color>
     <color name="snippets_list_header_text_color">#646464</color>
     <color name="snippets_headline_text_color">#333333</color>
+    <color name="suggestions_modern_bg">@android:color/white</color>
 
     <!-- Incognito NTP Colors. -->
     <color name="incognito_text">#b3ffffff</color>
@@ -133,7 +137,7 @@
     <color name="incognito_header">#ccffffff</color>
 
     <!-- Site suggestion tile colors. -->
-    <color name="tile_view_text">#6f6f6f</color>
+    <color name="tile_view_text">@color/black_alpha_54</color>
     <color name="tile_view_offline_badge_tint">#4285f4</color>
 
     <!-- Contextual Search colors -->
@@ -152,10 +156,10 @@
     <color name="incognito_primary_color">#505050</color>
 
     <!-- LocationBar colors -->
-    <color name="locationbar_dark_hint_text">#969696</color>
+    <color name="locationbar_dark_hint_text">@color/black_alpha_54</color>
     <color name="locationbar_light_hint_text">@color/white_alpha_70</color>
     <color name="locationbar_light_selection_color">#cc5595fe</color>
-    <color name="locationbar_status_color">@color/light_normal_color</color>
+    <color name="locationbar_status_color">@color/black_alpha_54</color>
     <color name="locationbar_status_color_light">#ffffff</color>
     <color name="locationbar_status_separator_color">#3d000000</color>
     <color name="locationbar_status_separator_color_light">#3dffffff</color>
@@ -185,7 +189,6 @@
     <color name="webapp_url_bar_separator">#e1e1e1</color>
 
     <!-- Bookmark UI colors -->
-    <color name="bookmark_detail_text">#212121</color>
     <color name="bookmark_detail_section">#7C7B79</color>
 
     <!-- Favicon colors -->
@@ -193,9 +196,8 @@
 
     <!-- Photo Picker colors -->
     <color name="photo_picker_tile_bg_color">@color/google_grey_200</color>
-    <color name="photo_picker_special_tile_bg_color">@color/dark_action_bar_color</color>
-    <color name="photo_picker_special_tile_color">@android:color/white</color>
-    <color name="photo_picker_special_tile_disabled_bg_color">@color/google_grey_300</color>
+    <color name="photo_picker_special_tile_bg_color">@color/google_grey_300</color>
+    <color name="photo_picker_special_tile_color">@color/black_alpha_40</color>
     <color name="photo_picker_special_tile_disabled_color">@color/google_grey_400</color>
 
     <!-- Bookmark widget colors -->
@@ -205,9 +207,6 @@
     <color name="physical_web_diags_success_color">#00933b</color>
     <color name="physical_web_diags_failure_color">#f90101</color>
     <color name="physical_web_diags_indeterminate_color">#f2b50f</color>
-
-    <!-- Bottom bar colors -->
-    <color name="bottom_bar_shadow_color">#1d000000</color>
 
     <!-- Payments UI colors -->
     <color name="payments_section_edit_background">#f5f5f5</color>

@@ -22,7 +22,6 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListPopupWindow;
 
-import org.chromium.base.PerfTraceEvent;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.R;
@@ -443,7 +442,6 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
      * @return     Whether or not animations are done.
      */
     public boolean updateLayout(long time, long dt) {
-        PerfTraceEvent.instant("StripLayoutHelper:updateLayout");
         final boolean doneAnimating = onUpdateAnimation(time, false);
         updateStrip();
 

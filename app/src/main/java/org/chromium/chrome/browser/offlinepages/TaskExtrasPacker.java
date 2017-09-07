@@ -6,8 +6,6 @@ package org.chromium.chrome.browser.offlinepages;
 
 import android.os.Bundle;
 
-import org.chromium.chrome.browser.ChromeBackgroundService;
-
 /**
  * Class to put our custom task information into the task bundle.
  */
@@ -19,11 +17,6 @@ public class TaskExtrasPacker {
     private static final String POWER_CONNECTED_TAG = "PowerConnected";
     private static final String BATTERY_PERCENTAGE_TAG = "BatteryPercentage";
     private static final String UNMETERED_NETWORK_TAG = "UnmeteredNetwork";
-
-    /** Puts requirement to hold a wakelock in the bundle. */
-    public static void packHoldWakelock(Bundle bundle) {
-        bundle.putBoolean(ChromeBackgroundService.HOLD_WAKELOCK, true);
-    }
 
     /** Puts current time into the input bundle. */
     public static void packTimeInBundle(Bundle bundle) {

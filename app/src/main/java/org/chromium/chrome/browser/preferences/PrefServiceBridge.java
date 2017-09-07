@@ -733,21 +733,19 @@ public final class PrefServiceBridge {
     }
 
     /**
-     * @return Whether subresource filtering is enabled.
+     * @return Whether ads are enabled / allowed on sites that tend to show intrusive ads.
      */
-    public boolean subresourceFilterEnabled() {
-        return isContentSettingEnabled(
-                ContentSettingsType.CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER);
+    public boolean adsEnabled() {
+        return isContentSettingEnabled(ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS);
     }
 
     /**
-     * Sets the preferences on whether to enable/disable subresource filtering.
+     * Sets the preferences on whether to enable/disable ads.
      *
-     * @param allow attribute to enable/disable subresource filtering.
+     * @param allow attribute to enable ads / block ads if the site tends to show intrusive ads.
      */
-    public void setAllowSubresourceFilterEnabled(boolean allow) {
-        setContentSettingEnabled(
-                ContentSettingsType.CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER, allow);
+    public void setAllowAdsEnabled(boolean allow) {
+        setContentSettingEnabled(ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS, allow);
     }
 
     /**

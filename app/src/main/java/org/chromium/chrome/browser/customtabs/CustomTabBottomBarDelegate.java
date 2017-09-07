@@ -211,10 +211,22 @@ class CustomTabBottomBarDelegate implements FullscreenListener {
     public void onControlsOffsetChanged(float topOffset, float bottomOffset,
             boolean needsAnimate) {
         if (mBottomBarView != null) mBottomBarView.setTranslationY(bottomOffset);
+        // If the bottom bar is not visible use the top controls as a guide to set state.
+        float offset = getBottomBarHeight() == 0 ? topOffset : bottomOffset;
+        float height = getBottomBarHeight() == 0 ? mFullscreenManager.getTopControlsHeight()
+                                                 : mFullscreenManager.getBottomControlsHeight();
+        // Avoid spamming this callback across process boundaries, by only sending messages at
+        // absolute transitions.
+        if (Math.abs(offset) == height || offset == 0) {
+            CustomTabsConnection.getInstance().onBottomBarScrollStateChanged(
+                    mDataProvider.getSession(), offset != 0);
+        }
     }
 
     @Override
-    public void onBottomControlsHeightChanged(int bottomControlsHeight) { }
+    public void onBottomControlsHeightChanged(int bottomControlsHeight) {
+        getBottomBarView().setTranslationY(mFullscreenManager.getBottomControlOffset());
+    }
 
     @Override
     public void onContentOffsetChanged(float offset) { }

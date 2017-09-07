@@ -195,7 +195,7 @@ If you enable or disable this setting, users cannot change or override this sett
 If this policy is left not set, the default search provider is enabled, and the user will be able to set the search provider list.
 
 This policy is not available on Windows instances that are not joined
-to an Active Directory domain.</string>
+to a MicrosoftÂ® Active DirectoryÂ® domain.</string>
   <string name="DefaultSearchProviderEncodingsTitle">Default search provider encodings</string>
   <string name="DefaultSearchProviderEncodingsDesc">Specifies the character encodings supported by the search provider. Encodings are code page names like UTF-8, GB2312, and ISO-8859-1. They are tried in the order provided.
 
@@ -303,7 +303,9 @@ If you disable this setting or leave it not set, the canonical name of the serve
   <string name="DisableSafeBrowsingProceedAnywayTitle">Disable proceeding from the Safe Browsing warning page</string>
   <string name="DisableSafeBrowsingProceedAnywayDesc">The Safe Browsing service shows a warning page when users navigate to sites that are flagged as potentially malicious. Enabling this setting prevents users from proceeding anyway from the warning page to the malicious site.
 
-If this setting is disabled or not configured then users can choose to proceed to the flagged site after being shown the warning.</string>
+If this setting is disabled or not configured then users can choose to proceed to the flagged site after being shown the warning.
+
+See https://developers.google.com/safe-browsing for more info on SafeBrowsing.</string>
   <string name="EditBookmarksEnabledTitle">Enables or disables bookmark editing</string>
   <string name="EditBookmarksEnabledDesc">If you enable this setting, bookmarks can be added, removed or modified. This is the default also when this policy is not set.
 
@@ -339,6 +341,10 @@ If this policy set to false, Google Cast will be disabled.</string>
 Note that this policy depends on the operating system certificate verification stack allowing SHA-1 signatures. If an OS update changes the OS handling of SHA-1 certificates, this policy may no longer have effect.  Further, this policy is intended as a temporary workaround to give enterprises more time to move away from SHA-1.  This policy will be removed on or around January 1st 2019.
 
 If this policy is not set, or it is set to false, then Chromium follows the publicly announced SHA-1 deprecation schedule.</string>
+  <string name="ForceBrowserSigninTitle">Enables force sign in for Chromium</string>
+  <string name="ForceBrowserSigninDesc">If this policy is set to true, user has to sign in to Chromium with their profile before using the browser. And the default value of BrowserGuestModeEnabled will be set to false.
+
+If this policy is set to false or not configured, user can use the browser without sign in to Chromium.</string>
   <string name="ForceGoogleSafeSearchTitle">Force Google SafeSearch</string>
   <string name="ForceGoogleSafeSearchDesc">Forces queries in Google Web Search to be done with SafeSearch set to active and prevents users from changing this setting.
 
@@ -545,7 +551,9 @@ If you disable this setting, Safe Browsing is never active.
 
 If you enable or disable this setting, users cannot change or override the \\&quot;Enable phishing and malware protection\\&quot; setting in Chromium.
 
-If this policy is left not set, this will be enabled but the user will be able to change it.</string>
+If this policy is left not set, this will be enabled but the user will be able to change it.
+
+See https://developers.google.com/safe-browsing for more info on SafeBrowsing.</string>
   <string name="SavingBrowserHistoryDisabledTitle">Disable saving browser history</string>
   <string name="SavingBrowserHistoryDisabledDesc">Disables saving browser history in Chromium and prevents users from changing this setting.
 

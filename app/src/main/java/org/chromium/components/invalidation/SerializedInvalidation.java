@@ -2,6 +2,8 @@
 
 package org.chromium.components.invalidation;
 
+// @@protoc_insertion_point(imports_scope)
+
 @SuppressWarnings("hiding")
 public interface SerializedInvalidation {
 
@@ -33,6 +35,8 @@ public interface SerializedInvalidation {
 
     // optional string payload = 4;
     public java.lang.String payload;
+
+    // @@protoc_insertion_point(class_scope:org.chromium.components.invalidation.Invalidation)
 
     public Invalidation() {
       clear();
@@ -98,7 +102,7 @@ public interface SerializedInvalidation {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;

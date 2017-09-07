@@ -14,6 +14,7 @@ import android.support.graphics.drawable.VectorDrawableCompat;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
 import android.widget.ImageView;
@@ -178,6 +179,19 @@ public class PickerBitmapView extends SelectableItemView<PickerBitmap> {
         }
     }
 
+    @Override
+    public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
+        super.onInitializeAccessibilityNodeInfo(info);
+
+        if (!isPictureTile()) return;
+
+        info.setCheckable(true);
+        info.setChecked(isChecked());
+        CharSequence text = mBitmapDetails.getFilenameWithoutExtension() + " "
+                + mBitmapDetails.getLastModifiedString();
+        info.setText(text);
+    }
+
     /**
      * Sets the {@link PickerCategoryView} for this PickerBitmapView.
      * @param categoryView The category view showing the images. Used to access
@@ -318,12 +332,11 @@ public class PickerBitmapView extends SelectableItemView<PickerBitmap> {
         if (!special) {
             bgColorId = R.color.photo_picker_tile_bg_color;
         } else {
+            bgColorId = R.color.photo_picker_special_tile_bg_color;
             int fgColorId;
             if (!anySelection) {
-                bgColorId = R.color.photo_picker_special_tile_bg_color;
                 fgColorId = R.color.photo_picker_special_tile_color;
             } else {
-                bgColorId = R.color.photo_picker_special_tile_disabled_bg_color;
                 fgColorId = R.color.photo_picker_special_tile_disabled_color;
             }
 
@@ -336,13 +349,13 @@ public class PickerBitmapView extends SelectableItemView<PickerBitmap> {
 
         setBackgroundColor(ApiCompatibilityUtils.getColor(resources, bgColorId));
 
-        // The visibility of the unselected image is a little more complex because we don't want
-        // to show it when nothing is selected and also not on a blank canvas.
+        // The visibility of the unselected toggle for multi-selection mode is a little more complex
+        // because we don't want to show it when nothing is selected and also not on a blank canvas.
         mSelectedView.setVisibility(!special && checked ? View.VISIBLE : View.GONE);
-        mUnselectedView.setVisibility(
-                !special && !checked && anySelection && mImageLoaded ? View.VISIBLE : View.GONE);
-        mScrim.setVisibility(
-                !special && !checked && anySelection && mImageLoaded ? View.VISIBLE : View.GONE);
+        boolean showUnselectedToggle = !special && !checked && anySelection && mImageLoaded
+                && mCategoryView.isMultiSelectAllowed();
+        mUnselectedView.setVisibility(showUnselectedToggle ? View.VISIBLE : View.GONE);
+        mScrim.setVisibility(showUnselectedToggle ? View.VISIBLE : View.GONE);
     }
 
     private boolean isGalleryTile() {

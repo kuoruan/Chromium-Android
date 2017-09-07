@@ -47,12 +47,11 @@ class MessagePipeHandleImpl extends HandleBase implements MessagePipeHandle {
     }
 
     /**
-     * @see MessagePipeHandle#readMessage(ByteBuffer, int, ReadFlags)
+     * @see MessagePipeHandle#readMessage(ReadFlags)
      */
     @Override
-    public ResultAnd<ReadMessageResult> readMessage(
-            ByteBuffer bytes, int maxNumberOfHandles, ReadFlags flags) {
-        return mCore.readMessage(this, bytes, maxNumberOfHandles, flags);
+    public ResultAnd<ReadMessageResult> readMessage(ReadFlags flags) {
+        return mCore.readMessage(this, flags);
     }
 
 }

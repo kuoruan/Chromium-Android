@@ -59,10 +59,7 @@ public class MediaPlayerBridge {
 
     @CalledByNative
     protected void destroy() {
-        if (mLoadDataUriTask != null) {
-            mLoadDataUriTask.cancel(true);
-            mLoadDataUriTask = null;
-        }
+        cancelLoadDataUriTask();
         mNativeMediaPlayerBridge = 0;
     }
 
@@ -152,6 +149,7 @@ public class MediaPlayerBridge {
 
     @CalledByNative
     protected void release() {
+        cancelLoadDataUriTask();
         getLocalPlayer().release();
     }
 
@@ -212,10 +210,7 @@ public class MediaPlayerBridge {
 
     @CalledByNative
     protected boolean setDataUriDataSource(final String url) {
-        if (mLoadDataUriTask != null) {
-            mLoadDataUriTask.cancel(true);
-            mLoadDataUriTask = null;
-        }
+        cancelLoadDataUriTask();
 
         if (!url.startsWith("data:")) return false;
         int headerStop = url.indexOf(',');
@@ -394,4 +389,11 @@ public class MediaPlayerBridge {
 
     private native void nativeOnDidSetDataUriDataSource(long nativeMediaPlayerBridge,
                                                         boolean success);
+
+    private void cancelLoadDataUriTask() {
+        if (mLoadDataUriTask != null) {
+            mLoadDataUriTask.cancel(true);
+            mLoadDataUriTask = null;
+        }
+    }
 }

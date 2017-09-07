@@ -11,7 +11,7 @@ package org.chromium.printing;
  */
 public interface Printable {
     /** Start the PDF generation process. */
-    boolean print();
+    boolean print(int renderProcessId, int renderFrameId);
 
     /** Get the title of the generated PDF document. */
     String getTitle();

@@ -148,12 +148,11 @@ public class ContentSettingsResources {
                                  org.chromium.chrome.R.string.protected_content,
                                  org.chromium.chrome.R.string.protected_content,
                                  ContentSetting.ASK, ContentSetting.BLOCK, 0, 0));
-            // TODO(csharrison): Swap out the placeholder icon once it is ready.
-            localMap.put(ContentSettingsType.CONTENT_SETTINGS_TYPE_SUBRESOURCE_FILTER,
-                    new ResourceItem(R.drawable.permission_popups,
-                            R.string.subresource_filter_permission_title,
-                            R.string.subresource_filter_permission_title, ContentSetting.ALLOW,
-                            ContentSetting.BLOCK, 0, 0));
+            localMap.put(ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS,
+                    new ResourceItem(R.drawable.ic_ad_24dp_grey600, R.string.ads_permission_title,
+                            R.string.ads_permission_title, ContentSetting.ALLOW,
+                            ContentSetting.BLOCK, 0,
+                            R.string.website_settings_category_ads_blocked));
             localMap.put(ContentSettingsType.CONTENT_SETTINGS_TYPE_USB_CHOOSER_DATA,
                     new ResourceItem(R.drawable.settings_usb, 0, 0, ContentSetting.ASK,
                                  ContentSetting.BLOCK, 0, 0));
@@ -299,5 +298,13 @@ public class ContentSettingsResources {
      */
     public static int getAutoplayDisabledByDataSaverSummary() {
         return R.string.website_settings_category_autoplay_disabled_data_saver;
+    }
+
+    /**
+     * Returns the blocked summary for the ads permission which should be used for display in the
+     * site settings list only.
+     */
+    public static int getAdsBlockedListSummary() {
+        return R.string.website_settings_category_ads_blocked_list;
     }
 }

@@ -10,7 +10,6 @@ import android.net.Uri;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.ChromeFeatureList;
-import org.chromium.chrome.browser.ChromeTabbedActivity;
 import org.chromium.chrome.browser.NativePage;
 import org.chromium.chrome.browser.NativePageHost;
 import org.chromium.chrome.browser.TabLoadStatus;
@@ -22,7 +21,8 @@ import org.chromium.chrome.browser.physicalweb.PhysicalWebDiagnosticsPage;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
-import org.chromium.chrome.browser.util.FeatureUtilities;
+import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
+import org.chromium.chrome.browser.widget.bottomsheet.BottomSheetMetrics;
 import org.chromium.content_public.browser.LoadUrlParams;
 
 /**
@@ -35,14 +35,13 @@ public class NativePageFactory {
     static class NativePageBuilder {
         protected NativePage buildNewTabPage(ChromeActivity activity, Tab tab,
                 TabModelSelector tabModelSelector) {
-            if (FeatureUtilities.isChromeHomeEnabled()) {
-                if (tab.isIncognito()) {
-                    return new ChromeHomeIncognitoNewTabPage(activity, tab, tabModelSelector,
-                            ((ChromeTabbedActivity) activity).getLayoutManager());
-                } else {
-                    return new ChromeHomeNewTabPage(activity, tab, tabModelSelector,
-                            ((ChromeTabbedActivity) activity).getLayoutManager());
-                }
+            if (activity.getBottomSheet() != null) {
+                BottomSheet sheet = activity.getBottomSheet();
+                sheet.getBottomSheetMetrics().recordNativeNewTabPageShown();
+                sheet.getBottomSheetMetrics().recordSheetOpenReason(
+                        BottomSheetMetrics.OPENED_BY_NEW_TAB_CREATION);
+                sheet.setSheetState(BottomSheet.SHEET_STATE_FULL, true);
+                return null;
             } else if (tab.isIncognito()) {
                 return new IncognitoNewTabPage(activity);
             } else {
@@ -164,7 +163,7 @@ public class NativePageFactory {
                 assert false;
                 return null;
         }
-        page.updateForUrl(url);
+        if (page != null) page.updateForUrl(url);
         return page;
     }
 

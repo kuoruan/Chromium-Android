@@ -31,11 +31,6 @@ public class SnippetsLauncher {
     // Task tags for fetching snippets.
     public static final String TASK_TAG_WIFI = "FetchSnippetsWifi";
     public static final String TASK_TAG_FALLBACK = "FetchSnippetsFallback";
-    // TODO(treib): Remove this after M55.
-    private static final String OBSOLETE_TASK_TAG_WIFI_CHARGING = "FetchSnippetsWifiCharging";
-
-    // TODO(treib): Remove this after M55.
-    private static final String OBSOLETE_TASK_TAG_RESCHEDULE = "RescheduleSnippets";
 
     // The amount of "flex" to add around the fetching periods, as a ratio of the period.
     private static final double FLEX_FACTOR = 0.1;
@@ -144,12 +139,10 @@ public class SnippetsLauncher {
         // Google Play Services may not be up to date, if the application was not installed through
         // the Play Store. In this case, scheduling the task will fail silently.
         try {
-            mScheduler.cancelTask(OBSOLETE_TASK_TAG_WIFI_CHARGING, ChromeBackgroundService.class);
             scheduleOrCancelFetchTask(
                     TASK_TAG_WIFI, periodWifiSeconds, Task.NETWORK_STATE_UNMETERED);
             scheduleOrCancelFetchTask(
                     TASK_TAG_FALLBACK, periodFallbackSeconds, Task.NETWORK_STATE_CONNECTED);
-            mScheduler.cancelTask(OBSOLETE_TASK_TAG_RESCHEDULE, ChromeBackgroundService.class);
         } catch (IllegalArgumentException e) {
             // Disable GCM for the remainder of this session.
             mGCMEnabled = false;
@@ -176,8 +169,8 @@ public class SnippetsLauncher {
         return !manager.isActiveNetworkMetered();
     }
 
-    public static boolean shouldRescheduleTasksOnUpgrade() {
-        // Reschedule the periodic tasks if they were enabled previously.
+    public static boolean shouldNotifyOnBrowserUpgraded() {
+        // If there was no schedule previously, we do not need to react to upgrades.
         return ContextUtils.getAppSharedPreferences().getBoolean(PREF_IS_SCHEDULED, false);
     }
 }

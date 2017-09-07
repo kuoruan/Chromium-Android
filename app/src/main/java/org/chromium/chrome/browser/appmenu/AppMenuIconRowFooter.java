@@ -106,7 +106,10 @@ public class AppMenuIconRowFooter
         } else if (itemId == R.id.info_menu_id) {
             description = resources.getString(R.string.menu_page_info);
         } else if (itemId == R.id.reload_menu_id) {
-            description = resources.getString(R.string.menu_refresh);
+            description = (mReloadButton.getDrawable().getLevel()
+                                  == resources.getInteger(R.integer.reload_button_level_reload))
+                    ? resources.getString(R.string.menu_refresh)
+                    : resources.getString(R.string.menu_stop_refresh);
         }
         return AccessibilityUtil.showAccessibilityToast(context, v, description);
     }
@@ -117,8 +120,8 @@ public class AppMenuIconRowFooter
      */
     public void loadingStateChanged(boolean isLoading) {
         mReloadButton.getDrawable().setLevel(isLoading
-                        ? AppMenuPropertiesDelegate.RELOAD_BUTTON_LEVEL_STOP_LOADING
-                        : AppMenuPropertiesDelegate.RELOAD_BUTTON_LEVEL_RELOAD);
+                        ? getResources().getInteger(R.integer.reload_button_level_stop)
+                        : getResources().getInteger(R.integer.reload_button_level_reload));
         mReloadButton.setContentDescription(isLoading
                         ? mActivity.getString(R.string.accessibility_btn_stop_loading)
                         : mActivity.getString(R.string.accessibility_btn_refresh));

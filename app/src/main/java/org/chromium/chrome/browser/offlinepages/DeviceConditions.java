@@ -113,8 +113,12 @@ public class DeviceConditions {
     }
 
     private static int getConnectionType(Context context) {
-        // Get the connection type from chromium's internal object.
-        int connectionType = NetworkChangeNotifier.getInstance().getCurrentConnectionType();
+        int connectionType = ConnectionType.CONNECTION_NONE;
+
+        // If we are starting in the background, native portion might not be initialized.
+        if (NetworkChangeNotifier.isInitialized()) {
+            connectionType = NetworkChangeNotifier.getInstance().getCurrentConnectionType();
+        }
 
         // Sometimes the NetworkConnectionNotifier lags the actual connection type, especially when
         // the GCM NM wakes us from doze state.  If we are really connected, report the connection

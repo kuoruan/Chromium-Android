@@ -6,7 +6,6 @@ package org.chromium.chrome.browser.contextmenu;
 
 import android.text.TextUtils;
 
-import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.chrome.browser.UrlConstants;
@@ -42,6 +41,9 @@ public class ContextMenuParams {
     private final boolean mIsImage;
     private final boolean mIsVideo;
     private final boolean mCanSaveMedia;
+
+    private final int mTriggeringTouchXDp;
+    private final int mTriggeringTouchYDp;
 
     /**
      * @return The URL associated with the main frame of the page that triggered the context menu.
@@ -134,10 +136,37 @@ public class ContextMenuParams {
         return false;
     }
 
-    @VisibleForTesting
+    /**
+     * @return The x-coordinate of the touch that triggered the context menu in dp relative to the
+     *         render view; 0 corresponds to the left edge.
+     */
+    public int getTriggeringTouchXDp() {
+        return mTriggeringTouchXDp;
+    }
+
+    /**
+     * @return The y-coordinate of the touch that triggered the context menu in dp relative to the
+     *         render view; 0 corresponds to the left edge.
+     */
+    public int getTriggeringTouchYDp() {
+        return mTriggeringTouchYDp;
+    }
+
+    /**
+     * @return The valid url of a ContextMenuParams.
+     */
+    public String getUrl() {
+        if (isAnchor() && !TextUtils.isEmpty(getLinkUrl())) {
+            return getLinkUrl();
+        } else {
+            return getSrcUrl();
+        }
+    }
+
     public ContextMenuParams(int mediaType, String pageUrl, String linkUrl, String linkText,
             String unfilteredLinkUrl, String srcUrl, String titleText, boolean imageWasFetchedLoFi,
-            Referrer referrer, boolean canSaveMedia) {
+            Referrer referrer, boolean canSaveMedia, int triggeringTouchXDp,
+            int triggeringTouchYDp) {
         mPageUrl = pageUrl;
         mLinkUrl = linkUrl;
         mLinkText = linkText;
@@ -151,16 +180,19 @@ public class ContextMenuParams {
         mIsImage = mediaType == MediaType.MEDIA_TYPE_IMAGE;
         mIsVideo = mediaType == MediaType.MEDIA_TYPE_VIDEO;
         mCanSaveMedia = canSaveMedia;
+        mTriggeringTouchXDp = triggeringTouchXDp;
+        mTriggeringTouchYDp = triggeringTouchYDp;
     }
 
     @CalledByNative
     private static ContextMenuParams create(int mediaType, String pageUrl, String linkUrl,
             String linkText, String unfilteredLinkUrl, String srcUrl, String titleText,
             boolean imageWasFetchedLoFi, String sanitizedReferrer, int referrerPolicy,
-            boolean canSaveMedia) {
+            boolean canSaveMedia, int triggeringTouchXDp, int triggeringTouchYDp) {
         Referrer referrer = TextUtils.isEmpty(sanitizedReferrer)
                 ? null : new Referrer(sanitizedReferrer, referrerPolicy);
         return new ContextMenuParams(mediaType, pageUrl, linkUrl, linkText, unfilteredLinkUrl,
-                srcUrl, titleText, imageWasFetchedLoFi, referrer, canSaveMedia);
+                srcUrl, titleText, imageWasFetchedLoFi, referrer, canSaveMedia, triggeringTouchXDp,
+                triggeringTouchYDp);
     }
 }

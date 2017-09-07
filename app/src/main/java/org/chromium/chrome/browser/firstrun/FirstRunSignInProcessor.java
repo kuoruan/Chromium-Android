@@ -16,8 +16,6 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.ChromeSwitches;
-import org.chromium.chrome.browser.IntentHandler;
-import org.chromium.chrome.browser.IntentHandler.ExternalAppId;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
 import org.chromium.chrome.browser.signin.AccountManagementFragment;
 import org.chromium.chrome.browser.signin.SigninManager;
@@ -68,17 +66,9 @@ public final class FirstRunSignInProcessor {
             return;
         }
 
-        // Force trigger the FRE if the Lightweight FRE is disabled or Chrome is started via Chrome
-        // icon or via intent from GSA. Otherwise, skip signin.
         if (!firstRunFlowComplete) {
-            if (!CommandLine.getInstance().hasSwitch(
-                        ChromeSwitches.ENABLE_LIGHTWEIGHT_FIRST_RUN_EXPERIENCE)
-                    || TextUtils.equals(activity.getIntent().getAction(), Intent.ACTION_MAIN)
-                    || IntentHandler.determineExternalIntentSource(
-                               activity.getPackageName(), activity.getIntent())
-                            == ExternalAppId.GSA) {
-                requestToFireIntentAndFinish(activity);
-            }
+            // Force trigger the FRE.
+            requestToFireIntentAndFinish(activity);
             return;
         }
 

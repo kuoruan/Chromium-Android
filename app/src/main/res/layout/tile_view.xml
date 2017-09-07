@@ -12,6 +12,16 @@
     android:paddingStart="4dp"
     android:paddingEnd="4dp" >
 
+    <!-- Icon background for the Modern layout. -->
+    <View
+        android:id="@+id/tile_view_icon_background"
+        android:layout_width="@dimen/tile_view_icon_size"
+        android:layout_height="@dimen/tile_view_icon_size"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/tile_view_icon_margin_top"
+        android:background="@drawable/tile_view_icon_background_modern"
+        android:visibility="gone" />
+
     <!-- The main icon. -->
     <ImageView
         android:id="@+id/tile_view_icon"

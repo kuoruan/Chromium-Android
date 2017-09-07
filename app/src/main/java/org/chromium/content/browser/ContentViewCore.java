@@ -7,8 +7,6 @@ package org.chromium.content.browser;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.assist.AssistStructure.ViewNode;
-import android.content.ClipData;
-import android.content.ClipDescription;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -19,7 +17,6 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Pair;
 import android.view.ActionMode;
-import android.view.DragEvent;
 import android.view.HapticFeedbackConstants;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -41,7 +38,7 @@ import org.chromium.base.TraceEvent;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.content.browser.accessibility.BrowserAccessibilityManager;
+import org.chromium.content.browser.accessibility.WebContentsAccessibility;
 import org.chromium.content.browser.accessibility.captioning.CaptioningBridgeFactory;
 import org.chromium.content.browser.accessibility.captioning.SystemCaptioningBridge;
 import org.chromium.content.browser.accessibility.captioning.TextTrackSettings;
@@ -207,7 +204,7 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
     private WebContents mWebContents;
     private WebContentsObserver mWebContentsObserver;
 
-    // Native pointer to C++ ContentViewCoreImpl object which will be set by nativeInit().
+    // Native pointer to C++ ContentViewCore object which will be set by nativeInit().
     private long mNativeContentViewCore;
 
     private boolean mAttachedToWindow;
@@ -242,11 +239,8 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
     // Whether native accessibility, i.e. without any script injection, is allowed.
     private boolean mNativeAccessibilityAllowed;
 
-    // Whether native accessibility, i.e. without any script injection, has been enabled.
-    private boolean mNativeAccessibilityEnabled;
-
     // Handles native accessibility, i.e. without any script injection.
-    private BrowserAccessibilityManager mBrowserAccessibilityManager;
+    private WebContentsAccessibility mWebContentsAccessibility;
 
     // System accessibility service.
     private final AccessibilityManager mAccessibilityManager;
@@ -280,7 +274,7 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
     /**
      * PID used to indicate an invalid render process.
      */
-    // Keep in sync with the value returned from ContentViewCoreImpl::GetCurrentRendererProcessId()
+    // Keep in sync with the value returned from ContentViewCore::GetCurrentRendererProcessId()
     // if there is no render process.
     public static final int INVALID_RENDER_PROCESS_PID = 0;
 
@@ -512,6 +506,15 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
         mSelectionPopupController.setCallback(callback);
     }
 
+    /**
+     * Set {@link ActionMode.Callback} used by {@link SelectionPopupController} when no text is
+     * selected.
+     * @param callback ActionMode.Callback instance.
+     */
+    public void setNonSelectionActionModeCallback(ActionMode.Callback callback) {
+        mSelectionPopupController.setNonSelectionCallback(callback);
+    }
+
     private void addDisplayAndroidObserverIfNeeded() {
         if (!mAttachedToWindow) return;
         WindowAndroid windowAndroid = getWindowAndroid();
@@ -741,6 +744,14 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
     }
 
     /**
+     * @return Last frame viewport width.
+     */
+    @VisibleForTesting
+    public float getLastFrameViewportWidthCss() {
+        return mRenderCoordinates.getLastFrameViewportWidthCss();
+    }
+
+    /**
      * @return The selected text (empty if no text selected).
      */
     @VisibleForTesting
@@ -841,18 +852,6 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
             mGestureStateListenersIterator.next().onSingleTap(consumed);
         }
         destroyPastePopup();
-    }
-
-    @SuppressWarnings("unused")
-    @CalledByNative
-    private void onShowUnhandledTapUIIfNeeded(int x, int y) {
-        mSelectionPopupController.onShowUnhandledTapUIIfNeeded(x, y);
-    }
-
-    @SuppressWarnings("unused")
-    @CalledByNative
-    private void onSelectWordAroundCaretAck(boolean didSelect, int startAdjust, int endAdjust) {
-        mSelectionPopupController.onSelectWordAroundCaretAck(didSelect, startAdjust, endAdjust);
     }
 
     /**
@@ -1127,6 +1126,9 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
     private void onTouchDown(MotionEvent event) {
         if (mShouldRequestUnbufferedDispatch) requestUnbufferedDispatch(event);
         cancelRequestToScrollFocusedEditableNodeIntoView();
+        for (mGestureStateListenersIterator.rewind(); mGestureStateListenersIterator.hasNext();) {
+            mGestureStateListenersIterator.next().onTouchDown();
+        }
     }
 
     private void updateAfterSizeChanged() {
@@ -1260,27 +1262,6 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
     }
 
     /**
-     * @see View#onHoverEvent(MotionEvent)
-     * Mouse move events are sent on hover move.
-     */
-    public boolean onHoverEvent(MotionEvent event) {
-        TraceEvent.begin("onHoverEvent");
-
-        MotionEvent offset = createOffsetMotionEvent(event);
-        try {
-            if (mBrowserAccessibilityManager != null && !mIsObscuredByAnotherView
-                    && mBrowserAccessibilityManager.onHoverEvent(offset)) {
-                return true;
-            }
-
-            return getEventForwarder().onMouseEvent(event);
-        } finally {
-            offset.recycle();
-            TraceEvent.end("onHoverEvent");
-        }
-    }
-
-    /**
      * Removes noise from joystick motion events.
      */
     private static float getFilteredAxisValue(MotionEvent event, int axis) {
@@ -1315,8 +1296,10 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
             if (mJoystickScrollEnabled) {
                 float velocityX = getFilteredAxisValue(event, MotionEvent.AXIS_X);
                 float velocityY = getFilteredAxisValue(event, MotionEvent.AXIS_Y);
-                flingViewport(event.getEventTime(), -velocityX, -velocityY, true);
-                return true;
+                if (velocityX != 0.f || velocityY != 0.f) {
+                    flingViewport(event.getEventTime(), -velocityX, -velocityY, true);
+                    return true;
+                }
             }
         }
         return mContainerViewInternals.super_onGenericMotionEvent(event);
@@ -1333,12 +1316,6 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
         mCurrentTouchOffsetX = dx;
         mCurrentTouchOffsetY = dy;
         getEventForwarder().setCurrentTouchEventOffsets(dx, dy);
-    }
-
-    private MotionEvent createOffsetMotionEvent(MotionEvent src) {
-        MotionEvent dst = MotionEvent.obtain(src);
-        dst.offsetLocation(mCurrentTouchOffsetX, mCurrentTouchOffsetY);
-        return dst;
     }
 
     /**
@@ -1568,10 +1545,6 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
             }
         }
 
-        if (mBrowserAccessibilityManager != null) {
-            mBrowserAccessibilityManager.notifyFrameInfoInitialized();
-        }
-
         TraceEvent.end("ContentViewCore:updateFrameInfo");
     }
 
@@ -1673,13 +1646,6 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
     @CalledByNative
     private void performLongPressHapticFeedback() {
         mContainerView.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
-    }
-
-    @CalledByNative
-    private void showPastePopup(
-            int left, int top, int right, int bottom, boolean canSelectAll, boolean canEditRichly) {
-        mSelectionPopupController.createAndShowPastePopup(
-                left, top, right, bottom, canSelectAll, canEditRichly);
     }
 
     private void destroyPastePopup() {
@@ -1910,7 +1876,7 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
      * @return Whether or not this action is supported.
      */
     public boolean supportsAccessibilityAction(int action) {
-        // TODO(dmazzoni): implement this in BrowserAccessibilityManager.
+        // TODO(dmazzoni): implement this in WebContentsAccessibility.
         return false;
     }
 
@@ -1925,34 +1891,18 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
      *         the super {@link View} class.
      */
     public boolean performAccessibilityAction(int action, Bundle arguments) {
-        // TODO(dmazzoni): implement this in BrowserAccessibilityManager.
+        // TODO(dmazzoni): implement this in WebContentsAccessibility.
         return false;
     }
 
     /**
-     * Set the BrowserAccessibilityManager, used for native accessibility
-     * (not script injection). This is only set when system accessibility
-     * has been enabled.
-     * @param manager The new BrowserAccessibilityManager.
-     */
-    public void setBrowserAccessibilityManager(BrowserAccessibilityManager manager) {
-        mBrowserAccessibilityManager = manager;
-
-        if (mBrowserAccessibilityManager != null && mRenderCoordinates.hasFrameInfo()) {
-            mBrowserAccessibilityManager.notifyFrameInfoInitialized();
-        }
-
-        if (mBrowserAccessibilityManager == null) mNativeAccessibilityEnabled = false;
-    }
-
-    /**
-     * Get the BrowserAccessibilityManager, used for native accessibility
+     * Get the WebContentsAccessibility, used for native accessibility
      * (not script injection). This will return null when system accessibility
      * is not enabled.
-     * @return This view's BrowserAccessibilityManager.
+     * @return This view's WebContentsAccessibility.
      */
-    public BrowserAccessibilityManager getBrowserAccessibilityManager() {
-        return mBrowserAccessibilityManager;
+    public WebContentsAccessibility getWebContentsAccessibility() {
+        return mWebContentsAccessibility;
     }
 
     /**
@@ -1965,16 +1915,17 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
     public AccessibilityNodeProvider getAccessibilityNodeProvider() {
         if (mIsObscuredByAnotherView) return null;
 
-        if (mBrowserAccessibilityManager != null) {
-            return mBrowserAccessibilityManager.getAccessibilityNodeProvider();
+        if (mWebContentsAccessibility != null) {
+            if (mWebContentsAccessibility.isEnabled()) {
+                return mWebContentsAccessibility.getAccessibilityNodeProvider();
+            }
+            mWebContentsAccessibility.enable();
+        } else if (mNativeAccessibilityAllowed) {
+            if (mWebContents == null) return null;
+            mWebContentsAccessibility = WebContentsAccessibility.create(mContext, mContainerView,
+                    mWebContents, mRenderCoordinates, mShouldSetAccessibilityFocusOnPageLoad);
+            mWebContentsAccessibility.enable();
         }
-
-        if (mNativeAccessibilityAllowed && !mNativeAccessibilityEnabled
-                && mNativeContentViewCore != 0) {
-            mNativeAccessibilityEnabled = true;
-            nativeSetAccessibilityEnabled(mNativeContentViewCore, true);
-        }
-
         return null;
     }
 
@@ -2108,13 +2059,6 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
     }
 
     /**
-     * Return whether or not we should set accessibility focus on page load.
-     */
-    public boolean shouldSetAccessibilityFocusOnPageLoad() {
-        return mShouldSetAccessibilityFocusOnPageLoad;
-    }
-
-    /**
      * Sets whether or not we should set accessibility focus on page load.
      * This only applies if an accessibility service like TalkBack is running.
      * This is desirable behavior for a browser window, but not for an embedded
@@ -2150,55 +2094,6 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
         if (mNativeContentViewCore != 0) {
             nativeSetBackgroundOpaque(mNativeContentViewCore, opaque);
         }
-    }
-
-    /**
-     * @see View#onDragEvent(DragEvent)
-     */
-    @TargetApi(Build.VERSION_CODES.N)
-    public boolean onDragEvent(DragEvent event) {
-        if (mNativeContentViewCore == 0 || Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
-            return false;
-        }
-
-        ClipDescription clipDescription = event.getClipDescription();
-
-        // text/* will match text/uri-list, text/html, text/plain.
-        String[] mimeTypes =
-                clipDescription == null ? new String[0] : clipDescription.filterMimeTypes("text/*");
-
-        if (event.getAction() == DragEvent.ACTION_DRAG_STARTED) {
-            // TODO(hush): support dragging more than just text.
-            return mimeTypes != null && mimeTypes.length > 0
-                    && nativeIsTouchDragDropEnabled(mNativeContentViewCore);
-        }
-
-        StringBuilder content = new StringBuilder("");
-        if (event.getAction() == DragEvent.ACTION_DROP) {
-            // TODO(hush): obtain dragdrop permissions, when dragging files into Chrome/WebView is
-            // supported. Not necessary to do so for now, because only text dragging is supported.
-            ClipData clipData = event.getClipData();
-            final int itemCount = clipData.getItemCount();
-            for (int i = 0; i < itemCount; i++) {
-                ClipData.Item item = clipData.getItemAt(i);
-                content.append(item.coerceToStyledText(mContainerView.getContext()));
-            }
-        }
-
-        int[] locationOnScreen = new int[2];
-        mContainerView.getLocationOnScreen(locationOnScreen);
-
-        float xPix = event.getX() + mCurrentTouchOffsetX;
-        float yPix = event.getY() + mCurrentTouchOffsetY;
-
-        int xCss = (int) mRenderCoordinates.fromPixToDip(xPix);
-        int yCss = (int) mRenderCoordinates.fromPixToDip(yPix);
-        int screenXCss = (int) mRenderCoordinates.fromPixToDip(xPix + locationOnScreen[0]);
-        int screenYCss = (int) mRenderCoordinates.fromPixToDip(yPix + locationOnScreen[1]);
-
-        nativeOnDragEvent(mNativeContentViewCore, event.getAction(), xCss, yCss, screenXCss,
-                screenYCss, mimeTypes, content.toString());
-        return true;
     }
 
     /**
@@ -2333,85 +2228,75 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
     private static native ContentViewCore nativeFromWebContentsAndroid(WebContents webContents);
 
     private native void nativeUpdateWindowAndroid(
-            long nativeContentViewCoreImpl, long windowAndroidPtr);
-    private native WebContents nativeGetWebContentsAndroid(long nativeContentViewCoreImpl);
-    private native WindowAndroid nativeGetJavaWindowAndroid(long nativeContentViewCoreImpl);
+            long nativeContentViewCore, long windowAndroidPtr);
+    private native WebContents nativeGetWebContentsAndroid(long nativeContentViewCore);
+    private native WindowAndroid nativeGetJavaWindowAndroid(long nativeContentViewCore);
 
-    private native void nativeOnJavaContentViewCoreDestroyed(long nativeContentViewCoreImpl);
+    private native void nativeOnJavaContentViewCoreDestroyed(long nativeContentViewCore);
 
-    private native void nativeSetFocus(long nativeContentViewCoreImpl, boolean focused);
+    private native void nativeSetFocus(long nativeContentViewCore, boolean focused);
 
-    private native void nativeSetDIPScale(long nativeContentViewCoreImpl, float dipScale);
+    private native void nativeSetDIPScale(long nativeContentViewCore, float dipScale);
 
     private native void nativeSendOrientationChangeEvent(
-            long nativeContentViewCoreImpl, int orientation);
+            long nativeContentViewCore, int orientation);
 
-    private native void nativeScrollBegin(long nativeContentViewCoreImpl, long timeMs, float x,
-            float y, float hintX, float hintY, boolean targetViewport, boolean fromGamepad);
+    private native void nativeScrollBegin(long nativeContentViewCore, long timeMs, float x, float y,
+            float hintX, float hintY, boolean targetViewport, boolean fromGamepad);
 
-    private native void nativeScrollEnd(long nativeContentViewCoreImpl, long timeMs);
+    private native void nativeScrollEnd(long nativeContentViewCore, long timeMs);
 
     private native void nativeScrollBy(
-            long nativeContentViewCoreImpl, long timeMs, float x, float y,
-            float deltaX, float deltaY);
+            long nativeContentViewCore, long timeMs, float x, float y, float deltaX, float deltaY);
 
-    private native void nativeFlingStart(long nativeContentViewCoreImpl, long timeMs, float x,
-            float y, float vx, float vy, boolean targetViewport, boolean fromGamepad);
+    private native void nativeFlingStart(long nativeContentViewCore, long timeMs, float x, float y,
+            float vx, float vy, boolean targetViewport, boolean fromGamepad);
 
     private native void nativeFlingCancel(
-            long nativeContentViewCoreImpl, long timeMs, boolean fromGamepad);
+            long nativeContentViewCore, long timeMs, boolean fromGamepad);
 
-    private native void nativeDoubleTap(
-            long nativeContentViewCoreImpl, long timeMs, float x, float y);
+    private native void nativeDoubleTap(long nativeContentViewCore, long timeMs, float x, float y);
 
     private native void nativeResolveTapDisambiguation(
-            long nativeContentViewCoreImpl, long timeMs, float x, float y, boolean isLongPress);
+            long nativeContentViewCore, long timeMs, float x, float y, boolean isLongPress);
 
-    private native void nativePinchBegin(
-            long nativeContentViewCoreImpl, long timeMs, float x, float y);
+    private native void nativePinchBegin(long nativeContentViewCore, long timeMs, float x, float y);
 
-    private native void nativePinchEnd(long nativeContentViewCoreImpl, long timeMs);
+    private native void nativePinchEnd(long nativeContentViewCore, long timeMs);
 
-    private native void nativePinchBy(long nativeContentViewCoreImpl, long timeMs,
-            float anchorX, float anchorY, float deltaScale);
+    private native void nativePinchBy(long nativeContentViewCore, long timeMs, float anchorX,
+            float anchorY, float deltaScale);
 
     private native void nativeSetTextHandlesTemporarilyHidden(
-            long nativeContentViewCoreImpl, boolean hidden);
+            long nativeContentViewCore, boolean hidden);
 
-    private native void nativeResetGestureDetection(long nativeContentViewCoreImpl);
+    private native void nativeResetGestureDetection(long nativeContentViewCore);
 
     private native void nativeSetDoubleTapSupportEnabled(
-            long nativeContentViewCoreImpl, boolean enabled);
+            long nativeContentViewCore, boolean enabled);
 
     private native void nativeSetMultiTouchZoomSupportEnabled(
-            long nativeContentViewCoreImpl, boolean enabled);
+            long nativeContentViewCore, boolean enabled);
 
-    private native void nativeSelectPopupMenuItems(long nativeContentViewCoreImpl,
-            long nativeSelectPopupSourceFrame, int[] indices);
+    private native void nativeSelectPopupMenuItems(
+            long nativeContentViewCore, long nativeSelectPopupSourceFrame, int[] indices);
 
-    private native int nativeGetCurrentRenderProcessId(long nativeContentViewCoreImpl);
+    private native int nativeGetCurrentRenderProcessId(long nativeContentViewCore);
 
     private native void nativeSetAllowJavascriptInterfacesInspection(
-            long nativeContentViewCoreImpl, boolean allow);
+            long nativeContentViewCore, boolean allow);
 
-    private native void nativeAddJavascriptInterface(long nativeContentViewCoreImpl, Object object,
-            String name, Class requiredAnnotation);
+    private native void nativeAddJavascriptInterface(
+            long nativeContentViewCore, Object object, String name, Class requiredAnnotation);
 
-    private native void nativeRemoveJavascriptInterface(long nativeContentViewCoreImpl,
-            String name);
+    private native void nativeRemoveJavascriptInterface(long nativeContentViewCore, String name);
 
-    private native void nativeWasResized(long nativeContentViewCoreImpl);
+    private native void nativeWasResized(long nativeContentViewCore);
 
-    private native void nativeSetAccessibilityEnabled(
-            long nativeContentViewCoreImpl, boolean enabled);
-
-    private native void nativeSetTextTrackSettings(long nativeContentViewCoreImpl,
+    private native void nativeSetTextTrackSettings(long nativeContentViewCore,
             boolean textTracksEnabled, String textTrackBackgroundColor, String textTrackFontFamily,
             String textTrackFontStyle, String textTrackFontVariant, String textTrackTextColor,
             String textTrackTextShadow, String textTrackTextSize);
 
-    private native void nativeSetBackgroundOpaque(long nativeContentViewCoreImpl, boolean opaque);
-    private native boolean nativeIsTouchDragDropEnabled(long nativeContentViewCoreImpl);
-    private native void nativeOnDragEvent(long nativeContentViewCoreImpl, int action, int x, int y,
-            int screenX, int screenY, String[] mimeTypes, String content);
+    private native void nativeSetBackgroundOpaque(long nativeContentViewCore, boolean opaque);
 }

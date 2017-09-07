@@ -16,7 +16,6 @@ import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanelContentViewDelegate;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanelManager;
 import org.chromium.chrome.browser.compositor.bottombar.contextualsearch.ContextualSearchPanel;
-import org.chromium.chrome.browser.compositor.bottombar.readermode.ReaderModePanel;
 import org.chromium.chrome.browser.compositor.layouts.components.LayoutTab;
 import org.chromium.chrome.browser.compositor.layouts.components.VirtualView;
 import org.chromium.chrome.browser.compositor.layouts.content.TabContentManager;
@@ -27,7 +26,6 @@ import org.chromium.chrome.browser.compositor.overlays.SceneOverlay;
 import org.chromium.chrome.browser.compositor.scene_layer.ToolbarSceneLayer;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchManagementDelegate;
 import org.chromium.chrome.browser.device.DeviceClassManager;
-import org.chromium.chrome.browser.dom_distiller.ReaderModeManagerDelegate;
 import org.chromium.chrome.browser.fullscreen.FullscreenManager;
 import org.chromium.chrome.browser.ntp.NewTabPage;
 import org.chromium.chrome.browser.tab.Tab;
@@ -60,7 +58,6 @@ public class LayoutManagerDocument extends LayoutManager
     // Internal State
     private final SparseArray<LayoutTab> mTabCache = new SparseArray<LayoutTab>();
     private final ContextualSearchPanel mContextualSearchPanel;
-    private final ReaderModePanel mReaderModePanel;
     private final OverlayPanelManager mOverlayPanelManager;
     private final ToolbarSceneLayer mToolbarOverlay;
     /** A delegate for interacting with the Contextual Search manager. */
@@ -92,9 +89,6 @@ public class LayoutManagerDocument extends LayoutManager
         // Contextual Search scene overlay.
         mContextualSearchPanel = new ContextualSearchPanel(mContext, this, mOverlayPanelManager);
 
-        // Reader Mode scene overlay.
-        mReaderModePanel = new ReaderModePanel(mContext, this, mOverlayPanelManager, this);
-
         // Set up layout parameters
         mStaticLayout.setLayoutHandlesTabLifecycles(true);
 
@@ -105,7 +99,6 @@ public class LayoutManagerDocument extends LayoutManager
     public void init(TabModelSelector selector, TabCreatorManager creator,
             TabContentManager content, ViewGroup androidContentContainer,
             ContextualSearchManagementDelegate contextualSearchDelegate,
-            ReaderModeManagerDelegate readerModeDelegate,
             DynamicResourceLoader dynamicResourceLoader) {
         // Add any SceneOverlays to a layout.
         addAllSceneOverlays();
@@ -122,11 +115,6 @@ public class LayoutManagerDocument extends LayoutManager
         // Set back flow communication
         if (contextualSearchDelegate != null) {
             contextualSearchDelegate.setContextualSearchPanel(mContextualSearchPanel);
-        }
-
-        mReaderModePanel.setManagerDelegate(readerModeDelegate);
-        if (readerModeDelegate != null) {
-            readerModeDelegate.setReaderModePanel(mReaderModePanel);
         }
 
         // Set the dynamic resource loader for all overlay panels.
@@ -151,7 +139,7 @@ public class LayoutManagerDocument extends LayoutManager
         };
 
         super.init(selector, creator, content, androidContentContainer, contextualSearchDelegate,
-                readerModeDelegate, dynamicResourceLoader);
+                dynamicResourceLoader);
     }
 
     @Override
@@ -213,7 +201,6 @@ public class LayoutManagerDocument extends LayoutManager
     protected void addAllSceneOverlays() {
         addGlobalSceneOverlay(mToolbarOverlay);
         mStaticLayout.addSceneOverlay(mContextualSearchPanel);
-        mStaticLayout.addSceneOverlay(mReaderModePanel);
     }
 
     /**

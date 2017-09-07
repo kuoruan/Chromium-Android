@@ -5,10 +5,9 @@
 package org.chromium.chrome.browser.preferences;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.preference.Preference;
+import android.support.v7.content.res.AppCompatResources;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
@@ -121,7 +120,7 @@ public class SignInPreference extends Preference
         setTitle(R.string.sign_in_to_chrome);
         setSummary(R.string.sign_in_to_chrome_summary);
         setFragment(null);
-        setIcon(R.drawable.account_management_no_picture);
+        setIcon(AppCompatResources.getDrawable(getContext(), R.drawable.logo_avatar_anonymous));
         setWidgetLayoutResource(0);
         setViewEnabled(true);
     }
@@ -141,10 +140,7 @@ public class SignInPreference extends Preference
         setTitle(title);
         setSummary(SyncPreference.getSyncStatusSummary(getContext()));
         setFragment(AccountManagementFragment.class.getName());
-
-        Resources resources = getContext().getResources();
-        Bitmap bitmap = AccountManagementFragment.getUserPicture(accountName, resources);
-        setIcon(new BitmapDrawable(resources, bitmap));
+        setIcon(AccountManagementFragment.getUserPicture(getContext(), accountName));
 
         setWidgetLayoutResource(
                 SyncPreference.showSyncErrorIcon(getContext()) ? R.layout.sync_error_widget : 0);
@@ -187,7 +183,8 @@ public class SignInPreference extends Preference
     @Override
     public void onProfileDownloaded(String accountId, String fullName, String givenName,
             Bitmap bitmap) {
-        AccountManagementFragment.updateUserNamePictureCache(accountId, fullName, bitmap);
+        AccountManagementFragment.updateUserNamePictureCache(
+                getContext(), accountId, fullName, bitmap);
         update();
     }
 

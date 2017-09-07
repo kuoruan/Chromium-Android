@@ -7,6 +7,7 @@
 
     <org.chromium.chrome.browser.preferences.SignInPreference
         android:key="sign_in"
+        android:layout="@layout/account_management_account_row"
         android:title="@string/sign_in_to_chrome" />
 
     <PreferenceCategory

@@ -26,6 +26,7 @@ import android.os.Build;
 import android.os.PowerManager;
 import android.os.Process;
 import android.os.StatFs;
+import android.os.StrictMode;
 import android.os.UserManager;
 import android.provider.Settings;
 import android.text.Html;
@@ -446,10 +447,15 @@ public class ApiCompatibilityUtils {
      */
     @SuppressWarnings("deprecation")
     public static Drawable getDrawable(Resources res, int id) throws NotFoundException {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            return res.getDrawable(id, null);
-        } else {
-            return res.getDrawable(id);
+        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                return res.getDrawable(id, null);
+            } else {
+                return res.getDrawable(id);
+            }
+        } finally {
+            StrictMode.setThreadPolicy(oldPolicy);
         }
     }
 
@@ -663,6 +669,17 @@ public class ApiCompatibilityUtils {
 
             window.setFeatureInt(featureNumber, featureValue);
         }
+    }
+
+    /**
+     * @param activity The {@link Activity} to check.
+     * @return Whether or not {@code activity} is currently in Android N+ multi-window mode.
+     */
+    public static boolean isInMultiWindowMode(Activity activity) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            return false;
+        }
+        return activity.isInMultiWindowMode();
     }
 
     /**

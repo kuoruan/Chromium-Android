@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser;
 
+import android.app.Activity;
 import android.app.KeyguardManager;
 import android.app.PendingIntent;
 import android.app.SearchManager;
@@ -161,6 +162,11 @@ public class IntentHandler {
     public static final String EXTRA_DATA_HASH_CODE = "org.chromium.chrome.browser.data_hash";
 
     /**
+     * A boolean to indicate whether incognito mode is currently selected.
+     */
+    public static final String EXTRA_INCOGNITO_MODE = "org.chromium.chrome.browser.incognito_mode";
+
+    /**
      * Fake ComponentName used in constructing TRUSTED_APPLICATION_CODE_EXTRA.
      */
     private static ComponentName sFakeComponentName;
@@ -178,7 +184,8 @@ public class IntentHandler {
     private static final String PACKAGE_MESSENGER = "com.google.android.apps.messaging";
     private static final String PACKAGE_LINE = "jp.naver.line.android";
     private static final String PACKAGE_WHATSAPP = "com.whatsapp";
-    private static final String FACEBOOK_LINK_PREFIX = "http://m.facebook.com/l.php?";
+    private static final String FACEBOOK_REFERRER_URL = "android-app://m.facebook.com";
+    private static final String FACEBOOK_INTERNAL_BROWSER_REFERRER = "http://m.facebook.com";
     private static final String TWITTER_LINK_PREFIX = "http://t.co/";
     private static final String NEWS_LINK_PREFIX = "http://news.google.com/news/url?";
 
@@ -287,12 +294,22 @@ public class IntentHandler {
         ExternalAppId externalId = ExternalAppId.OTHER;
         if (appId == null) {
             String url = getUrlFromIntent(intent);
+            String referrer = getReferrerUrl(intent);
             if (url != null && url.startsWith(TWITTER_LINK_PREFIX)) {
                 externalId = ExternalAppId.TWITTER;
-            } else if (url != null && url.startsWith(FACEBOOK_LINK_PREFIX)) {
+            } else if (FACEBOOK_REFERRER_URL.equals(referrer)) {
+                // This happens when "Links Open Externally" is checked in the Facebook app.
                 externalId = ExternalAppId.FACEBOOK;
             } else if (url != null && url.startsWith(NEWS_LINK_PREFIX)) {
                 externalId = ExternalAppId.NEWS;
+            } else {
+                Bundle headers = IntentUtils.safeGetBundleExtra(intent, Browser.EXTRA_HEADERS);
+                if (headers != null
+                        && FACEBOOK_INTERNAL_BROWSER_REFERRER.equals(headers.get("Referer"))) {
+                    // This happens when "Links Open Externally" is unchecked in the Facebook app,
+                    // and we use "Open With..." from the internal browser.
+                    externalId = ExternalAppId.FACEBOOK;
+                }
             }
         } else {
             if (appId.equals(PACKAGE_PLUS)) {
@@ -417,7 +434,7 @@ public class IntentHandler {
                 IntentUtils.safeGetIntExtra(intent, EXTRA_REFERRER_ID, 0));
         if (!TextUtils.isEmpty(referrerUrl)) {
             return referrerUrl;
-        } else if (isValidReferrerHeader(referrerExtra.toString())) {
+        } else if (isValidReferrerHeader(referrerExtra)) {
             return referrerExtra.toString();
         } else if (IntentHandler.isIntentChromeOrFirstParty(intent)) {
             return referrerExtra.toString();
@@ -441,8 +458,9 @@ public class IntentHandler {
         if (bundleExtraHeaders == null) return null;
         for (String key : bundleExtraHeaders.keySet()) {
             String value = bundleExtraHeaders.getString(key);
-            if ("referer".equals(key.toLowerCase(Locale.US)) && isValidReferrerHeader(value)) {
-                return value;
+            if (value != null && "referer".equals(key.toLowerCase(Locale.US))) {
+                Uri referrer = Uri.parse(value).normalizeScheme();
+                if (isValidReferrerHeader(referrer)) return referrer.toString();
             }
         }
         return null;
@@ -467,17 +485,20 @@ public class IntentHandler {
      * @return Whether that the given referrer is of the format that Chrome allows external
      * apps to specify.
      */
-    private static boolean isValidReferrerHeader(String referrer) {
-        return referrer != null
-                && referrer.toLowerCase(Locale.US).startsWith(ANDROID_APP_REFERRER_SCHEME + "://");
+    private static boolean isValidReferrerHeader(Uri referrer) {
+        if (referrer == null) return false;
+        Uri normalized = referrer.normalizeScheme();
+        return TextUtils.equals(normalized.getScheme(), ANDROID_APP_REFERRER_SCHEME)
+                && !TextUtils.isEmpty(normalized.getHost());
     }
 
     /**
      * Constructs a valid referrer using the given authority.
      * @param authority The authority to use.
-     * @return Referrer with default policy that uses the valid android app scheme.
+     * @return Referrer with default policy that uses the valid android app scheme, or null.
      */
     public static Referrer constructValidReferrerForAuthority(String authority) {
+        if (TextUtils.isEmpty(authority)) return null;
         return new Referrer(new Uri.Builder().scheme(ANDROID_APP_REFERRER_SCHEME)
                 .authority(authority).build().toString(), Referrer.REFERRER_POLICY_DEFAULT);
     }

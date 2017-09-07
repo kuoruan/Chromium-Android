@@ -30,7 +30,10 @@ public class ChannelDefinitions {
     public static final String CHANNEL_ID_DOWNLOADS = "downloads";
     public static final String CHANNEL_ID_INCOGNITO = "incognito";
     public static final String CHANNEL_ID_MEDIA = "media";
+    // TODO(crbug.com/700377): Deprecate the 'sites' channel.
     public static final String CHANNEL_ID_SITES = "sites";
+    public static final String CHANNEL_ID_PREFIX_SITES = "web:";
+    public static final String CHANNEL_GROUP_ID_SITES = "sites";
     static final String CHANNEL_GROUP_ID_GENERAL = "general";
     /**
      * Version number identifying the current set of channels. This must be incremented whenever
@@ -50,7 +53,7 @@ public class ChannelDefinitions {
     @Retention(RetentionPolicy.SOURCE)
     public @interface ChannelId {}
 
-    @StringDef({CHANNEL_GROUP_ID_GENERAL})
+    @StringDef({CHANNEL_GROUP_ID_GENERAL, CHANNEL_GROUP_ID_SITES})
     @Retention(RetentionPolicy.SOURCE)
     @interface ChannelGroupId {}
 
@@ -104,6 +107,9 @@ public class ChannelDefinitions {
             map.put(CHANNEL_GROUP_ID_GENERAL,
                     new ChannelGroup(CHANNEL_GROUP_ID_GENERAL,
                             org.chromium.chrome.R.string.notification_category_group_general));
+            map.put(CHANNEL_GROUP_ID_SITES,
+                    new ChannelGroup(CHANNEL_GROUP_ID_SITES,
+                            org.chromium.chrome.R.string.notification_category_sites));
             MAP = Collections.unmodifiableMap(map);
         }
     }
@@ -124,8 +130,12 @@ public class ChannelDefinitions {
         return LEGACY_CHANNEL_IDS;
     }
 
-    static ChannelGroup getChannelGroupFromId(PredefinedChannel channel) {
-        return PredefinedChannelGroups.MAP.get(channel.mGroupId);
+    static ChannelGroup getChannelGroupForChannel(PredefinedChannel channel) {
+        return getChannelGroup(channel.mGroupId);
+    }
+
+    static ChannelGroup getChannelGroup(@ChannelGroupId String groupId) {
+        return PredefinedChannelGroups.MAP.get(groupId);
     }
 
     static PredefinedChannel getChannelFromId(@ChannelId String channelId) {

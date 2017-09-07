@@ -22,9 +22,6 @@ public interface SuggestionsSource {
         /** Called when a category has a new list of content suggestions. */
         void onNewSuggestions(@CategoryInt int category);
 
-        /** Called when a request for additional suggestions completed. */
-        void onMoreSuggestions(@CategoryInt int category, List<SnippetArticle> suggestions);
-
         /** Called when a category changed its status. */
         void onCategoryStatusChanged(@CategoryInt int category, @CategoryStatus int newStatus);
 
@@ -40,9 +37,20 @@ public interface SuggestionsSource {
     }
 
     /**
+     * Destroys the resources associated with the source and all observers will be unregistered.
+     * It should not be used after this is called.
+     */
+    void destroy();
+
+    /**
      * Fetches new snippets for all remote categories.
      */
     void fetchRemoteSuggestions();
+
+    /**
+     * @return Whether remote suggestions are enabled.
+     */
+    boolean areRemoteSuggestionsEnabled();
 
     /**
      * Gets the categories in the order in which they should be displayed.
@@ -92,8 +100,10 @@ public interface SuggestionsSource {
      * Fetches new suggestions.
      * @param category the category to fetch new suggestions for.
      * @param displayedSuggestionIds ids of suggestions already known and that we want to keep.
+     * @param callback The callback to run with the received suggestions.
      */
-    void fetchSuggestions(@CategoryInt int category, String[] displayedSuggestionIds);
+    void fetchSuggestions(@CategoryInt int category, String[] displayedSuggestionIds,
+            Callback<List<SnippetArticle>> callback);
 
     /**
      * Fetches suggestions related to the provided URL.
@@ -120,5 +130,26 @@ public interface SuggestionsSource {
     /**
      * Sets the recipient for update events from the source.
      */
-    void setObserver(Observer observer);
+    void addObserver(Observer observer);
+
+    /**
+     * Removes an observer. Is no-op if the observer was not already registered.
+     */
+    void removeObserver(Observer observer);
+
+    /** No-op implementation of {@link SuggestionsSource.Observer}. */
+    class EmptyObserver implements Observer {
+        @Override
+        public void onNewSuggestions(@CategoryInt int category) {}
+
+        @Override
+        public void onCategoryStatusChanged(
+                @CategoryInt int category, @CategoryStatus int newStatus) {}
+
+        @Override
+        public void onSuggestionInvalidated(@CategoryInt int category, String idWithinCategory) {}
+
+        @Override
+        public void onFullRefreshRequired() {}
+    }
 }

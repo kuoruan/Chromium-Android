@@ -37,7 +37,6 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.blink_public.platform.WebDisplayMode;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.webapps.ChromeWebApkHost;
 import org.chromium.chrome.browser.webapps.WebApkInfo;
 import org.chromium.chrome.browser.webapps.WebappActivity;
 import org.chromium.chrome.browser.webapps.WebappAuthenticator;
@@ -165,11 +164,15 @@ public class ShortcutHelper {
                 // Encoding {@link icon} as a string and computing the mac are expensive.
 
                 Context context = ContextUtils.getApplicationContext();
+
+                // Encode the icon as a base64 string (Launcher drops Bitmaps in the Intent).
+                String encodedIcon = encodeBitmapAsString(icon);
+
                 String nonEmptyScopeUrl =
                         TextUtils.isEmpty(scopeUrl) ? getScopeFromUrl(url) : scopeUrl;
                 Intent shortcutIntent = createWebappShortcutIntent(id,
                         sDelegate.getFullscreenAction(), url, nonEmptyScopeUrl, name, shortName,
-                        icon, WEBAPP_SHORTCUT_VERSION, displayMode, orientation, themeColor,
+                        encodedIcon, WEBAPP_SHORTCUT_VERSION, displayMode, orientation, themeColor,
                         backgroundColor, iconUrl.isEmpty());
                 shortcutIntent.putExtra(EXTRA_MAC, getEncodedMac(context, url));
                 shortcutIntent.putExtra(EXTRA_SOURCE, source);
@@ -340,7 +343,7 @@ public class ShortcutHelper {
      * @param scope           Url scope of the web app.
      * @param name            Name of the web app.
      * @param shortName       Short name of the web app.
-     * @param icon            Icon of the web app.
+     * @param encodedIcon     Base64 encoded icon of the web app.
      * @param version         Version number of the shortcut.
      * @param displayMode     Display mode of the web app.
      * @param orientation     Orientation of the web app.
@@ -351,13 +354,9 @@ public class ShortcutHelper {
      * This method must not be called on the UI thread.
      */
     public static Intent createWebappShortcutIntent(String id, String action, String url,
-            String scope, String name, String shortName, Bitmap icon, int version, int displayMode,
-            int orientation, long themeColor, long backgroundColor, boolean isIconGenerated) {
-        assert !ThreadUtils.runningOnUiThread();
-
-        // Encode the icon as a base64 string (Launcher drops Bitmaps in the Intent).
-        String encodedIcon = encodeBitmapAsString(icon);
-
+            String scope, String name, String shortName, String encodedIcon, int version,
+            int displayMode, int orientation, long themeColor, long backgroundColor,
+            boolean isIconGenerated) {
         // Create an intent as a launcher icon for a full-screen Activity.
         Intent shortcutIntent = new Intent();
         shortcutIntent.setAction(action)
@@ -384,7 +383,6 @@ public class ShortcutHelper {
      * This method must not be called on the UI thread.
      */
     public static Intent createWebappShortcutIntentForTesting(String id, String url) {
-        assert !ThreadUtils.runningOnUiThread();
         return createWebappShortcutIntent(id, null, url, getScopeFromUrl(url), null, null, null,
                 WEBAPP_SHORTCUT_VERSION, WebDisplayMode.STANDALONE, 0, 0, 0, false);
     }
@@ -531,7 +529,6 @@ public class ShortcutHelper {
      */
     @CalledByNative
     private static String queryWebApkPackage(String url) {
-        if (!ChromeWebApkHost.isEnabled()) return null;
         return WebApkValidator.queryWebApkPackage(ContextUtils.getApplicationContext(), url);
     }
 

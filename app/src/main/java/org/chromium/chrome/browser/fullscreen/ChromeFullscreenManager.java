@@ -27,6 +27,7 @@ import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.TabModelSelectorTabModelObserver;
+import org.chromium.chrome.browser.vr_shell.VrShellDelegate;
 import org.chromium.chrome.browser.widget.ControlContainer;
 import org.chromium.content.browser.ContentVideoView;
 import org.chromium.content.browser.ContentViewCore;
@@ -148,7 +149,7 @@ public class ChromeFullscreenManager
                     public void run() {
                         if (getTab() != null) {
                             getTab().updateFullscreenEnabledState();
-                        } else if (!mBrowserVisibilityDelegate.isHidingBrowserControlsEnabled()) {
+                        } else if (!mBrowserVisibilityDelegate.canAutoHideBrowserControls()) {
                             setPositionsForTabToNonFullscreen();
                         }
                     }
@@ -213,9 +214,7 @@ public class ChromeFullscreenManager
         updateControlOffset();
     }
 
-    /**
-     * @return Whether or not the browser controls are attached to the bottom of the screen.
-     */
+    @Override
     public boolean areBrowserControlsAtBottom() {
         return mIsBottomControls;
     }
@@ -235,7 +234,7 @@ public class ChromeFullscreenManager
         if (tab != null && previousTab != getTab()) {
             mBrowserVisibilityDelegate.showControlsTransient();
         }
-        if (tab == null && !mBrowserVisibilityDelegate.isHidingBrowserControlsEnabled()) {
+        if (tab == null && !mBrowserVisibilityDelegate.canAutoHideBrowserControls()) {
             setPositionsForTabToNonFullscreen();
         }
     }
@@ -312,11 +311,8 @@ public class ChromeFullscreenManager
         };
     }
 
-    /**
-     * @return The ratio that the browser controls are off screen; this will be a number [0,1]
-     *         where 1 is completely hidden and 0 is completely shown.
-     */
-    private float getBrowserControlHiddenRatio() {
+    @Override
+    public float getBrowserControlHiddenRatio() {
         return mControlOffsetRatio;
     }
 
@@ -471,6 +467,8 @@ public class ChromeFullscreenManager
         }
         boolean controlsResizeView =
                 topContentOffset > 0 || bottomControlOffset < getBottomControlsHeight();
+        controlsResizeView &= !VrShellDelegate.isInVr();
+
         viewCore.setTopControlsHeight(getTopControlsHeight(), controlsResizeView);
         viewCore.setBottomControlsHeight(getBottomControlsHeight());
     }
@@ -482,8 +480,9 @@ public class ChromeFullscreenManager
         ViewGroup view = contentViewCore.getContainerView();
 
         float topViewsTranslation = getTopVisibleContentOffset();
+        float bottomMargin = getBottomControlsHeight() - getBottomControlOffset();
         applyTranslationToTopChildViews(view, topViewsTranslation);
-        applyMarginToFullChildViews(view, topViewsTranslation);
+        applyMarginToFullChildViews(view, topViewsTranslation, bottomMargin);
         updateContentViewViewportSize(contentViewCore);
     }
 
@@ -576,7 +575,8 @@ public class ChromeFullscreenManager
         return showControls;
     }
 
-    private void applyMarginToFullChildViews(ViewGroup contentView, float margin) {
+    private void applyMarginToFullChildViews(
+            ViewGroup contentView, float topMargin, float bottomMargin) {
         for (int i = 0; i < contentView.getChildCount(); i++) {
             View child = contentView.getChildAt(i);
             if (!(child.getLayoutParams() instanceof FrameLayout.LayoutParams)) continue;
@@ -584,8 +584,10 @@ public class ChromeFullscreenManager
                     (FrameLayout.LayoutParams) child.getLayoutParams();
 
             if (layoutParams.height == LayoutParams.MATCH_PARENT
-                    && layoutParams.topMargin != (int) margin) {
-                layoutParams.topMargin = (int) margin;
+                    && (layoutParams.topMargin != (int) topMargin
+                               || layoutParams.bottomMargin != (int) bottomMargin)) {
+                layoutParams.topMargin = (int) topMargin;
+                layoutParams.bottomMargin = (int) bottomMargin;
                 child.requestLayout();
                 TraceEvent.instant("FullscreenManager:child.requestLayout()");
             }
@@ -614,7 +616,7 @@ public class ChromeFullscreenManager
     @Override
     public void setPositionsForTabToNonFullscreen() {
         Tab tab = getTab();
-        if (tab == null || tab.isShowingBrowserControlsEnabled()) {
+        if (tab == null || tab.canShowBrowserControls()) {
             setPositionsForTab(0, 0, getTopControlsHeight());
         } else {
             setPositionsForTab(-getTopControlsHeight(), getBottomControlsHeight(), 0);

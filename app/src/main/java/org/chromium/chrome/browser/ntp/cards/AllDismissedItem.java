@@ -40,6 +40,10 @@ public class AllDismissedItem extends OptionalLeaf {
         visitor.visitAllDismissedItem();
     }
 
+    public void setVisible(boolean visible) {
+        setVisibilityInternal(visible);
+    }
+
     /**
      * ViewHolder for an item of type {@link ItemViewType#ALL_DISMISSED}.
      */

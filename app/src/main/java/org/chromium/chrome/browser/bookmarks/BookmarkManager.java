@@ -149,7 +149,7 @@ public class BookmarkManager implements BookmarkDelegate, SearchDelegate {
 
         mToolbar = (BookmarkActionBar) mSelectableListLayout.initializeToolbar(
                 R.layout.bookmark_action_bar, mSelectionDelegate, 0, null, R.id.normal_menu_group,
-                R.id.selection_mode_menu_group, R.color.default_primary_color, null);
+                R.id.selection_mode_menu_group, R.color.default_primary_color, null, true);
         mToolbar.initializeSearchView(
                 this, R.string.bookmark_action_bar_search, R.id.search_menu_id);
 

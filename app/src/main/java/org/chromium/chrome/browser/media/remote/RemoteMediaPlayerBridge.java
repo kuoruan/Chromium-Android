@@ -11,6 +11,7 @@ import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.blink_public.platform.modules.remoteplayback.WebRemotePlaybackAvailability;
 import org.chromium.chrome.browser.media.remote.RemoteVideoInfo.PlayerState;
+import org.chromium.chrome.browser.vr_shell.VrShellDelegate;
 
 /**
  * Acts as a proxy between the remotely playing video and the HTMLMediaElement.
@@ -202,6 +203,11 @@ public class RemoteMediaPlayerBridge {
     @CalledByNative
     private void requestRemotePlayback(long startPositionMillis) {
         Log.d(TAG, "requestRemotePlayback at t=%d", startPositionMillis);
+        // TODO(crbug.com/736568): Re-enable dialog in VR.
+        if (VrShellDelegate.isInVr()) {
+            mMediaStateListener.onRouteDialogCancelled();
+            return;
+        }
         if (mRouteController == null) return;
         // Clear out the state
         mPauseRequested = false;
@@ -217,6 +223,11 @@ public class RemoteMediaPlayerBridge {
     @CalledByNative
     private void requestRemotePlaybackControl() {
         Log.d(TAG, "requestRemotePlaybackControl");
+        // TODO(crbug.com/736568): Re-enable dialog in VR.
+        if (VrShellDelegate.isInVr()) {
+            mMediaStateListener.onRouteDialogCancelled();
+            return;
+        }
         RemoteMediaPlayerController.instance().requestRemotePlaybackControl(mMediaStateListener);
     }
 
@@ -323,13 +334,10 @@ public class RemoteMediaPlayerBridge {
         if (mNativeRemoteMediaPlayerBridge == 0) return;
 
         int availability = WebRemotePlaybackAvailability.DEVICE_NOT_AVAILABLE;
-        if (!mRouteIsAvailable && !mIsPlayable) {
-            availability = WebRemotePlaybackAvailability.SOURCE_NOT_SUPPORTED;
-        } else if (mRouteIsAvailable && mIsPlayable) {
-            availability = WebRemotePlaybackAvailability.DEVICE_AVAILABLE;
-        } else if (mRouteIsAvailable) {
-            // mIsPlayable is false here.
+        if (!mIsPlayable) {
             availability = WebRemotePlaybackAvailability.SOURCE_NOT_COMPATIBLE;
+        } else if (mRouteIsAvailable) {
+            availability = WebRemotePlaybackAvailability.DEVICE_AVAILABLE;
         }
         nativeOnRouteAvailabilityChanged(mNativeRemoteMediaPlayerBridge, availability);
     }

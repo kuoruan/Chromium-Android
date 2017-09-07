@@ -17,7 +17,8 @@ import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
     Event.INITIATED, Event.SHOWN, Event.PAY_CLICKED, Event.RECEIVED_INSTRUMENT_DETAILS,
-    Event.SKIPPED_SHOW, Event.ENUM_MAX
+    Event.SKIPPED_SHOW, Event.COMPLETED, Event.USER_ABORTED, Event.OTHER_ABORTED,
+    Event.HAD_INITIAL_FORM_OF_PAYMENT, Event.HAD_NECESSARY_COMPLETE_SUGGESTIONS, Event.ENUM_MAX
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface Event {
@@ -26,5 +27,10 @@ public @interface Event {
   int PAY_CLICKED = 1 << 1;
   int RECEIVED_INSTRUMENT_DETAILS = 1 << 2;
   int SKIPPED_SHOW = 1 << 3;
-  int ENUM_MAX = 16;
+  int COMPLETED = 1 << 4;
+  int USER_ABORTED = 1 << 5;
+  int OTHER_ABORTED = 1 << 6;
+  int HAD_INITIAL_FORM_OF_PAYMENT = 1 << 7;
+  int HAD_NECESSARY_COMPLETE_SUGGESTIONS = 1 << 8;
+  int ENUM_MAX = 512;
 }

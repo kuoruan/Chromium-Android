@@ -66,7 +66,8 @@ public class BarOverlapTapSuppression extends ContextualSearchHeuristic {
 
     @Override
     protected void logRankerTapSuppression(ContextualSearchRankerLogger logger) {
-        logger.log(ContextualSearchRankerLogger.Feature.WAS_SCREEN_BOTTOM, mIsConditionSatisfied);
+        logger.logFeature(
+                ContextualSearchRankerLogger.Feature.WAS_SCREEN_BOTTOM, mIsConditionSatisfied);
     }
 
     /**

@@ -314,12 +314,13 @@ public class DisplayAndroidManager {
         nativeUpdateDisplay(mNativePointer, displayAndroid.getDisplayId(),
                 displayAndroid.getDisplayWidth(), displayAndroid.getDisplayHeight(),
                 displayAndroid.getDipScale(), displayAndroid.getRotationDegrees(),
-                displayAndroid.getBitsPerPixel(), displayAndroid.getBitsPerComponent());
+                displayAndroid.getBitsPerPixel(), displayAndroid.getBitsPerComponent(),
+                displayAndroid.getIsWideColorGamut());
     }
 
     private native void nativeUpdateDisplay(long nativeDisplayAndroidManager, int sdkDisplayId,
             int width, int height, float dipScale, int rotationDegrees, int bitsPerPixel,
-            int bitsPerComponent);
+            int bitsPerComponent, boolean isWideColorGamut);
     private native void nativeRemoveDisplay(long nativeDisplayAndroidManager, int sdkDisplayId);
     private native void nativeSetPrimaryDisplayId(
             long nativeDisplayAndroidManager, int sdkDisplayId);

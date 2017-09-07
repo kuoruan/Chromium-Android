@@ -15,6 +15,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.content.pm.Signature;
 import android.os.StrictMode;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -56,7 +57,8 @@ public class WebApkValidator {
      * handled by a WebAPK.
      */
     public static String queryWebApkPackage(Context context, String url) {
-        return findWebApkPackage(context, resolveInfosForUrl(context, url));
+        return findWebApkPackage(
+                context, resolveInfosForUrlAndOptionalPackage(context, url, null /* package*/));
     }
 
     /**
@@ -72,33 +74,8 @@ public class WebApkValidator {
      *     handled by a WebAPK.
      */
     public static ResolveInfo queryResolveInfo(Context context, String url) {
-        return findResolveInfo(context, resolveInfosForUrl(context, url));
-    }
-
-    /**
-     * Fetches the list of resolve infos from the PackageManager that can handle the URL.
-     *
-     * @param context The application context.
-     * @param url The url to check.
-     * @return The list of resolve infos found that can handle the URL.
-     */
-    private static List<ResolveInfo> resolveInfosForUrl(Context context, String url) {
-        Intent intent;
-        try {
-            intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
-        } catch (Exception e) {
-            return new LinkedList<>();
-        }
-
-        intent.addCategory(Intent.CATEGORY_BROWSABLE);
-        intent.setComponent(null);
-        Intent selector = intent.getSelector();
-        if (selector != null) {
-            selector.addCategory(Intent.CATEGORY_BROWSABLE);
-            selector.setComponent(null);
-        }
-        return context.getPackageManager().queryIntentActivities(
-                intent, PackageManager.GET_RESOLVED_FILTER);
+        return findResolveInfo(
+                context, resolveInfosForUrlAndOptionalPackage(context, url, null /* package */));
     }
 
     /**
@@ -113,6 +90,49 @@ public class WebApkValidator {
             return resolveInfo.activityInfo.packageName;
         }
         return null;
+    }
+
+    public static boolean canWebApkHandleUrl(Context context, String webApkPackage, String url) {
+        List<ResolveInfo> infos = resolveInfosForUrlAndOptionalPackage(context, url, webApkPackage);
+        for (ResolveInfo info : infos) {
+            if (info.activityInfo != null
+                    && isValidWebApk(context, info.activityInfo.packageName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Fetches the list of resolve infos from the PackageManager that can handle the URL.
+     *
+     * @param context The application context.
+     * @param url The url to check.
+     * @param applicationPackage The optional package name to set for intent resolution.
+     * @return The list of resolve infos found that can handle the URL.
+     */
+    private static List<ResolveInfo> resolveInfosForUrlAndOptionalPackage(
+            Context context, String url, @Nullable String applicationPackage) {
+        Intent intent;
+        try {
+            intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+        } catch (Exception e) {
+            return new LinkedList<>();
+        }
+
+        intent.addCategory(Intent.CATEGORY_BROWSABLE);
+        if (applicationPackage != null) {
+            intent.setPackage(applicationPackage);
+        } else {
+            intent.setComponent(null);
+        }
+        Intent selector = intent.getSelector();
+        if (selector != null) {
+            selector.addCategory(Intent.CATEGORY_BROWSABLE);
+            selector.setComponent(null);
+        }
+        return context.getPackageManager().queryIntentActivities(
+                intent, PackageManager.GET_RESOLVED_FILTER);
     }
 
     /**

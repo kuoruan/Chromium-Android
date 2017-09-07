@@ -52,7 +52,7 @@
               android:layout_height="wrap_content"
               android:singleLine="true"
               android:ellipsize="end"
-              android:textColor="@color/google_grey_600"
+              android:textColor="@color/black_alpha_54"
               android:textSize="14sp" />
         </LinearLayout>
 

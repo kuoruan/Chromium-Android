@@ -228,14 +228,14 @@ public class LoadUrlParams {
     }
 
     /**
-     * @return the referrer of this load
+     * Sets the referrer of this load.
      */
     public void setReferrer(Referrer referrer) {
         mReferrer = referrer;
     }
 
     /**
-     * Sets the referrer of this load.
+     * @return the referrer of this load.
      */
     public Referrer getReferrer() {
         return mReferrer;

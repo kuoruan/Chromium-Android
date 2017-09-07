@@ -365,24 +365,16 @@ public abstract class StackAnimation {
      * @return              The TabSwitcherAnimation instance that will tween the
      *                      tabs to create the appropriate animation.
      */
-    // TODO(dtrainor): Remove this after confirming nothing uses this.
     protected ChromeAnimation<?> createNewTabOpenedAnimatorSet(
             StackTab[] tabs, int focusIndex, float discardRange) {
-        if (focusIndex < 0 || focusIndex >= tabs.length) return null;
-        ChromeAnimation<Animatable<?>> set = new ChromeAnimation<Animatable<?>>();
+        ChromeAnimation<Animatable<?>> set = new ChromeAnimation<>();
 
-        StackTab tab = tabs[focusIndex];
-        tab.getLayoutTab().setVisible(false);
-        tab.setXInStackInfluence(0.0f);
-        tab.setYInStackInfluence(0.0f);
-        tab.setDiscardFromClick(true);
-        tab.setDiscardOriginX(tab.getLayoutTab().getOriginalContentWidth());
-        tab.setDiscardOriginY(tab.getLayoutTab().getOriginalContentHeight() / 2.f);
-        tab.getLayoutTab().setAlpha(0.0f);
-        tab.getLayoutTab().setBorderAlpha(0.0f);
-        addAnimation(set, tab, DISCARD_AMOUNT, getTabCreationDirection() * discardRange, 0.0f,
-                TAB_OPENED_ANIMATION_DURATION, 0, false,
-                ChromeAnimation.getAccelerateInterpolator());
+        for (int i = 0; i < tabs.length; i++) {
+            addAnimation(set, tabs[i], StackTab.Property.SCROLL_OFFSET, tabs[i].getScrollOffset(),
+                    0.0f, TAB_OPENED_ANIMATION_DURATION, 0, false,
+                    ChromeAnimation.getDecelerateInterpolator());
+        }
+
         return set;
     }
 

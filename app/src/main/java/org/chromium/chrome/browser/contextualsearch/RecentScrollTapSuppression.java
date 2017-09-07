@@ -13,6 +13,7 @@ public class RecentScrollTapSuppression extends ContextualSearchHeuristic {
 
     private final int mDurationSinceRecentScrollMs;
     private final boolean mIsConditionSatisfied;
+    private final int mRecentScrollDurationThreshold;
 
     /**
      * Constructs a Tap suppression heuristic that handles a Tap after a recent scroll.
@@ -29,14 +30,17 @@ public class RecentScrollTapSuppression extends ContextualSearchHeuristic {
         } else {
             mDurationSinceRecentScrollMs = 0;
         }
-
+        int experimentThreshold = ContextualSearchFieldTrial.getRecentScrollDurationMs();
+        mRecentScrollDurationThreshold = experimentThreshold > 0
+                ? experimentThreshold
+                : DEFAULT_RECENT_SCROLL_SUPPRESSION_DURATION_MS;
         mIsConditionSatisfied = mDurationSinceRecentScrollMs > 0
-                && mDurationSinceRecentScrollMs < DEFAULT_RECENT_SCROLL_SUPPRESSION_DURATION_MS;
+                && mDurationSinceRecentScrollMs < mRecentScrollDurationThreshold;
     }
 
     @Override
     protected boolean isConditionSatisfiedAndEnabled() {
-        return mIsConditionSatisfied;
+        return mIsConditionSatisfied && mRecentScrollDurationThreshold > 0;
     }
 
     @Override
@@ -46,7 +50,7 @@ public class RecentScrollTapSuppression extends ContextualSearchHeuristic {
 
     @Override
     protected void logRankerTapSuppression(ContextualSearchRankerLogger logger) {
-        logger.log(ContextualSearchRankerLogger.Feature.DURATION_AFTER_SCROLL_MS,
+        logger.logFeature(ContextualSearchRankerLogger.Feature.DURATION_AFTER_SCROLL_MS,
                 mDurationSinceRecentScrollMs);
     }
 }

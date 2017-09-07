@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import org.chromium.base.ContextUtils;
+import org.chromium.base.Log;
 import org.chromium.base.ObserverList;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
@@ -48,6 +49,7 @@ import java.util.Set;
 /** Bridges the user's download history and the UI used to display it. */
 public class DownloadHistoryAdapter extends DateDividedAdapter
         implements DownloadUiObserver, DownloadSharedPreferenceHelper.Observer {
+    private static final String TAG = "DownloadAdapter";
 
     /** Alerted about changes to internal state. */
     static interface TestObserver {
@@ -335,7 +337,7 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
     protected DateViewHolder createDateViewHolder(ViewGroup parent) {
         DateViewHolder viewHolder = super.createDateViewHolder(parent);
         if (mUiConfig != null) {
-            MarginResizer.createWithViewAdapter(viewHolder.itemView, mUiConfig,
+            MarginResizer.createAndAttach(viewHolder.itemView, mUiConfig,
                     parent.getResources().getDimensionPixelSize(R.dimen.list_item_default_margin),
                     SelectableListLayout.getDefaultListItemLateralShadowSizePx(
                             parent.getResources()));
@@ -372,7 +374,7 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
             mSpaceDisplay = new SpaceDisplay(parent, this);
             registerAdapterDataObserver(mSpaceDisplay);
             if (mUiConfig != null) {
-                MarginResizer.createWithViewAdapter(mSpaceDisplay.getView(), mUiConfig,
+                MarginResizer.createAndAttach(mSpaceDisplay.getView(), mUiConfig,
                         parent.getResources().getDimensionPixelSize(
                                 R.dimen.list_item_default_margin),
                         SelectableListLayout.getDefaultListItemLateralShadowSizePx(
@@ -439,7 +441,13 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
                 // changed.  This prevents the RecyclerView from detaching and immediately
                 // reattaching the same view, causing janky animations.
                 for (DownloadItemView view : mViews) {
-                    if (TextUtils.equals(item.getId(), view.getItem().getId())) {
+                    DownloadHistoryItemWrapper wrapper = view.getItem();
+                    if (wrapper == null) {
+                        // TODO(qinmin): remove this once crbug.com/731789 is fixed.
+                        Log.e(TAG, "DownloadItemView contains empty DownloadHistoryItemWrapper");
+                        continue;
+                    }
+                    if (TextUtils.equals(item.getId(), wrapper.getId())) {
                         view.displayItem(mBackendProvider, existingWrapper);
                     }
                 }
@@ -557,7 +565,7 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
                 .apply();
         RecordHistogram.recordBooleanHistogram(
                 "Android.DownloadManager.ShowStorageInfo", mShouldShowStorageInfoHeader);
-        filter(mFilter);
+        if (mLoadingDelegate.isLoaded()) filter(mFilter);
     }
 
     private DownloadDelegate getDownloadDelegate() {

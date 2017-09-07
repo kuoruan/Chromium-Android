@@ -194,19 +194,15 @@ public class Connector implements MessageReceiver, HandleOwner<MessagePipeHandle
      */
     static ResultAnd<Boolean> readAndDispatchMessage(
             MessagePipeHandle handle, MessageReceiver receiver) {
-        // TODO(qsr) Allow usage of a pool of pre-allocated buffer for performance.
-        ResultAnd<ReadMessageResult> result =
-                handle.readMessage(null, 0, MessagePipeHandle.ReadFlags.NONE);
-        if (result.getMojoResult() != MojoResult.RESOURCE_EXHAUSTED) {
+        ResultAnd<ReadMessageResult> result = handle.readMessage(MessagePipeHandle.ReadFlags.NONE);
+        if (result.getMojoResult() != MojoResult.OK) {
             return new ResultAnd<Boolean>(result.getMojoResult(), false);
         }
         ReadMessageResult readResult = result.getValue();
         assert readResult != null;
-        ByteBuffer buffer = ByteBuffer.allocateDirect(readResult.getMessageSize());
-        result = handle.readMessage(
-                buffer, readResult.getHandlesCount(), MessagePipeHandle.ReadFlags.NONE);
-        if (receiver != null && result.getMojoResult() == MojoResult.OK) {
-            boolean accepted = receiver.accept(new Message(buffer, result.getValue().getHandles()));
+        if (receiver != null) {
+            boolean accepted = receiver.accept(
+                    new Message(ByteBuffer.wrap(readResult.mData), readResult.mHandles));
             return new ResultAnd<Boolean>(result.getMojoResult(), accepted);
         }
         return new ResultAnd<Boolean>(result.getMojoResult(), false);

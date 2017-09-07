@@ -67,9 +67,11 @@ public class TranslateMenuHelper implements AdapterView.OnItemClickListener {
         } else {
             for (int i = 0; i < mOptions.allLanguages().size(); ++i) {
                 String code = mOptions.allLanguages().get(i).mLanguageCode;
-                // Don't show target or source language in the menu list.
-                if (code.equals(mOptions.targetLanguageCode())
-                        || code.equals(mOptions.sourceLanguageCode())) {
+                // Avoid source language in both the source and target language list.
+                // Avoid target language only in the target language list.
+                if (code.equals(mOptions.sourceLanguageCode())
+                        || (menuType == TranslateMenu.MENU_TARGET_LANGUAGE
+                                   && code.equals(mOptions.targetLanguageCode()))) {
                     continue;
                 }
                 menuList.add(new TranslateMenu.MenuItem(TranslateMenu.ITEM_LANGUAGE, i, code));
@@ -191,9 +193,9 @@ public class TranslateMenuHelper implements AdapterView.OnItemClickListener {
     }
 
     /**
-     * @return Whether the app menu is currently showing.
+     * @return Whether the menu is currently showing.
      */
-    private boolean isShowing() {
+    public boolean isShowing() {
         if (mPopup == null) {
             return false;
         }

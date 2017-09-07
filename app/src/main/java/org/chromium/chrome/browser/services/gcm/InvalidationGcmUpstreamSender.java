@@ -19,7 +19,7 @@ import com.google.ipc.invalidation.ticl.android2.channel.GcmUpstreamSenderServic
 import org.chromium.base.ThreadUtils;
 import org.chromium.chrome.browser.init.ProcessInitializationHandler;
 import org.chromium.chrome.browser.signin.OAuth2TokenService;
-import org.chromium.components.signin.AccountManagerHelper;
+import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.components.signin.ChromeSigninController;
 import org.chromium.components.sync.SyncConstants;
 
@@ -68,7 +68,7 @@ public class InvalidationGcmUpstreamSender extends GcmUpstreamSenderService {
         // Attempt to retrieve a token for the user.
         OAuth2TokenService.getOAuth2AccessToken(this, account,
                 SyncConstants.CHROME_SYNC_OAUTH2_SCOPE,
-                new AccountManagerHelper.GetAuthTokenCallback() {
+                new AccountManagerFacade.GetAuthTokenCallback() {
                     @Override
                     public void tokenAvailable(final String token) {
                         new AsyncTask<Void, Void, Void>() {

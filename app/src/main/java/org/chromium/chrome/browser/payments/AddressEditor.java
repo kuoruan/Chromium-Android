@@ -45,8 +45,8 @@ public class AddressEditor
     private EditorFieldModel mCountryField;
     @Nullable
     private EditorFieldModel mPhoneField;
-    @Nullable
-    private EditorFieldValidator mPhoneValidator;
+    private PhoneNumberUtil.CountryAwareFormatTextWatcher mPhoneFormatter;
+    private CountryAwarePhoneNumberValidator mPhoneValidator;
     @Nullable
     private List<AddressUiComponent> mAddressUiComponents;
     private boolean mAdminAreasLoaded;
@@ -56,13 +56,21 @@ public class AddressEditor
     private EditorModel mEditor;
     private ProgressDialog mProgressDialog;
 
+    /** Builds an address editor. */
+    public AddressEditor() {
+        mPhoneFormatter = new PhoneNumberUtil.CountryAwareFormatTextWatcher();
+        mPhoneValidator = new CountryAwarePhoneNumberValidator();
+    }
+
     /**
      * Adds the given phone number to the autocomplete set, if it's valid.
+     * Note that here we consider all non-null and non-empty numbers as valid
+     * since we are doing strict validation of Autofill data.
      *
      * @param phoneNumber The phone number to possibly add.
      */
     public void addPhoneNumberIfValid(@Nullable CharSequence phoneNumber) {
-        if (getPhoneValidator().isValid(phoneNumber)) mPhoneNumbers.add(phoneNumber);
+        if (!TextUtils.isEmpty(phoneNumber)) mPhoneNumbers.add(phoneNumber.toString());
     }
 
     /**
@@ -124,6 +132,8 @@ public class AddressEditor
                 mEditor.removeAllFields();
                 showProgressDialog();
                 mRecentlySelectedCountry = eventData.first;
+                mPhoneFormatter.setCountryCode(mRecentlySelectedCountry);
+                mPhoneValidator.setCountryCode(mRecentlySelectedCountry);
                 mCountryChangeCallback = eventData.second;
                 loadAdminAreasForCountry(mRecentlySelectedCountry);
             }
@@ -132,6 +142,12 @@ public class AddressEditor
         // Country dropdown is cached, so the selected item needs to be updated for the new profile
         // that's being edited. This will not fire the dropdown callback.
         mCountryField.setValue(AutofillAddress.getCountryCode(mProfile));
+
+        // Phone number validator and formatter are cached, so their contry code needs to be updated
+        // for the new profile that's being edited.
+        assert mCountryField.getValue() != null;
+        mPhoneValidator.setCountryCode(mCountryField.getValue().toString());
+        mPhoneFormatter.setCountryCode(mCountryField.getValue().toString());
 
         // There's a finite number of fields for address editing. Changing the country will re-order
         // and relabel the fields. The meaning of each field remains the same.
@@ -162,7 +178,7 @@ public class AddressEditor
         if (mPhoneField == null) {
             mPhoneField = EditorFieldModel.createTextInput(EditorFieldModel.INPUT_TYPE_HINT_PHONE,
                     mContext.getString(R.string.autofill_profile_editor_phone_number),
-                    mPhoneNumbers, getPhoneValidator(), null,
+                    mPhoneNumbers, mPhoneFormatter, mPhoneValidator, null,
                     mContext.getString(R.string.payments_field_required_validation_message),
                     mContext.getString(R.string.payments_phone_invalid_validation_message), null);
         }
@@ -296,12 +312,13 @@ public class AddressEditor
     }
 
     @Override
-    public void onSubKeysReceived(String[] adminAreas) {
+    public void onSubKeysReceived(String[] adminAreaCodes, String[] adminAreaNames) {
         if (mAdminAreasLoaded) return;
         mAdminAreasLoaded = true;
 
         mAddressFields.put(AddressField.ADMIN_AREA,
-                contains(adminAreas, mProfile.getRegion())
+                (contains(adminAreaCodes, mProfile.getRegion())
+                        || contains(adminAreaNames, mProfile.getRegion()))
                         ? EditorFieldModel.createDropdown()
                         : EditorFieldModel.createTextInput(
                                   EditorFieldModel.INPUT_TYPE_HINT_REGION));
@@ -317,16 +334,16 @@ public class AddressEditor
             // For example, "US" will not add dependent locality to the editor. A "JP" address will
             // start with a person's full name or a with a prefecture name, depending on whether the
             // language code is "ja-Latn" or "ja".
-            addAddressFieldsToEditor(
-                    mRecentlySelectedCountry, Locale.getDefault().getLanguage(), adminAreas);
+            addAddressFieldsToEditor(mRecentlySelectedCountry, Locale.getDefault().getLanguage(),
+                    adminAreaCodes, adminAreaNames);
             // Notify EditorDialog that the fields in the model have changed. EditorDialog should
             // re-read the model and update the UI accordingly.
             mHandler.post(mCountryChangeCallback);
         } else {
             // This should be called when all required fields are put in mAddressField.
             setAddressFieldValuesFromCache();
-            addAddressFieldsToEditor(
-                    mProfile.getCountryCode(), mProfile.getLanguageCode(), adminAreas);
+            addAddressFieldsToEditor(mProfile.getCountryCode(), mProfile.getLanguageCode(),
+                    adminAreaCodes, adminAreaNames);
             mEditorDialog.show(mEditor);
         }
     }
@@ -349,7 +366,7 @@ public class AddressEditor
         // fetch the admin-areas, and show a text-field instead.
         // This is to have the tests independent of the network status.
         if (PersonalDataManager.getInstance().getRequestTimeoutMS() == 0) {
-            onSubKeysReceived(null);
+            onSubKeysReceived(null, null);
             return;
         }
 
@@ -362,8 +379,8 @@ public class AddressEditor
      * Adds fields to the editor model based on the country and language code of
      * the profile that's being edited.
      */
-    private void addAddressFieldsToEditor(
-            String countryCode, String languageCode, String[] adminAreas) {
+    private void addAddressFieldsToEditor(String countryCode, String languageCode,
+            String[] adminAreaCodes, String[] adminAreaNames) {
         mAddressUiComponents =
                 mAutofillProfileBridge.getAddressUiComponents(countryCode, languageCode);
         // In terms of order, country must be the first field.
@@ -379,8 +396,8 @@ public class AddressEditor
                     || component.id == AddressField.DEPENDENT_LOCALITY);
 
             if (component.id == AddressField.ADMIN_AREA && field.isDropdownField()) {
-                field.setDropdownKeyValues(
-                        mAutofillProfileBridge.getAdminAreaDropdownList(adminAreas));
+                field.setDropdownKeyValues(mAutofillProfileBridge.getAdminAreaDropdownList(
+                        adminAreaCodes, adminAreaNames));
             }
 
             // Libaddressinput formats do not always require the full name (RECIPIENT), but
@@ -397,20 +414,33 @@ public class AddressEditor
         mEditor.addField(mPhoneField);
     }
 
-    private EditorFieldValidator getPhoneValidator() {
-        if (mPhoneValidator == null) {
-            mPhoneValidator = new EditorFieldValidator() {
-                @Override
-                public boolean isValid(@Nullable CharSequence value) {
-                    return value != null && PhoneNumberUtil.isValidNumber(value.toString());
-                }
+    /** Country based phone number validator. */
+    private static class CountryAwarePhoneNumberValidator implements EditorFieldValidator {
+        @Nullable
+        private String mCountryCode;
 
-                @Override
-                public boolean isLengthMaximum(@Nullable CharSequence value) {
-                    return false;
-                }
-            };
+        /**
+         * Sets the country code used to validate the phone number.
+         *
+         * @param countryCode The given country code.
+         */
+        public void setCountryCode(@Nullable String countryCode) {
+            mCountryCode = countryCode;
         }
-        return mPhoneValidator;
+
+        @Override
+        public boolean isValid(@Nullable CharSequence value) {
+            // TODO(gogerald): Warn users when the phone number is a possible number but may be
+            // invalid, crbug.com/736387.
+            // Note that isPossibleNumber is used since the metadata in libphonenumber has to be
+            // updated frequently (daily) to do more strict validation.
+            return value != null
+                    && PhoneNumberUtil.isPossibleNumber(value.toString(), mCountryCode);
+        }
+
+        @Override
+        public boolean isLengthMaximum(@Nullable CharSequence value) {
+            return false;
+        }
     }
 }

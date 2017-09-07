@@ -37,10 +37,6 @@
     <!-- Recent tabs page -->
     <dimen name="recent_tabs_visible_separator_padding">28dp</dimen>
 
-    <!-- Omnibox suggestion list -->
-    <dimen name="omnibox_suggestion_list_padding_top">8dp</dimen>
-    <dimen name="omnibox_suggestion_list_padding_bottom">8dp</dimen>
-
     <!-- Web app dimensions -->
     <dimen name="webapp_splash_offset">48dp</dimen>
     <dimen name="webapp_splash_large_title_margin_bottom">8dp</dimen>

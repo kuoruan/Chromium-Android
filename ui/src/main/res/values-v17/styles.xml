@@ -38,4 +38,9 @@
     <style name="ButtonCompatBorderless" parent="ButtonCompat">
         <item name="android:background">?android:attr/selectableItemBackground</item>
     </style>
+
+    <style name="RobotoMediumStyle">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">bold</item>
+    </style>
 </resources>

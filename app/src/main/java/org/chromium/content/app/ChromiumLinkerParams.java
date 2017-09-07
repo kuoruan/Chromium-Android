@@ -4,8 +4,7 @@
 
 package org.chromium.content.app;
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.os.Bundle;
 
 import java.util.Locale;
 
@@ -17,7 +16,7 @@ import javax.annotation.concurrent.Immutable;
  * technical notes in Linker.java.
  */
 @Immutable
-public class ChromiumLinkerParams implements Parcelable {
+public class ChromiumLinkerParams {
     // Use this base address to load native shared libraries. If 0, ignore other members.
     public final long mBaseLoadAddress;
 
@@ -31,6 +30,18 @@ public class ChromiumLinkerParams implements Parcelable {
     // If mTestRunnerClassNameForTesting is not empty, the Linker implementation
     // to force for testing.
     public final int mLinkerImplementationForTesting;
+
+    private static final String EXTRA_LINKER_PARAMS_BASE_LOAD_ADDRESS =
+            "org.chromium.content.common.linker_params.base_load_address";
+
+    private static final String EXTRA_LINKER_PARAMS_WAIT_FOR_SHARED_RELRO =
+            "org.chromium.content.common.linker_params.wait_for_shared_relro";
+
+    private static final String EXTRA_LINKER_PARAMS_TEST_RUNNER_CLASS_NAME =
+            "org.chromium.content.common.linker_params.test_runner_class_name";
+
+    private static final String EXTRA_LINKER_PARAMS_LINKER_IMPLEMENTATION =
+            "org.chromium.content.common.linker_params.linker_implementation";
 
     public ChromiumLinkerParams(long baseLoadAddress, boolean waitForSharedRelro) {
         mBaseLoadAddress = baseLoadAddress;
@@ -52,38 +63,44 @@ public class ChromiumLinkerParams implements Parcelable {
         mLinkerImplementationForTesting = linkerImplementation;
     }
 
-    ChromiumLinkerParams(Parcel in) {
-        mBaseLoadAddress = in.readLong();
-        mWaitForSharedRelro = in.readInt() != 0;
-        mTestRunnerClassNameForTesting = in.readString();
-        mLinkerImplementationForTesting = in.readInt();
+    /**
+     * Use this method to recreate a LinkerParams instance from a Bundle.
+     *
+     * @param bundle A Bundle, its content must have been populated by a previous
+     * call to populateBundle().
+     * @return params instance or possibly null if params was not put into bundle.
+     */
+    public static ChromiumLinkerParams create(Bundle bundle) {
+        if (!bundle.containsKey(EXTRA_LINKER_PARAMS_BASE_LOAD_ADDRESS)
+                || !bundle.containsKey(EXTRA_LINKER_PARAMS_WAIT_FOR_SHARED_RELRO)
+                || !bundle.containsKey(EXTRA_LINKER_PARAMS_TEST_RUNNER_CLASS_NAME)
+                || !bundle.containsKey(EXTRA_LINKER_PARAMS_LINKER_IMPLEMENTATION)) {
+            return null;
+        }
+        return new ChromiumLinkerParams(bundle);
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
+    private ChromiumLinkerParams(Bundle bundle) {
+        mBaseLoadAddress = bundle.getLong(EXTRA_LINKER_PARAMS_BASE_LOAD_ADDRESS, 0);
+        mWaitForSharedRelro = bundle.getBoolean(EXTRA_LINKER_PARAMS_WAIT_FOR_SHARED_RELRO, false);
+        mTestRunnerClassNameForTesting =
+                bundle.getString(EXTRA_LINKER_PARAMS_TEST_RUNNER_CLASS_NAME);
+        mLinkerImplementationForTesting =
+                bundle.getInt(EXTRA_LINKER_PARAMS_LINKER_IMPLEMENTATION, 0);
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeLong(mBaseLoadAddress);
-        dest.writeInt(mWaitForSharedRelro ? 1 : 0);
-        dest.writeString(mTestRunnerClassNameForTesting);
-        dest.writeInt(mLinkerImplementationForTesting);
+    /**
+     * Save data in this LinkerParams instance in a bundle, to be sent to a service process.
+     *
+     * @param bundle An bundle to be passed to the child service process.
+     */
+    public void populateBundle(Bundle bundle) {
+        bundle.putLong(EXTRA_LINKER_PARAMS_BASE_LOAD_ADDRESS, mBaseLoadAddress);
+        bundle.putBoolean(EXTRA_LINKER_PARAMS_WAIT_FOR_SHARED_RELRO, mWaitForSharedRelro);
+        bundle.putString(
+                EXTRA_LINKER_PARAMS_TEST_RUNNER_CLASS_NAME, mTestRunnerClassNameForTesting);
+        bundle.putInt(EXTRA_LINKER_PARAMS_LINKER_IMPLEMENTATION, mLinkerImplementationForTesting);
     }
-
-    public static final Parcelable.Creator<ChromiumLinkerParams> CREATOR =
-            new Parcelable.Creator<ChromiumLinkerParams>() {
-                @Override
-                public ChromiumLinkerParams createFromParcel(Parcel in) {
-                    return new ChromiumLinkerParams(in);
-                }
-
-                @Override
-                public ChromiumLinkerParams[] newArray(int size) {
-                    return new ChromiumLinkerParams[size];
-                }
-            };
 
     // For debugging traces only.
     @Override

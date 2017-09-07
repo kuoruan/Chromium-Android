@@ -16,7 +16,7 @@ import org.chromium.base.library_loader.ProcessInitException;
 import org.chromium.chrome.browser.ChromeActivitySessionTracker;
 import org.chromium.chrome.browser.ChromeVersionInfo;
 import org.chromium.components.variations.firstrun.VariationsSeedFetcher;
-import org.chromium.content.browser.ChildProcessLauncher;
+import org.chromium.content.browser.ChildProcessLauncherHelper;
 
 import java.util.concurrent.Executor;
 
@@ -112,7 +112,7 @@ public abstract class AsyncInitTaskRunner {
         }
 
         if (allocateChildConnection) {
-            ChildProcessLauncher.warmUp(ContextUtils.getApplicationContext());
+            ChildProcessLauncherHelper.warmUp(ContextUtils.getApplicationContext());
         }
         mLoadTask = new LoadTask();
         mLoadTask.executeOnExecutor(getExecutor());

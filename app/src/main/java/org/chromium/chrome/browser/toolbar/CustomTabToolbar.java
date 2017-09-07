@@ -696,7 +696,7 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
     // Toolbar and LocationBar calls that are not relevant here.
 
     @Override
-    public void onTextChangedForAutocomplete(boolean canInlineAutocomplete) {}
+    public void onTextChangedForAutocomplete() {}
 
     @Override
     public void backKeyPressed() {
@@ -762,6 +762,25 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
 
     @Override
     public boolean mustQueryUrlBarLocationForSuggestions() {
+        return false;
+    }
+
+    // Temporary fix to override ToolbarLayout's highlight-related methods
+    @Override
+    public void setMenuButtonHighlight(boolean highlight) {}
+
+    @Override
+    protected void setMenuButtonHighlightDrawable(boolean highlighting) {}
+
+    @Override
+    public boolean isSuggestionsListShown() {
+        // Custom tabs do not support suggestions.
+        return false;
+    }
+
+    @Override
+    public boolean isSuggestionsListScrolled() {
+        // Custom tabs do not support suggestions.
         return false;
     }
 }

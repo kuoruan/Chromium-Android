@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeStringConstants;
 import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.AutofillProfile;
 import org.chromium.chrome.browser.customtabs.CustomTabActivity;
@@ -39,8 +40,8 @@ public class AutofillServerCardEditor extends AutofillCreditCardEditor {
         v.findViewById(R.id.edit_server_card).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                CustomTabActivity.showInfoPage(getActivity(),
-                        getActivity().getString(R.string.autofill_manage_wallet_cards_url));
+                CustomTabActivity.showInfoPage(
+                        getActivity(), ChromeStringConstants.AUTOFILL_MANAGE_WALLET_CARD_URL);
             }
         });
 

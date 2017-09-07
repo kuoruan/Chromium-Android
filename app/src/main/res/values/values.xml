@@ -8,12 +8,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:ignore="MissingTranslation">
 
-    <!-- Font to use when a spec asks for "Roboto Medium".
-         Bolding the text makes it look almost, but not quite, entirely unlike Roboto Medium,
-         which doesn't exist pre-L. -->
-    <string name="roboto_medium_typeface">sans-serif</string>
-    <integer name="roboto_medium_textstyle">1</integer>
-
     <!-- Menu Animation Constants -->
     <item type="fraction" format="fraction" name="menu_animation_pivot_x">95%</item>
 
@@ -38,9 +32,14 @@
     <!-- TabSwitcher - Maximum amount to tilt tabs in over scroll in degrees. -->
     <integer name="over_scroll_angle">15</integer>
 
+    <!-- Toolbar/AppMenu - Drawable level on reload image button -->
+    <integer name="reload_button_level_reload">0</integer>
+    <integer name="reload_button_level_stop">1</integer>
+
     <!-- Help and Feedback
          These constants should be in sync with the context names on go/mobilehelprecs.
          If the context ID cannot be found, the default help page will be shown to the user.-->
+    <string name="help_context_autofill">android_autofill_ota</string>
     <string name="help_context_new_tab">mobile_new_tab</string>
     <string name="help_context_search_results">mobile_search_results</string>
     <string name="help_context_webpage">mobile_webpage</string>
@@ -68,4 +67,7 @@
          loaded. -->
     <bool name="is_tablet">false</bool>
     <bool name="is_large_tablet">false</bool>
+
+    <!-- Value for scaleX to mirror drawables correctly for LTR / RTL layouts. -->
+    <integer name="automirror_scale_x">1</integer>
 </resources>

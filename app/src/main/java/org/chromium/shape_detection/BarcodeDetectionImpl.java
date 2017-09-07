@@ -19,7 +19,6 @@ import org.chromium.base.Log;
 import org.chromium.gfx.mojom.PointF;
 import org.chromium.gfx.mojom.RectF;
 import org.chromium.mojo.system.MojoException;
-import org.chromium.mojo.system.SharedBufferHandle;
 import org.chromium.services.service_manager.InterfaceFactory;
 import org.chromium.shape_detection.mojom.BarcodeDetection;
 import org.chromium.shape_detection.mojom.BarcodeDetectionResult;
@@ -38,8 +37,7 @@ public class BarcodeDetectionImpl implements BarcodeDetection {
     }
 
     @Override
-    public void detect(
-            SharedBufferHandle frameData, int width, int height, DetectResponse callback) {
+    public void detect(org.chromium.skia.mojom.Bitmap bitmapData, DetectResponse callback) {
         if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(
                     ContextUtils.getApplicationContext())
                 != ConnectionResult.SUCCESS) {
@@ -57,9 +55,9 @@ public class BarcodeDetectionImpl implements BarcodeDetection {
             return;
         }
 
-        Frame frame = SharedBufferUtils.convertToFrame(frameData, width, height);
+        Frame frame = BitmapUtils.convertToFrame(bitmapData);
         if (frame == null) {
-            Log.e(TAG, "Error converting SharedMemory to Frame");
+            Log.e(TAG, "Error converting Mojom Bitmap to Frame");
             callback.call(new BarcodeDetectionResult[0]);
             return;
         }

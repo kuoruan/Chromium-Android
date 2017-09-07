@@ -42,6 +42,13 @@ public class HistoryManagerToolbar extends SelectableListToolbar<HistoryItem> {
     }
 
     @Override
+    protected void showNormalView() {
+        super.showNormalView();
+        updateInfoMenuItem(
+                mManager.shouldShowInfoButton(), mManager.shouldShowInfoHeaderIfAvailable());
+    }
+
+    @Override
     public void onSelectionStateChange(List<HistoryItem> selectedItems) {
         boolean wasSelectionEnabled = mIsSelectionEnabled;
         super.onSelectionStateChange(selectedItems);
@@ -67,11 +74,21 @@ public class HistoryManagerToolbar extends SelectableListToolbar<HistoryItem> {
         }
     }
 
+    @Override
+    protected void onDataChanged(int numItems) {
+        super.onDataChanged(numItems);
+        getMenu()
+                .findItem(R.id.info_menu_id)
+                .setVisible(mManager.shouldShowInfoButton() && !mIsSearching && numItems > 0);
+    }
+
     /**
      * Should be called when the user's sign in state changes.
      */
     public void onSignInStateChange() {
         updateMenuItemVisibility();
+        updateInfoMenuItem(
+                mManager.shouldShowInfoButton(), mManager.shouldShowInfoHeaderIfAvailable());
     }
 
     private void updateMenuItemVisibility() {

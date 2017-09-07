@@ -16,31 +16,51 @@ public class MarginResizer implements DisplayStyleObserver {
     /** The wide display value for the lateral margins. */
     private int mWideMarginSizePixels;
     private final View mView;
+    private final DisplayStyleObserverAdapter mDisplayStyleObserver;
 
     @HorizontalDisplayStyle
     private int mCurrentDisplayStyle;
 
     /**
-     * Factory method that creates a {@link MarginResizer} and wraps it in a
-     * {@link DisplayStyleObserverAdapter} that will take care of invoking it when appropriate.
      * @param view The view that will have its margins resized.
      * @param config The UiConfig object to subscribe to.
      * @param defaultMarginPixels Margin size to use in {@link HorizontalDisplayStyle#REGULAR}.
      * @param wideMarginPixels Margin size to use in {@link HorizontalDisplayStyle#WIDE}.
-     * @return The newly created {@link MarginResizer}.
      */
-    public static MarginResizer createWithViewAdapter(View view, UiConfig config,
-            int defaultMarginPixels, int wideMarginPixels) {
-        MarginResizer marginResizer =
-                new MarginResizer(view, defaultMarginPixels, wideMarginPixels);
-        new DisplayStyleObserverAdapter(view, config, marginResizer);
-        return marginResizer;
-    }
-
-    public MarginResizer(View view, int defaultMarginPixels, int wideMarginPixels) {
+    public MarginResizer(
+            View view, UiConfig config, int defaultMarginPixels, int wideMarginPixels) {
         mView = view;
         mDefaultMarginSizePixels = defaultMarginPixels;
         mWideMarginSizePixels = wideMarginPixels;
+        mDisplayStyleObserver = new DisplayStyleObserverAdapter(view, config, this);
+    }
+
+    /**
+     * Convenience method to create a new MarginResizer and immediately attach it to a {@link
+     * UiConfig}. If the {@link UiConfig} can outlive the view, the regular constructor should be
+     * used, so it can be detached to avoid memory leaks.
+     * @param view The view that will have its margins resized.
+     * @param config The UiConfig object to subscribe to.
+     * @param defaultMarginPixels Margin size to use in {@link HorizontalDisplayStyle#REGULAR}.
+     * @param wideMarginPixels Margin size to use in {@link HorizontalDisplayStyle#WIDE}.
+     */
+    public static void createAndAttach(
+            View view, UiConfig config, int defaultMarginPixels, int wideMarginPixels) {
+        new MarginResizer(view, config, defaultMarginPixels, wideMarginPixels).attach();
+    }
+
+    /**
+     * Attaches to the {@link UiConfig}.
+     */
+    public void attach() {
+        mDisplayStyleObserver.attach();
+    }
+
+    /**
+     * Detaches from the {@link UiConfig}.
+     */
+    public void detach() {
+        mDisplayStyleObserver.detach();
     }
 
     @Override

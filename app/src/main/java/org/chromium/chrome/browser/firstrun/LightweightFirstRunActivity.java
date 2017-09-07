@@ -17,6 +17,7 @@ import org.chromium.base.CommandLine;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.customtabs.CustomTabActivity;
+import org.chromium.ui.base.LocalizationUtils;
 import org.chromium.ui.text.NoUnderlineClickableSpan;
 import org.chromium.ui.text.SpanApplier;
 import org.chromium.ui.text.SpanApplier.SpanInfo;
@@ -25,6 +26,10 @@ import org.chromium.ui.text.SpanApplier.SpanInfo;
 * Lightweight FirstRunActivity. It shows ToS dialog only.
 */
 public class LightweightFirstRunActivity extends FirstRunActivity {
+    private Button mOkButton;
+    private boolean mNativeInitialized;
+    private boolean mTriggerAcceptAfterNativeInit;
+
     @Override
     public void setContentView() {
         super.setContentView();
@@ -39,14 +44,16 @@ public class LightweightFirstRunActivity extends FirstRunActivity {
             @Override
             public void onClick(View widget) {
                 CustomTabActivity.showInfoPage(LightweightFirstRunActivity.this,
-                        getString(R.string.chrome_terms_of_service_url));
+                        LocalizationUtils.substituteLocalePlaceholder(
+                                getString(R.string.chrome_terms_of_service_url)));
             }
         };
         NoUnderlineClickableSpan clickablePrivacySpan = new NoUnderlineClickableSpan() {
             @Override
             public void onClick(View widget) {
                 CustomTabActivity.showInfoPage(LightweightFirstRunActivity.this,
-                        getString(R.string.chrome_privacy_notice_url));
+                        LocalizationUtils.substituteLocalePlaceholder(
+                                getString(R.string.chrome_privacy_notice_url)));
             }
         };
         ((TextView) findViewById(R.id.lightweight_fre_tos_and_privacy))
@@ -56,14 +63,13 @@ public class LightweightFirstRunActivity extends FirstRunActivity {
         ((TextView) findViewById(R.id.lightweight_fre_tos_and_privacy))
                 .setMovementMethod(LinkMovementMethod.getInstance());
 
-        ((Button) findViewById(R.id.lightweight_fre_terms_accept))
-                .setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        sGlue.acceptTermsOfService(false);
-                        completeFirstRunExperience();
-                    }
-                });
+        mOkButton = (Button) findViewById(R.id.lightweight_fre_terms_accept);
+        mOkButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                acceptTermsOfService();
+            }
+        });
 
         ((Button) findViewById(R.id.lightweight_fre_cancel))
                 .setOnClickListener(new OnClickListener() {
@@ -75,6 +81,15 @@ public class LightweightFirstRunActivity extends FirstRunActivity {
     }
 
     @Override
+    public void finishNativeInitialization() {
+        super.finishNativeInitialization();
+        assert !mNativeInitialized;
+
+        mNativeInitialized = true;
+        if (mTriggerAcceptAfterNativeInit) acceptTermsOfService();
+    }
+
+    @Override
     public void completeFirstRunExperience() {
         FirstRunStatus.setLightweightFirstRunFlowComplete(true);
         Intent intent = new Intent();
@@ -82,5 +97,17 @@ public class LightweightFirstRunActivity extends FirstRunActivity {
         finishAllTheActivities(getLocalClassName(), Activity.RESULT_OK, intent);
 
         sendPendingIntentIfNecessary(true);
+    }
+
+    private void acceptTermsOfService() {
+        if (!mNativeInitialized) {
+            mTriggerAcceptAfterNativeInit = true;
+
+            // Disable the "accept" button to indicate that "something is happening".
+            mOkButton.setEnabled(false);
+            return;
+        }
+        sGlue.acceptTermsOfService(false);
+        completeFirstRunExperience();
     }
 }

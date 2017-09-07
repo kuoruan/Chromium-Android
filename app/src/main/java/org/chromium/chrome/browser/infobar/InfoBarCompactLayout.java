@@ -57,9 +57,9 @@ public class InfoBarCompactLayout extends LinearLayout implements View.OnClickLi
         if (weight <= 0.0f) {
             params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, mCompactInfoBarSize);
         } else {
-            params = new LinearLayout.LayoutParams(0, mCompactInfoBarSize);
-            params.weight = weight;
+            params = new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, weight);
         }
+        view.setMinimumHeight(mCompactInfoBarSize);
         params.gravity = Gravity.BOTTOM;
         addView(view, indexOfChild(mCloseButton), params);
     }

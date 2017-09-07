@@ -36,6 +36,7 @@ public class DownloadItemView extends SelectableItemView<DownloadHistoryItemWrap
 
     private DownloadHistoryItemWrapper mItem;
     private int mIconResId;
+    private int mIconSize;
     private Bitmap mThumbnailBitmap;
 
     // Controls common to completed and in-progress downloads.
@@ -67,6 +68,7 @@ public class DownloadItemView extends SelectableItemView<DownloadHistoryItemWrap
         mIconBackgroundColorSelected =
                 ApiCompatibilityUtils.getColor(context.getResources(), R.color.google_grey_600);
         mIconForegroundColorList = DownloadUtils.getIconForegroundColorList(context);
+        mIconSize = getResources().getDimensionPixelSize(R.dimen.downloads_item_icon_size);
     }
 
     @Override
@@ -122,6 +124,11 @@ public class DownloadItemView extends SelectableItemView<DownloadHistoryItemWrap
         }
     }
 
+    @Override
+    public int getIconSize() {
+        return mIconSize;
+    }
+
     /**
      * Initialize the DownloadItemView. Must be called before the item can respond to click events.
      *
@@ -136,21 +143,22 @@ public class DownloadItemView extends SelectableItemView<DownloadHistoryItemWrap
         ThumbnailProvider thumbnailProvider = provider.getThumbnailProvider();
         thumbnailProvider.cancelRetrieval(this);
 
-        // Asynchronously grab a thumbnail for the file if it might have one.
         int fileType = item.getFilterType();
+
+        // Pick what icon to display for the item.
+        mIconResId = DownloadUtils.getIconResId(fileType, DownloadUtils.ICON_SIZE_24_DP);
+
+        // Request a thumbnail for the file to be sent to the ThumbnailCallback. This will happen
+        // immediately if the thumbnail is cached or asynchronously if it has to be fetched from a
+        // remote source.
         mThumbnailBitmap = null;
         if (fileType == DownloadFilter.FILTER_IMAGE && item.isComplete()) {
-            Bitmap cached_thumbnail = thumbnailProvider.getThumbnail(this);
-            if (cached_thumbnail != null && !cached_thumbnail.isRecycled()) {
-                mThumbnailBitmap = cached_thumbnail;
-            }
+            thumbnailProvider.getThumbnail(this);
         } else {
             // TODO(dfalcantara): Get thumbnails for audio and video files when possible.
         }
 
-        // Pick what icon to display for the item.
-        mIconResId = DownloadUtils.getIconResId(fileType, DownloadUtils.ICON_SIZE_24_DP);
-        updateIconView();
+        if (mThumbnailBitmap == null) updateIconView();
 
         Context context = mFilesizeView.getContext();
         mFilenameCompletedView.setText(item.getDisplayFileName());
@@ -201,6 +209,7 @@ public class DownloadItemView extends SelectableItemView<DownloadHistoryItemWrap
 
         setBackgroundResourceForGroupPosition(
                 getItem().isFirstInGroup(), getItem().isLastInGroup());
+        setLongClickable(item.isComplete());
     }
 
     /**

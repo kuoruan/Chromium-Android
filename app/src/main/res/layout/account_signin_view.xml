@@ -69,7 +69,7 @@
             android:fadingEdgeLength="48dp"
             android:visibility="gone">
 
-            <RelativeLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
@@ -87,8 +87,8 @@
 
                     <ImageView
                         android:id="@+id/signin_account_image"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
+                        android:layout_width="@dimen/signin_account_image_size"
+                        android:layout_height="@dimen/signin_account_image_size"
                         android:layout_marginBottom="24dp"
                         android:scaleType="fitCenter"
                         android:contentDescription="@null"/>
@@ -114,33 +114,26 @@
                         android:maxLines="1"/>
                 </LinearLayout>
 
-                <View
-                    android:id="@+id/signin_confirmation_head_body_border"
-                    style="@style/Divider"
-                    android:layout_below="@id/signin_confirmation_head"/>
+                <View style="@style/Divider"/>
 
                 <TextView
-                    android:id="@+id/signin_chrome_sync_title"
+                    style="@style/RobotoMediumStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:layout_marginBottom="8dp"
-                    android:layout_below="@id/signin_confirmation_head_body_border"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:text="@string/sync_confirmation_chrome_sync_title"
                     android:textColor="@color/default_text_color"
                     android:textSize="@dimen/fre_normal_text_size"
-                    android:fontFamily="sans-serif-medium"
                     android:drawableStart="@drawable/chrome_sync_logo"
                     android:drawablePadding="16dp"/>
 
                 <TextView
-                    android:id="@+id/signin_chrome_sync_description"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
-                    android:layout_below="@id/signin_chrome_sync_title"
                     android:paddingStart="56dp"
                     android:paddingEnd="16dp"
                     android:lineSpacingMultiplier="1.4"
@@ -149,25 +142,21 @@
                     android:textSize="@dimen/fre_normal_text_size" />
 
                 <View
-                    android:id="@+id/signin_confirmation_body_rule_line"
                     style="@style/Divider"
                     android:layout_marginStart="56dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_below="@id/signin_chrome_sync_description"/>
+                    android:layout_marginEnd="16dp"/>
 
                 <TextView
-                    android:id="@+id/signin_personalize_service_title"
+                    style="@style/RobotoMediumStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:layout_marginBottom="8dp"
-                    android:layout_below="@id/signin_confirmation_body_rule_line"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:text="@string/sync_confirmation_personalize_services_title"
                     android:textColor="@color/default_text_color"
                     android:textSize="@dimen/fre_normal_text_size"
-                    android:fontFamily="sans-serif-medium"
                     android:drawableStart="@drawable/googleg"
                     android:drawablePadding="16dp"/>
 
@@ -176,7 +165,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="32dp"
-                    android:layout_below="@id/signin_personalize_service_title"
                     android:paddingStart="56dp"
                     android:paddingEnd="16dp"
                     android:lineSpacingMultiplier="1.4"
@@ -188,7 +176,6 @@
                     android:id="@+id/signin_settings_control"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/signin_personalize_service_description"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:paddingBottom="36dp"
@@ -196,7 +183,7 @@
                     android:text="@string/signin_signed_in_settings_description"
                     android:textColor="@color/descriptive_text_color"
                     android:textSize="@dimen/fre_normal_text_size" />
-            </RelativeLayout>
+            </LinearLayout>
         </org.chromium.chrome.browser.signin.AccountSigninConfirmationView>
     </FrameLayout>
 

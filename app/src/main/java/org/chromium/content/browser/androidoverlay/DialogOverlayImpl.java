@@ -45,15 +45,19 @@ public class DialogOverlayImpl implements AndroidOverlay, DialogOverlayCore.Host
     // Has close() been run yet?
     private boolean mClosed;
 
+    // Temporary, so we don't need to keep allocating arrays.
+    private final int[] mCompositorOffset = new int[2];
+
     /**
      * @param client Mojo client interface.
      * @param config initial overlay configuration.
      * @param handler handler that posts to the overlay thread.  This is the android UI thread that
      * the dialog uses, not the browser UI thread.
      * @param provider the overlay provider that owns us.
+     * @param asPanel the overlay should be a panel, above the compositor.  This is for testing.
      */
     public DialogOverlayImpl(AndroidOverlayClient client, final AndroidOverlayConfig config,
-            Handler overlayHandler, Runnable releasedRunnable) {
+            Handler overlayHandler, Runnable releasedRunnable, final boolean asPanel) {
         ThreadUtils.assertOnUiThread();
 
         mClient = client;
@@ -63,19 +67,29 @@ public class DialogOverlayImpl implements AndroidOverlay, DialogOverlayCore.Host
         mDialogCore = new DialogOverlayCore();
         mHoppingHost = new ThreadHoppingHost(this);
 
+        // Register to get token updates.  Note that this may not call us back directly, since
+        // |mDialogCore| hasn't been initialized yet.
+        mNativeHandle = nativeInit(config.routingToken.high, config.routingToken.low);
+
+        if (mNativeHandle == 0) {
+            mClient.onDestroyed();
+            cleanup();
+            return;
+        }
+
         // Post init to the overlay thread.
         final DialogOverlayCore dialogCore = mDialogCore;
         final Context context = ContextUtils.getApplicationContext();
+        nativeGetCompositorOffset(mNativeHandle, config.rect);
         mOverlayHandler.post(new Runnable() {
             @Override
             public void run() {
-                dialogCore.initialize(context, config, mHoppingHost);
+                dialogCore.initialize(context, config, mHoppingHost, asPanel);
             }
         });
 
-        // Register to get token updates.
-        mNativeHandle = nativeInit(config.routingToken.high, config.routingToken.low);
-        assert mNativeHandle != 0;
+        // Now that |mDialogCore| has been initialized, we are ready for token callbacks.
+        nativeCompleteInit(mNativeHandle);
     }
 
     // AndroidOverlay impl.
@@ -134,6 +148,9 @@ public class DialogOverlayImpl implements AndroidOverlay, DialogOverlayCore.Host
 
         if (mDialogCore == null) return;
 
+        // |rect| is relative to the compositor surface.  Convert it to be relative to the screen.
+        nativeGetCompositorOffset(mNativeHandle, rect);
+
         final DialogOverlayCore dialogCore = mDialogCore;
         mOverlayHandler.post(new Runnable() {
             @Override
@@ -141,6 +158,13 @@ public class DialogOverlayImpl implements AndroidOverlay, DialogOverlayCore.Host
                 dialogCore.layoutSurface(rect);
             }
         });
+    }
+
+    // Receive the compositor offset, as part of scheduleLayout.  Adjust the layout position.
+    @CalledByNative
+    private static void receiveCompositorOffset(Rect rect, int x, int y) {
+        rect.x += x;
+        rect.y += y;
     }
 
     // DialogOverlayCore.Host impl.
@@ -187,13 +211,15 @@ public class DialogOverlayImpl implements AndroidOverlay, DialogOverlayCore.Host
     private void sendWindowTokenToCore(final IBinder token) {
         ThreadUtils.assertOnUiThread();
 
-        final DialogOverlayCore dialogCore = mDialogCore;
-        mOverlayHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                dialogCore.onWindowToken(token);
-            }
-        });
+        if (mDialogCore != null) {
+            final DialogOverlayCore dialogCore = mDialogCore;
+            mOverlayHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    dialogCore.onWindowToken(token);
+                }
+            });
+        }
     }
 
     /**
@@ -258,14 +284,27 @@ public class DialogOverlayImpl implements AndroidOverlay, DialogOverlayCore.Host
 
     /**
      * Initializes native side.  Will register for onWindowToken callbacks on |this|.  Returns a
-     * handle that should be provided to nativeDestroy.
+     * handle that should be provided to nativeDestroy.  This will not call back with a window token
+     * immediately.  Call nativeCompleteInit() for the initial token.
      */
     private native long nativeInit(long high, long low);
+
+    /**
+     * Notify the native side that we are ready for token / dismissed callbacks.  This may result in
+     * a callback before it returns.
+     */
+    private native void nativeCompleteInit(long nativeDialogOverlayImpl);
 
     /**
      * Stops native side and deallocates |handle|.
      */
     private native void nativeDestroy(long nativeDialogOverlayImpl);
+
+    /**
+     * Calls back ReceiveCompositorOffset with the screen location (in the View.getLocationOnScreen
+     * sense) of the compositor for our WebContents.  Sends |rect| along verbatim.
+     */
+    private native void nativeGetCompositorOffset(long nativeDialogOverlayImpl, Rect rect);
 
     /**
      * Register a surface and return the surface id for it.
@@ -279,4 +318,10 @@ public class DialogOverlayImpl implements AndroidOverlay, DialogOverlayCore.Host
      * @param surfaceId Id that was returned by registerSurface.
      */
     private static native void nativeUnregisterSurface(int surfaceId);
+
+    /**
+     * Look up and return a surface.
+     * @param surfaceId Id that was returned by registerSurface.
+     */
+    /* package */ static native Surface nativeLookupSurfaceForTesting(int surfaceId);
 }

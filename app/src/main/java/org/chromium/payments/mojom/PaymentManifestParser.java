@@ -29,7 +29,7 @@ public interface PaymentManifestParser extends org.chromium.mojo.bindings.Interf
 String content, 
 ParsePaymentMethodManifestResponse callback);
 
-    interface ParsePaymentMethodManifestResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<org.chromium.url.mojom.Url[]> { }
+    interface ParsePaymentMethodManifestResponse extends org.chromium.mojo.bindings.Callbacks.Callback3<org.chromium.url.mojom.Url[], org.chromium.url.mojom.Origin[], Boolean> { }
 
 
 

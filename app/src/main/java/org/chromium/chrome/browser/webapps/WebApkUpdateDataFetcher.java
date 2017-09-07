@@ -30,11 +30,13 @@ public class WebApkUpdateDataFetcher extends EmptyTabObserver {
         /**
          * Called when the Web Manifest has been successfully fetched (including on the initial URL
          * load).
-         * @param fetchedInfo  The fetched Web Manifest data.
-         * @param bestIconUrl  The icon URL in {@link fetchedInfo#iconUrlToMurmur2HashMap()} best
-         *                     suited for use as the launcher icon on this device.
+         * @param fetchedInfo    The fetched Web Manifest data.
+         * @param primaryIconUrl The icon URL in {@link fetchedInfo#iconUrlToMurmur2HashMap()} best
+         *                       suited for use as the launcher icon on this device.
+         * @param badgeIconUrl   The icon URL in {@link fetchedInfo#iconUrlToMurmur2HashMap()} best
+         *                       suited for use as the badge icon on this device.
          */
-        void onGotManifestData(WebApkInfo fetchedInfo, String bestIconUrl);
+        void onGotManifestData(WebApkInfo fetchedInfo, String primaryIconUrl, String badgeIconUrl);
     }
 
     /**
@@ -99,21 +101,28 @@ public class WebApkUpdateDataFetcher extends EmptyTabObserver {
      */
     @CalledByNative
     protected void onDataAvailable(String manifestStartUrl, String scopeUrl, String name,
-            String shortName, String bestIconUrl, String bestIconMurmur2Hash, Bitmap bestIconBitmap,
-            String[] iconUrls, int displayMode, int orientation, long themeColor,
-            long backgroundColor) {
+            String shortName, String primaryIconUrl, String primaryIconMurmur2Hash,
+            Bitmap primaryIconBitmap, String badgeIconUrl, String badgeIconMurmur2Hash,
+            Bitmap badgeIconBitmap, String[] iconUrls, int displayMode, int orientation,
+            long themeColor, long backgroundColor) {
         HashMap<String, String> iconUrlToMurmur2HashMap = new HashMap<String, String>();
         for (String iconUrl : iconUrls) {
-            String murmur2Hash = (iconUrl.equals(bestIconUrl)) ? bestIconMurmur2Hash : null;
+            String murmur2Hash = null;
+            if (iconUrl.equals(primaryIconUrl)) {
+                murmur2Hash = primaryIconMurmur2Hash;
+            } else if (iconUrl.equals(badgeIconUrl)) {
+                murmur2Hash = badgeIconMurmur2Hash;
+            }
             iconUrlToMurmur2HashMap.put(iconUrl, murmur2Hash);
         }
 
         WebApkInfo info = WebApkInfo.create(mOldInfo.id(), mOldInfo.uri().toString(),
-                mOldInfo.shouldForceNavigation(), scopeUrl, new WebApkInfo.Icon(bestIconBitmap),
-                name, shortName, displayMode, orientation, mOldInfo.source(), themeColor,
-                backgroundColor, mOldInfo.webApkPackageName(), mOldInfo.shellApkVersion(),
-                mOldInfo.manifestUrl(), manifestStartUrl, iconUrlToMurmur2HashMap);
-        mObserver.onGotManifestData(info, bestIconUrl);
+                mOldInfo.shouldForceNavigation(), scopeUrl, new WebApkInfo.Icon(primaryIconBitmap),
+                new WebApkInfo.Icon(badgeIconBitmap), name, shortName, displayMode, orientation,
+                mOldInfo.source(), themeColor, backgroundColor, mOldInfo.webApkPackageName(),
+                mOldInfo.shellApkVersion(), mOldInfo.manifestUrl(), manifestStartUrl,
+                iconUrlToMurmur2HashMap);
+        mObserver.onGotManifestData(info, primaryIconUrl, badgeIconUrl);
     }
 
     /**

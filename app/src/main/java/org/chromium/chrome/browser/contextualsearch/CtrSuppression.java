@@ -88,18 +88,18 @@ public class CtrSuppression extends ContextualSearchHeuristic {
         if (nativeHasPreviousWeekData(mNativePointer)) {
             int previousWeekImpressions = nativeGetPreviousWeekImpressions(mNativePointer);
             int previousWeekCtr = (int) (100 * nativeGetPreviousWeekCtr(mNativePointer));
-            logger.log(ContextualSearchRankerLogger.Feature.PREVIOUS_WEEK_IMPRESSIONS_COUNT,
+            logger.logFeature(ContextualSearchRankerLogger.Feature.PREVIOUS_WEEK_IMPRESSIONS_COUNT,
                     previousWeekImpressions);
-            logger.log(ContextualSearchRankerLogger.Feature.PREVIOUS_WEEK_CTR_PERCENT,
+            logger.logFeature(ContextualSearchRankerLogger.Feature.PREVIOUS_WEEK_CTR_PERCENT,
                     previousWeekCtr);
         }
 
         if (nativeHasPrevious28DayData(mNativePointer)) {
             int previous28DayImpressions = nativeGetPrevious28DayImpressions(mNativePointer);
             int previous28DayCtr = (int) (100 * nativeGetPrevious28DayCtr(mNativePointer));
-            logger.log(ContextualSearchRankerLogger.Feature.PREVIOUS_28DAY_IMPRESSIONS_COUNT,
+            logger.logFeature(ContextualSearchRankerLogger.Feature.PREVIOUS_28DAY_IMPRESSIONS_COUNT,
                     previous28DayImpressions);
-            logger.log(ContextualSearchRankerLogger.Feature.PREVIOUS_28DAY_CTR_PERCENT,
+            logger.logFeature(ContextualSearchRankerLogger.Feature.PREVIOUS_28DAY_CTR_PERCENT,
                     previous28DayCtr);
         }
     }

@@ -16,8 +16,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
-    WebRemotePlaybackAvailability.UNKNOWN, WebRemotePlaybackAvailability.SOURCE_NOT_SUPPORTED,
-    WebRemotePlaybackAvailability.DEVICE_NOT_AVAILABLE,
+    WebRemotePlaybackAvailability.UNKNOWN, WebRemotePlaybackAvailability.DEVICE_NOT_AVAILABLE,
     WebRemotePlaybackAvailability.SOURCE_NOT_COMPATIBLE,
     WebRemotePlaybackAvailability.DEVICE_AVAILABLE, WebRemotePlaybackAvailability.LAST
 })
@@ -28,22 +27,17 @@ public @interface WebRemotePlaybackAvailability {
    */
   int UNKNOWN = 0;
   /**
-   * The media source is not supported by the browser - device availability monitoring is
-   * unnecessary.
-   */
-  int SOURCE_NOT_SUPPORTED = 1;
-  /**
    * The media source is compatible with some supported device types but no devices were found.
    */
-  int DEVICE_NOT_AVAILABLE = 2;
+  int DEVICE_NOT_AVAILABLE = 1;
   /**
    * There're available devices but the current media source is not compatible with any of those.
    */
-  int SOURCE_NOT_COMPATIBLE = 3;
+  int SOURCE_NOT_COMPATIBLE = 2;
   /**
    * There're available remote playback devices and the media source is compatible with at least one
    * of them.
    */
-  int DEVICE_AVAILABLE = 4;
-  int LAST = 4;
+  int DEVICE_AVAILABLE = 3;
+  int LAST = 3;
 }

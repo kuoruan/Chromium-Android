@@ -233,6 +233,12 @@ by a child template that "extends" this file.
             <meta-data android:name="android.app.shortcuts"
                 android:resource="@xml/launchershortcuts" />
 
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity-alias>
 
         <activity android:name="org.chromium.chrome.browser.LauncherShortcutActivity"
@@ -301,7 +307,16 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
 
-             >
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity"
             android:theme="@style/MainTheme"
@@ -313,7 +328,16 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
 
-             >
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity0"
             android:theme="@style/MainTheme"
@@ -326,7 +350,16 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
 
-             >
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity1"
             android:theme="@style/MainTheme"
@@ -339,7 +372,16 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
 
-             >
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity2"
             android:theme="@style/MainTheme"
@@ -352,7 +394,16 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
 
-             >
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity3"
             android:theme="@style/MainTheme"
@@ -365,7 +416,16 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
 
-             >
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity4"
             android:theme="@style/MainTheme"
@@ -378,7 +438,16 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
 
-             >
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity5"
             android:theme="@style/MainTheme"
@@ -391,7 +460,16 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
 
-             >
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity6"
             android:theme="@style/MainTheme"
@@ -404,7 +482,16 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
 
-             >
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity7"
             android:theme="@style/MainTheme"
@@ -417,7 +504,16 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
 
-             >
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity8"
             android:theme="@style/MainTheme"
@@ -430,7 +526,16 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
 
-             >
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity9"
             android:theme="@style/MainTheme"
@@ -443,7 +548,16 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
 
-             >
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
 
         <!-- ChromeTabbedActivity related -->
@@ -451,10 +565,22 @@ by a child template that "extends" this file.
             android:theme="@style/TabbedModeTheme"
             android:exported="false"
             android:launchMode="singleTask"
+            android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
             android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
-            >
+        >
+            <!--
+              Daydream api categorizes an activity to three categories: Cardboard only, hybrid
+              or Daydream. It does so by testing if intents can be resolved by the activity
+              that requests it.
+            -->
+            <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
         </activity>
         <activity android:name="org.chromium.chrome.browser.ChromeTabbedActivity2"
             android:theme="@style/TabbedModeTheme"
@@ -465,7 +591,16 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
 
-            >
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.multiwindow.MultiInstanceChromeTabbedActivity"
             android:theme="@style/TabbedModeTheme"
@@ -475,14 +610,17 @@ by a child template that "extends" this file.
             android:hardwareAccelerated="false"
 >
         </activity>
-        <activity android:name="org.chromium.chrome.browser.FullscreenWebContentsActivity"
+        <activity android:name="org.chromium.chrome.browser.FullscreenActivity"
             android:theme="@style/MainTheme"
             android:exported="false"
+            android:noHistory="true"
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
 
-             >
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+ >
         </activity>
 
         <activity android:name="org.chromium.chrome.browser.sync.ui.PassphraseActivity"
@@ -491,7 +629,7 @@ by a child template that "extends" this file.
         </activity>
         <activity android:name="org.chromium.chrome.browser.firstrun.LightweightFirstRunActivity"
             android:theme="@style/SimpleDialog"
-            android:launchMode="singleTop"
+            android:launchMode="singleInstance"
             android:autoRemoveFromRecents="true"
             android:windowSoftInputMode="stateHidden|adjustPan"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize">
@@ -503,6 +641,19 @@ by a child template that "extends" this file.
             android:autoRemoveFromRecents="true"
             android:windowSoftInputMode="stateHidden|adjustPan"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize">
+        </activity>
+        <activity android:name="org.chromium.chrome.browser.vr_shell.VrFirstRunActivity"
+            android:exported="false"
+            android:theme="@style/VrActivityTheme"
+            android:excludeFromRecents="true"
+            android:enableVrMode="@string/gvr_vr_mode_component"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode">
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.signin.AccountSigninActivity"
             android:theme="@style/DialogWhenLarge"
@@ -585,6 +736,10 @@ by a child template that "extends" this file.
                 <action android:name="com.google.android.apps.chrome.webapps.WebappManager.ACTION_START_WEBAPP" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="org.webapk.ACTION_START_WEBAPK" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappManager"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappLauncherActivity">
@@ -592,18 +747,30 @@ by a child template that "extends" this file.
         <activity android:name="org.chromium.chrome.browser.webapps.WebappActivity"
             android:theme="@style/WebappTheme"
             android:label="@string/webapp_activity_title"
+            android:launchMode="singleTop"
             android:documentLaunchMode="intoExisting"
             android:persistableMode="persistNever"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity"
             android:label="@string/webapp_activity_title"
-             >
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+ >
         </activity-alias>
         <activity android:name="org.chromium.chrome.browser.webapps.WebappActivity0"
             android:theme="@style/WebappTheme"
@@ -612,11 +779,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebappActivity0"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                       <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity0"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity0"
@@ -630,11 +806,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebappActivity1"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                       <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity1"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity1"
@@ -648,11 +833,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebappActivity2"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                       <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity2"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity2"
@@ -666,11 +860,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebappActivity3"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                       <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity3"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity3"
@@ -684,11 +887,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebappActivity4"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                       <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity4"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity4"
@@ -702,11 +914,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebappActivity5"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                       <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity5"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity5"
@@ -720,11 +941,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebappActivity6"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                       <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity6"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity6"
@@ -738,11 +968,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebappActivity7"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                       <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity7"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity7"
@@ -756,11 +995,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebappActivity8"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                       <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity8"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity8"
@@ -774,11 +1022,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebappActivity9"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                       <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity9"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity9"
@@ -789,13 +1046,23 @@ by a child template that "extends" this file.
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity"
             android:theme="@style/WebappTheme"
             android:label="@string/webapp_activity_title"
+            android:launchMode="singleTop"
             android:documentLaunchMode="intoExisting"
             android:persistableMode="persistNever"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity0"
             android:theme="@style/WebappTheme"
@@ -804,11 +1071,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebApkActivity0"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity1"
             android:theme="@style/WebappTheme"
@@ -817,11 +1093,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebApkActivity1"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity2"
             android:theme="@style/WebappTheme"
@@ -830,11 +1115,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebApkActivity2"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity3"
             android:theme="@style/WebappTheme"
@@ -843,11 +1137,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebApkActivity3"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity4"
             android:theme="@style/WebappTheme"
@@ -856,11 +1159,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebApkActivity4"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity5"
             android:theme="@style/WebappTheme"
@@ -869,11 +1181,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebApkActivity5"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity6"
             android:theme="@style/WebappTheme"
@@ -882,11 +1203,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebApkActivity6"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity7"
             android:theme="@style/WebappTheme"
@@ -895,11 +1225,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebApkActivity7"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity8"
             android:theme="@style/WebappTheme"
@@ -908,11 +1247,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebApkActivity8"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity9"
             android:theme="@style/WebappTheme"
@@ -921,11 +1269,20 @@ by a child template that "extends" this file.
             android:launchMode="singleTask"
             android:persistableMode="persistNever"
             android:taskAffinity="org.chromium.chrome.webapps.WebApkActivity9"
-            
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
                         android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
             android:hardwareAccelerated="false"
->
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
 
         <activity android:name="org.chromium.chrome.browser.media.remote.ExpandedControllerActivity"
@@ -972,6 +1329,22 @@ by a child template that "extends" this file.
             android:theme="@android:style/Theme.NoDisplay"
             android:noHistory="true"
             android:excludeFromRecents="true">
+        </activity>
+
+        <activity
+            android:name="org.chromium.chrome.browser.vr_shell.VrCancelAnimationActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.NoDisplay"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:enableVrMode="@string/gvr_vr_mode_component"
+            >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
 
         <!-- Service for handling Nearby Messages -->
@@ -1244,6 +1617,8 @@ by a child template that "extends" this file.
         <service android:name="org.chromium.chrome.browser.omaha.OmahaClient"
             android:exported="false"/>
         <service android:name="org.chromium.chrome.browser.incognito.IncognitoNotificationService"
+            android:exported="false"/>
+        <service android:name="org.chromium.chrome.browser.webapps.WebApkDisclosureNotificationService"
             android:exported="false"/>
 
 

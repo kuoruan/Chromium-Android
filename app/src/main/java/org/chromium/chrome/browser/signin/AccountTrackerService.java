@@ -13,7 +13,7 @@ import org.chromium.base.ObserverList;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.components.signin.AccountManagerHelper;
+import org.chromium.components.signin.AccountManagerFacade;
 
 /**
 * Android wrapper of AccountTrackerService which provides access from the java layer.
@@ -113,7 +113,7 @@ public class AccountTrackerService {
             mSystemAccountsSeedingStatus = SystemAccountsSeedingStatus.SEEDING_NOT_STARTED;
             return;
         }
-        AccountManagerHelper.get().getGoogleAccounts(new Callback<Account[]>() {
+        AccountManagerFacade.get().tryGetGoogleAccounts(new Callback<Account[]>() {
             @Override
             public void onResult(final Account[] accounts) {
                 new AsyncTask<Void, Void, String[][]>() {
@@ -199,7 +199,7 @@ public class AccountTrackerService {
         }
 
         mSystemAccountsSeedingStatus = SystemAccountsSeedingStatus.SEEDING_VALIDATING;
-        AccountManagerHelper.get().getGoogleAccounts(new Callback<Account[]>() {
+        AccountManagerFacade.get().tryGetGoogleAccounts(new Callback<Account[]>() {
             @Override
             public void onResult(final Account[] accounts) {
                 if (mSystemAccountsChanged

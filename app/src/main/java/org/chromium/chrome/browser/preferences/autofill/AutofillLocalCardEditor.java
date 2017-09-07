@@ -19,6 +19,7 @@ import android.widget.Spinner;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeVersionInfo;
+import org.chromium.chrome.browser.autofill.CardType;
 import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.AutofillProfile;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.CreditCard;
@@ -184,7 +185,7 @@ public class AutofillLocalCardEditor extends AutofillCreditCardEditor {
                 cardNumber, "" /* obfuscatedNumber */,
                 String.valueOf(mExpirationMonth.getSelectedItemPosition() + 1),
                 (String) mExpirationYear.getSelectedItem(), "" /* basicCardPaymentType */,
-                0 /* issuerIconDrawableId */,
+                0 /* issuerIconDrawableId */, CardType.UNKNOWN,
                 ((AutofillProfile) mBillingAddress.getSelectedItem()).getGUID() /* billing */,
                 "" /* serverId */);
         personalDataManager.setCreditCard(card);

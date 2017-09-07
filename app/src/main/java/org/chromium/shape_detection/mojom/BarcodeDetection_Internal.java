@@ -56,16 +56,12 @@ class BarcodeDetection_Internal {
 
         @Override
         public void detect(
-org.chromium.mojo.system.SharedBufferHandle frameData, int width, int height, 
+org.chromium.skia.mojom.Bitmap bitmapData, 
 DetectResponse callback) {
 
             BarcodeDetectionDetectParams _message = new BarcodeDetectionDetectParams();
 
-            _message.frameData = frameData;
-
-            _message.width = width;
-
-            _message.height = height;
+            _message.bitmapData = bitmapData;
 
 
             getProxyHandler().getMessageReceiver().acceptWithResponder(
@@ -141,7 +137,7 @@ DetectResponse callback) {
                         BarcodeDetectionDetectParams data =
                                 BarcodeDetectionDetectParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().detect(data.frameData, data.width, data.height, new BarcodeDetectionDetectResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        getImpl().detect(data.bitmapData, new BarcodeDetectionDetectResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
             
@@ -160,16 +156,13 @@ DetectResponse callback) {
     
     static final class BarcodeDetectionDetectParams extends org.chromium.mojo.bindings.Struct {
     
-        private static final int STRUCT_SIZE = 24;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public org.chromium.mojo.system.SharedBufferHandle frameData;
-        public int width;
-        public int height;
+        public org.chromium.skia.mojom.Bitmap bitmapData;
     
         private BarcodeDetectionDetectParams(int version) {
             super(STRUCT_SIZE, version);
-            frameData = org.chromium.mojo.system.InvalidHandle.INSTANCE;
         }
     
         public BarcodeDetectionDetectParams() {
@@ -205,15 +198,8 @@ DetectResponse callback) {
                 result = new BarcodeDetectionDetectParams(mainDataHeader.elementsOrVersion);
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
-                    result.frameData = decoder0.readSharedBufferHandle(8, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.width = decoder0.readInt(12);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.height = decoder0.readInt(16);
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.bitmapData = org.chromium.skia.mojom.Bitmap.decode(decoder1);
                 }
             } finally {
                 decoder0.decreaseStackDepth();
@@ -226,11 +212,7 @@ DetectResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(frameData, 8, false);
-            
-            encoder0.encode(width, 12);
-            
-            encoder0.encode(height, 16);
+            encoder0.encode(bitmapData, 8, false);
         }
     
         /**
@@ -245,11 +227,7 @@ DetectResponse callback) {
             if (getClass() != object.getClass())
                 return false;
             BarcodeDetectionDetectParams other = (BarcodeDetectionDetectParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.frameData, other.frameData))
-                return false;
-            if (this.width!= other.width)
-                return false;
-            if (this.height!= other.height)
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.bitmapData, other.bitmapData))
                 return false;
             return true;
         }
@@ -261,9 +239,7 @@ DetectResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(frameData);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(width);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(height);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(bitmapData);
             return result;
         }
     }

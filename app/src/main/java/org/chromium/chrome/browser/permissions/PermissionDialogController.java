@@ -89,6 +89,7 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
      */
     private void queueDialog(PermissionDialogDelegate delegate) {
         mRequestQueue.add(delegate);
+        delegate.setDialogController(this);
         scheduleDisplay();
     }
 
@@ -193,9 +194,10 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
         mDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialog) {
-                // For some reason this is ocassionally null. See crbug.com/708562.
+                // Null if dismiss initiated by C++, or for some unknown reason (crbug.com/708562).
                 if (mDialogDelegate == null) {
                     scheduleDisplay();
+                    return;
                 }
 
                 mDialog = null;
@@ -251,6 +253,19 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
         }
 
         return fullString;
+    }
+
+    public void dismissFromNative(PermissionDialogDelegate delegate) {
+        if (mDialogDelegate == delegate) {
+            mDialogDelegate = null;
+            AlertDialog dialog = mDialog;
+            mDialog = null;
+            dialog.dismiss();
+        } else {
+            assert mRequestQueue.contains(delegate);
+            mRequestQueue.remove(delegate);
+        }
+        delegate.destroy();
     }
 
     private void destroyDelegate() {

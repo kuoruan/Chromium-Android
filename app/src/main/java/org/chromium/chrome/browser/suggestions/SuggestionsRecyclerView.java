@@ -27,7 +27,6 @@ import android.view.animation.Interpolator;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Callback;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ntp.ContextMenuManager;
@@ -93,7 +92,7 @@ public class SuggestionsRecyclerView extends RecyclerView {
         super(new ContextThemeWrapper(context, R.style.NewTabPageRecyclerView), attrs);
 
         Resources res = getContext().getResources();
-        setBackgroundColor(ApiCompatibilityUtils.getColor(res, R.color.ntp_bg));
+        setBackgroundColor(SuggestionsConfig.getBackgroundColor(res));
         setLayoutParams(new LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         setFocusable(true);

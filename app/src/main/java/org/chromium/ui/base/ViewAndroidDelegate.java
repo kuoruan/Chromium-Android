@@ -22,6 +22,9 @@ import org.chromium.base.annotations.JNINamespace;
  */
 @JNINamespace("ui")
 public abstract class ViewAndroidDelegate {
+    // Temporary storage for use as a parameter of getLocationOnScreen().
+    private int[] mTemporaryContainerLocation = new int[2];
+
     /**
      * @return An anchor view that can be used to anchor decoration views like Autofill popup.
      */
@@ -138,6 +141,30 @@ public abstract class ViewAndroidDelegate {
      */
     @CalledByNative
     public abstract ViewGroup getContainerView();
+
+    /**
+     * Return the X location of our container view.
+     */
+    @CalledByNative
+    private int getXLocationOfContainerViewOnScreen() {
+        ViewGroup container = getContainerView();
+        if (container == null) return 0;
+
+        container.getLocationOnScreen(mTemporaryContainerLocation);
+        return mTemporaryContainerLocation[0];
+    }
+
+    /**
+     * Return the Y location of our container view.
+     */
+    @CalledByNative
+    private int getYLocationOfContainerViewOnScreen() {
+        ViewGroup container = getContainerView();
+        if (container == null) return 0;
+
+        container.getLocationOnScreen(mTemporaryContainerLocation);
+        return mTemporaryContainerLocation[1];
+    }
 
     /**
      * Create and return a basic implementation of {@link ViewAndroidDelegate} where

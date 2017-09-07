@@ -4,9 +4,9 @@
 
 package org.chromium.chrome.browser.snackbar.smartlockautosignin;
 
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.support.v7.content.res.AppCompatResources;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.annotations.CalledByNative;
@@ -40,10 +40,10 @@ public class AutoSigninSnackbarController
                 new AutoSigninSnackbarController(snackbarManager, tab);
         Snackbar snackbar = Snackbar.make(text, snackbarController, Snackbar.TYPE_NOTIFICATION,
                 Snackbar.UMA_AUTO_LOGIN);
-        Resources resources = tab.getWindowAndroid().getActivity().get().getResources();
-        int backgroundColor = ApiCompatibilityUtils.getColor(resources, R.color.light_active_color);
-        Bitmap icon = BitmapFactory.decodeResource(
-                resources, R.drawable.account_management_no_picture);
+        Context context = tab.getWindowAndroid().getActivity().get();
+        int backgroundColor =
+                ApiCompatibilityUtils.getColor(context.getResources(), R.color.light_active_color);
+        Drawable icon = AppCompatResources.getDrawable(context, R.drawable.logo_avatar_anonymous);
         snackbar.setSingleLine(false).setBackgroundColor(backgroundColor).setProfileImage(icon);
         snackbarManager.showSnackbar(snackbar);
     }

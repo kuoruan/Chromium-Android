@@ -129,6 +129,7 @@ class ClientManager {
         private boolean mShouldHideDomain;
         private boolean mShouldPrerenderOnCellular;
         private boolean mShouldSendNavigationInfo;
+        private boolean mShouldSendBottomBarScrollState;
         private KeepAliveServiceConnection mKeepAliveConnection;
         private String mPredictedUrl;
         private long mLastMayLaunchUrlTimestamp;
@@ -415,6 +416,24 @@ class ClientManager {
     }
 
     /**
+     * @return Whether bottom bar scrolling state should be recorded and shared for the session.
+     */
+    public synchronized boolean shouldSendBottomBarScrollStateForSession(
+            CustomTabsSessionToken session) {
+        SessionParams params = mSessionParams.get(session);
+        return params != null ? params.mShouldSendBottomBarScrollState : false;
+    }
+
+    /**
+     * Sets whether bottom bar scrolling state should be recorded and shared for the session.
+     */
+    public synchronized void setSendBottomBarScrollingStateForSessionn(
+            CustomTabsSessionToken session, boolean send) {
+        SessionParams params = mSessionParams.get(session);
+        if (params != null) params.mShouldSendBottomBarScrollState = send;
+    }
+
+    /**
      * @return Whether navigation info should be recorded and shared for the session.
      */
     public synchronized boolean shouldSendNavigationInfoForSession(CustomTabsSessionToken session) {
@@ -491,6 +510,20 @@ class ClientManager {
         SessionParams params = mSessionParams.get(session);
         return params == null ? CustomTabsConnection.SpeculationParams.PRERENDER
                               : params.mSpeculationMode;
+    }
+
+    /**
+     * Returns whether an origin is first-party with respect to a session, that is if the
+     * application linked to the session has a relation with the provided origin. This does not
+     * calls OriginVerifier, but only checks the cached relations.
+     *
+     * @param session The session.
+     * @param origin Origin to verify
+     */
+    public synchronized boolean isFirstPartyOriginForSession(
+            CustomTabsSessionToken session, Uri origin) {
+        SessionParams params = mSessionParams.get(session);
+        return params == null ? false : OriginVerifier.isValidOrigin(params.packageName, origin);
     }
 
     /** Tries to bind to a client to keep it alive, and returns true for success. */

@@ -803,6 +803,100 @@ public class ContextualSearchUma {
     }
 
     /**
+     * Logs whether results were seen based on the duration of the Tap, for both short and long
+     * durations.
+     * @param wasSearchContentViewSeen If the panel was opened.
+     * @param isTapShort Whether this tap was "short" in duration.
+     */
+    public static void logTapDurationSeen(boolean wasSearchContentViewSeen, boolean isTapShort) {
+        if (isTapShort) {
+            RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchTapShortDurationSeen",
+                    wasSearchContentViewSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN,
+                    RESULTS_SEEN_BOUNDARY);
+        } else {
+            RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchTapLongDurationSeen",
+                    wasSearchContentViewSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN,
+                    RESULTS_SEEN_BOUNDARY);
+        }
+    }
+
+    /**
+     * Logs the duration of a Tap in ms into custom histograms to profile the duration of seen
+     * and not seen taps.
+     * @param wasPanelSeen Whether the panel was seen.
+     * @param durationMs The duration of the tap gesture.
+     */
+    public static void logTapDuration(boolean wasPanelSeen, int durationMs) {
+        int min = 1;
+        int max = 1000;
+        int numBuckets = 100;
+
+        if (wasPanelSeen) {
+            RecordHistogram.recordCustomCountHistogram(
+                    "Search.ContextualSearchTapDurationSeen", durationMs, min, max, numBuckets);
+        } else {
+            RecordHistogram.recordCustomCountHistogram(
+                    "Search.ContextualSearchTapDurationNotSeen", durationMs, min, max, numBuckets);
+        }
+    }
+
+    /**
+     * Log whether results were seen due to a Tap on a short word.
+     * @param wasSearchContentViewSeen If the panel was opened.
+     * @param isTapOnShortWord Whether this tap was on a "short" word.
+     */
+    public static void logTapShortWordSeen(
+            boolean wasSearchContentViewSeen, boolean isTapOnShortWord) {
+        if (!isTapOnShortWord) return;
+
+        // We just record CTR of short words.
+        RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchTapShortWordSeen",
+                wasSearchContentViewSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN, RESULTS_SEEN_BOUNDARY);
+    }
+
+    /**
+     * Log whether results were seen due to a Tap on a long word.
+     * @param wasSearchContentViewSeen If the panel was opened.
+     * @param isTapOnLongWord Whether this tap was on a long word.
+     */
+    public static void logTapLongWordSeen(
+            boolean wasSearchContentViewSeen, boolean isTapOnLongWord) {
+        if (!isTapOnLongWord) return;
+
+        RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchTapLongWordSeen",
+                wasSearchContentViewSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN, RESULTS_SEEN_BOUNDARY);
+    }
+
+    /**
+     * Log whether results were seen due to a Tap that was on the middle of a word.
+     * @param wasSearchContentViewSeen If the panel was opened.
+     * @param isTapOnWordMiddle Whether this tap was on the middle of a word.
+     */
+    public static void logTapOnWordMiddleSeen(
+            boolean wasSearchContentViewSeen, boolean isTapOnWordMiddle) {
+        if (!isTapOnWordMiddle) return;
+
+        // We just record CTR of words tapped in the "middle".
+        RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchTapOnWordMiddleSeen",
+                wasSearchContentViewSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN, RESULTS_SEEN_BOUNDARY);
+    }
+
+    /**
+     * Log whether results were seen due to a Tap on what we've recognized as a probable entity.
+     * @param wasSearchContentViewSeen If the panel was opened.
+     * @param isWordAnEntity Whether this tap was on a word that's an entity.
+     */
+    public static void logTapOnEntitySeen(
+            boolean wasSearchContentViewSeen, boolean isWordAnEntity) {
+        if (isWordAnEntity) {
+            // We just record CTR of probable entity words.
+            RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchEntitySeen",
+                    wasSearchContentViewSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN,
+                    RESULTS_SEEN_BOUNDARY);
+        }
+    }
+
+    /**
      * Logs whether results were seen and whether any tap suppression heuristics were satisfied.
      * @param wasSearchContentViewSeen If the panel was opened.
      * @param wasAnySuppressionHeuristicSatisfied Whether any of the implemented suppression

@@ -37,9 +37,10 @@ public class MediaUrlResolver extends AsyncTask<Void, Void, MediaUrlResolver.Res
     private static final int RESOLVE_RESULT_SERVER_ERROR = 4;
     private static final int RESOLVE_RESULT_NETWORK_ERROR = 5;
     private static final int RESOLVE_RESULT_UNSUPPORTED_MEDIA = 6;
+    private static final int RESOLVE_RESULT_HUC_EXCEPTION = 7;
 
     // Range of histogram.
-    private static final int HISTOGRAM_RESULT_COUNT = 7;
+    private static final int HISTOGRAM_RESULT_COUNT = 8;
 
     // Acceptal response codes for URL resolving request.
     private static final Integer[] SUCCESS_RESPONSE_CODES = {
@@ -185,8 +186,13 @@ public class MediaUrlResolver extends AsyncTask<Void, Void, MediaUrlResolver.Res
             recordResultHistogram(RESOLVE_RESULT_NETWORK_ERROR);
             Log.e(TAG, "Failed to fetch the final url", e);
             uri = Uri.EMPTY;
+        } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {
+            recordResultHistogram(RESOLVE_RESULT_HUC_EXCEPTION);
+            Log.e(TAG, "Threading issue with HUC, see https://crbug.com/754480", e);
+            uri = Uri.EMPTY;
+        } finally {
+            if (urlConnection != null) urlConnection.disconnect();
         }
-        if (urlConnection != null) urlConnection.disconnect();
         return new MediaUrlResolver.Result(uri, canPlayMedia(uri, headers));
     }
 

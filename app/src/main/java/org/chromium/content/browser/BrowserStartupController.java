@@ -61,21 +61,10 @@ public class BrowserStartupController {
 
     private static BrowserStartupController sInstance;
 
-    private static boolean sBrowserMayStartAsynchronously;
     private static boolean sShouldStartGpuProcessOnBrowserStartup;
-
-    private static void setAsynchronousStartup(boolean enable) {
-        sBrowserMayStartAsynchronously = enable;
-    }
 
     private static void setShouldStartGpuProcessOnBrowserStartup(boolean enable) {
         sShouldStartGpuProcessOnBrowserStartup = enable;
-    }
-
-    @VisibleForTesting
-    @CalledByNative
-    static boolean browserMayStartAsynchonously() {
-        return sBrowserMayStartAsynchronously;
     }
 
     @VisibleForTesting
@@ -100,6 +89,8 @@ public class BrowserStartupController {
 
     // Whether tasks that occur after resource extraction have been completed.
     private boolean mPostResourceExtractionTasksCompleted;
+
+    private boolean mHasCalledContentStart;
 
     // Whether the async startup of the browser process is complete.
     private boolean mStartupDone;
@@ -170,15 +161,12 @@ public class BrowserStartupController {
             // flag that indicates that we have kicked off starting the browser process.
             mHasStartedInitializingBrowserProcess = true;
 
-            setAsynchronousStartup(true);
             setShouldStartGpuProcessOnBrowserStartup(startGpuProcess);
             prepareToStartBrowserProcess(false, new Runnable() {
                 @Override
                 public void run() {
                     ThreadUtils.assertOnUiThread();
-                    // Make sure to not call ContentMain.start twice, if startBrowserProcessesSync
-                    // is called before this runs.
-                    if (!sBrowserMayStartAsynchronously) return;
+                    if (mHasCalledContentStart) return;
                     if (contentStart() > 0) {
                         // Failed. The callbacks may not have run, so run them.
                         enqueueCallbackExecution(STARTUP_FAILURE, NOT_ALREADY_STARTED);
@@ -206,10 +194,16 @@ public class BrowserStartupController {
                 prepareToStartBrowserProcess(singleProcess, null);
             }
 
-            setAsynchronousStartup(false);
-            if (contentStart() > 0) {
-                // Failed. The callbacks may not have run, so run them.
-                enqueueCallbackExecution(STARTUP_FAILURE, NOT_ALREADY_STARTED);
+            boolean startedSuccessfully = true;
+            if (!mHasCalledContentStart) {
+                if (contentStart() > 0) {
+                    // Failed. The callbacks may not have run, so run them.
+                    enqueueCallbackExecution(STARTUP_FAILURE, NOT_ALREADY_STARTED);
+                    startedSuccessfully = false;
+                }
+            }
+            if (startedSuccessfully) {
+                flushStartupTasks();
             }
         }
 
@@ -225,7 +219,14 @@ public class BrowserStartupController {
      */
     @VisibleForTesting
     int contentStart() {
+        assert !mHasCalledContentStart;
+        mHasCalledContentStart = true;
         return ContentMain.start();
+    }
+
+    @VisibleForTesting
+    void flushStartupTasks() {
+        nativeFlushStartupTasks();
     }
 
     /**
@@ -290,12 +291,6 @@ public class BrowserStartupController {
                     throws ProcessInitException {
         Log.i(TAG, "Initializing chromium process, singleProcess=%b", singleProcess);
 
-        // Normally Main.java will have kicked this off asynchronously for Chrome. But other
-        // ContentView apps like tests also need them so we make sure we've extracted resources
-        // here. We can still make it a little async (wait until the library is loaded).
-        ResourceExtractor resourceExtractor = ResourceExtractor.get();
-        resourceExtractor.startExtractingResources();
-
         // This strictmode exception is to cover the case where the browser process is being started
         // asynchronously but not in the main browser flow.  The main browser flow will trigger
         // library loading earlier and this will be a no-op, but in the other cases this will need
@@ -329,10 +324,10 @@ public class BrowserStartupController {
         if (completionCallback == null) {
             // If no continuation callback is specified, then force the resource extraction
             // to complete.
-            resourceExtractor.waitForCompletion();
+            ResourceExtractor.get().waitForCompletion();
             postResourceExtraction.run();
         } else {
-            resourceExtractor.addCompletionCallback(postResourceExtraction);
+            ResourceExtractor.get().addCompletionCallback(postResourceExtraction);
         }
     }
 
@@ -358,4 +353,6 @@ public class BrowserStartupController {
     private static native boolean nativeIsOfficialBuild();
 
     private static native boolean nativeIsPluginEnabled();
+
+    private static native void nativeFlushStartupTasks();
 }

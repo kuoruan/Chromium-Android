@@ -37,10 +37,11 @@ public abstract class ChromeFeatureList {
 
     /**
      * @return Whether the native FeatureList has been initialized. If this method returns false,
-     * none of the methods in this class that require native access should be called (except in
-     * tests if test features have been set).
+     *         none of the methods in this class that require native access should be called (except
+     *         in tests if test features have been set).
      */
     public static boolean isInitialized() {
+        if (sTestFeatures != null) return true;
         if (!LibraryLoader.isInitialized()) return false;
 
         // Even if the native library is loaded, the C++ FeatureList might not be initialized yet.
@@ -83,6 +84,7 @@ public abstract class ChromeFeatureList {
      *   the specified parameter does not exist.
      */
     public static String getFieldTrialParamByFeature(String featureName, String paramName) {
+        if (sTestFeatures != null) return "";
         assert isInitialized();
         return nativeGetFieldTrialParamByFeature(featureName, paramName);
     }
@@ -101,6 +103,7 @@ public abstract class ChromeFeatureList {
      */
     public static int getFieldTrialParamByFeatureAsInt(
             String featureName, String paramName, int defaultValue) {
+        if (sTestFeatures != null) return defaultValue;
         assert isInitialized();
         return nativeGetFieldTrialParamByFeatureAsInt(featureName, paramName, defaultValue);
     }
@@ -119,6 +122,7 @@ public abstract class ChromeFeatureList {
      */
     public static double getFieldTrialParamByFeatureAsDouble(
             String featureName, String paramName, double defaultValue) {
+        if (sTestFeatures != null) return defaultValue;
         assert isInitialized();
         return nativeGetFieldTrialParamByFeatureAsDouble(featureName, paramName, defaultValue);
     }
@@ -137,6 +141,7 @@ public abstract class ChromeFeatureList {
      */
     public static boolean getFieldTrialParamByFeatureAsBoolean(
             String featureName, String paramName, boolean defaultValue) {
+        if (sTestFeatures != null) return defaultValue;
         assert isInitialized();
         return nativeGetFieldTrialParamByFeatureAsBoolean(featureName, paramName, defaultValue);
     }
@@ -149,6 +154,7 @@ public abstract class ChromeFeatureList {
     public static final String CCT_BACKGROUND_TAB = "CCTBackgroundTab";
     public static final String CCT_EXTERNAL_LINK_HANDLING = "CCTExternalLinkHandling";
     public static final String CCT_POST_MESSAGE_API = "CCTPostMessageAPI";
+    public static final String CCT_REDIRECT_PRECONNECT = "CCTRedirectPreconnect";
     public static final String CHROME_HOME = "ChromeHome";
     public static final String CHROME_HOME_EXPAND_BUTTON = "ChromeHomeExpandButton";
     public static final String CONSISTENT_OMNIBOX_GEOLOCATION = "ConsistentOmniboxGeolocation";
@@ -156,9 +162,11 @@ public abstract class ChromeFeatureList {
             "ContentSuggestionsFaviconsFromNewServer";
     public static final String CONTENT_SUGGESTIONS_NOTIFICATIONS =
             "ContentSuggestionsNotifications";
-    public static final String CONTENT_SUGGESTIONS_CATEGORIES = "ContentSuggestionsCategories";
+    public static final String CONTENT_SUGGESTIONS_LARGE_THUMBNAIL =
+            "ContentSuggestionsLargeThumbnail";
     public static final String CONTENT_SUGGESTIONS_SETTINGS = "ContentSuggestionsSettings";
     public static final String CONTENT_SUGGESTIONS_SHOW_SUMMARY = "ContentSuggestionsShowSummary";
+    public static final String CONTENT_SUGGESTIONS_VIDEO_OVERLAY = "ContentSuggestionsVideoOverlay";
     public static final String CONTEXTUAL_SEARCH_SINGLE_ACTIONS = "ContextualSearchSingleActions";
     public static final String CONTEXTUAL_SEARCH_URL_ACTIONS = "ContextualSearchUrlActions";
     public static final String CONTEXTUAL_SUGGESTIONS_CAROUSEL = "ContextualSuggestionsCarousel";
@@ -169,6 +177,7 @@ public abstract class ChromeFeatureList {
     // Android.
     public static final String DATA_REDUCTION_MAIN_MENU = "DataReductionProxyMainMenu";
     public static final String DATA_REDUCTION_SITE_BREAKDOWN = "DataReductionProxySiteBreakdown";
+    public static final String DONT_PREFETCH_LIBRARIES = "DontPrefetchLibraries";
     public static final String DOWNLOAD_HOME_SHOW_STORAGE_INFO = "DownloadHomeShowStorageInfo";
     // When enabled, fullscreen WebContents will be moved to a new Activity. Coming soon...
     public static final String FULLSCREEN_ACTIVITY = "FullscreenActivity";
@@ -189,7 +198,12 @@ public abstract class ChromeFeatureList {
     public static final String NTP_OFFLINE_PAGES_FEATURE_NAME = "NTPOfflinePages";
     public static final String NTP_SHOW_GOOGLE_G_IN_OMNIBOX = "NTPShowGoogleGInOmnibox";
     public static final String NTP_SNIPPETS_INCREASED_VISIBILITY = "NTPSnippetsIncreasedVisibility";
+    public static final String OMNIBOX_SPARE_RENDERER = "OmniboxSpareRenderer";
+    public static final String PAY_WITH_GOOGLE_V1 = "PayWithGoogleV1";
     public static final String SERVICE_WORKER_PAYMENT_APPS = "ServiceWorkerPaymentApps";
+    public static final String SITE_NOTIFICATION_CHANNELS = "SiteNotificationChannels";
+    public static final String SPANNABLE_INLINE_AUTOCOMPLETE = "SpannableInlineAutocomplete";
+    public static final String SUGGESTIONS_HOME_MODERN_LAYOUT = "SuggestionsHomeModernLayout";
     public static final String TAB_REPARENTING = "TabReparenting";
     public static final String VIDEO_PERSISTENCE = "VideoPersistence";
     public static final String VR_BROWSING_FEEDBACK = "VrBrowsingFeedback";

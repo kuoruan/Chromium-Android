@@ -184,4 +184,38 @@ public class NotificationManagerProxyImpl implements NotificationManagerProxy {
     public void notify(String tag, int id, Notification notification) {
         mNotificationManager.notify(tag, id, notification);
     }
+
+    @Override
+    public Channel getNotificationChannel(String channelId) {
+        assert BuildInfo.isAtLeastO();
+        /*
+        The code in the try-block uses reflection in order to compile as it calls APIs newer than
+        our compileSdkVersion of Android. The equivalent code without reflection looks like this:
+
+            NotificationChannel nc = mNotificationManager.getNotificationChannel(channelId);
+            String name = nc.getName();
+            int importance = nc.getImportance();
+            String groupId = nc.getGroup();
+            return new Channel(channelId, name, importance, groupId);
+         */
+        // TODO(crbug.com/707804) Stop using reflection once compileSdkVersion is high enough.
+        try {
+            Method method = mNotificationManager.getClass().getMethod(
+                    "getNotificationChannel", String.class);
+            Object object = method.invoke(mNotificationManager, channelId);
+            if (object == null) {
+                return null;
+            }
+            Method getName = object.getClass().getMethod("getName");
+            Method getImportance = object.getClass().getMethod("getImportance");
+            Method getGroup = object.getClass().getMethod("getGroup");
+            String name = (String) getName.invoke(object);
+            int importance = (int) getImportance.invoke(object);
+            String groupId = (String) getGroup.invoke(object);
+            return new Channel(channelId, name, importance, groupId);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            Log.e(TAG, "Error deleting notification channel:", e);
+            return null;
+        }
+    }
 }

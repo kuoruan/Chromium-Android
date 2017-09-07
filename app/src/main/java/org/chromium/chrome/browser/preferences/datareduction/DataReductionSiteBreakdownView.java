@@ -30,12 +30,20 @@ import java.util.List;
  */
 public class DataReductionSiteBreakdownView extends LinearLayout {
     private static final int NUM_DATA_USE_ITEMS_TO_ADD = 10;
+
+    /**
+     * Hostname used for the other bucket which consists of chrome-services traffic.
+     * This should be in sync with the same in DataReductionProxyDataUseObserver.
+     */
+    private static final String OTHER_HOST_NAME = "Other";
+
     private int mNumDataUseItemsToDisplay = 10;
 
     private TableLayout mTableLayout;
     private TextView mDataUsedTitle;
     private TextView mDataSavedTitle;
     private List<DataReductionDataUseItem> mDataUseItems;
+    private boolean mTextViewsNeedAttributesSet;
     @ColorInt
     private int mTextColor;
     @ColorInt
@@ -81,15 +89,25 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
         });
     }
 
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        if (mTextViewsNeedAttributesSet) {
+            mTextViewsNeedAttributesSet = false;
+            setTextViewUnsortedAttributes(mDataUsedTitle);
+            setTextViewSortedAttributes(mDataSavedTitle);
+        }
+    }
+
     /**
-     * Display the data use items once they have been fetched from the compression stats.
+     * Set and display the data use items once they have been fetched from the compression stats.
      * @param items A list of items split by hostname to show in the breakdown.
      */
-    public void onQueryDataUsageComplete(List<DataReductionDataUseItem> items) {
+    public void setAndDisplayDataUseItems(List<DataReductionDataUseItem> items) {
         mDataUseItems = items;
         setTextViewUnsortedAttributes(mDataUsedTitle);
         setTextViewSortedAttributes(mDataSavedTitle);
-        Collections.sort(items, new DataSavedComparator());
+        Collections.sort(mDataUseItems, new DataSavedComparator());
         if (mDataUseItems.size() == 0) {
             setVisibility(GONE);
         } else {
@@ -103,6 +121,12 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
     private void setTextViewSortedAttributes(TextView textView) {
         textView.setTextColor(mTextColor);
         Drawable arrowDrawable = getStartCompoundDrawable(textView);
+        // If the drawable has not been created yet, set mTextViewsNeedAttributesSet so that
+        // onMeasure will set the attributes after the drawable is created.
+        if (arrowDrawable == null) {
+            mTextViewsNeedAttributesSet = true;
+            return;
+        }
         arrowDrawable.mutate();
         arrowDrawable.setAlpha(255);
     }
@@ -110,6 +134,12 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
     private void setTextViewUnsortedAttributes(TextView textView) {
         textView.setTextColor(mLightTextColor);
         Drawable arrowDrawable = getStartCompoundDrawable(textView);
+        // If the drawable has not been created yet, set mTextViewsNeedAttributesSet so that
+        // onMeasure will set the attributes after the drawable is created.
+        if (arrowDrawable == null) {
+            mTextViewsNeedAttributesSet = true;
+            return;
+        }
         arrowDrawable.mutate();
         arrowDrawable.setAlpha(0);
     }
@@ -130,7 +160,12 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
             implements Comparator<DataReductionDataUseItem>, Serializable {
         @Override
         public int compare(DataReductionDataUseItem lhs, DataReductionDataUseItem rhs) {
-            if (lhs.getDataUsed() < rhs.getDataUsed()) {
+            // Force the 'Other' category to the bottom of the list.
+            if (OTHER_HOST_NAME.equals(lhs.getHostname())) {
+                return 1;
+            } else if (OTHER_HOST_NAME.equals(rhs.getHostname())) {
+                return -1;
+            } else if (lhs.getDataUsed() < rhs.getDataUsed()) {
                 return 1;
             } else if (lhs.getDataUsed() > rhs.getDataUsed()) {
                 return -1;
@@ -147,7 +182,12 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
             implements Comparator<DataReductionDataUseItem>, Serializable {
         @Override
         public int compare(DataReductionDataUseItem lhs, DataReductionDataUseItem rhs) {
-            if (lhs.getDataSaved() < rhs.getDataSaved()) {
+            // Force the 'Other' category to the bottom of the list.
+            if (OTHER_HOST_NAME.equals(lhs.getHostname())) {
+                return 1;
+            } else if (OTHER_HOST_NAME.equals(rhs.getHostname())) {
+                return -1;
+            } else if (lhs.getDataSaved() < rhs.getDataSaved()) {
                 return 1;
             } else if (lhs.getDataSaved() > rhs.getDataSaved()) {
                 return -1;
@@ -180,7 +220,12 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
                 TextView dataUsedView = (TextView) row.findViewById(R.id.site_data_used);
                 TextView dataSavedView = (TextView) row.findViewById(R.id.site_data_saved);
 
-                hostnameView.setText(mDataUseItems.get(i).getHostname());
+                String hostName = mDataUseItems.get(i).getHostname();
+                if (OTHER_HOST_NAME.equals(hostName)) {
+                    hostName = getResources().getString(
+                            R.string.data_reduction_breakdown_other_host_name);
+                }
+                hostnameView.setText(hostName);
                 dataUsedView.setText(mDataUseItems.get(i).getFormattedDataUsed(getContext()));
                 dataSavedView.setText(mDataUseItems.get(i).getFormattedDataSaved(getContext()));
 

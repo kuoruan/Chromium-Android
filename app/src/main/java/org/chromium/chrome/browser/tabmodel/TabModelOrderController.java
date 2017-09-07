@@ -51,15 +51,16 @@ public class TabModelOrderController {
      */
     public int determineInsertionIndex(TabLaunchType type, Tab newTab) {
         TabModel currentModel = mTabModelSelector.getCurrentModel();
-        Tab currentTab = TabModelUtils.getCurrentTab(currentModel);
-        if (currentTab == null) {
-            assert (currentModel.getCount() == 0);
-            return 0;
-        }
-        int currentId = currentTab.getId();
-        int currentIndex = TabModelUtils.getTabIndexById(currentModel, currentId);
 
         if (sameModelType(currentModel, newTab)) {
+            Tab currentTab = TabModelUtils.getCurrentTab(currentModel);
+            if (currentTab == null) {
+                assert (currentModel.getCount() == 0);
+                return 0;
+            }
+            int currentId = currentTab.getId();
+            int currentIndex = TabModelUtils.getTabIndexById(currentModel, currentId);
+
             if (willOpenInForeground(type, newTab.isIncognito())) {
                 // If the tab was opened in the foreground, insert it adjacent to
                 // the tab that opened that link.

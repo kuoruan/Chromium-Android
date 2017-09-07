@@ -160,10 +160,6 @@ public class TabUma {
             recordLongTimesHistogram100("Tabs.StateTransfer.Time_Active_Inactive", delta);
         } else if (prevState == TAB_STATE_ACTIVE && newState == TAB_STATE_CLOSED) {
             recordLongTimesHistogram100("Tabs.StateTransfer.Time_Active_Closed", delta);
-        } else if (prevState == TAB_STATE_INACTIVE && newState == TAB_STATE_ACTIVE) {
-            recordLongTimesHistogram100("Tabs.StateTransfer.Time_Inactive_Active", delta);
-        } else if (prevState == TAB_STATE_INACTIVE && newState == TAB_STATE_CLOSED) {
-            recordLongTimesHistogram100("Tabs.StateTransfer.Time_Inactive_Close", delta);
         }
 
         if (prevState == TAB_STATE_INITIAL) {

@@ -11,6 +11,7 @@ import android.view.ViewGroup.LayoutParams;
 import org.chromium.base.TraceEvent;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.fullscreen.FullscreenManager;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.third_party.android.swiperefresh.SwipeRefreshLayout;
 import org.chromium.ui.OverscrollRefreshHandler;
@@ -124,6 +125,15 @@ public class SwipeRefreshHandler implements OverscrollRefreshHandler {
 
     @Override
     public boolean start() {
+        FullscreenManager manager = mTab.getFullscreenManager();
+
+        // If the controls are at the bottom and hidden, allow cc to handle the scroll event to show
+        // them.
+        if (manager != null && manager.areBrowserControlsAtBottom()
+                && manager.getBrowserControlHiddenRatio() > 0) {
+            return false;
+        }
+
         attachSwipeRefreshLayoutIfNecessary();
         return mSwipeRefreshLayout.start();
     }

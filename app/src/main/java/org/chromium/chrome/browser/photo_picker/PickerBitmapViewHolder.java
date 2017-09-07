@@ -7,12 +7,15 @@ package org.chromium.chrome.browser.photo_picker;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
+import android.os.SystemClock;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.text.TextUtils;
 
+import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Holds on to a {@link PickerBitmapView} that displays information about a picker bitmap.
@@ -69,8 +72,10 @@ public class PickerBitmapViewHolder
      * Display a single item from |position| in the PickerCategoryView.
      * @param categoryView The PickerCategoryView to use to fetch the image.
      * @param position The position of the item to fetch.
+     * @return The decoding action required to display the item.
      */
-    public void displayItem(PickerCategoryView categoryView, int position) {
+    public @PickerAdapter.DecodeActions int displayItem(
+            PickerCategoryView categoryView, int position) {
         mCategoryView = categoryView;
 
         List<PickerBitmap> pickerBitmaps = mCategoryView.getPickerBitmaps();
@@ -79,27 +84,33 @@ public class PickerBitmapViewHolder
         if (mBitmapDetails.type() == PickerBitmap.CAMERA
                 || mBitmapDetails.type() == PickerBitmap.GALLERY) {
             mItemView.initialize(mBitmapDetails, null, false);
-            return;
+            return PickerAdapter.NO_ACTION;
         }
 
         String filePath = mBitmapDetails.getFilePath();
         Bitmap original = mCategoryView.getHighResBitmaps().get(filePath);
         if (original != null) {
             mItemView.initialize(mBitmapDetails, original, false);
-            return;
+            return PickerAdapter.FROM_CACHE;
         }
 
         int size = mCategoryView.getImageSize();
         Bitmap placeholder = mCategoryView.getLowResBitmaps().get(filePath);
         if (placeholder != null) {
             // For performance stats see http://crbug.com/719919.
+            long begin = SystemClock.elapsedRealtime();
             placeholder = BitmapUtils.scale(placeholder, size, false);
+            long scaleTime = SystemClock.elapsedRealtime() - begin;
+            RecordHistogram.recordTimesHistogram(
+                    "Android.PhotoPicker.UpscaleLowResBitmap", scaleTime, TimeUnit.MILLISECONDS);
+
             mItemView.initialize(mBitmapDetails, placeholder, true);
         } else {
             mItemView.initialize(mBitmapDetails, null, true);
         }
 
         mCategoryView.getDecoderServiceHost().decodeImage(filePath, size, this);
+        return PickerAdapter.DECODE;
     }
 
     /**

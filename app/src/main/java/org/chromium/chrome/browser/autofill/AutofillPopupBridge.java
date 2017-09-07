@@ -19,7 +19,7 @@ import org.chromium.chrome.browser.ResourceId;
 import org.chromium.components.autofill.AutofillDelegate;
 import org.chromium.components.autofill.AutofillPopup;
 import org.chromium.components.autofill.AutofillSuggestion;
-import org.chromium.content.browser.accessibility.BrowserAccessibilityManager;
+import org.chromium.content.browser.accessibility.WebContentsAccessibility;
 import org.chromium.ui.DropdownItem;
 import org.chromium.ui.base.WindowAndroid;
 
@@ -32,7 +32,7 @@ public class AutofillPopupBridge implements AutofillDelegate, DialogInterface.On
     private final AutofillPopup mAutofillPopup;
     private AlertDialog mDeletionDialog;
     private final Context mContext;
-    private BrowserAccessibilityManager mBrowserAccessibilityManager;
+    private WebContentsAccessibility mWebContentsAccessibility;
 
     public AutofillPopupBridge(View anchorView, long nativeAutofillPopupViewAndroid,
             WindowAndroid windowAndroid) {
@@ -52,9 +52,9 @@ public class AutofillPopupBridge implements AutofillDelegate, DialogInterface.On
         } else {
             mAutofillPopup = new AutofillPopup(activity, anchorView, this);
             mContext = activity;
-            mBrowserAccessibilityManager = ((ChromeActivity) activity)
-                                                   .getCurrentContentViewCore()
-                                                   .getBrowserAccessibilityManager();
+            mWebContentsAccessibility = ((ChromeActivity) activity)
+                                                .getCurrentContentViewCore()
+                                                .getWebContentsAccessibility();
         }
     }
 
@@ -82,8 +82,8 @@ public class AutofillPopupBridge implements AutofillDelegate, DialogInterface.On
 
     @Override
     public void accessibilityFocusCleared() {
-        if (mBrowserAccessibilityManager != null) {
-            mBrowserAccessibilityManager.onAutofillPopupAccessibilityFocusCleared();
+        if (mWebContentsAccessibility != null) {
+            mWebContentsAccessibility.onAutofillPopupAccessibilityFocusCleared();
         }
     }
 
@@ -100,8 +100,8 @@ public class AutofillPopupBridge implements AutofillDelegate, DialogInterface.On
     private void dismiss() {
         if (mAutofillPopup != null) mAutofillPopup.dismiss();
         if (mDeletionDialog != null) mDeletionDialog.dismiss();
-        if (mBrowserAccessibilityManager != null) {
-            mBrowserAccessibilityManager.onAutofillPopupDismissed();
+        if (mWebContentsAccessibility != null) {
+            mWebContentsAccessibility.onAutofillPopupDismissed();
         }
     }
 
@@ -124,8 +124,8 @@ public class AutofillPopupBridge implements AutofillDelegate, DialogInterface.On
         if (mAutofillPopup != null) {
             mAutofillPopup.filterAndShow(
                     suggestions, isRtl, backgroundColor, dividerColor, dropdownItemHeight, margin);
-            if (mBrowserAccessibilityManager != null) {
-                mBrowserAccessibilityManager.onAutofillPopupDisplayed(mAutofillPopup.getListView());
+            if (mWebContentsAccessibility != null) {
+                mWebContentsAccessibility.onAutofillPopupDisplayed(mAutofillPopup.getListView());
             }
         }
     }

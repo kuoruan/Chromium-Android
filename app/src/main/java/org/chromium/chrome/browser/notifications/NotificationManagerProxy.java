@@ -29,4 +29,6 @@ public interface NotificationManagerProxy {
 
     void notify(int id, Notification notification);
     void notify(String tag, int id, Notification notification);
+
+    Channel getNotificationChannel(String channelId);
 }

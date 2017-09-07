@@ -31,6 +31,7 @@ public class BookmarkAddActivity extends AsyncInitializationActivity {
 
     @Override
     public void finishNativeInitialization() {
+        super.finishNativeInitialization();
         RecordUserAction.record("MobileAddBookmarkViaIntent");
 
         final String title = getIntent().getStringExtra(EXTRA_TITLE);

@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.payments.ui;
 
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Pair;
 
 import org.chromium.base.Callback;
@@ -118,6 +119,8 @@ public class EditorFieldModel {
     @Nullable private List<DropdownKeyValue> mDropdownKeyValues;
     @Nullable private Set<String> mDropdownKeys;
     @Nullable private List<CharSequence> mSuggestions;
+    @Nullable
+    private TextWatcher mFormatter;
     @Nullable private EditorFieldValidator mValidator;
     @Nullable private EditorValueIconGenerator mValueIconGenerator;
     @Nullable private CharSequence mRequiredErrorMessage;
@@ -267,6 +270,7 @@ public class EditorFieldModel {
      * @param label                The human-readable label for user to understand the type of data
      *                             that should be entered into this field.
      * @param suggestions          Optional set of values to suggest to the user.
+     * @param formatter            Optional formatter for the values in this field.
      * @param validator            Optional validator for the values in this field.
      * @param valueIconGenerator   Optional icon generator for the values in this field.
      * @param requiredErrorMessage The optional error message that indicates to the user that they
@@ -276,7 +280,8 @@ public class EditorFieldModel {
      * @param value                Optional initial value of this field.
      */
     public static EditorFieldModel createTextInput(int inputTypeHint, CharSequence label,
-            @Nullable Set<CharSequence> suggestions, @Nullable EditorFieldValidator validator,
+            @Nullable Set<CharSequence> suggestions, @Nullable TextWatcher formatter,
+            @Nullable EditorFieldValidator validator,
             @Nullable EditorValueIconGenerator valueIconGenerator,
             @Nullable CharSequence requiredErrorMessage, @Nullable CharSequence invalidErrorMessage,
             @Nullable CharSequence value) {
@@ -284,6 +289,7 @@ public class EditorFieldModel {
         EditorFieldModel result = new EditorFieldModel(inputTypeHint);
         assert result.isTextField();
         result.mSuggestions = suggestions == null ? null : new ArrayList<CharSequence>(suggestions);
+        result.mFormatter = formatter;
         result.mValidator = validator;
         result.mValueIconGenerator = valueIconGenerator;
         result.mInvalidErrorMessage = invalidErrorMessage;
@@ -329,6 +335,13 @@ public class EditorFieldModel {
     public Runnable getActionIconAction() {
         assert isTextField();
         return mActionIconAction;
+    }
+
+    /** @return The value formatter or null if not exist. */
+    @Nullable
+    public TextWatcher getFormatter() {
+        assert isTextField();
+        return mFormatter;
     }
 
     /** @return The value icon generator or null if not exist. */

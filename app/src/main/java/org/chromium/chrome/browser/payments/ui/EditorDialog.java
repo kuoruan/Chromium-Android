@@ -39,10 +39,10 @@ import android.widget.TextView;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.autofill.PhoneNumberUtil;
-import org.chromium.chrome.browser.customtabs.CustomTabActivity;
+import org.chromium.chrome.browser.help.HelpAndFeedback;
 import org.chromium.chrome.browser.payments.ui.PaymentRequestUI.PaymentRequestObserverForTest;
 import org.chromium.chrome.browser.preferences.autofill.CreditCardNumberFormattingTextWatcher;
+import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.widget.AlwaysDismissedDialog;
 import org.chromium.chrome.browser.widget.FadingEdgeScrollView;
 import org.chromium.chrome.browser.widget.FadingShadow;
@@ -64,9 +64,6 @@ public class EditorDialog
                                                  DialogInterface.OnDismissListener {
     /** The indicator for input fields that are required. */
     public static final String REQUIRED_FIELD_INDICATOR = "*";
-
-    /** Help page that the user is directed to when asking for help. */
-    private static final String HELP_URL = "https://support.google.com/chrome/answer/142893";
 
     /** Duration of the animation to show the UI to full height. */
     private static final int DIALOG_ENTER_ANIMATION_MS = 300;
@@ -157,7 +154,6 @@ public class EditorDialog
         };
 
         mCardNumberFormatter = new CreditCardNumberFormattingTextWatcher();
-        mPhoneFormatter = new PhoneNumberUtil.FormatTextWatcher();
     }
 
     /** Prevents screenshots of this editor. */
@@ -169,7 +165,10 @@ public class EditorDialog
 
     /** Launches the Autofill help page on top of the current Context. */
     public static void launchAutofillHelpPage(Context context) {
-        CustomTabActivity.showInfoPage(context, HELP_URL);
+        assert context instanceof Activity;
+        HelpAndFeedback.getInstance(context).show((Activity) context,
+                context.getString(R.string.help_context_autofill), Profile.getLastUsedProfile(),
+                null);
     }
 
     /**
@@ -445,6 +444,8 @@ public class EditorDialog
                 filter = mCardNumberInputFilter;
                 formatter = mCardNumberFormatter;
             } else if (fieldModel.getInputTypeHint() == EditorFieldModel.INPUT_TYPE_HINT_PHONE) {
+                mPhoneFormatter = fieldModel.getFormatter();
+                assert mPhoneFormatter != null;
                 formatter = mPhoneFormatter;
             }
 

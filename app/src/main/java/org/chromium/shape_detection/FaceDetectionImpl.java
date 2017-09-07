@@ -5,6 +5,7 @@
 package org.chromium.shape_detection;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.PointF;
 import android.media.FaceDetector;
 import android.media.FaceDetector.Face;
@@ -13,14 +14,10 @@ import android.os.AsyncTask;
 import org.chromium.base.Log;
 import org.chromium.gfx.mojom.RectF;
 import org.chromium.mojo.system.MojoException;
-import org.chromium.mojo.system.SharedBufferHandle;
-import org.chromium.mojo.system.SharedBufferHandle.MapFlags;
 import org.chromium.shape_detection.mojom.FaceDetection;
 import org.chromium.shape_detection.mojom.FaceDetectionResult;
 import org.chromium.shape_detection.mojom.FaceDetectorOptions;
 import org.chromium.shape_detection.mojom.Landmark;
-
-import java.nio.ByteBuffer;
 
 /**
  * Android implementation of the FaceDetection service defined in
@@ -38,32 +35,24 @@ public class FaceDetectionImpl implements FaceDetection {
     }
 
     @Override
-    public void detect(SharedBufferHandle frameData, final int width, final int height,
-            final DetectResponse callback) {
-        final long numPixels = (long) width * height;
-        // TODO(xianglu): https://crbug.com/670028 homogeneize overflow checking.
-        if (!frameData.isValid() || width <= 0 || height <= 0 || numPixels > (Long.MAX_VALUE / 4)) {
-            Log.d(TAG, "Invalid argument(s).");
+    public void detect(org.chromium.skia.mojom.Bitmap bitmapData, final DetectResponse callback) {
+        Bitmap bitmap = BitmapUtils.convertToBitmap(bitmapData);
+        if (bitmap == null) {
+            Log.e(TAG, "Error converting Mojom Bitmap to Android Bitmap");
             callback.call(new FaceDetectionResult[0]);
             return;
         }
 
-        ByteBuffer imageBuffer = frameData.map(0, numPixels * 4, MapFlags.none());
-        if (imageBuffer.capacity() <= 0) {
-            Log.d(TAG, "Failed to map from SharedBufferHandle.");
-            callback.call(new FaceDetectionResult[0]);
-            return;
+        // FaceDetector requires an even width, so pad the image if the width is odd.
+        // https://developer.android.com/reference/android/media/FaceDetector.html#FaceDetector(int, int, int)
+        final int width = bitmapData.width + (bitmapData.width % 2);
+        final int height = bitmapData.height;
+        if (width != bitmapData.width) {
+            Bitmap paddedBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(paddedBitmap);
+            canvas.drawBitmap(bitmap, 0, 0, null);
+            bitmap = paddedBitmap;
         }
-
-        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-
-        // An int array is needed to construct a Bitmap. However the Bytebuffer
-        // we get from |sharedBufferHandle| is directly allocated and does not
-        // have a supporting array. Therefore we need to copy from |imageBuffer|
-        // to create this intermediate Bitmap.
-        // TODO(xianglu): Consider worker pool as appropriate threads.
-        // http://crbug.com/655814
-        bitmap.copyPixelsFromBuffer(imageBuffer);
 
         // A Bitmap must be in 565 format for findFaces() to work. See
         // http://androidxref.com/7.0.0_r1/xref/frameworks/base/media/java/android/media/FaceDetector.java#124

@@ -13,6 +13,7 @@ import android.os.Environment;
 import org.chromium.base.ActivityState;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.Callback;
+import org.chromium.base.ContextUtils;
 import org.chromium.base.FileUtils;
 import org.chromium.base.Log;
 import org.chromium.base.StreamUtil;
@@ -23,6 +24,7 @@ import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.share.ShareHelper;
+import org.chromium.chrome.browser.share.ShareParams;
 import org.chromium.chrome.browser.snackbar.Snackbar;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;
 import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarController;
@@ -335,23 +337,10 @@ public class OfflinePageUtils {
 
     /**
      * Share an offline copy of the current page.
-     * @param shareDirectly Whether it should share directly with the activity that was most
-     *                      recently used to share.
-     * @param saveLastUsed Whether to save the chosen activity for future direct sharing.
-     * @param mainActivity Activity that is used to access package manager.
-     * @param text Text to be shared. If both |text| and |url| are supplied, they are concatenated
-     *             with a space.
-     * @param screenshotUri Screenshot of the page to be shared.
-     * @param callback Optional callback to be called when user makes a choice. Will not be called
-     *                 if receiving a response when the user makes a choice is not supported (see
-     *                 TargetChosenReceiver#isSupported()).
+     * @param builder The builder to construct {@link ShareParams} for holding share parameters.
      * @param currentTab The current tab for which sharing is being done.
      */
-    public static void shareOfflinePage(final boolean shareDirectly, final boolean saveLastUsed,
-            final Activity mainActivity, final String text, final Uri screenshotUri,
-            final ShareHelper.TargetChosenCallback callback, final Tab currentTab) {
-        final String url = currentTab.getUrl();
-        final String title = currentTab.getTitle();
+    public static void shareOfflinePage(ShareParams.Builder builder, final Tab currentTab) {
         final OfflinePageBridge offlinePageBridge =
                 OfflinePageBridge.getForProfile(currentTab.getProfile());
 
@@ -363,41 +352,28 @@ public class OfflinePageUtils {
         OfflinePageItem offlinePage = offlinePageBridge.getOfflinePage(currentTab.getWebContents());
         if (offlinePage != null) {
             // If we're currently on offline page get the saved file directly.
-            prepareFileAndShare(shareDirectly, saveLastUsed, mainActivity, title, text,
-                                url, screenshotUri, callback, offlinePage.getFilePath());
+            prepareFileAndShare(builder, offlinePage.getFilePath());
             return;
         }
 
         // If this is an online page, share the offline copy of it.
-        Callback<OfflinePageItem> prepareForSharing = onGotOfflinePageItemToShare(shareDirectly,
-                saveLastUsed, mainActivity, title, text, url, screenshotUri, callback);
-        offlinePageBridge.selectPageForOnlineUrl(url, currentTab.getId(),
-                selectPageForOnlineUrlCallback(currentTab.getWebContents(), offlinePageBridge,
-                        prepareForSharing));
+        Callback<OfflinePageItem> prepareForSharing = onGotOfflinePageItemToShare(builder);
+        offlinePageBridge.selectPageForOnlineUrl(currentTab.getUrl(), currentTab.getId(),
+                selectPageForOnlineUrlCallback(
+                        currentTab.getWebContents(), offlinePageBridge, prepareForSharing));
     }
 
     /**
      * Callback for receiving the OfflinePageItem and use it to call prepareForSharing.
-     * @param shareDirectly Whether it should share directly with the activity that was most
-     *                      recently used to share.
-     * @param mainActivity Activity that is used to access package manager
-     * @param title Title of the page.
-     * @param onlineUrl Online URL associated with the offline page that is used to access the
-     *                  offline page file path.
-     * @param screenshotUri Screenshot of the page to be shared.
-     * @param mContext The application context.
-     * @return a callback of OfflinePageItem
+     * @param builder The builder to construct {@link ShareParams} for holding share parameters.
      */
     private static Callback<OfflinePageItem> onGotOfflinePageItemToShare(
-            final boolean shareDirectly, final boolean saveLastUsed, final Activity mainActivity,
-            final String title, final String text, final String onlineUrl, final Uri screenshotUri,
-            final ShareHelper.TargetChosenCallback callback) {
+            final ShareParams.Builder builder) {
         return new Callback<OfflinePageItem>() {
             @Override
             public void onResult(OfflinePageItem item) {
                 String offlineFilePath = (item == null) ? null : item.getFilePath();
-                prepareFileAndShare(shareDirectly, saveLastUsed, mainActivity, title, text,
-                        onlineUrl, screenshotUri, callback, offlineFilePath);
+                prepareFileAndShare(builder, offlineFilePath);
             }
         };
     }
@@ -461,32 +437,19 @@ public class OfflinePageUtils {
     /**
      * If file path of offline page is not null, do file operations needed for the page to be
      * shared. Otherwise, only share the online url.
-     * @param shareDirectly Whether it should share directly with the activity that was most
-     *                      recently used to share.
-     * @param saveLastUsed Whether to save the chosen activity for future direct sharing.
-     * @param activity Activity that is used to access package manager
-     * @param title Title of the page.
-     * @param text Text to be shared. If both |text| and |url| are supplied, they are concatenated
-     *             with a space.
-     * @param onlineUrl Online URL associated with the offline page that is used to access the
-     *                  offline page file path.
-     * @param screenshotUri Screenshot of the page to be shared.
-     * @param callback Optional callback to be called when user makes a choice. Will not be called
-     *                 if receiving a response when the user makes a choice is not supported (on
-     *                 older Android versions).
+     * @param builder The builder to construct {@link ShareParams} for holding share parameters.
      * @param filePath File path of the offline page.
      */
-    private static void prepareFileAndShare(final boolean shareDirectly, final boolean saveLastUsed,
-            final Activity activity, final String title, final String text, final String onlineUrl,
-            final Uri screenshotUri, final ShareHelper.TargetChosenCallback callback,
-            final String filePath) {
+    private static void prepareFileAndShare(
+            final ShareParams.Builder builder, final String filePath) {
         new AsyncTask<Void, Void, File>() {
             @Override
             protected File doInBackground(Void... params) {
                 if (filePath == null) return null;
 
                 File offlinePageOriginal = new File(filePath);
-                File shareableDir = getDirectoryForOfflineSharing(activity);
+                File shareableDir =
+                        getDirectoryForOfflineSharing(ContextUtils.getApplicationContext());
 
                 if (shareableDir == null) {
                     Log.e(TAG, "Unable to create subdirectory in shareable directory");
@@ -522,8 +485,8 @@ public class OfflinePageUtils {
                 if (offlinePageShareable != null) {
                     offlineUri = Uri.fromFile(offlinePageShareable);
                 }
-                ShareHelper.share(shareDirectly, saveLastUsed, activity, title, text, onlineUrl,
-                        offlineUri, screenshotUri, callback);
+                builder.setOfflineUri(offlineUri);
+                ShareHelper.share(builder.build());
             }
         }.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
     }

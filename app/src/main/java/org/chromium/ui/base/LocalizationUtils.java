@@ -9,6 +9,7 @@ import android.view.View;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContextUtils;
+import org.chromium.base.LocaleUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -74,6 +75,10 @@ public class LocalizationUtils {
     public static int getFirstStrongCharacterDirection(String string) {
         assert string != null;
         return nativeGetFirstStrongCharacterDirection(string);
+    }
+
+    public static String substituteLocalePlaceholder(String str) {
+        return str.replace("$LOCALE", LocaleUtils.getDefaultLocaleString().replace('-', '_'));
     }
 
     private static native int nativeGetFirstStrongCharacterDirection(String string);

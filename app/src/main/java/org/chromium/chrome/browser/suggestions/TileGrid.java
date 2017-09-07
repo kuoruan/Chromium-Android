@@ -66,7 +66,7 @@ public class TileGrid extends OptionalLeaf implements TileGroup.Observer {
 
     @Override
     public void onTileDataChanged() {
-        setVisible(mTileGroup.getTiles().length != 0);
+        setVisibilityInternal(mTileGroup.getTiles().length != 0);
         if (isVisible()) notifyItemChanged(0, new ViewHolder.UpdateTilesCallback(mTileGroup));
     }
 
@@ -85,18 +85,12 @@ public class TileGrid extends OptionalLeaf implements TileGroup.Observer {
         if (isVisible()) notifyItemChanged(0, new ViewHolder.UpdateOfflineBadgeCallback(tile));
     }
 
-    @Override
-    public void onLoadTaskAdded() {}
-
-    @Override
-    public void onLoadTaskCompleted() {}
-
     public TileGroup getTileGroup() {
         return mTileGroup;
     }
 
     private static int getMaxTileRows() {
-        int defaultValue = 1;
+        int defaultValue = 2;
         return ChromeFeatureList.getFieldTrialParamByFeatureAsInt(
                 ChromeFeatureList.CHROME_HOME, PARAM_CHROME_HOME_MAX_TILE_ROWS, defaultValue);
     }
@@ -122,8 +116,7 @@ public class TileGrid extends OptionalLeaf implements TileGroup.Observer {
         }
 
         public void updateTiles(TileGroup tileGroup) {
-            tileGroup.renderTileViews(mLayout, /* trackLoadTasks = */ false,
-                    /* condensed = */ false);
+            tileGroup.renderTileViews(mLayout, /* condensed = */ false);
         }
 
         public void updateIconView(Tile tile) {

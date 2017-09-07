@@ -9,7 +9,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.text.SpannableString;
-import android.text.style.TypefaceSpan;
+import android.text.style.TextAppearanceSpan;
 import android.view.View;
 
 import org.chromium.base.ContextUtils;
@@ -74,7 +74,8 @@ public class GeolocationSnackbarController implements SnackbarController {
         }
 
         Uri searchUri = Uri.parse(TemplateUrlService.getInstance().getUrlForSearchQuery("foo"));
-        TypefaceSpan robotoMediumSpan = new TypefaceSpan("sans-serif-medium");
+        TextAppearanceSpan robotoMediumSpan =
+                new TextAppearanceSpan(context, R.style.RobotoMediumStyle);
         String messageWithoutSpans = context.getResources().getString(
                 R.string.omnibox_geolocation_disclosure, "<b>" + searchUri.getHost() + "</b>");
         SpannableString message = SpanApplier.applySpans(messageWithoutSpans,

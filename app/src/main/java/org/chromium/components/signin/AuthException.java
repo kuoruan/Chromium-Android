@@ -9,15 +9,31 @@ package org.chromium.components.signin;
  * It is used for passing information that is useful for better handling of errors.
  */
 public class AuthException extends Exception {
+    public static final boolean TRANSIENT = true;
+    public static final boolean NONTRANSIENT = false;
+
     private final boolean mIsTransientError;
 
     /**
-     * A simple constructor that stores all the error handling information and makes it available to
-     * the handler.
+     * Wraps exception that caused auth failure along with transience flag.
      * @param isTransientError Whether the error is transient and we can retry.
+     *         Use {@link #TRANSIENT} and {@link #NONTRANSIENT} for readability.
+     * @param cause Exception that caused auth failure.
      */
-    public AuthException(boolean isTransientError, Exception exception) {
-        super(exception);
+    public AuthException(boolean isTransientError, Exception cause) {
+        super(cause);
+        mIsTransientError = isTransientError;
+    }
+
+    /**
+     * Wraps exception that caused auth failure along with transience flag and message.
+     * @param isTransientError Whether the error is transient and we can retry.
+     *         Use {@link #TRANSIENT} and {@link #NONTRANSIENT} for readability.
+     * @param message Message describing context in which auth failure happened.
+     * @param cause Exception that caused auth failure.
+     */
+    public AuthException(boolean isTransientError, String message, Exception cause) {
+        super(message, cause);
         mIsTransientError = isTransientError;
     }
 

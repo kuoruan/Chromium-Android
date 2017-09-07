@@ -53,7 +53,6 @@ public class LogoDelegateImpl implements LogoView.Delegate {
         mLogoBridge = new LogoBridge(tab.getProfile());
     }
 
-    @Override
     public void destroy() {
         mIsDestroyed = true;
     }
@@ -79,9 +78,8 @@ public class LogoDelegateImpl implements LogoView.Delegate {
         }
     }
 
-    @Override
     public void getSearchProviderLogo(final LogoObserver logoObserver) {
-        if (mIsDestroyed) return;
+        assert !mIsDestroyed;
 
         final long loadTimeStart = System.currentTimeMillis();
 

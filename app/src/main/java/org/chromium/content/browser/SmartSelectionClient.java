@@ -130,7 +130,7 @@ public class SmartSelectionClient implements SelectionClient {
     @CalledByNative
     private void onSurroundingTextReceived(
             @RequestType int callbackData, String text, int start, int end) {
-        if (TextUtils.isEmpty(text)) {
+        if (!textHasValidSelection(text, start, end)) {
             mCallback.onClassified(new SmartSelectionProvider.Result());
             return;
         }
@@ -148,6 +148,10 @@ public class SmartSelectionClient implements SelectionClient {
                 assert false : "Unexpected callback data";
                 break;
         }
+    }
+
+    private boolean textHasValidSelection(String text, int start, int end) {
+        return !TextUtils.isEmpty(text) && 0 <= start && start < end && end <= text.length();
     }
 
     private native long nativeInit(WebContents webContents);

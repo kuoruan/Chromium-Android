@@ -64,7 +64,6 @@
                 style="@style/IncognitoNewTabLearnMoreLink"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
                 android:text="@string/learn_more"
                 android:textColor="#03a9f4" />
 

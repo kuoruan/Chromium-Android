@@ -32,6 +32,11 @@ public abstract class ChildNode implements TreeNode {
         mParent = null;
     }
 
+    /** @return Whether the node is attached to a parent node. */
+    protected boolean isAttached() {
+        return mParent != null;
+    }
+
     @Override
     public final int getItemCount() {
         assert mNumItems == getItemCountForDebugging();

@@ -6,13 +6,11 @@ package org.chromium.chrome.browser.preferences;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.preference.PreferenceGroup;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
-import android.text.style.StyleSpan;
-import android.text.style.TypefaceSpan;
+import android.text.style.TextAppearanceSpan;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageView;
@@ -47,18 +45,8 @@ public class ExpandablePreferenceGroup extends PreferenceGroup {
                 new SpannableStringBuilder(getContext().getResources().getString(resourceId));
         String prefCount = String.format(Locale.getDefault(), " - %d", count);
         spannable.append(prefCount);
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            spannable.setSpan(new StyleSpan(android.graphics.Typeface.BOLD),
-                       0,
-                       spannable.length() - prefCount.length(),
-                       Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        } else {
-            spannable.setSpan(new TypefaceSpan("sans-serif-medium"),
-                       0,
-                       spannable.length() - prefCount.length(),
-                       Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
+        spannable.setSpan(new TextAppearanceSpan(getContext(), R.style.RobotoMediumStyle), 0,
+                spannable.length() - prefCount.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Color the first part of the title blue.
         ForegroundColorSpan blueSpan = new ForegroundColorSpan(

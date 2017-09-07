@@ -11,7 +11,7 @@ package org.chromium.chrome.browser.vr_shell;
 public interface OnDispatchTouchEventCallback {
     /**
      * Runs some code that may need to know if the event was consumed
-     * by the parent and if a cardboard event was triggered.
+     * by the parent.
      */
-    void onDispatchTouchEvent(boolean parentConsumed, boolean cardboardTriggered);
+    void onDispatchTouchEvent(boolean parentConsumed);
 }

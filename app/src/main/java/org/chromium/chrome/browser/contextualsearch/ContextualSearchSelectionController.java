@@ -10,6 +10,7 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel;
 import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
+import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.content.browser.ContentViewCore;
 import org.chromium.content_public.browser.GestureStateListener;
@@ -46,6 +47,8 @@ public class ContextualSearchSelectionController {
     // Max selection length must be limited or the entire request URL can go past the 2K limit.
     private static final int MAX_SELECTION_LENGTH = 100;
 
+    private static final int INVALID_DURATION = -1;
+
     private final ChromeActivity mActivity;
     private final ContextualSearchSelectionHandler mHandler;
     private final float mPxToDp;
@@ -58,6 +61,7 @@ public class ContextualSearchSelectionController {
     private ContextualSearchTapState mLastTapState;
     private boolean mIsWaitingForInvalidTapDetection;
     private boolean mShouldHandleSelectionModification;
+    // Whether the selection was automatically expanded due to an adjustment (e.g. Resolve).
     private boolean mDidExpandSelection;
 
     // Position of the selection.
@@ -70,9 +74,8 @@ public class ContextualSearchSelectionController {
     // When the last tap gesture happened.
     private long mTapTimeNanoseconds;
 
-    // Tracks whether a Context Menu has just been shown and the UX has been dismissed.
-    // The selection may be unreliable until the next reset.  See crbug.com/628436.
-    private boolean mIsContextMenuShown;
+    // The duration of the last tap gesture in milliseconds, or 0 if not set.
+    private int mTapDurationMs = INVALID_DURATION;
 
     private class ContextualSearchGestureStateListener extends GestureStateListener {
         @Override
@@ -92,13 +95,9 @@ public class ContextualSearchSelectionController {
             mLastScrollTimeNs = System.nanoTime();
         }
 
-        // TODO(donnd): Remove this once we get notification of the selection changing
-        // after a tap-select gets a subsequent tap nearby.  Currently there's no
-        // notification in this case.
-        // See crbug.com/444114.
         @Override
-        public void onSingleTap(boolean consumed) {
-            // TODO(donnd): remove completely!
+        public void onTouchDown() {
+            mTapTimeNanoseconds = System.nanoTime();
         }
     }
 
@@ -125,12 +124,10 @@ public class ContextualSearchSelectionController {
 
     /**
      * Notifies that a Context Menu has been shown.
-     * Future controller events may be unreliable until the next reset.
      */
     void onContextMenuShown() {
         // Hide the UX.
         mHandler.handleSelectionDismissal();
-        mIsContextMenuShown = true;
     }
 
     /**
@@ -205,7 +202,7 @@ public class ContextualSearchSelectionController {
         if (baseContentView != null) {
             baseContentView.clearSelection();
         }
-        resetAllStates();
+        resetSelectionStates();
     }
 
     /**
@@ -252,11 +249,11 @@ public class ContextualSearchSelectionController {
         boolean shouldHandleSelection = false;
         switch (eventType) {
             case SelectionEventType.SELECTION_HANDLES_SHOWN:
-                if (!mIsContextMenuShown) {
-                    mWasTapGestureDetected = false;
-                    mSelectionType = SelectionType.LONG_PRESS;
-                    shouldHandleSelection = true;
-                }
+                mWasTapGestureDetected = false;
+                mSelectionType = SelectionType.LONG_PRESS;
+                shouldHandleSelection = true;
+                ContentViewCore baseContentView = getBaseContentView();
+                if (baseContentView != null) mSelectedText = baseContentView.getSelectedText();
                 break;
             case SelectionEventType.SELECTION_HANDLES_CLEARED:
                 mHandler.handleSelectionDismissal();
@@ -269,15 +266,10 @@ public class ContextualSearchSelectionController {
         }
 
         if (shouldHandleSelection) {
-            ContentViewCore baseContentView = getBaseContentView();
-            if (baseContentView != null) {
-                String selection = baseContentView.getSelectedText();
-                if (selection != null) {
-                    mX = posXPix;
-                    mY = posYPix;
-                    mSelectedText = selection;
-                    handleSelection(selection, SelectionType.LONG_PRESS);
-                }
+            if (mSelectedText != null) {
+                mX = posXPix;
+                mY = posYPix;
+                handleSelection(mSelectedText, SelectionType.LONG_PRESS);
             }
         }
     }
@@ -301,8 +293,8 @@ public class ContextualSearchSelectionController {
         resetSelectionStates();
         mLastTapState = null;
         mLastScrollTimeNs = 0;
-        mIsContextMenuShown = false;
         mTapTimeNanoseconds = 0;
+        mTapDurationMs = INVALID_DURATION;
         mDidExpandSelection = false;
     }
 
@@ -333,9 +325,11 @@ public class ContextualSearchSelectionController {
         mWasTapGestureDetected = false;
         // TODO(donnd): refactor to avoid needing a new handler API method as suggested by Pedro.
         if (mSelectionType != SelectionType.LONG_PRESS) {
+            assert mTapTimeNanoseconds != 0 : "mTapTimeNanoseconds not set!";
+            mTapDurationMs = (int) ((System.nanoTime() - mTapTimeNanoseconds)
+                    / ContextualSearchHeuristic.NANOSECONDS_IN_A_MILLISECOND);
             mWasTapGestureDetected = true;
             mSelectionType = SelectionType.TAP;
-            mTapTimeNanoseconds = System.nanoTime();
             mX = x;
             mY = y;
             mHandler.handleValidTap();
@@ -351,8 +345,12 @@ public class ContextualSearchSelectionController {
      * or #handleNonSuppressedTap() after a possible delay.
      * This should be called when the context is fully built (by gathering surrounding text
      * if needed, etc) but before showing any UX.
+     * @param contextualSearchContext The {@link ContextualSearchContext} for the Tap gesture.
+     * @param rankerLogger The {@link ContextualSearchRankerLogger} currently being used to measure
+     *        or suppress the UI by Ranker.
      */
-    void handleShouldSuppressTap() {
+    void handleShouldSuppressTap(ContextualSearchContext contextualSearchContext,
+            ContextualSearchRankerLogger rankerLogger) {
         int x = (int) mX;
         int y = (int) mY;
 
@@ -360,27 +358,35 @@ public class ContextualSearchSelectionController {
         ChromePreferenceManager prefs = ChromePreferenceManager.getInstance();
         int adjustedTapsSinceOpen = prefs.getContextualSearchTapCount()
                 - prefs.getContextualSearchTapQuickAnswerCount();
-        TapSuppressionHeuristics tapHeuristics =
-                new TapSuppressionHeuristics(this, mLastTapState, x, y, adjustedTapsSinceOpen);
+        assert mTapDurationMs != INVALID_DURATION : "mTapDurationMs not set!";
+        TapSuppressionHeuristics tapHeuristics = new TapSuppressionHeuristics(this, mLastTapState,
+                x, y, adjustedTapsSinceOpen, contextualSearchContext, mTapDurationMs);
         // TODO(donnd): Move to be called when the panel closes to work with states that change.
         tapHeuristics.logConditionState();
+
+        tapHeuristics.logRankerTapSuppression(rankerLogger);
         // Tell the manager what it needs in order to log metrics on whether the tap would have
         // been suppressed if each of the heuristics were satisfied.
         mHandler.handleMetricsForWouldSuppressTap(tapHeuristics);
 
-        boolean shouldSuppressTap = tapHeuristics.shouldSuppressTap();
+        boolean shouldSuppressTapBasedOnHeuristics = tapHeuristics.shouldSuppressTap();
         if (mTapTimeNanoseconds != 0) {
             // Remember the tap state for subsequent tap evaluation.
-            mLastTapState =
-                    new ContextualSearchTapState(x, y, mTapTimeNanoseconds, shouldSuppressTap);
+            mLastTapState = new ContextualSearchTapState(
+                    x, y, mTapTimeNanoseconds, shouldSuppressTapBasedOnHeuristics);
         } else {
             mLastTapState = null;
         }
 
-        if (shouldSuppressTap) {
+        // Log features that don't require heuristics.
+        logNonHeuristicFeatures(rankerLogger);
+
+        // Make the suppression decision and act upon it.
+        boolean shouldSuppressTapBasedOnRanker = rankerLogger.inferUiSuppression();
+        if (shouldSuppressTapBasedOnHeuristics || shouldSuppressTapBasedOnRanker) {
             mHandler.handleSuppressedTap();
         } else {
-            mHandler.handleNonSuppressedTap();
+            mHandler.handleNonSuppressedTap(mTapTimeNanoseconds);
         }
     }
 
@@ -403,10 +409,7 @@ public class ContextualSearchSelectionController {
         Tab currentTab = mActivity.getActivityTab();
         if (currentTab == null) return null;
 
-        ContentViewCore contentViewCore = currentTab.getContentViewCore();
-        if (contentViewCore == null) return null;
-
-        return contentViewCore.getWebContents();
+        return currentTab.getWebContents();
     }
 
     /**
@@ -424,6 +427,16 @@ public class ContextualSearchSelectionController {
             basePageWebContents.adjustSelectionByCharacterOffset(
                     selectionStartAdjust, selectionEndAdjust);
         }
+    }
+
+    /**
+     * Logs all the features that we can obtain without accessing heuristics, i.e. from global
+     * state.
+     * @param rankerLogger The {@link ContextualSearchRankerLogger} to log the features to.
+     */
+    private void logNonHeuristicFeatures(ContextualSearchRankerLogger rankerLogger) {
+        boolean didOptIn = !PrefServiceBridge.getInstance().isContextualSearchUninitialized();
+        rankerLogger.logFeature(ContextualSearchRankerLogger.Feature.DID_OPT_IN, didOptIn);
     }
 
     // ============================================================================================

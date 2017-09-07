@@ -267,8 +267,14 @@ public class ChromeAnimation<T> {
             mCurrentTime = 0;
         }
 
+        public static void setAnimationMultiplierForTesting(float animationMultiplier) {
+            synchronized (sLock) {
+                sAnimationMultiplier = animationMultiplier;
+            }
+        }
+
         @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-        private float getAnimationMultiplier() {
+        public static float getAnimationMultiplier() {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) return 1f;
 
             synchronized (sLock) {

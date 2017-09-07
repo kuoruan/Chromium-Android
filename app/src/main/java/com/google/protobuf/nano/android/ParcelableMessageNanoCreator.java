@@ -38,6 +38,7 @@ import com.google.protobuf.nano.InvalidProtocolBufferNanoException;
 import com.google.protobuf.nano.MessageNano;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
 
 public final class ParcelableMessageNanoCreator<T extends MessageNano>
         implements Parcelable.Creator<T> {
@@ -58,11 +59,18 @@ public final class ParcelableMessageNanoCreator<T extends MessageNano>
         T proto = null;
 
         try {
-            Class<?> clazz = Class.forName(className);
-            Object instance = clazz.newInstance();
+            // Check that the provided class is a subclass of MessageNano before executing any code
+            Class<?> clazz =
+                Class.forName(className, false /*initialize*/, this.getClass().getClassLoader())
+                    .asSubclass(MessageNano.class);
+            Object instance = clazz.getConstructor().newInstance();
             proto = (T) instance;
             MessageNano.mergeFrom(proto, data);
         } catch (ClassNotFoundException e) {
+            Log.e(TAG, "Exception trying to create proto from parcel", e);
+        } catch (NoSuchMethodException e) {
+            Log.e(TAG, "Exception trying to create proto from parcel", e);
+        } catch (InvocationTargetException e) {
             Log.e(TAG, "Exception trying to create proto from parcel", e);
         } catch (IllegalAccessException e) {
             Log.e(TAG, "Exception trying to create proto from parcel", e);

@@ -5,13 +5,14 @@
 package org.chromium.chrome.browser.ntp.cards;
 
 import android.content.Context;
-import android.support.annotation.ColorRes;
+import android.content.res.Resources;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageView;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.suggestions.SuggestionsConfig;
 import org.chromium.third_party.android.swiperefresh.MaterialProgressDrawable;
 
 /**
@@ -44,9 +45,11 @@ public class ProgressIndicatorView extends ImageView {
 
         mProgressDrawable = new MaterialProgressDrawable(getContext(), this);
 
-        mProgressDrawable.setBackgroundColor(getColorAsInt(R.color.ntp_bg));
+        Resources resources = getResources();
+        mProgressDrawable.setBackgroundColor(SuggestionsConfig.getBackgroundColor(resources));
         mProgressDrawable.setAlpha(255);
-        mProgressDrawable.setColorSchemeColors(getColorAsInt(R.color.light_active_color));
+        mProgressDrawable.setColorSchemeColors(
+                ApiCompatibilityUtils.getColor(resources, R.color.light_active_color));
         mProgressDrawable.updateSizes(MaterialProgressDrawable.LARGE);
         setImageDrawable(mProgressDrawable);
 
@@ -87,9 +90,5 @@ public class ProgressIndicatorView extends ImageView {
         // We don't want to show the spinner every time we load content if it loads quickly; instead
         // only start showing the spinner if loading the content has taken longer than 500ms
         postDelayed(mShowSpinnerRunnable, SHOW_DELAY_MS);
-    }
-
-    private int getColorAsInt(@ColorRes int colorId) {
-        return ApiCompatibilityUtils.getColor(getResources(), colorId);
     }
 }

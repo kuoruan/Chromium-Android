@@ -2,6 +2,8 @@
 
 package com.google.protos.ipc.invalidation.nano;
 
+// @@protoc_insertion_point(imports_scope)
+
 @SuppressWarnings("hiding")
 public interface NanoChannelCommon {
 
@@ -25,6 +27,8 @@ public interface NanoChannelCommon {
       return _emptyArray;
     }
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ChannelMessageEncoding)
+
     public ChannelMessageEncoding() {
       clear();
     }
@@ -45,7 +49,7 @@ public interface NanoChannelCommon {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -96,6 +100,8 @@ public interface NanoChannelCommon {
 
     // optional bool is_offline = 3;
     public java.lang.Boolean isOffline;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.NetworkEndpointId)
 
     public NetworkEndpointId() {
       clear();
@@ -153,18 +159,23 @@ public interface NanoChannelCommon {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
           }
           case 8: {
+            int initialPos = input.getPosition();
             int value = input.readInt32();
             switch (value) {
               case com.google.protos.ipc.invalidation.nano.NanoChannelCommon.NetworkEndpointId.TEST:
               case com.google.protos.ipc.invalidation.nano.NanoChannelCommon.NetworkEndpointId.ANDROID:
               case com.google.protos.ipc.invalidation.nano.NanoChannelCommon.NetworkEndpointId.LCS:
                 this.networkAddress = value;
+                break;
+              default:
+                input.rewindToPosition(initialPos);
+                storeUnknownField(input, tag);
                 break;
             }
             break;

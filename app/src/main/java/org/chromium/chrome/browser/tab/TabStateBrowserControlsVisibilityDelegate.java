@@ -131,7 +131,7 @@ public class TabStateBrowserControlsVisibilityDelegate
     }
 
     @Override
-    public boolean isHidingBrowserControlsEnabled() {
+    public boolean canAutoHideBrowserControls() {
         WebContents webContents = mTab.getWebContents();
         if (webContents == null || webContents.isDestroyed()) return false;
 
@@ -159,7 +159,7 @@ public class TabStateBrowserControlsVisibilityDelegate
     }
 
     @Override
-    public boolean isShowingBrowserControlsEnabled() {
+    public boolean canShowBrowserControls() {
         if (mTab.getFullscreenManager() == null) return true;
         return !mTab.getFullscreenManager().getPersistentFullscreenMode();
     }

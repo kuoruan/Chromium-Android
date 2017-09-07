@@ -26,7 +26,7 @@ public interface FaceDetection extends org.chromium.mojo.bindings.Interface {
 
 
     void detect(
-org.chromium.mojo.system.SharedBufferHandle frameData, int width, int height, 
+org.chromium.skia.mojom.Bitmap bitmapData, 
 DetectResponse callback);
 
     interface DetectResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<FaceDetectionResult[]> { }

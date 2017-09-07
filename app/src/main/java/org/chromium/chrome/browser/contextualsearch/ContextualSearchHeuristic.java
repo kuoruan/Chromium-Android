@@ -59,4 +59,12 @@ abstract class ContextualSearchHeuristic {
     protected void logRankerTapSuppression(ContextualSearchRankerLogger logger) {
         // Default is to not log.
     }
+
+    /**
+     * Logs a Ranker outcome using the heuristic for the purpose of Ranker Tap Suppression.
+     * @param logger A logger to log to.
+     */
+    protected void logRankerTapSuppressionOutcome(ContextualSearchRankerLogger logger) {
+        // Default is to not log.
+    }
 }

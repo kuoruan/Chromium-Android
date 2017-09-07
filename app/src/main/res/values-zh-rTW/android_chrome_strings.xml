@@ -16,7 +16,6 @@
 <string name="more">"更多"</string>
 <string name="close">"關閉"</string>
 <string name="no_thanks">"不用了，謝謝"</string>
-<string name="enable">"啟用"</string>
 <string name="next">"繼續"</string>
 <string name="continue_button">"繼續"</string>
 <string name="submit">"提交"</string>
@@ -66,16 +65,16 @@
 <string name="payment_apps_title">"付款應用程式"</string>
 <string name="payment_no_apps_summary">"尚未安裝系統支援的應用程式"</string>
 <string name="payment_apps_usage_message">"在部分網站上，你可以在你的裝置上使用上述支援的付款應用程式付款。"</string>
-<string name="autofill_credit_cards_title">"信用卡"</string>
+<string name="autofill_credit_cards_title">"卡片"</string>
 <string name="autofill_create_profile">"新增地址"</string>
 <string name="autofill_edit_profile">"編輯地址"</string>
 <string name="autofill_create_credit_card">"新增信用卡"</string>
-<string name="autofill_edit_credit_card">"編輯信用卡"</string>
+<string name="autofill_edit_credit_card">"編輯卡片資訊"</string>
 <string name="autofill_profile_editor_country">"國家/地區"</string>
 <string name="autofill_profile_editor_email_address">"電子郵件"</string>
 <string name="autofill_profile_editor_phone_number">"電話"</string>
 <string name="autofill_credit_card_editor_name">"持卡人姓名"</string>
-<string name="autofill_credit_card_editor_number">"信用卡號碼"</string>
+<string name="autofill_credit_card_editor_number">"卡片號碼"</string>
 <string name="autofill_credit_card_editor_expiration_date">"到期日"</string>
 <string name="autofill_credit_card_editor_billing_address">"帳單地址"</string>
 <string name="autofill_describe_local_copy">"已複製到 Chrome"</string>
@@ -95,10 +94,6 @@
   <item quantity="one">"%1$s\u2026 和另外 %2$s 個聯絡人"</item>
   <item quantity="other">"%1$s\u2026 和另外 %2$s 個聯絡人"</item>
 </plurals>
-<string name="autofill_wallet_management_link_text">"編輯"</string>
-<string name="autofill_manage_wallet_cards_url">"https://payments.google.com/#paymentMethods"</string>
-<string name="autofill_manage_wallet_addresses_url">"https://payments.google.com/#paymentMethods"</string>
-<string name="autofill_from_google_account_long">"來自 Google Payments"</string>
 <string name="prefs_saved_passwords">"儲存密碼"</string>
 <string name="passwords_auto_signin_title">"自動登入"</string>
 <string name="passwords_auto_signin_description">"自動使用已儲存的憑證登入網站。如果關閉這項功能，每次在您登入網站之前，網站一律會要求驗證。"</string>
@@ -108,7 +103,7 @@
 <string name="redirect_to_passwords_text">"已儲存的密碼"</string>
 <string name="redirect_to_passwords_link">"passwords.google.com"</string>
 <string name="saved_passwords_none_text">"已儲存的密碼會顯示在這裡。"</string>
-<string name="password_entry_editor_title">"編輯已儲存的帳戶"</string>
+<string name="password_entry_editor_title">"已儲存的密碼"</string>
 <string name="password_entry_editor_site_title">"網站"</string>
 <string name="password_entry_editor_username_title">"使用者名稱"</string>
 <string name="password_entry_editor_password">"密碼"</string>
@@ -118,6 +113,14 @@
 <string name="password_entry_editor_view_stored_password">"取消密碼遮罩"</string>
 <string name="password_entry_editor_delete_stored_password_action_title">"刪除密碼"</string>
 <string name="password_entry_editor_delete_stored_password">"刪除已儲存的密碼"</string>
+<string name="password_entry_editor_username_copied_into_clipboard">"已複製使用者名稱"</string>
+<string name="password_entry_editor_site_copied_into_clipboard">"已複製網站"</string>
+<string name="password_entry_editor_password_copied_into_clipboard">"已複製密碼"</string>
+<string name="password_entry_editor_set_lock_screen">"如要查看及複製密碼，請在裝置的安全性設定中設置裝置鎖。"</string>
+<string name="password_entry_editor_not_available_on_pre_lollipop">"無法在您使用的 Android 版本中查看及複製密碼"</string>
+<string name="lockscreen_verification_title">"請解除螢幕鎖定"</string>
+<string name="lockscreen_verification_text">"為了安全起見，你必須解除螢幕鎖定才能存取密碼。"</string>
+<string name="lockscreen_description">"請先將手機解除鎖定，才能繼續進行設定"</string>
 <string name="options_homepage_edit_title">"編輯首頁"</string>
 <string name="options_homepage_edit_label">"開啟以下網頁"</string>
 <string name="prefs_privacy">"隱私權"</string>
@@ -194,7 +197,6 @@
 <string name="android_history_blocked_site">"已封鎖網站"</string>
 <string name="usage_and_crash_reports_title">"使用資料和當機報告"</string>
 <string name="usage_and_crash_reports_description">"自動傳送使用統計資料及當機報告給 Google"</string>
-<string name="prefs_suggestions">"Suggestions"</string>
 <string name="suggestions_feature_switch_title">"Suggestions"</string>
 <string name="suggestions_feature_switch_on_summary">"Use Google servers to provide browsing suggestions."</string>
 <string name="suggestions_caveats_description">"When this feature is turned on, Chrome will use Google servers to provide browsing suggestions, e.g. when you open a new tab. This include popular websites, trending articles as well as personalized suggestions."</string>
@@ -206,6 +208,8 @@
 <string name="force_enable_zoom_summary">"覆寫網站禁止放大的要求"</string>
 <string name="prefs_site_settings">"網站設定"</string>
 <string name="all_sites">"所有網站"</string>
+<string name="intrusive_ads_information">"這個網站經常顯示侵入式廣告"</string>
+<string name="ads_permission_title">"廣告"</string>
 <string name="autoplay_title">"自動播放"</string>
 <string name="cookies_title">"Cookie"</string>
 <string name="allow_third_party_cookies_title">"允許第三方 Cookie"</string>
@@ -213,7 +217,6 @@
 <string name="javascript_permission_title">"JavaScript"</string>
 <string name="media_permission_title">"媒體"</string>
 <string name="popup_permission_title">"彈出式視窗"</string>
-<string name="subresource_filter_permission_title">"Subresource Filter"</string>
 <string name="push_notifications_permission_title">"通知"</string>
 <string name="enable_notifications_vibrate_title">"震動"</string>
 <string name="enable_notifications_vibrate_summary">"收到通知時裝置會震動"</string>
@@ -240,13 +243,15 @@
 <string name="website_settings_exceptions_group_heading">"例外"</string>
 <string name="accessibility_expanded_group">"已展開 - 按一下即可收合。"</string>
 <string name="accessibility_collapsed_group">"已收合 - 按一下即可展開。"</string>
-<string name="website_settings_category_blocked_recommended">"已封鎖 (建議)"</string>
 <string name="website_settings_category_allowed_recommended">"已允許 (建議)"</string>
 <string name="website_settings_category_cookie_allowed">"允許網站儲存及讀取 Cookie 資料 (建議)"</string>
 <string name="website_settings_category_autoplay_allowed">"允許網站自動播放靜音的影片 (建議)"</string>
 <string name="website_settings_category_autoplay_disabled_data_saver">"開啟 Data Saver 時無法使用這項設定"</string>
 <string name="website_settings_category_javascript_allowed">"允許網站執行 JavaScript (建議)"</string>
 <string name="website_settings_category_popups_blocked">"禁止網站顯示彈出式視窗 (建議)"</string>
+<string name="website_settings_category_ads_blocked">"如果網站經常顯示侵入式廣告，就封鎖廣告"</string>
+<string name="website_settings_category_ads_blocked_list">"封鎖部分網站的廣告"</string>
+<string name="website_settings_permissions_ads_block">"針對經常顯示侵入式廣告的網站封鎖廣告 (建議)"</string>
 <string name="website_settings_category_location_ask">"允許網站存取您的位置資訊前，必須先詢問您 (建議)"</string>
 <string name="website_settings_category_notifications_ask">"允許網站傳送通知前，必須先詢問您 (建議)"</string>
 <string name="website_settings_category_camera_ask">"允許網站使用您的攝影機前，必須先詢問您 (建議)"</string>
@@ -290,7 +295,6 @@
 <string name="website_settings_usb">"USB"</string>
 <string name="website_settings_revoke_device_permission">"撤銷裝置權限"</string>
 <string name="website_settings_usb_no_devices">"清單中沒有任何 USB 裝置"</string>
-<string name="iph_data_saver_preview_text">"Chrome 正以較少的數據用量顯示這個網頁"</string>
 <string name="data_reduction_title">"Data Saver"</string>
 <string name="data_reduction_saved_label">"已節省 %1$s"</string>
 <string name="data_reduction_date_label">"(%1$s起)"</string>
@@ -304,6 +308,7 @@
 <string name="data_reduction_breakdown_used_title">"使用量"</string>
 <string name="data_reduction_breakdown_saved_title">"已節省"</string>
 <string name="data_reduction_breakdown_remaining_sites_label">"其餘網站 (%1$d)"</string>
+<string name="data_reduction_breakdown_other_host_name">"其他"</string>
 <string name="data_reduction_usage_reset_statistics_button">"重設統計資料"</string>
 <string name="safe_browsing_description">"Chrome 的安全瀏覽系統也會用於偵測惡意網頁，保護您不受網路釣魚、惡意軟體和有害下載內容的攻擊。"</string>
 <string name="data_reduction_caveats_description">"這項功能可能會讓您無法存取電信業者提供的付費數據服務。"</string>
@@ -350,8 +355,9 @@
 <string name="open_source_license_url">"chrome://credits"</string>
 <string name="terms_of_service_title">"Chrome 服務條款"</string>
 <string name="privacy_notice_title">"Chrome 隱私權聲明"</string>
-<string name="chrome_privacy_notice_url">"https://www.google.com/intl/zh-TW/chrome/browser/privacy/"</string>
-<string name="chrome_terms_of_service_url">"https://www.google.com/intl/zh-TW/chrome/browser/privacy/eula_text.html"</string>
+<string name="chrome_privacy_notice_url">"https://www.google.com/intl/$LOCALE/chrome/browser/privacy/"</string>
+<string name="chrome_terms_of_service_url">"https://www.google.com/intl/$LOCALE/chrome/browser/privacy/eula_text.html"</string>
+<string name="family_link_privacy_policy_url">"https://families.google.com/intl/$LOCALE/familylink/privacy/child-policy/"</string>
 <string name="leave">"離開"</string>
 <string name="reload">"重新載入"</string>
 <string name="suppress_js_modal_dialogs">"防止這個網頁產生其他對話方塊"</string>
@@ -391,7 +397,7 @@
 <string name="sync_passwords">"密碼"</string>
 <string name="sync_recent_tabs">"開啟分頁"</string>
 <string name="sync_settings">"設定"</string>
-<string name="payments_integration">"使用 Google Payments 儲存的信用卡和地址資訊。"</string>
+<string name="payments_integration">"使用 Google Payments 儲存的卡片和地址資訊"</string>
 <string name="sync_encryption">"加密"</string>
 <string name="sync_manage_data">"管理同步資料"</string>
 <string name="sync_passphrase_type_title">"加密"</string>
@@ -401,7 +407,6 @@
 <string name="sync_passphrase_type_custom_dialog_title">"建立通關密語"</string>
 <string name="sign_in_google_account">"Google 帳戶"</string>
 <string name="sync_custom_passphrase">"只有知道您通關密語的使用者，才能讀取加密保護的資料。系統不會將通關密語傳送給 Google，Google 也不會儲存通關密語。如果您忘記自己的通關密語，或是想變更這項設定，則必須重設同步功能。&lt;learnmore&gt;瞭解詳情&lt;/learnmore&gt;"</string>
-<string name="sync_dashboard_url">"https://www.google.com/settings/chrome/sync"</string>
 <string name="sync_enter_custom_passphrase_hint">"通關密語"</string>
 <string name="sync_enter_custom_passphrase_hint_confirm">"確認通關密語"</string>
 <string name="sync_passphrase_cannot_be_blank">"這個欄位不能留空"</string>
@@ -458,6 +463,7 @@
 <string name="tab_loading_default_title">"載入中…"</string>
 <string name="infobar_close">"關閉"</string>
 <string name="bottom_bar_screen_position">"選項在接近畫面底部的位置"</string>
+<string name="previews_infobar_accessibility_title">"網頁內容經過簡化，不僅節省數據用量，更加快載入速度。"</string>
 <string name="duplicate_download_infobar_text">"你要再次下載 ^1 嗎？"</string>
 <string name="duplicate_download_request_infobar_text">"要重新下載「^1」嗎？"</string>
 <string name="duplicate_download_infobar_download_button">"下載"</string>
@@ -508,15 +514,15 @@
 <string name="contextmenu_copy">"複製"</string>
 <string name="contextmenu_send_message">"傳送訊息"</string>
 <string name="contextmenu_add_to_contacts">"新增為聯絡人"</string>
-<string name="contextmenu_copy_link_address">"複製連結網址"</string>
-<string name="contextmenu_copy_link_text">"複製連結文字"</string>
-<string name="contextmenu_save_link">"下載連結"</string>
+<string name="contextmenu_copy_link_address">"複製連結"</string>
+<string name="contextmenu_save_link">"下載網頁"</string>
 <string name="contextmenu_save_image">"下載圖片"</string>
 <string name="contextmenu_open_image">"開啟圖片"</string>
 <string name="contextmenu_open_image_in_new_tab">"在新分頁中開啟圖片"</string>
 <string name="contextmenu_load_original_image">"載入圖片"</string>
 <string name="contextmenu_search_web_for_image">"透過 %1$s 搜尋這張圖片"</string>
 <string name="contextmenu_share_image">"分享圖片"</string>
+<string name="contextmenu_share_link">"分享連結"</string>
 <string name="contextmenu_save_video">"下載影片"</string>
 <string name="contextmenu_open_in_new_chrome_tab">"在新的 Chrome 分頁中開啟"</string>
 <string name="contextmenu_open_in_chrome_incognito_tab">"在無痕式分頁中開啟"</string>
@@ -526,6 +532,10 @@
 <string name="browser_actions_save_link_as">"下載網頁"</string>
 <string name="browser_actions_copy_address">"複製連結"</string>
 <string name="browser_actions_share">"分享…"</string>
+<string name="browser_actions_open_in_background_toast_message">"連結已在 Chrome 中開啟"</string>
+<string name="browser_actions_single_link_open_notification_title">"連結已在 Chrome 中開啟"</string>
+<string name="browser_actions_multi_links_open_notification_title">"多個連結已在 Chrome 中開啟"</string>
+<string name="browser_actions_notification_text">"輕觸即可查看"</string>
 <string name="app_banner_installing">"安裝中…"</string>
 <string name="app_banner_open">"開啟"</string>
 <string name="app_banner_installing_webapk">"新增中…"</string>
@@ -649,6 +659,7 @@
 <string name="native_startup_failed">"發生未預期的錯誤，Chrome 啟動失敗。"</string>
 <string name="fre_skip_text">"不用了，謝謝"</string>
 <string name="fre_tos_and_privacy">"使用這個應用程式即表示您同意接受 Chrome 的《&lt;LINK1&gt;服務條款&lt;/LINK1&gt;》和《&lt;LINK2&gt;隱私權聲明&lt;/LINK2&gt;》。"</string>
+<string name="fre_tos_and_privacy_child_account">"使用這個應用程式即表示您同意接受 Chrome 的《&lt;LINK1&gt;服務條款&lt;/LINK1&gt;》和《&lt;LINK2&gt;隱私權聲明&lt;/LINK2&gt;》，以及《&lt;LINK3&gt;透過 Family Link 建立的 Google 帳戶所適用的隱私權聲明&lt;/LINK3&gt;》。"</string>
 <string name="lightweight_fre_tos_and_privacy">"繼續操作即表示您同意接受 Chrome 的《&lt;LINK1&gt;服務條款&lt;/LINK1&gt;》和《&lt;LINK2&gt;隱私權聲明&lt;/LINK2&gt;》。"</string>
 <string name="fre_send_report_check">"將使用統計資料及當機報告傳送給 Google，助我們一臂之力，讓 Chrome 更臻完美。"</string>
 <string name="fre_accept_continue">"接受並繼續"</string>
@@ -664,11 +675,9 @@
 <string name="signin_signed_in_settings_description_child_account">"你和你的家長可前往&lt;LINK1&gt;設定&lt;/LINK1&gt;頁面管理 Chrome 同步功能和個人化設定"</string>
 <string name="signin_signed_in_settings_description">"前往&lt;LINK1&gt;設定&lt;/LINK1&gt;頁面管理 Chrome 同步功能和個人化設定"</string>
 <string name="signin_gms_updating">"正在等待 Google Play 服務完成更新"</string>
-<string name="external_app_leave_incognito_warning">"這個網站即將與外部應用程式分享資訊，分享時會自動退出無痕模式。"</string>
-<string name="external_app_leave_incognito_warning_title">"要退出無痕模式嗎？"</string>
-<string name="external_app_leave_incognito_stay">"不離開"</string>
-<string name="external_app_leave_incognito_leave">"離開"</string>
-<string name="external_app_restricted_access_error">"Chrome 無法存取要求的資源。"</string>
+<string name="signin_promo_settings">"無論使用任何裝置，只要登入 Chrome，即可取得你的書籤、密碼，並沿用其他設定。"</string>
+<string name="signin_promo_continue_as">"以%1$s的身分繼續使用"</string>
+<string name="signin_promo_choose_account">"不是 %1$s 嗎？"</string>
 <string name="cast_casting_video">"正在投放到 %1$s"</string>
 <string name="cast_error_playing_video">"無法透過 %1$s 播放影片。"</string>
 <string name="accessibility_play">"播放"</string>
@@ -678,7 +687,6 @@
 <string name="accessibility_next_track">"下一首曲目"</string>
 <string name="accessibility_seek_forward">"快轉到特定的播放時間點"</string>
 <string name="accessibility_seek_backward">"倒轉到特定的播放時間點"</string>
-<string name="ntp_bookmarks">"書籤"</string>
 <string name="recent_tabs">"最近開啟的分頁"</string>
 <string name="most_visited_placeholder_title">"目前還沒有任何常用網頁…"</string>
 <string name="most_visited_placeholder_summary">"這裡會顯示您最常造訪的網頁"</string>
@@ -704,7 +712,6 @@
 <string name="ntp_recent_tabs_accessibility_expanded_group">"已展開 - 按一下即可收合"</string>
 <string name="recent_tabs_open_all_menu_option">"全部開啟"</string>
 <string name="recent_tabs_hide_menu_option">"暫時隱藏"</string>
-<string name="recent_tabs_show_more">"更多"</string>
 <string name="recently_closed">"最近關閉的分頁"</string>
 <string name="show_full_history">"顯示完整記錄"</string>
 <string name="remove_all">"全部移除"</string>
@@ -719,13 +726,13 @@
 <string name="button_new_incognito_tab">"新增無痕式分頁"</string>
 <string name="menu_update">"更新 Chrome"</string>
 <string name="menu_update_summary_default">"已推出新版本"</string>
-<string name="menu_update_summary_new_features">"取得最新功能"</string>
 <string name="menu_move_to_other_window">"移至其他視窗"</string>
 <string name="menu_forward">"往前"</string>
 <string name="menu_bookmark">"書籤"</string>
 <string name="menu_download">"下載"</string>
 <string name="menu_page_info">"頁面資訊"</string>
 <string name="menu_refresh">"重新整理"</string>
+<string name="menu_stop_refresh">"停止重新整理"</string>
 <string name="menu_new_tab">"新增分頁"</string>
 <string name="menu_new_incognito_tab">"新無痕式分頁"</string>
 <string name="menu_bookmarks">"書籤"</string>
@@ -772,11 +779,12 @@
 <string name="find_in_page_count">"%1$d/%2$d"</string>
 <string name="accessible_find_in_page_count">"第 %1$d 個結果，共 %2$d 個"</string>
 <string name="accessible_find_in_page_no_results">"沒有結果"</string>
-<string name="search_or_type_url">"搜尋或輸入網址"</string>
 <string name="location_bar_verbose_status_offline">"離線"</string>
+<string name="search_or_type_web_address">"搜尋或輸入網址"</string>
+<string name="type_what_you_are_looking_for">"輸入你要尋找的項目"</string>
+<string name="find_news_recipes_weather">"尋找新聞、食譜、氣象資訊…"</string>
 <string name="voice_search_error">"沒有可用的語音搜尋功能"</string>
 <string name="open_in_new_tab_toast">"已在背景開啟分頁。"</string>
-<string name="contextmenu_copy_url">"複製網址"</string>
 <string name="menu_open_in_chrome">"在 Chrome 中開啟"</string>
 <string name="menu_open_in_product">"在 %1$s 中開啟"</string>
 <string name="menu_open_in_product_default">"在瀏覽器中開啟"</string>
@@ -819,10 +827,6 @@
 <string name="accessibility_drawer_toggle_btn_open">"開啟導覽匣"</string>
 <string name="accessibility_drawer_toggle_btn_close">"關閉導覽匣"</string>
 <string name="accessibility_toolbar_screen_position">"選項位於畫面頂端"</string>
-<plurals name="accessibility_selected_items">
-  <item quantity="one">"已選取 1 個項目"</item>
-  <item quantity="other">"已選取 %d 個項目"</item>
-</plurals>
 <plurals name="accessibility_share_selected_items">
   <item quantity="one">"分享 1 個選取的項目"</item>
   <item quantity="other">"分享 %d 個選取的項目"</item>
@@ -831,7 +835,10 @@
   <item quantity="one">"移除 1 個選取的項目"</item>
   <item quantity="other">"移除 %d 個選取的項目"</item>
 </plurals>
-<string name="selected">"已選取"</string>
+<plurals name="selected_items">
+  <item quantity="one">"已選取 1 個項目"</item>
+  <item quantity="other">"已選取 %d 個項目"</item>
+</plurals>
 <string name="media_notification_link_text">"輕觸即可返回 %1$s"</string>
 <string name="screen_capture_notification_text">"%1$s 正在共用你的畫面。"</string>
 <string name="new_tab_incognito_header">"你已啟用無痕模式。"</string>
@@ -903,9 +910,9 @@
 <string name="using_google">"現已使用 Google 搜尋"</string>
 <string name="item_chooser_item_name_with_id">"%1$s (%2$s)"</string>
 <string name="instant_apps_open_in_app">"開啟應用程式"</string>
-<string name="webapk_unknown_sources_dialog_title">"增強型新增至主畫面實驗功能"</string>
-<string name="webapk_unknown_sources_dialog_message">"開啟 Android 安全性設定中的「不明來源」即可體驗「增強型新增至主畫面」實驗功能。體驗結束後請務必停用這項設定。"</string>
-<string name="webapk_unknown_sources_settings_button">"設定"</string>
+<string name="webapk_running_in_chrome_disclosure">"Chrome 正在執行這個應用程式。"</string>
+<string name="webapk_offline_dialog">"初次使用「%1$s」時請連線至網際網路"</string>
+<string name="webapk_offline_dialog_quit_button">"確定"</string>
 <string name="keyboard_shortcut_open_new_tab">"開啟新分頁"</string>
 <string name="keyboard_shortcut_reopen_new_tab">"重新開啟最近關閉的分頁"</string>
 <string name="keyboard_shortcut_new_incognito_tab">"在無痕模式下開啟新分頁"</string>
@@ -941,14 +948,19 @@
 <string name="iph_download_page_for_offline_usage_accessibility_text">"透過「更多選項」按鈕下載網頁，以便離線存取"</string>
 <string name="iph_download_home_text">"前往「下載」主畫面尋找你的檔案和網頁"</string>
 <string name="iph_download_home_accessibility_text">"透過「更多選項」按鈕前往「下載」主畫面尋找你的檔案和網頁"</string>
+<string name="iph_data_saver_preview_text">"Chrome 正以較少的數據用量顯示這個網頁"</string>
+<string name="iph_data_saver_detail_text">"查看節省的數據用量"</string>
+<string name="iph_data_saver_detail_accessibility_text">"如要查看節省的數據用量，請點選 [更多選項] 按鈕"</string>
 <string name="search_widget_default">"搜尋"</string>
 <string name="search_with_product">"使用 %1$s 搜尋"</string>
 <string name="disabled_incognito_launcher_shortcut_message">"移除這個捷徑後再重新建立"</string>
 <string name="bottom_sheet_help_bubble_message">"往上拉即可查看書籤和其他內容"</string>
 <string name="bottom_sheet_accessibility_help_bubble_message">"在網址列往上拉即可查看書籤、下載內容和歷史紀錄"</string>
 <string name="bottom_sheet_accessibility_toolbar">"網址列。往上拉即可查看書籤、下載內容和歷史紀錄。"</string>
+<string name="bottom_sheet_open_accessibility_toolbar">"網址列。往下拉即可關閉導覽面板。"</string>
 <string name="bottom_sheet_expand_button_help_bubble_message">"輕觸即可查看書籤和其他內容"</string>
 <string name="bottom_sheet_accessibility_expand_button_help_bubble_message">"輕觸即可查看書籤、下載內容和歷史紀錄"</string>
+<string name="bottom_sheet_accessibility_description">"導覽面板"</string>
 <string name="bottom_sheet_opened">"導覽面版已開啟"</string>
 <string name="bottom_sheet_closed">"導覽面版已關閉"</string>
 <string name="bottom_sheet_bookmarks_tab">"已選取 [書籤] 標籤"</string>

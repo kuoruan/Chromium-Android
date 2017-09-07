@@ -79,4 +79,10 @@ public interface PaymentApp {
      * @return The identifier for this payment app.
      */
     String getAppIdentifier();
+
+    /**
+     * @return The resource identifier for the additional text that should be displayed to the user
+     * when selecting a payment instrument from this payment app or 0 if not needed.
+     */
+    int getAdditionalAppTextResourceId();
 }

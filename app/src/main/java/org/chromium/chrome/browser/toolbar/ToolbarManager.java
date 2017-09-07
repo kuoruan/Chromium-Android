@@ -16,8 +16,6 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.View.OnAttachStateChangeListener;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup.MarginLayoutParams;
-import android.widget.FrameLayout;
 import android.widget.PopupWindow.OnDismissListener;
 
 import org.chromium.base.ApiCompatibilityUtils;
@@ -49,6 +47,7 @@ import org.chromium.chrome.browser.download.DownloadUtils;
 import org.chromium.chrome.browser.feature_engagement_tracker.FeatureEngagementTrackerFactory;
 import org.chromium.chrome.browser.fullscreen.BrowserStateBrowserControlsVisibilityDelegate;
 import org.chromium.chrome.browser.fullscreen.FullscreenManager;
+import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
 import org.chromium.chrome.browser.ntp.IncognitoNewTabPage;
 import org.chromium.chrome.browser.ntp.NativePageFactory;
 import org.chromium.chrome.browser.ntp.NewTabPage;
@@ -88,7 +87,6 @@ import org.chromium.ui.UiUtils;
 import org.chromium.ui.base.DeviceFormFactor;
 import org.chromium.ui.base.PageTransition;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -142,7 +140,7 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
 
     private final TabObserver mTabObserver;
     private final BookmarkBridge.BookmarkModelObserver mBookmarksObserver;
-    private final List<FindToolbarObserver> mFindToolbarObservers;
+    private final FindToolbarObserver mFindToolbarObserver;
     private final OverviewModeObserver mOverviewModeObserver;
     private final SceneChangeObserver mSceneChangeObserver;
     private final ActionBarDelegate mActionBarDelegate;
@@ -187,34 +185,12 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
             ToolbarControlContainer controlContainer, final AppMenuHandler menuHandler,
             AppMenuPropertiesDelegate appMenuPropertiesDelegate,
             Invalidator invalidator, Callback<Boolean> urlFocusChangedCallback) {
-        mActionBarDelegate = new ActionModeController.ActionBarDelegate() {
-            @Override
-            public void setControlTopMargin(int margin) {
-                MarginLayoutParams lp = (MarginLayoutParams)
-                        mControlContainer.getLayoutParams();
-                lp.topMargin = margin;
-                mControlContainer.setLayoutParams(lp);
-            }
-
-            @Override
-            public int getControlTopMargin() {
-                FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams)
-                        mControlContainer.getLayoutParams();
-                return lp.topMargin;
-            }
-
-            @Override
-            public ActionBar getSupportActionBar() {
-                return activity.getSupportActionBar();
-            }
-
-            @Override
-            public void setActionBarBackgroundVisibility(boolean visible) {
-                int visibility = visible ? View.VISIBLE : View.GONE;
-                activity.findViewById(R.id.action_bar_black_background).setVisibility(visibility);
-                // TODO(tedchoc): Add support for changing the color based on the brand color.
-            }
-        };
+        if (activity.getBottomSheet() != null) {
+            mActionBarDelegate =
+                    new ViewShiftingActionBarDelegate(activity, activity.getBottomSheet());
+        } else {
+            mActionBarDelegate = new ViewShiftingActionBarDelegate(activity, controlContainer);
+        }
 
         mToolbarModel = new ToolbarModelImpl(activity.getBottomSheet());
         mControlContainer = controlContainer;
@@ -318,6 +294,12 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
             @Override
             public void tabRemoved(Tab tab) {
                 updateTabCount();
+                refreshSelectedTab();
+            }
+
+            @Override
+            public void pendingTabAdd(boolean isPendingTabAdd) {
+                if (isPendingTabAdd) mPreselectedTabId = Tab.INVALID_TAB_ID;
                 refreshSelectedTab();
             }
         };
@@ -576,29 +558,26 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
             }
         };
 
-        mFindToolbarObservers = new ArrayList<>();
-        addFindToolbarObserver(
-                new FindToolbarObserver() {
-                    @Override
-                    public void onFindToolbarShown() {
-                        mToolbar.handleFindToolbarStateChange(true);
-                        if (mControlsVisibilityDelegate != null) {
-                            mFullscreenFindInPageToken = mControlsVisibilityDelegate
-                                    .showControlsPersistentAndClearOldToken(
-                                            mFullscreenFindInPageToken);
-                        }
-                    }
-
-                    @Override
-                    public void onFindToolbarHidden() {
-                        mToolbar.handleFindToolbarStateChange(false);
-                        if (mControlsVisibilityDelegate != null) {
-                            mControlsVisibilityDelegate.hideControlsPersistent(
+        mFindToolbarObserver = new FindToolbarObserver() {
+            @Override
+            public void onFindToolbarShown() {
+                mToolbar.handleFindToolbarStateChange(true);
+                if (mControlsVisibilityDelegate != null) {
+                    mFullscreenFindInPageToken =
+                            mControlsVisibilityDelegate.showControlsPersistentAndClearOldToken(
                                     mFullscreenFindInPageToken);
-                            mFullscreenFindInPageToken = FullscreenManager.INVALID_TOKEN;
-                        }
-                    }
-                });
+                }
+            }
+
+            @Override
+            public void onFindToolbarHidden() {
+                mToolbar.handleFindToolbarStateChange(false);
+                if (mControlsVisibilityDelegate != null) {
+                    mControlsVisibilityDelegate.hideControlsPersistent(mFullscreenFindInPageToken);
+                    mFullscreenFindInPageToken = FullscreenManager.INVALID_TOKEN;
+                }
+            }
+        };
 
         mOverviewModeObserver = new EmptyOverviewModeObserver() {
             @Override
@@ -637,29 +616,6 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
         };
 
         mLoadProgressSimulator = new LoadProgressSimulator(this);
-    }
-
-    /**
-     * Add an observer to the FindToolbarManager.
-     * @param observer The observer to add.
-     */
-    public void addFindToolbarObserver(FindToolbarObserver observer) {
-        // Keep a list of all added observers in case the manager does not exist yet.
-        mFindToolbarObservers.add(observer);
-        if (mFindToolbarManager != null) {
-            mFindToolbarManager.addObserver(observer);
-        }
-    }
-
-    /**
-     * Remove an observer from the FindToolbarManager.
-     * @param observer The observer to remove.
-     */
-    public void removeFindToolbarObserver(FindToolbarObserver observer) {
-        mFindToolbarObservers.remove(observer);
-        if (mFindToolbarManager != null) {
-            mFindToolbarManager.removeObserver(observer);
-        }
     }
 
     /**
@@ -715,12 +671,7 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
                     mTemplateUrlObserver = null;
                 }
 
-                // Remove all previously attached observers from the FindToolbarManager.
-                if (mFindToolbarManager != null) {
-                    for (FindToolbarObserver observer : mFindToolbarObservers) {
-                        mFindToolbarManager.removeObserver(observer);
-                    }
-                }
+                mFindToolbarManager.removeObserver(mFindToolbarObserver);
 
                 if (overviewModeBehavior != null) {
                     overviewModeBehavior.removeOverviewModeObserver(mOverviewModeObserver);
@@ -746,12 +697,7 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
 
         mNativeLibraryReady = false;
 
-        // Add observers to the FindToolbarManager.
-        if (mFindToolbarManager != null) {
-            for (FindToolbarObserver observer : mFindToolbarObservers) {
-                mFindToolbarManager.addObserver(observer);
-            }
-        }
+        mFindToolbarManager.addObserver(mFindToolbarObserver);
 
         if (overviewModeBehavior != null) {
             overviewModeBehavior.addOverviewModeObserver(mOverviewModeObserver);
@@ -823,7 +769,6 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
     public void destroy() {
         Tab currentTab = mToolbarModel.getTab();
         if (currentTab != null) currentTab.removeObserver(mTabObserver);
-        mFindToolbarObservers.clear();
         mToolbar.destroy();
     }
 
@@ -906,6 +851,12 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
         menuHandler.addObserver(new AppMenuObserver() {
             @Override
             public void onMenuVisibilityChanged(boolean isVisible) {
+                if (isVisible) {
+                    // Defocus here to avoid handling focus in multiple places, e.g., when the
+                    // forward button is pressed. (see crbug.com/414219)
+                    setUrlBarFocus(false);
+                }
+
                 if (mControlsVisibilityDelegate == null) return;
                 if (isVisible) {
                     mFullscreenMenuToken =
@@ -938,6 +889,16 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
             public void run() {
                 RecordUserAction.record("MobileToolbarShowMenu");
                 mToolbar.onMenuShown();
+
+                // Assume data saver footer is shown only if data reduction proxy is enabled and
+                // Chrome home is not
+                if (DataReductionProxySettings.getInstance().isDataReductionProxyEnabled()
+                        && !FeatureUtilities.isChromeHomeEnabled()) {
+                    FeatureEngagementTracker tracker =
+                            FeatureEngagementTrackerFactory.getFeatureEngagementTrackerForProfile(
+                                    Profile.getLastUsedProfile());
+                    tracker.notifyEvent(EventConstants.OVERFLOW_OPENED_WITH_DATA_SAVER_SHOWN);
+                }
             }
         });
     }
@@ -1379,5 +1340,10 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
         public void cancel() {
             mHandler.removeMessages(MSG_ID_UPDATE_PROGRESS);
         }
+    }
+
+    @VisibleForTesting
+    public ToolbarDataProvider getToolbarDataProviderForTests() {
+        return mToolbarModel;
     }
 }

@@ -11,6 +11,13 @@
     <Preference
         android:key="os_permissions_warning_divider"
         android:layout="@layout/divider_preference" />
+    <org.chromium.chrome.browser.preferences.TextMessagePreference
+        android:key="intrusive_ads_info"
+        android:title="@string/intrusive_ads_information"
+        android:icon="@drawable/btn_info" />
+    <Preference
+        android:key="intrusive_ads_info_divider"
+        android:layout="@layout/divider_preference" />
     <PreferenceCategory
         android:key="site_heading"
         android:title="@string/website_settings_site_category" />
@@ -46,7 +53,7 @@
     <org.chromium.chrome.browser.preferences.ChromeBaseListPreference
         android:key="popup_permission_list" />
     <org.chromium.chrome.browser.preferences.ChromeBaseListPreference
-        android:key="subresource_filter_permission_list" />
+        android:key="ads_permission_list" />
     <org.chromium.chrome.browser.preferences.ChromeBaseListPreference
         android:key="background_sync_permission_list" />
     <org.chromium.chrome.browser.preferences.ChromeBaseListPreference

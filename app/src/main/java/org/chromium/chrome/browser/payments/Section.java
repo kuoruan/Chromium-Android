@@ -16,12 +16,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
-    Section.CONTACT_INFO, Section.CREDIT_CARDS, Section.SHIPPING_ADDRESS, Section.MAX
+    Section.CONTACT_INFO, Section.PAYMENT_METHOD, Section.SHIPPING_ADDRESS, Section.MAX
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface Section {
   int CONTACT_INFO = 0;
-  int CREDIT_CARDS = 1;
+  int PAYMENT_METHOD = 1;
   int SHIPPING_ADDRESS = 2;
   int MAX = 3;
 }

@@ -37,8 +37,6 @@ public enum ChromeContextMenuItem implements ContextMenuItem {
             R.string.contextmenu_open_in_incognito_tab, R.id.contextmenu_open_in_incognito_tab),
     COPY_LINK_ADDRESS(R.drawable.ic_content_copy, R.string.contextmenu_copy_link_address,
             R.id.contextmenu_copy_link_address),
-    COPY_LINK_TEXT(R.drawable.ic_content_copy, R.string.contextmenu_copy_link_text,
-            R.id.contextmenu_copy_link_text),
     SAVE_LINK_AS(R.drawable.ic_file_download_white_24dp, R.string.contextmenu_save_link,
             R.id.contextmenu_save_link_as),
 
@@ -51,10 +49,8 @@ public enum ChromeContextMenuItem implements ContextMenuItem {
             R.id.contextmenu_open_image),
     OPEN_IMAGE_IN_NEW_TAB(R.drawable.context_menu_new_tab,
             R.string.contextmenu_open_image_in_new_tab, R.id.contextmenu_open_image_in_new_tab),
-    SEARCH_BY_IMAGE(R.drawable.googleg, R.string.contextmenu_search_web_for_image,
+    SEARCH_BY_IMAGE(R.drawable.context_menu_search, R.string.contextmenu_search_web_for_image,
             R.id.contextmenu_search_by_image),
-    SHARE_IMAGE(R.drawable.ic_share_white_24dp, R.string.contextmenu_share_image,
-            R.id.contextmenu_share_image),
 
     // Message Group
     CALL(R.drawable.ic_phone_googblue_36dp, R.string.contextmenu_call, R.id.contextmenu_call),
@@ -81,9 +77,7 @@ public enum ChromeContextMenuItem implements ContextMenuItem {
     BROWSER_ACTION_SAVE_LINK_AS(R.drawable.ic_file_download_white_24dp,
             R.string.browser_actions_save_link_as, R.id.browser_actions_save_link_as),
     BROWSER_ACTIONS_COPY_ADDRESS(R.drawable.ic_content_copy, R.string.browser_actions_copy_address,
-            R.id.browser_actions_copy_address),
-    BROWSER_ACTIONS_SHARE(R.drawable.ic_share_white_24dp, R.string.browser_actions_share,
-            R.id.browser_actions_share);
+            R.id.browser_actions_copy_address);
 
     @DrawableRes
     private final int mIconId;

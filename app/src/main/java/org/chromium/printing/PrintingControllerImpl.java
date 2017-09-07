@@ -31,17 +31,16 @@ import java.util.Iterator;
  */
 @TargetApi(Build.VERSION_CODES.KITKAT)
 public class PrintingControllerImpl implements PrintingController, PdfGenerator {
-    private static final String TAG = "cr.printing";
+    private static final String TAG = "printing";
 
     /**
      * This is used for both initial state and a completed state (i.e. starting from either
      * onLayout or onWrite, a PDF generation cycle is completed another new one can safely start).
      */
     private static final int PRINTING_STATE_READY = 0;
-    private static final int PRINTING_STATE_STARTED_FROM_ONLAYOUT = 1;
-    private static final int PRINTING_STATE_STARTED_FROM_ONWRITE = 2;
+    private static final int PRINTING_STATE_STARTED_FROM_ONWRITE = 1;
     /** Printing dialog has been dismissed and cleanup has been done. */
-    private static final int PRINTING_STATE_FINISHED = 3;
+    private static final int PRINTING_STATE_FINISHED = 2;
 
     /** The singleton instance for this class. */
     private static PrintingController sInstance;
@@ -55,6 +54,8 @@ public class PrintingControllerImpl implements PrintingController, PdfGenerator 
      * with javascript.
      */
     private PrintingContextInterface mContextFromScriptInitiation;
+    private int mRenderProcessId;
+    private int mRenderFrameId;
 
     /** The file descriptor into which the PDF will be written.  Provided by the framework. */
     private int mFileDescriptor;
@@ -87,18 +88,12 @@ public class PrintingControllerImpl implements PrintingController, PdfGenerator 
 
     private int mPrintingState = PRINTING_STATE_READY;
 
-    /** Whether layouting parameters have been changed to require a new PDF generation. */
-    private boolean mNeedNewPdf;
-
-    /** Total number of pages to print with initial print dialog settings. */
-    private int mLastKnownMaxPages = PrintDocumentInfo.PAGE_COUNT_UNKNOWN;
-
     private boolean mIsBusy;
 
     private PrintManagerDelegate mPrintManager;
 
-    private PrintingControllerImpl(PrintDocumentAdapterWrapper printDocumentAdapterWrapper,
-                                   String errorText) {
+    private PrintingControllerImpl(
+            PrintDocumentAdapterWrapper printDocumentAdapterWrapper, String errorText) {
         mErrorMessage = errorText;
         mPrintDocumentAdapterWrapper = printDocumentAdapterWrapper;
         mPrintDocumentAdapterWrapper.setPdfGenerator(this);
@@ -179,13 +174,16 @@ public class PrintingControllerImpl implements PrintingController, PdfGenerator 
     }
 
     @Override
-    public void setPendingPrint(final Printable printable, PrintManagerDelegate printManager) {
+    public void setPendingPrint(final Printable printable, PrintManagerDelegate printManager,
+            int renderProcessId, int renderFrameId) {
         if (mIsBusy) {
             Log.d(TAG, "Pending print can't be set. PrintingController is busy.");
             return;
         }
         mPrintable = printable;
         mPrintManager = printManager;
+        mRenderProcessId = renderProcessId;
+        mRenderFrameId = renderFrameId;
     }
 
     @Override
@@ -206,23 +204,23 @@ public class PrintingControllerImpl implements PrintingController, PdfGenerator 
     @Override
     public void startPrint(final Printable printable, PrintManagerDelegate printManager) {
         if (mIsBusy) return;
-        setPendingPrint(printable, printManager);
+        setPendingPrint(printable, printManager, mRenderProcessId, mRenderFrameId);
         startPendingPrint(null);
     }
 
     @Override
-    public void pdfWritingDone(boolean success) {
+    public void pdfWritingDone(int pageCount) {
         if (mPrintingState == PRINTING_STATE_FINISHED) return;
         mPrintingState = PRINTING_STATE_READY;
-        if (success) {
-            PageRange[] pageRanges = convertIntegerArrayToPageRanges(mPages);
+        closeFileDescriptor(mFileDescriptor);
+        mFileDescriptor = -1;
+        if (pageCount > 0) {
+            PageRange[] pageRanges = convertIntegerArrayToPageRanges(mPages, pageCount);
             mOnWriteCallback.onWriteFinished(pageRanges);
         } else {
             mOnWriteCallback.onWriteFailed(mErrorMessage);
             resetCallbacks();
         }
-        closeFileDescriptor(mFileDescriptor);
-        mFileDescriptor = -1;
     }
 
     @Override
@@ -242,52 +240,24 @@ public class PrintingControllerImpl implements PrintingController, PdfGenerator 
         mDpi = newAttributes.getResolution().getHorizontalDpi();
         mMediaSize = newAttributes.getMediaSize();
 
-        mNeedNewPdf = !newAttributes.equals(oldAttributes);
-
         mOnLayoutCallback = callback;
         // We don't want to stack Chromium with multiple PDF generation operations before
         // completion of an ongoing one.
-        // TODO(cimamoglu): Whenever onLayout is called, generate a new PDF with the new
-        //                  parameters. Hence, we can get the true number of pages.
-        if (mPrintingState == PRINTING_STATE_STARTED_FROM_ONLAYOUT) {
-            // We don't start a new Chromium PDF generation operation if there's an existing
-            // onLayout going on. Use the last known valid page count.
-            pageCountEstimationDone(mLastKnownMaxPages);
-        } else if (mPrintingState == PRINTING_STATE_STARTED_FROM_ONWRITE) {
+        if (mPrintingState == PRINTING_STATE_STARTED_FROM_ONWRITE) {
             callback.onLayoutFailed(mErrorMessage);
             resetCallbacks();
-        } else if (mPrintable.print()) {
-            mPrintingState = PRINTING_STATE_STARTED_FROM_ONLAYOUT;
         } else {
-            callback.onLayoutFailed(mErrorMessage);
-            resetCallbacks();
-        }
-    }
-
-    @Override
-    public void pageCountEstimationDone(final int maxPages) {
-        // This method might be called even after onFinish, e.g. as a result of a long page
-        // estimation operation.  We make sure that such call has no effect, since the printing
-        // dialog has already been dismissed and relevant cleanup has already been done.
-        // Also, this ensures that we do not call askUserForSettingsReply twice.
-        if (mPrintingState == PRINTING_STATE_FINISHED) return;
-        if (maxPages != PrintDocumentInfo.PAGE_COUNT_UNKNOWN) {
-            mLastKnownMaxPages = maxPages;
-        }
-        if (mPrintingState == PRINTING_STATE_STARTED_FROM_ONLAYOUT) {
-            PrintDocumentInfo info = new PrintDocumentInfo.Builder(mPrintable.getTitle())
-                    .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT)
-                    .setPageCount(mLastKnownMaxPages)
-                    .build();
-            mOnLayoutCallback.onLayoutFinished(info, mNeedNewPdf);
-        } else if (mPrintingState == PRINTING_STATE_STARTED_FROM_ONWRITE) {
-            // Chromium PDF generation is started inside onWrite, continue that.
-            if (mPrintingContext == null) {
-                mOnWriteCallback.onWriteFailed(mErrorMessage);
-                resetCallbacks();
-                return;
-            }
-            mPrintingContext.askUserForSettingsReply(true);
+            PrintDocumentInfo info =
+                    new PrintDocumentInfo.Builder(mPrintable.getTitle())
+                            .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT)
+                            // Set page count to unknown since Android framework will get it from
+                            // PDF file generated in onWrite.
+                            .setPageCount(PrintDocumentInfo.PAGE_COUNT_UNKNOWN)
+                            .build();
+            // We always need to generate a new PDF. onLayout is not only called when attributes
+            // changed, but also when pages need to print got selected. We can't tell if the later
+            // case was happened, so has to generate a new file.
+            mOnLayoutCallback.onLayoutFinished(info, true);
         }
     }
 
@@ -297,39 +267,26 @@ public class PrintingControllerImpl implements PrintingController, PdfGenerator 
             final ParcelFileDescriptor destination,
             final CancellationSignal cancellationSignal,
             final PrintDocumentAdapterWrapper.WriteResultCallbackWrapper callback) {
-        if (mPrintingContext == null) {
-            callback.onWriteFailed(mErrorMessage);
-            resetCallbacks();
+        // TODO(cimamoglu): Make use of CancellationSignal.
+        if (ranges == null || ranges.length == 0) {
+            callback.onWriteFailed(null);
             return;
         }
 
-        // TODO(cimamoglu): Make use of CancellationSignal.
         mOnWriteCallback = callback;
 
+        assert mPrintingState == PRINTING_STATE_READY;
+
         mFileDescriptor = destination.getFd();
-        // Update file descriptor to PrintingContext mapping in the owner class.
-        mPrintingContext.updatePrintingContextMap(mFileDescriptor, false);
+        mPages = convertPageRangesToIntegerArray(ranges);
 
-        // We need to convert ranges list into an array of individual numbers for
-        // easier JNI passing and compatibility with the native side.
-        if (ranges.length == 1 && ranges[0].equals(PageRange.ALL_PAGES)) {
-            // null corresponds to all pages in Chromium printing logic.
-            mPages = null;
+        // mRenderProcessId and mRenderFrameId could be invalid values, in this case we are going to
+        // print the main frame.
+        if (mPrintable.print(mRenderProcessId, mRenderFrameId)) {
+            mPrintingState = PRINTING_STATE_STARTED_FROM_ONWRITE;
         } else {
-            mPages = normalizeRanges(ranges);
-        }
-
-        if (mPrintingState == PRINTING_STATE_READY) {
-            // If this onWrite is without a preceding onLayout, start Chromium PDF generation here.
-            if (mPrintable.print()) {
-                mPrintingState = PRINTING_STATE_STARTED_FROM_ONWRITE;
-            } else {
-                callback.onWriteFailed(mErrorMessage);
-                resetCallbacks();
-            }
-        } else if (mPrintingState == PRINTING_STATE_STARTED_FROM_ONLAYOUT) {
-            // Otherwise, continue previously started operation.
-            mPrintingContext.askUserForSettingsReply(true);
+            mOnWriteCallback.onWriteFailed(mErrorMessage);
+            resetCallbacks();
         }
         // We are guaranteed by the framework that we will not have two onWrite calls at once.
         // We may get a CancellationSignal, after replying it (via WriteResultCallback) we might
@@ -338,9 +295,7 @@ public class PrintingControllerImpl implements PrintingController, PdfGenerator 
 
     @Override
     public void onFinish() {
-        mLastKnownMaxPages = PrintDocumentInfo.PAGE_COUNT_UNKNOWN;
         mPages = null;
-
         if (mPrintingContext != null) {
             if (mPrintingState != PRINTING_STATE_READY) {
                 // Note that we are never making an extraneous askUserForSettingsReply call.
@@ -348,9 +303,7 @@ public class PrintingControllerImpl implements PrintingController, PdfGenerator 
                 // the state isn't PRINTING_STATE_READY, so we enter here and make this call (no
                 // extra). If we complete the PDF generation successfully from onLayout or onWrite,
                 // we already make the state PRINTING_STATE_READY and call askUserForSettingsReply
-                // inside pdfWritingDone, thus not entering here.  Also, if we get an extra
-                // AskUserForSettings call, it's handled inside {@link
-                // PrintingContext#pageCountEstimationDone}.
+                // inside pdfWritingDone, thus not entering here.
                 mPrintingContext.askUserForSettingsReply(false);
             }
             mPrintingContext.updatePrintingContextMap(mFileDescriptor, true);
@@ -361,6 +314,8 @@ public class PrintingControllerImpl implements PrintingController, PdfGenerator 
             mContextFromScriptInitiation.showSystemDialogDone();
             mContextFromScriptInitiation = null;
         }
+        mRenderProcessId = -1;
+        mRenderFrameId = -1;
 
         mPrintingState = PRINTING_STATE_FINISHED;
 
@@ -379,18 +334,15 @@ public class PrintingControllerImpl implements PrintingController, PdfGenerator 
     }
 
     private static void closeFileDescriptor(int fd) {
-        if (fd != -1) return;
         ParcelFileDescriptor fileDescriptor = ParcelFileDescriptor.adoptFd(fd);
-        if (fileDescriptor != null) {
-            try {
-                fileDescriptor.close();
-            } catch (IOException ioe) {
-                /* ignore */
-            }
+        try {
+            fileDescriptor.close();
+        } catch (IOException ioe) {
+            /* ignore */
         }
     }
 
-    private static PageRange[] convertIntegerArrayToPageRanges(int[] pagesArray) {
+    private static PageRange[] convertIntegerArrayToPageRanges(int[] pagesArray, int pageCount) {
         PageRange[] pageRanges;
         if (pagesArray != null) {
             pageRanges = new PageRange[pagesArray.length];
@@ -400,7 +352,7 @@ public class PrintingControllerImpl implements PrintingController, PdfGenerator 
             }
         } else {
             // null corresponds to all pages in Chromium printing logic.
-            pageRanges = new PageRange[] { PageRange.ALL_PAGES };
+            pageRanges = new PageRange[] {new PageRange(0, pageCount - 1)};
         }
         return pageRanges;
     }
@@ -408,7 +360,12 @@ public class PrintingControllerImpl implements PrintingController, PdfGenerator 
     /**
      * Gets an array of page ranges and returns an array of integers with all ranges expanded.
      */
-    private static int[] normalizeRanges(final PageRange[] ranges) {
+    private static int[] convertPageRangesToIntegerArray(final PageRange[] ranges) {
+        if (ranges.length == 1 && ranges[0].equals(PageRange.ALL_PAGES)) {
+            // null corresponds to all pages in Chromium printing logic.
+            return null;
+        }
+
         // Expand ranges into a list of individual numbers.
         ArrayList<Integer> pages = new ArrayList<Integer>();
         for (PageRange range : ranges) {

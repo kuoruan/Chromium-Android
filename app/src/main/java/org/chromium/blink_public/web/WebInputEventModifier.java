@@ -26,8 +26,8 @@ import java.lang.annotation.RetentionPolicy;
     WebInputEventModifier.ALT_GR_KEY, WebInputEventModifier.FN_KEY,
     WebInputEventModifier.SYMBOL_KEY, WebInputEventModifier.SCROLL_LOCK_ON,
     WebInputEventModifier.IS_COMPATIBILITY_EVENT_FOR_TOUCH, WebInputEventModifier.BACK_BUTTON_DOWN,
-    WebInputEventModifier.FORWARD_BUTTON_DOWN, WebInputEventModifier.KEY_MODIFIERS,
-    WebInputEventModifier.NO_MODIFIERS
+    WebInputEventModifier.FORWARD_BUTTON_DOWN, WebInputEventModifier.RELATIVE_MOTION_EVENT,
+    WebInputEventModifier.KEY_MODIFIERS, WebInputEventModifier.NO_MODIFIERS
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface WebInputEventModifier {
@@ -74,6 +74,11 @@ public @interface WebInputEventModifier {
   int IS_COMPATIBILITY_EVENT_FOR_TOUCH = 1 << 19;
   int BACK_BUTTON_DOWN = 1 << 20;
   int FORWARD_BUTTON_DOWN = 1 << 21;
+  /**
+   * Represents movement as a result of content changing under the cursor, not actual physical
+   * movement of the pointer
+   */
+  int RELATIVE_MOTION_EVENT = 1 << 22;
   /**
    * The set of non-stateful modifiers that specifically change the interpretation of the key being
    * pressed. For example; IsLeft, IsRight, IsComposing don't change the meaning of the key being

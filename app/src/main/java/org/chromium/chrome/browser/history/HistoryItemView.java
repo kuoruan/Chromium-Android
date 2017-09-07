@@ -178,6 +178,8 @@ public class HistoryItemView extends SelectableItemView<HistoryItem> implements 
     }
 
     private void requestIcon() {
+        if (mHistoryManager == null || mHistoryManager.getLargeIconBridge() == null) return;
+
         mHistoryManager.getLargeIconBridge().getLargeIconForUrl(
                 getItem().getUrl(), mMinIconSize, this);
     }
@@ -198,6 +200,8 @@ public class HistoryItemView extends SelectableItemView<HistoryItem> implements 
      * Sets the background resource for this view using the item's positioning in its group.
      */
     public void setBackgroundResourceForGroupPosition() {
+        if (getItem() == null) return;
+
         setBackgroundResourceForGroupPosition(
                 getItem().isFirstInGroup(), getItem().isLastInGroup());
     }

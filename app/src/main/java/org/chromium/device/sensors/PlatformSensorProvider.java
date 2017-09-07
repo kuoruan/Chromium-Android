@@ -29,7 +29,7 @@ class PlatformSensorProvider {
      * creation and @see android.hardware.SensorEventListener registration.
      * @see android.hardware.SensorManager
      */
-    private final SensorManager mSensorManager;
+    private SensorManager mSensorManager;
 
     /**
      * Thread that is handling all sensor events.
@@ -136,6 +136,14 @@ class PlatformSensorProvider {
     }
 
     /**
+     * Sets |mSensorManager| to null for testing purposes.
+     */
+    @CalledByNative
+    protected void setSensorManagerToNullForTesting() {
+        mSensorManager = null;
+    }
+
+    /**
      * Creates PlatformSensor instance.
      *
      * @param type type of a sensor.
@@ -156,9 +164,9 @@ class PlatformSensorProvider {
                 return PlatformSensor.create(Sensor.TYPE_GYROSCOPE, 3, this);
             case SensorType.MAGNETOMETER:
                 return PlatformSensor.create(Sensor.TYPE_MAGNETIC_FIELD, 3, this);
-            case SensorType.ABSOLUTE_ORIENTATION:
+            case SensorType.ABSOLUTE_ORIENTATION_QUATERNION:
                 return PlatformSensor.create(Sensor.TYPE_ROTATION_VECTOR, 4, this);
-            case SensorType.RELATIVE_ORIENTATION:
+            case SensorType.RELATIVE_ORIENTATION_QUATERNION:
                 return PlatformSensor.create(Sensor.TYPE_GAME_ROTATION_VECTOR, 4, this);
             default:
                 return null;

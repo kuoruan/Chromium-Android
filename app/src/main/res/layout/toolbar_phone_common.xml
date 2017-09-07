@@ -26,13 +26,6 @@
         android:contentDescription="@string/accessibility_toolbar_btn_home"
         android:visibility="gone" />
 
-    <org.chromium.chrome.browser.widget.TintedImageButton
-        android:id="@+id/expand_sheet_button"
-        style="@style/ToolbarButton"
-        android:src="@drawable/ic_collapsed"
-        android:contentDescription="@string/accessibility_toolbar_btn_expand"
-        android:visibility="gone" />
-
     <org.chromium.chrome.browser.omnibox.LocationBarPhone
         android:id="@+id/location_bar"
         android:layout_width="match_parent"
@@ -48,6 +41,13 @@
         <Space
             android:layout_width="4dp"
             android:layout_height="match_parent" />
+
+        <org.chromium.chrome.browser.widget.TintedImageButton
+            android:id="@+id/expand_sheet_button"
+            style="@style/ToolbarButton"
+            android:src="@drawable/ic_collapsed"
+            android:contentDescription="@string/accessibility_toolbar_btn_expand"
+            android:visibility="gone" />
 
         <ImageButton android:id="@+id/tab_switcher_button"
             style="@style/ToolbarButton"

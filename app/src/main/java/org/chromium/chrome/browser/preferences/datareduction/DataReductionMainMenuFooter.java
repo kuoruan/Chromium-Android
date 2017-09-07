@@ -22,8 +22,12 @@ import android.widget.TextView;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.feature_engagement_tracker.FeatureEngagementTrackerFactory;
 import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
+import org.chromium.chrome.browser.profiles.Profile;
+import org.chromium.components.feature_engagement_tracker.EventConstants;
+import org.chromium.components.feature_engagement_tracker.FeatureEngagementTracker;
 import org.chromium.third_party.android.datausagechart.ChartDataUsageView;
 
 /**
@@ -104,5 +108,10 @@ public class DataReductionMainMenuFooter extends FrameLayout implements View.OnC
         RecordUserAction.record("MobileMenuDataSaverOpened");
         intent.putExtra(DataReductionPreferences.FROM_MAIN_MENU, true);
         getContext().startActivity(intent);
+
+        FeatureEngagementTracker tracker =
+                FeatureEngagementTrackerFactory.getFeatureEngagementTrackerForProfile(
+                        Profile.getLastUsedProfile());
+        tracker.notifyEvent(EventConstants.DATA_SAVER_DETAIL_OPENED);
     }
 }

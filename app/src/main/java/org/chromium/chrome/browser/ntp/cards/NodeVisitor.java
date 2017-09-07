@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.ntp.cards;
 
 import org.chromium.chrome.browser.ntp.snippets.SnippetArticle;
 import org.chromium.chrome.browser.suggestions.ContentSuggestionsAdditionalAction;
+import org.chromium.chrome.browser.suggestions.SuggestionsCarouselAdapter;
 
 /**
  * Allows implementing a visitor pattern to iterate over all items under a (sub-)tree.
@@ -67,4 +68,10 @@ public class NodeVisitor {
      * Visits the tile grid.
      */
     public void visitTileGrid() {}
+
+    /**
+     * Visits the contextual suggestions carousel.
+     * @param adapter The adapter that holds all information displayed in the carousel.
+     */
+    public void visitCarouselItem(SuggestionsCarouselAdapter adapter) {}
 }

@@ -303,7 +303,7 @@ public class ManageSpaceActivity extends AppCompatActivity implements View.OnCli
          * asynchronously, and at the end we update the UI with the new storage numbers.
          */
         public void clearData() {
-            WebsitePermissionsFetcher fetcher = new WebsitePermissionsFetcher(this);
+            WebsitePermissionsFetcher fetcher = new WebsitePermissionsFetcher(this, true);
             fetcher.fetchPreferencesForCategory(
                     SiteSettingsCategory.fromString(SiteSettingsCategory.CATEGORY_USE_STORAGE));
         }
@@ -326,7 +326,7 @@ public class ManageSpaceActivity extends AppCompatActivity implements View.OnCli
                     siteStorageLeft += site.getTotalUsage();
                 }
             }
-            if (sites.size() == 0) {
+            if (mNumSitesClearing == 0) {
                 onStoredDataCleared();
             }
             onSiteStorageSizeCalculated(siteStorageLeft, 0);

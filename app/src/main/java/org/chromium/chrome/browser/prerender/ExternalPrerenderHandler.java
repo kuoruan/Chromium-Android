@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.prerender;
 
-import android.app.Application;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Point;
@@ -121,20 +120,20 @@ public class ExternalPrerenderHandler {
      * The estimate is likely to be incorrect. This is not a problem, as the aim
      * is to avoid getting a different layout and resources than needed at
      * render time.
-     * @param application The application to use for getting resources.
+     * @param context The application context.
      * @param convertToDp Whether the value should be converted to dp from pixels.
      * @return The estimated prerender size in pixels or dp.
      */
-    public static Rect estimateContentSize(Application application, boolean convertToDp) {
+    public static Rect estimateContentSize(Context context, boolean convertToDp) {
         // The size is estimated as:
         // X = screenSizeX
         // Y = screenSizeY - top bar - bottom bar - custom tabs bar
         // The bounds rectangle includes the bottom bar and the custom tabs bar as well.
         Rect screenBounds = new Rect();
         Point screenSize = new Point();
-        WindowManager wm = (WindowManager) application.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         wm.getDefaultDisplay().getSize(screenSize);
-        Resources resources = application.getResources();
+        Resources resources = context.getResources();
         int statusBarId = resources.getIdentifier("status_bar_height", "dimen", "android");
         try {
             screenSize.y -= resources.getDimensionPixelSize(statusBarId);

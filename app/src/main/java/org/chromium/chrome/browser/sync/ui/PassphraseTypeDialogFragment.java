@@ -29,6 +29,7 @@ import android.widget.TextView;
 import org.chromium.base.BuildInfo;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeStringConstants;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.components.sync.PassphraseType;
 import org.chromium.ui.text.SpanApplier;
@@ -192,8 +193,7 @@ public class PassphraseTypeDialogFragment extends DialogFragment implements
                 new SpanInfo("<resetlink>", "</resetlink>", new ClickableSpan() {
                     @Override
                     public void onClick(View view) {
-                        Uri syncDashboardUrl = Uri.parse(
-                                context.getText(R.string.sync_dashboard_url).toString());
+                        Uri syncDashboardUrl = Uri.parse(ChromeStringConstants.SYNC_DASHBOARD_URL);
                         Intent intent = new Intent(Intent.ACTION_VIEW, syncDashboardUrl);
                         intent.setPackage(BuildInfo.getPackageName());
                         IntentUtils.safePutBinderExtra(

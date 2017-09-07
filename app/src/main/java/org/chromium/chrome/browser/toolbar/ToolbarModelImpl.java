@@ -77,9 +77,6 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
         // TODO(dtrainor, tedchoc): Remove the isInitialized() check when we no longer wait for
         // TAB_CLOSED events to remove this tab.  Otherwise there is a chance we use this tab after
         // {@link ChromeTab#destroy()} is called.
-        if (mBottomSheet != null && mBottomSheet.isShowingNewTab()) {
-            return null;
-        }
         return (mTab == null || !mTab.isInitialized()) ? null : mTab;
     }
 

@@ -48,7 +48,7 @@ public class NearTopTapSuppression extends ContextualSearchHeuristic {
 
     @Override
     protected void logRankerTapSuppression(ContextualSearchRankerLogger logger) {
-        logger.log(ContextualSearchRankerLogger.Feature.SCREEN_TOP_DPS, mYDp);
+        logger.logFeature(ContextualSearchRankerLogger.Feature.SCREEN_TOP_DPS, mYDp);
     }
 
     // TODO(twellington): Define a default value to use when determining if the condition is

@@ -103,11 +103,6 @@ public class WebContentsDelegateAndroid {
     }
 
     @CalledByNative
-    public boolean onGoToEntryOffset(int offset) {
-        return true;
-    }
-
-    @CalledByNative
     public void onUpdateUrl(String url) {
     }
 

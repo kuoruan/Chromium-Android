@@ -28,17 +28,17 @@ public class ComposedBrowserControlsVisibilityDelegate
     }
 
     @Override
-    public boolean isShowingBrowserControlsEnabled() {
+    public boolean canShowBrowserControls() {
         for (int i = 0; i < mDelegates.size(); i++) {
-            if (!mDelegates.get(i).isShowingBrowserControlsEnabled()) return false;
+            if (!mDelegates.get(i).canShowBrowserControls()) return false;
         }
         return true;
     }
 
     @Override
-    public boolean isHidingBrowserControlsEnabled() {
+    public boolean canAutoHideBrowserControls() {
         for (int i = 0; i < mDelegates.size(); i++) {
-            if (!mDelegates.get(i).isHidingBrowserControlsEnabled()) return false;
+            if (!mDelegates.get(i).canAutoHideBrowserControls()) return false;
         }
         return true;
     }

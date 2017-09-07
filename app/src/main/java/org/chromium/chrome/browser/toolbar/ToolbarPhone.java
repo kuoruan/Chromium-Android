@@ -122,7 +122,7 @@ public class ToolbarPhone extends ToolbarLayout
     protected NewTabButton mNewTabButton;
     private TintedImageButton mHomeButton;
     private TextView mUrlBar;
-    private View mUrlActionContainer;
+    protected View mUrlActionContainer;
     private ImageView mToolbarShadow;
 
     private final int mProgressBackBackgroundColorWhite;
@@ -188,6 +188,8 @@ public class ToolbarPhone extends ToolbarLayout
     protected boolean mLayoutLocationBarInFocusedMode;
     protected int mUnfocusedLocationBarLayoutWidth;
     protected int mUnfocusedLocationBarLayoutLeft;
+    protected int mUnfocusedLocationBarLayoutRight;
+    protected boolean mHasVisibleViewPriorToUrlBar;
     private boolean mUnfocusedLocationBarUsesTransparentBg;
 
     private int mLocationBarBackgroundAlpha = 255;
@@ -260,7 +262,7 @@ public class ToolbarPhone extends ToolbarLayout
         NEW_TAB_NORMAL
     }
 
-    private VisualState mVisualState = VisualState.NORMAL;
+    protected VisualState mVisualState = VisualState.NORMAL;
     private VisualState mOverlayDrawablesVisualState;
     protected boolean mUseLightToolbarDrawables;
 
@@ -529,12 +531,12 @@ public class ToolbarPhone extends ToolbarLayout
     }
 
     private void updateUnfocusedLocationBarLayoutParams() {
-        boolean hasVisibleViewPriorToUrlBar = false;
+        mHasVisibleViewPriorToUrlBar = false;
         for (int i = 0; i < mLocationBar.getChildCount(); i++) {
             View child = mLocationBar.getChildAt(i);
             if (child == mUrlBar) break;
             if (child.getVisibility() != GONE) {
-                hasVisibleViewPriorToUrlBar = true;
+                mHasVisibleViewPriorToUrlBar = true;
                 break;
             }
         }
@@ -542,7 +544,7 @@ public class ToolbarPhone extends ToolbarLayout
         int leftViewBounds = getViewBoundsLeftOfLocationBar(mVisualState);
         int rightViewBounds = getViewBoundsRightOfLocationBar(mVisualState);
 
-        if (!hasVisibleViewPriorToUrlBar) {
+        if (!mHasVisibleViewPriorToUrlBar) {
             if (ApiCompatibilityUtils.isLayoutRtl(mLocationBar)) {
                 rightViewBounds -= mToolbarSidePadding;
             } else {
@@ -561,6 +563,7 @@ public class ToolbarPhone extends ToolbarLayout
 
         mUnfocusedLocationBarLayoutWidth = rightViewBounds - leftViewBounds;
         mUnfocusedLocationBarLayoutLeft = leftViewBounds;
+        mUnfocusedLocationBarLayoutRight = rightViewBounds;
     }
 
     /**
@@ -624,6 +627,8 @@ public class ToolbarPhone extends ToolbarLayout
         changed |= (leftMargin != locationBarLayoutParams.leftMargin);
         locationBarLayoutParams.leftMargin = leftMargin;
 
+        if (changed) updateLocationBarLayoutForExpansionAnimation();
+
         return changed;
     }
 
@@ -647,7 +652,7 @@ public class ToolbarPhone extends ToolbarLayout
     /**
      * @return The left bounds of the location bar after accounting for any visible left buttons.
      */
-    protected int getBoundsAfterAccountingForLeftButton() {
+    private int getBoundsAfterAccountingForLeftButton() {
         int padding = mToolbarSidePadding;
         if (mHomeButton.getVisibility() != GONE) padding = mHomeButton.getMeasuredWidth();
         return padding;
@@ -674,8 +679,7 @@ public class ToolbarPhone extends ToolbarLayout
      * @return The right bounds of the location bar after accounting for any visible left buttons.
      */
     protected int getBoundsAfterAccountingForRightButtons() {
-        return Math.max(mToolbarSidePadding,
-                shouldHideToolbarButtons() ? 0 : mToolbarButtonsContainer.getMeasuredWidth());
+        return Math.max(mToolbarSidePadding, mToolbarButtonsContainer.getMeasuredWidth());
     }
 
     protected void updateToolbarBackground(int color) {
@@ -843,6 +847,27 @@ public class ToolbarPhone extends ToolbarLayout
             return;
         }
 
+        int toolbarButtonVisibility = getToolbarButtonVisibility();
+        mToolbarButtonsContainer.setVisibility(toolbarButtonVisibility);
+        if (mHomeButton.getVisibility() != GONE) {
+            mHomeButton.setVisibility(toolbarButtonVisibility);
+        }
+
+        updateLocationBarLayoutForExpansionAnimation();
+    }
+
+    /**
+     * @return The visibility for {@link #mToolbarButtonsContainer}.
+     */
+    protected int getToolbarButtonVisibility() {
+        return mUrlExpansionPercent == 1f ? INVISIBLE : VISIBLE;
+    }
+
+    /**
+     * Updates the location bar layout, as the result of either a focus change or scrolling the
+     * New Tab Page.
+     */
+    private void updateLocationBarLayoutForExpansionAnimation() {
         FrameLayout.LayoutParams locationBarLayoutParams = getFrameLayoutParams(mLocationBar);
         int currentLeftMargin = locationBarLayoutParams.leftMargin;
         int currentWidth = locationBarLayoutParams.width;
@@ -888,11 +913,32 @@ public class ToolbarPhone extends ToolbarLayout
         }
 
         mLocationBar.setTranslationX(locationBarTranslationX);
+        mUrlActionContainer.setTranslationX(getUrlActionsTranslationXForExpansionAnimation(
+                isLocationBarRtl, isRtl, locationBarBaseTranslationX));
+        mLocationBar.setUrlFocusChangePercent(mUrlExpansionPercent);
 
-        // Negate the location bar translation to keep the URL action container in the same
-        // place during the focus expansion.
+        // Force an invalidation of the location bar to properly handle the clipping of the URL
+        // bar text as a result of the URL action container translations.
+        mLocationBar.invalidate();
+        invalidate();
+    }
+
+    /**
+     * Calculates the translation X for the URL actions container for use in the URL expansion
+     * animation.
+     *
+     * @param isLocationBarRtl Whether the location bar layout is RTL.
+     * @param isRtl Whether the toolbar layout is RTL.
+     * @param locationBarBaseTranslationX The base location bar translation for the URL expansion
+     *                                    animation.
+     * @return The translation X for the URL actions container.
+     */
+    protected float getUrlActionsTranslationXForExpansionAnimation(
+            boolean isLocationBarRtl, boolean isRtl, float locationBarBaseTranslationX) {
         float urlActionsTranslationX = 0;
         if (!isLocationBarRtl || isRtl) {
+            // Negate the location bar translation to keep the URL action container in the same
+            // place during the focus expansion.
             urlActionsTranslationX = -locationBarBaseTranslationX;
         }
 
@@ -902,38 +948,7 @@ public class ToolbarPhone extends ToolbarLayout
             urlActionsTranslationX += mLocationBarNtpOffsetRight - mLocationBarNtpOffsetLeft;
         }
 
-        if (shouldHideToolbarButtons()) {
-            // When the end toolbar buttons are not hidden, url actions are shown and hidden due to
-            // a change in location bar's width. When the end toolbar buttons are hidden, the
-            // location bar's width does not change by as much, causing the end location for the url
-            // actions to be immediately visible. Translate the url action container so that their
-            // appearance is animated.
-            float urlActionsTranslationXOffset =
-                    mUrlActionContainer.getWidth() * (1 - mUrlExpansionPercent);
-            if (isLocationBarRtl) {
-                urlActionsTranslationX -= urlActionsTranslationXOffset;
-            } else {
-                urlActionsTranslationX += urlActionsTranslationXOffset;
-            }
-        }
-
-        mUrlActionContainer.setTranslationX(urlActionsTranslationX);
-
-        mLocationBar.setUrlFocusChangePercent(mUrlExpansionPercent);
-
-        // Ensure the buttons are invisible after focusing the omnibox to prevent them from
-        // accepting click events.
-        int toolbarButtonVisibility =
-                mUrlExpansionPercent == 1f || shouldHideToolbarButtons() ? INVISIBLE : VISIBLE;
-        mToolbarButtonsContainer.setVisibility(toolbarButtonVisibility);
-        if (mHomeButton.getVisibility() != GONE) {
-            mHomeButton.setVisibility(toolbarButtonVisibility);
-        }
-
-        // Force an invalidation of the location bar to properly handle the clipping of the URL
-        // bar text as a result of the url action container translations.
-        mLocationBar.invalidate();
-        invalidate();
+        return urlActionsTranslationX;
     }
 
     /**
@@ -1150,7 +1165,7 @@ public class ToolbarPhone extends ToolbarLayout
      *
      * @throws IllegalArgumentException if {@code from} is not an ancestor of {@code to}.
      */
-    private static void translateCanvasToView(View from, View to, Canvas canvas)
+    protected static void translateCanvasToView(View from, View to, Canvas canvas)
             throws IllegalArgumentException {
         assert from != null;
         assert to != null;
@@ -1418,14 +1433,6 @@ public class ToolbarPhone extends ToolbarLayout
             mHomeButton.setVisibility(GONE);
             mBrowsingModeViews.remove(mHomeButton);
         }
-    }
-
-    /**
-     * @return Whether the toolbar buttons (tab switcher and menu) are currently hidden regardless
-     *         of URL bar focus. Sub-classes that hide these buttons should override this method.
-     */
-    protected boolean shouldHideToolbarButtons() {
-        return false;
     }
 
     private ObjectAnimator createEnterTabSwitcherModeAnimation() {

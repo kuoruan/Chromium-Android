@@ -11,7 +11,6 @@ import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.StateChangeReason;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.base.WindowAndroid;
 
@@ -21,14 +20,14 @@ import org.chromium.ui.base.WindowAndroid;
 @JNINamespace("dom_distiller::android")
 public final class DomDistillerUIUtils {
     // Static handle to Reader Mode's manager.
-    private static ReaderModeManagerDelegate sManagerDelegate;
+    private static ReaderModeManager sManagerManager;
 
     /**
      * Set the delegate to the ReaderModeManager.
-     * @param delegate The delegate for the ReaderModeManager.
+     * @param manager The class managing Reader Mode.
      */
-    public static void setReaderModeManagerDelegate(ReaderModeManagerDelegate delegate) {
-        sManagerDelegate = delegate;
+    public static void setReaderModeManagerDelegate(ReaderModeManager manager) {
+        sManagerManager = manager;
     }
 
     /**
@@ -48,24 +47,13 @@ public final class DomDistillerUIUtils {
     }
 
     /**
-     * A static method for native code to close the current Reader Mode panel. This should be
-     * some usage of a "close" button.
-     * @param animate If the panel should animate closed.
-     */
-    @CalledByNative
-    public static void closePanel(boolean animate) {
-        if (sManagerDelegate == null) return;
-        sManagerDelegate.closeReaderPanel(StateChangeReason.CLOSE_BUTTON, animate);
-    }
-
-    /**
      * Clear static references to objects.
-     * @param delegate The delegate requesting the destoy. This prevents different managers in
+     * @param manager The manager requesting the destoy. This prevents different managers in
      * document mode from accidentally clearing a reference it doesn't own.
      */
-    public static void destroy(ReaderModeManagerDelegate delegate) {
-        if (delegate != sManagerDelegate) return;
-        sManagerDelegate = null;
+    public static void destroy(ReaderModeManager manager) {
+        if (manager != sManagerManager) return;
+        sManagerManager = null;
     }
 
     /**

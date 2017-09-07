@@ -114,16 +114,17 @@ public class UrlBar extends AutocompleteEditText {
 
     private long mFirstFocusTimeMs;
 
-    private boolean mIsPastedText;
-
     // Used as a hint to indicate the text may contain an ellipsize span.  This will be true if an
     // ellispize span was applied the last time the text changed.  A true value here does not
     // guarantee that the text does contain the span currently as newly set text may have cleared
     // this (and it the value will only be recalculated after the text has been changed).
     private boolean mDidEllipsizeTextHint;
 
-    /** This tracks whether or not the last ACTION_DOWN event was when the url bar had focus. */
-    boolean mDownEventHadFocus;
+    /** A cached point for getting this view's location in the window. */
+    private final int[] mCachedLocation = new int[2];
+
+    /** The location of this view on the last ACTION_DOWN event. */
+    private float mDownEventViewTop;
 
     /**
      * Implement this to get updates when the direction of the text in the URL bar changes.
@@ -157,10 +158,8 @@ public class UrlBar extends AutocompleteEditText {
         /**
          * Called when the text state has changed and the autocomplete suggestions should be
          * refreshed.
-         *
-         * @param textDeleted Whether this change was as a result of text being deleted.
          */
-        void onTextChangedForAutocomplete(boolean textDeleted);
+        void onTextChangedForAutocomplete();
 
         /**
          * @return Whether the light security theme should be used.
@@ -203,6 +202,8 @@ public class UrlBar extends AutocompleteEditText {
         // the first draw.
         setFocusable(false);
         setFocusableInTouchMode(false);
+
+        setHint(OmniboxPlaceholderFieldTrial.getOmniboxPlaceholder());
 
         mGestureDetector = new GestureDetector(
                 getContext(), new GestureDetector.SimpleOnGestureListener() {
@@ -283,12 +284,6 @@ public class UrlBar extends AutocompleteEditText {
             mKeyboardHideHelper.monitorForKeyboardHidden();
         }
         return super.onKeyPreIme(keyCode, event);
-    }
-
-    @Override
-    public boolean shouldAutocomplete() {
-        if (isPastedText()) return false;
-        return super.shouldAutocomplete();
     }
 
     /**
@@ -389,12 +384,15 @@ public class UrlBar extends AutocompleteEditText {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            getLocationInWindow(mCachedLocation);
+            mDownEventViewTop = mCachedLocation[1];
+        }
+
         if (!mFocused) {
             mGestureDetector.onTouchEvent(event);
             return true;
         }
-
-        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) mDownEventHadFocus = mFocused;
 
         Tab currentTab = mUrlBarDelegate.getCurrentTab();
         if (event.getAction() == MotionEvent.ACTION_DOWN && currentTab != null) {
@@ -408,11 +406,22 @@ public class UrlBar extends AutocompleteEditText {
 
     @Override
     public boolean performLongClick(float x, float y) {
-        // If the touch event that triggered this was when the url bar was in a different focus
-        // state, ignore the event.
-        if (mDownEventHadFocus != mFocused) return true;
+        return shouldPerformLongClick() ? super.performLongClick(x, y) : true;
+    }
 
-        return super.performLongClick(x, y);
+    @Override
+    public boolean performLongClick() {
+        return shouldPerformLongClick() ? super.performLongClick() : true;
+    }
+
+    /**
+     * @return Whether or not a long click should be performed.
+     */
+    private boolean shouldPerformLongClick() {
+        getLocationInWindow(mCachedLocation);
+
+        // If the view moved between the last down event, block the long-press.
+        return mDownEventViewTop == mCachedLocation[1];
     }
 
     @Override
@@ -502,11 +511,7 @@ public class UrlBar extends AutocompleteEditText {
         mOmniboxLivenessListener = listener;
     }
 
-    /**
-     * Signal {@link OmniboxLivenessListener} that the omnibox is completely operational now.
-     */
-    @VisibleForTesting
-    public void onOmniboxFullyFunctional() {
+    public void onNativeLibraryReady() {
         if (mOmniboxLivenessListener != null) mOmniboxLivenessListener.onOmniboxFullyFunctional();
     }
 
@@ -536,7 +541,7 @@ public class UrlBar extends AutocompleteEditText {
 
                 Selection.setSelection(getText(), max);
                 getText().replace(min, max, pasteString);
-                mIsPastedText = true;
+                onPaste();
                 return true;
             }
         }
@@ -663,12 +668,6 @@ public class UrlBar extends AutocompleteEditText {
     }
 
     @Override
-    protected void onTextChanged(CharSequence text, int start, int lengthBefore, int lengthAfter) {
-        super.onTextChanged(text, start, lengthBefore, lengthAfter);
-        mIsPastedText = false;
-    }
-
-    @Override
     public void setText(CharSequence text, BufferType type) {
         if (DEBUG) Log.i(TAG, "setText -- text: %s", text);
         super.setText(text, type);
@@ -778,13 +777,6 @@ public class UrlBar extends AutocompleteEditText {
         OmniboxUrlEmphasizer.deEmphasizeUrl(getText());
     }
 
-    /**
-     * @return Whether the current UrlBar input has been pasted from the clipboard.
-     */
-    public boolean isPastedText() {
-        return mIsPastedText;
-    }
-
     @Override
     public CharSequence getAccessibilityClassName() {
         // When UrlBar is used as a read-only TextView, force Talkback to pronounce it like
@@ -797,16 +789,20 @@ public class UrlBar extends AutocompleteEditText {
     }
 
     @Override
-    protected void replaceAllTextFromAutocomplete(String text) {
+    public void replaceAllTextFromAutocomplete(String text) {
+        if (DEBUG) Log.i(TAG, "replaceAllTextFromAutocomplete: " + text);
         setUrl(text, null);
     }
 
     @Override
-    public void onAutocompleteTextStateChanged(boolean textDeleted, boolean updateDisplay) {
+    public void onAutocompleteTextStateChanged(boolean updateDisplay) {
+        if (DEBUG) {
+            Log.i(TAG, "onAutocompleteTextStateChanged: DIS[%b]", updateDisplay);
+        }
         if (mUrlBarDelegate == null) return;
         if (updateDisplay) limitDisplayableLength();
 
-        mUrlBarDelegate.onTextChangedForAutocomplete(textDeleted);
+        mUrlBarDelegate.onTextChangedForAutocomplete();
     }
 
     /**

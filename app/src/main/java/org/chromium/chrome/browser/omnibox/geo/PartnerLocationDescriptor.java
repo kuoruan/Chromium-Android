@@ -2,6 +2,8 @@
 
 package org.chromium.chrome.browser.omnibox.geo;
 
+// @@protoc_insertion_point(imports_scope)
+
 @SuppressWarnings("hiding")
 public interface PartnerLocationDescriptor {
 
@@ -35,6 +37,8 @@ public interface PartnerLocationDescriptor {
 
     // optional sfixed32 longitude_e7 = 2;
     public java.lang.Integer longitudeE7;
+
+    // @@protoc_insertion_point(class_scope:org.chromium.chrome.browser.omnibox.geo.LatLng)
 
     public LatLng() {
       clear();
@@ -84,7 +88,7 @@ public interface PartnerLocationDescriptor {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -139,6 +143,8 @@ public interface PartnerLocationDescriptor {
       // optional int32 level_dbm = 2;
       public java.lang.Integer levelDbm;
 
+      // @@protoc_insertion_point(class_scope:org.chromium.chrome.browser.omnibox.geo.VisibleNetwork.WiFi)
+
       public WiFi() {
         clear();
       }
@@ -187,7 +193,7 @@ public interface PartnerLocationDescriptor {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
@@ -263,6 +269,8 @@ public interface PartnerLocationDescriptor {
 
       // optional int32 tracking_area_code = 8;
       public java.lang.Integer trackingAreaCode;
+
+      // @@protoc_insertion_point(class_scope:org.chromium.chrome.browser.omnibox.geo.VisibleNetwork.Cell)
 
       public Cell() {
         clear();
@@ -360,12 +368,13 @@ public interface PartnerLocationDescriptor {
             case 0:
               return this;
             default: {
-              if (!storeUnknownField(input, tag)) {
+              if (!super.storeUnknownField(input, tag)) {
                 return this;
               }
               break;
             }
             case 8: {
+              int initialPos = input.getPosition();
               int value = input.readInt32();
               switch (value) {
                 case org.chromium.chrome.browser.omnibox.geo.PartnerLocationDescriptor.VisibleNetwork.Cell.UNKNOWN:
@@ -374,6 +383,10 @@ public interface PartnerLocationDescriptor {
                 case org.chromium.chrome.browser.omnibox.geo.PartnerLocationDescriptor.VisibleNetwork.Cell.CDMA:
                 case org.chromium.chrome.browser.omnibox.geo.PartnerLocationDescriptor.VisibleNetwork.Cell.WCDMA:
                   this.type = value;
+                  break;
+                default:
+                  input.rewindToPosition(initialPos);
+                  storeUnknownField(input, tag);
                   break;
               }
               break;
@@ -448,6 +461,8 @@ public interface PartnerLocationDescriptor {
     // optional int64 timestamp_ms = 4;
     public java.lang.Long timestampMs;
 
+    // @@protoc_insertion_point(class_scope:org.chromium.chrome.browser.omnibox.geo.VisibleNetwork)
+
     public VisibleNetwork() {
       clear();
     }
@@ -512,7 +527,7 @@ public interface PartnerLocationDescriptor {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -589,6 +604,8 @@ public interface PartnerLocationDescriptor {
 
     // repeated .org.chromium.chrome.browser.omnibox.geo.VisibleNetwork visible_network = 23;
     public org.chromium.chrome.browser.omnibox.geo.PartnerLocationDescriptor.VisibleNetwork[] visibleNetwork;
+
+    // @@protoc_insertion_point(class_scope:org.chromium.chrome.browser.omnibox.geo.LocationDescriptor)
 
     public LocationDescriptor() {
       clear();
@@ -680,27 +697,37 @@ public interface PartnerLocationDescriptor {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
           }
           case 8: {
+            int initialPos = input.getPosition();
             int value = input.readInt32();
             switch (value) {
               case org.chromium.chrome.browser.omnibox.geo.PartnerLocationDescriptor.UNKNOWN_ROLE:
               case org.chromium.chrome.browser.omnibox.geo.PartnerLocationDescriptor.CURRENT_LOCATION:
                 this.role = value;
                 break;
+              default:
+                input.rewindToPosition(initialPos);
+                storeUnknownField(input, tag);
+                break;
             }
             break;
           }
           case 16: {
+            int initialPos = input.getPosition();
             int value = input.readInt32();
             switch (value) {
               case org.chromium.chrome.browser.omnibox.geo.PartnerLocationDescriptor.UNKNOWN_PRODUCER:
               case org.chromium.chrome.browser.omnibox.geo.PartnerLocationDescriptor.DEVICE_LOCATION:
                 this.producer = value;
+                break;
+              default:
+                input.rewindToPosition(initialPos);
+                storeUnknownField(input, tag);
                 break;
             }
             break;

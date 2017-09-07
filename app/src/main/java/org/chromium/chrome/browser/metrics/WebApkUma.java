@@ -39,7 +39,11 @@ public class WebApkUma {
     public static final int GOOGLE_PLAY_INSTALL_FAILED_DOWNLOAD_ERROR = 8;
     public static final int GOOGLE_PLAY_INSTALL_FAILED_INSTALL_ERROR = 9;
     public static final int GOOGLE_PLAY_INSTALL_FAILED_INSTALL_TIMEOUT = 10;
-    public static final int GOOGLE_PLAY_INSTALL_RESULT_MAX = 11;
+    public static final int GOOGLE_PLAY_INSTALL_REQUEST_FAILED_POLICY_DISABLED = 11;
+    public static final int GOOGLE_PLAY_INSTALL_REQUEST_FAILED_UNKNOWN_ACCOUNT = 12;
+    public static final int GOOGLE_PLAY_INSTALL_REQUEST_FAILED_NETWORK_ERROR = 13;
+    public static final int GOOGLE_PLAY_INSTALL_REQUSET_FAILED_RESOLVE_ERROR = 14;
+    public static final int GOOGLE_PLAY_INSTALL_RESULT_MAX = 14;
 
     public static final String HISTOGRAM_UPDATE_REQUEST_SENT =
             "WebApk.Update.RequestSent";
@@ -91,6 +95,14 @@ public class WebApkUma {
                 "WebApk.Install.GooglePlayInstallResult", result, GOOGLE_PLAY_INSTALL_RESULT_MAX);
     }
 
+    /** Records the error code if installing a WebAPK via Google Play fails. */
+    public static void recordGooglePlayInstallErrorCode(int errorCode) {
+        // Don't use an enumerated histogram as there are > 30 potential error codes. In practice,
+        // a given client will always get the same error code.
+        RecordHistogram.recordSparseSlowlyHistogram(
+                "WebApk.Install.GooglePlayErrorCode", Math.min(errorCode, 1000));
+    }
+
     /**
      * Records whether updating a WebAPK from Google Play succeeded. If not, records the reason
      * that the update failed.
@@ -119,5 +131,14 @@ public class WebApkUma {
                 ? "WebApk.ShellApkVersion.BrowserApk"
                 : "WebApk.ShellApkVersion.UnboundApk";
         RecordHistogram.recordSparseSlowlyHistogram(name, shellApkVersion);
+    }
+
+    /**
+     * Recorded when a WebAPK is launched from the homescreen. Records the time elapsed since the
+     * previous WebAPK launch. Not recorded the first time that a WebAPK is launched.
+     */
+    public static void recordLaunchInterval(long intervalMs) {
+        RecordHistogram.recordCustomTimesHistogram("WebApk.LaunchInterval", intervalMs,
+                TimeUnit.HOURS.toMillis(1), TimeUnit.DAYS.toMillis(30), TimeUnit.MILLISECONDS, 50);
     }
 }

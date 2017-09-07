@@ -63,12 +63,22 @@ public class ContextualSearchHeuristics {
     }
 
     /**
-     * Logs all the heuristics to the given logger.
+     * Logs all the heuristics that want to provide a Ranker "feature" to the given logger.
      * @param logger The logger to log to.
      */
     public void logRankerTapSuppression(ContextualSearchRankerLogger logger) {
         for (ContextualSearchHeuristic heuristic : mHeuristics) {
             heuristic.logRankerTapSuppression(logger);
+        }
+    }
+
+    /**
+     * Logs all the heuristics that want to provide outcomes to Ranker to the given logger.
+     * @param logger The logger to log to.
+     */
+    public void logRankerTapSuppressionOutcome(ContextualSearchRankerLogger logger) {
+        for (ContextualSearchHeuristic heuristic : mHeuristics) {
+            heuristic.logRankerTapSuppressionOutcome(logger);
         }
     }
 }

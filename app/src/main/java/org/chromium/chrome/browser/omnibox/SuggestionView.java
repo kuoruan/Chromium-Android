@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.omnibox;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -69,10 +70,6 @@ class SuggestionView extends ViewGroup {
 
     private static final long RELAYOUT_DELAY_MS = 20;
 
-    static final int TITLE_COLOR_STANDARD_FONT_DARK = 0xFF333333;
-    private static final int TITLE_COLOR_STANDARD_FONT_LIGHT = 0xFFFFFFFF;
-    private static final int URL_COLOR = 0xFF5595FE;
-
     private static final float ANSWER_IMAGE_SCALING_FACTOR = 1.15f;
 
     private final LocationBar mLocationBar;
@@ -82,6 +79,10 @@ class SuggestionView extends ViewGroup {
     private final int mSuggestionHeight;
     private final int mSuggestionAnswerHeight;
     private int mNumAnswerLines = 1;
+
+    private final int mDarkTitleColorStandardFont;
+    private final int mLightTitleColorStandardFont;
+    private final int mUrlColor;
 
     private OmniboxResultItem mSuggestionItem;
     private OmniboxSuggestion mSuggestion;
@@ -116,6 +117,13 @@ class SuggestionView extends ViewGroup {
         mSuggestionAnswerHeight =
                 context.getResources().getDimensionPixelOffset(
                         R.dimen.omnibox_suggestion_answer_height);
+
+        Resources resources = getResources();
+        mDarkTitleColorStandardFont =
+                ApiCompatibilityUtils.getColor(resources, R.color.url_emphasis_default_text);
+        mLightTitleColorStandardFont =
+                ApiCompatibilityUtils.getColor(resources, R.color.url_emphasis_light_default_text);
+        mUrlColor = ApiCompatibilityUtils.getColor(resources, R.color.suggestion_url);
 
         TypedArray a = getContext().obtainStyledAttributes(
                 new int [] {R.attr.selectableItemBackground});
@@ -372,8 +380,8 @@ class SuggestionView extends ViewGroup {
     }
 
     private int getStandardFontColor() {
-        return (mUseDarkColors == null || mUseDarkColors)
-                ? TITLE_COLOR_STANDARD_FONT_DARK : TITLE_COLOR_STANDARD_FONT_LIGHT;
+        return (mUseDarkColors == null || mUseDarkColors) ? mDarkTitleColorStandardFont
+                                                          : mLightTitleColorStandardFont;
     }
 
     @Override
@@ -455,7 +463,7 @@ class SuggestionView extends ViewGroup {
 
         // Force left-to-right rendering for URLs. See UrlBar constructor for details.
         if (isUrl) {
-            textLine.setTextColor(URL_COLOR);
+            textLine.setTextColor(mUrlColor);
             ApiCompatibilityUtils.setTextDirection(textLine, TEXT_DIRECTION_LTR);
         } else {
             textLine.setTextColor(getStandardFontColor());

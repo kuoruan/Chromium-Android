@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser.tabmodel;
 
+import android.support.annotation.Nullable;
+
 import org.chromium.base.TraceEvent;
 import org.chromium.chrome.browser.TabState;
 import org.chromium.chrome.browser.UrlConstants;
@@ -33,8 +35,9 @@ public interface TabCreatorManager {
          * @param loadUrlParams parameters of the url load.
          * @param type Information about how the tab was launched.
          * @param parent the parent tab, if present.
-         * @return The new tab.
+         * @return The new tab or null if no tab was created.
          */
+        @Nullable
         public abstract Tab createNewTab(
                 LoadUrlParams loadUrlParams, TabModel.TabLaunchType type, Tab parent);
 
@@ -54,8 +57,9 @@ public interface TabCreatorManager {
          * @param url the URL to open.
          * @param type the type of action that triggered that launch. Determines how the tab is
          *             opened (for example, in the foreground or background).
-         * @return the created tab.
+         * @return The new tab or null if no tab was created.
          */
+        @Nullable
         public abstract Tab launchUrl(String url, TabModel.TabLaunchType type);
 
         /**
@@ -80,8 +84,8 @@ public interface TabCreatorManager {
          */
         public final boolean createTabWithWebContents(Tab parent,
                 WebContents webContents, int parentId, TabLaunchType type) {
-            return createTabWithWebContents(parent, webContents, parentId, type,
-                    webContents.getUrl());
+            return createTabWithWebContents(
+                    parent, webContents, parentId, type, webContents.getVisibleUrl());
         }
 
         /**

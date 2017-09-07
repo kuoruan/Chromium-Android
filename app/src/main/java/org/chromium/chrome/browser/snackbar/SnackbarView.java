@@ -9,8 +9,8 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
-import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.support.annotation.Nullable;
 import android.view.Gravity;
@@ -175,6 +175,10 @@ class SnackbarView {
         return mView.isShown();
     }
 
+    void bringToFront() {
+        mView.bringToFront();
+    }
+
     /**
      * Sends an accessibility event to mMessageView announcing that this window was added so that
      * the mMessageView content description is read aloud if accessibility is enabled.
@@ -233,10 +237,10 @@ class SnackbarView {
         } else {
             mActionButtonView.setVisibility(View.GONE);
         }
-        Bitmap profileImage = snackbar.getProfileImage();
+        Drawable profileImage = snackbar.getProfileImage();
         if (profileImage != null) {
             mProfileImageView.setVisibility(View.VISIBLE);
-            mProfileImageView.setImageBitmap(profileImage);
+            mProfileImageView.setImageDrawable(profileImage);
         } else {
             mProfileImageView.setVisibility(View.GONE);
         }

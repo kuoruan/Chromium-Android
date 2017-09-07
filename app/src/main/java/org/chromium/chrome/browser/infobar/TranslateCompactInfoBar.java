@@ -25,7 +25,7 @@ import org.chromium.ui.widget.Toast;
 /**
  * Java version of the compact translate infobar.
  */
-class TranslateCompactInfoBar extends InfoBar
+public class TranslateCompactInfoBar extends InfoBar
         implements TabLayout.OnTabSelectedListener, TranslateMenuHelper.TranslateMenuListener {
     public static final int TRANSLATING_INFOBAR = 1;
 
@@ -106,6 +106,7 @@ class TranslateCompactInfoBar extends InfoBar
     private TranslateSnackbarController mSnackbarController;
 
     private boolean mMenuExpanded;
+    private boolean mIsFirstLayout = true;
     private boolean mUserInteracted;
 
     /** The controller for translate UI snackbars. */
@@ -181,6 +182,17 @@ class TranslateCompactInfoBar extends InfoBar
                 (LinearLayout) LayoutInflater.from(getContext())
                         .inflate(R.layout.infobar_translate_compact_content, parent, false);
 
+        // When parent tab is being switched out (view detached), dismiss all menus and snackbars.
+        content.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View view) {}
+
+            @Override
+            public void onViewDetachedFromWindow(View view) {
+                dismissMenusAndSnackbars();
+            }
+        });
+
         mTabLayout = (TranslateTabLayout) content.findViewById(R.id.translate_infobar_tabs);
         mTabLayout.addTabs(mOptions.sourceLanguageName(), mOptions.targetLanguageName());
 
@@ -193,12 +205,26 @@ class TranslateCompactInfoBar extends InfoBar
 
         mTabLayout.addOnTabSelectedListener(this);
 
-        // Dismiss all menus when there is layout changed. (which will cause menu misplacement.)
+        // Dismiss all menus and end scrolling animation when there is layout changed.
         mTabLayout.addOnLayoutChangeListener(new OnLayoutChangeListener() {
             @Override
             public void onLayoutChange(View v, int left, int top, int right, int bottom,
                     int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                dismissMenus();
+                if (left != oldLeft || top != oldTop || right != oldRight || bottom != oldBottom) {
+                    // Dismiss all menus to prevent menu misplacement.
+                    dismissMenus();
+
+                    if (mIsFirstLayout) {
+                        // Scrolls to the end to make sure the target language tab is visible when
+                        // language tabs is too long.
+                        mTabLayout.startScrollingAnimationIfNeeded();
+                        mIsFirstLayout = false;
+                        return;
+                    }
+
+                    // End scrolling animation when layout changed.
+                    mTabLayout.endScrollingAnimationIfPlaying();
+                }
             }
         });
 
@@ -206,6 +232,7 @@ class TranslateCompactInfoBar extends InfoBar
         mMenuButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
+                mTabLayout.endScrollingAnimationIfPlaying();
                 recordInfobarAction(INFOBAR_OPTIONS);
                 initMenuHelper(TranslateMenu.MENU_OVERFLOW);
                 mOverflowMenuHelper.show(TranslateMenu.MENU_OVERFLOW);
@@ -304,6 +331,7 @@ class TranslateCompactInfoBar extends InfoBar
 
     @Override
     public void onCloseButtonClicked() {
+        mTabLayout.endScrollingAnimationIfPlaying();
         closeInfobar(true);
     }
 
@@ -397,6 +425,12 @@ class TranslateCompactInfoBar extends InfoBar
 
     @Override
     public void onSourceMenuItemClicked(String code) {
+        // If source language is same as target language, the infobar will dismiss and no
+        // translation will be done.
+        if (mOptions.targetLanguageCode().equals(code)) {
+            closeInfobar(true);
+            return;
+        }
         // Reset source code in both UI and native.
         if (mNativeTranslateInfoBarPtr != 0 && mOptions.setSourceLanguage(code)) {
             recordInfobarLanguageData(
@@ -416,12 +450,33 @@ class TranslateCompactInfoBar extends InfoBar
         if (mLanguageMenuHelper != null) mLanguageMenuHelper.dismiss();
     }
 
-    @Override
-    protected void onStartedHiding() {
+    // Dismiss all overflow menus and snackbars that belong to this infobar and remain open.
+    private void dismissMenusAndSnackbars() {
         dismissMenus();
         if (getSnackbarManager() != null && mSnackbarController != null) {
             getSnackbarManager().dismissSnackbars(mSnackbarController);
         }
+    }
+
+    @Override
+    protected void onStartedHiding() {
+        dismissMenusAndSnackbars();
+    }
+
+    /**
+     * Returns true if overflow menu is showing.  This is only used for automation testing.
+     */
+    public boolean isShowingOverflowMenuForTesting() {
+        if (mOverflowMenuHelper == null) return false;
+        return mOverflowMenuHelper.isShowing();
+    }
+
+    /**
+     * Returns true if language menu is showing.  This is only used for automation testing.
+     */
+    public boolean isShowingLanguageMenuForTesting() {
+        if (mLanguageMenuHelper == null) return false;
+        return mLanguageMenuHelper.isShowing();
     }
 
     private void createAndShowSnackbar(String title, int umaType, int actionId) {

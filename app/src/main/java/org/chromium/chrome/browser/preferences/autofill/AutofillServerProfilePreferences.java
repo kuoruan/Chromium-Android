@@ -11,6 +11,7 @@ import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceFragment;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeStringConstants;
 import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.AutofillProfile;
 import org.chromium.chrome.browser.customtabs.CustomTabActivity;
@@ -58,7 +59,7 @@ public class AutofillServerProfilePreferences
         assert preference.getKey().equals(PREF_SERVER_PROFILE_EDIT_LINK);
         Context context = preference.getContext();
         CustomTabActivity.showInfoPage(
-                context, context.getString(R.string.autofill_manage_wallet_addresses_url));
+                context, ChromeStringConstants.AUTOFILL_MANAGE_WALLET_ADDRESSES_URL);
         return true;
     }
 }

@@ -32,7 +32,8 @@ public class ActionItem extends OptionalLeaf {
         mCategoryInfo = section.getCategoryInfo();
         mParentSection = section;
         mSuggestionsRanker = ranker;
-        setVisible(mCategoryInfo.getAdditionalAction() != ContentSuggestionsAdditionalAction.NONE);
+        setVisibilityInternal(
+                mCategoryInfo.getAdditionalAction() != ContentSuggestionsAdditionalAction.NONE);
     }
 
     @Override
@@ -75,9 +76,12 @@ public class ActionItem extends OptionalLeaf {
                 mCategoryInfo.performViewAllAction(uiDelegate.getNavigationDelegate());
                 return;
             case ContentSuggestionsAdditionalAction.FETCH:
-                uiDelegate.getSuggestionsSource().fetchSuggestions(
-                        mCategoryInfo.getCategory(), mParentSection.getDisplayedSuggestionIds());
-                mParentSection.onFetchStarted();
+                if (mParentSection.getSuggestionsCount() == 0
+                        && mParentSection.getCategoryInfo().isRemote()) {
+                    uiDelegate.getSuggestionsSource().fetchRemoteSuggestions();
+                } else {
+                    mParentSection.fetchSuggestions();
+                }
                 return;
             case ContentSuggestionsAdditionalAction.NONE:
             default:

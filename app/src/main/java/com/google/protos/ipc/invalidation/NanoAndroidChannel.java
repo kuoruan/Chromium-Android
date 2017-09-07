@@ -2,6 +2,8 @@
 
 package com.google.protos.ipc.invalidation;
 
+// @@protoc_insertion_point(imports_scope)
+
 @SuppressWarnings("hiding")
 public interface NanoAndroidChannel {
 
@@ -43,6 +45,8 @@ public interface NanoAndroidChannel {
 
     // optional string package_name = 6;
     public java.lang.String packageName;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.AndroidEndpointId)
 
     public AndroidEndpointId() {
       clear();
@@ -116,7 +120,7 @@ public interface NanoAndroidChannel {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -183,6 +187,8 @@ public interface NanoAndroidChannel {
     // optional bytes message = 2;
     public byte[] message;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.AddressedAndroidMessage)
+
     public AddressedAndroidMessage() {
       clear();
     }
@@ -231,7 +237,7 @@ public interface NanoAndroidChannel {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -279,6 +285,8 @@ public interface NanoAndroidChannel {
 
     // repeated .com.google.protos.ipc.invalidation.AddressedAndroidMessage addressed_message = 1;
     public com.google.protos.ipc.invalidation.NanoAndroidChannel.AddressedAndroidMessage[] addressedMessage;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.AddressedAndroidMessageBatch)
 
     public AddressedAndroidMessageBatch() {
       clear();
@@ -330,7 +338,7 @@ public interface NanoAndroidChannel {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;

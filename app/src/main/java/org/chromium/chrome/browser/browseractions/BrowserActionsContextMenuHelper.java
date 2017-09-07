@@ -22,6 +22,7 @@ import org.chromium.chrome.browser.contextmenu.ContextMenuItem;
 import org.chromium.chrome.browser.contextmenu.ContextMenuParams;
 import org.chromium.chrome.browser.contextmenu.ContextMenuUi;
 import org.chromium.chrome.browser.contextmenu.PlatformContextMenuUi;
+import org.chromium.chrome.browser.contextmenu.ShareContextMenuItem;
 import org.chromium.chrome.browser.contextmenu.TabularContextMenuUi;
 import org.chromium.ui.base.WindowAndroid.OnCloseContextMenuListener;
 
@@ -37,18 +38,13 @@ public class BrowserActionsContextMenuHelper implements OnCreateContextMenuListe
                                                         OnAttachStateChangeListener {
     private static final boolean IS_NEW_UI_ENABLED = true;
 
-    // Items list that could be included in the Browser Actions context menu for type {@code LINK}.
-    private static final List<? extends ContextMenuItem> BROWSER_ACTIONS_LINK_GROUP =
-            Arrays.asList(ChromeContextMenuItem.BROWSER_ACTIONS_OPEN_IN_BACKGROUND,
-                    ChromeContextMenuItem.BROWSER_ACTIONS_OPEN_IN_INCOGNITO_TAB,
-                    ChromeContextMenuItem.BROWSER_ACTION_SAVE_LINK_AS,
-                    ChromeContextMenuItem.BROWSER_ACTIONS_COPY_ADDRESS,
-                    ChromeContextMenuItem.BROWSER_ACTIONS_SHARE);
-
     private static final List<Integer> CUSTOM_BROWSER_ACTIONS_ID_GROUP =
             Arrays.asList(R.id.browser_actions_custom_item_one,
                     R.id.browser_actions_custom_item_two, R.id.browser_actions_custom_item_three,
                     R.id.browser_actions_custom_item_four, R.id.browser_actions_custom_item_five);
+
+    // Items list that could be included in the Browser Actions context menu for type {@code LINK}.
+    private final List<? extends ContextMenuItem> mBrowserActionsLinkGroup;
 
     // Map each custom item's id with its PendingIntent action.
     private final SparseArray<PendingIntent> mCustomItemActionMap = new SparseArray<>();
@@ -59,12 +55,12 @@ public class BrowserActionsContextMenuHelper implements OnCreateContextMenuListe
     private final Callback<Integer> mItemSelectedCallback;
     private final Runnable mOnMenuShown;
     private final Runnable mOnMenuClosed;
-    private final Runnable mOnShareClickedRunnable;
+    private final Callback<Boolean> mOnShareClickedRunnable;
 
     private final List<Pair<Integer, List<ContextMenuItem>>> mItems;
 
     public BrowserActionsContextMenuHelper(BrowserActionActivity activity, ContextMenuParams params,
-            List<BrowserActionItem> customItems) {
+            List<BrowserActionItem> customItems, String sourcePackageName) {
         mActivity = activity;
         mCurrentContextMenuParams = params;
         mOnMenuShown = new Runnable() {
@@ -85,11 +81,22 @@ public class BrowserActionsContextMenuHelper implements OnCreateContextMenuListe
                 onItemSelected(result);
             }
         };
-        mOnShareClickedRunnable = new Runnable() {
+        mOnShareClickedRunnable = new Callback<Boolean>() {
             @Override
-            public void run() {}
+            public void onResult(Boolean isShareLink) {
+                mDelegate.share(true, mCurrentContextMenuParams.getLinkUrl());
+            }
         };
-        mDelegate = new BrowserActionsContextMenuItemDelegate();
+        ShareContextMenuItem shareItem = new ShareContextMenuItem(R.drawable.ic_share_white_24dp,
+                R.string.browser_actions_share, R.id.browser_actions_share, true);
+        shareItem.setCreatorPackageName(sourcePackageName);
+        mBrowserActionsLinkGroup =
+                Arrays.asList(ChromeContextMenuItem.BROWSER_ACTIONS_OPEN_IN_BACKGROUND,
+                        ChromeContextMenuItem.BROWSER_ACTIONS_OPEN_IN_INCOGNITO_TAB,
+                        ChromeContextMenuItem.BROWSER_ACTION_SAVE_LINK_AS,
+                        ChromeContextMenuItem.BROWSER_ACTIONS_COPY_ADDRESS, shareItem);
+        mDelegate = new BrowserActionsContextMenuItemDelegate(mActivity, sourcePackageName);
+
         mItems = buildContextMenuItems(customItems);
     }
 
@@ -100,7 +107,7 @@ public class BrowserActionsContextMenuHelper implements OnCreateContextMenuListe
             List<BrowserActionItem> customItems) {
         List<Pair<Integer, List<ContextMenuItem>>> menuItems = new ArrayList<>();
         List<ContextMenuItem> items = new ArrayList<>();
-        items.addAll(BROWSER_ACTIONS_LINK_GROUP);
+        items.addAll(mBrowserActionsLinkGroup);
         addBrowserActionItems(items, customItems);
 
         menuItems.add(new Pair<>(R.string.contextmenu_link_title, items));
@@ -132,7 +139,7 @@ public class BrowserActionsContextMenuHelper implements OnCreateContextMenuListe
         } else if (itemId == R.id.browser_actions_copy_address) {
             mDelegate.onSaveToClipboard(mCurrentContextMenuParams.getLinkUrl());
         } else if (itemId == R.id.browser_actions_share) {
-            mDelegate.share(mCurrentContextMenuParams.getLinkUrl());
+            mDelegate.share(false, mCurrentContextMenuParams.getLinkUrl());
         } else if (mCustomItemActionMap.indexOfKey(itemId) >= 0) {
             mDelegate.onCustomItemSelected(mCustomItemActionMap.get(itemId));
         }

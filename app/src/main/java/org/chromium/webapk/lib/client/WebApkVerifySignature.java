@@ -14,6 +14,7 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,14 +25,14 @@ import java.util.regex.Pattern;
 public class WebApkVerifySignature {
     /** Errors codes. */
     @IntDef({
-            ERROR_OK, ERROR_BAD_APK, ERROR_EXTRA_FIELD_TOO_LARGE, ERROR_COMMENT_TOO_LARGE,
+            ERROR_OK, ERROR_BAD_APK, ERROR_EXTRA_FIELD_TOO_LARGE, ERROR_FILE_COMMENT_TOO_LARGE,
             ERROR_INCORRECT_SIGNATURE, ERROR_SIGNATURE_NOT_FOUND, ERROR_TOO_MANY_META_INF_FILES,
     })
     public @interface Error {}
     public static final int ERROR_OK = 0;
     public static final int ERROR_BAD_APK = 1;
     public static final int ERROR_EXTRA_FIELD_TOO_LARGE = 2;
-    public static final int ERROR_COMMENT_TOO_LARGE = 3;
+    public static final int ERROR_FILE_COMMENT_TOO_LARGE = 3;
     public static final int ERROR_INCORRECT_SIGNATURE = 4;
     public static final int ERROR_SIGNATURE_NOT_FOUND = 5;
     public static final int ERROR_TOO_MANY_META_INF_FILES = 6;
@@ -79,8 +80,8 @@ public class WebApkVerifySignature {
     private static final Pattern WEBAPK_COMMENT_PATTERN =
             Pattern.compile("webapk:\\d+:([a-fA-F0-9]+)");
 
-    /** Maximum comment length permitted. */
-    private static final int MAX_COMMENT_LENGTH = 0;
+    /** Maximum file comment length permitted. */
+    private static final int MAX_FILE_COMMENT_LENGTH = 0;
 
     /** Maximum extra field length permitted. */
     private static final int MAX_EXTRA_LENGTH = 8;
@@ -125,6 +126,14 @@ public class WebApkVerifySignature {
         public int compareTo(Block o) {
             return mFilename.compareTo(o.mFilename);
         }
+
+        /** Comparator for sorting the list by position ascending. */
+        public static Comparator<Block> positionComparator = new Comparator<Block>() {
+            @Override
+            public int compare(Block b1, Block b2) {
+                return b1.mPosition - b2.mPosition;
+            }
+        };
 
         @Override
         public boolean equals(Object o) {
@@ -313,8 +322,8 @@ public class WebApkVerifySignature {
             if (extraLen > MAX_EXTRA_LENGTH) {
                 return ERROR_EXTRA_FIELD_TOO_LARGE;
             }
-            if (fileCommentLength > MAX_COMMENT_LENGTH) {
-                return ERROR_COMMENT_TOO_LARGE;
+            if (fileCommentLength > MAX_FILE_COMMENT_LENGTH) {
+                return ERROR_FILE_COMMENT_TOO_LARGE;
             }
             mBlocks.add(new Block(filename, offset, compressedSize));
         }
@@ -324,15 +333,17 @@ public class WebApkVerifySignature {
             return ERROR_BAD_BLANK_SPACE;
         }
 
-        boolean hasBlockAtStart = false;
-        long positionOfLastByteOfLastBlock = 0;
+        // We need blocks to be sorted by position at this point.
+        Collections.sort(mBlocks, Block.positionComparator);
+        int lastByte = 0;
 
         // Read the 'local file header' block to the size of the header in bytes.
         for (Block block : mBlocks) {
-            seek(block.mPosition);
-            if (block.mPosition == 0) {
-                hasBlockAtStart = true;
+            if (block.mPosition != lastByte) {
+                return ERROR_BAD_BLANK_SPACE;
             }
+
+            seek(block.mPosition);
             int signature = read4();
             if (signature != LFH_SIG) {
                 Log.d(TAG, "LFH Signature missing");
@@ -353,7 +364,7 @@ public class WebApkVerifySignature {
             block.mHeaderSize =
                     (mBuffer.position() - block.mPosition) + fileNameLength + extraFieldLength;
 
-            int lastByte = block.mPosition + block.mHeaderSize + block.mCompressedSize;
+            lastByte = block.mPosition + block.mHeaderSize + block.mCompressedSize;
             if ((flags & 0x8) != 0) {
                 seek(lastByte);
                 if (read4() == DATA_DESCRIPTOR_SIG) {
@@ -366,20 +377,14 @@ public class WebApkVerifySignature {
                     lastByte += 12;
                 }
             }
-            if (lastByte > positionOfLastByteOfLastBlock) {
-                positionOfLastByteOfLastBlock = lastByte;
-            }
         }
-        if (!hasBlockAtStart) {
-            return ERROR_BAD_BLANK_SPACE;
-        }
-        if (positionOfLastByteOfLastBlock != mCentralDirOffset) {
+        if (lastByte != mCentralDirOffset) {
             seek(mCentralDirOffset - V2_SIGNING_MAGIC.length());
             String magic = readString(V2_SIGNING_MAGIC.length());
             if (V2_SIGNING_MAGIC.equals(magic)) {
                 // Only if we have a v2 signature do we allow medium sized gap between the last
                 // block and the start of the central directory.
-                if (mCentralDirOffset - positionOfLastByteOfLastBlock > MAX_V2_SIGNING_BLOCK_SIZE) {
+                if (mCentralDirOffset - lastByte > MAX_V2_SIGNING_BLOCK_SIZE) {
                     return ERROR_BAD_V2_SIGNING_BLOCK;
                 }
             } else {

@@ -51,15 +51,19 @@ class RendererClient_Internal {
 
     private static final int ON_ERROR_ORDINAL = 3;
 
-    private static final int ON_VIDEO_NATURAL_SIZE_CHANGE_ORDINAL = 4;
+    private static final int ON_AUDIO_CONFIG_CHANGE_ORDINAL = 4;
 
-    private static final int ON_VIDEO_OPACITY_CHANGE_ORDINAL = 5;
+    private static final int ON_VIDEO_CONFIG_CHANGE_ORDINAL = 5;
 
-    private static final int ON_STATISTICS_UPDATE_ORDINAL = 6;
+    private static final int ON_VIDEO_NATURAL_SIZE_CHANGE_ORDINAL = 6;
 
-    private static final int ON_WAITING_FOR_DECRYPTION_KEY_ORDINAL = 7;
+    private static final int ON_VIDEO_OPACITY_CHANGE_ORDINAL = 7;
 
-    private static final int ON_DURATION_CHANGE_ORDINAL = 8;
+    private static final int ON_STATISTICS_UPDATE_ORDINAL = 8;
+
+    private static final int ON_WAITING_FOR_DECRYPTION_KEY_ORDINAL = 9;
+
+    private static final int ON_DURATION_CHANGE_ORDINAL = 10;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements RendererClient.Proxy {
@@ -134,6 +138,40 @@ int state) {
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
                             new org.chromium.mojo.bindings.MessageHeader(ON_ERROR_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void onAudioConfigChange(
+AudioDecoderConfig config) {
+
+            RendererClientOnAudioConfigChangeParams _message = new RendererClientOnAudioConfigChangeParams();
+
+            _message.config = config;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(ON_AUDIO_CONFIG_CHANGE_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void onVideoConfigChange(
+VideoDecoderConfig config) {
+
+            RendererClientOnVideoConfigChangeParams _message = new RendererClientOnVideoConfigChangeParams();
+
+            _message.config = config;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(ON_VIDEO_CONFIG_CHANGE_ORDINAL)));
 
         }
 
@@ -298,6 +336,32 @@ org.chromium.mojo.common.mojom.TimeDelta duration) {
             
             
             
+                    case ON_AUDIO_CONFIG_CHANGE_ORDINAL: {
+            
+                        RendererClientOnAudioConfigChangeParams data =
+                                RendererClientOnAudioConfigChangeParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().onAudioConfigChange(data.config);
+                        return true;
+                    }
+            
+            
+            
+            
+            
+                    case ON_VIDEO_CONFIG_CHANGE_ORDINAL: {
+            
+                        RendererClientOnVideoConfigChangeParams data =
+                                RendererClientOnVideoConfigChangeParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().onVideoConfigChange(data.config);
+                        return true;
+                    }
+            
+            
+            
+            
+            
                     case ON_VIDEO_NATURAL_SIZE_CHANGE_ORDINAL: {
             
                         RendererClientOnVideoNaturalSizeChangeParams data =
@@ -382,6 +446,10 @@ org.chromium.mojo.common.mojom.TimeDelta duration) {
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), RendererClient_Internal.MANAGER, messageWithHeader, receiver);
+            
+            
+            
+            
             
             
             
@@ -777,6 +845,192 @@ org.chromium.mojo.common.mojom.TimeDelta duration) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
+            return result;
+        }
+    }
+
+
+
+    
+    static final class RendererClientOnAudioConfigChangeParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public AudioDecoderConfig config;
+    
+        private RendererClientOnAudioConfigChangeParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public RendererClientOnAudioConfigChangeParams() {
+            this(0);
+        }
+    
+        public static RendererClientOnAudioConfigChangeParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static RendererClientOnAudioConfigChangeParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static RendererClientOnAudioConfigChangeParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            RendererClientOnAudioConfigChangeParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new RendererClientOnAudioConfigChangeParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.config = AudioDecoderConfig.decode(decoder1);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(config, 8, false);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            RendererClientOnAudioConfigChangeParams other = (RendererClientOnAudioConfigChangeParams) object;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.config, other.config))
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(config);
+            return result;
+        }
+    }
+
+
+
+    
+    static final class RendererClientOnVideoConfigChangeParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public VideoDecoderConfig config;
+    
+        private RendererClientOnVideoConfigChangeParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public RendererClientOnVideoConfigChangeParams() {
+            this(0);
+        }
+    
+        public static RendererClientOnVideoConfigChangeParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static RendererClientOnVideoConfigChangeParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static RendererClientOnVideoConfigChangeParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            RendererClientOnVideoConfigChangeParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new RendererClientOnVideoConfigChangeParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.config = VideoDecoderConfig.decode(decoder1);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(config, 8, false);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            RendererClientOnVideoConfigChangeParams other = (RendererClientOnVideoConfigChangeParams) object;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.config, other.config))
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(config);
             return result;
         }
     }

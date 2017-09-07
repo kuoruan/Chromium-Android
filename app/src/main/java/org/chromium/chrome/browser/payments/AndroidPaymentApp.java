@@ -574,4 +574,9 @@ public class AndroidPaymentApp
 
     @Override
     public void dismissInstrument() {}
+
+    @Override
+    public int getAdditionalAppTextResourceId() {
+        return 0;
+    }
 }

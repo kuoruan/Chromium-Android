@@ -4,6 +4,7 @@
 
 package org.chromium.content_public.browser;
 
+import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Parcelable;
 
@@ -12,6 +13,8 @@ import org.chromium.content.browser.RenderCoordinates;
 import org.chromium.ui.OverscrollRefreshHandler;
 import org.chromium.ui.base.EventForwarder;
 import org.chromium.ui.base.WindowAndroid;
+
+import java.util.List;
 
 /**
  * The WebContents Java wrapper to allow communicating with the native WebContents object.
@@ -149,9 +152,9 @@ public interface WebContents extends Parcelable {
 
     // TODO (amaralp): Only used in content. Should be moved out of public interface.
     /**
-     * Shows paste popup menu at point
+     * Shows paste popup menu at the touch handle at specified location.
      */
-    void showContextMenuAtPoint(int x, int y);
+    void showContextMenuAtTouchHandle(int x, int y);
 
     /**
      * Suspends all media players for this WebContents.  Note: There may still
@@ -233,13 +236,6 @@ public interface WebContents extends Parcelable {
      * @param endAdjust The amount to adjust the end of the selection.
      */
     public void adjustSelectionByCharacterOffset(int startAdjust, int endAdjust);
-
-    /**
-     * Get the URL of the current page.
-     *
-     * @return The URL of the current page.
-     */
-    String getUrl();
 
     /**
      * Gets the last committed URL. It represents the current page that is
@@ -422,6 +418,12 @@ public interface WebContents extends Parcelable {
      * The WebContents must be fullscreen when this method is called.
      */
     public boolean hasActiveEffectivelyFullscreenVideo();
+
+    /**
+     * Gets a Rect containing the size of the currently playing video. The position of the rectangle
+     * is meaningless.
+     */
+    public List<Rect> getCurrentlyPlayingVideoSizes();
 
     /**
      * Issues a fake notification about the renderer being killed.

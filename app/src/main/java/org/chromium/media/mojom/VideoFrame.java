@@ -24,7 +24,6 @@ public final class VideoFrame extends org.chromium.mojo.bindings.Struct {
     public org.chromium.gfx.mojom.Size codedSize;
     public org.chromium.gfx.mojom.Rect visibleRect;
     public org.chromium.gfx.mojom.Size naturalSize;
-    public boolean endOfStream;
     public org.chromium.mojo.common.mojom.TimeDelta timestamp;
     public VideoFrameData data;
 
@@ -70,10 +69,6 @@ public final class VideoFrame extends org.chromium.mojo.bindings.Struct {
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.endOfStream = decoder0.readBoolean(12, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                 result.codedSize = org.chromium.gfx.mojom.Size.decode(decoder1);
             }
@@ -109,8 +104,6 @@ public final class VideoFrame extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(format, 8);
         
-        encoder0.encode(endOfStream, 12, 0);
-        
         encoder0.encode(codedSize, 16, false);
         
         encoder0.encode(visibleRect, 24, false);
@@ -119,7 +112,7 @@ public final class VideoFrame extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(timestamp, 40, false);
         
-        encoder0.encode(data, 48, true);
+        encoder0.encode(data, 48, false);
     }
 
     /**
@@ -142,8 +135,6 @@ public final class VideoFrame extends org.chromium.mojo.bindings.Struct {
             return false;
         if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.naturalSize, other.naturalSize))
             return false;
-        if (this.endOfStream!= other.endOfStream)
-            return false;
         if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.timestamp, other.timestamp))
             return false;
         if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.data, other.data))
@@ -162,7 +153,6 @@ public final class VideoFrame extends org.chromium.mojo.bindings.Struct {
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(codedSize);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(visibleRect);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(naturalSize);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(endOfStream);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(timestamp);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(data);
         return result;

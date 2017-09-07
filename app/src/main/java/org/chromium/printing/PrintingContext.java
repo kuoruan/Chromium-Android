@@ -110,13 +110,13 @@ public class PrintingContext implements PrintingContextInterface {
     }
 
     @CalledByNative
-    public static void pdfWritingDone(int fd, boolean success) {
+    public static void pdfWritingDone(int fd, int pageCount) {
         ThreadUtils.assertOnUiThread();
         // TODO(cimamoglu): Do something when fd == -1.
         if (PRINTING_CONTEXT_MAP.get(fd) != null) {
             ThreadUtils.assertOnUiThread();
             PrintingContext printingContext = PRINTING_CONTEXT_MAP.get(fd);
-            printingContext.mController.pdfWritingDone(success);
+            printingContext.mController.pdfWritingDone(pageCount);
             PRINTING_CONTEXT_MAP.remove(fd);
         } else {
             Log.d(TAG, "No PrintingContext found for fd %d, can't notify print completion.", fd);
@@ -130,17 +130,18 @@ public class PrintingContext implements PrintingContextInterface {
     }
 
     @CalledByNative
-    public void pageCountEstimationDone(final int maxPages) {
+    public void askUserForSettings(final int maxPages) {
         ThreadUtils.assertOnUiThread();
         // If the printing dialog has already finished, tell Chromium that operation is cancelled.
         if (mController.hasPrintingFinished()) {
             // NOTE: We don't call nativeAskUserForSettingsReply (hence Chromium callback in
             // AskUserForSettings callback) twice.  See {@link PrintingControllerImpl#onFinish}
             // for more explanation.
-            nativeAskUserForSettingsReply(mNativeObject, false);
+            askUserForSettingsReply(false);
         } else {
             mController.setPrintingContext(this);
-            mController.pageCountEstimationDone(maxPages);
+            updatePrintingContextMap(mController.getFileDescriptor(), /* delete = */ false);
+            askUserForSettingsReply(true);
         }
     }
 

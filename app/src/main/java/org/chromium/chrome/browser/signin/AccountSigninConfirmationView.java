@@ -10,7 +10,6 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 
 import org.chromium.chrome.R;
@@ -54,8 +53,8 @@ public class AccountSigninConfirmationView extends ScrollView {
         int height = MeasureSpec.getSize(heightMeasureSpec);
 
         View head = findViewById(R.id.signin_confirmation_head);
-        RelativeLayout.LayoutParams headLayoutParams =
-                (RelativeLayout.LayoutParams) head.getLayoutParams();
+        LinearLayout.LayoutParams headLayoutParams =
+                (LinearLayout.LayoutParams) head.getLayoutParams();
         View accountImage = findViewById(R.id.signin_account_image);
         LinearLayout.LayoutParams accountImageLayoutParams =
                 (LinearLayout.LayoutParams) accountImage.getLayoutParams();

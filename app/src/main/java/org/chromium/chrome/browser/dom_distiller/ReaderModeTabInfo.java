@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser.dom_distiller;
 
+import android.os.SystemClock;
+
 import org.chromium.content_public.browser.WebContentsObserver;
 
 /**
@@ -16,7 +18,7 @@ public class ReaderModeTabInfo {
     // The distillation status of the tab.
     private int mStatus;
 
-    // If the panel was closed due to the close button.
+    // If the infobar was closed due to the close button.
     private boolean mIsDismissed;
 
     // The URL that distiller is using for this tab. This is used to check if a result comes
@@ -27,8 +29,14 @@ public class ReaderModeTabInfo {
     // be distilled. This flag is used to detect if the callback is set for this tab.
     private boolean mIsCallbackSet;
 
-    // Used to flag the the panel was shown and recorded by UMA.
-    private boolean mShowPanelRecorded;
+    // Used to flag the the infobar was shown and recorded by UMA.
+    private boolean mShowInfoBarRecorded;
+
+    // The time that the user started viewing Reader Mode content.
+    private long mViewStartTimeMs;
+
+    // Whether or not the current tab is a Reader Mode page.
+    private boolean mIsViewingReaderModePage;
 
     /**
      * @param observer The WebContentsObserver for the tab this object represents.
@@ -42,6 +50,31 @@ public class ReaderModeTabInfo {
      */
     public WebContentsObserver getWebContentsObserver() {
         return mWebContentsObserver;
+    }
+
+    /**
+     * A notification that the user started viewing Reader Mode.
+     */
+    public void onStartedReaderMode() {
+        mIsViewingReaderModePage = true;
+        mViewStartTimeMs = SystemClock.elapsedRealtime();
+    }
+
+    /**
+     * A notification that the user is no longer viewing Reader Mode. This could be because of a
+     * navigation away from the page, switching tabs, or closing the browser.
+     * @return The amount of time in ms that the user spent viewing Reader Mode.
+     */
+    public long onExitReaderMode() {
+        mIsViewingReaderModePage = false;
+        return SystemClock.elapsedRealtime() - mViewStartTimeMs;
+    }
+
+    /**
+     * @return Whether or not the user is on a Reader Mode page.
+     */
+    public boolean isViewingReaderModePage() {
+        return mIsViewingReaderModePage;
     }
 
     /**
@@ -59,14 +92,14 @@ public class ReaderModeTabInfo {
     }
 
     /**
-     * @return If the panel has been dismissed for this object's tab.
+     * @return If the infobar has been dismissed for this object's tab.
      */
     public boolean isDismissed() {
         return mIsDismissed;
     }
 
     /**
-     * @param dismissed Set the panel as dismissed for this object's tab.
+     * @param dismissed Set the infobar as dismissed for this object's tab.
      */
     public void setIsDismissed(boolean dismissed) {
         mIsDismissed = dismissed;
@@ -101,17 +134,17 @@ public class ReaderModeTabInfo {
     }
 
     /**
-     * @return If the call to show the panel was recorded.
+     * @return If the call to show the infobar was recorded.
      */
-    public boolean isPanelShowRecorded() {
-        return mShowPanelRecorded;
+    public boolean isInfoBarShowRecorded() {
+        return mShowInfoBarRecorded;
     }
 
     /**
      * @param isRecorded True if the action has been recorded.
      */
-    public void setIsPanelShowRecorded(boolean isRecorded) {
-        mShowPanelRecorded = isRecorded;
+    public void setIsInfoBarShowRecorded(boolean isRecorded) {
+        mShowInfoBarRecorded = isRecorded;
     }
 
 }

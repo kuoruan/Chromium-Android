@@ -189,7 +189,7 @@ public class SearchActivity extends AsyncInitializationActivity
         if (mQueuedUrl != null) loadUrl(mQueuedUrl);
 
         AutocompleteController.nativePrefetchZeroSuggestResults();
-        CustomTabsConnection.getInstance(getApplication()).warmup(0);
+        CustomTabsConnection.getInstance().warmup(0);
         mSearchBox.onDeferredStartup(isVoiceSearchIntent());
         RecordUserAction.record("SearchWidget.WidgetSelected");
 

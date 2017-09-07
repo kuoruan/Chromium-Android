@@ -11,9 +11,9 @@
     android:viewportWidth="72"
     android:viewportHeight="72">
 
-    <path android:fillColor="@color/snippets_thumbnail_placeholder_bg"
+    <path android:fillColor="@color/default_primary_color"
         android:pathData="M0,0 L72,0 L72,71.9997 L0,71.9997 Z" />
-    <path android:fillColor="@color/snippets_thumbnail_placeholder_fg"
+    <path android:fillColor="@color/light_normal_color"
         android:pathData="M45,42.9997 L45,28.9997 C45,27.8997,44.1,26.9997,43,26.9997 L29,26.9997
 C27.9,26.9997,27,27.8997,27,28.9997 L27,42.9997
 C27,44.0997,27.9,44.9997,29,44.9997 L43,44.9997

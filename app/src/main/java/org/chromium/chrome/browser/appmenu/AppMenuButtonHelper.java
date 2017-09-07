@@ -27,6 +27,7 @@ public class AppMenuButtonHelper extends AccessibilityDelegate implements OnTouc
     private final AppMenuHandler mMenuHandler;
     private Runnable mOnAppMenuShownListener;
     private boolean mIsTouchEventsBeingProcessed;
+    private boolean mShowMenuOnUp;
 
     /**
      * @param menuHandler MenuHandler implementation that can show and get the app menu.
@@ -40,6 +41,14 @@ public class AppMenuButtonHelper extends AccessibilityDelegate implements OnTouc
      */
     public void setOnAppMenuShownListener(Runnable onAppMenuShownListener) {
         mOnAppMenuShownListener = onAppMenuShownListener;
+    }
+
+    /**
+     * @param showMenuOnUp Whether app menu should show on the up action.
+     *                     If false, the app menu will be shown on the down action.
+     */
+    public void setShowMenuOnUp(boolean showMenuOnUp) {
+        mShowMenuOnUp = showMenuOnUp;
     }
 
     /**
@@ -81,6 +90,16 @@ public class AppMenuButtonHelper extends AccessibilityDelegate implements OnTouc
         return showAppMenu(view, false);
     }
 
+    /**
+     * Set whether touch event is being processed and view is pressed on touch event.
+     * @param view View that received a touch event.
+     * @param isActionDown Whether the touch event is a down action.
+     */
+    private void updateTouchEvent(View view, boolean isActionDown) {
+        mIsTouchEventsBeingProcessed = isActionDown;
+        view.setPressed(isActionDown);
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouch(View view, MotionEvent event) {
@@ -88,16 +107,20 @@ public class AppMenuButtonHelper extends AccessibilityDelegate implements OnTouc
 
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
-                mIsTouchEventsBeingProcessed = true;
-                isTouchEventConsumed |= true;
-                view.setPressed(true);
-                showAppMenu(view, true);
+                if (!mShowMenuOnUp) {
+                    isTouchEventConsumed |= true;
+                    updateTouchEvent(view, true);
+                    showAppMenu(view, true);
+                }
                 break;
             case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_CANCEL:
-                mIsTouchEventsBeingProcessed = false;
                 isTouchEventConsumed |= true;
-                view.setPressed(false);
+                updateTouchEvent(view, false);
+                if (mShowMenuOnUp) showAppMenu(view, false);
+                break;
+            case MotionEvent.ACTION_CANCEL:
+                isTouchEventConsumed |= true;
+                updateTouchEvent(view, false);
                 break;
             default:
         }

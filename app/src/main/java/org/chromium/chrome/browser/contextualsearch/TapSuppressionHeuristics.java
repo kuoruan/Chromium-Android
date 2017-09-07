@@ -19,22 +19,20 @@ public class TapSuppressionHeuristics extends ContextualSearchHeuristics {
      * @param tapsSinceOpen the number of Tap gestures since the last open of the panel.
      */
     TapSuppressionHeuristics(ContextualSearchSelectionController selectionController,
-            ContextualSearchTapState previousTapState, int x, int y, int tapsSinceOpen) {
+            ContextualSearchTapState previousTapState, int x, int y, int tapsSinceOpen,
+            ContextualSearchContext contextualSearchContext, int tapDurationMs) {
         super();
         mCtrSuppression = new CtrSuppression();
         mHeuristics.add(mCtrSuppression);
-        RecentScrollTapSuppression scrollTapExperiment =
-                new RecentScrollTapSuppression(selectionController);
-        mHeuristics.add(scrollTapExperiment);
-        TapFarFromPreviousSuppression farFromPreviousHeuristic =
-                new TapFarFromPreviousSuppression(selectionController, previousTapState, x, y);
-        mHeuristics.add(farFromPreviousHeuristic);
-        NearTopTapSuppression tapNearTopSuppression =
-                new NearTopTapSuppression(selectionController, y);
-        mHeuristics.add(tapNearTopSuppression);
-        BarOverlapTapSuppression barOverlapTapSuppression =
-                new BarOverlapTapSuppression(selectionController, y);
-        mHeuristics.add(barOverlapTapSuppression);
+        mHeuristics.add(new RecentScrollTapSuppression(selectionController));
+        mHeuristics.add(
+                new TapFarFromPreviousSuppression(selectionController, previousTapState, x, y));
+        mHeuristics.add(new TapDurationSuppression(tapDurationMs));
+        mHeuristics.add(new TapWordLengthSuppression(contextualSearchContext));
+        mHeuristics.add(new TapWordEdgeSuppression(contextualSearchContext));
+        mHeuristics.add(new ContextualSearchEntityHeuristic(contextualSearchContext));
+        mHeuristics.add(new NearTopTapSuppression(selectionController, y));
+        mHeuristics.add(new BarOverlapTapSuppression(selectionController, y));
         // General Tap Suppression and Tap Twice.
         TapSuppression tapSuppression =
                 new TapSuppression(selectionController, previousTapState, x, y, tapsSinceOpen);

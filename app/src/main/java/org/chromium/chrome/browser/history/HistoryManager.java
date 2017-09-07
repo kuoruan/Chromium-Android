@@ -56,10 +56,12 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
     private static final int FAVICON_MAX_CACHE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
     private static final int MEGABYTES_TO_BYTES =  1024 * 1024;
     private static final String METRICS_PREFIX = "Android.HistoryPage.";
+    private static final String PREF_SHOW_HISTORY_INFO = "history_home_show_info";
 
     private static HistoryProvider sProviderForTests;
 
     private final Activity mActivity;
+    private final boolean mIsIncognito;
     private final boolean mIsSeparateActivity;
     private final SelectableListLayout<HistoryItem> mSelectableListLayout;
     private final HistoryAdapter mHistoryAdapter;
@@ -71,25 +73,30 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
     private LargeIconBridge mLargeIconBridge;
 
     private boolean mIsSearching;
-
+    private boolean mShouldShowInfoHeader;
     /**
      * Creates a new HistoryManager.
      * @param activity The Activity associated with the HistoryManager.
      * @param isSeparateActivity Whether the history UI will be shown in a separate activity than
      *                           the main Chrome activity.
      * @param snackbarManager The {@link SnackbarManager} used to display snackbars.
+     * @param isIncognito Whether the incognito tab model is currently selected.
      */
     @SuppressWarnings("unchecked") // mSelectableListLayout
-    public HistoryManager(
-            Activity activity, boolean isSeparateActivity, SnackbarManager snackbarManager) {
+    public HistoryManager(Activity activity, boolean isSeparateActivity,
+            SnackbarManager snackbarManager, boolean isIncognito) {
+        mShouldShowInfoHeader =
+                ContextUtils.getAppSharedPreferences().getBoolean(PREF_SHOW_HISTORY_INFO, true);
         mActivity = activity;
         mIsSeparateActivity = isSeparateActivity;
         mSnackbarManager = snackbarManager;
+        mIsIncognito = isIncognito;
 
         mSelectionDelegate = new SelectionDelegate<>();
         mSelectionDelegate.addObserver(this);
         mHistoryAdapter = new HistoryAdapter(mSelectionDelegate, this,
-                sProviderForTests != null ? sProviderForTests : new BrowsingHistoryBridge());
+                sProviderForTests != null ? sProviderForTests
+                                          : new BrowsingHistoryBridge(isIncognito));
 
         // 1. Create SelectableListLayout.
         mSelectableListLayout =
@@ -103,9 +110,11 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
         mToolbar = (HistoryManagerToolbar) mSelectableListLayout.initializeToolbar(
                 R.layout.history_toolbar, mSelectionDelegate, R.string.menu_history, null,
                 R.id.normal_menu_group, R.id.selection_mode_menu_group,
-                R.color.default_primary_color, this);
+                R.color.default_primary_color, this, true);
         mToolbar.setManager(this);
         mToolbar.initializeSearchView(this, R.string.history_manager_search, R.id.search_menu_id);
+        mToolbar.setInfoMenuItem(R.id.info_menu_id);
+        mToolbar.updateInfoMenuItem(shouldShowInfoButton(), shouldShowInfoHeaderIfAvailable());
 
         // 4. Width constrain the SelectableListLayout.
         mSelectableListLayout.configureWideDisplayStyle();
@@ -197,6 +206,14 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
             recordUserAction("Search");
             mIsSearching = true;
             return true;
+        } else if (item.getItemId() == R.id.info_menu_id) {
+            mShouldShowInfoHeader = !mShouldShowInfoHeader;
+            ContextUtils.getAppSharedPreferences()
+                    .edit()
+                    .putBoolean(PREF_SHOW_HISTORY_INFO, mShouldShowInfoHeader)
+                    .apply();
+            mToolbar.updateInfoMenuItem(shouldShowInfoButton(), shouldShowInfoHeaderIfAvailable());
+            mHistoryAdapter.setPrivacyDisclaimerVisibility();
         }
         return false;
     }
@@ -256,6 +273,13 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
     public void openUrl(String url, Boolean isIncognito, boolean createNewTab) {
         IntentHandler.startActivityForTrustedIntent(
                 getOpenUrlIntent(url, isIncognito, createNewTab));
+    }
+
+    /**
+     * @return Whether the HistoryManager is displaying history for the incognito profile.
+     */
+    public boolean isIncognito() {
+        return mIsIncognito;
     }
 
     @VisibleForTesting
@@ -357,7 +381,7 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
     }
 
     @VisibleForTesting
-    HistoryAdapter getAdapterForTests() {
+    public HistoryAdapter getAdapterForTests() {
         return mHistoryAdapter;
     }
 
@@ -384,6 +408,21 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
         List<HistoryItem> selectedItems = mSelectionDelegate.getSelectedItems();
         RecordHistogram.recordCount100Histogram(
                 METRICS_PREFIX + action + "Selected", selectedItems.size());
+    }
+
+    /**
+     * @return True if info menu item should be shown on history toolbar, false otherwise.
+     */
+    boolean shouldShowInfoButton() {
+        return mHistoryAdapter.hasPrivacyDisclaimers();
+    }
+
+    /**
+     * @return True if the available privacy disclaimers should be shown.
+     * Note that this may return true even if there are currently no privacy disclaimers.
+     */
+    boolean shouldShowInfoHeaderIfAvailable() {
+        return mShouldShowInfoHeader;
     }
 
     @Override

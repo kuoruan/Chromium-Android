@@ -29,16 +29,13 @@ public final class NfcMessageValidator {
         return true;
     }
 
+    /**
+     * Checks that NfcRecord#data and NfcRecord#mediaType fields are valid. NfcRecord#data and
+     * NfcRecord#mediaType fields are omitted for the record with EMPTY type.
+     */
     private static boolean isValid(NfcRecord record) {
-        if (record == null || record.data == null || record.data.length == 0) {
-            return false;
-        }
-
-        if (record.mediaType == null || record.mediaType.isEmpty()
-                || record.recordType == NfcRecordType.EMPTY) {
-            return false;
-        }
-
-        return true;
+        if (record == null) return false;
+        if (record.recordType == NfcRecordType.EMPTY) return true;
+        return record.data != null && record.mediaType != null && !record.mediaType.isEmpty();
     }
 }

@@ -76,6 +76,8 @@ public class BackgroundTaskJobService extends JobService {
 
         TaskParameters taskParams =
                 BackgroundTaskSchedulerJobService.getTaskParametersFromJobParameters(params);
+
+        BackgroundTaskSchedulerUma.getInstance().reportTaskStarted(taskParams.getTaskId());
         boolean taskNeedsBackgroundProcessing = backgroundTask.onStartTask(getApplicationContext(),
                 taskParams, new TaskFinishedCallbackJobService(this, backgroundTask, params));
 
@@ -96,6 +98,7 @@ public class BackgroundTaskJobService extends JobService {
 
         TaskParameters taskParams =
                 BackgroundTaskSchedulerJobService.getTaskParametersFromJobParameters(params);
+        BackgroundTaskSchedulerUma.getInstance().reportTaskStopped(taskParams.getTaskId());
         boolean taskNeedsReschedule =
                 backgroundTask.onStopTask(getApplicationContext(), taskParams);
         mCurrentTasks.remove(params.getJobId());

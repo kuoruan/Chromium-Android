@@ -19,10 +19,12 @@ public final class PasswordUIView {
     public static final class SavedPasswordEntry {
         private final String mUrl;
         private final String mName;
+        private final String mPassword;
 
-        private SavedPasswordEntry(String url, String name) {
+        private SavedPasswordEntry(String url, String name, String password) {
             mUrl = url;
             mName = name;
+            mPassword = password;
         }
 
         public String getUrl() {
@@ -32,11 +34,16 @@ public final class PasswordUIView {
         public String getUserName() {
             return mName;
         }
+
+        public String getPassword() {
+            return mPassword;
+        }
     }
 
     @CalledByNative
-    private static SavedPasswordEntry createSavedPasswordEntry(String url, String name) {
-        return new SavedPasswordEntry(url, name);
+    private static SavedPasswordEntry createSavedPasswordEntry(
+            String url, String name, String password) {
+        return new SavedPasswordEntry(url, name, password);
     }
 
     /**

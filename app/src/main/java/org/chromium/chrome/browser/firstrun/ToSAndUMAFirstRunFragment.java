@@ -91,9 +91,28 @@ public class ToSAndUMAFirstRunFragment extends FirstRunPage {
                 getPageDelegate().showInfoPage(R.string.chrome_privacy_notice_url);
             }
         };
-        mTosAndPrivacy.setText(SpanApplier.applySpans(getString(R.string.fre_tos_and_privacy),
-                new SpanInfo("<LINK1>", "</LINK1>", clickableTermsSpan),
-                new SpanInfo("<LINK2>", "</LINK2>", clickablePrivacySpan)));
+
+        NoUnderlineClickableSpan clickableFamilyLinkPrivacySpan = new NoUnderlineClickableSpan() {
+            @Override
+            public void onClick(View widget) {
+                if (!isAdded()) return;
+                getPageDelegate().showInfoPage(R.string.family_link_privacy_policy_url);
+            }
+        };
+
+        final CharSequence tosAndPrivacyText;
+        if (getProperties().getBoolean(AccountFirstRunFragment.IS_CHILD_ACCOUNT)) {
+            tosAndPrivacyText =
+                    SpanApplier.applySpans(getString(R.string.fre_tos_and_privacy_child_account),
+                            new SpanInfo("<LINK1>", "</LINK1>", clickableTermsSpan),
+                            new SpanInfo("<LINK2>", "</LINK2>", clickablePrivacySpan),
+                            new SpanInfo("<LINK3>", "</LINK3>", clickableFamilyLinkPrivacySpan));
+        } else {
+            tosAndPrivacyText = SpanApplier.applySpans(getString(R.string.fre_tos_and_privacy),
+                    new SpanInfo("<LINK1>", "</LINK1>", clickableTermsSpan),
+                    new SpanInfo("<LINK2>", "</LINK2>", clickablePrivacySpan));
+        }
+        mTosAndPrivacy.setText(tosAndPrivacyText);
 
         // If this page should be skipped, it can be one of the following cases:
         //   1. Native hasn't been initialized yet and this page will be skipped once that happens.

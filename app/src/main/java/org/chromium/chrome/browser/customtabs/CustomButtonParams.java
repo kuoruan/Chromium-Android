@@ -87,7 +87,7 @@ class CustomButtonParams {
      */
     Drawable getIcon(Resources res) {
         if (mShouldTint) {
-            return TintedDrawable.constructTintedDrawable(res, mIcon);
+            return new TintedDrawable(res, mIcon);
         } else {
             return new BitmapDrawable(res, mIcon);
         }

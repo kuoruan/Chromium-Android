@@ -11,6 +11,7 @@ import android.content.Context;
 import com.google.android.gms.common.GoogleApiAvailability;
 
 import org.chromium.base.ThreadUtils;
+import org.chromium.base.metrics.CachedMetrics.ActionEvent;
 import org.chromium.base.metrics.CachedMetrics.EnumeratedHistogramSample;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -48,9 +49,15 @@ public abstract class UserRecoverableErrorHandler {
     private static final int ERROR_HANDLER_ACTION_IGNORED_AS_REDUNDANT = 3;
     private static final int ERROR_HANDLER_ACTION_HISTOGRAM_BOUNDARY = 4;
 
+    private static final String MODAL_DIALOG_SHOWN_USER_ACTION_NAME =
+            "Signin_Android_GmsUserRecoverableDialogShown";
+
     private static final EnumeratedHistogramSample sErrorHandlerActionHistogramSample =
             new EnumeratedHistogramSample(ERROR_HANDLER_ACTION_HISTOGRAM_NAME,
                     ERROR_HANDLER_ACTION_HISTOGRAM_BOUNDARY);
+
+    private static final ActionEvent sModalDialogShownActionEvent =
+            new ActionEvent(MODAL_DIALOG_SHOWN_USER_ACTION_NAME);
 
     /**
      * Handles the specified error code from Google Play Services.
@@ -175,9 +182,10 @@ public abstract class UserRecoverableErrorHandler {
                 mErrorCode = errorCode;
             }
             // This can happen if |errorCode| is ConnectionResult.SERVICE_INVALID.
-            if (mDialog != null) {
+            if (mDialog != null && !mDialog.isShowing()) {
                 mDialog.setCancelable(mCancelable);
                 mDialog.show();
+                sModalDialogShownActionEvent.record();
             }
             sErrorHandlerActionHistogramSample.record(ERROR_HANDLER_ACTION_MODAL_DIALOG);
         }

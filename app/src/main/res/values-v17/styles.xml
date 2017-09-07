@@ -23,6 +23,7 @@
         <item name="android:textColorHighlight">@color/text_highlight_color</item>
         <item name="android:textColorLink">@color/light_active_color</item>
         <item name="colorPrimaryDark">@android:color/black</item>
+        <item name="android:colorAccent">@color/google_blue_500</item>
         <item name="android:statusBarColor" tools:targetApi="21">@android:color/black</item>
 
         <!--  Overriding AppCompat values -->
@@ -47,7 +48,7 @@
     </style>
 
     <style name="TabbedModeTheme" parent="MainTheme">
-        <item name="android:windowBackground">@drawable/window_background</item>
+        <item name="android:windowBackground">@android:color/white</item>
     </style>
 
     <style name="FullscreenWhite" parent="Theme.AppCompat.Light" >
@@ -130,10 +131,9 @@
         <item name="android:paddingTop">16dp</item>
         <item name="android:layout_marginBottom">16dp</item>
     </style>
-    <style name="PreferenceCategoryTextStyle">
+    <style name="PreferenceCategoryTextStyle" parent="RobotoMediumStyle">
         <item name="android:textColor">@color/pref_accent_color</item>
         <item name="android:textSize">12sp</item>
-        <item name="android:textStyle">bold</item>
     </style>
     <style name="PreferenceTitle">
         <item name="android:ellipsize">end</item>
@@ -252,6 +252,10 @@
     <style name="OverflowMenuAnim">
         <item name="android:windowEnterAnimation">@anim/menu_enter</item>
         <item name="android:windowExitAnimation">@anim/menu_exit</item>
+    </style>
+    <style name="OverflowMenuAnimBottom">
+        <item name="android:windowEnterAnimation">@anim/menu_enter_from_bottom</item>
+        <item name="android:windowExitAnimation">@anim/menu_exit_from_bottom</item>
     </style>
     <style name="DistilledPagePrefThemeButton">
         <item name="android:layout_width">0dp</item>
@@ -569,10 +573,6 @@
         <item name="android:paddingEnd">16dp</item>
         <item name="android:background">?attr/listChoiceBackgroundIndicator</item>
     </style>
-    <style name="RobotoMediumStyle">
-        <item name="android:fontFamily">sans-serif</item>
-        <item name="android:textStyle">bold</item>
-    </style>
     <style name="NumberRollTextViewStyle">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
@@ -588,6 +588,19 @@
         <item name="android:textColor">@color/sad_tab_body_text_color</item>
         <item name="android:textSize">14sp</item>
         <item name="android:layout_gravity">start</item>
+    </style>
+    <style name="SigninButtonCompat">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">14sp</item>
+        <item name="buttonColor">@color/light_active_color</item>
+        <item name="buttonRaised">false</item>
+    </style>
+    <style name="SigninButtonBorderlessRegular">
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/light_active_color</item>
+        <item name="android:textSize">14sp</item>
     </style>
 
     <!-- New tab page RecyclerView overscroll color -->
@@ -635,6 +648,7 @@
         <item name="android:layout_marginTop">12dp</item>
         <item name="android:layout_marginBottom">10dp</item>
         <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/black_alpha_54</item>
     </style>
     <style name="DownloadRowContainer">
         <item name="android:layout_width">match_parent</item>
@@ -715,7 +729,7 @@
         <item name="android:textSize">14sp</item>
         <item name="android:lineSpacingMultiplier">1.2</item>
     </style>
-    <style name="IncognitoNewTabLearnMoreLink">
+    <style name="IncognitoNewTabLearnMoreLink" parent="RobotoMediumStyle">
         <item name="android:background">?attr/listChoiceBackgroundIndicator</item>
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>

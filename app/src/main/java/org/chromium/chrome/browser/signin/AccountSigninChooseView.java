@@ -72,7 +72,7 @@ public class AccountSigninChooseView extends FirstRunChooserView {
             // Sets account profile image and name.
             String accountName = accounts.get(i);
             ((ImageView) view.findViewById(R.id.account_image))
-                    .setImageBitmap(profileData.getImage(accountName));
+                    .setImageDrawable(profileData.getImage(accountName));
             ((TextView) view.findViewById(R.id.account_name)).setText(accountName);
 
             view.setOnClickListener(new View.OnClickListener() {
@@ -125,7 +125,7 @@ public class AccountSigninChooseView extends FirstRunChooserView {
             String accountEmail =
                     ((TextView) view.findViewById(R.id.account_name)).getText().toString();
             ((ImageView) view.findViewById(R.id.account_image))
-                    .setImageBitmap(profileData.getImage(accountEmail));
+                    .setImageDrawable(profileData.getImage(accountEmail));
         }
     }
 

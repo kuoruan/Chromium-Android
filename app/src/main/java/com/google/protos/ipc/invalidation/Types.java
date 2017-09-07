@@ -2,6 +2,8 @@
 
 package com.google.protos.ipc.invalidation;
 
+// @@protoc_insertion_point(imports_scope)
+
 @SuppressWarnings("hiding")
 public interface Types {
 
@@ -34,6 +36,8 @@ public interface Types {
 
     // optional .com.google.protos.ipc.invalidation.ClientType.Type type = 1;
     public java.lang.Integer type;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ClientType)
 
     public ClientType() {
       clear();
@@ -75,12 +79,13 @@ public interface Types {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
           }
           case 8: {
+            int initialPos = input.getPosition();
             int value = input.readInt32();
             switch (value) {
               case com.google.protos.ipc.invalidation.Types.ClientType.INTERNAL:
@@ -92,6 +97,10 @@ public interface Types {
               case com.google.protos.ipc.invalidation.Types.ClientType.CHROME_SYNC_GCM_DESKTOP:
               case com.google.protos.ipc.invalidation.Types.ClientType.CHROME_SYNC_GCM_IOS:
                 this.type = value;
+                break;
+              default:
+                input.rewindToPosition(initialPos);
+                storeUnknownField(input, tag);
                 break;
             }
             break;
@@ -141,6 +150,8 @@ public interface Types {
     // optional .com.google.protos.ipc.invalidation.ObjectSource.Type type = 1;
     public java.lang.Integer type;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ObjectSource)
+
     public ObjectSource() {
       clear();
     }
@@ -181,12 +192,13 @@ public interface Types {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
           }
           case 8: {
+            int initialPos = input.getPosition();
             int value = input.readInt32();
             switch (value) {
               case com.google.protos.ipc.invalidation.Types.ObjectSource.INTERNAL:
@@ -197,6 +209,10 @@ public interface Types {
               case com.google.protos.ipc.invalidation.Types.ObjectSource.CHROME_COMPONENTS:
               case com.google.protos.ipc.invalidation.Types.ObjectSource.CHROME_PUSH_MESSAGING:
                 this.type = value;
+                break;
+              default:
+                input.rewindToPosition(initialPos);
+                storeUnknownField(input, tag);
                 break;
             }
             break;
@@ -237,6 +253,8 @@ public interface Types {
       return _emptyArray;
     }
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.Constants)
+
     public Constants() {
       clear();
     }
@@ -257,7 +275,7 @@ public interface Types {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;

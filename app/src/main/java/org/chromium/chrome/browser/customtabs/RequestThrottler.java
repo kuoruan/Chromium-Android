@@ -17,6 +17,7 @@ import org.chromium.base.annotations.SuppressFBWarnings;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Applications are throttled in two ways:
@@ -46,6 +47,7 @@ class RequestThrottler {
     private static final String LAST_REQUEST = "last_request_";
     private static final String BANNED_UNTIL = "banned_until_";
 
+    private static final AtomicBoolean sAccessedSharedPreferences = new AtomicBoolean();
     private static SparseArray<RequestThrottler> sUidToThrottler;
 
     private final SharedPreferences mSharedPreferences;
@@ -200,6 +202,8 @@ class RequestThrottler {
     // TODO(crbug.com/635567): Fix this properly.
     @SuppressLint("CommitPrefEdits")
     static void loadInBackground(final Context context) {
+        boolean alreadyDone = !sAccessedSharedPreferences.compareAndSet(false, true);
+        if (alreadyDone) return;
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {

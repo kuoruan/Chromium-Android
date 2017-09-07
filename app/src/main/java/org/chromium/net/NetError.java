@@ -115,6 +115,7 @@ public static final int ERR_CERT_END = -215;
 public static final int ERR_INVALID_URL = -300;
 public static final int ERR_DISALLOWED_URL_SCHEME = -301;
 public static final int ERR_UNKNOWN_URL_SCHEME = -302;
+public static final int ERR_INVALID_REDIRECT = -303;
 public static final int ERR_TOO_MANY_REDIRECTS = -310;
 public static final int ERR_UNSAFE_REDIRECT = -311;
 public static final int ERR_UNSAFE_PORT = -312;

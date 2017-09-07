@@ -8,6 +8,7 @@ import android.accounts.Account;
 import android.accounts.AuthenticatorDescription;
 import android.app.Activity;
 import android.support.annotation.AnyThread;
+import android.support.annotation.MainThread;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 
@@ -19,11 +20,25 @@ import org.chromium.base.Callback;
  */
 public interface AccountManagerDelegate {
     /**
-     * Get all the accounts for a given {@code type}.
+     * Adds an observer to get notified about accounts changes.
+     * @param observer the observer to add.
+     */
+    @MainThread
+    void addObserver(AccountsChangeObserver observer);
+
+    /**
+     * Removes an observer that was previously added using {@link #addObserver}.
+     * @param observer the observer to remove.
+     */
+    @MainThread
+    void removeObserver(AccountsChangeObserver observer);
+
+    /**
+     * Get all the accounts.
      * This method shouldn't be called on the UI thread (violated due to crbug.com/517697).
      */
     @WorkerThread
-    Account[] getAccountsByType(String type);
+    Account[] getAccountsSync() throws AccountManagerDelegateException;
 
     /**
      * Get an auth token.

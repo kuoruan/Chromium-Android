@@ -43,7 +43,7 @@ import org.chromium.chrome.browser.signin.SigninManager;
 import org.chromium.chrome.browser.sync.GoogleServiceAuthError;
 import org.chromium.chrome.browser.sync.ProfileSyncService;
 import org.chromium.chrome.browser.sync.SyncAccountSwitcher;
-import org.chromium.components.signin.AccountManagerHelper;
+import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.components.signin.ChromeSigninController;
 import org.chromium.components.sync.AndroidSyncSettings;
 import org.chromium.components.sync.ModelType;
@@ -335,7 +335,7 @@ public class SyncCustomizationFragment extends PreferenceFragment
         // We remove the the SyncedAccountPreference if there's only 1 account on the device, so
         // it's possible for accountList to be null
         if (accountList != null) {
-            Account[] accounts = AccountManagerHelper.get().getGoogleAccounts();
+            Account[] accounts = AccountManagerFacade.get().tryGetGoogleAccounts();
             if (accounts.length <= 1) {
                 getPreferenceScreen().removePreference(accountList);
             } else {
@@ -708,7 +708,7 @@ public class SyncCustomizationFragment extends PreferenceFragment
         }
 
         if (mCurrentSyncError == SYNC_AUTH_ERROR) {
-            AccountManagerHelper.get().updateCredentials(
+            AccountManagerFacade.get().updateCredentials(
                     ChromeSigninController.get().getSignedInUser(), getActivity(), null);
             return;
         }

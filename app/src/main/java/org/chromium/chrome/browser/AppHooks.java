@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 
+import org.chromium.base.BuildInfo;
 import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
@@ -25,7 +26,6 @@ import org.chromium.chrome.browser.historyreport.AppIndexingReporter;
 import org.chromium.chrome.browser.init.ProcessInitializationHandler;
 import org.chromium.chrome.browser.instantapps.InstantAppsHandler;
 import org.chromium.chrome.browser.locale.LocaleManager;
-import org.chromium.chrome.browser.media.VideoPersister;
 import org.chromium.chrome.browser.metrics.VariationsSession;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.net.qualityprovider.ExternalEstimateProviderAndroid;
@@ -120,7 +120,7 @@ public abstract class AppHooks {
      * outside of {@link CustomTabsConnection#getInstance()}.
      */
     public CustomTabsConnection createCustomTabsConnection() {
-        return new CustomTabsConnection(((ChromeApplication) ContextUtils.getApplicationContext()));
+        return new CustomTabsConnection();
     }
 
     /**
@@ -247,13 +247,6 @@ public abstract class AppHooks {
         return new VariationsSession();
     }
 
-    /**
-     * @return An instance of VideoPersister to be installed as a singleton.
-     */
-    public VideoPersister createVideoPersister() {
-        return new VideoPersister();
-    }
-
     /** Returns the singleton instance of GooglePlayWebApkInstallDelegate. */
     public GooglePlayWebApkInstallDelegate getGooglePlayWebApkInstallDelegate() {
         return null;
@@ -291,7 +284,7 @@ public abstract class AppHooks {
      */
     @CalledByNative
     public boolean shouldDetectVideoFullscreen() {
-        return false;
+        return BuildInfo.isAtLeastO();
     }
 
     /**

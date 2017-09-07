@@ -109,7 +109,7 @@ class ExecutorFactory {
         private boolean readNotifyBufferMessage() {
             try {
                 ResultAnd<ReadMessageResult> readMessageResult =
-                        mReadHandle.readMessage(NOTIFY_BUFFER, 0, MessagePipeHandle.ReadFlags.NONE);
+                        mReadHandle.readMessage(MessagePipeHandle.ReadFlags.NONE);
                 if (readMessageResult.getMojoResult() == MojoResult.OK) {
                     return true;
                 }

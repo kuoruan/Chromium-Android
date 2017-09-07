@@ -71,7 +71,7 @@ public abstract class SelectableItemView<E> extends FrameLayout implements Check
      * @param uiConfig The UiConfig used to observe display style changes.
      */
     public void configureWideDisplayStyle(UiConfig uiConfig) {
-        MarginResizer.createWithViewAdapter(this, uiConfig,
+        MarginResizer.createAndAttach(this, uiConfig,
                 SelectableListLayout.getDefaultListItemLateralMarginPx(getResources()), 0);
     }
 

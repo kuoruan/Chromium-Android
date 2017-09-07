@@ -5,28 +5,21 @@
 package org.chromium.chrome.browser.widget;
 
 import android.content.Context;
-import android.os.Build;
 import android.support.design.widget.TextInputLayout;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 
 import org.chromium.base.ApiCompatibilityUtils;
 
-import javax.annotation.Nullable;
+import java.util.ArrayList;
 
 /**
- * Handles bugs with the Android Support library's {@link TextInputLayout} until Chrome can upgrade
- * to a newer version.
- *
- * TODO(dfalcantara): Remove this super gross dirty hack once Chrome can roll version 24:
- *                    https://crbug.com/603635
+ * Wraps around the Android Support library's {@link TextInputLayout} to handle various issues.
  */
 public class CompatibilityTextInputLayout extends TextInputLayout {
-
-    /** Whether or not the background has been mutated to work around the red line bug. */
-    private boolean mIsBackgroundMutated;
 
     public CompatibilityTextInputLayout(Context context) {
         super(context);
@@ -36,22 +29,8 @@ public class CompatibilityTextInputLayout extends TextInputLayout {
         super(context, attrs);
     }
 
-    /**
-     * Super gross, dirty, awful hack for dealing with bugs in version 23 of the support library.
-     *
-     * Gleaned using dirty things from comments on the Android bug and support library source:
-     * https://code.google.com/p/android/issues/detail?id=190829
-     */
     @Override
-    public void setError(@Nullable CharSequence error) {
-        if (!mIsBackgroundMutated && getEditText() != null && getEditText().getBackground() != null
-                && ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP))) {
-            getEditText().setBackground(
-                    getEditText().getBackground().getConstantState().newDrawable());
-            getEditText().getBackground().mutate();
-            mIsBackgroundMutated = true;
-        }
-
+    public void setError(CharSequence error) {
         super.setError(error);
         if (TextUtils.isEmpty(error)) setErrorEnabled(false);
     }
@@ -60,11 +39,28 @@ public class CompatibilityTextInputLayout extends TextInputLayout {
     public void onFinishInflate() {
         super.onFinishInflate();
 
-        if (getChildCount() == 1) {
-            // If there is a child to this TextInputLayout, automatically set the hint.
-            View child = getChildAt(0);
-            if (child instanceof EditText && child.getId() > NO_ID) {
-                ApiCompatibilityUtils.setLabelFor(this, child.getId());
+        // If there is an EditText descendant, make this serve as the label for it.
+        ArrayList<EditText> views = new ArrayList<>();
+        findEditTextChildren(this, views);
+        if (views.size() == 1) {
+            ApiCompatibilityUtils.setLabelFor(this, views.get(0).getId());
+        }
+    }
+
+    /**
+     * Dig through the descendant hierarchy to find the EditText displayed by this TextInputLayout.
+     * This is necessary because the Support Library version we're using automatically inserts a
+     * FrameLayout when a TextInputEditText isn't used as the child.
+     *
+     * @param views Finds all EditText children of the root view.
+     */
+    private static void findEditTextChildren(ViewGroup root, ArrayList<EditText> views) {
+        for (int nChild = 0; nChild < root.getChildCount(); nChild++) {
+            View child = root.getChildAt(nChild);
+            if (child instanceof ViewGroup) {
+                findEditTextChildren((ViewGroup) child, views);
+            } else if (child instanceof EditText) {
+                views.add((EditText) child);
             }
         }
     }

@@ -20,7 +20,8 @@ import java.lang.annotation.RetentionPolicy;
     WebTextInputFlags.AUTOCORRECT_ON, WebTextInputFlags.AUTOCORRECT_OFF,
     WebTextInputFlags.SPELLCHECK_ON, WebTextInputFlags.SPELLCHECK_OFF,
     WebTextInputFlags.AUTOCAPITALIZE_NONE, WebTextInputFlags.AUTOCAPITALIZE_CHARACTERS,
-    WebTextInputFlags.AUTOCAPITALIZE_WORDS, WebTextInputFlags.AUTOCAPITALIZE_SENTENCES
+    WebTextInputFlags.AUTOCAPITALIZE_WORDS, WebTextInputFlags.AUTOCAPITALIZE_SENTENCES,
+    WebTextInputFlags.HAVE_NEXT_FOCUSABLE_ELEMENT, WebTextInputFlags.HAVE_PREVIOUS_FOCUSABLE_ELEMENT
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface WebTextInputFlags {
@@ -35,4 +36,6 @@ public @interface WebTextInputFlags {
   int AUTOCAPITALIZE_CHARACTERS = 1 << 7;
   int AUTOCAPITALIZE_WORDS = 1 << 8;
   int AUTOCAPITALIZE_SENTENCES = 1 << 9;
+  int HAVE_NEXT_FOCUSABLE_ELEMENT = 1 << 10;
+  int HAVE_PREVIOUS_FOCUSABLE_ELEMENT = 1 << 11;
 }

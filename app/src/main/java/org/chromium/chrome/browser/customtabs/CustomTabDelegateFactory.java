@@ -202,8 +202,8 @@ public class CustomTabDelegateFactory extends TabDelegateFactory {
         TabStateBrowserControlsVisibilityDelegate tabDelegate =
                 new TabStateBrowserControlsVisibilityDelegate(tab) {
                     @Override
-                    public boolean isHidingBrowserControlsEnabled() {
-                        return mShouldHideBrowserControls && super.isHidingBrowserControlsEnabled();
+                    public boolean canAutoHideBrowserControls() {
+                        return mShouldHideBrowserControls && super.canAutoHideBrowserControls();
                     }
                 };
 

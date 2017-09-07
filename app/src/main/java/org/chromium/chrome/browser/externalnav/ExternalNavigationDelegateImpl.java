@@ -201,8 +201,10 @@ public class ExternalNavigationDelegateImpl implements ExternalNavigationDelegat
         Context context = ContextUtils.getApplicationContext();
         try {
             // Early-out if the intent targets Chrome.
-            if (intent.getComponent() != null
-                    && context.getPackageName().equals(intent.getComponent().getPackageName())) {
+            if (context.getPackageName().equals(intent.getPackage())
+                    || (intent.getComponent() != null
+                               && context.getPackageName().equals(
+                                          intent.getComponent().getPackageName()))) {
                 return true;
             }
 
@@ -492,15 +494,23 @@ public class ExternalNavigationDelegateImpl implements ExternalNavigationDelegat
 
     @Override
     public OverrideUrlLoadingResult clobberCurrentTab(
-            String url, String referrerUrl, Tab tab) {
+            String url, String referrerUrl, final Tab tab) {
         int transitionType = PageTransition.LINK;
-        LoadUrlParams loadUrlParams = new LoadUrlParams(url, transitionType);
+        final LoadUrlParams loadUrlParams = new LoadUrlParams(url, transitionType);
         if (!TextUtils.isEmpty(referrerUrl)) {
             Referrer referrer = new Referrer(referrerUrl, Referrer.REFERRER_POLICY_ALWAYS);
             loadUrlParams.setReferrer(referrer);
         }
         if (tab != null) {
-            tab.loadUrl(loadUrlParams);
+            // Loading URL will start a new navigation which cancels the current one
+            // that this clobbering is being done for. It leads to UAF. To avoid that,
+            // we're loading URL asynchronously. See https://crbug.com/732260.
+            ThreadUtils.postOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    tab.loadUrl(loadUrlParams);
+                }
+            });
             return OverrideUrlLoadingResult.OVERRIDE_WITH_CLOBBERING_TAB;
         } else {
             assert false : "clobberCurrentTab was called with an empty tab.";

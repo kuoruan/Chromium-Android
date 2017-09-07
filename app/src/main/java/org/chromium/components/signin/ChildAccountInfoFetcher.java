@@ -40,7 +40,7 @@ public final class ChildAccountInfoFetcher {
             long nativeAccountFetcherService, String accountId, String accountName) {
         mNativeAccountFetcherService = nativeAccountFetcherService;
         mAccountId = accountId;
-        mAccount = AccountManagerHelper.createAccountFromName(accountName);
+        mAccount = AccountManagerFacade.createAccountFromName(accountName);
 
         // Register for notifications about flag changes in the future.
         mAccountFlagsChangedReceiver = new BroadcastReceiver() {
@@ -70,7 +70,7 @@ public final class ChildAccountInfoFetcher {
 
     private void fetch() {
         Log.d(TAG, "Checking child account status for %s", mAccount.name);
-        AccountManagerHelper.get().checkChildAccount(mAccount, new Callback<Boolean>() {
+        AccountManagerFacade.get().checkChildAccount(mAccount, new Callback<Boolean>() {
             @Override
             public void onResult(Boolean isChildAccount) {
                 setIsChildAccount(isChildAccount);
@@ -93,7 +93,7 @@ public final class ChildAccountInfoFetcher {
     private static void initializeForTests() {
         Context context = ContextUtils.getApplicationContext();
         AccountManagerDelegate delegate = new SystemAccountManagerDelegate();
-        AccountManagerHelper.overrideAccountManagerHelperForTests(context, delegate);
+        AccountManagerFacade.overrideAccountManagerFacadeForTests(context, delegate);
     }
 
     private static native void nativeSetIsChildAccount(

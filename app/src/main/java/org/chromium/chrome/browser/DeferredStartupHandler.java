@@ -95,10 +95,12 @@ public class DeferredStartupHandler {
         RecordHistogram.recordLongTimesHistogram(
                 "UMA.Debug.EnableCrashUpload.DeferredStartUpMaxTaskDuration", mMaxTaskDuration,
                 TimeUnit.MILLISECONDS);
-        RecordHistogram.recordLongTimesHistogram(
-                "UMA.Debug.EnableCrashUpload.DeferredStartUpCompleteTime",
-                SystemClock.uptimeMillis() - UmaUtils.getForegroundStartTime(),
-                TimeUnit.MILLISECONDS);
+        if (UmaUtils.hasComeToForeground()) {
+            RecordHistogram.recordLongTimesHistogram(
+                    "UMA.Debug.EnableCrashUpload.DeferredStartUpCompleteTime",
+                    SystemClock.uptimeMillis() - UmaUtils.getForegroundStartTime(),
+                    TimeUnit.MILLISECONDS);
+        }
     }
 
     /**

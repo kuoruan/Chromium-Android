@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.share.ShareHelper;
+import org.chromium.chrome.browser.share.ShareParams;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.mojo.system.MojoException;
 import org.chromium.ui.base.WindowAndroid;
@@ -76,7 +77,11 @@ public class ShareServiceImpl implements ShareService {
             }
         };
 
-        ShareHelper.share(false, false, mActivity, title, text, url.url, null, null, innerCallback);
+        ShareParams params = new ShareParams.Builder(mActivity, title, url.url)
+                                     .setText(text)
+                                     .setCallback(innerCallback)
+                                     .build();
+        ShareHelper.share(params);
     }
 
     @Nullable

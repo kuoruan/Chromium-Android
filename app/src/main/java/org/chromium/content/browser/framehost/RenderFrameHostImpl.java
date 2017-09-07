@@ -32,6 +32,8 @@ public class RenderFrameHostImpl implements RenderFrameHost {
                 new InterfaceProvider(CoreImpl.getInstance()
                                               .acquireNativeHandle(nativeInterfaceProviderHandle)
                                               .toMessagePipeHandle());
+
+        mDelegate.renderFrameCreated(this);
     }
 
     @CalledByNative
@@ -45,6 +47,7 @@ public class RenderFrameHostImpl implements RenderFrameHost {
     @CalledByNative
     private void clearNativePtr() {
         mNativeRenderFrameHostAndroid = 0;
+        mDelegate.renderFrameDeleted(this);
     }
 
     /**

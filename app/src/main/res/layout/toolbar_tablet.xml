@@ -42,7 +42,7 @@
         <org.chromium.chrome.browser.widget.TintedImageButton
             android:id="@+id/refresh_button"
             style="@style/ToolbarButton"
-            android:src="@drawable/btn_toolbar_reload"
+            android:src="@drawable/btn_reload_stop"
             android:contentDescription="@string/accessibility_btn_refresh" />
 
         <org.chromium.chrome.browser.omnibox.LocationBarTablet

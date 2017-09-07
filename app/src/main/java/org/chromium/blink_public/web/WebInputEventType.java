@@ -36,7 +36,9 @@ import java.lang.annotation.RetentionPolicy;
     WebInputEventType.TOUCH_START, WebInputEventType.TOUCH_TYPE_FIRST, WebInputEventType.TOUCH_MOVE,
     WebInputEventType.TOUCH_END, WebInputEventType.TOUCH_CANCEL,
     WebInputEventType.TOUCH_SCROLL_STARTED, WebInputEventType.TOUCH_TYPE_LAST,
-    WebInputEventType.TYPE_LAST
+    WebInputEventType.POINTER_DOWN, WebInputEventType.POINTER_TYPE_FIRST,
+    WebInputEventType.POINTER_UP, WebInputEventType.POINTER_MOVE, WebInputEventType.POINTER_CANCEL,
+    WebInputEventType.POINTER_TYPE_LAST, WebInputEventType.TYPE_LAST
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface WebInputEventType {
@@ -150,5 +152,14 @@ public @interface WebInputEventType {
   int TOUCH_CANCEL = 31;
   int TOUCH_SCROLL_STARTED = 32;
   int TOUCH_TYPE_LAST = 32;
+  /**
+   * WebPointerEvent: work in progress
+   */
+  int POINTER_DOWN = 33;
+  int POINTER_TYPE_FIRST = 33;
+  int POINTER_UP = 34;
+  int POINTER_MOVE = 35;
+  int POINTER_CANCEL = 36;
+  int POINTER_TYPE_LAST = 36;
   int TYPE_LAST = 32;
 }

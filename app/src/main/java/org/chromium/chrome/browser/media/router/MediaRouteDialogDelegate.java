@@ -13,9 +13,10 @@ public interface MediaRouteDialogDelegate {
     /**
      * Notifies the delegate if the user has chosen a {@link MediaSink} to connect to.
      * onDialogDismissed() is not called in this case.
+     * @param sourceUrn The source the sink was selected for.
      * @param sink The sink selected by the user.
      */
-    void onSinkSelected(MediaSink sink);
+    void onSinkSelected(String sourceUrn, MediaSink sink);
 
     /**
      * Notifies the delegate if the user has closed the existing route.

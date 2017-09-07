@@ -17,7 +17,7 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.components.invalidation.PendingInvalidation;
-import org.chromium.components.signin.AccountManagerHelper;
+import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.components.sync.AndroidSyncSettings;
 
 import java.util.ArrayList;
@@ -61,7 +61,7 @@ public class DelayedInvalidationsController {
             return false;
         } else {
             Log.d(TAG, "Handling pending invalidations.");
-            Account account = AccountManagerHelper.createAccountFromName(accountName);
+            Account account = AccountManagerFacade.createAccountFromName(accountName);
             List<Bundle> bundles = popPendingInvalidations(context);
             notifyInvalidationsOnBackgroundThread(context, account, bundles);
             return true;

@@ -46,10 +46,13 @@ public class DataReductionDataUseItem {
     }
 
     /**
-     * Returns the amount of data saved by the associated hostname.
+     * Returns the amount of data saved by the associated hostname. If the data used is greater than
+     * data saved, return zero savings so that negative savings are not shown, which users found to
+     * be confusing.
      * @return The data saved.
      */
     public long getDataSaved() {
+        if (mDataUsed > mOriginalSize) return 0;
         return mOriginalSize - mDataUsed;
     }
 
@@ -63,11 +66,14 @@ public class DataReductionDataUseItem {
     }
 
     /**
-     * Returns a formatted String of the data saved by the associated hostname.
+     * Returns a formatted String of the data saved by the associated hostname. If the data used is
+     * greater than data saved, return zero savings so that negative savings are not shown, which
+     * users found to be confusing.
      * @param context An Android context.
      * @return A formatted string of the data saved.
      */
     public String getFormattedDataSaved(Context context) {
+        if (mDataUsed > mOriginalSize) return Formatter.formatFileSize(context, 0);
         return Formatter.formatFileSize(context, mOriginalSize - mDataUsed);
     }
 }

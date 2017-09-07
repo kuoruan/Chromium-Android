@@ -13,6 +13,7 @@ import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.chrome.browser.ChromeActivity;
+import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.ui.UiUtils;
 import org.chromium.ui.base.WindowAndroid;
 
@@ -48,11 +49,14 @@ public final class ScreenshotTask {
      */
     public static void create(Activity activity, final ScreenshotTaskCallback callback) {
         if (activity instanceof ChromeActivity) {
-            Rect rect = new Rect();
-            activity.getWindow().getDecorView().getRootView().getWindowVisibleDisplayFrame(rect);
-            createCompositorScreenshot(((ChromeActivity) activity).getWindowAndroid(), rect,
-                    callback);
-            return;
+            ChromeActivity chromeActivity = (ChromeActivity) activity;
+            if (shouldTakeCompositorScreenshot(chromeActivity)) {
+                Rect rect = new Rect();
+                activity.getWindow().getDecorView().getRootView().getWindowVisibleDisplayFrame(
+                        rect);
+                createCompositorScreenshot(chromeActivity.getWindowAndroid(), rect, callback);
+                return;
+            }
         }
 
         final Bitmap bitmap = prepareScreenshot(activity, null);
@@ -62,6 +66,21 @@ public final class ScreenshotTask {
                 callback.onGotBitmap(bitmap);
             }
         });
+    }
+
+    private static boolean shouldTakeCompositorScreenshot(ChromeActivity activity) {
+        Tab currentTab = activity.getActivityTab();
+        // If the tab is null, assume in the tab switcher so a Compositor snapshot is good.
+        if (currentTab == null) return true;
+        // If the tab is not interactable, also assume in the tab switcher.
+        if (!currentTab.isUserInteractable()) return true;
+        // If the tab focused and not showing Android widget based content, then use the Compositor
+        // based screenshot.
+        if (currentTab.getNativePage() == null && !currentTab.isShowingSadTab()) return true;
+
+        // Assume the UI is drawn primarily by Android widgets, so do not use the Compositor
+        // screenshot.
+        return false;
     }
 
     /**

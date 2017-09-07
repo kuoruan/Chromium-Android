@@ -6,6 +6,8 @@ package org.chromium.content.browser;
 
 import android.content.Context;
 
+import org.chromium.base.process_launcher.ChildProcessConnection;
+
 /**
  * Manages oom bindings used to bound child services. "Oom binding" is a binding that raises the
  * process oom priority so that it shouldn't be killed by the OS out-of-memory killer under

@@ -8,6 +8,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import org.chromium.chrome.browser.AppHooks;
+
 /**
  * MediaButtonReceiver is a basic BroadcastReceiver class that receives
  * ACTION_MEDIA_BUTTON from a MediaSessionCompat. It then forward these intents
@@ -20,6 +22,6 @@ public abstract class MediaButtonReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         intent.setClass(context, getServiceClass());
-        context.startService(intent);
+        AppHooks.get().startForegroundService(intent);
     }
 }

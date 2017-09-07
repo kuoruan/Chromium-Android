@@ -59,8 +59,9 @@ interface ContextualSearchSelectionHandler {
 
     /**
      * Handle a Tap gesture that has not been suppressed by showing the Tap Search UI.
+     * @param tapTimeNanoseconds When the last tap gesture happened, or {@code 0} if not known.
      */
-    public void handleNonSuppressedTap();
+    public void handleNonSuppressedTap(long tapTimeNanoseconds);
 
     /**
      * Handle updating metrics to reflect that a Tap gesture <i>would</i> be suppressed

@@ -7,8 +7,6 @@ package org.chromium.chrome.browser.download.ui;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.content.res.Resources;
-import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v7.widget.RecyclerView;
@@ -17,7 +15,6 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 
-import org.chromium.base.ContextUtils;
 import org.chromium.base.FileUtils;
 import org.chromium.base.ObserverList;
 import org.chromium.base.VisibleForTesting;
@@ -32,7 +29,6 @@ import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.snackbar.Snackbar;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;
 import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarController;
-import org.chromium.chrome.browser.widget.TintedDrawable;
 import org.chromium.chrome.browser.widget.selection.SelectableListLayout;
 import org.chromium.chrome.browser.widget.selection.SelectableListToolbar;
 import org.chromium.chrome.browser.widget.selection.SelectableListToolbar.SearchDelegate;
@@ -73,12 +69,9 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
         private ThumbnailProvider mThumbnailProvider;
 
         DownloadBackendProvider() {
-            Resources resources = ContextUtils.getApplicationContext().getResources();
-            int iconSize = resources.getDimensionPixelSize(R.dimen.downloads_item_icon_size);
-
             mOfflinePageBridge = new OfflinePageDownloadBridge(Profile.getLastUsedProfile());
             mSelectionDelegate = new DownloadItemSelectionDelegate();
-            mThumbnailProvider = new ThumbnailProviderImpl(iconSize);
+            mThumbnailProvider = new ThumbnailProviderImpl();
         }
 
         @Override
@@ -213,9 +206,10 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
 
         mToolbar = (DownloadManagerToolbar) mSelectableListLayout.initializeToolbar(
                 R.layout.download_manager_toolbar, mBackendProvider.getSelectionDelegate(), 0, null,
-                R.id.normal_menu_group, R.id.selection_mode_menu_group, null, this);
+                R.id.normal_menu_group, R.id.selection_mode_menu_group, null, this, true);
         mToolbar.initializeFilterSpinner(mFilterAdapter);
         mToolbar.initializeSearchView(this, R.string.download_manager_search, R.id.search_menu_id);
+        mToolbar.setInfoMenuItem(R.id.info_menu_id);
         addObserver(mToolbar);
 
         mSelectableListLayout.configureWideDisplayStyle();
@@ -398,12 +392,7 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
         }
 
         mHistoryAdapter.setShowStorageInfoHeader(show);
-        MenuItem infoMenuItem = mToolbar.getMenu().findItem(R.id.info_menu_id);
-        Drawable iconDrawable = TintedDrawable.constructTintedDrawable(mActivity.getResources(),
-                R.drawable.btn_info,
-                show ? R.color.light_active_color : R.color.default_text_color);
-        infoMenuItem.setIcon(iconDrawable);
-        infoMenuItem.setTitle(show ? R.string.hide_info : R.string.show_info);
+        mToolbar.updateInfoMenuItem(true, show);
     }
 
     /**

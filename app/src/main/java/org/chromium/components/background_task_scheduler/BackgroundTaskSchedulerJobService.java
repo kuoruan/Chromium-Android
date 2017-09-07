@@ -18,6 +18,7 @@ import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 
+import java.util.List;
 /**
  * An implementation of {@link BackgroundTaskSchedulerDelegate} that uses the system
  * {@link JobScheduler} to schedule jobs.
@@ -141,8 +142,8 @@ class BackgroundTaskSchedulerJobService implements BackgroundTaskSchedulerDelega
         JobScheduler jobScheduler =
                 (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
 
-        if (taskInfo.shouldUpdateCurrent()) {
-            jobScheduler.cancel(taskInfo.getTaskId());
+        if (!taskInfo.shouldUpdateCurrent() && hasPendingJob(jobScheduler, taskInfo.getTaskId())) {
+            return true;
         }
 
         int result = jobScheduler.schedule(jobInfo);
@@ -155,5 +156,14 @@ class BackgroundTaskSchedulerJobService implements BackgroundTaskSchedulerDelega
         JobScheduler jobScheduler =
                 (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         jobScheduler.cancel(taskId);
+    }
+
+    private boolean hasPendingJob(JobScheduler jobScheduler, int jobId) {
+        List<JobInfo> pendingJobs = jobScheduler.getAllPendingJobs();
+        for (JobInfo pendingJob : pendingJobs) {
+            if (pendingJob.getId() == jobId) return true;
+        }
+
+        return false;
     }
 }

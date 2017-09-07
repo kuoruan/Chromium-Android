@@ -4,11 +4,15 @@
 
 package org.chromium.chrome.browser.suggestions;
 
+import android.support.annotation.Nullable;
+
 import org.chromium.base.metrics.RecordUserAction;
+import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.NativePageHost;
 import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.bookmarks.BookmarkUtils;
+import org.chromium.chrome.browser.device.DeviceClassManager;
 import org.chromium.chrome.browser.download.DownloadUtils;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.ntp.NewTabPageUma;
@@ -19,6 +23,7 @@ import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
 import org.chromium.chrome.browser.offlinepages.OfflinePageUtils;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.profiles.Profile;
+import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
@@ -28,6 +33,7 @@ import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.content_public.common.Referrer;
 import org.chromium.ui.base.PageTransition;
 import org.chromium.ui.mojom.WindowOpenDisposition;
+import org.chromium.ui.widget.Toast;
 
 /**
  * {@link SuggestionsUiDelegate} implementation.
@@ -97,7 +103,8 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
                     || windowOpenDisposition == WindowOpenDisposition.NEW_WINDOW
                     || windowOpenDisposition == WindowOpenDisposition.NEW_BACKGROUND_TAB;
             DownloadUtils.openFile(article.getAssetDownloadFile(),
-                    article.getAssetDownloadMimeType(), article.getAssetDownloadGuid(), false);
+                    article.getAssetDownloadMimeType(), article.getAssetDownloadGuid(), false, null,
+                    null);
             return;
         }
 
@@ -133,22 +140,26 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
                     CHROME_CONTENT_SUGGESTIONS_REFERRER, Referrer.REFERRER_POLICY_ALWAYS));
         }
 
-        openUrl(windowOpenDisposition, loadUrlParams);
-
-        // TODO(treib): Also track other dispositions. crbug.com/665915
-        if (windowOpenDisposition == WindowOpenDisposition.CURRENT_TAB) {
-            NewTabPageUma.monitorContentSuggestionVisit(mHost.getActiveTab(), article.mCategory);
+        Tab loadingTab = openUrl(windowOpenDisposition, loadUrlParams);
+        if (loadingTab != null && loadingTab.getWebContents() != null) {
+            // TODO(https://crbug.com/665915): Handle cases where webcontents is null by waiting
+            // for it to be added, probably using TabObserver#webContentsCreated().
+            SuggestionsMetrics.recordVisit(loadingTab, article);
         }
     }
 
     @Override
-    public void openUrl(int windowOpenDisposition, LoadUrlParams loadUrlParams) {
+    @Nullable
+    public Tab openUrl(int windowOpenDisposition, LoadUrlParams loadUrlParams) {
+        Tab loadingTab = null;
+
         switch (windowOpenDisposition) {
             case WindowOpenDisposition.CURRENT_TAB:
                 mHost.loadUrl(loadUrlParams, mTabModelSelector.isIncognitoSelected());
+                loadingTab = mHost.getActiveTab();
                 break;
             case WindowOpenDisposition.NEW_BACKGROUND_TAB:
-                openUrlInNewTab(loadUrlParams);
+                loadingTab = openUrlInNewTab(loadUrlParams);
                 break;
             case WindowOpenDisposition.OFF_THE_RECORD:
                 mHost.loadUrl(loadUrlParams, true);
@@ -162,6 +173,8 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
             default:
                 assert false;
         }
+
+        return loadingTab;
     }
 
     private boolean openRecentTabSnippet(SnippetArticle article) {
@@ -178,9 +191,22 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
         tabDelegate.createTabInOtherWindow(loadUrlParams, mActivity, mHost.getParentId());
     }
 
-    private void openUrlInNewTab(LoadUrlParams loadUrlParams) {
-        mTabModelSelector.openNewTab(loadUrlParams, TabLaunchType.FROM_LONGPRESS_BACKGROUND,
-                mHost.getActiveTab(), /* incognito = */ false);
+    private Tab openUrlInNewTab(LoadUrlParams loadUrlParams) {
+        Tab tab = mTabModelSelector.openNewTab(loadUrlParams,
+                TabLaunchType.FROM_LONGPRESS_BACKGROUND, mHost.getActiveTab(),
+                /* incognito = */ false);
+
+        // If the bottom sheet NTP UI is showing, a toast is not necessary because the bottom sheet
+        // will be closed when the overview is hidden due to the new tab creation above.
+        // If animations are disabled in the DeviceClassManager, a toast is already displayed for
+        // all tabs opened in the background.
+        // TODO(twellington): Replace this with an animation.
+        if (mActivity.getBottomSheet() != null && !mActivity.getBottomSheet().isShowingNewTab()
+                && DeviceClassManager.enableAnimations()) {
+            Toast.makeText(mActivity, R.string.open_in_new_tab_toast, Toast.LENGTH_SHORT).show();
+        }
+
+        return tab;
     }
 
     private void saveUrlForOffline(String url) {

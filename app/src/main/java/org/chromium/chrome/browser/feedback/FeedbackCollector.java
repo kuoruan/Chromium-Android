@@ -114,15 +114,10 @@ public class FeedbackCollector
      * @param profile the current Profile.
      * @param url The URL of the current tab to include in the feedback the user sends, if any.
      *            This parameter may be null.
+     * @param takeScreenshot Whether to take screenshot.
      * @param callback The callback which is invoked when feedback gathering is finished.
      * @return the created {@link FeedbackCollector}.
      */
-    public static FeedbackCollector create(
-            Activity activity, Profile profile, @Nullable String url, FeedbackResult callback) {
-        // TODO(ymalik): Remove this constructor once all the references are removed.
-        return create(activity, profile, url, true, callback);
-    }
-
     public static FeedbackCollector create(Activity activity, Profile profile, @Nullable String url,
             boolean takeScreenshot, FeedbackResult callback) {
         ThreadUtils.assertOnUiThread();

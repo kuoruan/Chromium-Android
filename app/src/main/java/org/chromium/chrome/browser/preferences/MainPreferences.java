@@ -207,6 +207,10 @@ public class MainPreferences extends PreferenceFragment
         updatePreferences();
     }
 
+    ManagedPreferenceDelegate getManagedPreferenceDelegateForTest() {
+        return mManagedPreferenceDelegate;
+    }
+
     private ManagedPreferenceDelegate createManagedPreferenceDelegate() {
         return new ManagedPreferenceDelegate() {
             @Override

@@ -23,14 +23,14 @@ import org.chromium.base.FieldTrialList;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.chrome.browser.ApplicationLifetime;
+import org.chromium.base.library_loader.LibraryLoader;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.firstrun.FirstRunGlueImpl;
+import org.chromium.chrome.browser.omnibox.OmniboxPlaceholderFieldTrial;
 import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
 import org.chromium.chrome.browser.tabmodel.DocumentModeAssassin;
-import org.chromium.chrome.browser.webapps.ChromeWebApkHost;
-import org.chromium.components.signin.AccountManagerHelper;
+import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.ui.base.DeviceFormFactor;
 
 import java.util.List;
@@ -47,6 +47,7 @@ public class FeatureUtilities {
     private static Boolean sHasGoogleAccountAuthenticator;
     private static Boolean sHasRecognitionIntentHandler;
     private static Boolean sChromeHomeEnabled;
+    private static String sChromeHomeSwipeLogicType;
 
     private static String sCachedHerbFlavor;
     private static boolean sIsHerbFlavorCached;
@@ -89,7 +90,7 @@ public class FeatureUtilities {
     @VisibleForTesting
     static boolean hasGoogleAccountAuthenticator(Context context) {
         if (sHasGoogleAccountAuthenticator == null) {
-            AccountManagerHelper accountHelper = AccountManagerHelper.get();
+            AccountManagerFacade accountHelper = AccountManagerFacade.get();
             sHasGoogleAccountAuthenticator = accountHelper.hasGoogleAccountAuthenticator();
         }
         return sHasGoogleAccountAuthenticator;
@@ -97,7 +98,7 @@ public class FeatureUtilities {
 
     @VisibleForTesting
     static boolean hasGoogleAccounts(Context context) {
-        return AccountManagerHelper.get().hasGoogleAccounts();
+        return AccountManagerFacade.get().hasGoogleAccounts();
     }
 
     @SuppressLint("InlinedApi")
@@ -185,9 +186,15 @@ public class FeatureUtilities {
      */
     public static void cacheNativeFlags() {
         cacheHerbFlavor();
-        ChromeWebApkHost.cacheEnabledStateForNextLaunch();
         cacheChromeHomeEnabled();
         FirstRunGlueImpl.cacheFirstRunPrefs();
+        OmniboxPlaceholderFieldTrial.cacheOmniboxPlaceholderGroup();
+
+        // Propagate DONT_PREFETCH_LIBRARIES feature value to LibraryLoader. This can't
+        // be done in LibraryLoader itself because it lives in //base and can't depend
+        // on ChromeFeatureList.
+        LibraryLoader.setDontPrefetchLibrariesOnNextRuns(
+                ChromeFeatureList.isEnabled(ChromeFeatureList.DONT_PREFETCH_LIBRARIES));
     }
 
     /**
@@ -244,12 +251,7 @@ public class FeatureUtilities {
 
         boolean isChromeHomeEnabled = ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME);
         ChromePreferenceManager manager = ChromePreferenceManager.getInstance();
-        boolean valueChanged = isChromeHomeEnabled != manager.isChromeHomeEnabled();
         manager.setChromeHomeEnabled(isChromeHomeEnabled);
-        sChromeHomeEnabled = isChromeHomeEnabled;
-
-        // If the cached value changed, restart chrome.
-        if (valueChanged) ApplicationLifetime.terminate(true);
     }
 
     /**
@@ -257,17 +259,59 @@ public class FeatureUtilities {
      */
     public static boolean isChromeHomeEnabled() {
         if (sChromeHomeEnabled == null) {
-            sChromeHomeEnabled = ChromePreferenceManager.getInstance().isChromeHomeEnabled();
+            // Allow disk access for preferences while Chrome Home is in experimentation.
+            StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
+            try {
+                sChromeHomeEnabled = ChromePreferenceManager.getInstance().isChromeHomeEnabled();
+            } finally {
+                StrictMode.setThreadPolicy(oldPolicy);
+            }
+
+            // If the browser has been initialized by this point, check the experiment as well to
+            // avoid the restart logic in cacheChromeHomeEnabled.
+            if (ChromeFeatureList.isInitialized()) {
+                boolean chromeHomeExperimentEnabled =
+                        ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME);
+
+                if (chromeHomeExperimentEnabled != sChromeHomeEnabled) {
+                    sChromeHomeEnabled = chromeHomeExperimentEnabled;
+                    ChromePreferenceManager.getInstance().setChromeHomeEnabled(
+                            chromeHomeExperimentEnabled);
+                }
+            }
         }
 
         return sChromeHomeEnabled;
     }
 
     /**
+     * Resets whether Chrome Home is enabled for tests. After this is called, the next call to
+     * #isChromeHomeEnabled() will retrieve the value from shared preferences.
+     */
+    public static void resetChromeHomeEnabledForTests() {
+        sChromeHomeEnabled = null;
+    }
+
+    /**
      * @return Whether or not the expand button for Chrome Home is enabled.
      */
     public static boolean isChromeHomeExpandButtonEnabled() {
+        if (!ChromeFeatureList.isInitialized()) return false;
         return ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_EXPAND_BUTTON);
+    }
+
+    /**
+     * @return The type of swipe logic used for opening the bottom sheet in Chrome Home. Null is
+     *         returned if the command line is not initialized or no experiment is specified.
+     */
+    public static String getChromeHomeSwipeLogicType() {
+        if (sChromeHomeSwipeLogicType == null && CommandLine.isInitialized()) {
+            CommandLine instance = CommandLine.getInstance();
+            sChromeHomeSwipeLogicType =
+                    instance.getSwitchValue(ChromeSwitches.CHROME_HOME_SWIPE_LOGIC);
+        }
+
+        return sChromeHomeSwipeLogicType;
     }
 
     private static native void nativeSetCustomTabVisible(boolean visible);

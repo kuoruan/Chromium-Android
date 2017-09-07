@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.omnibox;
 
+import android.content.res.Resources;
 import android.graphics.Paint;
 import android.text.Html;
 import android.text.Spannable;
@@ -13,6 +14,10 @@ import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.MetricAffectingSpan;
 import android.util.Log;
+
+import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.base.ContextUtils;
+import org.chromium.chrome.R;
 
 import java.util.List;
 
@@ -54,21 +59,6 @@ class AnswerTextBuilder {
     private static final int ANSWERS_ANSWER_TEXT_LARGE_SIZE_SP = 24;
     private static final int ANSWERS_SECONDARY_TEXT_SMALL_SIZE_SP = 12;
     private static final int ANSWERS_SECONDARY_TEXT_MEDIUM_SIZE_SP = 14;
-
-    private static final int ANSWERS_TOP_ALIGNED_TEXT_COLOR = 0xFF8A8A8A;
-    // These two colors deviate from the AIS spec because they provide better
-    // contrast over the background in Chrome, but they do come from the
-    // Google pallette.
-    private static final int ANSWERS_DESCRIPTION_TEXT_NEGATIVE_COLOR = 0xFFC53929;
-    private static final int ANSWERS_DESCRIPTION_TEXT_POSITIVE_COLOR = 0xFF0B8043;
-    private static final int ANSWERS_SUGGESTION_TEXT_COLOR =
-            SuggestionView.TITLE_COLOR_STANDARD_FONT_DARK;
-    private static final int ANSWERS_PERSONALIZED_SUGGESTION_TEXT_COLOR =
-            SuggestionView.TITLE_COLOR_STANDARD_FONT_DARK;
-    private static final int ANSWERS_ANSWER_TEXT_MEDIUM_COLOR = 0xFF8A8A8A;
-    private static final int ANSWERS_ANSWER_TEXT_LARGE_COLOR = 0xFF8A8A8A;
-    private static final int ANSWERS_SECONDARY_TEXT_SMALL_COLOR = 0xFF8A8A8A;
-    private static final int ANSWERS_SECONDARY_TEXT_MEDIUM_COLOR = 0xFF8A8A8A;
 
     /**
      * Builds a Spannable containing all of the styled text in the supplied ImageLine.
@@ -217,28 +207,32 @@ class AnswerTextBuilder {
      * @param type The answer type as specified at http://goto.google.com/ais_api.
      */
     private static int getAnswerTextColor(int type) {
+        Resources resources = ContextUtils.getApplicationContext().getResources();
         switch (type) {
-            case ANSWERS_TOP_ALIGNED_TEXT_TYPE:
-                return ANSWERS_TOP_ALIGNED_TEXT_COLOR;
             case ANSWERS_DESCRIPTION_TEXT_NEGATIVE_TYPE:
-                return ANSWERS_DESCRIPTION_TEXT_NEGATIVE_COLOR;
+                return ApiCompatibilityUtils.getColor(
+                        resources, R.color.answers_description_text_negative);
+
             case ANSWERS_DESCRIPTION_TEXT_POSITIVE_TYPE:
-                return ANSWERS_DESCRIPTION_TEXT_POSITIVE_COLOR;
+                return ApiCompatibilityUtils.getColor(
+                        resources, R.color.answers_description_text_positive);
+
             case ANSWERS_SUGGESTION_TEXT_TYPE:
-                return ANSWERS_SUGGESTION_TEXT_COLOR;
+                return ApiCompatibilityUtils.getColor(resources, R.color.url_emphasis_default_text);
+
             case ANSWERS_PERSONALIZED_SUGGESTION_TEXT_TYPE:
-                return ANSWERS_PERSONALIZED_SUGGESTION_TEXT_COLOR;
+                return ApiCompatibilityUtils.getColor(resources, R.color.url_emphasis_default_text);
+
+            case ANSWERS_TOP_ALIGNED_TEXT_TYPE:
             case ANSWERS_ANSWER_TEXT_MEDIUM_TYPE:
-                return ANSWERS_ANSWER_TEXT_MEDIUM_COLOR;
             case ANSWERS_ANSWER_TEXT_LARGE_TYPE:
-                return ANSWERS_ANSWER_TEXT_LARGE_COLOR;
             case ANSWERS_SECONDARY_TEXT_SMALL_TYPE:
-                return ANSWERS_SECONDARY_TEXT_SMALL_COLOR;
             case ANSWERS_SECONDARY_TEXT_MEDIUM_TYPE:
-                return ANSWERS_SECONDARY_TEXT_MEDIUM_COLOR;
+                return ApiCompatibilityUtils.getColor(resources, R.color.answers_answer_text);
+
             default:
                 Log.w(TAG, "Unknown answer type: " + type);
-                return ANSWERS_SUGGESTION_TEXT_COLOR;
+                return ApiCompatibilityUtils.getColor(resources, R.color.url_emphasis_default_text);
         }
     }
 

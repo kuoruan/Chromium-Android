@@ -142,9 +142,10 @@ public class X509Util {
         }
 
         @Override
-        public List<X509Certificate> checkServerTrusted(X509Certificate[] chain,
-                                                        String authType,
-                                                        String host) throws CertificateException {
+        @SuppressLint("NewApi")
+        public List<X509Certificate> checkServerTrusted(
+                X509Certificate[] chain, String authType, String host) throws CertificateException {
+            // API Level 17: android.net.http.X509TrustManagerExtensions#checkServerTrusted
             return mTrustManagerExtensions.checkServerTrusted(chain, authType, host);
         }
     }

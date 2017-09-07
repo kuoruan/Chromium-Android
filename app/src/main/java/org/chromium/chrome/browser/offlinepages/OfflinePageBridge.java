@@ -55,7 +55,6 @@ public class OfflinePageBridge {
 
     /** Whether an offline sub-feature is enabled or not. */
     private static Boolean sOfflineBookmarksEnabled;
-    private static Boolean sBackgroundLoadingEnabled;
     private static Boolean sIsPageSharingEnabled;
 
     /**
@@ -95,7 +94,7 @@ public class OfflinePageBridge {
          * @param offlineId The offline ID of the deleted offline page.
          * @param clientId The client supplied ID of the deleted offline page.
          */
-        public void offlinePageDeleted(long offlineId, ClientId clientId) {}
+        public void offlinePageDeleted(DeletedPageInfo deletedPage) {}
     }
 
     /**
@@ -528,6 +527,11 @@ public class OfflinePageBridge {
         return nativeGetOfflinePage(mNativeOfflinePageBridge, webContents);
     }
 
+    /**
+     * Allows setting the offline bookmarks feature as enabled or disabled for testing. This is
+     * required for tests that don't load the native binary otherwise UnsatisfiedLinkError sadness
+     * will occur.
+     */
     @VisibleForTesting
     static void setOfflineBookmarksEnabledForTesting(boolean enabled) {
         sOfflineBookmarksEnabled = enabled;
@@ -564,9 +568,9 @@ public class OfflinePageBridge {
     }
 
     @CalledByNative
-    void offlinePageDeleted(long offlineId, ClientId clientId) {
+    void offlinePageDeleted(DeletedPageInfo deletedPage) {
         for (OfflinePageModelObserver observer : mObservers) {
-            observer.offlinePageDeleted(offlineId, clientId);
+            observer.offlinePageDeleted(deletedPage);
         }
     }
 
@@ -589,6 +593,12 @@ public class OfflinePageBridge {
     @CalledByNative
     private static ClientId createClientId(String clientNamespace, String id) {
         return new ClientId(clientNamespace, id);
+    }
+
+    @CalledByNative
+    private static DeletedPageInfo createDeletedPageInfo(
+            long offlineId, String clientNamespace, String clientId, String requestOrigin) {
+        return new DeletedPageInfo(offlineId, clientNamespace, clientId, requestOrigin);
     }
 
     private static native boolean nativeIsOfflineBookmarksEnabled();

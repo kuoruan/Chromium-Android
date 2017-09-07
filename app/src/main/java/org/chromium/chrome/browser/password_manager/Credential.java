@@ -4,7 +4,7 @@
 
 package org.chromium.chrome.browser.password_manager;
 
-import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 
 import org.chromium.base.annotations.CalledByNative;
 
@@ -18,7 +18,7 @@ public class Credential {
     private final String mOriginUrl;
     private final String mFederation;
     private final int mIndex;
-    private Bitmap mAvatar;
+    private Drawable mAvatar;
 
     /**
      * @param username username which is used to authenticate user.
@@ -59,11 +59,11 @@ public class Credential {
         return mIndex;
     }
 
-    public Bitmap getAvatar() {
+    public Drawable getAvatar() {
         return mAvatar;
     }
 
-    public void setBitmap(Bitmap avatar) {
+    public void setAvatar(Drawable avatar) {
         mAvatar = avatar;
     }
 

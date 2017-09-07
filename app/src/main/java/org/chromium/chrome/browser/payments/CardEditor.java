@@ -15,6 +15,7 @@ import android.util.Pair;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Callback;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.autofill.CardType;
 import org.chromium.chrome.browser.autofill.CreditCardScanner;
 import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.AutofillProfile;
@@ -89,7 +90,7 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
     /** The dropdown key that triggers the address editor to add a new billing address. */
     private static final String BILLING_ADDRESS_ADD_NEW = "add";
 
-    /** The shared preference for the 'save card to device' checkbox status*/
+    /** The shared preference for the 'save card to device' checkbox status. */
     private static final String CHECK_SAVE_CARD_TO_DEVICE = "check_save_card_to_device";
 
     /** The web contents where the web payments API is invoked. */
@@ -130,6 +131,11 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
      * complete payment instrument.
      */
     private final Set<String> mAcceptedBasicCardIssuerNetworks;
+
+    /**
+     * The accepted card types: CardType.UNKNOWN, CardType.CREDIT, CardType.DEBIT, CardType.PREPAID.
+     */
+    private final Set<Integer> mAcceptedBasicCardTypes;
 
     /**
      * The information about the accepted card issuer networks. Used in the editor as a hint to the
@@ -229,6 +235,7 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
 
         mAcceptedIssuerNetworks = new HashSet<>();
         mAcceptedBasicCardIssuerNetworks = new HashSet<>();
+        mAcceptedBasicCardTypes = new HashSet<>();
         mAcceptedCardIssuerNetworks = new ArrayList<>();
         mHandler = new Handler();
 
@@ -313,6 +320,8 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
                         addAcceptedNetwork(network);
                     }
                 }
+
+                mAcceptedBasicCardTypes.addAll(AutofillPaymentApp.convertBasicCardToTypes(data));
             }
         }
     }
@@ -356,7 +365,8 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
         // Ensure that |instrument| and |card| are never null.
         final AutofillPaymentInstrument instrument = isNewCard
                 ? new AutofillPaymentInstrument(mWebContents, new CreditCard(),
-                          null /* billingAddress */, null /* methodName */)
+                          null /* billingAddress */, null /* methodName */,
+                          false /* matchesMerchantCardTypeExactly */)
                 : toEdit;
         final CreditCard card = instrument.getCard();
 
@@ -470,8 +480,7 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
                 descriptions.add(mAcceptedCardIssuerNetworks.get(i).description);
             }
             mIconHint = EditorFieldModel.createIconList(
-                    mContext.getString(R.string.payments_accepted_cards_label), icons,
-                    descriptions);
+                    mContext.getString(getAcceptedCardsLabelResourceId()), icons, descriptions);
         }
         editor.addField(mIconHint);
 
@@ -485,11 +494,12 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
         if (mNumberField == null) {
             mNumberField = EditorFieldModel.createTextInput(
                     EditorFieldModel.INPUT_TYPE_HINT_CREDIT_CARD,
-                    mContext.getString(R.string.autofill_credit_card_editor_number), null,
-                    mCardNumberValidator, mCardIconGenerator,
+                    mContext.getString(R.string.autofill_credit_card_editor_number),
+                    null /* suggestions */, null /* formatter */, mCardNumberValidator,
+                    mCardIconGenerator,
                     mContext.getString(R.string.payments_field_required_validation_message),
                     mContext.getString(R.string.payments_card_number_invalid_validation_message),
-                    null);
+                    null /* value */);
             if (mCanScan) {
                 mNumberField.addActionIcon(R.drawable.ic_photo_camera,
                         R.string.autofill_scan_credit_card, new Runnable() {
@@ -507,11 +517,13 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
 
         // Name on card is required.
         if (mNameField == null) {
-            mNameField = EditorFieldModel.createTextInput(
-                    EditorFieldModel.INPUT_TYPE_HINT_PERSON_NAME,
-                    mContext.getString(R.string.autofill_credit_card_editor_name), null, null, null,
-                    mContext.getString(R.string.payments_field_required_validation_message), null,
-                    null);
+            mNameField =
+                    EditorFieldModel.createTextInput(EditorFieldModel.INPUT_TYPE_HINT_PERSON_NAME,
+                            mContext.getString(R.string.autofill_credit_card_editor_name),
+                            null /* suggestions */, null /* formatter */, null /* validator */,
+                            null /* valueIconGenerator */,
+                            mContext.getString(R.string.payments_field_required_validation_message),
+                            null /* invalidErrorMessage */, null /* value */);
         }
         mNameField.setValue(card.getName());
         editor.addField(mNameField);
@@ -579,6 +591,22 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
             mYearField.setValue(mYearField.getDropdownKeyValues().get(0).getKey());
         }
         editor.addField(mYearField);
+    }
+
+    private int getAcceptedCardsLabelResourceId() {
+        int credit = mAcceptedBasicCardTypes.contains(CardType.CREDIT) ? 1 : 0;
+        int debit = mAcceptedBasicCardTypes.contains(CardType.DEBIT) ? 1 : 0;
+        int prepaid = mAcceptedBasicCardTypes.contains(CardType.PREPAID) ? 1 : 0;
+        int[][][] resourceIds = new int[2][2][2];
+        resourceIds[0][0][0] = R.string.payments_accepted_cards_label;
+        resourceIds[0][0][1] = R.string.payments_accepted_prepaid_cards_label;
+        resourceIds[0][1][0] = R.string.payments_accepted_debit_cards_label;
+        resourceIds[0][1][1] = R.string.payments_accepted_debit_prepaid_cards_label;
+        resourceIds[1][0][0] = R.string.payments_accepted_credit_cards_label;
+        resourceIds[1][0][1] = R.string.payments_accepted_credit_prepaid_cards_label;
+        resourceIds[1][1][0] = R.string.payments_accepted_credit_debit_cards_label;
+        resourceIds[1][1][1] = R.string.payments_accepted_cards_label;
+        return resourceIds[credit][debit][prepaid];
     }
 
     /** Builds the key-value pairs for the month dropdown. */

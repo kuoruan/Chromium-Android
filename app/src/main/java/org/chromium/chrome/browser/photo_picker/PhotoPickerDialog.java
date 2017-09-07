@@ -5,14 +5,13 @@
 package org.chromium.chrome.browser.photo_picker;
 
 import android.content.Context;
-import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
-import android.view.ViewGroup.LayoutParams;
-import android.view.WindowManager;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.ui.PhotoPickerListener;
+
+import java.util.List;
 
 /**
  * UI for the photo chooser that shows on the Android platform as a result of
@@ -28,24 +27,16 @@ public class PhotoPickerDialog extends AlertDialog {
      * @param listener The listener object that gets notified when an action is taken.
      * @param multiSelectionAllowed Whether the photo picker should allow multiple items to be
      *                              selected.
+     * @param mimeTypes A list of mime types to show in the dialog.
      */
-    public PhotoPickerDialog(
-            Context context, PhotoPickerListener listener, boolean multiSelectionAllowed) {
+    public PhotoPickerDialog(Context context, PhotoPickerListener listener,
+            boolean multiSelectionAllowed, List<String> mimeTypes) {
         super(context, R.style.FullscreenWhite);
 
         // Initialize the main content view.
         mCategoryView = new PickerCategoryView(context);
-        mCategoryView.initialize(this, listener, multiSelectionAllowed);
+        mCategoryView.initialize(this, listener, multiSelectionAllowed, mimeTypes);
         setView(mCategoryView);
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 
     @Override

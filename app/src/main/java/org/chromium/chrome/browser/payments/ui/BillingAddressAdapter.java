@@ -6,7 +6,6 @@ package org.chromium.chrome.browser.payments.ui;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Typeface;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -14,6 +13,7 @@ import android.widget.TextView;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.widget.TintedDrawable;
+import org.chromium.ui.UiUtils;
 
 import java.util.List;
 
@@ -116,9 +116,7 @@ public class BillingAddressAdapter<T> extends DropdownFieldAdapter<T> {
             // Set the correct appearance, face and style for the text.
             ApiCompatibilityUtils.setTextAppearance(
                     textView, R.style.PaymentsUiSectionAddButtonLabel);
-            textView.setTypeface(
-                    Typeface.create(resources.getString(R.string.roboto_medium_typeface),
-                            R.integer.roboto_medium_textstyle));
+            textView.setTypeface(UiUtils.createRobotoMediumTypeface());
 
             // Padding at the bottom of the dropdown.
             ApiCompatibilityUtils.setPaddingRelative(convertView,

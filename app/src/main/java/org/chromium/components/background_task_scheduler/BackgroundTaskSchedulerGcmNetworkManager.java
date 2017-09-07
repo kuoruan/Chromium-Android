@@ -151,7 +151,13 @@ class BackgroundTaskSchedulerGcmNetworkManager implements BackgroundTaskSchedule
 
         Task task = createTaskFromTaskInfo(taskInfo);
 
-        gcmNetworkManager.schedule(task);
+        try {
+            gcmNetworkManager.schedule(task);
+        } catch (IllegalArgumentException e) {
+            Log.e(TAG, "GcmNetworkManager failed to schedule task.");
+            return false;
+        }
+
         return true;
     }
 
@@ -165,7 +171,12 @@ class BackgroundTaskSchedulerGcmNetworkManager implements BackgroundTaskSchedule
             return;
         }
 
-        gcmNetworkManager.cancelTask(taskIdToTaskTag(taskId), BackgroundTaskGcmTaskService.class);
+        try {
+            gcmNetworkManager.cancelTask(
+                    taskIdToTaskTag(taskId), BackgroundTaskGcmTaskService.class);
+        } catch (IllegalArgumentException e) {
+            Log.e(TAG, "GcmNetworkManager failed to cancel task.");
+        }
     }
 
     private GcmNetworkManager getGcmNetworkManager(Context context) {

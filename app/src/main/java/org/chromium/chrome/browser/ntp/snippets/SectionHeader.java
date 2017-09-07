@@ -18,7 +18,7 @@ public class SectionHeader extends OptionalLeaf {
 
     public SectionHeader(String headerText) {
         this.mHeaderText = headerText;
-        setVisible(true);
+        setVisibilityInternal(true);
     }
 
     @Override
@@ -40,5 +40,9 @@ public class SectionHeader extends OptionalLeaf {
     @Override
     public void visitOptionalItem(NodeVisitor visitor) {
         visitor.visitHeader();
+    }
+
+    public void setVisible(boolean visible) {
+        setVisibilityInternal(visible);
     }
 }

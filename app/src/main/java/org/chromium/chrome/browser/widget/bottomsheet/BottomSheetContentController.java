@@ -34,8 +34,10 @@ import org.chromium.chrome.browser.suggestions.SuggestionsBottomSheetContent;
 import org.chromium.chrome.browser.tabmodel.EmptyTabModelSelectorObserver;
 import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
+import org.chromium.chrome.browser.tabmodel.TabModelSelectorObserver;
 import org.chromium.chrome.browser.util.MathUtils;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.BottomSheetContent;
+import org.chromium.ui.UiUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -95,29 +97,19 @@ public class BottomSheetContentController extends BottomNavigationView
 
         @Override
         public void onSheetOpened() {
-            if (!mDefaultContentInitialized && mTabModelSelector.getCurrentTab() != null) {
-                initializeDefaultContent();
-            }
+            if (!mDefaultContentInitialized) initializeDefaultContent();
         }
 
         @Override
         public void onSheetClosed() {
             if (mSelectedItemId != 0 && mSelectedItemId != R.id.action_home) {
                 showBottomSheetContent(R.id.action_home);
+            } else {
+                clearBottomSheetContents(false);
             }
-
-            Iterator<Entry<Integer, BottomSheetContent>> contentIterator =
-                    mBottomSheetContents.entrySet().iterator();
-            while (contentIterator.hasNext()) {
-                Entry<Integer, BottomSheetContent> entry = contentIterator.next();
-                if (entry.getKey() == R.id.action_home || entry.getKey() == INCOGNITO_HOME_ID) {
-                    continue;
-                }
-
-                entry.getValue().destroy();
-                contentIterator.remove();
-            }
-
+            // The keyboard should be hidden when the sheet is closed in case it was made visible by
+            // sheet content.
+            UiUtils.hideKeyboard((View) BottomSheetContentController.this);
             // TODO(twellington): determine a policy for destroying the
             //                    SuggestionsBottomSheetContent.
         }
@@ -126,11 +118,16 @@ public class BottomSheetContentController extends BottomNavigationView
         public void onSheetContentChanged(BottomSheetContent newContent) {
             if (mBottomSheet.isSheetOpen()) announceBottomSheetContentSelected();
 
-            if (!mShouldOpenSheetOnNextContentChange) return;
+            if (mShouldOpenSheetOnNextContentChange) {
+                mShouldOpenSheetOnNextContentChange = false;
+                if (!mBottomSheet.isSheetOpen()) {
+                    mBottomSheet.setSheetState(BottomSheet.SHEET_STATE_FULL, true);
+                }
+                return;
+            }
 
-            mShouldOpenSheetOnNextContentChange = false;
-            if (!mBottomSheet.isSheetOpen()) {
-                mBottomSheet.setSheetState(BottomSheet.SHEET_STATE_FULL, true);
+            if (mBottomSheet.getSheetState() == BottomSheet.SHEET_STATE_PEEK) {
+                clearBottomSheetContents(false);
             }
         }
 
@@ -150,11 +147,25 @@ public class BottomSheetContentController extends BottomNavigationView
     private boolean mShouldOpenSheetOnNextContentChange;
     private PlaceholderSheetContent mPlaceholderContent;
     private boolean mOmniboxHasFocus;
+    private TabModelSelectorObserver mTabModelSelectorObserver;
 
     public BottomSheetContentController(Context context, AttributeSet atts) {
         super(context, atts);
 
         mPlaceholderContent = new PlaceholderSheetContent(context);
+    }
+
+    /** Called when the activity containing the bottom sheet is destroyed. */
+    public void destroy() {
+        clearBottomSheetContents(true);
+        if (mPlaceholderContent != null) {
+            mPlaceholderContent.destroy();
+            mPlaceholderContent = null;
+        }
+        if (mTabModelSelector != null) {
+            mTabModelSelector.removeObserver(mTabModelSelectorObserver);
+            mTabModelSelector = null;
+        }
     }
 
     /**
@@ -170,7 +181,7 @@ public class BottomSheetContentController extends BottomNavigationView
         mBottomSheet.addObserver(mBottomSheetObserver);
         mActivity = activity;
         mTabModelSelector = tabModelSelector;
-        mTabModelSelector.addObserver(new EmptyTabModelSelectorObserver() {
+        mTabModelSelectorObserver = new EmptyTabModelSelectorObserver() {
             @Override
             public void onTabModelSelected(TabModel newModel, TabModel oldModel) {
                 updateVisuals(newModel.isIncognito());
@@ -184,7 +195,8 @@ public class BottomSheetContentController extends BottomNavigationView
                     mBottomSheetContents.remove(INCOGNITO_HOME_ID);
                 }
             }
-        });
+        };
+        mTabModelSelector.addObserver(mTabModelSelectorObserver);
 
         Resources res = getContext().getResources();
         mDistanceBelowToolbarPx = controlContainerHeight
@@ -216,6 +228,16 @@ public class BottomSheetContentController extends BottomNavigationView
     }
 
     /**
+     * @param itemId The id of the MenuItem to select.
+     */
+    public void selectItem(int itemId) {
+        // TODO(twellington): A #setSelectedItemId() method was added to the support library
+        //                    recently. Replace this custom implementation with that method after
+        //                    the support library is rolled.
+        onNavigationItemSelected(getMenu().findItem(itemId));
+    }
+
+    /**
      * Shows the specified {@link BottomSheetContent} and opens the {@link BottomSheet}.
      * @param itemId The menu item id of the {@link BottomSheetContent} to show.
      */
@@ -242,10 +264,6 @@ public class BottomSheetContentController extends BottomNavigationView
             mBottomSheet.endTransitionAnimations();
             if (mSelectedItemId > 0) getMenu().findItem(mSelectedItemId).setChecked(false);
             mSelectedItemId = PLACEHOLDER_ID;
-        }
-
-        if (!hasFocus && mBottomSheet.getCurrentSheetContent() == mPlaceholderContent) {
-            showBottomSheetContent(R.id.action_home);
         }
     }
 
@@ -342,22 +360,27 @@ public class BottomSheetContentController extends BottomNavigationView
         setItemTextColor(tint);
     }
 
-    /**
-     * @param itemId The id of the MenuItem to select.
-     */
-    @VisibleForTesting
-    public void selectItem(int itemId) {
-        // TODO(twellington): A #setSelectedItemId() method was added to the support library
-        //                    recently. Replace this custom implementation with that method after
-        //                    the support library is rolled.
-        onNavigationItemSelected(getMenu().findItem(itemId));
-    }
-
     @VisibleForTesting
     public int getSelectedItemIdForTests() {
         // TODO(twellington): A #getSelectedItemId() method was added to the support library
         //                    recently. Replace this custom implementation with that method after
         //                    the support library is rolled.
         return mSelectedItemId;
+    }
+
+    private void clearBottomSheetContents(boolean destroyHomeContent) {
+        Iterator<Entry<Integer, BottomSheetContent>> contentIterator =
+                mBottomSheetContents.entrySet().iterator();
+        while (contentIterator.hasNext()) {
+            Entry<Integer, BottomSheetContent> entry = contentIterator.next();
+            if (!destroyHomeContent
+                    && (entry.getKey() == R.id.action_home
+                               || entry.getKey() == INCOGNITO_HOME_ID)) {
+                continue;
+            }
+
+            entry.getValue().destroy();
+            contentIterator.remove();
+        }
     }
 }

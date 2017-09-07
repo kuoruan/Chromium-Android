@@ -7,7 +7,6 @@ package org.chromium.chrome.browser.webapps;
 import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.app.ActivityManager.AppTask;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -110,45 +109,26 @@ public class WebappDirectoryManager {
             if (data != null && TextUtils.equals(WebappActivity.WEBAPP_SCHEME, data.getScheme())) {
                 liveWebapps.add(data.getHost());
             }
+        }
 
-            // WebappManagedActivities have titles from "WebappActivity0" through "WebappActivity9".
-            ComponentName component = intent.getComponent();
-            if (component != null) {
-                String fullClassName = component.getClassName();
-                int lastPeriodIndex = fullClassName.lastIndexOf(".");
-                if (lastPeriodIndex != -1) {
-                    String className = fullClassName.substring(lastPeriodIndex + 1);
-                    if (className.startsWith(WEBAPP_DIRECTORY_NAME)
-                            && className.length() > WEBAPP_DIRECTORY_NAME.length()) {
-                        String activityIndex = className.substring(WEBAPP_DIRECTORY_NAME.length());
-                        liveWebapps.add(activityIndex);
-                    }
-                }
+        // Delete all web app directories in the main directory, which were for pre-L web apps.
+        File appDirectory = new File(context.getApplicationInfo().dataDir);
+        String webappDirectoryAppBaseName = webappBaseDirectory.getName();
+        File[] files = appDirectory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                String filename = file.getName();
+                if (!filename.startsWith(webappDirectoryAppBaseName)) continue;
+                if (filename.length() == webappDirectoryAppBaseName.length()) continue;
+                directoriesToDelete.add(file);
             }
         }
 
-        if (webappBaseDirectory != null) {
-            // Delete all web app directories in the main directory, which were for pre-L web apps.
-            File appDirectory = new File(context.getApplicationInfo().dataDir);
-            String webappDirectoryAppBaseName = webappBaseDirectory.getName();
-            File[] files = appDirectory.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    String filename = file.getName();
-                    if (!filename.startsWith(webappDirectoryAppBaseName)) continue;
-                    if (filename.length() == webappDirectoryAppBaseName.length()) continue;
-                    directoriesToDelete.add(file);
-                }
-            }
-
-            // Clean out web app directories no longer corresponding to tasks in Recents.
-            if (webappBaseDirectory.exists()) {
-                files = webappBaseDirectory.listFiles();
-                if (files != null) {
-                    for (File file : files) {
-                        if (!liveWebapps.contains(file.getName())) directoriesToDelete.add(file);
-                    }
-                }
+        // Clean out web app directories no longer corresponding to tasks in Recents.
+        files = webappBaseDirectory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (!liveWebapps.contains(file.getName())) directoriesToDelete.add(file);
             }
         }
     }

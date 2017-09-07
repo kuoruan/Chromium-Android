@@ -71,24 +71,33 @@ class DeviceSensors implements SensorEventListener {
     // Option C backup sensors are used when options A and B are not available.
     static final Set<Integer> DEVICE_ORIENTATION_SENSORS_C =
             CollectionUtil.newHashSet(Sensor.TYPE_ACCELEROMETER, Sensor.TYPE_MAGNETIC_FIELD);
-    static final Set<Integer> DEVICE_ORIENTATION_ABSOLUTE_SENSORS =
+
+    static final Set<Integer> DEVICE_ORIENTATION_ABSOLUTE_SENSORS_A =
             CollectionUtil.newHashSet(Sensor.TYPE_ROTATION_VECTOR);
+    static final Set<Integer> DEVICE_ORIENTATION_ABSOLUTE_SENSORS_B =
+            CollectionUtil.newHashSet(Sensor.TYPE_ACCELEROMETER, Sensor.TYPE_MAGNETIC_FIELD);
     static final Set<Integer> DEVICE_MOTION_SENSORS = CollectionUtil.newHashSet(
             Sensor.TYPE_ACCELEROMETER, Sensor.TYPE_LINEAR_ACCELERATION, Sensor.TYPE_GYROSCOPE);
 
     @VisibleForTesting
     final Set<Integer> mActiveSensors = new HashSet<Integer>();
     final List<Set<Integer>> mOrientationSensorSets;
+    final List<Set<Integer>> mOrientationAbsoluteSensorSets;
     Set<Integer> mDeviceOrientationSensors;
+    Set<Integer> mDeviceOrientationAbsoluteSensors;
     boolean mDeviceMotionIsActive;
     boolean mDeviceOrientationIsActive;
     boolean mDeviceOrientationIsActiveWithBackupSensors;
     boolean mDeviceOrientationAbsoluteIsActive;
+    boolean mDeviceOrientationAbsoluteIsActiveWithBackupSensors;
     boolean mOrientationNotAvailable;
+    boolean mOrientationAbsoluteNotAvailable;
 
     protected DeviceSensors() {
         mOrientationSensorSets = CollectionUtil.newArrayList(DEVICE_ORIENTATION_SENSORS_A,
                 DEVICE_ORIENTATION_SENSORS_B, DEVICE_ORIENTATION_SENSORS_C);
+        mOrientationAbsoluteSensorSets = CollectionUtil.newArrayList(
+                DEVICE_ORIENTATION_ABSOLUTE_SENSORS_A, DEVICE_ORIENTATION_ABSOLUTE_SENSORS_B);
     }
 
     // For orientation we use a 3-way fallback approach where up to 3 different sets of sensors
@@ -118,8 +127,38 @@ class DeviceSensors implements SensorEventListener {
 
         mOrientationNotAvailable = true;
         mDeviceOrientationSensors = null;
-        mDeviceRotationMatrix = null;
-        mRotationAngles = null;
+        nullifyRotationStructures();
+        return false;
+    }
+
+    // For absolute orientation we use a 2-way fallback approach where up to 2 different sets
+    // of sensors are attempted if necessary.
+    // The sensors to be used for absolute orientation are determined in the following order:
+    //   A: ROTATION_VECTOR (absolute)
+    //   B: combination of ACCELEROMETER and MAGNETIC_FIELD (absolute)
+    // Some of the sensors may not be available depending on the device and Android version, so
+    // the 2-way fallback ensures selection of the best possible option.
+    // Examples:
+    //   * Samsung Edge, Android 6.0.1 --> option A
+    //   * Samsung Galaxy A7, Android 5.0.2 --> option B
+    @VisibleForTesting
+    protected boolean registerOrientationAbsoluteSensorsWithFallback(int rateInMicroseconds) {
+        if (mOrientationAbsoluteNotAvailable) return false;
+        if (mDeviceOrientationAbsoluteSensors != null) {
+            return registerSensors(mDeviceOrientationAbsoluteSensors, rateInMicroseconds, true);
+        }
+        ensureRotationStructuresAllocated();
+
+        for (Set<Integer> sensors : mOrientationAbsoluteSensorSets) {
+            mDeviceOrientationAbsoluteSensors = sensors;
+            if (registerSensors(mDeviceOrientationAbsoluteSensors, rateInMicroseconds, true)) {
+                return true;
+            }
+        }
+
+        mOrientationAbsoluteNotAvailable = true;
+        mDeviceOrientationAbsoluteSensors = null;
+        nullifyRotationStructures();
         return false;
     }
 
@@ -143,9 +182,7 @@ class DeviceSensors implements SensorEventListener {
                     success = registerOrientationSensorsWithFallback(rateInMicroseconds);
                     break;
                 case ConsumerType.ORIENTATION_ABSOLUTE:
-                    ensureRotationStructuresAllocated();
-                    success = registerSensors(
-                            DEVICE_ORIENTATION_ABSOLUTE_SENSORS, rateInMicroseconds, true);
+                    success = registerOrientationAbsoluteSensorsWithFallback(rateInMicroseconds);
                     break;
                 case ConsumerType.MOTION:
                     // note: device motion spec does not require all sensors to be available
@@ -209,7 +246,7 @@ class DeviceSensors implements SensorEventListener {
 
             if (mDeviceOrientationAbsoluteIsActive
                     && eventType != ConsumerType.ORIENTATION_ABSOLUTE) {
-                sensorsToRemainActive.addAll(DEVICE_ORIENTATION_ABSOLUTE_SENSORS);
+                sensorsToRemainActive.addAll(mDeviceOrientationAbsoluteSensors);
             }
 
             if (mDeviceMotionIsActive && eventType != ConsumerType.MOTION) {
@@ -243,7 +280,8 @@ class DeviceSensors implements SensorEventListener {
                 if (mDeviceMotionIsActive) {
                     gotAccelerationIncludingGravity(values[0], values[1], values[2]);
                 }
-                if (mDeviceOrientationIsActiveWithBackupSensors) {
+                if (mDeviceOrientationIsActiveWithBackupSensors
+                        || mDeviceOrientationAbsoluteIsActiveWithBackupSensors) {
                     getOrientationFromGeomagneticVectors(values, mMagneticFieldVector);
                 }
                 break;
@@ -258,14 +296,18 @@ class DeviceSensors implements SensorEventListener {
                 }
                 break;
             case Sensor.TYPE_ROTATION_VECTOR:
-                if (mDeviceOrientationAbsoluteIsActive) {
+                boolean anglesComputed = false;
+                if (mDeviceOrientationAbsoluteIsActive
+                        && mDeviceOrientationAbsoluteSensors
+                                == DEVICE_ORIENTATION_ABSOLUTE_SENSORS_A) {
                     convertRotationVectorToAngles(values, mRotationAngles);
+                    anglesComputed = true;
                     gotOrientationAbsolute(
                             mRotationAngles[0], mRotationAngles[1], mRotationAngles[2]);
                 }
                 if (mDeviceOrientationIsActive
                         && mDeviceOrientationSensors == DEVICE_ORIENTATION_SENSORS_B) {
-                    if (!mDeviceOrientationAbsoluteIsActive) {
+                    if (!anglesComputed) {
                         // only compute if not already computed for absolute orientation above.
                         convertRotationVectorToAngles(values, mRotationAngles);
                     }
@@ -279,7 +321,8 @@ class DeviceSensors implements SensorEventListener {
                 }
                 break;
             case Sensor.TYPE_MAGNETIC_FIELD:
-                if (mDeviceOrientationIsActiveWithBackupSensors) {
+                if (mDeviceOrientationIsActiveWithBackupSensors
+                        || mDeviceOrientationAbsoluteIsActiveWithBackupSensors) {
                     if (mMagneticFieldVector == null) {
                         mMagneticFieldVector = new float[3];
                     }
@@ -408,8 +451,15 @@ class DeviceSensors implements SensorEventListener {
         }
         computeDeviceOrientationFromRotationMatrix(mDeviceRotationMatrix, mRotationAngles);
 
-        gotOrientation(Math.toDegrees(mRotationAngles[0]), Math.toDegrees(mRotationAngles[1]),
-                Math.toDegrees(mRotationAngles[2]));
+        double alpha = Math.toDegrees(mRotationAngles[0]);
+        double beta = Math.toDegrees(mRotationAngles[1]);
+        double gamma = Math.toDegrees(mRotationAngles[2]);
+        if (mDeviceOrientationIsActiveWithBackupSensors) {
+            gotOrientation(alpha, beta, gamma);
+        }
+        if (mDeviceOrientationAbsoluteIsActiveWithBackupSensors) {
+            gotOrientationAbsolute(alpha, beta, gamma);
+        }
     }
 
     private SensorManagerProxy getSensorManagerProxy() {
@@ -442,6 +492,9 @@ class DeviceSensors implements SensorEventListener {
                 return;
             case ConsumerType.ORIENTATION_ABSOLUTE:
                 mDeviceOrientationAbsoluteIsActive = active;
+                mDeviceOrientationAbsoluteIsActiveWithBackupSensors = active
+                        && (mDeviceOrientationAbsoluteSensors
+                                   == DEVICE_ORIENTATION_ABSOLUTE_SENSORS_B);
                 return;
             case ConsumerType.MOTION:
                 mDeviceMotionIsActive = active;
@@ -459,6 +512,12 @@ class DeviceSensors implements SensorEventListener {
         if (mTruncatedRotationVector == null) {
             mTruncatedRotationVector = new float[4];
         }
+    }
+
+    private void nullifyRotationStructures() {
+        mDeviceRotationMatrix = null;
+        mRotationAngles = null;
+        mTruncatedRotationVector = null;
     }
 
     /**

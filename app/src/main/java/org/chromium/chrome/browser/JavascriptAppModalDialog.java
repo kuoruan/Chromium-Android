@@ -142,6 +142,19 @@ public class JavascriptAppModalDialog implements DialogInterface.OnClickListener
             layout.findViewById(R.id.js_modal_dialog_scroll_view).setVisibility(View.GONE);
         } else {
             ((TextView) layout.findViewById(R.id.js_modal_dialog_message)).setText(mMessage);
+
+            layout.findViewById(R.id.js_modal_dialog_scroll_view)
+                    .addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+                        @Override
+                        public void onLayoutChange(View v, int left, int top, int right, int bottom,
+                                int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                            boolean isScrollable =
+                                    v.getMeasuredHeight() - v.getPaddingTop() - v.getPaddingBottom()
+                                    < ((ViewGroup) v).getChildAt(0).getMeasuredHeight();
+
+                            v.setFocusable(isScrollable);
+                        }
+                    });
         }
     }
 

@@ -2,6 +2,8 @@
 
 package com.google.protos.ipc.invalidation.nano;
 
+// @@protoc_insertion_point(imports_scope)
+
 @SuppressWarnings("hiding")
 public interface NanoClient {
 
@@ -24,6 +26,8 @@ public interface NanoClient {
 
     // optional .com.google.protos.ipc.invalidation.InvalidationP invalidation = 1;
     public com.google.protos.ipc.invalidation.nano.NanoClientProtocol.InvalidationP invalidation;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.AckHandleP)
 
     public AckHandleP() {
       clear();
@@ -65,7 +69,7 @@ public interface NanoClient {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -116,6 +120,8 @@ public interface NanoClient {
     // optional int64 last_message_send_time_ms = 2 [default = 0];
     public java.lang.Long lastMessageSendTimeMs;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.PersistentTiclState)
+
     public PersistentTiclState() {
       clear();
     }
@@ -164,7 +170,7 @@ public interface NanoClient {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -216,6 +222,8 @@ public interface NanoClient {
     // optional bytes authentication_code = 2;
     public byte[] authenticationCode;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.PersistentStateBlob)
+
     public PersistentStateBlob() {
       clear();
     }
@@ -264,7 +272,7 @@ public interface NanoClient {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
@@ -321,6 +329,8 @@ public interface NanoClient {
     // optional .com.google.protos.ipc.invalidation.RunStateP.State state = 1;
     public java.lang.Integer state;
 
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.RunStateP)
+
     public RunStateP() {
       clear();
     }
@@ -361,18 +371,23 @@ public interface NanoClient {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;
           }
           case 8: {
+            int initialPos = input.getPosition();
             int value = input.readInt32();
             switch (value) {
               case com.google.protos.ipc.invalidation.nano.NanoClient.RunStateP.NOT_STARTED:
               case com.google.protos.ipc.invalidation.nano.NanoClient.RunStateP.STARTED:
               case com.google.protos.ipc.invalidation.nano.NanoClient.RunStateP.STOPPED:
                 this.state = value;
+                break;
+              default:
+                input.rewindToPosition(initialPos);
+                storeUnknownField(input, tag);
                 break;
             }
             break;
@@ -415,6 +430,8 @@ public interface NanoClient {
 
     // optional bool in_retry_mode = 2;
     public java.lang.Boolean inRetryMode;
+
+    // @@protoc_insertion_point(class_scope:com.google.protos.ipc.invalidation.ExponentialBackoffState)
 
     public ExponentialBackoffState() {
       clear();
@@ -464,7 +481,7 @@ public interface NanoClient {
           case 0:
             return this;
           default: {
-            if (!storeUnknownField(input, tag)) {
+            if (!super.storeUnknownField(input, tag)) {
               return this;
             }
             break;

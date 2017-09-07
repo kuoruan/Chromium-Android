@@ -21,6 +21,9 @@ import org.chromium.chrome.browser.compositor.layouts.content.InvalidationAwareT
 import org.chromium.chrome.browser.help.HelpAndFeedback;
 import org.chromium.chrome.browser.ntp.IncognitoNewTabPageView.IncognitoNewTabPageManager;
 import org.chromium.chrome.browser.profiles.Profile;
+import org.chromium.chrome.browser.vr_shell.OnExitVrRequestListener;
+import org.chromium.chrome.browser.vr_shell.UiUnsupportedMode;
+import org.chromium.chrome.browser.vr_shell.VrShellDelegate;
 
 /**
  * Provides functionality when the user interacts with the Incognito NTP.
@@ -39,9 +42,23 @@ public class IncognitoNewTabPage implements NativePage, InvalidationAwareThumbna
             new IncognitoNewTabPageManager() {
         @Override
         public void loadIncognitoLearnMore() {
-            HelpAndFeedback.getInstance(mActivity).show(mActivity,
-                    mActivity.getString(R.string.help_context_incognito_learn_more),
-                    Profile.getLastUsedProfile(), null);
+            // Incognito 'Learn More' either opens a new activity or a new non-incognito tab.
+            // Both is not supported in VR. Request to exit VR and if we succeed show the 'Learn
+            // More' page in 2D.
+            if (VrShellDelegate.isInVr()) {
+                VrShellDelegate.requestToExitVr(new OnExitVrRequestListener() {
+                    @Override
+                    public void onSucceeded() {
+                        showIncognitoLearnMore();
+                    }
+
+                    @Override
+                    public void onDenied() {}
+                }, UiUnsupportedMode.UNHANDLED_CODE_POINT);
+                return;
+            }
+
+            showIncognitoLearnMore();
         }
 
         @Override
@@ -49,6 +66,12 @@ public class IncognitoNewTabPage implements NativePage, InvalidationAwareThumbna
             mIsLoaded = true;
         }
     };
+
+    private void showIncognitoLearnMore() {
+        HelpAndFeedback.getInstance(mActivity).show(mActivity,
+                mActivity.getString(R.string.help_context_incognito_learn_more),
+                Profile.getLastUsedProfile(), null);
+    }
 
     /**
      * Constructs an Incognito NewTabPage.

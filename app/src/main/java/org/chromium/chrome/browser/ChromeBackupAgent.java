@@ -28,7 +28,7 @@ import org.chromium.chrome.browser.init.AsyncInitTaskRunner;
 import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
 import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
 import org.chromium.chrome.browser.preferences.privacy.PrivacyPreferencesManager;
-import org.chromium.components.signin.AccountManagerHelper;
+import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.components.signin.ChromeSigninController;
 import org.chromium.content_public.common.ContentProcessInfo;
 
@@ -147,7 +147,7 @@ public class ChromeBackupAgent extends BackupAgent {
 
     @VisibleForTesting
     protected boolean accountExistsOnDevice(String userName) {
-        return AccountManagerHelper.get().getAccountFromName(userName) != null;
+        return AccountManagerFacade.get().getAccountFromName(userName) != null;
     }
 
     // TODO (aberent) Refactor the tests to use a mocked ChromeBrowserInitializer, and make this

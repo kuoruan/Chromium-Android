@@ -9,6 +9,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.support.annotation.Nullable;
@@ -41,6 +42,7 @@ import org.chromium.components.signin.ChromeSigninController;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Preference screen that allows the user to clear browsing data.
@@ -289,6 +291,8 @@ public class ClearBrowsingDataPreferences extends PreferenceFragment
     // This is the dialog we show to the user that lets them 'uncheck' (or exclude) the above
     // important domains from being cleared.
     private ConfirmImportantSitesDialogFragment mConfirmImportantSitesDialog;
+    // Time in ms, when the dialog was created.
+    private long mDialogOpened;
 
     /**
      * @return The currently selected DialogOptions.
@@ -302,13 +306,22 @@ public class ClearBrowsingDataPreferences extends PreferenceFragment
     }
 
     /**
+     * Notifies subclasses that browsing data is about to be cleared.
+     */
+    protected void onClearBrowsingData() {}
+
+    /**
      * Requests the browsing data corresponding to the given dialog options to be deleted.
      * @param options The dialog options whose corresponding data should be deleted.
      */
     private final void clearBrowsingData(EnumSet<DialogOption> options,
             @Nullable String[] blacklistedDomains, @Nullable int[] blacklistedDomainReasons,
             @Nullable String[] ignoredDomains, @Nullable int[] ignoredDomainReasons) {
+        onClearBrowsingData();
         showProgressDialog();
+
+        RecordHistogram.recordMediumTimesHistogram("History.ClearBrowsingData.TimeSpentInDialog",
+                SystemClock.elapsedRealtime() - mDialogOpened, TimeUnit.MILLISECONDS);
 
         int[] dataTypes = new int[options.size()];
         int i = 0;
@@ -505,6 +518,8 @@ public class ClearBrowsingDataPreferences extends PreferenceFragment
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mDialogOpened = SystemClock.elapsedRealtime();
         // Don't record this action if TabsInCBD is enabled because this class is created twice.
         // The action will be recorded in ClearBrowsingDataTabsFragment instead.
         if (!ClearBrowsingDataTabsFragment.isFeatureEnabled()) {
@@ -549,7 +564,6 @@ public class ClearBrowsingDataPreferences extends PreferenceFragment
 
         // The time range selection spinner.
         SpinnerPreference spinner = (SpinnerPreference) findPreference(PREF_TIME_RANGE);
-        spinner.setOnPreferenceChangeListener(this);
         TimePeriodSpinnerOption[] spinnerOptions = getTimePeriodSpinnerOptions();
         int selectedTimePeriod = PrefServiceBridge.getInstance().getBrowsingDataDeletionTimePeriod(
                 getPreferenceType());
@@ -562,6 +576,7 @@ public class ClearBrowsingDataPreferences extends PreferenceFragment
         }
         assert spinnerOptionIndex != -1;
         spinner.setOptions(spinnerOptions, spinnerOptionIndex);
+        spinner.setOnPreferenceChangeListener(this);
 
         initClearButtonPreference();
         initFootnote();

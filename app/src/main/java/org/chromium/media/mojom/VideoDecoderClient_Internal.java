@@ -56,11 +56,13 @@ class VideoDecoderClient_Internal {
 
         @Override
         public void onVideoFrameDecoded(
-VideoFrame frame, org.chromium.mojo.common.mojom.UnguessableToken releaseToken) {
+VideoFrame frame, boolean canReadWithoutStalling, org.chromium.mojo.common.mojom.UnguessableToken releaseToken) {
 
             VideoDecoderClientOnVideoFrameDecodedParams _message = new VideoDecoderClientOnVideoFrameDecodedParams();
 
             _message.frame = frame;
+
+            _message.canReadWithoutStalling = canReadWithoutStalling;
 
             _message.releaseToken = releaseToken;
 
@@ -105,7 +107,7 @@ VideoFrame frame, org.chromium.mojo.common.mojom.UnguessableToken releaseToken) 
                         VideoDecoderClientOnVideoFrameDecodedParams data =
                                 VideoDecoderClientOnVideoFrameDecodedParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().onVideoFrameDecoded(data.frame, data.releaseToken);
+                        getImpl().onVideoFrameDecoded(data.frame, data.canReadWithoutStalling, data.releaseToken);
                         return true;
                     }
             
@@ -151,10 +153,11 @@ VideoFrame frame, org.chromium.mojo.common.mojom.UnguessableToken releaseToken) 
     
     static final class VideoDecoderClientOnVideoFrameDecodedParams extends org.chromium.mojo.bindings.Struct {
     
-        private static final int STRUCT_SIZE = 24;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final int STRUCT_SIZE = 32;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public VideoFrame frame;
+        public boolean canReadWithoutStalling;
         public org.chromium.mojo.common.mojom.UnguessableToken releaseToken;
     
         private VideoDecoderClientOnVideoFrameDecodedParams(int version) {
@@ -199,7 +202,11 @@ VideoFrame frame, org.chromium.mojo.common.mojom.UnguessableToken releaseToken) 
                 }
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, true);
+                    result.canReadWithoutStalling = decoder0.readBoolean(16, 0);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, true);
                     result.releaseToken = org.chromium.mojo.common.mojom.UnguessableToken.decode(decoder1);
                 }
             } finally {
@@ -215,7 +222,9 @@ VideoFrame frame, org.chromium.mojo.common.mojom.UnguessableToken releaseToken) 
             
             encoder0.encode(frame, 8, false);
             
-            encoder0.encode(releaseToken, 16, true);
+            encoder0.encode(canReadWithoutStalling, 16, 0);
+            
+            encoder0.encode(releaseToken, 24, true);
         }
     
         /**
@@ -232,6 +241,8 @@ VideoFrame frame, org.chromium.mojo.common.mojom.UnguessableToken releaseToken) 
             VideoDecoderClientOnVideoFrameDecodedParams other = (VideoDecoderClientOnVideoFrameDecodedParams) object;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.frame, other.frame))
                 return false;
+            if (this.canReadWithoutStalling!= other.canReadWithoutStalling)
+                return false;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.releaseToken, other.releaseToken))
                 return false;
             return true;
@@ -245,6 +256,7 @@ VideoFrame frame, org.chromium.mojo.common.mojom.UnguessableToken releaseToken) 
             final int prime = 31;
             int result = prime + getClass().hashCode();
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(frame);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(canReadWithoutStalling);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(releaseToken);
             return result;
         }

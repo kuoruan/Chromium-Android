@@ -202,12 +202,6 @@ class StackAnimationPortrait extends StackAnimation {
     }
 
     @Override
-    protected ChromeAnimation<?> createNewTabOpenedAnimatorSet(
-            StackTab[] tabs, int focusIndex, float discardRange) {
-        return super.createNewTabOpenedAnimatorSet(tabs, focusIndex, -discardRange);
-    }
-
-    @Override
     protected boolean isDefaultDiscardDirectionPositive() {
         // On clicking the close button, discard the tab to the right on LTR, to the left on RTL.
         return !LocalizationUtils.isLayoutRtl();

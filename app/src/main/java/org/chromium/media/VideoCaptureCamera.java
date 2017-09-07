@@ -216,7 +216,12 @@ public class VideoCaptureCamera
         // with at least one element, but when the camera is in bad state, they
         // can return null pointers; in that case we use a 0 entry, so we can
         // retrieve as much information as possible.
-        List<Integer> pixelFormats = parameters.getSupportedPreviewFormats();
+        List<Integer> pixelFormats = null;
+        try {
+            pixelFormats = parameters.getSupportedPreviewFormats();
+        } catch (NullPointerException ex) {
+            Log.e(TAG, "Camera.Parameters.getSupportedPreviewFormats: ", ex);
+        }
         if (pixelFormats == null) {
             pixelFormats = new ArrayList<Integer>();
         }
@@ -231,7 +236,12 @@ public class VideoCaptureCamera
                 continue;
             }
 
-            List<int[]> listFpsRange = parameters.getSupportedPreviewFpsRange();
+            List<int[]> listFpsRange = null;
+            try {
+                listFpsRange = parameters.getSupportedPreviewFpsRange();
+            } catch (StringIndexOutOfBoundsException ex) {
+                Log.e(TAG, "Camera.Parameters.getSupportedPreviewFpsRange: ", ex);
+            }
             if (listFpsRange == null) {
                 listFpsRange = new ArrayList<int[]>();
             }

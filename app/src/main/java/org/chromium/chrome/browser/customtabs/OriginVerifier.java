@@ -30,8 +30,10 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Used to verify postMessage origin for a designated package name.
@@ -47,21 +49,25 @@ import java.util.Map;
 class OriginVerifier {
     private static final String TAG = "OriginVerifier";
     private static final char[] HEX_CHAR_LOOKUP = "0123456789ABCDEF".toCharArray();
-    private static Map<String, Uri> sCachedOriginMap;
+    private static Map<String, Set<Uri>> sPackageToCachedOrigins;
     private final OriginVerificationListener mListener;
     private final String mPackageName;
     private final String mSignatureFingerprint;
     private long mNativeOriginVerifier = 0;
     private Uri mOrigin;
 
-    /**
-     * To be used for prepopulating verified origin for testing functionality.
-     * @param packageName The package name to prepopulate for.
-     * @param origin The origin to add as verified.
-     */
-    @VisibleForTesting
-    static void prePopulateVerifiedOriginForTesting(String packageName, Uri origin) {
-        cacheVerifiedOriginIfNeeded(packageName, origin);
+    /** Small helper class to post a result of origin verification. */
+    private class VerifiedCallback implements Runnable {
+        private final boolean mResult;
+
+        public VerifiedCallback(boolean result) {
+            this.mResult = result;
+        }
+
+        @Override
+        public void run() {
+            originVerified(mResult);
+        }
     }
 
     private static Uri getPostMessageOriginFromVerifiedOrigin(
@@ -70,11 +76,44 @@ class OriginVerifier {
                 + verifiedOrigin.getHost() + "/" + packageName);
     }
 
-    private static void cacheVerifiedOriginIfNeeded(String packageName, Uri origin) {
-        if (sCachedOriginMap == null) sCachedOriginMap = new HashMap<>();
-        if (!sCachedOriginMap.containsKey(packageName)) {
-            sCachedOriginMap.put(packageName, origin);
+    /** Clears all known relations. */
+    @VisibleForTesting
+    static void reset() {
+        ThreadUtils.assertOnUiThread();
+        if (sPackageToCachedOrigins != null) sPackageToCachedOrigins.clear();
+    }
+
+    /**
+     * Mark an origin as verified for a package.
+     * @param packageName The package name to prepopulate for.
+     * @param origin The origin to add as verified.
+     */
+    static void addVerifiedOriginForPackage(String packageName, Uri origin) {
+        ThreadUtils.assertOnUiThread();
+        if (sPackageToCachedOrigins == null) sPackageToCachedOrigins = new HashMap<>();
+        Set<Uri> cachedOrigins = sPackageToCachedOrigins.get(packageName);
+        if (cachedOrigins == null) {
+            cachedOrigins = new HashSet<Uri>();
+            sPackageToCachedOrigins.put(packageName, cachedOrigins);
         }
+        cachedOrigins.add(origin);
+    }
+
+    /**
+     * Returns whether an origin is first-party relative to a given package name.
+     *
+     * This only returns data from previously cached relations, and does not
+     * trigger an asynchronous validation.
+     *
+     * @param packageName The package name
+     * @param origin The origin to verify
+     */
+    static boolean isValidOrigin(String packageName, Uri origin) {
+        ThreadUtils.assertOnUiThread();
+        if (sPackageToCachedOrigins == null) return false;
+        Set<Uri> cachedOrigins = sPackageToCachedOrigins.get(packageName);
+        if (cachedOrigins == null) return false;
+        return cachedOrigins.contains(origin);
     }
 
     /**
@@ -112,24 +151,13 @@ class OriginVerifier {
         ThreadUtils.assertOnUiThread();
         mOrigin = origin;
         if (!UrlConstants.HTTPS_SCHEME.equals(mOrigin.getScheme().toLowerCase(Locale.US))) {
-            ThreadUtils.postOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    originVerified(false);
-                }
-            });
+            ThreadUtils.runOnUiThread(new VerifiedCallback(false));
             return;
         }
 
         // If this origin is cached as verified already, use that.
-        Uri cachedOrigin = getCachedOriginIfExists();
-        if (cachedOrigin != null && cachedOrigin.equals(origin)) {
-            ThreadUtils.postOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    originVerified(true);
-                }
-            });
+        if (isValidOrigin(mPackageName, origin)) {
+            ThreadUtils.runOnUiThread(new VerifiedCallback(true));
             return;
         }
         if (mNativeOriginVerifier != 0) cleanUp();
@@ -142,14 +170,7 @@ class OriginVerifier {
         assert mNativeOriginVerifier != 0;
         boolean success = nativeVerifyOrigin(
                 mNativeOriginVerifier, mPackageName, mSignatureFingerprint, mOrigin.toString());
-        if (!success) {
-            ThreadUtils.postOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    originVerified(false);
-                }
-            });
-        }
+        if (!success) ThreadUtils.runOnUiThread(new VerifiedCallback(false));
     }
 
     /**
@@ -219,16 +240,11 @@ class OriginVerifier {
     @CalledByNative
     private void originVerified(boolean originVerified) {
         if (originVerified) {
-            cacheVerifiedOriginIfNeeded(mPackageName, mOrigin);
+            addVerifiedOriginForPackage(mPackageName, mOrigin);
             mOrigin = getPostMessageOriginFromVerifiedOrigin(mPackageName, mOrigin);
         }
         mListener.onOriginVerified(mPackageName, mOrigin, originVerified);
         cleanUp();
-    }
-
-    private Uri getCachedOriginIfExists() {
-        if (sCachedOriginMap == null) return null;
-        return sCachedOriginMap.get(mPackageName);
     }
 
     private native long nativeInit(Profile profile);

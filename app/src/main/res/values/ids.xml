@@ -22,6 +22,7 @@
     <!-- InfoBar constants -->
     <item type="id" name="button_primary" />
     <item type="id" name="button_secondary" />
+    <item type="id" name="infobar_icon" />
     <item type="id" name="infobar_close_button" />
     <item type="id" name="infobar_extra_check" />
     <item type="id" name="infobar_message" />
@@ -82,6 +83,7 @@
     <item type="id" name="contextmenu_copy_link_address" />
     <item type="id" name="contextmenu_copy_link_text" />
     <item type="id" name="contextmenu_save_link_as" />
+    <item type="id" name="contextmenu_share_link" />
 
     <!--Image Group -->
     <item type="id" name="contextmenu_load_original_image" />

@@ -500,6 +500,13 @@ public final class CodedOutputByteBufferNano {
         bytes[j++] = (byte) (0x80 | (0x3F & (codePoint >>> 6)));
         bytes[j++] = (byte) (0x80 | (0x3F & codePoint));
       } else {
+        // If we are surrogates and we're not a surrogate pair, always throw an
+        // IllegalArgumentException instead of an ArrayOutOfBoundsException.
+        if ((Character.MIN_SURROGATE <= c && c <= Character.MAX_SURROGATE)
+            && (i + 1 == sequence.length()
+                || !Character.isSurrogatePair(c, sequence.charAt(i + 1)))) {
+          throw new IllegalArgumentException("Unpaired surrogate at index " + i);
+        }
         throw new ArrayIndexOutOfBoundsException("Failed writing " + c + " at index " + j);
       }
     }

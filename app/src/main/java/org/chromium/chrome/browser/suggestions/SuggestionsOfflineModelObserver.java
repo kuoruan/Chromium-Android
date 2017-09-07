@@ -7,7 +7,7 @@ package org.chromium.chrome.browser.suggestions;
 import android.support.annotation.Nullable;
 
 import org.chromium.base.Callback;
-import org.chromium.chrome.browser.offlinepages.ClientId;
+import org.chromium.chrome.browser.offlinepages.DeletedPageInfo;
 import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
 import org.chromium.chrome.browser.offlinepages.OfflinePageItem;
 
@@ -46,13 +46,13 @@ public abstract class SuggestionsOfflineModelObserver<T extends OfflinableSugges
     }
 
     @Override
-    public void offlinePageDeleted(long offlineId, ClientId clientId) {
+    public void offlinePageDeleted(DeletedPageInfo deletedPage) {
         for (T suggestion : getOfflinableSuggestions()) {
             if (suggestion.requiresExactOfflinePage()) continue;
 
             Long suggestionOfflineId = suggestion.getOfflinePageOfflineId();
             if (suggestionOfflineId == null) continue;
-            if (suggestionOfflineId != offlineId) continue;
+            if (suggestionOfflineId != deletedPage.getOfflineId()) continue;
 
             // The old value cannot be simply removed without a request to the
             // model, because there may be an older offline page for the same

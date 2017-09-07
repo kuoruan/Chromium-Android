@@ -98,6 +98,7 @@ public class BackgroundTaskGcmTaskService extends GcmTaskService {
         ThreadUtils.runOnUiThreadBlocking(new Runnable() {
             @Override
             public void run() {
+                BackgroundTaskSchedulerUma.getInstance().reportTaskStarted(taskParams.getTaskId());
                 taskNeedsBackgroundProcessing.set(
                         backgroundTask.onStartTask(ContextUtils.getApplicationContext(), taskParams,
                                 new TaskFinishedCallbackGcmTaskService(waiter)));
@@ -115,6 +116,7 @@ public class BackgroundTaskGcmTaskService extends GcmTaskService {
         ThreadUtils.runOnUiThreadBlocking(new Runnable() {
             @Override
             public void run() {
+                BackgroundTaskSchedulerUma.getInstance().reportTaskStopped(taskParams.getTaskId());
                 taskNeedsRescheduling.set(backgroundTask.onStopTask(
                         ContextUtils.getApplicationContext(), taskParams));
             }

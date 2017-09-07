@@ -45,6 +45,16 @@ int state);
 
 
 
+    void onAudioConfigChange(
+AudioDecoderConfig config);
+
+
+
+    void onVideoConfigChange(
+VideoDecoderConfig config);
+
+
+
     void onVideoNaturalSizeChange(
 org.chromium.gfx.mojom.Size size);
 

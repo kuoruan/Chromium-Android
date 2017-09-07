@@ -11,6 +11,7 @@ import android.support.annotation.Nullable;
 
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
+import org.chromium.base.VisibleForTesting;
 
 import java.lang.reflect.Constructor;
 import java.util.Set;
@@ -60,7 +61,9 @@ public class BackgroundTaskScheduler {
 
     private final BackgroundTaskSchedulerDelegate mSchedulerDelegate;
 
-    BackgroundTaskScheduler(BackgroundTaskSchedulerDelegate schedulerDelegate) {
+    /** Public constructor that allows null delegate, for testing only */
+    @VisibleForTesting
+    public BackgroundTaskScheduler(BackgroundTaskSchedulerDelegate schedulerDelegate) {
         assert schedulerDelegate != null;
         mSchedulerDelegate = schedulerDelegate;
     }
@@ -77,6 +80,7 @@ public class BackgroundTaskScheduler {
     public boolean schedule(Context context, TaskInfo taskInfo) {
         ThreadUtils.assertOnUiThread();
         boolean success = mSchedulerDelegate.schedule(context, taskInfo);
+        BackgroundTaskSchedulerUma.getInstance().reportTaskScheduled(taskInfo.getTaskId(), success);
         if (success) {
             BackgroundTaskSchedulerPrefs.addScheduledTask(taskInfo);
         }
@@ -91,6 +95,7 @@ public class BackgroundTaskScheduler {
      */
     public void cancel(Context context, int taskId) {
         ThreadUtils.assertOnUiThread();
+        BackgroundTaskSchedulerUma.getInstance().reportTaskCanceled(taskId);
         BackgroundTaskSchedulerPrefs.removeScheduledTask(taskId);
         mSchedulerDelegate.cancel(context, taskId);
     }
@@ -105,14 +110,19 @@ public class BackgroundTaskScheduler {
     public void checkForOSUpgrade(Context context) {
         int oldSdkInt = BackgroundTaskSchedulerPrefs.getLastSdkVersion();
         int newSdkInt = Build.VERSION.SDK_INT;
-        // No OS upgrade detected.
-        if (oldSdkInt == newSdkInt) return;
 
-        // Save the current SDK version to preferences.
-        BackgroundTaskSchedulerPrefs.setLastSdkVersion(newSdkInt);
+        if (oldSdkInt != newSdkInt) {
+            // Save the current SDK version to preferences.
+            BackgroundTaskSchedulerPrefs.setLastSdkVersion(newSdkInt);
+        }
 
-        // Check for OS upgrades forcing delegate change or "just in case" rescheduling.
-        if (!osUpgradeChangesDelegateType(oldSdkInt, newSdkInt)) return;
+        // No OS upgrade detected or OS upgrade does not change delegate.
+        if (oldSdkInt == newSdkInt || !osUpgradeChangesDelegateType(oldSdkInt, newSdkInt)) {
+            BackgroundTaskSchedulerUma.getInstance().flushStats();
+            return;
+        }
+
+        BackgroundTaskSchedulerUma.getInstance().removeCachedStats();
 
         // Explicitly create and invoke old delegate type to cancel all scheduled tasks.
         // All preference entries are kept until reschedule call, which removes then then.

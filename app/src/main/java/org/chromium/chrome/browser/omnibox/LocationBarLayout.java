@@ -394,7 +394,7 @@ public class LocationBarLayout extends FrameLayout
                 // user tapped the URL bar to dismiss the suggestions, then pressed enter. This can
                 // also happen if the user presses enter before any suggestions have been received
                 // from the autocomplete controller.
-                suggestionMatch = mAutocomplete.classify(urlText);
+                suggestionMatch = mAutocomplete.classify(urlText, mUrlFocusedFromFakebox);
                 suggestionMatchPosition = 0;
                 // Classify matches don't propagate to java, so skip the OOB check.
                 skipOutOfBoundsCheck = true;
@@ -412,8 +412,9 @@ public class LocationBarLayout extends FrameLayout
             // omnibox results. There is one special case where the suggestion text was pasted,
             // where we want the transition type to be LINK.
             int transition = suggestionMatch.getType() == OmniboxSuggestionType.URL_WHAT_YOU_TYPED
-                    && mUrlBar.isPastedText() ? PageTransition.LINK
-                            : suggestionMatch.getTransition();
+                            && mUrlBar.wasLastEditPaste()
+                    ? PageTransition.LINK
+                    : suggestionMatch.getTransition();
 
             loadUrlFromOmniboxMatch(suggestionMatchUrl, transition, suggestionMatchPosition,
                     suggestionMatch.getType());
@@ -627,12 +628,6 @@ public class LocationBarLayout extends FrameLayout
         }
 
         @Override
-        public void onWindowFocusChanged(boolean hasWindowFocus) {
-            super.onWindowFocusChanged(hasWindowFocus);
-            if (!hasWindowFocus && !mSuggestionModalShown) hideSuggestions();
-        }
-
-        @Override
         protected void layoutChildren() {
             super.layoutChildren();
             // In ICS, the selected view is not marked as selected despite calling setSelection(0),
@@ -650,6 +645,13 @@ public class LocationBarLayout extends FrameLayout
                 if (!(childView instanceof SuggestionView)) continue;
                 ApiCompatibilityUtils.setLayoutDirection(childView, layoutDirection);
             }
+        }
+
+        /**
+         * @return Whether or not the suggestions list is scrolled any amount.
+         */
+        private boolean isScrolled() {
+            return computeVerticalScrollOffset() > 0;
         }
     }
 
@@ -693,6 +695,17 @@ public class LocationBarLayout extends FrameLayout
         mSuggestionListAdapter = new OmniboxResultsAdapter(getContext(), this, mSuggestionItems);
 
         mMicButton = (TintedImageButton) findViewById(R.id.mic_button);
+    }
+
+    @Override
+    public boolean isSuggestionsListShown() {
+        return mSuggestionsShown;
+    }
+
+    @Override
+    public boolean isSuggestionsListScrolled() {
+        if (!mSuggestionsShown || mSuggestionList == null) return false;
+        return mSuggestionList.isScrolled();
     }
 
     @Override
@@ -863,7 +876,7 @@ public class LocationBarLayout extends FrameLayout
         }
         mDeferredNativeRunnables.clear();
 
-        mUrlBar.onOmniboxFullyFunctional();
+        mUrlBar.onNativeLibraryReady();
         updateVisualsForState();
     }
 
@@ -1132,7 +1145,7 @@ public class LocationBarLayout extends FrameLayout
     }
 
     @Override
-    public void onTextChangedForAutocomplete(final boolean textDeleted) {
+    public void onTextChangedForAutocomplete() {
         cancelPendingAutocompleteStart();
 
         updateButtonVisibility();
@@ -1158,24 +1171,19 @@ public class LocationBarLayout extends FrameLayout
                 @Override
                 public void run() {
                     String textWithoutAutocomplete = mUrlBar.getTextWithoutAutocomplete();
-
-                    boolean preventAutocomplete = textDeleted || !mUrlBar.shouldAutocomplete();
+                    boolean preventAutocomplete = !mUrlBar.shouldAutocomplete();
                     mRequestSuggestions = null;
 
                     if (getCurrentTab() == null
-                            && (mBottomSheet == null || mToolbarDataProvider.isIncognito())) {
+                            && (mBottomSheet == null || !mBottomSheet.isShowingNewTab())) {
                         return;
                     }
 
-                    // If the bottom sheet is not null, the current tab will be null when the
-                    // NTP UI is showing. Use the original profile rather than the tab profile
-                    // in that scenario.
-                    Profile profile = getCurrentTab() != null
-                            ? getCurrentTab().getProfile()
-                            : Profile.getLastUsedProfile().getOriginalProfile();
+                    Profile profile = getToolbarDataProvider().getProfile();
                     String url = getCurrentTab() != null ? getCurrentTab().getUrl()
                                                          : UrlConstants.NTP_URL;
-                    mAutocomplete.start(profile, url, textWithoutAutocomplete, preventAutocomplete);
+                    mAutocomplete.start(profile, url, textWithoutAutocomplete, preventAutocomplete,
+                            mUrlFocusedFromFakebox);
                 }
             };
             if (mNativeInitialized) {
@@ -1184,11 +1192,6 @@ public class LocationBarLayout extends FrameLayout
                 mDeferredNativeRunnables.add(mRequestSuggestions);
             }
         }
-
-        // Occasionally, was seeing the selection in the URL not being cleared during
-        // very rapid editing.  This is here to hopefully force a selection reset during
-        // deletes.
-        if (textDeleted) mUrlBar.setSelection(mUrlBar.getSelectionStart());
     }
 
     @Override
@@ -1645,7 +1648,11 @@ public class LocationBarLayout extends FrameLayout
                 stopAutocomplete(false);
                 mUrlBar.setUrl(suggestion.getFillIntoEdit(), null);
                 mUrlBar.setSelection(mUrlBar.getText().length());
-                RecordUserAction.record("MobileOmniboxRefineSuggestion");
+                if (suggestion.isUrlSuggestion()) {
+                    RecordUserAction.record("MobileOmniboxRefineSuggestion.Url");
+                } else {
+                    RecordUserAction.record("MobileOmniboxRefineSuggestion.Search");
+                }
             }
 
             @Override
@@ -1894,10 +1901,10 @@ public class LocationBarLayout extends FrameLayout
         stopAutocomplete(false);
         if (getCurrentTab() != null) {
             mAutocomplete.start(
-                    getCurrentTab().getProfile(), getCurrentTab().getUrl(), query, false);
-        } else if (mBottomSheet != null && !mToolbarDataProvider.isIncognito()) {
-            mAutocomplete.start(Profile.getLastUsedProfile().getOriginalProfile(),
-                    UrlConstants.NTP_URL, query, false);
+                    getCurrentTab().getProfile(), getCurrentTab().getUrl(), query, false, false);
+        } else if (mBottomSheet != null) {
+            mAutocomplete.start(
+                    mToolbarDataProvider.getProfile(), UrlConstants.NTP_URL, query, false, false);
         }
         post(new Runnable() {
             @Override
@@ -2375,6 +2382,16 @@ public class LocationBarLayout extends FrameLayout
         }
 
         return FeatureUtilities.isRecognitionIntentPresent(getContext(), true);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasWindowFocus) {
+        super.onWindowFocusChanged(hasWindowFocus);
+        if (!hasWindowFocus && !mSuggestionModalShown) {
+            hideSuggestions();
+        } else if (hasWindowFocus && mUrlHasFocus && mNativeInitialized) {
+            onTextChangedForAutocomplete();
+        }
     }
 
     @Override

@@ -14,8 +14,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingTop="40dp"
-    android:paddingBottom="18dp"
+    android:paddingTop="@dimen/ntp_suggestions_footer_padding_top"
+    android:paddingBottom="@dimen/ntp_suggestions_footer_padding_bottom"
     android:paddingStart="16dp"
     android:paddingEnd="16dp">
     <TextView
@@ -24,6 +24,5 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:textColor="@color/snippets_text_color"
-        android:textSize="12sp"
-        android:textStyle="italic"/>
+        android:textSize="12sp"/>
 </FrameLayout>

@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.ntp.cards;
 
+import android.content.res.Resources;
 import android.graphics.Rect;
 import android.support.annotation.CallSuper;
 import android.support.annotation.DrawableRes;
@@ -22,6 +23,7 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ntp.ContextMenuManager;
 import org.chromium.chrome.browser.ntp.ContextMenuManager.ContextMenuItemId;
+import org.chromium.chrome.browser.suggestions.SuggestionsConfig;
 import org.chromium.chrome.browser.suggestions.SuggestionsRecyclerView;
 import org.chromium.chrome.browser.util.MathUtils;
 import org.chromium.chrome.browser.util.ViewUtils;
@@ -68,7 +70,7 @@ public abstract class CardViewHolder
 
     protected final SuggestionsRecyclerView mRecyclerView;
 
-    private final UiConfig mUiConfig;
+    protected final UiConfig mUiConfig;
     private final MarginResizer mMarginResizer;
 
     /**
@@ -90,13 +92,13 @@ public abstract class CardViewHolder
             UiConfig uiConfig, final ContextMenuManager contextMenuManager) {
         super(inflateView(layoutId, recyclerView));
 
-        ApiCompatibilityUtils.getDrawable(recyclerView.getResources(), R.drawable.card_single)
+        Resources resources = recyclerView.getResources();
+        ApiCompatibilityUtils.getDrawable(resources, R.drawable.card_single)
                 .getPadding(mCardShadow);
 
         mCardGap = recyclerView.getResources().getDimensionPixelSize(R.dimen.snippets_card_gap);
 
-        mMaxPeekPadding = recyclerView.getResources().getDimensionPixelSize(
-                R.dimen.snippets_padding);
+        mMaxPeekPadding = resources.getDimensionPixelSize(R.dimen.snippets_padding);
 
         mRecyclerView = recyclerView;
 
@@ -121,15 +123,18 @@ public abstract class CardViewHolder
 
         // Configure the resizer to use negative margins on regular display to balance out the
         // lateral shadow of the card 9-patch and avoid a rounded corner effect.
-        int cardCornerRadius = recyclerView.getResources().getDimensionPixelSize(
-                R.dimen.card_corner_radius);
+        int cardCornerRadius = resources.getDimensionPixelSize(R.dimen.card_corner_radius);
         assert mCardShadow.left == mCardShadow.right;
-        mDefaultLateralMargin = -(mCardShadow.left + cardCornerRadius);
-        mWideLateralMargin = recyclerView.getResources().getDimensionPixelSize(
-                R.dimen.ntp_wide_card_lateral_margins);
+        if (SuggestionsConfig.useModern()) {
+            mDefaultLateralMargin =
+                    resources.getDimensionPixelSize(R.dimen.content_suggestions_card_modern_margin);
+        } else {
+            mDefaultLateralMargin = -(mCardShadow.left + cardCornerRadius);
+        }
+        mWideLateralMargin = resources.getDimensionPixelSize(R.dimen.ntp_wide_card_lateral_margins);
 
-        mMarginResizer = MarginResizer.createWithViewAdapter(itemView, mUiConfig,
-                mDefaultLateralMargin, mWideLateralMargin);
+        mMarginResizer =
+                new MarginResizer(itemView, uiConfig, mDefaultLateralMargin, mWideLateralMargin);
     }
 
     @Override
@@ -193,13 +198,24 @@ public abstract class CardViewHolder
         // Make sure we use the right background.
         updateLayoutParams();
 
+        mMarginResizer.attach();
+
         mRecyclerView.onCardBound(this);
+    }
+
+    @Override
+    public void recycle() {
+        mMarginResizer.detach();
+        super.recycle();
     }
 
     @Override
     public void updateLayoutParams() {
         // Nothing to do for dismissed cards.
         if (getAdapterPosition() == RecyclerView.NO_POSITION) return;
+
+        // Nothing to do for the modern layout.
+        if (SuggestionsConfig.useModern()) return;
 
         NewTabPageAdapter adapter = mRecyclerView.getNewTabPageAdapter();
 
@@ -314,6 +330,7 @@ public abstract class CardViewHolder
             case ItemViewType.PROGRESS:
             case ItemViewType.FOOTER:
             case ItemViewType.ALL_DISMISSED:
+            case ItemViewType.CAROUSEL:
                 return false;
             default:
                 assert false;

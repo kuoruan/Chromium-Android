@@ -24,7 +24,7 @@ public class Message {
     /**
      * The handles of the message.
      */
-    private final List<? extends Handle> mHandle;
+    private final List<? extends Handle> mHandles;
 
     /**
      * This message interpreted as a message for a mojo service with an appropriate header.
@@ -38,9 +38,8 @@ public class Message {
      * @param handles The list of handles to send.
      */
     public Message(ByteBuffer buffer, List<? extends Handle> handles) {
-        assert buffer.isDirect();
         mBuffer = buffer;
-        mHandle = handles;
+        mHandles = handles;
     }
 
     /**
@@ -54,7 +53,7 @@ public class Message {
      * The handles of the message.
      */
     public List<? extends Handle> getHandles() {
-        return mHandle;
+        return mHandles;
     }
 
     /**

@@ -19,7 +19,8 @@ import java.lang.annotation.RetentionPolicy;
     KnownCategories.RECENT_TABS, KnownCategories.DOWNLOADS, KnownCategories.BOOKMARKS,
     KnownCategories.PHYSICAL_WEB_PAGES, KnownCategories.FOREIGN_TABS, KnownCategories.READING_LIST,
     KnownCategories.LOCAL_CATEGORIES_COUNT, KnownCategories.REMOTE_CATEGORIES_OFFSET,
-    KnownCategories.ARTICLES, KnownCategories.LAST_KNOWN_REMOTE_CATEGORY
+    KnownCategories.ARTICLES, KnownCategories.BREAKING_NEWS,
+    KnownCategories.LAST_KNOWN_REMOTE_CATEGORY
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface KnownCategories {
@@ -62,8 +63,12 @@ public @interface KnownCategories {
    */
   int ARTICLES = 10001;
   /**
+   * Breaking News
+   */
+  int BREAKING_NEWS = 10008;
+  /**
    * ****************** INSERT NEW REMOTE CATEGORIES HERE! ****************** Tracks the last known
    * remote category
    */
-  int LAST_KNOWN_REMOTE_CATEGORY = 10001;
+  int LAST_KNOWN_REMOTE_CATEGORY = 10008;
 }

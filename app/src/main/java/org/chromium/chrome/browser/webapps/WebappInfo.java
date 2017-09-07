@@ -283,7 +283,7 @@ public class WebappInfo {
     }
 
     /**
-     * Returns the icon in Bitmap form.  Caches the result for future retrievals.
+     * Returns the icon in Bitmap form.
      */
     public Bitmap icon() {
         return (mIcon == null) ? null : mIcon.decoded();

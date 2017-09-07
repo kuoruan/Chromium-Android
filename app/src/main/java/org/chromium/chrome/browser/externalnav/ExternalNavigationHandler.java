@@ -28,7 +28,6 @@ import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tab.TabRedirectHandler;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.chrome.browser.util.UrlUtilities;
-import org.chromium.chrome.browser.webapps.ChromeWebApkHost;
 import org.chromium.content_public.common.ContentUrlConstants;
 import org.chromium.ui.base.PageTransition;
 
@@ -184,7 +183,8 @@ public class ExternalNavigationHandler {
 
         // http://crbug.com/169549 : If you type in a URL that then redirects in server side to an
         // link that cannot be rendered by the browser, we want to show the intent picker.
-        boolean isTyped = pageTransitionCore == PageTransition.TYPED;
+        boolean isTyped = (pageTransitionCore == PageTransition.TYPED)
+                || ((params.getPageTransition() & PageTransition.FROM_ADDRESS_BAR) != 0);
         boolean typedRedirectToExternalProtocol = isTyped && params.isRedirect()
                 && isExternalProtocol;
 
@@ -515,27 +515,24 @@ public class ExternalNavigationHandler {
                 IntentWithGesturesHandler.getInstance().onNewIntentWithGesture(intent);
             }
 
-            if (ChromeWebApkHost.isEnabled()) {
-                // If the only specialized intent handler is a WebAPK, set the intent's package to
-                // launch the WebAPK without showing the intent picker.
-                String targetWebApkPackageName = mDelegate.findWebApkPackageName(resolvingInfos);
+            // If the only specialized intent handler is a WebAPK, set the intent's package to
+            // launch the WebAPK without showing the intent picker.
+            String targetWebApkPackageName = mDelegate.findWebApkPackageName(resolvingInfos);
 
-                // We can't rely on this falling through to startActivityIfNeeded and behaving
-                // correctly for WebAPKs. This is because the target of the intent is the WebApk's
-                // main activity but that's just a bouncer which will redirect to WebApkActivity in
-                // chrome. To avoid bouncing indefinitely, don't override the navigation if we are
-                // currently showing the WebApk |params.webApkPackageName()| that we will redirect
-                // to.
-                if (targetWebApkPackageName != null
-                        && targetWebApkPackageName.equals(params.webApkPackageName())) {
-                    if (DEBUG) Log.i(TAG, "NO_OVERRIDE: Navigation in WebApk");
-                    return OverrideUrlLoadingResult.NO_OVERRIDE;
-                }
+            // We can't rely on this falling through to startActivityIfNeeded and behaving
+            // correctly for WebAPKs. This is because the target of the intent is the WebApk's main
+            // activity but that's just a bouncer which will redirect to WebApkActivity in chrome.
+            // To avoid bouncing indefinitely, don't override the navigation if we are currently
+            // showing the WebApk |params.webApkPackageName()| that we will redirect to.
+            if (targetWebApkPackageName != null
+                    && targetWebApkPackageName.equals(params.webApkPackageName())) {
+                if (DEBUG) Log.i(TAG, "NO_OVERRIDE: Navigation in WebApk");
+                return OverrideUrlLoadingResult.NO_OVERRIDE;
+            }
 
-                if (targetWebApkPackageName != null
-                        && mDelegate.countSpecializedHandlers(resolvingInfos) == 1) {
-                    intent.setPackage(targetWebApkPackageName);
-                }
+            if (targetWebApkPackageName != null
+                    && mDelegate.countSpecializedHandlers(resolvingInfos) == 1) {
+                intent.setPackage(targetWebApkPackageName);
             }
 
             if (mDelegate.startActivityIfNeeded(intent, shouldProxyForInstantApps)) {

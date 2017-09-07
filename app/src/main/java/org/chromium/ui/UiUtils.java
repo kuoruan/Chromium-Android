@@ -8,6 +8,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -16,10 +17,13 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.View.MeasureSpec;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.view.inputmethod.InputMethodSubtype;
+import android.widget.AbsListView;
+import android.widget.ListAdapter;
 
 import org.chromium.base.ApiCompatibilityUtils;
 
@@ -83,8 +87,10 @@ public class UiUtils {
          * @param listener The listener that will be notified of the action the user took in the
          *                 picker.
          * @param allowMultiple Whether the dialog should allow multiple images to be selected.
+         * @param mimeTypes A list of mime types to show in the dialog.
          */
-        void showPhotoPicker(Context context, PhotoPickerListener listener, boolean allowMultiple);
+        void showPhotoPicker(Context context, PhotoPickerListener listener, boolean allowMultiple,
+                List<String> mimeTypes);
 
         /**
          * Called when the photo picker dialog should be dismissed.
@@ -103,16 +109,24 @@ public class UiUtils {
     }
 
     /**
+     * Returns whether a photo picker should be called.
+     */
+    public static boolean shouldShowPhotoPicker() {
+        return sPhotoPickerDelegate != null;
+    }
+
+    /**
      * Called to display the photo picker.
      * @param context  The context to use.
      * @param listener The listener that will be notified of the action the user took in the
      *                 picker.
      * @param allowMultiple Whether the dialog should allow multiple images to be selected.
+     * @param mimeTypes A list of mime types to show in the dialog.
      */
-    public static boolean showPhotoPicker(
-            Context context, PhotoPickerListener listener, boolean allowMultiple) {
+    public static boolean showPhotoPicker(Context context, PhotoPickerListener listener,
+            boolean allowMultiple, List<String> mimeTypes) {
         if (sPhotoPickerDelegate == null) return false;
-        sPhotoPickerDelegate.showPhotoPicker(context, listener, allowMultiple);
+        sPhotoPickerDelegate.showPhotoPicker(context, listener, allowMultiple, mimeTypes);
         return true;
     }
 
@@ -384,5 +398,59 @@ public class UiUtils {
         ViewGroup parent = (ViewGroup) view.getParent();
         if (parent == null) return;
         parent.removeView(view);
+    }
+
+    /**
+     * Creates a {@link Typeface} that represents medium-weighted text.  This function returns
+     * Roboto Medium when it is available (Lollipop and up) and Roboto Bold where it isn't.
+     *
+     * @return Typeface that can be applied to a View.
+     */
+    public static Typeface createRobotoMediumTypeface() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            // Roboto Medium, regular.
+            return Typeface.create("sans-serif-medium", Typeface.NORMAL);
+        } else {
+            return Typeface.create("sans-serif", Typeface.BOLD);
+        }
+    }
+
+    /**
+     * Iterates through all items in the specified ListAdapter (including header and footer views)
+     * and returns the width of the widest item (when laid out with height and width set to
+     * WRAP_CONTENT).
+     *
+     * WARNING: do not call this on a ListAdapter with more than a handful of items, the performance
+     * will be terrible since it measures every single item.
+     *
+     * @param adapter The ListAdapter whose widest item's width will be returned.
+     * @return The measured width (in pixels) of the widest item in the passed-in ListAdapter.
+     */
+    public static int computeMaxWidthOfListAdapterItems(ListAdapter adapter) {
+        final int widthMeasureSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
+        final int heightMeasureSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
+        AbsListView.LayoutParams params = new AbsListView.LayoutParams(
+                AbsListView.LayoutParams.WRAP_CONTENT, AbsListView.LayoutParams.WRAP_CONTENT);
+
+        int maxWidth = 0;
+        View[] itemViews = new View[adapter.getViewTypeCount()];
+        for (int i = 0; i < adapter.getCount(); ++i) {
+            View itemView;
+            int type = adapter.getItemViewType(i);
+            if (type < 0) {
+                // Type is negative for header/footer views, or views the adapter does not want
+                // recycled.
+                itemView = adapter.getView(i, null, null);
+            } else {
+                itemViews[type] = adapter.getView(i, itemViews[type], null);
+                itemView = itemViews[type];
+            }
+
+            itemView.setLayoutParams(params);
+            itemView.measure(widthMeasureSpec, heightMeasureSpec);
+            maxWidth = Math.max(maxWidth, itemView.getMeasuredWidth());
+        }
+
+        return maxWidth;
     }
 }

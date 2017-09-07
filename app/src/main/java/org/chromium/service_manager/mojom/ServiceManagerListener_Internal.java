@@ -49,9 +49,11 @@ class ServiceManagerListener_Internal {
 
     private static final int ON_SERVICE_STARTED_ORDINAL = 2;
 
-    private static final int ON_SERVICE_FAILED_TO_START_ORDINAL = 3;
+    private static final int ON_SERVICE_PID_RECEIVED_ORDINAL = 3;
 
-    private static final int ON_SERVICE_STOPPED_ORDINAL = 4;
+    private static final int ON_SERVICE_FAILED_TO_START_ORDINAL = 4;
+
+    private static final int ON_SERVICE_STOPPED_ORDINAL = 5;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements ServiceManagerListener.Proxy {
@@ -111,6 +113,25 @@ Identity identity, int pid) {
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
                             new org.chromium.mojo.bindings.MessageHeader(ON_SERVICE_STARTED_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void onServicePidReceived(
+Identity identity, int pid) {
+
+            ServiceManagerListenerOnServicePidReceivedParams _message = new ServiceManagerListenerOnServicePidReceivedParams();
+
+            _message.identity = identity;
+
+            _message.pid = pid;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(ON_SERVICE_PID_RECEIVED_ORDINAL)));
 
         }
 
@@ -215,6 +236,19 @@ Identity identity) {
             
             
             
+                    case ON_SERVICE_PID_RECEIVED_ORDINAL: {
+            
+                        ServiceManagerListenerOnServicePidReceivedParams data =
+                                ServiceManagerListenerOnServicePidReceivedParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().onServicePidReceived(data.identity, data.pid);
+                        return true;
+                    }
+            
+            
+            
+            
+            
                     case ON_SERVICE_FAILED_TO_START_ORDINAL: {
             
                         ServiceManagerListenerOnServiceFailedToStartParams data =
@@ -261,6 +295,8 @@ Identity identity) {
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), ServiceManagerListener_Internal.MANAGER, messageWithHeader, receiver);
+            
+            
             
             
             
@@ -567,6 +603,109 @@ Identity identity) {
             if (getClass() != object.getClass())
                 return false;
             ServiceManagerListenerOnServiceStartedParams other = (ServiceManagerListenerOnServiceStartedParams) object;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.identity, other.identity))
+                return false;
+            if (this.pid!= other.pid)
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(identity);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(pid);
+            return result;
+        }
+    }
+
+
+
+    
+    static final class ServiceManagerListenerOnServicePidReceivedParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public Identity identity;
+        public int pid;
+    
+        private ServiceManagerListenerOnServicePidReceivedParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public ServiceManagerListenerOnServicePidReceivedParams() {
+            this(0);
+        }
+    
+        public static ServiceManagerListenerOnServicePidReceivedParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static ServiceManagerListenerOnServicePidReceivedParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static ServiceManagerListenerOnServicePidReceivedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            ServiceManagerListenerOnServicePidReceivedParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new ServiceManagerListenerOnServicePidReceivedParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.identity = Identity.decode(decoder1);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.pid = decoder0.readInt(16);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(identity, 8, false);
+            
+            encoder0.encode(pid, 16);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            ServiceManagerListenerOnServicePidReceivedParams other = (ServiceManagerListenerOnServicePidReceivedParams) object;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.identity, other.identity))
                 return false;
             if (this.pid!= other.pid)

@@ -16,7 +16,6 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.gfx.mojom.RectF;
 import org.chromium.mojo.system.MojoException;
-import org.chromium.mojo.system.SharedBufferHandle;
 import org.chromium.shape_detection.mojom.FaceDetection;
 import org.chromium.shape_detection.mojom.FaceDetectionResult;
 import org.chromium.shape_detection.mojom.FaceDetectorOptions;
@@ -57,8 +56,7 @@ public class FaceDetectionImplGmsCore implements FaceDetection {
     }
 
     @Override
-    public void detect(
-            SharedBufferHandle frameData, int width, int height, DetectResponse callback) {
+    public void detect(org.chromium.skia.mojom.Bitmap bitmapData, DetectResponse callback) {
         // The vision library will be downloaded the first time the API is used
         // on the device; this happens "fast", but it might have not completed,
         // bail in this case.
@@ -70,13 +68,13 @@ public class FaceDetectionImplGmsCore implements FaceDetection {
             options.fastMode = mFastMode;
             options.maxDetectedFaces = mMaxFaces;
             FaceDetectionImpl detector = new FaceDetectionImpl(options);
-            detector.detect(frameData, width, height, callback);
+            detector.detect(bitmapData, callback);
             return;
         }
 
-        Frame frame = SharedBufferUtils.convertToFrame(frameData, width, height);
+        Frame frame = BitmapUtils.convertToFrame(bitmapData);
         if (frame == null) {
-            Log.e(TAG, "Error converting SharedMemory to Frame");
+            Log.e(TAG, "Error converting Mojom Bitmap to Frame");
             callback.call(new FaceDetectionResult[0]);
             return;
         }
@@ -88,17 +86,13 @@ public class FaceDetectionImplGmsCore implements FaceDetection {
             faceArray[i] = new FaceDetectionResult();
             final Face face = faces.valueAt(i);
 
-            final PointF corner = face.getPosition();
-            faceArray[i].boundingBox = new RectF();
-            faceArray[i].boundingBox.x = corner.x;
-            faceArray[i].boundingBox.y = corner.y;
-            faceArray[i].boundingBox.width = face.getWidth();
-            faceArray[i].boundingBox.height = face.getHeight();
-
             final List<Landmark> landmarks = face.getLandmarks();
             ArrayList<org.chromium.shape_detection.mojom.Landmark> mojoLandmarks =
                     new ArrayList<org.chromium.shape_detection.mojom.Landmark>(landmarks.size());
 
+            int leftEyeIndex = -1;
+            int rightEyeIndex = -1;
+            int bottomMouthIndex = -1;
             for (int j = 0; j < landmarks.size(); j++) {
                 final Landmark landmark = landmarks.get(j);
                 final int landmarkType = landmark.getType();
@@ -112,10 +106,43 @@ public class FaceDetectionImplGmsCore implements FaceDetection {
                     mojoLandmark.type = landmarkType == Landmark.BOTTOM_MOUTH ? LandmarkType.MOUTH
                                                                               : LandmarkType.EYE;
                     mojoLandmarks.add(mojoLandmark);
+
+                    if (landmarkType == Landmark.LEFT_EYE) {
+                        leftEyeIndex = j;
+                    } else if (landmarkType == Landmark.RIGHT_EYE) {
+                        rightEyeIndex = j;
+                    } else {
+                        assert landmarkType == Landmark.BOTTOM_MOUTH;
+                        bottomMouthIndex = j;
+                    }
                 }
             }
             faceArray[i].landmarks = mojoLandmarks.toArray(
                     new org.chromium.shape_detection.mojom.Landmark[mojoLandmarks.size()]);
+
+            final PointF corner = face.getPosition();
+            faceArray[i].boundingBox = new RectF();
+            if (leftEyeIndex != -1 && rightEyeIndex != -1) {
+                final PointF leftEyePoint = landmarks.get(leftEyeIndex).getPosition();
+                final float eyesDistance =
+                        leftEyePoint.x - landmarks.get(rightEyeIndex).getPosition().x;
+                final float eyeMouthDistance = bottomMouthIndex != -1
+                        ? landmarks.get(bottomMouthIndex).getPosition().y - leftEyePoint.y
+                        : -1;
+                final PointF midEyePoint =
+                        new PointF(corner.x + face.getWidth() / 2, leftEyePoint.y);
+                faceArray[i].boundingBox.x = midEyePoint.x - eyesDistance;
+                faceArray[i].boundingBox.y = midEyePoint.y - eyesDistance;
+                faceArray[i].boundingBox.width = 2 * eyesDistance;
+                faceArray[i].boundingBox.height = eyeMouthDistance > eyesDistance
+                        ? eyeMouthDistance + eyesDistance
+                        : 2 * eyesDistance;
+            } else {
+                faceArray[i].boundingBox.x = corner.x;
+                faceArray[i].boundingBox.y = corner.y;
+                faceArray[i].boundingBox.width = face.getWidth();
+                faceArray[i].boundingBox.height = face.getHeight();
+            }
         }
         callback.call(faceArray);
     }

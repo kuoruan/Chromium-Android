@@ -33,13 +33,13 @@ public class TabPrinter implements Printable {
     }
 
     @Override
-    public boolean print() {
+    public boolean print(int renderProcessId, int renderFrameId) {
         Tab tab = mTab.get();
         if (tab == null || !tab.isInitialized()) {
             Log.d(TAG, "Tab not ready, unable to start printing.");
             return false;
         }
-        return tab.print();
+        return tab.print(renderProcessId, renderFrameId);
     }
 
     @Override

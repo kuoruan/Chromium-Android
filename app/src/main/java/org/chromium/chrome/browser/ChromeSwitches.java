@@ -31,9 +31,6 @@ public abstract class ChromeSwitches {
     /** Disable the First Run Experience. */
     public static final String DISABLE_FIRST_RUN_EXPERIENCE = "disable-fre";
 
-    /** Enable the Lightweight First Run Experience. */
-    public static final String ENABLE_LIGHTWEIGHT_FIRST_RUN_EXPERIENCE = "enable-lightweight-fre";
-
     /** Force the crash dump to be uploaded regardless of preferences. */
     public static final String FORCE_CRASH_DUMP_UPLOAD = "force-dump-upload";
 
@@ -184,6 +181,15 @@ public abstract class ChromeSwitches {
 
     /** Enable Vr Shell development environment. */
     public static final String ENABLE_VR_SHELL_DEV = "enable-vr-shell-dev";
+
+    /** Command line switch for Chrome Home's swipe logic. */
+    public static final String CHROME_HOME_SWIPE_LOGIC = "chrome-home-swipe-logic";
+
+    /** Switch for enabling "restricted area" swipe logic for Chrome Home. */
+    public static final String CHROME_HOME_SWIPE_LOGIC_RESTRICT_AREA = "restrict-area";
+
+    /** Switch for enabling "button only" swipe logic for Chrome Home. */
+    public static final String CHROME_HOME_SWIPE_LOGIC_BUTTON_ONLY = "button-only";
 
     // Prevent instantiation.
     private ChromeSwitches() {}

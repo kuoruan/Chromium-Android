@@ -61,7 +61,7 @@ public final class MailboxVideoFrameData extends org.chromium.mojo.bindings.Stru
                 
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                 {
-                    org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                    org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(4);
                     result.mailboxHolder = new org.chromium.gpu.mojom.MailboxHolder[si1.elementsOrVersion];
                     for (int i1 = 0; i1 < si1.elementsOrVersion; ++i1) {
                         
@@ -84,7 +84,7 @@ public final class MailboxVideoFrameData extends org.chromium.mojo.bindings.Stru
         if (mailboxHolder == null) {
             encoder0.encodeNullPointer(8, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(mailboxHolder.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(mailboxHolder.length, 8, 4);
             for (int i0 = 0; i0 < mailboxHolder.length; ++i0) {
                 
                 encoder1.encode(mailboxHolder[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);

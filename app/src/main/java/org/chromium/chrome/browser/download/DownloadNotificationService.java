@@ -972,13 +972,15 @@ public class DownloadNotificationService extends Service {
      * @param isSupportedMimeType Whether the MIME type can be viewed inside browser.
      * @param isOpenable          Whether or not this download can be opened.
      * @param icon                A {@link Bitmap} to be used as the large icon for display.
+     * @param originalUrl         The original url of the downloaded file.
+     * @param referrer            Referrer of the downloaded file.
      * @return                    ID of the successful download notification. Used for removing the
      *                            notification when user click on the snackbar.
      */
     @VisibleForTesting
     public int notifyDownloadSuccessful(ContentId id, String filePath, String fileName,
             long systemDownloadId, boolean isOffTheRecord, boolean isSupportedMimeType,
-            boolean isOpenable, Bitmap icon) {
+            boolean isOpenable, Bitmap icon, String originalUrl, String referrer) {
         int notificationId = getNotificationId(id);
         ChromeNotificationBuilder builder = buildNotification(R.drawable.offline_pin, fileName,
                 mContext.getResources().getString(R.string.download_notification_completed));
@@ -997,6 +999,7 @@ public class DownloadNotificationService extends Service {
                 intent.putExtra(EXTRA_DOWNLOAD_CONTENTID_ID, id.id);
                 intent.putExtra(EXTRA_DOWNLOAD_CONTENTID_NAMESPACE, id.namespace);
                 intent.putExtra(NotificationConstants.EXTRA_NOTIFICATION_ID, notificationId);
+                DownloadUtils.setOriginalUrlAndReferralExtraToIntent(intent, originalUrl, referrer);
             } else {
                 intent = buildActionIntent(mContext, ACTION_DOWNLOAD_OPEN, id, false);
             }

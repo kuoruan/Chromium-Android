@@ -26,7 +26,7 @@ public interface VideoDecoder extends org.chromium.mojo.bindings.Interface {
 
 
     void construct(
-org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client, org.chromium.mojo.system.DataPipe.ConsumerHandle decoderBufferPipe, CommandBufferId commandBufferId);
+org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client, org.chromium.mojo.bindings.AssociatedInterfaceNotSupported mediaLog, org.chromium.mojo.system.DataPipe.ConsumerHandle decoderBufferPipe, CommandBufferId commandBufferId);
 
 
 

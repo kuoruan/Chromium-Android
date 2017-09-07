@@ -21,6 +21,9 @@ public class PermissionDialogDelegate {
     /** The native-side counterpart of this class */
     private long mNativeDelegatePtr;
 
+    /** The controller for this class */
+    private PermissionDialogController mDialogController;
+
     /** The tab for which to create the dialog. */
     private Tab mTab;
 
@@ -101,6 +104,18 @@ public class PermissionDialogDelegate {
     public void onLinkClicked() {
         assert mNativeDelegatePtr != 0;
         nativeLinkClicked(mNativeDelegatePtr);
+    }
+
+    public void setDialogController(PermissionDialogController controller) {
+        mDialogController = controller;
+    }
+
+    /**
+     * Called from C++ by |nativeDelegatePtr| to destroy the dialog.
+     */
+    @CalledByNative
+    private void dismissFromNative() {
+        mDialogController.dismissFromNative(this);
     }
 
     /**

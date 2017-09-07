@@ -181,7 +181,7 @@ public class ContentView extends FrameLayout
 
     @Override
     public boolean onDragEvent(DragEvent event) {
-        return mContentViewCore.onDragEvent(event);
+        return getEventForwarder().onDragEvent(event, this);
     }
 
     @Override
@@ -196,7 +196,7 @@ public class ContentView extends FrameLayout
      */
     @Override
     public boolean onHoverEvent(MotionEvent event) {
-        boolean consumed = mContentViewCore.onHoverEvent(event);
+        boolean consumed = getEventForwarder().onHoverEvent(event);
         if (!mContentViewCore.isTouchExplorationEnabled()) super.onHoverEvent(event);
         return consumed;
     }

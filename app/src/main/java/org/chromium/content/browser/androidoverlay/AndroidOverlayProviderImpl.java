@@ -9,6 +9,8 @@ import android.os.Handler;
 import android.os.HandlerThread;
 
 import org.chromium.base.ThreadUtils;
+import org.chromium.base.annotations.CalledByNative;
+import org.chromium.base.annotations.JNINamespace;
 import org.chromium.media.mojom.AndroidOverlay;
 import org.chromium.media.mojom.AndroidOverlayClient;
 import org.chromium.media.mojom.AndroidOverlayConfig;
@@ -21,6 +23,7 @@ import org.chromium.services.service_manager.InterfaceFactory;
  * Default impl of AndroidOverlayProvider.  Creates AndroidOverlayImpls.  We're a singleton, in the
  * sense that all provider clients talk to the same instance in the browser.
  */
+@JNINamespace("content")
 public class AndroidOverlayProviderImpl implements AndroidOverlayProvider {
     private static final String TAG = "AndroidOverlayProvider";
 
@@ -63,8 +66,8 @@ public class AndroidOverlayProviderImpl implements AndroidOverlayProvider {
         startThreadIfNeeded();
         mNumOverlays++;
 
-        DialogOverlayImpl impl =
-                new DialogOverlayImpl(client, config, mHandler, mNotifyReleasedRunnable);
+        DialogOverlayImpl impl = new DialogOverlayImpl(
+                client, config, mHandler, mNotifyReleasedRunnable, false /* asPanel*/);
         DialogOverlayImpl.MANAGER.bind(impl, request);
     }
 
@@ -101,6 +104,12 @@ public class AndroidOverlayProviderImpl implements AndroidOverlayProvider {
     // Remember that we can't tell which client disconnected.
     @Override
     public void onConnectionError(MojoException e) {}
+
+    // Are overlays supported by the embedder?
+    @CalledByNative
+    private static boolean areOverlaysSupported() {
+        return true;
+    }
 
     /**
      * Mojo factory.

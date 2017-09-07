@@ -64,11 +64,13 @@ class VideoDecoder_Internal {
 
         @Override
         public void construct(
-org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client, org.chromium.mojo.system.DataPipe.ConsumerHandle decoderBufferPipe, CommandBufferId commandBufferId) {
+org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client, org.chromium.mojo.bindings.AssociatedInterfaceNotSupported mediaLog, org.chromium.mojo.system.DataPipe.ConsumerHandle decoderBufferPipe, CommandBufferId commandBufferId) {
 
             VideoDecoderConstructParams _message = new VideoDecoderConstructParams();
 
             _message.client = client;
+
+            _message.mediaLog = mediaLog;
 
             _message.decoderBufferPipe = decoderBufferPipe;
 
@@ -200,7 +202,7 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
                         VideoDecoderConstructParams data =
                                 VideoDecoderConstructParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().construct(data.client, data.decoderBufferPipe, data.commandBufferId);
+                        getImpl().construct(data.client, data.mediaLog, data.decoderBufferPipe, data.commandBufferId);
                         return true;
                     }
             
@@ -311,10 +313,11 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
     
     static final class VideoDecoderConstructParams extends org.chromium.mojo.bindings.Struct {
     
-        private static final int STRUCT_SIZE = 32;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
+        private static final int STRUCT_SIZE = 40;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client;
+        public org.chromium.mojo.bindings.AssociatedInterfaceNotSupported mediaLog;
         public org.chromium.mojo.system.DataPipe.ConsumerHandle decoderBufferPipe;
         public CommandBufferId commandBufferId;
     
@@ -360,11 +363,15 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
                 }
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
-                    result.decoderBufferPipe = decoder0.readConsumerHandle(16, false);
+                    result.mediaLog = decoder0.readAssociatedServiceInterfaceNotSupported(16, false);
                 }
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, true);
+                    result.decoderBufferPipe = decoder0.readConsumerHandle(24, false);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, true);
                     result.commandBufferId = CommandBufferId.decode(decoder1);
                 }
             } finally {
@@ -380,9 +387,11 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
             
             encoder0.encode(client, 8, false);
             
-            encoder0.encode(decoderBufferPipe, 16, false);
+            encoder0.encode(mediaLog, 16, false);
             
-            encoder0.encode(commandBufferId, 24, true);
+            encoder0.encode(decoderBufferPipe, 24, false);
+            
+            encoder0.encode(commandBufferId, 32, true);
         }
     
         /**
@@ -399,6 +408,8 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
             VideoDecoderConstructParams other = (VideoDecoderConstructParams) object;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.client, other.client))
                 return false;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.mediaLog, other.mediaLog))
+                return false;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.decoderBufferPipe, other.decoderBufferPipe))
                 return false;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.commandBufferId, other.commandBufferId))
@@ -414,6 +425,7 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
             final int prime = 31;
             int result = prime + getClass().hashCode();
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(client);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mediaLog);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(decoderBufferPipe);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(commandBufferId);
             return result;

@@ -4,7 +4,10 @@
 
 package org.chromium.chrome.browser.suggestions;
 
+import android.support.annotation.Nullable;
+
 import org.chromium.chrome.browser.ntp.snippets.SnippetArticle;
+import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.content_public.browser.LoadUrlParams;
 
 /**
@@ -36,6 +39,11 @@ public interface SuggestionsNavigationDelegate {
      */
     void openSnippet(int windowOpenDisposition, SnippetArticle article);
 
-    /** Opens an url with the desired disposition. */
-    void openUrl(int windowOpenDisposition, LoadUrlParams loadUrlParams);
+    /**
+     * Opens an URL with the desired disposition.
+     * @return The tab where the URL is being loaded, if it is accessible. Cases where no tab is
+     * returned include opening incognito tabs or opening the URL in a new window.
+     */
+    @Nullable
+    Tab openUrl(int windowOpenDisposition, LoadUrlParams loadUrlParams);
 }

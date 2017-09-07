@@ -113,6 +113,13 @@ public class ChromeBrowserInitializer {
     }
 
     /**
+     * @return whether native initialization is complete.
+     */
+    public boolean hasNativeInitializationCompleted() {
+        return mNativeInitializationComplete;
+    }
+
+    /**
      * Initializes the Chrome browser process synchronously.
      *
      * @throws ProcessInitException if there is a problem with the native library.

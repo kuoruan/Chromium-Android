@@ -196,8 +196,8 @@ public class InfoBarContainerLayout extends FrameLayout {
             Animator.AnimatorListener listener = new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
-                    mAnimation = null;
                     InfoBarAnimation.this.onAnimationEnd();
+                    mAnimation = null;
                     for (InfoBarAnimationListener listener : mAnimationListeners) {
                         listener.notifyAnimationFinished(getAnimationType());
                     }
@@ -410,6 +410,11 @@ public class InfoBarContainerLayout extends FrameLayout {
             mAppearingWrapper.setTranslationY(mAppearingWrapper.getHeight());
             return createTranslationYAnimator(mAppearingWrapper, 0f)
                     .setDuration(DURATION_SLIDE_UP_MS);
+        }
+
+        @Override
+        public void onAnimationEnd() {
+            mAppearingWrapper.removeView(mAppearingWrapper.getItem().getView());
         }
 
         @Override

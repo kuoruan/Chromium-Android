@@ -78,7 +78,7 @@
             android:layout_weight="1"
             android:background="@null"
             android:drawableStart="@drawable/googleg"
-            android:drawablePadding="8dp"
+            android:drawablePadding="@dimen/ntp_search_box_logo_padding"
             android:ellipsize="end"
             android:focusableInTouchMode="false"
             android:gravity="center_vertical"

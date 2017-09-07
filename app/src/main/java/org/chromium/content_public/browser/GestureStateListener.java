@@ -37,33 +37,39 @@ public class GestureStateListener {
      */
     public void onScrollUpdateGestureConsumed() {}
 
-    /*
+    /**
      * Called when a scroll gesture has started.
      */
     public void onScrollStarted(int scrollOffsetY, int scrollExtentY) {}
 
-    /*
+    /**
      * Called when a scroll gesture has stopped.
      */
     public void onScrollEnded(int scrollOffsetY, int scrollExtentY) {}
 
-    /*
+    /**
      * Called when the min or max scale factor may have been changed.
      */
     public void onScaleLimitsChanged(float minPageScaleFactor, float maxPageScaleFactor) {}
 
-    /*
+    /**
      * Called when the scroll offsets or extents may have changed.
      */
     public void onScrollOffsetOrExtentChanged(int scrollOffsetY, int scrollExtentY) {}
 
-    /*
+    /**
+     * Called at the beginning of any kind of touch event when the user's finger first touches down
+     * onto the screen.  The resulting gesture may be a single tap, long-press, or scroll.
+     */
+    public void onTouchDown() {}
+
+    /**
      * Called after a single-tap gesture event was dispatched to the renderer,
      * indicating whether or not the gesture was consumed.
      */
     public void onSingleTap(boolean consumed) {}
 
-    /*
+    /**
      * Called after a single-tap gesture event was processed by the renderer,
      * but was not handled.
      */

@@ -80,7 +80,7 @@ public class MediaRouteChooserDialogManager extends BaseMediaRouteDialogManager 
 
             MediaSink newSink =
                     MediaSink.fromRoute(mManager.androidMediaRouter().getSelectedRoute());
-            mManager.delegate().onSinkSelected(newSink);
+            mManager.delegate().onSinkSelected(mManager.mediaSource().getUrn(), newSink);
         }
     }
 
