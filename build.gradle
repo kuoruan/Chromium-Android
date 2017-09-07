@@ -21,3 +21,18 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+ext {
+    compileSdkVersion = 26
+    buildToolsVersion = "26.0.1"
+    minSdkVersion = 19
+    targetSdkVersion = 23
+
+    versionCode = 2
+    versionName = "61.0.3163.79"
+
+    supportLibraryVersion = "26.0.0-alpha1"
+    playServicesVersion = "10.2.6"
+    espressoVersion = "2.2.2"
+    junitVersion = "4.12"
+}
