@@ -47,11 +47,11 @@ before_deploy:
 
   # Verification
   - jarsigner -verify app-release-unsigned.apk
-  - ${ANDROID_HOME}/build-tools/${ANDROID_BUILD_TOOLS}/zipalign -v 4 app-release-unsigned.apk Chrome.apk
+  - ${ANDROID_HOME}/build-tools/${ANDROID_BUILD_TOOLS}/zipalign -v 4 app-release-unsigned.apk Chromium.apk
 
 deploy:
   provider: releases
-  file: Chrome.apk
+  file: Chromium.apk
   skip_cleanup: true
 
   on:
