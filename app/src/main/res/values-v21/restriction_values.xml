@@ -341,10 +341,6 @@ If this policy set to false, Google Cast will be disabled.</string>
 Note that this policy depends on the operating system certificate verification stack allowing SHA-1 signatures. If an OS update changes the OS handling of SHA-1 certificates, this policy may no longer have effect.  Further, this policy is intended as a temporary workaround to give enterprises more time to move away from SHA-1.  This policy will be removed on or around January 1st 2019.
 
 If this policy is not set, or it is set to false, then Chromium follows the publicly announced SHA-1 deprecation schedule.</string>
-  <string name="ForceBrowserSigninTitle">Enables force sign in for Chromium</string>
-  <string name="ForceBrowserSigninDesc">If this policy is set to true, user has to sign in to Chromium with their profile before using the browser. And the default value of BrowserGuestModeEnabled will be set to false.
-
-If this policy is set to false or not configured, user can use the browser without sign in to Chromium.</string>
   <string name="ForceGoogleSafeSearchTitle">Force Google SafeSearch</string>
   <string name="ForceGoogleSafeSearchDesc">Forces queries in Google Web Search to be done with SafeSearch set to active and prevents users from changing this setting.
 
