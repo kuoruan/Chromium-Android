@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.omnibox;
 import android.os.Bundle;
 import android.text.TextUtils;
 
+import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.WarmupManager;
@@ -23,6 +24,8 @@ import java.util.List;
  * Bridge to the native AutocompleteControllerAndroid.
  */
 public class AutocompleteController {
+    private static final String TAG = "cr_Autocomplete";
+
     // Maximum number of search/history suggestions to show.
     private static final int MAX_DEFAULT_SUGGESTION_COUNT = 5;
 
@@ -116,6 +119,9 @@ public class AutocompleteController {
      */
     public void start(Profile profile, String url, String text, int cursorPosition,
             boolean preventInlineAutocomplete, boolean focusedFromFakebox) {
+        // crbug.com/764749
+        Log.w(TAG, "starting autocomplete controller..[%b][%b]", profile == null,
+                TextUtils.isEmpty(url));
         if (profile == null || TextUtils.isEmpty(url)) return;
 
         mNativeAutocompleteControllerAndroid = nativeInit(profile);
@@ -191,6 +197,8 @@ public class AutocompleteController {
         mCurrentNativeAutocompleteResult = 0;
         mWaitingForSuggestionsToCache = false;
         if (mNativeAutocompleteControllerAndroid != 0) {
+            // crbug.com/764749
+            Log.w(TAG, "stopping autocomplete.");
             nativeStop(mNativeAutocompleteControllerAndroid, clear);
         }
     }

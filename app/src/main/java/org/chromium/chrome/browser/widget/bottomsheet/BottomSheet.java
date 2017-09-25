@@ -1379,6 +1379,14 @@ public class BottomSheet
      */
     private void setInternalCurrentState(@SheetState int state) {
         if (state == mCurrentState) return;
+
+        // TODO(mdjones): This shouldn't be able to happen, but does occasionally during layout.
+        //                Fix the race condition that is making this happen.
+        if (state == SHEET_STATE_NONE) {
+            setSheetState(getTargetSheetState(getSheetOffsetFromBottom(), 0), false);
+            return;
+        }
+
         mCurrentState = state;
 
         for (BottomSheetObserver o : mObservers) {

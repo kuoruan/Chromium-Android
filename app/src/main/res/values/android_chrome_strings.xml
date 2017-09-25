@@ -514,8 +514,9 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="contextmenu_copy">"Copy"</string>
 <string name="contextmenu_send_message">"Send message"</string>
 <string name="contextmenu_add_to_contacts">"Add to contacts"</string>
-<string name="contextmenu_copy_link_address">"Copy link"</string>
-<string name="contextmenu_save_link">"Download page"</string>
+<string name="contextmenu_copy_link_address">"Copy link address"</string>
+<string name="contextmenu_copy_link_text">"Copy link text"</string>
+<string name="contextmenu_save_link">"Download link"</string>
 <string name="contextmenu_save_image">"Download image"</string>
 <string name="contextmenu_open_image">"Open image"</string>
 <string name="contextmenu_open_image_in_new_tab">"Open image in new tab"</string>

@@ -37,6 +37,8 @@ public enum ChromeContextMenuItem implements ContextMenuItem {
             R.string.contextmenu_open_in_incognito_tab, R.id.contextmenu_open_in_incognito_tab),
     COPY_LINK_ADDRESS(R.drawable.ic_content_copy, R.string.contextmenu_copy_link_address,
             R.id.contextmenu_copy_link_address),
+    COPY_LINK_TEXT(R.drawable.ic_content_copy, R.string.contextmenu_copy_link_text,
+            R.id.contextmenu_copy_link_text),
     SAVE_LINK_AS(R.drawable.ic_file_download_white_24dp, R.string.contextmenu_save_link,
             R.id.contextmenu_save_link_as),
 

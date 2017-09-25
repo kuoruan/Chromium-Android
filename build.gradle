@@ -28,8 +28,8 @@ ext {
     minSdkVersion = 19
     targetSdkVersion = 23
 
-    versionCode = 3
-    versionName = "61.0.3163.93"
+    versionCode = 4
+    versionName = "61.0.3163.100"
 
     supportLibraryVersion = "26.0.0-alpha1"
     playServicesVersion = "10.2.6"

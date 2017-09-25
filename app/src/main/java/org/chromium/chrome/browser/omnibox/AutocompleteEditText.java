@@ -58,10 +58,10 @@ public class AutocompleteEditText
 
         if (ChromeFeatureList.isInitialized()
                 && ChromeFeatureList.isEnabled(ChromeFeatureList.SPANNABLE_INLINE_AUTOCOMPLETE)) {
-            Log.i(TAG, "Using spannable model...");
+            Log.w(TAG, "Using spannable model...");
             mModel = new SpannableAutocompleteEditTextModel(this);
         } else {
-            Log.i(TAG, "Using non-spannable model...");
+            Log.w(TAG, "Using non-spannable model...");
             mModel = new AutocompleteEditTextModel(this);
         }
         // Feed initial values.

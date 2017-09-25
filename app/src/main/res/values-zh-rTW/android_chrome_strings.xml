@@ -514,8 +514,9 @@
 <string name="contextmenu_copy">"複製"</string>
 <string name="contextmenu_send_message">"傳送訊息"</string>
 <string name="contextmenu_add_to_contacts">"新增為聯絡人"</string>
-<string name="contextmenu_copy_link_address">"複製連結"</string>
-<string name="contextmenu_save_link">"下載網頁"</string>
+<string name="contextmenu_copy_link_address">"複製連結網址"</string>
+<string name="contextmenu_copy_link_text">"複製連結文字"</string>
+<string name="contextmenu_save_link">"下載連結"</string>
 <string name="contextmenu_save_image">"下載圖片"</string>
 <string name="contextmenu_open_image">"開啟圖片"</string>
 <string name="contextmenu_open_image_in_new_tab">"在新分頁中開啟圖片"</string>

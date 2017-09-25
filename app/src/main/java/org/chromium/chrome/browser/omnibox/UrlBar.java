@@ -801,6 +801,8 @@ public class UrlBar extends AutocompleteEditText {
         }
         if (mUrlBarDelegate == null) return;
         if (updateDisplay) limitDisplayableLength();
+        // crbug.com/764749
+        Log.w(TAG, "Text change observed, triggering autocomplete.");
 
         mUrlBarDelegate.onTextChangedForAutocomplete();
     }
