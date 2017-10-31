@@ -340,7 +340,7 @@ int action) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(client, 8, false, MediaSessionClient.MANAGER);
+            encoder0.encode(this.client, 8, false, MediaSessionClient.MANAGER);
         }
     
         /**
@@ -367,7 +367,7 @@ int action) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(client);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.client);
             return result;
         }
     }
@@ -433,7 +433,7 @@ int action) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(state, 8);
+            encoder0.encode(this.state, 8);
         }
     
         /**
@@ -460,7 +460,7 @@ int action) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(state);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.state);
             return result;
         }
     }
@@ -526,7 +526,7 @@ int action) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(metadata, 8, true);
+            encoder0.encode(this.metadata, 8, true);
         }
     
         /**
@@ -553,7 +553,7 @@ int action) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(metadata);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.metadata);
             return result;
         }
     }
@@ -619,7 +619,7 @@ int action) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(action, 8);
+            encoder0.encode(this.action, 8);
         }
     
         /**
@@ -646,7 +646,7 @@ int action) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(action);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.action);
             return result;
         }
     }
@@ -712,7 +712,7 @@ int action) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(action, 8);
+            encoder0.encode(this.action, 8);
         }
     
         /**
@@ -739,7 +739,7 @@ int action) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(action);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.action);
             return result;
         }
     }

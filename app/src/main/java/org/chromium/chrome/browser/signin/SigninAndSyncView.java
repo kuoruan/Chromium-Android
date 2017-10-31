@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.chromium.base.ThreadUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
 import org.chromium.chrome.browser.signin.AccountSigninActivity.AccessPoint;
@@ -24,17 +25,19 @@ import org.chromium.components.signin.ChromeSigninController;
 import org.chromium.components.sync.AndroidSyncSettings;
 import org.chromium.components.sync.AndroidSyncSettings.AndroidSyncSettingsObserver;
 
+import javax.annotation.Nullable;
+
 /**
  * A View that shows the user the next step they must complete to start syncing their data (eg.
  * Recent Tabs or Bookmarks). For example, if the user is not signed in, the View will prompt them
  * to do so and link to the AccountSigninActivity.
- * If inflated manually, {@link SigninAndSyncView#init()} must be called before attaching this View
- * to a ViewGroup.
+ * If inflated manually, {@link SigninAndSyncView#init(Listener, int)} must be called before
+ * attaching this View to a ViewGroup.
  */
 public class SigninAndSyncView extends LinearLayout
         implements AndroidSyncSettingsObserver, SignInStateObserver {
-    private Listener mListener;
-    @AccessPoint private int mAccessPoint;
+    private @Nullable Listener mListener;
+    private @AccessPoint int mAccessPoint;
     private boolean mInitialized;
     private final SigninManager mSigninManager;
 
@@ -57,12 +60,18 @@ public class SigninAndSyncView extends LinearLayout
     /**
      * A convenience method to inflate and initialize a SigninAndSyncView.
      * @param parent A parent used to provide LayoutParams (the SigninAndSyncView will not be
-     *     attached).
-     * @param listener Listener for user interactions.
+     *         attached).
+     * @param listener Listener for user interactions. A null listener marks that the promo is not
+     *         dismissible.
      * @param accessPoint Where the SigninAndSyncView is used.
      */
-    public static SigninAndSyncView create(ViewGroup parent, Listener listener,
-            @AccessPoint int accessPoint) {
+    public static SigninAndSyncView create(
+            ViewGroup parent, @Nullable Listener listener, @AccessPoint int accessPoint) {
+        if (listener == null) {
+            assert accessPoint
+                    == SigninAccessPoint.RECENT_TABS
+                : "The promo should not be dismissible in Recent Tabs!";
+        }
         SigninAndSyncView signinView = (SigninAndSyncView) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.signin_and_sync_view, parent, false);
         signinView.init(listener, accessPoint);
@@ -186,26 +195,18 @@ public class SigninAndSyncView extends LinearLayout
                 ? R.string.bookmark_sign_in_promo_description
                 : R.string.recent_tabs_sign_in_promo_description;
 
-        ButtonState positiveButton = new ButtonPresent(
-                R.string.sign_in_button,
-                new OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        AccountSigninActivity
-                                .startAccountSigninActivity(getContext(), mAccessPoint);
-                    }
-                });
+        ButtonState positiveButton = new ButtonPresent(R.string.sign_in_button, view -> {
+            Context context = getContext();
+            context.startActivity(AccountSigninActivity.createIntentForDefaultSigninFlow(
+                    context, mAccessPoint, false));
+        });
 
         ButtonState negativeButton;
         if (mAccessPoint == SigninAccessPoint.RECENT_TABS) {
             negativeButton = new ButtonAbsent();
         } else {
-            negativeButton = new ButtonPresent(R.string.no_thanks, new OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    mListener.onViewDismissed();
-                }
-            });
+            negativeButton =
+                    new ButtonPresent(R.string.no_thanks, view -> mListener.onViewDismissed());
         }
 
         return new ViewState(descId, positiveButton, negativeButton);
@@ -217,18 +218,13 @@ public class SigninAndSyncView extends LinearLayout
 
         int descId = R.string.recent_tabs_sync_promo_enable_android_sync;
 
-        ButtonState positiveButton = new ButtonPresent(
-                R.string.open_settings_button,
-                new OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        // TODO(crbug.com/557784): Like AccountManagementFragment, this would also
-                        // benefit from going directly to an account.
-                        Intent intent = new Intent(Settings.ACTION_SYNC_SETTINGS);
-                        intent.putExtra(Settings.EXTRA_ACCOUNT_TYPES, new String[] {"com.google"});
-                        getContext().startActivity(intent);
-                    }
-                });
+        ButtonState positiveButton = new ButtonPresent(R.string.open_settings_button, view -> {
+            // TODO(crbug.com/557784): Like AccountManagementFragment, this would also
+            // benefit from going directly to an account.
+            Intent intent = new Intent(Settings.ACTION_SYNC_SETTINGS);
+            intent.putExtra(Settings.EXTRA_ACCOUNT_TYPES, new String[] {"com.google"});
+            getContext().startActivity(intent);
+        });
 
         return new ViewState(descId, positiveButton, new ButtonAbsent());
     }
@@ -238,15 +234,9 @@ public class SigninAndSyncView extends LinearLayout
                 ? R.string.bookmarks_sync_promo_enable_sync
                 : R.string.recent_tabs_sync_promo_enable_chrome_sync;
 
-        ButtonState positiveButton = new ButtonPresent(
-                R.string.enable_sync_button,
-                new OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        PreferencesLauncher.launchSettingsPage(getContext(),
-                                SyncCustomizationFragment.class.getName());
-                    }
-                });
+        ButtonState positiveButton = new ButtonPresent(R.string.enable_sync_button,
+                view -> PreferencesLauncher.launchSettingsPage(
+                        getContext(), SyncCustomizationFragment.class.getName()));
 
         return new ViewState(descId, positiveButton, new ButtonAbsent());
     }
@@ -292,6 +282,7 @@ public class SigninAndSyncView extends LinearLayout
     // AndroidSyncStateObserver
     @Override
     public void androidSyncSettingsChanged() {
-        update();
+        // AndroidSyncSettings calls this method from non-UI threads.
+        ThreadUtils.runOnUiThread(() -> update());
     }
 }

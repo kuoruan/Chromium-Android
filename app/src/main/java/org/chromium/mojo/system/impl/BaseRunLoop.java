@@ -39,7 +39,7 @@ class BaseRunLoop implements RunLoop {
     @Override
     public void quit() {
         assert mRunLoopID != 0 : "The run loop cannot be quitted run once closed";
-        nativeQuit(mRunLoopID);
+        nativeQuit();
     }
 
     @Override
@@ -68,7 +68,7 @@ class BaseRunLoop implements RunLoop {
     private native long nativeCreateBaseRunLoop();
     private native void nativeRun();
     private native void nativeRunUntilIdle();
-    private native void nativeQuit(long runLoopID);
+    private native void nativeQuit();
     private native void nativePostDelayedTask(long runLoopID, Runnable runnable, long delay);
     private native void nativeDeleteMessageLoop(long runLoopID);
 }

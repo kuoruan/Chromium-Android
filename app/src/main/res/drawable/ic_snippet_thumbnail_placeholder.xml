@@ -11,7 +11,7 @@
     android:viewportWidth="72"
     android:viewportHeight="72">
 
-    <path android:fillColor="@color/default_primary_color"
+    <path android:fillColor="@color/modern_light_grey"
         android:pathData="M0,0 L72,0 L72,71.9997 L0,71.9997 Z" />
     <path android:fillColor="@color/light_normal_color"
         android:pathData="M45,42.9997 L45,28.9997 C45,27.8997,44.1,26.9997,43,26.9997 L29,26.9997

@@ -56,9 +56,8 @@ public class WebappDirectoryManager {
      * @param currentWebappId ID for the currently running web app.
      * @return                AsyncTask doing the cleaning.
      */
-    public AsyncTask<Void, Void, Void> cleanUpDirectories(
-            final Context context, final String currentWebappId) {
-        if (mCleanupTask != null) return mCleanupTask;
+    public void cleanUpDirectories(final Context context, final String currentWebappId) {
+        if (mCleanupTask != null) return;
 
         mCleanupTask = new AsyncTask<Void, Void, Void>() {
             @Override
@@ -81,12 +80,16 @@ public class WebappDirectoryManager {
             }
         };
         mCleanupTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        return mCleanupTask;
     }
 
     /** Cancels the cleanup task, if one exists. */
     public void cancelCleanup() {
         if (mCleanupTask != null) mCleanupTask.cancel(true);
+    }
+
+    /** Resets class' static state */
+    public void resetForTesting() {
+        sMustCleanUpOldDirectories.getAndSet(true);
     }
 
     /**

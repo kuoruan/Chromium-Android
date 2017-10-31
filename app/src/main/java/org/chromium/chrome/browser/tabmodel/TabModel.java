@@ -61,9 +61,12 @@ public interface TabModel extends TabList {
         FROM_LAUNCHER_SHORTCUT,
 
         /**
-         * The tab is initially detached.
+         * The tab is created by CCT in the background and detached from ChromeActivity.
          */
-        FROM_DETACHED,
+        FROM_SPECULATIVE_BACKGROUND_CREATION,
+
+        /** Opened in the background from Browser Actions context menu. */
+        FROM_BROWSER_ACTIONS,
     }
 
     /**

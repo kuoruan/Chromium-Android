@@ -14,6 +14,8 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
@@ -26,7 +28,13 @@ public class AddToHomescreenDialog implements AddToHomescreenManager.Observer {
     private AlertDialog mDialog;
     private View mProgressBarView;
     private ImageView mIconView;
-    private EditText mInput;
+
+    /**
+     * The {@mShortcutTitleInput} and the {@mPwaLayout} are mutually exclusive, depending on
+     * whether the site is WebAPK compatible.
+     */
+    private EditText mShortcutTitleInput;
+    private LinearLayout mPwaLayout;
 
     private AddToHomescreenManager mManager;
 
@@ -69,21 +77,23 @@ public class AddToHomescreenDialog implements AddToHomescreenManager.Observer {
         // title is the title of the page.
         mProgressBarView = view.findViewById(R.id.spinny);
         mIconView = (ImageView) view.findViewById(R.id.icon);
-        mInput = (EditText) view.findViewById(R.id.text);
+        mShortcutTitleInput = (EditText) view.findViewById(R.id.text);
+        mPwaLayout = (LinearLayout) view.findViewById(R.id.read_only_text);
 
         // The dialog's text field is disabled till the "user title" is fetched,
-        mInput.setEnabled(false);
+        mShortcutTitleInput.setVisibility(View.INVISIBLE);
 
         view.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
             @Override
             public void onLayoutChange(View v, int left, int top, int right, int bottom,
                     int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                if (mProgressBarView.getMeasuredHeight() == mInput.getMeasuredHeight()
-                        && mInput.getBackground() != null) {
+                if (mProgressBarView.getMeasuredHeight() == mShortcutTitleInput.getMeasuredHeight()
+                        && mShortcutTitleInput.getBackground() != null) {
                     // Force the text field to align better with the icon by accounting for the
                     // padding introduced by the background drawable.
-                    mInput.getLayoutParams().height =
-                            mProgressBarView.getMeasuredHeight() + mInput.getPaddingBottom();
+                    mShortcutTitleInput.getLayoutParams().height =
+                            mProgressBarView.getMeasuredHeight()
+                            + mShortcutTitleInput.getPaddingBottom();
                     v.requestLayout();
                     v.removeOnLayoutChangeListener(this);
                 }
@@ -91,7 +101,7 @@ public class AddToHomescreenDialog implements AddToHomescreenManager.Observer {
         });
 
         // The "Add" button should be disabled if the dialog's text field is empty.
-        mInput.addTextChangedListener(new TextWatcher() {
+        mShortcutTitleInput.addTextChangedListener(new TextWatcher() {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
             }
@@ -112,7 +122,8 @@ public class AddToHomescreenDialog implements AddToHomescreenManager.Observer {
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        mManager.addShortcut(mInput.getText().toString());
+                        // For installing WebAPKs, the text doesn't matter.
+                        mManager.addShortcut(mShortcutTitleInput.getText().toString());
                     }
                 });
 
@@ -127,7 +138,7 @@ public class AddToHomescreenDialog implements AddToHomescreenManager.Observer {
             @Override
             public void onDismiss(DialogInterface dialog) {
                 mDialog = null;
-                mManager.onFinished();
+                mManager.destroy();
             }
         });
 
@@ -135,12 +146,23 @@ public class AddToHomescreenDialog implements AddToHomescreenManager.Observer {
     }
 
     /**
-     * Called when the title of the page is available.
+     * Called when the homescreen icon title (and possibly information from the web manifest) is
+     * available.
      */
     @Override
-    public void onUserTitleAvailable(String title) {
-        mInput.setEnabled(true);
-        mInput.setText(title);
+    public void onUserTitleAvailable(String title, String url, boolean isTitleEditable) {
+        if (isTitleEditable) {
+            mShortcutTitleInput.setText(title);
+            mShortcutTitleInput.setVisibility(View.VISIBLE);
+            return;
+        }
+
+        mShortcutTitleInput.setVisibility(View.GONE);
+        TextView nameView = (TextView) mPwaLayout.findViewById(R.id.name);
+        TextView originView = (TextView) mPwaLayout.findViewById(R.id.origin);
+        nameView.setText(title);
+        originView.setText(url);
+        mPwaLayout.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -162,7 +184,9 @@ public class AddToHomescreenDialog implements AddToHomescreenManager.Observer {
      * Updates whether the dialog's OK button is enabled.
      */
     public void updateAddButtonEnabledState() {
-        boolean enable = mIsReadyToAdd && !TextUtils.isEmpty(mInput.getText());
+        boolean enable = mIsReadyToAdd
+                && (!TextUtils.isEmpty(mShortcutTitleInput.getText())
+                           || mPwaLayout.getVisibility() == View.VISIBLE);
         mDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(enable);
     }
 }

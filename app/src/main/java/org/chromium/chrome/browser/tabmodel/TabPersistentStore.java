@@ -110,29 +110,29 @@ public class TabPersistentStore extends TabPersister {
          * been loaded.
          * @param tabCountAtStartup How many tabs there are in the TabModels.
          */
-        void onInitialized(int tabCountAtStartup) {}
+        public void onInitialized(int tabCountAtStartup) {}
 
         /**
          * Called when details about a Tab are read from the metadata file.
          */
-        void onDetailsRead(int index, int id, String url,
-                boolean isStandardActiveIndex, boolean isIncognitoActiveIndex) {}
+        public void onDetailsRead(int index, int id, String url, boolean isStandardActiveIndex,
+                boolean isIncognitoActiveIndex) {}
 
         /**
          * To be called when the TabStates have all been loaded.
          */
-        void onStateLoaded() {}
+        public void onStateLoaded() {}
 
         /**
          * To be called when the TabState from another instance has been merged.
          */
-        void onStateMerged() {}
+        public void onStateMerged() {}
 
         /**
          * Called when the metadata file has been saved out asynchronously.
          * This currently does not get called when the metadata file is saved out on the UI thread.
          */
-        void onMetadataSavedAsynchronously() {}
+        public void onMetadataSavedAsynchronously() {}
     }
 
     /** Stores information about a TabModel. */
@@ -565,8 +565,14 @@ public class TabPersistentStore extends TabPersister {
                 Log.w(TAG, "Failed to restore tab: not enough info about its type was available.");
                 return;
             } else if (isIncognito) {
-                Log.i(TAG, "Failed to restore Incognito tab: its TabState could not be restored.");
-                return;
+                boolean isNtp = NewTabPage.isNTPUrl(tabToRestore.url);
+                boolean isNtpFromMerge = isNtp && tabToRestore.fromMerge;
+
+                if (!isNtpFromMerge && (!isNtp || !setAsActive || mCancelIncognitoTabLoads)) {
+                    Log.i(TAG,
+                            "Failed to restore Incognito tab: its TabState could not be restored.");
+                    return;
+                }
             }
         }
 
@@ -575,6 +581,8 @@ public class TabPersistentStore extends TabPersister {
         int restoredIndex = 0;
         if (tabToRestore.fromMerge) {
             // Put any tabs being merged into this list at the end.
+            // TODO(ltian): need to figure out a way to add merged tabs before Browser Actions tabs
+            // when tab restore and Browser Actions tab merging happen at the same time.
             restoredIndex = mTabModelSelector.getModel(isIncognito).getCount();
         } else if (restoredTabs.size() > 0
                 && tabToRestore.originalIndex > restoredTabs.keyAt(restoredTabs.size() - 1)) {

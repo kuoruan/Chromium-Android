@@ -17,13 +17,14 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class VideoDecoderConfig extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 80;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(80, 0)};
+    private static final int STRUCT_SIZE = 88;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(88, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public int codec;
     public int profile;
     public int format;
     public int colorSpace;
+    public int videoRotation;
     public org.chromium.gfx.mojom.Size codedSize;
     public org.chromium.gfx.mojom.Rect visibleRect;
     public org.chromium.gfx.mojom.Size naturalSize;
@@ -89,36 +90,41 @@ public final class VideoDecoderConfig extends org.chromium.mojo.bindings.Struct 
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
-                result.codedSize = org.chromium.gfx.mojom.Size.decode(decoder1);
+                result.videoRotation = decoder0.readInt(24);
+                    VideoRotation.validate(result.videoRotation);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, false);
-                result.visibleRect = org.chromium.gfx.mojom.Rect.decode(decoder1);
+                result.codedSize = org.chromium.gfx.mojom.Size.decode(decoder1);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(40, false);
+                result.visibleRect = org.chromium.gfx.mojom.Rect.decode(decoder1);
+            }
+            if (mainDataHeader.elementsOrVersion >= 0) {
+                
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(48, false);
                 result.naturalSize = org.chromium.gfx.mojom.Size.decode(decoder1);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.extraData = decoder0.readBytes(48, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(56, false);
-                result.encryptionScheme = EncryptionScheme.decode(decoder1);
+                result.extraData = decoder0.readBytes(56, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(64, false);
+                result.encryptionScheme = EncryptionScheme.decode(decoder1);
+            }
+            if (mainDataHeader.elementsOrVersion >= 0) {
+                
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(72, false);
                 result.colorSpaceInfo = VideoColorSpace.decode(decoder1);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(72, true);
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(80, true);
                 result.hdrMetadata = HdrMetadata.decode(decoder1);
             }
         } finally {
@@ -132,27 +138,29 @@ public final class VideoDecoderConfig extends org.chromium.mojo.bindings.Struct 
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(codec, 8);
+        encoder0.encode(this.codec, 8);
         
-        encoder0.encode(profile, 12);
+        encoder0.encode(this.profile, 12);
         
-        encoder0.encode(format, 16);
+        encoder0.encode(this.format, 16);
         
-        encoder0.encode(colorSpace, 20);
+        encoder0.encode(this.colorSpace, 20);
         
-        encoder0.encode(codedSize, 24, false);
+        encoder0.encode(this.videoRotation, 24);
         
-        encoder0.encode(visibleRect, 32, false);
+        encoder0.encode(this.codedSize, 32, false);
         
-        encoder0.encode(naturalSize, 40, false);
+        encoder0.encode(this.visibleRect, 40, false);
         
-        encoder0.encode(extraData, 48, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+        encoder0.encode(this.naturalSize, 48, false);
         
-        encoder0.encode(encryptionScheme, 56, false);
+        encoder0.encode(this.extraData, 56, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
         
-        encoder0.encode(colorSpaceInfo, 64, false);
+        encoder0.encode(this.encryptionScheme, 64, false);
         
-        encoder0.encode(hdrMetadata, 72, true);
+        encoder0.encode(this.colorSpaceInfo, 72, false);
+        
+        encoder0.encode(this.hdrMetadata, 80, true);
     }
 
     /**
@@ -174,6 +182,8 @@ public final class VideoDecoderConfig extends org.chromium.mojo.bindings.Struct 
         if (this.format!= other.format)
             return false;
         if (this.colorSpace!= other.colorSpace)
+            return false;
+        if (this.videoRotation!= other.videoRotation)
             return false;
         if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.codedSize, other.codedSize))
             return false;
@@ -199,17 +209,18 @@ public final class VideoDecoderConfig extends org.chromium.mojo.bindings.Struct 
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(codec);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(profile);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(format);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(colorSpace);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(codedSize);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(visibleRect);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(naturalSize);
-        result = prime * result + java.util.Arrays.hashCode(extraData);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(encryptionScheme);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(colorSpaceInfo);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(hdrMetadata);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.codec);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.profile);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.format);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.colorSpace);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoRotation);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.codedSize);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.visibleRect);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.naturalSize);
+        result = prime * result + java.util.Arrays.hashCode(this.extraData);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.encryptionScheme);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.colorSpaceInfo);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.hdrMetadata);
         return result;
     }
 }

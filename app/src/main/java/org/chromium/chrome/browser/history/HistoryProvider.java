@@ -19,7 +19,7 @@ public interface HistoryProvider {
          * @param items The items that matched the #queryHistory() parameters.
          * @param hasMorePotentialMatches Whether there are more items that match the query text.
          *                                This will be false once the entire local history database
-         *                                has been searched.
+         *                                and remote web history has been searched.
          */
         void onQueryHistoryComplete(List<HistoryItem> items,
                 boolean hasMorePotentialMatches);
@@ -36,9 +36,8 @@ public interface HistoryProvider {
          * Called after querying history to indicate whether other forms of browsing history were
          * found.
          * @param hasOtherForms Whether other forms of browsing history were found.
-         * @param hasSyncedResults Whether synced results were found.
          */
-        void hasOtherFormsOfBrowsingData(boolean hasOtherForms, boolean hasSyncedResults);
+        void hasOtherFormsOfBrowsingData(boolean hasOtherForms);
     }
 
     /**
@@ -50,10 +49,14 @@ public interface HistoryProvider {
      * Query browsing history. Only one query may be in-flight at any time. See
      * BrowsingHistoryService::QueryHistory.
      * @param query The query search text. May be empty.
-     * @param endQueryTime The end of the time range to search. A value of 0 indicates that there
-     *                     is no limit on the end time. See the native QueryOptions.
      */
-    void queryHistory(String query, long endQueryTime);
+    void queryHistory(String query);
+
+    /*
+     * Fetches more results using the previous query's text, only valid to call
+     * after queryHistory is called.
+     */
+    void queryHistoryContinuation();
 
     /**
      * Adds the HistoryItem to the list of items being removed. The removal will not be committed

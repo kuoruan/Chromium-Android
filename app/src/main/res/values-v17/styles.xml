@@ -51,6 +51,18 @@
         <item name="android:windowBackground">@android:color/white</item>
     </style>
 
+    <!-- The theme to use when starting Chrome in VR mode.-->
+    <style name="VrSupportTheme" parent="MainTheme">
+       <!-- Android shows a preview window to give the user immediate feedback that the
+            app launched. The default behavior with this preview window is to show system
+            UI (e.g. navigation bars), which looks jarring if the user already has their
+            headset on. We disable the preview window feature when starting Chrome in VR
+            mode.
+       -->
+      <item name="android:windowDisablePreview">true</item>
+      <item name="android:windowBackground">@android:color/black</item>
+    </style>
+
     <style name="FullscreenWhite" parent="Theme.AppCompat.Light" >
         <item name="android:windowBackground">@android:color/white</item>
         <item name="android:textColorLink">@color/light_active_color</item>
@@ -181,6 +193,7 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">@dimen/divider_height</item>
         <item name="android:background">@color/google_grey_300</item>
+        <item name="android:importantForAccessibility">no</item>
     </style>
 
     <style name="ThemeWithActionBar" parent="Theme.AppCompat.Light.DarkActionBar">
@@ -271,6 +284,28 @@
             @drawable/distilled_page_prefs_button_bg
         </item>
     </style>
+    <style name="OverflowMenuHeaderLayout">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@color/modern_light_grey</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:paddingStart">16dp</item>
+    </style>
+        <!-- Top and bottom padding is used to achieve layout that best matches
+         UX spec. While the text matches @style/BlankHint2, text size and color
+         are set explicitly. When shown in the overflow menu, the header
+         is inflated using the OverflowMenuTheme. The theme's textAppearance
+         will override any textAppearance set on this element. -->
+    <style name="OverflowMenuHeaderText">
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:paddingTop">9dp</item>
+        <item name="android:paddingBottom">9dp</item>
+        <item name="android:textColor">@color/black_alpha_54</item>
+        <item name="android:textSize">@dimen/text_size_medium</item>
+    </style>
 
     <!-- Button bar styles -->
     <style name="ButtonBarTopSpacerLight">
@@ -327,6 +362,9 @@
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowNoTitle">true</item>
     </style>
+    <style name="PromoDialogNormalText" parent="@style/BlackBody">
+        <item name="android:lineSpacingMultiplier">1.3</item>
+    </style>
 
     <!-- Cast and media playback notifications -->
     <style
@@ -359,8 +397,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:gravity">center</item>
         <item name="android:lineSpacingMultiplier">1.4</item>
-        <item name="android:textColor">@color/fre_title_color</item>
-        <item name="android:textSize">@dimen/fre_title_text_size</item>
+        <item name="android:textAppearance">@style/BlackHeadline1</item>
     </style>
 
     <!-- Web Notifications -->
@@ -436,12 +473,6 @@
     </style>
 
     <!-- Bookmarks -->
-    <style name="BookmarkTitleBarButton">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:background">@null</item>
-        <item name="android:padding">15dp</item>
-    </style>
     <style name="BookmarkMenuStyle" parent="Widget.AppCompat.ListPopupWindow">
         <item name="android:popupBackground">@drawable/menu_bg</item>
     </style>
@@ -457,13 +488,11 @@
         <item name="android:paddingStart">53dp</item>
         <item name="android:paddingEnd">53dp</item>
     </style>
-    <style name="ContextualSearchTextView">
+    <style name="ContextualSearchTextView" parent="@style/BlackTitle1">
         <item name="android:layout_height">match_parent</item>
         <item name="android:ellipsize">end</item>
         <item name="android:includeFontPadding">false</item>
         <item name="android:singleLine">true</item>
-        <item name="android:textColor">#000</item>
-        <item name="android:textSize">@dimen/overlay_panel_text_size</item>
     </style>
     <style name="ContextualSearchContextTextView">
         <item name="android:layout_width">0dp</item>
@@ -476,7 +505,7 @@
         <item name="android:requiresFadingEdge">horizontal</item>
         <item name="android:singleLine">true</item>
         <item name="android:textColor">#CCC</item>
-        <item name="android:textSize">@dimen/overlay_panel_text_size</item>
+        <item name="android:textSize">@dimen/text_size_large</item>
     </style>
     <style name="ContextualSearchCaptionTextView">
         <item name="android:layout_width">match_parent</item>
@@ -488,8 +517,7 @@
         <item name="android:ellipsize">end</item>
         <item name="android:includeFontPadding">false</item>
         <item name="android:singleLine">true</item>
-        <item name="android:textColor">#444</item>
-        <item name="android:textSize">@dimen/contextual_search_caption_text_size</item>
+        <item name="android:textAppearance">@style/BlackBody</item>
     </style>
 
     <!-- Physical Web styles -->
@@ -552,6 +580,10 @@
         <item name="android:layout_height">match_parent</item>
         <item name="android:layout_width">match_parent</item>
     </style>
+    <style name="ModernToolbar" parent="Widget.AppCompat.Toolbar">
+        <item name="titleTextAppearance">@style/BlackHeadline1</item>
+        <item name="windowActionBarOverlay">true</item>
+    </style>
     <style name="ToolbarButton">
         <item name="android:background">?attr/selectableItemBackground</item>
         <item name="android:layout_width">@dimen/toolbar_button_width</item>
@@ -572,17 +604,6 @@
         <item name="android:paddingStart">16dp</item>
         <item name="android:paddingEnd">16dp</item>
         <item name="android:background">?attr/listChoiceBackgroundIndicator</item>
-    </style>
-    <style name="NumberRollTextViewStyle">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_gravity">center_vertical</item>
-        <item name="android:singleLine">true</item>
-        <item name="android:textColor">@android:color/white</item>
-        <item name="android:textSize">20sp</item>
-    </style>
-    <style name="BottomSheetContentTitle" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
-        <item name="android:textSize">20sp</item>
     </style>
     <style name="SadTabBodyText">
         <item name="android:textColor">@color/sad_tab_body_text_color</item>
@@ -608,27 +629,30 @@
         <item name="android:colorEdgeEffect">@color/google_grey_300</item>
     </style>
 
-    <!-- History UI -->
-    <style name="HistoryStartIcon">
-        <item name="android:layout_width">@dimen/selectable_list_layout_start_icon_width</item>
-        <item name="android:layout_height">match_parent</item>
-        <item name="android:scaleType">center</item>
-    </style>
-    <style name="HistoryEndIcon">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">match_parent</item>
-        <item name="android:paddingStart">16dp</item>
-        <item name="android:background">@null</item>
-        <item name="android:scaleType">center</item>
-        <item name="android:paddingEnd">@dimen/selectable_list_layout_row_end_padding</item>
-    </style>
-    <style name="PrivacyDisclaimerText">
+    <!-- Modern List Item -->
+    <style name="ListItemContainer">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginTop">6dp</item>
-        <item name="android:lineSpacingExtra">6sp</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:visibility">gone</item>
+        <item name="android:minHeight">@dimen/list_item_min_height</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:layout_marginStart">@dimen/list_item_default_margin</item>
+        <item name="android:paddingTop">@dimen/list_item_top_bottom_padding</item>
+        <item name="android:paddingBottom">@dimen/list_item_top_bottom_padding</item>
+    </style>
+    <style name="ListItemStartIcon">
+        <item name="android:layout_width">@dimen/list_item_start_icon_width</item>
+        <item name="android:layout_height">@dimen/list_item_start_icon_width</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:layout_marginEnd">@dimen/list_item_start_icon_right_margin</item>
+        <item name="android:scaleType">center</item>
+        <item name="android:contentDescription">@null</item>
+    </style>
+    <style name="ListItemEndIcon">
+        <item name="android:layout_width">@dimen/list_item_end_icon_width</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">@null</item>
+        <item name="android:scaleType">center</item>
     </style>
 
     <!-- Download Home -->
@@ -642,22 +666,14 @@
         <item name="android:ellipsize">start</item>
         <item name="android:singleLine">true</item>
     </style>
-    <style name="DateView" parent="RobotoMediumStyle">
+    <style name="DateView">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">12dp</item>
         <item name="android:layout_marginBottom">10dp</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/black_alpha_54</item>
-    </style>
-    <style name="DownloadRowContainer">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginStart">16dp</item>
-        <item name="android:layout_marginTop">16dp</item>
-        <item name="android:layout_marginBottom">16dp</item>
-        <item name="android:gravity">center_vertical</item>
-        <item name="android:orientation">horizontal</item>
+        <item name="android:layout_marginStart">@dimen/list_item_default_margin</item>
+        <item name="android:layout_marginEnd">@dimen/list_item_default_margin</item>
+        <item name="android:textAppearance">@style/BlackDenseListText2</item>
     </style>
     <style name="DownloadTitleStyle">
         <item name="android:layout_width">wrap_content</item>
@@ -666,38 +682,21 @@
         <item name="android:layout_alignParentStart">true</item>
         <item name="android:paddingEnd">16dp</item>
         <item name="android:singleLine">true</item>
-        <item name="android:textColor">@color/default_text_color</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textAppearance">@style/BlackDenseListText1</item>
     </style>
     <style name="DownloadDescriptionStyle">
-        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_alignParentBottom">true</item>
         <item name="android:layout_alignParentStart">true</item>
         <item name="android:layout_marginEnd">16dp</item>
         <item name="android:layout_marginTop">0dp</item>
         <item name="android:textAlignment">viewStart</item>
-        <item name="android:textColor">@color/google_grey_600</item>
         <item name="android:ellipsize">start</item>
         <item name="android:singleLine">true</item>
+        <item name="android:textAppearance">@style/BlackDenseListText2</item>
     </style>
-    <style name="DownloadFileSizeStyle">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_alignParentBottom">true</item>
-        <item name="android:layout_alignParentEnd">true</item>
-        <item name="android:layout_marginTop">0dp</item>
-        <item name="android:paddingEnd">16dp</item>
-        <item name="android:textAlignment">viewEnd</item>
-        <item name="android:textColor">@color/google_grey_600</item>
-        <item name="android:singleLine">true</item>
-    </style>
-    <style name="DownloadIconView">
-        <item name="android:layout_width">@dimen/downloads_item_icon_size</item>
-        <item name="android:layout_height">@dimen/downloads_item_icon_size</item>
-        <item name="android:layout_marginEnd">16dp</item>
-        <item name="android:contentDescription">@null</item>
-        <item name="android:scaleType">center</item>
+    <style name="DownloadIconView" parent="@style/ListItemStartIcon">
         <item name="android:background">@color/light_active_color</item>
     </style>
 
@@ -745,9 +744,35 @@
         <item name="android:windowExitAnimation">@null</item>
     </style>
 
-    <!-- VR animations -->
-    <style name="VrEntryAnimation">
-        <item name="android:windowEnterAnimation">@anim/stay_hidden</item>
-        <item name="android:windowExitAnimation">@null</item>
+    <!-- Content and Site Suggestions -->
+    <style name="SuggestionCardModern">
+        <item name="android:layout_marginBottom">@dimen/content_suggestions_card_modern_margin</item>
+        <item name="android:background">@drawable/content_card_modern_background</item>
+        <item name="android:foreground">@drawable/button_borderless_compat</item>
+    </style>
+    <style name="SuggestionCardTitleModern" parent="BlackBodyDefault">
+        <item name="android:ellipsize">end</item>
+        <item name="leading">16sp</item>
+    </style>
+    <style name="SuggestionCardBodyModern" parent="BlackBody">
+        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:ellipsize">end</item>
+        <item name="leading">16sp</item>
+    </style>
+    <style name="SuggestionCardAction" parent="ButtonCompatBorderless">
+        <item name="android:textAppearance">@style/BlueButtonText2</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+
+        <!-- Negative marginEnd to balance the padding from the parent (SuggestionCardModern).
+             Buttons are supposed to have 8dp margin while we have a 16dp margin at the parent
+             level. -->
+        <item name="android:layout_marginEnd">-8dp</item>
+    </style>
+
+    <!-- Password manager settings page -->
+    <style name="PasswordEntryName" parent="BlueButtonText2">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
     </style>
 </resources>

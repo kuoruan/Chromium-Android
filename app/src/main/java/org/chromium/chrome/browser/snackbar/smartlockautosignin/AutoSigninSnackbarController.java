@@ -44,7 +44,10 @@ public class AutoSigninSnackbarController
         int backgroundColor =
                 ApiCompatibilityUtils.getColor(context.getResources(), R.color.light_active_color);
         Drawable icon = AppCompatResources.getDrawable(context, R.drawable.logo_avatar_anonymous);
-        snackbar.setSingleLine(false).setBackgroundColor(backgroundColor).setProfileImage(icon);
+        snackbar.setSingleLine(false)
+                .setBackgroundColor(backgroundColor)
+                .setProfileImage(icon)
+                .setTextAppearance(R.style.WhiteBody);
         snackbarManager.showSnackbar(snackbar);
     }
 

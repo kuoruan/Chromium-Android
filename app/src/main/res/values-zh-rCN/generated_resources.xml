@@ -4,7 +4,7 @@
 <string name="search_or_type_url">"搜索或输入网址"</string>
 <string name="options_homepage_title">"主页"</string>
 <string name="autofill_from_google_account">"Google Payments"</string>
-<string name="sync_confirmation_chrome_sync_title">"酷容浏览器同步"</string>
+<string name="sync_confirmation_chrome_sync_title">"Chrome 浏览器同步"</string>
 <string name="sync_confirmation_chrome_sync_message">"您的书签、历史记录、密码及其他设置均将同步到您的 Google 帐号，以便您在自己的任意设备上使用"</string>
 <string name="sync_confirmation_personalize_services_title">"对 Google 服务进行个性化设置"</string>
 <string name="sync_confirmation_personalize_services_body">"Google 可能会利用您的浏览记录为您提供个性化的 Google 搜索、广告和其他 Google 服务"</string>

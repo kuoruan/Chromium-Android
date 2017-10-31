@@ -48,4 +48,9 @@
         android:key="clear_site_settings_checkbox"
         android:persistent="false"
         android:title="@string/prefs_site_settings" />
+
+    <org.chromium.chrome.browser.preferences.ClearBrowsingDataTabCheckBoxPreference
+        android:key="clear_media_licenses_checkbox"
+        android:persistent="false"
+        android:title="@string/clear_media_licenses_title" />
 </PreferenceScreen>

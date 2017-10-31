@@ -58,4 +58,9 @@ ResetResponse callback);
 org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.mojom.SyncToken releaseSyncToken);
 
 
+
+    void onOverlayInfoChanged(
+OverlayInfo overlayInfo);
+
+
 }

@@ -5,8 +5,6 @@ android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
     publishNonDefault true
-    // Multiple targets use the package name "org.dummy"
-    enforceUniquePackageName false
     defaultConfig {
         applicationId "org.chromium.chrome"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -19,6 +17,10 @@ android {
         ndk {
             abiFilters "armeabi-v7a"
         }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     buildTypes {
         release {
@@ -36,7 +38,7 @@ android {
                     "com/google/protobuf/micro/*.java",
                     "com/google/protobuf/nano/*.java",
                     "com/google/protobuf/nano/android/*.java",
-                    "org/chromium/chrome/browser/offlinepages/evaluation/*.java",
+                    "org/chromium/chrome/browser/offlinepages/evaluation/*.java"
             )
         }
     }
@@ -56,12 +58,6 @@ idea {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile fileTree(
-            dir: 'libs/third_party/android_tools',
-            include:[
-                    'gcm.jar'
-            ]
-    )
     compile "com.android.support:appcompat-v7:$rootProject.ext.supportLibraryVersion"
     compile "com.android.support:design:$rootProject.ext.supportLibraryVersion"
     compile "com.android.support:gridlayout-v7:$rootProject.ext.supportLibraryVersion"
@@ -74,9 +70,9 @@ dependencies {
     compile "com.google.android.gms:play-services-nearby:$rootProject.ext.playServicesVersion"
     compile "com.google.android.gms:play-services-vision:$rootProject.ext.playServicesVersion"
     compile "com.google.android.gms:play-services-location:$rootProject.ext.playServicesVersion"
-    compile 'com.android.support:multidex:1.0.1'
+    compile 'com.android.support:multidex:1.0.2'
     compile 'com.google.code.findbugs:jsr305:2.0.1'
-    compile 'com.google.vr:sdk-base:1.60.1'
+    compile 'com.google.vr:sdk-base:1.80.0'
     compile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.2'
     compile project(':components:autofill')
     compile project(':components:web_contents_delegate')

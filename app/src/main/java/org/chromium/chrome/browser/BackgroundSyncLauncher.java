@@ -17,6 +17,7 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
+import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.externalauth.ExternalAuthUtils;
 import org.chromium.chrome.browser.externalauth.UserRecoverableErrorHandler;
@@ -70,6 +71,7 @@ public class BackgroundSyncLauncher {
     /**
      * Called when the C++ counterpart is deleted.
      */
+    @SuppressFBWarnings("ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD")
     @VisibleForTesting
     @CalledByNative
     protected void destroy() {
@@ -247,19 +249,15 @@ public class BackgroundSyncLauncher {
      */
     protected static void rescheduleTasksOnUpgrade(final Context context) {
         final GcmNetworkManager scheduler = GcmNetworkManager.getInstance(context);
-        BackgroundSyncLauncher.ShouldLaunchCallback callback =
-                new BackgroundSyncLauncher.ShouldLaunchCallback() {
-                    @Override
-                    public void run(Boolean shouldLaunch) {
-                        if (shouldLaunch) {
-                            // It's unclear what time the sync event was supposed to fire, so fire
-                            // without delay and let the browser reschedule if necessary.
-                            // TODO(iclelland): If this fails, report the failure via UMA (not now,
-                            // since the browser is not running, but on next startup.)
-                            scheduleLaunchTask(scheduler, 0);
-                        }
-                    }
-                };
+        BackgroundSyncLauncher.ShouldLaunchCallback callback = shouldLaunch -> {
+            if (shouldLaunch) {
+                // It's unclear what time the sync event was supposed to fire, so fire
+                // without delay and let the browser reschedule if necessary.
+                // TODO(iclelland): If this fails, report the failure via UMA (not now,
+                // since the browser is not running, but on next startup.)
+                scheduleLaunchTask(scheduler, 0);
+            }
+        };
         BackgroundSyncLauncher.shouldLaunchBrowserIfStopped(callback);
     }
 

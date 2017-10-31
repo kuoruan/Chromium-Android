@@ -4,19 +4,23 @@
 
 package org.chromium.chrome.browser.widget.bottomsheet;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.ColorStateList;
-import android.content.res.Resources;
+import android.graphics.PointF;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.IntDef;
-import android.support.design.internal.BottomNavigationItemView;
-import android.support.design.internal.BottomNavigationMenuView;
-import android.support.design.widget.BottomNavigationView;
-import android.support.design.widget.BottomNavigationView.OnNavigationItemSelectedListener;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver.OnGlobalLayoutListener;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 
 import org.chromium.base.ActivityState;
 import org.chromium.base.ApiCompatibilityUtils;
@@ -25,6 +29,7 @@ import org.chromium.base.ApplicationStatus.ActivityStateListener;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.bookmarks.BookmarkSheetContent;
 import org.chromium.chrome.browser.download.DownloadSheetContent;
 import org.chromium.chrome.browser.history.HistorySheetContent;
@@ -36,12 +41,18 @@ import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.TabModelSelectorObserver;
 import org.chromium.chrome.browser.util.MathUtils;
+import org.chromium.chrome.browser.util.ViewUtils;
+import org.chromium.chrome.browser.widget.ViewHighlighter;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.BottomSheetContent;
+import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.StateChangeReason;
+import org.chromium.chrome.browser.widget.bottomsheet.base.BottomNavigationItemView;
+import org.chromium.chrome.browser.widget.bottomsheet.base.BottomNavigationMenuView;
+import org.chromium.chrome.browser.widget.bottomsheet.base.BottomNavigationView;
+import org.chromium.chrome.browser.widget.bottomsheet.base.BottomNavigationView.OnNavigationItemSelectedListener;
 import org.chromium.ui.UiUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -55,7 +66,7 @@ public class BottomSheetContentController extends BottomNavigationView
         implements OnNavigationItemSelectedListener {
     /** The different types of content that may be displayed in the bottom sheet. */
     @IntDef({TYPE_SUGGESTIONS, TYPE_DOWNLOADS, TYPE_BOOKMARKS, TYPE_HISTORY, TYPE_INCOGNITO_HOME,
-            TYPE_PLACEHOLDER})
+            TYPE_AUXILIARY_CONTENT})
     @Retention(RetentionPolicy.SOURCE)
     public @interface ContentType {}
     public static final int TYPE_SUGGESTIONS = 0;
@@ -63,7 +74,12 @@ public class BottomSheetContentController extends BottomNavigationView
     public static final int TYPE_BOOKMARKS = 2;
     public static final int TYPE_HISTORY = 3;
     public static final int TYPE_INCOGNITO_HOME = 4;
-    public static final int TYPE_PLACEHOLDER = 5;
+    // This type should be used for non-primary sheet content. If the sheet is opened because of
+    // content with this type, the back button will close the sheet.
+    public static final int TYPE_AUXILIARY_CONTENT = 5;
+
+    // Used if there is no bottom sheet content.
+    private static final int NO_CONTENT_ID = 0;
 
     // R.id.action_home is overloaded, so an invalid ID is used to reference the incognito version
     // of the home content.
@@ -80,9 +96,10 @@ public class BottomSheetContentController extends BottomNavigationView
         public void onSheetOffsetChanged(float heightFraction) {
             // If the omnibox is not focused, allow the navigation bar to set its Y translation.
             if (!mOmniboxHasFocus) {
-                float offsetY =
-                        (mBottomSheet.getMinOffset() - mBottomSheet.getSheetOffsetFromBottom())
-                        + mDistanceBelowToolbarPx;
+                float offsetY = mBottomSheet.getSheetHeightForState(mBottomSheet.isSmallScreen()
+                                                ? BottomSheet.SHEET_STATE_FULL
+                                                : BottomSheet.SHEET_STATE_HALF)
+                        - mBottomSheet.getSheetOffsetFromBottom();
                 setTranslationY(Math.max(offsetY, 0f));
 
                 if (mBottomSheet.getTargetSheetState() != BottomSheet.SHEET_STATE_PEEK
@@ -96,22 +113,49 @@ public class BottomSheetContentController extends BottomNavigationView
         }
 
         @Override
-        public void onSheetOpened() {
-            if (!mDefaultContentInitialized) initializeDefaultContent();
+        public void onSheetOpened(@StateChangeReason int reason) {
+            setIcons();
+
+            if (reason == StateChangeReason.OMNIBOX_FOCUS) {
+                // If the omnibox is being focused, show the placeholder.
+                mBottomSheet.showContent(mPlaceholderContent);
+                mBottomSheet.endTransitionAnimations();
+                if (mSelectedItemId > 0) getMenu().findItem(mSelectedItemId).setChecked(false);
+                mSelectedItemId = PLACEHOLDER_ID;
+                return;
+            }
+
+            if (mSelectedItemId == NO_CONTENT_ID) showBottomSheetContent(R.id.action_home);
+
+            if (mHighlightItemId != null) {
+                mHighlightedView = mActivity.findViewById(mHighlightItemId);
+                ViewHighlighter.turnOnHighlight(mHighlightedView, true);
+            }
         }
 
         @Override
-        public void onSheetClosed() {
-            if (mSelectedItemId != 0 && mSelectedItemId != R.id.action_home) {
-                showBottomSheetContent(R.id.action_home);
+        public void onSheetClosed(@StateChangeReason int reason) {
+            removeIcons();
+
+            if (ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_DESTROY_SUGGESTIONS)) {
+                // TODO(bauerb): Implement support for destroying the home sheet after a delay.
+                mSelectedItemId = NO_CONTENT_ID;
+                mBottomSheet.showContent(null);
             } else {
-                clearBottomSheetContents(false);
+                if (mSelectedItemId != NO_CONTENT_ID && mSelectedItemId != R.id.action_home) {
+                    showBottomSheetContent(R.id.action_home);
+                } else {
+                    clearBottomSheetContents(false);
+                }
             }
+
             // The keyboard should be hidden when the sheet is closed in case it was made visible by
             // sheet content.
-            UiUtils.hideKeyboard((View) BottomSheetContentController.this);
-            // TODO(twellington): determine a policy for destroying the
-            //                    SuggestionsBottomSheetContent.
+            UiUtils.hideKeyboard(BottomSheetContentController.this);
+
+            ViewHighlighter.turnOffHighlight(mHighlightedView);
+            mHighlightedView = null;
+            mHighlightItemId = null;
         }
 
         @Override
@@ -120,14 +164,14 @@ public class BottomSheetContentController extends BottomNavigationView
 
             if (mShouldOpenSheetOnNextContentChange) {
                 mShouldOpenSheetOnNextContentChange = false;
-                if (!mBottomSheet.isSheetOpen()) {
+                if (mBottomSheet.getSheetState() != BottomSheet.SHEET_STATE_FULL) {
                     mBottomSheet.setSheetState(BottomSheet.SHEET_STATE_FULL, true);
                 }
                 return;
             }
 
             if (mBottomSheet.getSheetState() == BottomSheet.SHEET_STATE_PEEK) {
-                clearBottomSheetContents(false);
+                clearBottomSheetContents(mBottomSheet.getCurrentSheetContent() == null);
             }
         }
 
@@ -140,19 +184,25 @@ public class BottomSheetContentController extends BottomNavigationView
     private BottomSheet mBottomSheet;
     private TabModelSelector mTabModelSelector;
     private SnackbarManager mSnackbarManager;
-    private float mDistanceBelowToolbarPx;
     private int mSelectedItemId;
-    private boolean mDefaultContentInitialized;
     private ChromeActivity mActivity;
     private boolean mShouldOpenSheetOnNextContentChange;
     private PlaceholderSheetContent mPlaceholderContent;
     private boolean mOmniboxHasFocus;
     private TabModelSelectorObserver mTabModelSelectorObserver;
+    private Integer mHighlightItemId;
+    private View mHighlightedView;
+    private boolean mNavItemSelectedWhileOmniboxFocused;
+    private int mConsecutiveBookmarkTaps;
 
     public BottomSheetContentController(Context context, AttributeSet atts) {
         super(context, atts);
 
         mPlaceholderContent = new PlaceholderSheetContent(context);
+    }
+
+    public void setHighlightItemId(@Nullable Integer highlightItemId) {
+        mHighlightItemId = highlightItemId;
     }
 
     /** Called when the activity containing the bottom sheet is destroyed. */
@@ -171,20 +221,20 @@ public class BottomSheetContentController extends BottomNavigationView
     /**
      * Initializes the {@link BottomSheetContentController}.
      * @param bottomSheet The {@link BottomSheet} associated with this bottom nav.
-     * @param controlContainerHeight The height of the control container in px.
      * @param tabModelSelector The {@link TabModelSelector} for the application.
      * @param activity The {@link ChromeActivity} that owns the BottomSheet.
      */
-    public void init(BottomSheet bottomSheet, int controlContainerHeight,
-            TabModelSelector tabModelSelector, ChromeActivity activity) {
+    public void init(
+            BottomSheet bottomSheet, TabModelSelector tabModelSelector, ChromeActivity activity) {
         mBottomSheet = bottomSheet;
         mBottomSheet.addObserver(mBottomSheetObserver);
         mActivity = activity;
         mTabModelSelector = tabModelSelector;
+
         mTabModelSelectorObserver = new EmptyTabModelSelectorObserver() {
             @Override
             public void onTabModelSelected(TabModel newModel, TabModel oldModel) {
-                updateVisuals(newModel.isIncognito());
+                updateVisuals(newModel.isIncognito(), true);
                 showBottomSheetContent(R.id.action_home);
                 mPlaceholderContent.setIsIncognito(newModel.isIncognito());
 
@@ -198,15 +248,19 @@ public class BottomSheetContentController extends BottomNavigationView
         };
         mTabModelSelector.addObserver(mTabModelSelectorObserver);
 
-        Resources res = getContext().getResources();
-        mDistanceBelowToolbarPx = controlContainerHeight
-                + res.getDimensionPixelOffset(R.dimen.bottom_nav_space_from_toolbar);
-
         setOnNavigationItemSelectedListener(this);
-        disableShiftingMode();
+        hideMenuLabels();
 
-        mSnackbarManager = new SnackbarManager(
-                mActivity, (ViewGroup) activity.findViewById(R.id.bottom_sheet_snackbar_container));
+        ViewGroup snackbarContainer =
+                (ViewGroup) activity.findViewById(R.id.bottom_sheet_snackbar_container);
+
+        if (mBottomSheet.useTallBottomNav()) {
+            getLayoutParams().height = (int) mBottomSheet.getBottomNavHeight();
+            ((MarginLayoutParams) snackbarContainer.getLayoutParams()).bottomMargin =
+                    (int) mBottomSheet.getBottomNavHeight();
+        }
+
+        mSnackbarManager = new SnackbarManager(mActivity, snackbarContainer);
         mSnackbarManager.onStart();
 
         ApplicationStatus.registerStateListenerForActivity(new ActivityStateListener() {
@@ -216,15 +270,26 @@ public class BottomSheetContentController extends BottomNavigationView
                 if (newState == ActivityState.STOPPED) mSnackbarManager.onStop();
             }
         }, mActivity);
+
+        // We use a global layout listener here to ensure we update menu item spacing after the
+        // menu icons have their full width.
+        mBottomSheet.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                updateMenuItemSpacing();
+            }
+        });
+        updateVisuals(mTabModelSelector.isIncognitoSelected(), true);
+        BottomSheetPaddingUtils.applyPaddingToContent(mPlaceholderContent, mBottomSheet);
     }
 
     /**
-     * Initialize the default {@link BottomSheetContent}.
+     * Whenever this is triggered by a global layout change, we ensure that our bottom navigation
+     * menu items are spaced apart appropriately.
      */
-    public void initializeDefaultContent() {
-        if (mDefaultContentInitialized) return;
-        showBottomSheetContent(R.id.action_home);
-        mDefaultContentInitialized = true;
+    private void updateMenuItemSpacing() {
+        getMenuView().updateMenuItemSpacingForMinWidth(
+                mBottomSheet.getWidth(), mBottomSheet.getHeight());
     }
 
     /**
@@ -242,10 +307,15 @@ public class BottomSheetContentController extends BottomNavigationView
      * @param itemId The menu item id of the {@link BottomSheetContent} to show.
      */
     public void showContentAndOpenSheet(int itemId) {
-        if (itemId != mSelectedItemId) {
+        if (mActivity.isInOverviewMode() && !mBottomSheet.isShowingNewTab()) {
+            // Open a new tab to show the content if currently in tab switcher and a new tab is
+            // not currently being displayed.
+            mShouldOpenSheetOnNextContentChange = true;
+            mBottomSheet.displayNewTabUi(mTabModelSelector.getCurrentModel().isIncognito(), itemId);
+        } else if (itemId != mSelectedItemId) {
             mShouldOpenSheetOnNextContentChange = true;
             selectItem(itemId);
-        } else if (!mBottomSheet.isSheetOpen()) {
+        } else if (mBottomSheet.getSheetState() != BottomSheet.SHEET_STATE_FULL) {
             mBottomSheet.setSheetState(BottomSheet.SHEET_STATE_FULL, true);
         }
     }
@@ -257,19 +327,39 @@ public class BottomSheetContentController extends BottomNavigationView
     public void onOmniboxFocusChange(boolean hasFocus) {
         mOmniboxHasFocus = hasFocus;
 
-        // If the omnibox is being focused, show the placeholder.
-        if (hasFocus && mBottomSheet.getSheetState() != BottomSheet.SHEET_STATE_HALF
-                && mBottomSheet.getSheetState() != BottomSheet.SHEET_STATE_FULL) {
-            mBottomSheet.showContent(mPlaceholderContent);
-            mBottomSheet.endTransitionAnimations();
-            if (mSelectedItemId > 0) getMenu().findItem(mSelectedItemId).setChecked(false);
-            mSelectedItemId = PLACEHOLDER_ID;
+        if (!mNavItemSelectedWhileOmniboxFocused && !mOmniboxHasFocus) {
+            showBottomSheetContent(R.id.action_home);
         }
+        mNavItemSelectedWhileOmniboxFocused = false;
     }
 
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        if (mSelectedItemId == item.getItemId()) return false;
+        mConsecutiveBookmarkTaps =
+                item.getItemId() == R.id.action_bookmarks ? mConsecutiveBookmarkTaps + 1 : 0;
+        if (mConsecutiveBookmarkTaps >= 5) {
+            mConsecutiveBookmarkTaps = 0;
+            doStarExplosion((ViewGroup) getRootView(), findViewById(R.id.action_bookmarks));
+        }
+
+        if (mOmniboxHasFocus) mNavItemSelectedWhileOmniboxFocused = true;
+
+        if (mBottomSheet.getSheetState() == BottomSheet.SHEET_STATE_PEEK
+                && !mShouldOpenSheetOnNextContentChange) {
+            return false;
+        }
+
+        ViewHighlighter.turnOffHighlight(mHighlightedView);
+        mHighlightedView = null;
+        mHighlightItemId = null;
+
+        boolean isShowingAuxContent = mBottomSheet.getCurrentSheetContent() != null
+                && mBottomSheet.getCurrentSheetContent().getType() == TYPE_AUXILIARY_CONTENT;
+
+        if (mSelectedItemId == item.getItemId() && !isShowingAuxContent) {
+            getSheetContentForId(mSelectedItemId).scrollToTop();
+            return false;
+        }
 
         mBottomSheet.defocusOmnibox();
 
@@ -278,24 +368,11 @@ public class BottomSheetContentController extends BottomNavigationView
         return true;
     }
 
-    // TODO(twellington): remove this once the support library is updated to allow disabling
-    //                    shifting mode or determines shifting mode based on the width of the
-    //                    child views.
-    private void disableShiftingMode() {
-        BottomNavigationMenuView menuView = (BottomNavigationMenuView) getChildAt(0);
-        try {
-            Field shiftingMode = menuView.getClass().getDeclaredField("mShiftingMode");
-            shiftingMode.setAccessible(true);
-            shiftingMode.setBoolean(menuView, false);
-            shiftingMode.setAccessible(false);
-            for (int i = 0; i < menuView.getChildCount(); i++) {
-                BottomNavigationItemView item = (BottomNavigationItemView) menuView.getChildAt(i);
-                item.setShiftingMode(false);
-                // Set the checked value so that the view will be updated.
-                item.setChecked(item.getItemData().isChecked());
-            }
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            // Do nothing if reflection fails.
+    private void hideMenuLabels() {
+        BottomNavigationMenuView menuView = getMenuView();
+        for (int i = 0; i < menuView.getChildCount(); i++) {
+            BottomNavigationItemView item = (BottomNavigationItemView) menuView.getChildAt(i);
+            item.hideLabel();
         }
     }
 
@@ -307,6 +384,16 @@ public class BottomSheetContentController extends BottomNavigationView
         BottomSheetContent content = mBottomSheetContents.get(navItemId);
         if (content != null) return content;
 
+        return createAndCacheContentForId(navItemId);
+    }
+
+    /**
+     * Create and return the content for the provided nav button id.
+     * @param navItemId The id to create and get the content for.
+     * @return The created content.
+     */
+    private BottomSheetContent createAndCacheContentForId(int navItemId) {
+        BottomSheetContent content = null;
         if (navItemId == R.id.action_home) {
             content = new SuggestionsBottomSheetContent(
                     mActivity, mBottomSheet, mTabModelSelector, mSnackbarManager);
@@ -321,12 +408,16 @@ public class BottomSheetContentController extends BottomNavigationView
             content = new IncognitoBottomSheetContent(mActivity);
         }
 
+        // Call this only after it's created to avoid adding an infinite amount of additional
+        // padding.
+        BottomSheetPaddingUtils.applyPaddingToContent(content, mBottomSheet);
+
         mBottomSheetContents.put(navItemId, content);
         return content;
     }
 
     private void showBottomSheetContent(int navItemId) {
-        // There are some bugs related to programatically selecting menu items that are fixed in
+        // There are some bugs related to programmatically selecting menu items that are fixed in
         // newer support library versions.
         // TODO(twellington): remove this after the support library is rolled.
         if (mSelectedItemId > 0) getMenu().findItem(mSelectedItemId).setChecked(false);
@@ -349,15 +440,36 @@ public class BottomSheetContentController extends BottomNavigationView
         }
     }
 
-    private void updateVisuals(boolean isIncognitoTabModelSelected) {
-        setBackgroundResource(isIncognitoTabModelSelected ? R.color.incognito_primary_color
-                                                          : R.color.default_primary_color);
+    private void updateVisuals(
+            boolean isIncognitoTabModelSelected, boolean bottomNavIsTransparent) {
+        if (bottomNavIsTransparent) {
+            setBackgroundResource(isIncognitoTabModelSelected
+                            ? R.color.incognito_primary_color_home_bottom_nav
+                            : R.color.primary_color_home_bottom_nav);
+        } else {
+            setBackgroundResource(isIncognitoTabModelSelected ? R.color.incognito_primary_color
+                                                              : R.color.modern_primary_color);
+        }
 
         ColorStateList tint = ApiCompatibilityUtils.getColorStateList(getResources(),
                 isIncognitoTabModelSelected ? R.color.bottom_nav_tint_incognito
                                             : R.color.bottom_nav_tint);
         setItemIconTintList(tint);
         setItemTextColor(tint);
+    }
+
+    private void setIcons() {
+        getMenu().findItem(R.id.action_home).setIcon(R.drawable.ic_home_grey600_24dp);
+        getMenu().findItem(R.id.action_downloads).setIcon(R.drawable.ic_file_download_white_24dp);
+        getMenu().findItem(R.id.action_bookmarks).setIcon(R.drawable.btn_star_filled);
+        getMenu().findItem(R.id.action_history).setIcon(R.drawable.ic_watch_later_24dp);
+    }
+
+    private void removeIcons() {
+        getMenu().findItem(R.id.action_home).setIcon(null);
+        getMenu().findItem(R.id.action_downloads).setIcon(null);
+        getMenu().findItem(R.id.action_bookmarks).setIcon(null);
+        getMenu().findItem(R.id.action_history).setIcon(null);
     }
 
     @VisibleForTesting
@@ -381,6 +493,133 @@ public class BottomSheetContentController extends BottomNavigationView
 
             entry.getValue().destroy();
             contentIterator.remove();
+        }
+    }
+
+    /**
+     * Explode some stars from the center of the bookmarks icon.
+     * @param rootView The root view to run in.
+     * @param selectedItemView The item that was selected.
+     */
+    private void doStarExplosion(ViewGroup rootView, View selectedItemView) {
+        if (rootView == null || selectedItemView == null) return;
+
+        Drawable starFull =
+                ApiCompatibilityUtils.getDrawable(getResources(), R.drawable.btn_star_filled);
+        Drawable starEmpty = ApiCompatibilityUtils.getDrawable(getResources(), R.drawable.btn_star);
+
+        int[] outPosition = new int[2];
+        ViewUtils.getRelativeDrawPosition(rootView, selectedItemView, outPosition);
+
+        // Center the star's start position over the icon in the middle of the button.
+        outPosition[0] += selectedItemView.getWidth() / 2.f - starFull.getIntrinsicWidth() / 2.f;
+        outPosition[1] += selectedItemView.getHeight() / 2.f - starFull.getIntrinsicHeight() / 2.f;
+
+        for (int i = 0; i < 5; i++) {
+            MagicStar star = new MagicStar(getContext(), outPosition[0], outPosition[1], 100 * i,
+                    Math.random() > 0.5f ? starFull : starEmpty);
+            rootView.addView(star);
+        }
+    }
+
+    /**
+     * This is an image view that runs a simple animation before detaching itself from the window.
+     */
+    private static class MagicStar extends ImageView {
+        /** The starting position of the star. */
+        private PointF mStartPosition;
+
+        /** The direction of the star. */
+        private PointF mVector;
+
+        /** The velocity of the star. */
+        private float mVelocity;
+
+        /** The speed and direction that the star is rotating. Negative is counter-clockwise. */
+        private float mRotationVelocity;
+
+        /** The animation delay for the star. */
+        private long mStartDelay;
+
+        public MagicStar(
+                Context context, float startX, float startY, long startDelay, Drawable drawable) {
+            super(context);
+
+            mStartPosition = new PointF(startX, startY);
+            mStartDelay = startDelay;
+
+            // Fire stars within 45 degrees of 'up'.
+            float minAngle = (float) Math.toRadians(45.f);
+            float maxAngle = (float) Math.toRadians(135.f);
+            mVector = new PointF((float) Math.cos(getRandomInInterval(minAngle, maxAngle)),
+                    (float) Math.sin(getRandomInInterval(minAngle, maxAngle)));
+
+            mVelocity = getRandomInInterval(10.f, 15.f);
+            mRotationVelocity = getRandomInInterval(-2.f, 2.f);
+
+            setImageDrawable(drawable);
+        }
+
+        /**
+         * Get a random number between min and max.
+         * @param min The minimum value of the float.
+         * @param max The maximum value of the float.
+         * @return A random number between min and max.
+         */
+        private float getRandomInInterval(float min, float max) {
+            return (float) (Math.random() * (max - min)) + min;
+        }
+
+        @Override
+        public void onAttachedToWindow() {
+            super.onAttachedToWindow();
+
+            setAlpha(0.f);
+
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                    getDrawable().getIntrinsicWidth(), getDrawable().getIntrinsicHeight());
+            setLayoutParams(params);
+
+            setTranslationX(mStartPosition.x);
+            setTranslationY(mStartPosition.y);
+
+            doAnimation();
+        }
+
+        /**
+         * Run the star's animation and detach it from the window when complete.
+         */
+        private void doAnimation() {
+            ValueAnimator animator = ValueAnimator.ofFloat(0.f, 1.f);
+            animator.setDuration(500);
+            animator.setStartDelay(mStartDelay);
+
+            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                    float value = (float) valueAnimator.getAnimatedValue();
+                    setAlpha(1.f - value);
+                    setTranslationX(getTranslationX() - mVector.x * mVelocity);
+                    setTranslationY(getTranslationY() - mVector.y * mVelocity);
+                    setScaleX(0.4f + value);
+                    setScaleY(0.4f + value);
+                    setRotation((getRotation() + mRotationVelocity) % 360);
+                }
+            });
+
+            animator.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+                    setAlpha(1.f);
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    ((ViewGroup) getParent()).removeView(MagicStar.this);
+                }
+            });
+
+            animator.start();
         }
     }
 }

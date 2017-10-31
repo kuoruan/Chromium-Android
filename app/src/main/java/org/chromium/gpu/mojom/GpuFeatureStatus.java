@@ -23,7 +23,9 @@ public final class GpuFeatureStatus {
 
     public static final int DISABLED = BLACKLISTED + 1;
 
-    public static final int UNDEFINED = DISABLED + 1;
+    public static final int SOFTWARE = DISABLED + 1;
+
+    public static final int UNDEFINED = SOFTWARE + 1;
 
     public static final int MAX = UNDEFINED + 1;
 
@@ -37,6 +39,7 @@ public final class GpuFeatureStatus {
             case 2:
             case 3:
             case 4:
+            case 5:
                 return true;
         }
         return false;

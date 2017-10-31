@@ -35,6 +35,13 @@ abstract class GamepadMappings {
     static final int PS_DUALSHOCK_4_PRODUCT_ID = 1476;
     @VisibleForTesting
     static final int PS_DUALSHOCK_4_SLIM_PRODUCT_ID = 2508;
+    @VisibleForTesting
+    static final int PS_DUALSHOCK_4_USB_RECEIVER_PRODUCT_ID = 2976;
+
+    @VisibleForTesting
+    static final int XBOX_ONE_S_2016_FIRMWARE_VENDOR_ID = 0x045e;
+    @VisibleForTesting
+    static final int XBOX_ONE_S_2016_FIRMWARE_PRODUCT_ID = 0x02e0;
 
     public static GamepadMappings getMappings(InputDevice device, int[] axes) {
         GamepadMappings mappings = null;
@@ -53,8 +60,18 @@ abstract class GamepadMappings {
         // so we better go by the product and vendor ids.
         if (vendorId == PS_DUALSHOCK_4_VENDOR_ID
                 && (productId == PS_DUALSHOCK_4_PRODUCT_ID
-                           || productId == PS_DUALSHOCK_4_SLIM_PRODUCT_ID)) {
+                           || productId == PS_DUALSHOCK_4_SLIM_PRODUCT_ID
+                           || productId == PS_DUALSHOCK_4_USB_RECEIVER_PRODUCT_ID)) {
             return new PS4GamepadMappings();
+        }
+        // Microsoft released a firmware update for the Xbox One S gamepad that modified the button
+        // and axis assignments. With the new firmware, these gamepads work correctly in Android
+        // using the default mapping, but a custom mapping is still required for the old firmware.
+        // Both gamepads return the same device name, so we must compare hardware IDs to distinguish
+        // them.
+        if (vendorId == XBOX_ONE_S_2016_FIRMWARE_VENDOR_ID
+                && productId == XBOX_ONE_S_2016_FIRMWARE_PRODUCT_ID) {
+            return new XboxOneS2016FirmwareMappings();
         }
         return null;
     }
@@ -252,6 +269,68 @@ abstract class GamepadMappings {
         }
     }
 
+    private static class XboxOneS2016FirmwareMappings extends GamepadMappings {
+        private boolean mLeftTriggerActivated = false;
+        private boolean mRightTriggerActivated = false;
+
+        /**
+         * Method for mapping Xbox One S controller (in Bluetooth mode) to
+         * standard gamepad button and axes values.
+         */
+        @Override
+        public void mapToStandardGamepad(
+                float[] mappedAxes, float[] mappedButtons, float[] rawAxes, float[] rawButtons) {
+            mappedButtons[CanonicalButtonIndex.PRIMARY] = rawButtons[KeyEvent.KEYCODE_BUTTON_A];
+            mappedButtons[CanonicalButtonIndex.SECONDARY] = rawButtons[KeyEvent.KEYCODE_BUTTON_B];
+            mappedButtons[CanonicalButtonIndex.TERTIARY] = rawButtons[KeyEvent.KEYCODE_BUTTON_C];
+            mappedButtons[CanonicalButtonIndex.QUATERNARY] = rawButtons[KeyEvent.KEYCODE_BUTTON_X];
+
+            mappedButtons[CanonicalButtonIndex.LEFT_SHOULDER] =
+                    rawButtons[KeyEvent.KEYCODE_BUTTON_Y];
+            mappedButtons[CanonicalButtonIndex.RIGHT_SHOULDER] =
+                    rawButtons[KeyEvent.KEYCODE_BUTTON_Z];
+
+            mappedButtons[CanonicalButtonIndex.BACK_SELECT] =
+                    rawButtons[KeyEvent.KEYCODE_BUTTON_L1];
+            mappedButtons[CanonicalButtonIndex.START] = rawButtons[KeyEvent.KEYCODE_BUTTON_R1];
+
+            mappedButtons[CanonicalButtonIndex.LEFT_THUMBSTICK] =
+                    rawButtons[KeyEvent.KEYCODE_BUTTON_L2];
+            mappedButtons[CanonicalButtonIndex.RIGHT_THUMBSTICK] =
+                    rawButtons[KeyEvent.KEYCODE_BUTTON_R2];
+
+            // The left and right triggers on the Xbox One S controller
+            // are exposed as AXIS_Z and AXIS_RZ respectively. However,
+            // these nominally idle at -1 rather than 0, like other triggers.
+            // Unfortunately, the -1 value is only reported upon the first
+            // activation of each trigger axis. In order to prevent idling at
+            // 0.5 before trigger activation, we only expose trigger values
+            // when we've seen them report a non-zero value at least once.
+            if (rawAxes[MotionEvent.AXIS_Z] != 0) {
+                mLeftTriggerActivated = true;
+            }
+            if (rawAxes[MotionEvent.AXIS_RZ] != 0) {
+                mRightTriggerActivated = true;
+            }
+            if (mLeftTriggerActivated) {
+                mappedButtons[CanonicalButtonIndex.LEFT_TRIGGER] =
+                        (rawAxes[MotionEvent.AXIS_Z] + 1) / 2;
+            } else {
+                mappedButtons[CanonicalButtonIndex.LEFT_TRIGGER] = 0.f;
+            }
+            if (mRightTriggerActivated) {
+                mappedButtons[CanonicalButtonIndex.RIGHT_TRIGGER] =
+                        (rawAxes[MotionEvent.AXIS_RZ] + 1) / 2;
+            } else {
+                mappedButtons[CanonicalButtonIndex.RIGHT_TRIGGER] = 0.f;
+            }
+
+            mapHatAxisToDpadButtons(mappedButtons, rawAxes);
+            mapXYAxes(mappedAxes, rawAxes);
+            mapRXAndRYAxesToRightStick(mappedAxes, rawAxes);
+        }
+    }
+
     private static class PS3SixAxisGamepadMappings extends GamepadMappings {
 
         /**
@@ -314,9 +393,20 @@ abstract class GamepadMappings {
             mappedButtons[CanonicalButtonIndex.LEFT_TRIGGER] = scaleRxRy(rx);
             mappedButtons[CanonicalButtonIndex.RIGHT_TRIGGER] = scaleRxRy(ry);
 
-            mapHatAxisToDpadButtons(mappedButtons, rawAxes);
-            mapCommonStartSelectMetaButtons(mappedButtons, rawButtons);
+            float share = rawButtons[KeyEvent.KEYCODE_BUTTON_L2];
+            float options = rawButtons[KeyEvent.KEYCODE_BUTTON_R2];
+            mappedButtons[CanonicalButtonIndex.BACK_SELECT] = share;
+            mappedButtons[CanonicalButtonIndex.START] = options;
 
+            float thumbL = rawButtons[KeyEvent.KEYCODE_BUTTON_SELECT];
+            float thumbR = rawButtons[KeyEvent.KEYCODE_BUTTON_START];
+            mappedButtons[CanonicalButtonIndex.LEFT_THUMBSTICK] = thumbL;
+            mappedButtons[CanonicalButtonIndex.RIGHT_THUMBSTICK] = thumbR;
+
+            float mode = rawButtons[KeyEvent.KEYCODE_BUTTON_MODE];
+            mappedButtons[CanonicalButtonIndex.META] = mode;
+
+            mapHatAxisToDpadButtons(mappedButtons, rawAxes);
             mapXYAxes(mappedAxes, rawAxes);
             mapZAndRZAxesToRightStick(mappedAxes, rawAxes);
         }

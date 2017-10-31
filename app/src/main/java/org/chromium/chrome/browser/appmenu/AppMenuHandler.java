@@ -166,7 +166,8 @@ public class AppMenuHandler {
             footerResourceId = mDelegate.getFooterResourceId();
         }
         mAppMenu.show(wrapper, anchorView, isByPermanentButton, rotation, appRect, pt.y,
-                footerResourceId, mHighlightMenuId);
+                footerResourceId, mDelegate.getHeaderResourceId(),
+                mDelegate.getHeaderOnClickListener(), mHighlightMenuId);
         mAppMenuDragHelper.onShow(startDragging);
         mDelegate.onShow(mAppMenu);
         setMenuHighlight(null);

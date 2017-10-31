@@ -143,10 +143,6 @@ class AutocompleteState {
         mAutocompleteText = "";
     }
 
-    public boolean equalsExceptAutocompleteText(AutocompleteState a) {
-        return mUserText.equals(a.mUserText) && mSelStart == a.mSelStart && mSelEnd == a.mSelEnd;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof AutocompleteState)) return false;

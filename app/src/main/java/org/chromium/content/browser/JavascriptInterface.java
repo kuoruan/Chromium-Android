@@ -12,10 +12,9 @@ import java.lang.annotation.Target;
 /**
  * Marks a method as being able to be exposed to JavaScript.  This is used for safety purposes so
  * that only explicitly marked methods get exposed instead of every method in a class.
- * @see {@link ContentViewCore#addJavascriptInterface(Class, String, boolean)}
+ * @see {@link WebContents#addJavascriptInterface(Class, String, boolean)}
  */
 @SuppressWarnings("javadoc")
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
-public @interface JavascriptInterface {
-}
+public @interface JavascriptInterface {}

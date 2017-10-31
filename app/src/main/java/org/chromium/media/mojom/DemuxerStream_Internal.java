@@ -313,7 +313,7 @@ ReadResponse callback) {
     
         private DemuxerStreamInitializeResponseParams(int version) {
             super(STRUCT_SIZE, version);
-            pipe = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+            this.pipe = org.chromium.mojo.system.InvalidHandle.INSTANCE;
         }
     
         public DemuxerStreamInitializeResponseParams() {
@@ -377,13 +377,13 @@ ReadResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(type, 8);
+            encoder0.encode(this.type, 8);
             
-            encoder0.encode(pipe, 12, false);
+            encoder0.encode(this.pipe, 12, false);
             
-            encoder0.encode(audioConfig, 16, true);
+            encoder0.encode(this.audioConfig, 16, true);
             
-            encoder0.encode(videoConfig, 24, true);
+            encoder0.encode(this.videoConfig, 24, true);
         }
     
         /**
@@ -416,10 +416,10 @@ ReadResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(type);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(pipe);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(audioConfig);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(videoConfig);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.type);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pipe);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.audioConfig);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoConfig);
             return result;
         }
     }
@@ -651,13 +651,13 @@ ReadResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(status, 8);
+            encoder0.encode(this.status, 8);
             
-            encoder0.encode(buffer, 16, true);
+            encoder0.encode(this.buffer, 16, true);
             
-            encoder0.encode(audioConfig, 24, true);
+            encoder0.encode(this.audioConfig, 24, true);
             
-            encoder0.encode(videoConfig, 32, true);
+            encoder0.encode(this.videoConfig, 32, true);
         }
     
         /**
@@ -690,10 +690,10 @@ ReadResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(status);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(buffer);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(audioConfig);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(videoConfig);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.status);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.buffer);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.audioConfig);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoConfig);
             return result;
         }
     }

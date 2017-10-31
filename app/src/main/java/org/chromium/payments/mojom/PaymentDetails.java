@@ -29,7 +29,7 @@ public final class PaymentDetails extends org.chromium.mojo.bindings.Struct {
 
     private PaymentDetails(int version) {
         super(STRUCT_SIZE, version);
-        error = (String) "";
+        this.error = (String) "";
     }
 
     public PaymentDetails() {
@@ -126,41 +126,41 @@ public final class PaymentDetails extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(total, 8, true);
+        encoder0.encode(this.total, 8, true);
         
-        if (displayItems == null) {
+        if (this.displayItems == null) {
             encoder0.encodeNullPointer(16, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(displayItems.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < displayItems.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.displayItems.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.displayItems.length; ++i0) {
                 
-                encoder1.encode(displayItems[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                encoder1.encode(this.displayItems[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
         
-        if (shippingOptions == null) {
+        if (this.shippingOptions == null) {
             encoder0.encodeNullPointer(24, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(shippingOptions.length, 24, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < shippingOptions.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.shippingOptions.length, 24, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.shippingOptions.length; ++i0) {
                 
-                encoder1.encode(shippingOptions[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                encoder1.encode(this.shippingOptions[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
         
-        if (modifiers == null) {
+        if (this.modifiers == null) {
             encoder0.encodeNullPointer(32, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(modifiers.length, 32, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < modifiers.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.modifiers.length, 32, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.modifiers.length; ++i0) {
                 
-                encoder1.encode(modifiers[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                encoder1.encode(this.modifiers[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
         
-        encoder0.encode(error, 40, false);
+        encoder0.encode(this.error, 40, false);
         
-        encoder0.encode(id, 48, true);
+        encoder0.encode(this.id, 48, true);
     }
 
     /**
@@ -197,12 +197,12 @@ public final class PaymentDetails extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(total);
-        result = prime * result + java.util.Arrays.deepHashCode(displayItems);
-        result = prime * result + java.util.Arrays.deepHashCode(shippingOptions);
-        result = prime * result + java.util.Arrays.deepHashCode(modifiers);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(error);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(id);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.total);
+        result = prime * result + java.util.Arrays.deepHashCode(this.displayItems);
+        result = prime * result + java.util.Arrays.deepHashCode(this.shippingOptions);
+        result = prime * result + java.util.Arrays.deepHashCode(this.modifiers);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.error);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.id);
         return result;
     }
 }

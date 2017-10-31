@@ -18,8 +18,8 @@ import java.lang.annotation.RetentionPolicy;
 @IntDef({
     KnownCategories.RECENT_TABS, KnownCategories.DOWNLOADS, KnownCategories.BOOKMARKS,
     KnownCategories.PHYSICAL_WEB_PAGES, KnownCategories.FOREIGN_TABS, KnownCategories.READING_LIST,
-    KnownCategories.LOCAL_CATEGORIES_COUNT, KnownCategories.REMOTE_CATEGORIES_OFFSET,
-    KnownCategories.ARTICLES, KnownCategories.BREAKING_NEWS,
+    KnownCategories.CONTEXTUAL, KnownCategories.LOCAL_CATEGORIES_COUNT,
+    KnownCategories.REMOTE_CATEGORIES_OFFSET, KnownCategories.ARTICLES,
     KnownCategories.LAST_KNOWN_REMOTE_CATEGORY
 })
 @Retention(RetentionPolicy.SOURCE)
@@ -49,11 +49,15 @@ public @interface KnownCategories {
    */
   int READING_LIST = 5;
   /**
+   * Contextual suggestion.
+   */
+  int CONTEXTUAL = 6;
+  /**
    * ****************** INSERT NEW LOCAL CATEGORIES HERE! ****************** Existing categories are
    * persisted and they must never be removed. This may happen implicitly, e.g. when an older
    * version without some local category is installed. Follows the last local category.
    */
-  int LOCAL_CATEGORIES_COUNT = 6;
+  int LOCAL_CATEGORIES_COUNT = 7;
   /**
    * Remote categories come after this.
    */
@@ -63,12 +67,9 @@ public @interface KnownCategories {
    */
   int ARTICLES = 10001;
   /**
-   * Breaking News
+   * Categories 10002-10008 are defined on the server. ****************** INSERT NEW REMOTE
+   * CATEGORIES HERE! ****************** Update the list on the server first. Here specify the ID
+   * explicitly. Tracks the last known remote category
    */
-  int BREAKING_NEWS = 10008;
-  /**
-   * ****************** INSERT NEW REMOTE CATEGORIES HERE! ****************** Tracks the last known
-   * remote category
-   */
-  int LAST_KNOWN_REMOTE_CATEGORY = 10008;
+  int LAST_KNOWN_REMOTE_CATEGORY = 10001;
 }

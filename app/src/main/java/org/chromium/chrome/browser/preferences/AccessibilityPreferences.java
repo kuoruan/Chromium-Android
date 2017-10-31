@@ -11,6 +11,7 @@ import android.preference.PreferenceFragment;
 import android.widget.ListView;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.accessibility.FontSizePrefs;
 import org.chromium.chrome.browser.accessibility.FontSizePrefs.FontSizePrefsObserver;
 
@@ -24,12 +25,14 @@ public class AccessibilityPreferences extends PreferenceFragment
 
     static final String PREF_TEXT_SCALE = "text_scale";
     static final String PREF_FORCE_ENABLE_ZOOM = "force_enable_zoom";
+    static final String PREF_READER_FOR_ACCESSIBILITY = "reader_for_accessibility";
 
     private NumberFormat mFormat;
     private FontSizePrefs mFontSizePrefs;
 
     private TextScalePreference mTextScalePref;
     private SeekBarLinkedCheckBoxPreference mForceEnableZoomPref;
+    private ChromeBaseCheckBoxPreference mReaderForAccessibilityPref;
 
     private FontSizePrefsObserver mFontSizePrefsObserver = new FontSizePrefsObserver() {
         @Override
@@ -47,7 +50,7 @@ public class AccessibilityPreferences extends PreferenceFragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getActivity().setTitle(R.string.prefs_accessibility);
-        addPreferencesFromResource(R.xml.accessibility_preferences);
+        PreferenceUtils.addPreferencesFromResource(this, R.xml.accessibility_preferences);
 
         mFormat = NumberFormat.getPercentInstance();
         mFontSizePrefs = FontSizePrefs.getInstance(getActivity());
@@ -59,6 +62,12 @@ public class AccessibilityPreferences extends PreferenceFragment
                 PREF_FORCE_ENABLE_ZOOM);
         mForceEnableZoomPref.setOnPreferenceChangeListener(this);
         mForceEnableZoomPref.setLinkedSeekBarPreference(mTextScalePref);
+
+        mReaderForAccessibilityPref =
+                (ChromeBaseCheckBoxPreference) findPreference(PREF_READER_FOR_ACCESSIBILITY);
+        if (!ChromeFeatureList.isEnabled(ChromeFeatureList.ALLOW_READER_FOR_ACCESSIBILITY)) {
+            this.getPreferenceScreen().removePreference(mReaderForAccessibilityPref);
+        }
     }
 
     @Override

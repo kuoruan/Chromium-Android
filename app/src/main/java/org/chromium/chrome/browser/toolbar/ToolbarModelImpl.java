@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.toolbar;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
@@ -18,6 +19,7 @@ import org.chromium.chrome.browser.offlinepages.OfflinePageUtils;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.toolbar.ToolbarModel.ToolbarModelDelegate;
+import org.chromium.chrome.browser.util.ColorUtils;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
 import org.chromium.components.dom_distiller.core.DomDistillerService;
 import org.chromium.components.dom_distiller.core.DomDistillerUrlUtils;
@@ -53,9 +55,8 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
 
     @Override
     public WebContents getActiveWebContents() {
-        Tab tab = getTab();
-        if (tab == null) return null;
-        return tab.getWebContents();
+        if (!hasTab()) return null;
+        return mTab.getWebContents();
     }
 
     /**
@@ -65,32 +66,37 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
      *                    passed in tab if non-null.
      */
     public void setTab(Tab tab, boolean isIncognito) {
+        assert tab == null || tab.isIncognito() == isIncognito;
         mTab = tab;
-        if (mTab != null) {
-            assert mTab.isIncognito() == isIncognito;
-        }
         mIsIncognito = isIncognito;
+        updateUsingBrandColor();
     }
 
     @Override
     public Tab getTab() {
+        return hasTab() ? mTab : null;
+    }
+
+    @Override
+    public boolean hasTab() {
         // TODO(dtrainor, tedchoc): Remove the isInitialized() check when we no longer wait for
         // TAB_CLOSED events to remove this tab.  Otherwise there is a chance we use this tab after
         // {@link ChromeTab#destroy()} is called.
-        return (mTab == null || !mTab.isInitialized()) ? null : mTab;
+        return mTab != null && mTab.isInitialized();
     }
 
     @Override
     public String getCurrentUrl() {
         // TODO(yusufo) : Consider using this for all calls from getTab() for accessing url.
-        return getTab() != null ? getTab().getUrl() : null;
+        if (!hasTab()) return "";
+        // Tab.getUrl() returns empty string if it does not have a URL.
+        return getTab().getUrl().trim();
     }
 
     @Override
     public NewTabPage getNewTabPageForCurrentTab() {
-        Tab currentTab = getTab();
-        if (currentTab != null && currentTab.getNativePage() instanceof NewTabPage) {
-            return (NewTabPage) currentTab.getNativePage();
+        if (hasTab() && mTab.getNativePage() instanceof NewTabPage) {
+            return (NewTabPage) mTab.getNativePage();
         }
         return null;
     }
@@ -99,13 +105,13 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
     public String getText() {
         String displayText = super.getText();
 
-        if (mTab == null || mTab.isFrozen()) return displayText;
+        if (!hasTab() || mTab.isFrozen()) return displayText;
 
-        String url = mTab.getUrl().trim();
+        String url = getCurrentUrl();
         if (DomDistillerUrlUtils.isDistilledPage(url)) {
             if (isStoredArticle(url)) {
                 DomDistillerService domDistillerService =
-                        DomDistillerServiceFactory.getForProfile(mTab.getProfile());
+                        DomDistillerServiceFactory.getForProfile(getProfile());
                 String originalUrl = domDistillerService.getUrlForEntry(
                         DomDistillerUrlUtils.getValueForKeyInUrl(url, "entry_id"));
                 displayText =
@@ -115,7 +121,7 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
                 displayText =
                         DomDistillerTabUtils.getFormattedUrlFromOriginalDistillerUrl(originalUrl);
             }
-        } else if (OfflinePageUtils.isOfflinePage(mTab)) {
+        } else if (isOfflinePage()) {
             String originalUrl = mTab.getOriginalUrl();
             displayText = OfflinePageUtils.stripSchemeFromOnlineUrl(
                   DomDistillerTabUtils.getFormattedUrlFromOriginalDistillerUrl(originalUrl));
@@ -126,7 +132,7 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
 
     private boolean isStoredArticle(String url) {
         DomDistillerService domDistillerService =
-                DomDistillerServiceFactory.getForProfile(mTab.getProfile());
+                DomDistillerServiceFactory.getForProfile(getProfile());
         String entryIdFromUrl = DomDistillerUrlUtils.getValueForKeyInUrl(url, "entry_id");
         if (TextUtils.isEmpty(entryIdFromUrl)) return false;
         return domDistillerService.hasEntry(entryIdFromUrl);
@@ -153,20 +159,23 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
      */
     public void setPrimaryColor(int color) {
         mPrimaryColor = color;
+        updateUsingBrandColor();
+    }
+
+    private void updateUsingBrandColor() {
         Context context = ContextUtils.getApplicationContext();
         mIsUsingBrandColor = !isIncognito()
-                && mPrimaryColor != ApiCompatibilityUtils.getColor(context.getResources(),
-                        R.color.default_primary_color)
-                && getTab() != null && !getTab().isNativePage();
+                && mPrimaryColor
+                        != ApiCompatibilityUtils.getColor(
+                                   context.getResources(), R.color.default_primary_color)
+                && hasTab() && !mTab.isNativePage();
     }
 
     @Override
     public int getPrimaryColor() {
         if (mBottomSheet != null) {
-            int colorId =
-                    isIncognito() ? R.color.incognito_primary_color : R.color.default_primary_color;
-            return ApiCompatibilityUtils.getColor(
-                    ContextUtils.getApplicationContext().getResources(), colorId);
+            Resources res = ContextUtils.getApplicationContext().getResources();
+            return ColorUtils.getDefaultThemeColor(res, true, isIncognito());
         }
         return mPrimaryColor;
     }
@@ -174,5 +183,10 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
     @Override
     public boolean isUsingBrandColor() {
         return mIsUsingBrandColor && mBottomSheet == null;
+    }
+
+    @Override
+    public boolean isOfflinePage() {
+        return hasTab() && OfflinePageUtils.isOfflinePage(mTab);
     }
 }

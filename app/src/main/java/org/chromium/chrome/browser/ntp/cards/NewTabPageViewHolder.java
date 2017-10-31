@@ -16,13 +16,6 @@ import org.chromium.base.Callback;
  */
 public class NewTabPageViewHolder extends RecyclerView.ViewHolder {
     /**
-     * A single instance of {@link UpdateLayoutParamsCallback} that can be reused as it has no
-     * state.
-     */
-    public static final UpdateLayoutParamsCallback UPDATE_LAYOUT_PARAMS_CALLBACK =
-            new UpdateLayoutParamsCallback();
-
-    /**
      * Constructs a {@link NewTabPageViewHolder} used to display an part of the NTP (e.g., header,
      * article snippet, above-the-fold view, etc.)
      *
@@ -59,21 +52,11 @@ public class NewTabPageViewHolder extends RecyclerView.ViewHolder {
 
     /**
      * A callback to perform a partial bind on a {@link NewTabPageViewHolder}.
-     * @see org.chromium.chrome.browser.ntp.cards.InnerNode#notifyItemChanged(int,
-     * PartialBindCallback)
      *
-     * This empty class is used to strengthen type assertions, as those would be less useful with a
+     * This interface is used to strengthen type assertions, as those would be less useful with a
      * generic class due to type erasure.
+     *
+     * @see InnerNode#notifyItemChanged(int, PartialBindCallback)
      */
-    public abstract static class PartialBindCallback extends Callback<NewTabPageViewHolder> {}
-
-    /**
-     * Callback to update the layout params for the view holder.
-     */
-    public static class UpdateLayoutParamsCallback extends PartialBindCallback {
-        @Override
-        public void onResult(NewTabPageViewHolder holder) {
-            holder.updateLayoutParams();
-        }
-    }
+    public interface PartialBindCallback extends Callback<NewTabPageViewHolder> {}
 }

@@ -5,7 +5,16 @@
 package org.chromium.chrome.browser.partnerbookmarks;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
+
+import org.chromium.base.CommandLine;
+import org.chromium.base.ContextUtils;
+import org.chromium.base.Log;
+import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.chrome.browser.ChromeSwitches;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * The Java counterpart for the C++ partner bookmarks shim.
@@ -16,7 +25,10 @@ import android.content.pm.ApplicationInfo;
  * - reporting that all partner bookmarks were read to the C++ side.
  */
 public class PartnerBookmarksShim {
+    private static final String TAG = "PartnerBookmarksShim";
+
     private static boolean sIsReadingAttempted;
+    private static final long BAN_DURATION_MS = TimeUnit.DAYS.toMillis(7);
 
     /**
      * Checks if we need to fetch the Partner bookmarks and kicks the reading off. If reading was
@@ -27,10 +39,28 @@ public class PartnerBookmarksShim {
         sIsReadingAttempted = true;
 
         PartnerBookmarksReader reader = new PartnerBookmarksReader(context);
-        if ((context.getApplicationInfo().flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
+
+        boolean skip = shouldSkipReading();
+        RecordHistogram.recordBooleanHistogram("PartnerBookmark.Skipped", skip);
+        if (skip) {
+            Log.i(TAG, "Skip reading partner bookmarks since recent result was empty.");
+        }
+        boolean systemOrForced =
+                (context.getApplicationInfo().flags & ApplicationInfo.FLAG_SYSTEM) == 1
+                || CommandLine.getInstance().hasSwitch(ChromeSwitches.ALLOW_PARTNER_CUSTOMIZATION);
+        if (skip || !systemOrForced) {
             reader.onBookmarksRead();
             return;
         }
         reader.readBookmarks();
+    }
+
+    private static boolean shouldSkipReading() {
+        SharedPreferences pref = ContextUtils.getAppSharedPreferences();
+        long last = pref.getLong(PartnerBookmarksReader.LAST_EMPTY_READ_PREFS_NAME, 0);
+        long elapsed = System.currentTimeMillis() - last;
+        // Without checking elapsed >= 0, we might get stuck at an "always skip mode" if
+        // |LAST_EMPTY_READ_PREFS_NAME| is a bogus future time.
+        return 0 <= elapsed && elapsed < BAN_DURATION_MS;
     }
 }

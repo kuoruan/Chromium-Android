@@ -14,6 +14,7 @@ import org.chromium.chrome.browser.metrics.UmaSessionStats;
 import org.chromium.chrome.browser.preferences.ChromeSwitchPreference;
 import org.chromium.chrome.browser.preferences.ManagedPreferenceDelegate;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
+import org.chromium.chrome.browser.preferences.PreferenceUtils;
 
 /**
  * Fragment to manage the Usage and crash reports preference and to explain to
@@ -26,7 +27,7 @@ public class UsageAndCrashReportsPreferenceFragment extends PreferenceFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        addPreferencesFromResource(R.xml.usage_and_crash_reports_preferences);
+        PreferenceUtils.addPreferencesFromResource(this, R.xml.usage_and_crash_reports_preferences);
         getActivity().setTitle(R.string.usage_and_crash_reports_title);
         initUsageAndCrashReportsSwitch();
     }

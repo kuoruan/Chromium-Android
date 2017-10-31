@@ -43,25 +43,19 @@ public class ChromeBackupWatcher {
             sharedPrefs.edit().putBoolean(FIRST_BACKUP_DONE, true).apply();
         }
         sharedPrefs.registerOnSharedPreferenceChangeListener(
-                new SharedPreferences.OnSharedPreferenceChangeListener() {
-
-                    @Override
-                    public void onSharedPreferenceChanged(
-                            SharedPreferences sharedPreferences, String key) {
-                        // Update the backup if the user id or any of the backed up Android
-                        // preferences change.
-                        if (key.equals(ChromeSigninController.SIGNED_IN_ACCOUNT_KEY)) {
+                (sharedPreferences, key) -> {
+                    // Update the backup if the user id or any of the backed up Android
+                    // preferences change.
+                    if (key.equals(ChromeSigninController.SIGNED_IN_ACCOUNT_KEY)) {
+                        onBackupPrefsChanged();
+                        return;
+                    }
+                    for (String pref : ChromeBackupAgent.BACKUP_ANDROID_BOOL_PREFS) {
+                        if (key.equals(pref)) {
                             onBackupPrefsChanged();
                             return;
                         }
-                        for (String pref : ChromeBackupAgent.BACKUP_ANDROID_BOOL_PREFS) {
-                            if (key.equals(pref)) {
-                                onBackupPrefsChanged();
-                                return;
-                            }
-                        }
                     }
-
                 });
     }
 

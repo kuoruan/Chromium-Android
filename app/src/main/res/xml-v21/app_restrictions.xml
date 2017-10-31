@@ -80,6 +80,12 @@
         android:restrictionType="bool"/>
 
     <restriction
+        android:key="AutofillCreditCardEnabled"
+        android:title="@string/AutofillCreditCardEnabledTitle"
+        android:description="@string/AutofillCreditCardEnabledDesc"
+        android:restrictionType="bool"/>
+
+    <restriction
         android:key="ProxyMode"
         android:title="@string/ProxyModeTitle"
         android:description="@string/ProxyModeDesc"

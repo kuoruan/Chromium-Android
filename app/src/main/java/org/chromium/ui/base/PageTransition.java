@@ -16,7 +16,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
-    PageTransition.LINK, PageTransition.TYPED, PageTransition.AUTO_BOOKMARK,
+    PageTransition.FIRST, PageTransition.LINK, PageTransition.TYPED, PageTransition.AUTO_BOOKMARK,
     PageTransition.AUTO_SUBFRAME, PageTransition.MANUAL_SUBFRAME, PageTransition.GENERATED,
     PageTransition.AUTO_TOPLEVEL, PageTransition.FORM_SUBMIT, PageTransition.RELOAD,
     PageTransition.KEYWORD, PageTransition.KEYWORD_GENERATED, PageTransition.LAST_CORE,
@@ -27,10 +27,11 @@ import java.lang.annotation.RetentionPolicy;
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface PageTransition {
+  int FIRST = 0;
   /**
    * User got to this page by clicking a link on another page.
    */
-  int LINK = 0;
+  int LINK = FIRST;
   /**
    * User got this page by typing the URL in the URL bar.  This should not be used for cases where
    * the user selected a choice that didn't look at all like a URL; see GENERATED below. We also use

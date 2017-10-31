@@ -7,7 +7,13 @@ package org.chromium.components.signin;
 /**
  * AccountManagerDelegateException encapsulates errors that can happen while getting list of
  * accounts.
- *
- * Currently, this exception is a stub. Support for different errors will be added soon.
  */
-public class AccountManagerDelegateException extends Exception {}
+public abstract class AccountManagerDelegateException extends Exception {
+    protected AccountManagerDelegateException(String message) {
+        super(message);
+    }
+
+    protected AccountManagerDelegateException(AccountManagerDelegateException cause) {
+        super(cause);
+    }
+}

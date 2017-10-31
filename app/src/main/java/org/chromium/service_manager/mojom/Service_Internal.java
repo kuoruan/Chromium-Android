@@ -257,7 +257,7 @@ OnBindInterfaceResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(identity, 8, false);
+            encoder0.encode(this.identity, 8, false);
         }
     
         /**
@@ -284,7 +284,7 @@ OnBindInterfaceResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(identity);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.identity);
             return result;
         }
     }
@@ -354,9 +354,9 @@ OnBindInterfaceResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(connectorRequest, 8, true);
+            encoder0.encode(this.connectorRequest, 8, true);
             
-            encoder0.encode(controlRequest, 12, true);
+            encoder0.encode(this.controlRequest, 12, true);
         }
     
         /**
@@ -385,8 +385,8 @@ OnBindInterfaceResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(connectorRequest);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(controlRequest);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.connectorRequest);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.controlRequest);
             return result;
         }
     }
@@ -468,7 +468,7 @@ OnBindInterfaceResponse callback) {
     
         private ServiceOnBindInterfaceParams(int version) {
             super(STRUCT_SIZE, version);
-            interfacePipe = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+            this.interfacePipe = org.chromium.mojo.system.InvalidHandle.INSTANCE;
         }
     
         public ServiceOnBindInterfaceParams() {
@@ -526,11 +526,11 @@ OnBindInterfaceResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(source, 8, false);
+            encoder0.encode(this.source, 8, false);
             
-            encoder0.encode(interfaceName, 16, false);
+            encoder0.encode(this.interfaceName, 16, false);
             
-            encoder0.encode(interfacePipe, 24, false);
+            encoder0.encode(this.interfacePipe, 24, false);
         }
     
         /**
@@ -561,9 +561,9 @@ OnBindInterfaceResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(source);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(interfaceName);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(interfacePipe);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.source);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.interfaceName);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.interfacePipe);
             return result;
         }
     }

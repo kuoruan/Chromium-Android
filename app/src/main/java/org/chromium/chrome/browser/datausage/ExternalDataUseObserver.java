@@ -10,6 +10,7 @@ import org.chromium.base.ApplicationState;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.PackageUtils;
+import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.annotations.NativeClassQualifiedName;
@@ -133,6 +134,7 @@ public class ExternalDataUseObserver {
      */
     @CalledByNative
     private void onDestroy() {
+        ThreadUtils.assertOnUiThread();
         mNativeExternalDataUseObserverBridge = 0;
     }
 
@@ -143,6 +145,7 @@ public class ExternalDataUseObserver {
      */
     @CalledByNative
     protected void fetchMatchingRules() {
+        ThreadUtils.assertOnUiThread();
         fetchMatchingRulesDone(null, null, null);
     }
 
@@ -158,6 +161,7 @@ public class ExternalDataUseObserver {
      */
     protected void fetchMatchingRulesDone(
             String[] appPackageName, String[] domainPathRegEx, String[] label) {
+        ThreadUtils.assertOnUiThread();
         // Check if native object is destroyed. This may happen at the time of Chromium shutdown.
         if (mNativeExternalDataUseObserverBridge == 0) {
             return;
@@ -196,6 +200,7 @@ public class ExternalDataUseObserver {
      * @param success true if the data report was successfully submitted to the external observer.
      */
     protected void onReportDataUseDone(boolean success) {
+        ThreadUtils.assertOnUiThread();
         // Check if native object is destroyed.  This may happen at the time of Chromium shutdown.
         if (mNativeExternalDataUseObserverBridge == 0) {
             return;

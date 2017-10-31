@@ -27,19 +27,6 @@ public class VrClassesWrapperImpl implements VrClassesWrapper {
     public VrClassesWrapperImpl() {}
 
     @Override
-    public NonPresentingGvrContext createNonPresentingGvrContext(ChromeActivity activity) {
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-        try {
-            return new NonPresentingGvrContextImpl(activity);
-        } catch (Exception ex) {
-            Log.e(TAG, "Unable to instantiate NonPresentingGvrContextImpl", ex);
-            return null;
-        } finally {
-            StrictMode.setThreadPolicy(oldPolicy);
-        }
-    }
-
-    @Override
     public VrShell createVrShell(
             ChromeActivity activity, VrShellDelegate delegate, TabModelSelector tabModelSelector) {
         StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();

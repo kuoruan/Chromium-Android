@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.customtabs.CustomTabActivity;
 import org.chromium.ui.base.LocalizationUtils;
@@ -23,6 +24,7 @@ public class HyperlinkPreference extends Preference {
 
     private final int mTitleResId;
     private final int mUrlResId;
+    private final int mColor;
     private final boolean mImitateWebLink;
 
     public HyperlinkPreference(Context context, AttributeSet attrs) {
@@ -33,6 +35,7 @@ public class HyperlinkPreference extends Preference {
         mImitateWebLink = a.getBoolean(R.styleable.HyperlinkPreference_imitateWebLink, false);
         a.recycle();
         mTitleResId = getTitleRes();
+        mColor = ApiCompatibilityUtils.getColor(context.getResources(), R.color.google_blue_700);
     }
 
     @Override
@@ -51,7 +54,7 @@ public class HyperlinkPreference extends Preference {
             setSelectable(false);
 
             titleView.setClickable(true);
-            titleView.setTextColor(titleView.getPaint().linkColor);
+            titleView.setTextColor(mColor);
             titleView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {

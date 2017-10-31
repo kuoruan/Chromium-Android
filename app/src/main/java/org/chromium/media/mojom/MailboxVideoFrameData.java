@@ -81,13 +81,13 @@ public final class MailboxVideoFrameData extends org.chromium.mojo.bindings.Stru
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        if (mailboxHolder == null) {
+        if (this.mailboxHolder == null) {
             encoder0.encodeNullPointer(8, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(mailboxHolder.length, 8, 4);
-            for (int i0 = 0; i0 < mailboxHolder.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.mailboxHolder.length, 8, 4);
+            for (int i0 = 0; i0 < this.mailboxHolder.length; ++i0) {
                 
-                encoder1.encode(mailboxHolder[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                encoder1.encode(this.mailboxHolder[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
     }
@@ -116,7 +116,7 @@ public final class MailboxVideoFrameData extends org.chromium.mojo.bindings.Stru
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + java.util.Arrays.deepHashCode(mailboxHolder);
+        result = prime * result + java.util.Arrays.deepHashCode(this.mailboxHolder);
         return result;
     }
 }

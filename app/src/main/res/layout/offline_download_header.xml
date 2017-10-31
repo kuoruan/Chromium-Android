@@ -12,7 +12,7 @@
 
     <LinearLayout
             android:id="@+id/layout_container"
-            style="@style/DownloadRowContainer" >
+            style="@style/ListItemContainer" >
 
         <org.chromium.chrome.browser.widget.TintedImageView
                 android:id="@+id/icon_view"
@@ -24,18 +24,18 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1" >
-    
+
             <TextView
-                    android:id="@+id/page_count_text"
-                    style="@style/DownloadTitleStyle" />
+                    android:id="@+id/title"
+                    style="@style/DownloadTitleStyle"
+                    android:text="@string/download_manager_offline_header_title" />
 
             <ImageView
                     android:id="@+id/expand_icon"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentTop="true"
-                    android:layout_toEndOf="@+id/page_count_text"
-                    android:layout_marginTop="0dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
                     android:paddingEnd="16dp"
                     android:contentDescription="@null"
                     android:src="@drawable/ic_expanded" />
@@ -43,14 +43,8 @@
             <TextView
                     android:id="@+id/description"
                     style="@style/DownloadDescriptionStyle"
-                    android:layout_toStartOf="@+id/filesize_view"
-                    android:layout_below="@+id/page_count_text"
+                    android:layout_below="@+id/title"
                     android:text="@string/download_manager_offline_header_description" />
-
-            <TextView
-                    android:id="@+id/filesize_view"
-                    style="@style/DownloadFileSizeStyle"
-                    android:layout_below="@+id/page_count_text" />
         </RelativeLayout>
     </LinearLayout>
 </view>

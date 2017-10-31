@@ -56,12 +56,14 @@ class AudioOutputStreamProvider_Internal {
 
         @Override
         public void acquire(
-org.chromium.mojo.bindings.InterfaceRequest<AudioOutputStream> outputStream, AudioParameters params, 
+org.chromium.mojo.bindings.InterfaceRequest<AudioOutputStream> outputStream, AudioOutputStreamClient client, AudioParameters params, 
 AcquireResponse callback) {
 
             AudioOutputStreamProviderAcquireParams _message = new AudioOutputStreamProviderAcquireParams();
 
             _message.outputStream = outputStream;
+
+            _message.client = client;
 
             _message.params = params;
 
@@ -139,7 +141,7 @@ AcquireResponse callback) {
                         AudioOutputStreamProviderAcquireParams data =
                                 AudioOutputStreamProviderAcquireParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().acquire(data.outputStream, data.params, new AudioOutputStreamProviderAcquireResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        getImpl().acquire(data.outputStream, data.client, data.params, new AudioOutputStreamProviderAcquireResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
             
@@ -158,10 +160,11 @@ AcquireResponse callback) {
     
     static final class AudioOutputStreamProviderAcquireParams extends org.chromium.mojo.bindings.Struct {
     
-        private static final int STRUCT_SIZE = 24;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final int STRUCT_SIZE = 32;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.mojo.bindings.InterfaceRequest<AudioOutputStream> outputStream;
+        public AudioOutputStreamClient client;
         public AudioParameters params;
     
         private AudioOutputStreamProviderAcquireParams(int version) {
@@ -205,7 +208,11 @@ AcquireResponse callback) {
                 }
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                    result.client = decoder0.readServiceInterface(12, false, AudioOutputStreamClient.MANAGER);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
                     result.params = AudioParameters.decode(decoder1);
                 }
             } finally {
@@ -219,9 +226,11 @@ AcquireResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(outputStream, 8, false);
+            encoder0.encode(this.outputStream, 8, false);
             
-            encoder0.encode(params, 16, false);
+            encoder0.encode(this.client, 12, false, AudioOutputStreamClient.MANAGER);
+            
+            encoder0.encode(this.params, 24, false);
         }
     
         /**
@@ -238,6 +247,8 @@ AcquireResponse callback) {
             AudioOutputStreamProviderAcquireParams other = (AudioOutputStreamProviderAcquireParams) object;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.outputStream, other.outputStream))
                 return false;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.client, other.client))
+                return false;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.params, other.params))
                 return false;
             return true;
@@ -250,8 +261,9 @@ AcquireResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(outputStream);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(params);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.outputStream);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.client);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.params);
             return result;
         }
     }
@@ -269,8 +281,8 @@ AcquireResponse callback) {
     
         private AudioOutputStreamProviderAcquireResponseParams(int version) {
             super(STRUCT_SIZE, version);
-            sharedBuffer = org.chromium.mojo.system.InvalidHandle.INSTANCE;
-            socketDescriptor = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+            this.sharedBuffer = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+            this.socketDescriptor = org.chromium.mojo.system.InvalidHandle.INSTANCE;
         }
     
         public AudioOutputStreamProviderAcquireResponseParams() {
@@ -323,9 +335,9 @@ AcquireResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(sharedBuffer, 8, false);
+            encoder0.encode(this.sharedBuffer, 8, false);
             
-            encoder0.encode(socketDescriptor, 12, false);
+            encoder0.encode(this.socketDescriptor, 12, false);
         }
     
         /**
@@ -354,8 +366,8 @@ AcquireResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sharedBuffer);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(socketDescriptor);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sharedBuffer);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.socketDescriptor);
             return result;
         }
     }

@@ -226,11 +226,11 @@ ShareResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(title, 8, false);
+            encoder0.encode(this.title, 8, false);
             
-            encoder0.encode(text, 16, false);
+            encoder0.encode(this.text, 16, false);
             
-            encoder0.encode(url, 24, false);
+            encoder0.encode(this.url, 24, false);
         }
     
         /**
@@ -261,9 +261,9 @@ ShareResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(title);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(text);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(url);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.title);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.text);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.url);
             return result;
         }
     }
@@ -329,7 +329,7 @@ ShareResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(error, 8);
+            encoder0.encode(this.error, 8);
         }
     
         /**
@@ -356,7 +356,7 @@ ShareResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(error);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.error);
             return result;
         }
     }

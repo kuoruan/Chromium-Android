@@ -19,9 +19,7 @@ public final class WebApkConstants {
     public static final String EXTRA_SOURCE = "org.chromium.chrome.browser.webapp_source";
     public static final String EXTRA_WEBAPK_PACKAGE_NAME =
             "org.chromium.chrome.browser.webapk_package_name";
-    // Whether the WebAPK should navigate to the URL in {@link EXTRA_URL} if the WebAPK is already
-    // open.
-    public static final String EXTRA_WEBAPK_FORCE_NAVIGATION =
+    public static final String EXTRA_FORCE_NAVIGATION =
             "org.chromium.chrome.browser.webapk_force_navigation";
 
     public static final String DEFAULT_HOST_BROWSER = "com.android.chrome";

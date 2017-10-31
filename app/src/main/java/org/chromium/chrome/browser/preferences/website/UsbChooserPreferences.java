@@ -19,6 +19,7 @@ import android.widget.TextView;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.help.HelpAndFeedback;
+import org.chromium.chrome.browser.preferences.PreferenceUtils;
 import org.chromium.chrome.browser.profiles.Profile;
 
 import java.util.ArrayList;
@@ -48,7 +49,7 @@ public class UsbChooserPreferences extends PreferenceFragment {
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        addPreferencesFromResource(R.xml.usb_chooser_preferences);
+        PreferenceUtils.addPreferencesFromResource(this, R.xml.usb_chooser_preferences);
         ListView listView = (ListView) getView().findViewById(android.R.id.list);
         mEmptyView = (TextView) getView().findViewById(android.R.id.empty);
         listView.setEmptyView(mEmptyView);
@@ -154,7 +155,7 @@ public class UsbChooserPreferences extends PreferenceFragment {
 
     private void resetList() {
         getPreferenceScreen().removeAll();
-        addPreferencesFromResource(R.xml.usb_chooser_preferences);
+        PreferenceUtils.addPreferencesFromResource(this, R.xml.usb_chooser_preferences);
 
         if (mPermissionsByObject.isEmpty() && mSearch.isEmpty() && mEmptyView != null) {
             mEmptyView.setText(R.string.website_settings_usb_no_devices);

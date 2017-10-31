@@ -87,13 +87,13 @@ public final class InsetsF extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(top, 8);
+        encoder0.encode(this.top, 8);
         
-        encoder0.encode(left, 12);
+        encoder0.encode(this.left, 12);
         
-        encoder0.encode(bottom, 16);
+        encoder0.encode(this.bottom, 16);
         
-        encoder0.encode(right, 20);
+        encoder0.encode(this.right, 20);
     }
 
     /**
@@ -126,10 +126,10 @@ public final class InsetsF extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(top);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(left);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(bottom);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(right);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.top);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.left);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.bottom);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.right);
         return result;
     }
 }

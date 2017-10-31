@@ -397,11 +397,11 @@ int scanResult, java.util.Map<String, String[]> matches) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(scanResult, 8);
+            encoder0.encode(this.scanResult, 8);
             
-            encoder0.encode(isComplete, 12, 0);
+            encoder0.encode(this.isComplete, 12, 0);
             
-            encoder0.encode(percentComplete, 16);
+            encoder0.encode(this.percentComplete, 16);
         }
     
         /**
@@ -432,9 +432,9 @@ int scanResult, java.util.Map<String, String[]> matches) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(scanResult);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(isComplete);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(percentComplete);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.scanResult);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isComplete);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.percentComplete);
             return result;
         }
     }
@@ -545,17 +545,17 @@ int scanResult, java.util.Map<String, String[]> matches) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(scanResult, 8);
+            encoder0.encode(this.scanResult, 8);
             
-            if (matches == null) {
+            if (this.matches == null) {
                 encoder0.encodeNullPointer(16, false);
             } else {
                 org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encoderForMap(16);
-                int size0 = matches.size();
+                int size0 = this.matches.size();
                 String[] keys0 = new String[size0];
                 String[][] values0 = new String[size0][];
                 int index0 = 0;
-                for (java.util.Map.Entry<String, String[]> entry0 : matches.entrySet()) {
+                for (java.util.Map.Entry<String, String[]> entry0 : this.matches.entrySet()) {
                     keys0[index0] = entry0.getKey();
                     values0[index0] = entry0.getValue();
                     ++index0;
@@ -613,8 +613,8 @@ int scanResult, java.util.Map<String, String[]> matches) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(scanResult);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(matches);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.scanResult);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.matches);
             return result;
         }
     }

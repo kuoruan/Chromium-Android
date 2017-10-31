@@ -1823,6 +1823,6 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
         }
         builder.append(mContext.getResources().getString(resId));
 
-        stripTab.setAccessibilityDescription(builder.toString());
+        stripTab.setAccessibilityDescription(builder.toString(), title);
     }
 }

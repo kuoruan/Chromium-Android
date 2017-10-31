@@ -79,10 +79,10 @@ public class TextScalePreference extends SeekBarPreference {
     private void updatePreview() {
         if (mPreview != null) {
             // Online body text tends to be around 13-16px. We ask the user to adjust the text scale
-            // until 13px text is legible, that way all body text will be legible (and since font
+            // until 12px text is legible, that way all body text will be legible (and since font
             // boosting approximately preserves relative font size differences, other text will be
             // bigger/smaller as appropriate).
-            final float smallestStandardWebPageFontSize = 13.0f;  // CSS px
+            final float smallestStandardWebPageFontSize = 12.0f; // CSS px
             mPreview.setTextSize(TypedValue.COMPLEX_UNIT_DIP,
                     smallestStandardWebPageFontSize * mFontSizePrefs.getFontScaleFactor());
         }

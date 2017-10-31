@@ -140,11 +140,15 @@ public class OfflinePageUtils {
 
         @Override
         public boolean isOfflinePage(Tab tab) {
+            if (tab == null) return false;
+
             WebContents webContents = tab.getWebContents();
             if (webContents == null) return false;
+
             OfflinePageBridge offlinePageBridge =
                     getInstance().getOfflinePageBridge(tab.getProfile());
             if (offlinePageBridge == null) return false;
+
             return offlinePageBridge.isOfflinePage(webContents);
         }
 

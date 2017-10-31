@@ -117,23 +117,23 @@ public final class DecoderBuffer extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(timestamp, 8, false);
+        encoder0.encode(this.timestamp, 8, false);
         
-        encoder0.encode(duration, 16, false);
+        encoder0.encode(this.duration, 16, false);
         
-        encoder0.encode(isEndOfStream, 24, 0);
+        encoder0.encode(this.isEndOfStream, 24, 0);
         
-        encoder0.encode(isKeyFrame, 24, 1);
+        encoder0.encode(this.isKeyFrame, 24, 1);
         
-        encoder0.encode(dataSize, 28);
+        encoder0.encode(this.dataSize, 28);
         
-        encoder0.encode(sideData, 32, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+        encoder0.encode(this.sideData, 32, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
         
-        encoder0.encode(decryptConfig, 40, true);
+        encoder0.encode(this.decryptConfig, 40, true);
         
-        encoder0.encode(frontDiscard, 48, false);
+        encoder0.encode(this.frontDiscard, 48, false);
         
-        encoder0.encode(backDiscard, 56, false);
+        encoder0.encode(this.backDiscard, 56, false);
     }
 
     /**
@@ -176,15 +176,15 @@ public final class DecoderBuffer extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(timestamp);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(duration);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(isEndOfStream);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(dataSize);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(isKeyFrame);
-        result = prime * result + java.util.Arrays.hashCode(sideData);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(decryptConfig);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(frontDiscard);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(backDiscard);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.timestamp);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.duration);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isEndOfStream);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.dataSize);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isKeyFrame);
+        result = prime * result + java.util.Arrays.hashCode(this.sideData);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.decryptConfig);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.frontDiscard);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.backDiscard);
         return result;
     }
 }

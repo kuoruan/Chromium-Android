@@ -92,15 +92,15 @@ public final class Origin extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(scheme, 8, false);
+        encoder0.encode(this.scheme, 8, false);
         
-        encoder0.encode(host, 16, false);
+        encoder0.encode(this.host, 16, false);
         
-        encoder0.encode(port, 24);
+        encoder0.encode(this.port, 24);
         
-        encoder0.encode(unique, 26, 0);
+        encoder0.encode(this.unique, 26, 0);
         
-        encoder0.encode(suborigin, 32, false);
+        encoder0.encode(this.suborigin, 32, false);
     }
 
     /**
@@ -135,11 +135,11 @@ public final class Origin extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(scheme);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(host);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(port);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(suborigin);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(unique);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.scheme);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.host);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.port);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.suborigin);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.unique);
         return result;
     }
 }

@@ -115,7 +115,7 @@ public class DownloadBackgroundTask extends NativeBackgroundTask {
 
     @Override
     public void reschedule(Context context) {
-        // TODO(shaktisahu): Called when system asks us to schedule the task again. (crbug/730786)
+        DownloadTaskScheduler.rescheduleAllTasks();
     }
 
     private native void nativeStartBackgroundTask(

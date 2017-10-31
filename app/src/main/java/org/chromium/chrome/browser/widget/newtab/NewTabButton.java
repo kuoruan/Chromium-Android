@@ -8,13 +8,16 @@ import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
+import android.support.graphics.drawable.VectorDrawableCompat;
 import android.util.AttributeSet;
 import android.widget.Button;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.device.DeviceClassManager;
 import org.chromium.chrome.browser.widget.animation.AnimatorProperties;
 
 import java.util.ArrayList;
@@ -25,8 +28,11 @@ import java.util.List;
  */
 public class NewTabButton extends Button implements Drawable.Callback {
 
-    private final Drawable mNormalDrawable;
-    private final Drawable mIncognitoDrawable;
+    private final ColorStateList mLightModeTint;
+    private final ColorStateList mDarkModeTint;
+    private Drawable mNormalDrawable;
+    private Drawable mIncognitoDrawable;
+    private VectorDrawableCompat mModernDrawable;
     private boolean mIsIncognito;
     private AnimatorSet mTransitionAnimation;
 
@@ -47,12 +53,21 @@ public class NewTabButton extends Button implements Drawable.Callback {
                 mIncognitoDrawable.getIntrinsicWidth(), mIncognitoDrawable.getIntrinsicHeight());
         mIncognitoDrawable.setCallback(this);
         mIsIncognito = false;
+        mLightModeTint =
+                ApiCompatibilityUtils.getColorStateList(getResources(), R.color.light_mode_tint);
+        mDarkModeTint =
+                ApiCompatibilityUtils.getColorStateList(getResources(), R.color.dark_mode_tint);
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int desiredWidth = Math.max(
-                mIncognitoDrawable.getIntrinsicWidth(), mNormalDrawable.getIntrinsicWidth());
+        int desiredWidth;
+        if (mModernDrawable != null) {
+            desiredWidth = mModernDrawable.getIntrinsicWidth();
+        } else {
+            desiredWidth = Math.max(
+                    mIncognitoDrawable.getIntrinsicWidth(), mNormalDrawable.getIntrinsicWidth());
+        }
         desiredWidth += getPaddingLeft() + getPaddingRight();
         widthMeasureSpec = MeasureSpec.makeMeasureSpec(desiredWidth, MeasureSpec.EXACTLY);
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -69,34 +84,54 @@ public class NewTabButton extends Button implements Drawable.Callback {
         canvas.save();
         if (!isRtl) canvas.translate(paddingStart, 0);
 
-        canvas.save();
-        canvas.translate(0, (getHeight() - mNormalDrawable.getIntrinsicHeight()) / 2.f);
-        if (isRtl) {
-            canvas.translate(widthWithoutPadding - mNormalDrawable.getIntrinsicWidth(), 0);
-        }
-        mNormalDrawable.draw(canvas);
-        canvas.restore();
-
-        if (mIsIncognito || (mTransitionAnimation != null && mTransitionAnimation.isRunning())) {
-            canvas.save();
-            canvas.translate(0, (getHeight() - mIncognitoDrawable.getIntrinsicHeight()) / 2.f);
-            if (isRtl) {
-                canvas.translate(widthWithoutPadding - mIncognitoDrawable.getIntrinsicWidth(), 0);
+        if (mModernDrawable != null) {
+            drawIcon(canvas, mModernDrawable, isRtl, widthWithoutPadding);
+        } else {
+            drawIcon(canvas, mNormalDrawable, isRtl, widthWithoutPadding);
+            if (mIsIncognito
+                    || (mTransitionAnimation != null && mTransitionAnimation.isRunning())) {
+                drawIcon(canvas, mIncognitoDrawable, isRtl, widthWithoutPadding);
             }
-            mIncognitoDrawable.draw(canvas);
-            canvas.restore();
         }
 
         canvas.restore();
     }
 
+    private void drawIcon(Canvas canvas, Drawable drawable, boolean isRtl, int widthNoPadding) {
+        canvas.save();
+        canvas.translate(0, (getHeight() - drawable.getIntrinsicHeight()) / 2.f);
+        if (isRtl) {
+            canvas.translate(widthNoPadding - drawable.getIntrinsicWidth(), 0);
+        }
+        drawable.draw(canvas);
+        canvas.restore();
+    }
+
     @Override
     public void invalidateDrawable(Drawable dr) {
-        if (dr == mIncognitoDrawable || dr == mNormalDrawable) {
+        if (dr == mIncognitoDrawable || dr == mNormalDrawable || dr == mModernDrawable) {
             invalidate();
         } else {
             super.invalidateDrawable(dr);
         }
+    }
+
+    /**
+     * Set the icon to use the drawable for Chrome Modern.
+     */
+    public void setIsModern() {
+        mModernDrawable = VectorDrawableCompat.create(
+                getContext().getResources(), R.drawable.new_tab_icon, getContext().getTheme());
+        mModernDrawable.setState(getDrawableState());
+        mModernDrawable.setTintList(DeviceClassManager.enableAccessibilityLayout() && mIsIncognito
+                        ? mLightModeTint
+                        : mDarkModeTint);
+        mModernDrawable.setBounds(
+                0, 0, mModernDrawable.getIntrinsicWidth(), mModernDrawable.getIntrinsicHeight());
+        mModernDrawable.setCallback(this);
+
+        mNormalDrawable = null;
+        mIncognitoDrawable = null;
     }
 
     /**
@@ -106,6 +141,14 @@ public class NewTabButton extends Button implements Drawable.Callback {
     public void setIsIncognito(boolean incognito) {
         if (mIsIncognito == incognito) return;
         mIsIncognito = incognito;
+
+        if (mModernDrawable != null) {
+            mModernDrawable.setTintList(
+                    DeviceClassManager.enableAccessibilityLayout() && mIsIncognito ? mLightModeTint
+                                                                                   : mDarkModeTint);
+            invalidateDrawable(mModernDrawable);
+            return;
+        }
 
         if (mTransitionAnimation != null) {
             mTransitionAnimation.cancel();
@@ -142,7 +185,11 @@ public class NewTabButton extends Button implements Drawable.Callback {
     protected void drawableStateChanged() {
         super.drawableStateChanged();
 
-        mNormalDrawable.setState(getDrawableState());
-        mIncognitoDrawable.setState(getDrawableState());
+        if (mModernDrawable != null) {
+            mModernDrawable.setState(getDrawableState());
+        } else {
+            mNormalDrawable.setState(getDrawableState());
+            mIncognitoDrawable.setState(getDrawableState());
+        }
     }
 }

@@ -32,7 +32,7 @@ public final class SensorInitParams extends org.chromium.mojo.bindings.Struct {
 
     private SensorInitParams(int version) {
         super(STRUCT_SIZE, version);
-        memory = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+        this.memory = org.chromium.mojo.system.InvalidHandle.INSTANCE;
     }
 
     public SensorInitParams() {
@@ -103,17 +103,17 @@ public final class SensorInitParams extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(memory, 8, false);
+        encoder0.encode(this.memory, 8, false);
         
-        encoder0.encode(mode, 12);
+        encoder0.encode(this.mode, 12);
         
-        encoder0.encode(bufferOffset, 16);
+        encoder0.encode(this.bufferOffset, 16);
         
-        encoder0.encode(defaultConfiguration, 24, false);
+        encoder0.encode(this.defaultConfiguration, 24, false);
         
-        encoder0.encode(maximumFrequency, 32);
+        encoder0.encode(this.maximumFrequency, 32);
         
-        encoder0.encode(minimumFrequency, 40);
+        encoder0.encode(this.minimumFrequency, 40);
     }
 
     /**
@@ -150,12 +150,12 @@ public final class SensorInitParams extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(memory);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(bufferOffset);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(defaultConfiguration);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(maximumFrequency);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(minimumFrequency);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.memory);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.bufferOffset);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mode);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.defaultConfiguration);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.maximumFrequency);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.minimumFrequency);
         return result;
     }
 }

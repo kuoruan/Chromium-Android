@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.media.router;
 import android.support.v7.media.MediaRouter;
 
 import org.chromium.base.ContextUtils;
+import org.chromium.base.Log;
 import org.chromium.base.SysUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
@@ -14,6 +15,7 @@ import org.chromium.base.annotations.JNINamespace;
 import org.chromium.chrome.browser.media.router.cast.CastMediaRouteProvider;
 import org.chromium.chrome.browser.media.router.cast.MediaSink;
 import org.chromium.chrome.browser.media.router.cast.MediaSource;
+import org.chromium.chrome.browser.media.router.cast.remoting.RemotingMediaRouteProvider;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,8 +33,17 @@ public class ChromeMediaRouter implements MediaRouteManager {
 
     private static final String TAG = "MediaRouter";
 
-    private static MediaRouteProvider.Builder sRouteProviderBuilder =
-            new CastMediaRouteProvider.Builder();
+    private static MediaRouteProvider.Factory sRouteProviderFactory =
+            new MediaRouteProvider.Factory() {
+                public void addProviders(MediaRouteManager manager) {
+                    MediaRouteProvider castProvider = CastMediaRouteProvider.create(manager);
+                    manager.addMediaRouteProvider(castProvider);
+
+                    MediaRouteProvider remotingProvider =
+                            RemotingMediaRouteProvider.create(manager);
+                    manager.addMediaRouteProvider(remotingProvider);
+                }
+            };
 
     // The pointer to the native object. Can be null only during tests.
     private final long mNativeMediaRouterAndroidBridge;
@@ -53,8 +64,8 @@ public class ChromeMediaRouter implements MediaRouteManager {
     }
 
     @VisibleForTesting
-    public static void setRouteProviderBuilderForTest(MediaRouteProvider.Builder builder) {
-        sRouteProviderBuilder = builder;
+    public static void setRouteProviderFactoryForTest(MediaRouteProvider.Factory factory) {
+        sRouteProviderFactory = factory;
     }
 
     @VisibleForTesting
@@ -95,6 +106,11 @@ public class ChromeMediaRouter implements MediaRouteManager {
             // TODO(mlamouri): happens with Robolectric.
             return null;
         }
+    }
+
+    @Override
+    public void addMediaRouteProvider(MediaRouteProvider provider) {
+        mRouteProviders.add(provider);
     }
 
     @Override
@@ -172,9 +188,7 @@ public class ChromeMediaRouter implements MediaRouteManager {
     @CalledByNative
     public static ChromeMediaRouter create(long nativeMediaRouterAndroidBridge) {
         ChromeMediaRouter router = new ChromeMediaRouter(nativeMediaRouterAndroidBridge);
-        MediaRouteProvider provider = sRouteProviderBuilder.create(router);
-        if (provider != null) router.addMediaRouteProvider(provider);
-
+        sRouteProviderFactory.addProviders(router);
         return router;
     }
 
@@ -186,6 +200,7 @@ public class ChromeMediaRouter implements MediaRouteManager {
      */
     @CalledByNative
     public boolean startObservingMediaSinks(String sourceId) {
+        Log.d(TAG, "startObservingMediaSinks: " + sourceId);
         if (SysUtils.isLowEndDevice()) return false;
 
         for (MediaRouteProvider provider : mRouteProviders) {
@@ -202,6 +217,7 @@ public class ChromeMediaRouter implements MediaRouteManager {
      */
     @CalledByNative
     public void stopObservingMediaSinks(String sourceId) {
+        Log.d(TAG, "stopObservingMediaSinks: " + sourceId);
         for (MediaRouteProvider provider : mRouteProviders) {
             provider.stopObservingMediaSinks(sourceId);
         }
@@ -337,11 +353,6 @@ public class ChromeMediaRouter implements MediaRouteManager {
     @VisibleForTesting
     protected ChromeMediaRouter(long nativeMediaRouterAndroidBridge) {
         mNativeMediaRouterAndroidBridge = nativeMediaRouterAndroidBridge;
-    }
-
-    @VisibleForTesting
-    protected void addMediaRouteProvider(MediaRouteProvider provider) {
-        mRouteProviders.add(provider);
     }
 
     private MediaSink getSink(String sourceId, int index) {

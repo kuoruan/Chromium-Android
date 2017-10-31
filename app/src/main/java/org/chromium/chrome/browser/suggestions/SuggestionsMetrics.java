@@ -63,6 +63,18 @@ public abstract class SuggestionsMetrics {
         RecordUserAction.record("Suggestions.Card.SwipedAway");
     }
 
+    public static void recordContextualSuggestionOpened() {
+        RecordUserAction.record("Suggestions.ContextualSuggestion.Open");
+    }
+
+    public static void recordContextualSuggestionsCarouselShown() {
+        RecordUserAction.record("Suggestions.Contextual.Carousel.Shown");
+    }
+
+    public static void recordContextualSuggestionsCarouselScrolled() {
+        RecordUserAction.record("Suggestions.Contextual.Carousel.Scrolled");
+    }
+
     // Effect/Purpose of the interactions. Most are recorded in |content_suggestions_metrics.h|
 
     public static void recordActionViewAll() {
@@ -78,15 +90,12 @@ public abstract class SuggestionsMetrics {
     public static void recordVisit(Tab tab, SnippetArticle suggestion) {
         @CategoryInt
         final int category = suggestion.mCategory;
-        NavigationRecorder.record(tab, new Callback<NavigationRecorder.VisitData>() {
-            @Override
-            public void onResult(NavigationRecorder.VisitData visit) {
-                if (NewTabPage.isNTPUrl(visit.endUrl)) {
-                    RecordUserAction.record("MobileNTP.Snippets.VisitEndBackInNTP");
-                }
-                RecordUserAction.record("MobileNTP.Snippets.VisitEnd");
-                SuggestionsEventReporterBridge.onSuggestionTargetVisited(category, visit.duration);
+        NavigationRecorder.record(tab, visit -> {
+            if (NewTabPage.isNTPUrl(visit.endUrl)) {
+                RecordUserAction.record("MobileNTP.Snippets.VisitEndBackInNTP");
             }
+            RecordUserAction.record("MobileNTP.Snippets.VisitEnd");
+            SuggestionsEventReporterBridge.onSuggestionTargetVisited(category, visit.duration);
         });
     }
 
@@ -124,6 +133,18 @@ public abstract class SuggestionsMetrics {
     }
 
     /**
+     * @return A {@link DurationTracker} to notify to report how long the spinner is visible
+     * for.
+     */
+    public static DurationTracker getSpinnerVisibilityReporter() {
+        return new DurationTracker((duration) -> {
+            RecordHistogram.recordTimesHistogram(
+                    "ContentSuggestions.FetchPendingSpinner.VisibleDuration", duration,
+                    TimeUnit.MILLISECONDS);
+        });
+    }
+
+    /**
      * Measures the amount of time it takes for date formatting in order to track StrictMode
      * violations.
      * See https://crbug.com/639877
@@ -151,6 +172,35 @@ public abstract class SuggestionsMetrics {
 
         public void reset() {
             mFired = false;
+        }
+    }
+
+    /**
+     * Utility class to track the duration of an event. Call {@link #startTracking()} and
+     * {@link #endTracking()} to notify about the key moments. These methods are no-ops when called
+     * while tracking is not in the expected state.
+     */
+    public static class DurationTracker {
+        private long mTrackingStartTimeMs;
+        private final Callback<Long> mTrackingCompleteCallback;
+
+        private DurationTracker(Callback<Long> trackingCompleteCallback) {
+            mTrackingCompleteCallback = trackingCompleteCallback;
+        }
+
+        public void startTracking() {
+            if (isTracking()) return;
+            mTrackingStartTimeMs = System.currentTimeMillis();
+        }
+
+        public void endTracking() {
+            if (!isTracking()) return;
+            mTrackingCompleteCallback.onResult(System.currentTimeMillis() - mTrackingStartTimeMs);
+            mTrackingStartTimeMs = 0;
+        }
+
+        private boolean isTracking() {
+            return mTrackingStartTimeMs > 0;
         }
     }
 }

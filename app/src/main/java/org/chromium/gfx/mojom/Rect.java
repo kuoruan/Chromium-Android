@@ -87,13 +87,13 @@ public final class Rect extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(x, 8);
+        encoder0.encode(this.x, 8);
         
-        encoder0.encode(y, 12);
+        encoder0.encode(this.y, 12);
         
-        encoder0.encode(width, 16);
+        encoder0.encode(this.width, 16);
         
-        encoder0.encode(height, 20);
+        encoder0.encode(this.height, 20);
     }
 
     /**
@@ -126,10 +126,10 @@ public final class Rect extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(x);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(y);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(width);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(height);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.x);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.y);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.width);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.height);
         return result;
     }
 }

@@ -149,34 +149,22 @@ public class DownloadController {
         TextView dialogText = (TextView) view.findViewById(R.id.text);
         dialogText.setText(R.string.missing_storage_permission_download_education_text);
 
-        final PermissionCallback permissionCallback = new PermissionCallback() {
-            @Override
-            public void onRequestPermissionsResult(String[] permissions, int[] grantResults) {
-                nativeOnAcquirePermissionResult(callbackId,
+        final PermissionCallback permissionCallback =
+                (permissions, grantResults) -> nativeOnAcquirePermissionResult(callbackId,
                         grantResults.length > 0
                                 && grantResults[0] == PackageManager.PERMISSION_GRANTED,
                         null);
-            }
-        };
 
         AlertDialog.Builder builder =
                 new AlertDialog.Builder(activity, R.style.AlertDialogTheme)
                         .setView(view)
                         .setPositiveButton(R.string.infobar_update_permissions_button_text,
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        windowAndroid.requestPermissions(
-                                                new String[] {permission.WRITE_EXTERNAL_STORAGE},
-                                                permissionCallback);
-                                    }
-                                })
-                        .setOnCancelListener(new DialogInterface.OnCancelListener() {
-                            @Override
-                            public void onCancel(DialogInterface dialog) {
-                                nativeOnAcquirePermissionResult(callbackId, false, null);
-                            }
-                        });
+                                (DialogInterface.OnClickListener) (dialog, id) -> windowAndroid
+                                        .requestPermissions(
+                                        new String[]{permission.WRITE_EXTERNAL_STORAGE},
+                                        permissionCallback))
+                        .setOnCancelListener(
+                                dialog -> nativeOnAcquirePermissionResult(callbackId, false, null));
         builder.create().show();
     }
 

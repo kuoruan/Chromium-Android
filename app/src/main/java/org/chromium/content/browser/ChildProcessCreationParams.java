@@ -74,13 +74,18 @@ public class ChildProcessCreationParams {
     private final boolean mIsSandboxedServiceExternal;
     private final int mLibraryProcessType;
     private final boolean mBindToCallerCheck;
+    // Use only the explicit WebContents.setImportance signal, and ignore other implicit
+    // signals in content.
+    private final boolean mIgnoreVisibilityForImportance;
 
     public ChildProcessCreationParams(String packageNameForSandboxedService,
-            boolean isExternalSandboxedService, int libraryProcessType, boolean bindToCallerCheck) {
+            boolean isExternalSandboxedService, int libraryProcessType, boolean bindToCallerCheck,
+            boolean ignoreVisibilityForImportance) {
         mPackageNameForSandboxedService = packageNameForSandboxedService;
         mIsSandboxedServiceExternal = isExternalSandboxedService;
         mLibraryProcessType = libraryProcessType;
         mBindToCallerCheck = bindToCallerCheck;
+        mIgnoreVisibilityForImportance = ignoreVisibilityForImportance;
     }
 
     public String getPackageNameForSandboxedService() {
@@ -93,6 +98,10 @@ public class ChildProcessCreationParams {
 
     public boolean getBindToCallerCheck() {
         return mBindToCallerCheck;
+    }
+
+    public boolean getIgnoreVisibilityForImportance() {
+        return mIgnoreVisibilityForImportance;
     }
 
     public void addIntentExtras(Bundle extras) {

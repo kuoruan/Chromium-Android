@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+<string name="autofill_popup_content_description">"目前显示的是“自动填充”弹出式窗口"</string>
+</resources>

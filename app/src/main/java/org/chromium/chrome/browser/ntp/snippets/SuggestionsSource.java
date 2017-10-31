@@ -100,10 +100,11 @@ public interface SuggestionsSource {
      * Fetches new suggestions.
      * @param category the category to fetch new suggestions for.
      * @param displayedSuggestionIds ids of suggestions already known and that we want to keep.
-     * @param callback The callback to run with the received suggestions.
+     * @param successCallback The callback to run with the received suggestions.
+     * @param failureRunnable The runnable to be run if the fetch fails.
      */
     void fetchSuggestions(@CategoryInt int category, String[] displayedSuggestionIds,
-            Callback<List<SnippetArticle>> callback);
+            Callback<List<SnippetArticle>> successCallback, Runnable failureRunnable);
 
     /**
      * Fetches suggestions related to the provided URL.
@@ -111,6 +112,12 @@ public interface SuggestionsSource {
      * @param callback The callback to run with the received suggestions.
      */
     void fetchContextualSuggestions(String url, Callback<List<SnippetArticle>> callback);
+
+    /**
+     * Fetches the thumbnail image for a contextual suggestion. A {@code null} Bitmap is returned if
+     * no image is available.
+     */
+    void fetchContextualSuggestionImage(SnippetArticle suggestion, Callback<Bitmap> callback);
 
     /**
      * Tells the source to dismiss the content suggestion.

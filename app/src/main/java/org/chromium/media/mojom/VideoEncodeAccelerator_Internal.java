@@ -357,15 +357,15 @@ int bitrate, int framerate) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(inputFormat, 8);
+            encoder0.encode(this.inputFormat, 8);
             
-            encoder0.encode(outputProfile, 12);
+            encoder0.encode(this.outputProfile, 12);
             
-            encoder0.encode(inputVisibleSize, 16, false);
+            encoder0.encode(this.inputVisibleSize, 16, false);
             
-            encoder0.encode(initialBitrate, 24);
+            encoder0.encode(this.initialBitrate, 24);
             
-            encoder0.encode(client, 28, false, VideoEncodeAcceleratorClient.MANAGER);
+            encoder0.encode(this.client, 28, false, VideoEncodeAcceleratorClient.MANAGER);
         }
     
         /**
@@ -400,11 +400,11 @@ int bitrate, int framerate) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(inputFormat);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(inputVisibleSize);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(outputProfile);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(initialBitrate);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(client);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.inputFormat);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.inputVisibleSize);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.outputProfile);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.initialBitrate);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.client);
             return result;
         }
     }
@@ -469,7 +469,7 @@ int bitrate, int framerate) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(result, 8, 0);
+            encoder0.encode(this.result, 8, 0);
         }
     
         /**
@@ -496,7 +496,7 @@ int bitrate, int framerate) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(result);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.result);
             return result;
         }
     }
@@ -628,9 +628,9 @@ int bitrate, int framerate) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(frame, 8, false);
+            encoder0.encode(this.frame, 8, false);
             
-            encoder0.encode(forceKeyframe, 16, 0);
+            encoder0.encode(this.forceKeyframe, 16, 0);
         }
     
         /**
@@ -659,8 +659,8 @@ int bitrate, int framerate) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(frame);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(forceKeyframe);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.frame);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.forceKeyframe);
             return result;
         }
     }
@@ -816,7 +816,7 @@ int bitrate, int framerate) {
     
         private VideoEncodeAcceleratorUseOutputBitstreamBufferParams(int version) {
             super(STRUCT_SIZE, version);
-            buffer = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+            this.buffer = org.chromium.mojo.system.InvalidHandle.INSTANCE;
         }
     
         public VideoEncodeAcceleratorUseOutputBitstreamBufferParams() {
@@ -869,9 +869,9 @@ int bitrate, int framerate) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(bitstreamBufferId, 8);
+            encoder0.encode(this.bitstreamBufferId, 8);
             
-            encoder0.encode(buffer, 12, false);
+            encoder0.encode(this.buffer, 12, false);
         }
     
         /**
@@ -900,8 +900,8 @@ int bitrate, int framerate) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(bitstreamBufferId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(buffer);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.bitstreamBufferId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.buffer);
             return result;
         }
     }
@@ -971,9 +971,9 @@ int bitrate, int framerate) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(bitrate, 8);
+            encoder0.encode(this.bitrate, 8);
             
-            encoder0.encode(framerate, 12);
+            encoder0.encode(this.framerate, 12);
         }
     
         /**
@@ -1002,8 +1002,8 @@ int bitrate, int framerate) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(bitrate);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(framerate);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.bitrate);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.framerate);
             return result;
         }
     }

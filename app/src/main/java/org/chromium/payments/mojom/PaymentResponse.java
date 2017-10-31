@@ -103,19 +103,19 @@ public final class PaymentResponse extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(methodName, 8, false);
+        encoder0.encode(this.methodName, 8, false);
         
-        encoder0.encode(stringifiedDetails, 16, false);
+        encoder0.encode(this.stringifiedDetails, 16, false);
         
-        encoder0.encode(shippingAddress, 24, true);
+        encoder0.encode(this.shippingAddress, 24, true);
         
-        encoder0.encode(shippingOption, 32, true);
+        encoder0.encode(this.shippingOption, 32, true);
         
-        encoder0.encode(payerName, 40, true);
+        encoder0.encode(this.payerName, 40, true);
         
-        encoder0.encode(payerEmail, 48, true);
+        encoder0.encode(this.payerEmail, 48, true);
         
-        encoder0.encode(payerPhone, 56, true);
+        encoder0.encode(this.payerPhone, 56, true);
     }
 
     /**
@@ -154,13 +154,13 @@ public final class PaymentResponse extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(methodName);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(stringifiedDetails);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(shippingAddress);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(shippingOption);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(payerName);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(payerEmail);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(payerPhone);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.methodName);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.stringifiedDetails);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.shippingAddress);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.shippingOption);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.payerName);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.payerEmail);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.payerPhone);
         return result;
     }
 }

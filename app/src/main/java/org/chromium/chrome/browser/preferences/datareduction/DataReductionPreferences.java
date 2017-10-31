@@ -125,9 +125,9 @@ public class DataReductionPreferences extends PreferenceFragment {
         getPreferenceScreen().removeAll();
         createDataReductionSwitch(isEnabled);
         if (isEnabled) {
-            addPreferencesFromResource(R.xml.data_reduction_preferences);
+            PreferenceUtils.addPreferencesFromResource(this, R.xml.data_reduction_preferences);
         } else {
-            addPreferencesFromResource(R.xml.data_reduction_preferences_off);
+            PreferenceUtils.addPreferencesFromResource(this, R.xml.data_reduction_preferences_off);
         }
         mIsEnabled = isEnabled;
     }

@@ -141,8 +141,7 @@ public class TabStateBrowserControlsVisibilityDelegate
         enableHidingBrowserControls &= !url.startsWith(UrlConstants.CHROME_NATIVE_URL_PREFIX);
 
         int securityState = mTab.getSecurityLevel();
-        enableHidingBrowserControls &= (securityState != ConnectionSecurityLevel.DANGEROUS
-                && securityState != ConnectionSecurityLevel.SECURITY_WARNING);
+        enableHidingBrowserControls &= (securityState != ConnectionSecurityLevel.DANGEROUS);
 
         enableHidingBrowserControls &= !AccessibilityUtil.isAccessibilityEnabled();
 

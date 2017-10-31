@@ -6,7 +6,9 @@ package org.chromium.chrome.browser.widget;
 
 import android.content.Context;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
+import android.view.accessibility.AccessibilityEvent;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 
@@ -57,8 +59,10 @@ public class OverviewListLayout extends Layout implements AccessibilityTabModelA
 
         if (container == null || mTabModelWrapper.getParent() != null) return;
 
-        ((ViewGroup) container.findViewById(R.id.overview_list_layout_holder))
-                .addView(mTabModelWrapper);
+        ViewGroup overviewList =
+                (ViewGroup) container.findViewById(R.id.overview_list_layout_holder);
+        overviewList.setVisibility(View.VISIBLE);
+        overviewList.addView(mTabModelWrapper);
     }
 
     @Override
@@ -152,7 +156,10 @@ public class OverviewListLayout extends Layout implements AccessibilityTabModelA
         if (mTabModelSelector != null) mTabModelSelector.commitAllTabClosures();
         if (mTabModelWrapper != null) {
             ViewGroup parent = (ViewGroup) mTabModelWrapper.getParent();
-            if (parent != null) parent.removeView(mTabModelWrapper);
+            if (parent != null) {
+                parent.setVisibility(View.GONE);
+                parent.removeView(mTabModelWrapper);
+            }
         }
     }
 
@@ -202,5 +209,22 @@ public class OverviewListLayout extends Layout implements AccessibilityTabModelA
     @Override
     protected SceneLayer getSceneLayer() {
         return mSceneLayer;
+    }
+
+    /**
+     * Set whether or not the accessibility tab switcher is visible (from an accessibility
+     * perspective), or whether it is obscured by another view.
+     * @param isVisible Whether or not accessibility tab switcher is visible.
+     */
+    public void updateAccessibilityVisibility(boolean isVisible) {
+        if (mTabModelWrapper == null) return;
+
+        int importantForAccessibility = isVisible
+                ? View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+                : View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS;
+        if (mTabModelWrapper.getImportantForAccessibility() != importantForAccessibility) {
+            mTabModelWrapper.setImportantForAccessibility(importantForAccessibility);
+            mTabModelWrapper.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED);
+        }
     }
 }

@@ -83,11 +83,11 @@ public final class NfcPushOptions extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(target, 8);
+        encoder0.encode(this.target, 8);
         
-        encoder0.encode(ignoreRead, 12, 0);
+        encoder0.encode(this.ignoreRead, 12, 0);
         
-        encoder0.encode(timeout, 16);
+        encoder0.encode(this.timeout, 16);
     }
 
     /**
@@ -118,9 +118,9 @@ public final class NfcPushOptions extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(target);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(timeout);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(ignoreRead);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.target);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.timeout);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.ignoreRead);
         return result;
     }
 }

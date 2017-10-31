@@ -77,9 +77,9 @@ public final class Vector2dF extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(x, 8);
+        encoder0.encode(this.x, 8);
         
-        encoder0.encode(y, 12);
+        encoder0.encode(this.y, 12);
     }
 
     /**
@@ -108,8 +108,8 @@ public final class Vector2dF extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(x);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(y);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.x);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.y);
         return result;
     }
 }

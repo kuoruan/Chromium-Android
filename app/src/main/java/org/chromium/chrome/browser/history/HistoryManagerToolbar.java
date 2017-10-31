@@ -77,9 +77,8 @@ public class HistoryManagerToolbar extends SelectableListToolbar<HistoryItem> {
     @Override
     protected void onDataChanged(int numItems) {
         super.onDataChanged(numItems);
-        getMenu()
-                .findItem(R.id.info_menu_id)
-                .setVisible(mManager.shouldShowInfoButton() && !mIsSearching && numItems > 0);
+        updateInfoMenuItem(
+                mManager.shouldShowInfoButton(), mManager.shouldShowInfoHeaderIfAvailable());
     }
 
     /**

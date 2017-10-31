@@ -227,13 +227,13 @@ int type, int reason, String description, org.chromium.mojo.bindings.InterfaceRe
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(type, 8);
+            encoder0.encode(this.type, 8);
             
-            encoder0.encode(reason, 12);
+            encoder0.encode(this.reason, 12);
             
-            encoder0.encode(description, 16, false);
+            encoder0.encode(this.description, 16, false);
             
-            encoder0.encode(wakeLock, 24, false);
+            encoder0.encode(this.wakeLock, 24, false);
         }
     
         /**
@@ -266,10 +266,10 @@ int type, int reason, String description, org.chromium.mojo.bindings.InterfaceRe
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(type);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(reason);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(description);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(wakeLock);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.type);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.reason);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.description);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.wakeLock);
             return result;
         }
     }

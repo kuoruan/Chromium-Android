@@ -32,7 +32,7 @@ public class SavePageRequest {
      *     request.
      * @param clientIdId a String that will be the ID of the client ID of this request.
      */
-    @CalledByNative("SavePageRequest")
+    @CalledByNative
     public static SavePageRequest create(
             int state, long requestId, String url, String clientIdNamespace, String clientIdId) {
         return new SavePageRequest(

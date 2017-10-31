@@ -12,17 +12,18 @@
         xmlns:chrome="http://schemas.android.com/apk/res-auto"
         style="@style/AppMenuItem"
         android:layout_width="match_parent"
-        android:layout_height="?android:attr/listPreferredItemHeightSmall" >
+        android:layout_height="wrap_content" >
 
         <TextView
             android:id="@+id/menu_item_text"
             android:textAppearance="?android:attr/textAppearanceLargePopupMenu"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_gravity="start"
             android:gravity="center_vertical"
-            android:singleLine="true"
+            android:paddingTop="13dp"
+            android:paddingBottom="13dp"
             android:paddingEnd="16dp" />
         <org.chromium.chrome.browser.widget.TintedImageView
             android:id="@+id/menu_item_icon"

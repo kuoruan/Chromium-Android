@@ -15,8 +15,8 @@ import org.chromium.chrome.browser.childaccounts.ChildAccountService;
  * Usage:
  * new AndroidEduAndChildAccountHelper() { override onParametersReady() }.start(appContext).
  */
-public abstract class AndroidEduAndChildAccountHelper extends Callback<Boolean>
-        implements AndroidEduOwnerCheckCallback {
+public abstract class AndroidEduAndChildAccountHelper
+        implements Callback<Boolean>, AndroidEduOwnerCheckCallback {
     private Boolean mIsAndroidEduDevice;
     private Boolean mHasChildAccount;
     // Abbreviated to < 20 chars.

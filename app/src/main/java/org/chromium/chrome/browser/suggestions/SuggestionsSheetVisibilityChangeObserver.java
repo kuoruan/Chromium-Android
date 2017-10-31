@@ -9,9 +9,11 @@ import android.support.annotation.CallSuper;
 
 import org.chromium.base.ActivityState;
 import org.chromium.base.ApplicationStatus;
+import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.BottomSheetContent;
+import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.StateChangeReason;
 import org.chromium.chrome.browser.widget.bottomsheet.EmptyBottomSheetObserver;
 
 /**
@@ -48,7 +50,7 @@ public abstract class SuggestionsSheetVisibilityChangeObserver
 
         // This event is swallowed when the observer is registered after the sheet is opened.
         // (e.g. Chrome starts on the NTP). This allows taking it into account.
-        if (mBottomSheet.isSheetOpen()) onSheetOpened();
+        if (mBottomSheet.isSheetOpen()) onSheetOpened(StateChangeReason.NONE);
     }
 
     public void onDestroy() {
@@ -75,14 +77,14 @@ public abstract class SuggestionsSheetVisibilityChangeObserver
 
     @Override
     @CallSuper
-    public void onSheetOpened() {
+    public void onSheetOpened(@StateChangeReason int reason) {
         mWasShownSinceLastOpen = false;
         onStateChange();
     }
 
     @Override
     @CallSuper
-    public void onSheetClosed() {
+    public void onSheetClosed(@StateChangeReason int reason) {
         onStateChange();
     }
 
@@ -112,6 +114,13 @@ public abstract class SuggestionsSheetVisibilityChangeObserver
     }
 
     /**
+     * @return Whether the observed sheet content is currently visible.
+     */
+    boolean isVisible() {
+        return mCurrentVisibility;
+    }
+
+    /**
      * Compares the current state of the bottom sheet and activity with the ones recorded at the
      * previous call and generates events based on the difference.
      * @see #onContentShown(boolean)
@@ -119,9 +128,13 @@ public abstract class SuggestionsSheetVisibilityChangeObserver
      * @see #onContentStateChanged(int)
      */
     private void onStateChange() {
-        boolean newVisibility = mBottomSheet.isSheetOpen()
-                && mBottomSheet.getCurrentSheetContent() == mContentObserved
-                && ApplicationStatus.getStateForActivity(mActivity) == ActivityState.RESUMED;
+        @ActivityState
+        int activityState = ApplicationStatus.getStateForActivity(mActivity);
+        boolean isActivityVisible =
+                activityState == ActivityState.RESUMED || activityState == ActivityState.PAUSED;
+
+        boolean newVisibility =
+                isActivityVisible && mBottomSheet.isSheetOpen() && isObservedContentCurrent();
 
         // As the visibility we track is the one for a specific sheet content rather than the
         // whole BottomSheet, we also need to reflect that in the state, marking it "peeking" here
@@ -149,5 +162,10 @@ public abstract class SuggestionsSheetVisibilityChangeObserver
             onContentStateChanged(newContentState);
             mCurrentContentState = newContentState;
         }
+    }
+
+    @VisibleForTesting
+    protected boolean isObservedContentCurrent() {
+        return mContentObserved == mBottomSheet.getCurrentSheetContent();
     }
 }

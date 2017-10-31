@@ -26,7 +26,10 @@ public interface MediaDrmStorage extends org.chromium.mojo.bindings.Interface {
 
 
     void initialize(
-org.chromium.url.mojom.Origin origin);
+
+InitializeResponse callback);
+
+    interface InitializeResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<org.chromium.mojo.common.mojom.UnguessableToken> { }
 
 
 

@@ -96,6 +96,32 @@
             android:src="@drawable/btn_mic" />
     </LinearLayout>
 
+    <!-- Chrome Home promo -->
+    <LinearLayout
+        android:id="@+id/chrome_home_promo_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:gravity="center_vertical"
+        android:visibility="gone">
+        <org.chromium.chrome.browser.widget.TintedImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_new_releases_black_24dp" />
+        <org.chromium.ui.widget.TextViewWithClickableSpans
+            android:id="@+id/chrome_home_promo_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:textAppearance="@style/BlackHint2"
+            chrome:leading="20sp" />
+    </LinearLayout>
+
     <!-- Middle spacer -->
     <View
         android:id="@+id/ntp_middle_spacer"
@@ -104,17 +130,7 @@
         android:layout_weight="0"
         android:visibility="invisible" />
 
-    <!-- Site suggestion tile grid -->
-    <org.chromium.chrome.browser.suggestions.TileGridLayout
-        android:id="@+id/tile_grid_layout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:layout_marginStart="12dp"
-        android:layout_marginEnd="12dp"
-        android:layout_gravity="center_horizontal"
-        android:paddingTop="@dimen/tile_grid_layout_padding_top"
-        android:paddingBottom="4dp" />
+    <!-- Insertion point of the SiteSectionView, see NewTabPageLayout#insertSiteSection() -->
 
     <!-- Site suggestion tile grid placeholder -->
     <ViewStub

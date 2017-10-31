@@ -39,7 +39,9 @@ public class SystemDownloadNotifier implements DownloadNotifier, Observer {
     private static final int DOWNLOAD_NOTIFICATION_TYPE_REMOVE_NOTIFICATION = 7;
 
     private final Context mApplicationContext;
-    @Nullable private DownloadNotificationService mBoundService;
+
+    @Nullable
+    private DownloadNotificationService mBoundService;
     private Set<String> mActiveDownloads = new HashSet<String>();
     private ArrayList<PendingNotificationInfo> mPendingNotifications =
             new ArrayList<PendingNotificationInfo>();
@@ -82,8 +84,9 @@ public class SystemDownloadNotifier implements DownloadNotifier, Observer {
         @Override
         public void onServiceConnected(ComponentName className, IBinder service) {
             if (!(service instanceof DownloadNotificationService.LocalBinder)) {
-                Log.w(TAG, "Not from DownloadNotificationService, do not connect."
-                        + " Component name: " + className);
+                Log.w(TAG,
+                        "Not from DownloadNotificationService, do not connect."
+                                + " Component name: " + className);
                 assert false;
                 return;
             }
@@ -220,7 +223,6 @@ public class SystemDownloadNotifier implements DownloadNotifier, Observer {
     @Override
     public void resumePendingDownloads() {
         if (!DownloadNotificationService.isTrackingResumableDownloads(mApplicationContext)) return;
-
         updateDownloadNotification(
                 new PendingNotificationInfo(DOWNLOAD_NOTIFICATION_TYPE_RESUME_ALL, null), true);
     }
@@ -274,9 +276,8 @@ public class SystemDownloadNotifier implements DownloadNotifier, Observer {
                         info.getIsTransient(), info.getIcon());
                 break;
             case DOWNLOAD_NOTIFICATION_TYPE_PAUSE:
-                mBoundService.notifyDownloadPaused(
-                        info.getContentId(), info.getFileName(), true, false, info.isOffTheRecord(),
-                        info.getIsTransient(), info.getIcon());
+                mBoundService.notifyDownloadPaused(info.getContentId(), info.getFileName(), true,
+                        false, info.isOffTheRecord(), info.getIsTransient(), info.getIcon());
                 break;
             case DOWNLOAD_NOTIFICATION_TYPE_INTERRUPT:
                 mBoundService.notifyDownloadPaused(info.getContentId(), info.getFileName(),

@@ -68,16 +68,4 @@
 
     </TableLayout>
 
-    <Button
-        android:id="@+id/data_reduction_reset_statistics"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="24dp"
-        android:text="@string/data_reduction_usage_reset_statistics_button"
-        android:textAllCaps="true"
-        android:textColor="@color/light_active_color"
-        android:textSize="14sp"
-        style="@style/ButtonCompatBorderless" />
-
 </org.chromium.chrome.browser.preferences.datareduction.DataReductionSiteBreakdownView>

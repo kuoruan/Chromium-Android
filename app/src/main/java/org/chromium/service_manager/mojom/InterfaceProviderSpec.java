@@ -145,15 +145,15 @@ public final class InterfaceProviderSpec extends org.chromium.mojo.bindings.Stru
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        if (provides == null) {
+        if (this.provides == null) {
             encoder0.encodeNullPointer(8, false);
         } else {
             org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encoderForMap(8);
-            int size0 = provides.size();
+            int size0 = this.provides.size();
             String[] keys0 = new String[size0];
             InterfaceSet[] values0 = new InterfaceSet[size0];
             int index0 = 0;
-            for (java.util.Map.Entry<String, InterfaceSet> entry0 : provides.entrySet()) {
+            for (java.util.Map.Entry<String, InterfaceSet> entry0 : this.provides.entrySet()) {
                 keys0[index0] = entry0.getKey();
                 values0[index0] = entry0.getValue();
                 ++index0;
@@ -176,15 +176,15 @@ public final class InterfaceProviderSpec extends org.chromium.mojo.bindings.Stru
             }
         }
         
-        if (requires == null) {
+        if (this.requires == null) {
             encoder0.encodeNullPointer(16, false);
         } else {
             org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encoderForMap(16);
-            int size0 = requires.size();
+            int size0 = this.requires.size();
             String[] keys0 = new String[size0];
             CapabilitySet[] values0 = new CapabilitySet[size0];
             int index0 = 0;
-            for (java.util.Map.Entry<String, CapabilitySet> entry0 : requires.entrySet()) {
+            for (java.util.Map.Entry<String, CapabilitySet> entry0 : this.requires.entrySet()) {
                 keys0[index0] = entry0.getKey();
                 values0[index0] = entry0.getValue();
                 ++index0;
@@ -234,8 +234,8 @@ public final class InterfaceProviderSpec extends org.chromium.mojo.bindings.Stru
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(provides);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(requires);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.provides);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.requires);
         return result;
     }
 }

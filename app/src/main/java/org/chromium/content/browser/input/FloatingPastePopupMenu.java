@@ -92,12 +92,9 @@ public class FloatingPastePopupMenu implements PastePopupMenu {
             if (!mDelegate.canPasteAsPlainText()) {
                 menu.removeItem(R.id.select_action_menu_paste_as_plain_text);
             }
-            // TODO(ctzsm): Remove runtime title set after O SDK rolls.
-            MenuItem item = menu.findItem(R.id.select_action_menu_paste_as_plain_text);
-            if (item != null) {
-                item.setTitle(mContext.getResources().getIdentifier(
-                        "paste_as_plain_text", "string", "android"));
-            }
+
+            SelectionPopupController.setPasteAsPlainTextMenuItemTitle(menu);
+
             menu.removeItem(R.id.select_action_menu_cut);
             menu.removeItem(R.id.select_action_menu_copy);
             menu.removeItem(R.id.select_action_menu_share);

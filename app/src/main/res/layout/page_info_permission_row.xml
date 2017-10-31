@@ -23,8 +23,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_toEndOf="@id/page_info_permission_icon"
-        android:textColor="@color/page_info_popup_text"
-        android:textSize="14sp" />
+        android:textAppearance="@style/BlackBodyDefault" />
 
     <org.chromium.ui.widget.TextViewWithLeading
         android:id="@+id/page_info_permission_unavailable_message"
@@ -32,8 +31,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/page_info_permission_status"
         android:layout_toEndOf="@id/page_info_permission_icon"
-        android:textColor="@color/page_info_popup_text_link"
-        android:textSize="14sp"
+        android:textAppearance="@style/BlueLink2"
         android:visibility="gone"
         chrome:leading="20dp" />
 

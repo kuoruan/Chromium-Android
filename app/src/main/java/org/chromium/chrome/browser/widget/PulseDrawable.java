@@ -17,12 +17,12 @@ import android.os.SystemClock;
 import android.support.annotation.ColorInt;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v4.view.animation.PathInterpolatorCompat;
-import android.util.TypedValue;
 import android.view.animation.Interpolator;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContextUtils;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.MathUtils;
 
 /**
@@ -88,8 +88,10 @@ public class PulseDrawable extends Drawable implements Animatable {
      * @return A new {@link PulseDrawable} instance.
      */
     public static PulseDrawable createCircle(Context context) {
-        final int startingPulseRadiusPx = Math.round(TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, 16.f, context.getResources().getDisplayMetrics()));
+        final int startingPulseRadiusPx =
+                context.getResources().getDimensionPixelSize(FeatureUtilities.isChromeHomeEnabled()
+                                ? R.dimen.iph_pulse_chrome_home_baseline_radius
+                                : R.dimen.iph_pulse_baseline_radius);
 
         PulseDrawable.Painter painter = new PulseDrawable.Painter() {
             @Override

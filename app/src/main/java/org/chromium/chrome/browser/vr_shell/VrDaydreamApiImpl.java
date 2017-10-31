@@ -68,6 +68,15 @@ public class VrDaydreamApiImpl implements VrDaydreamApi {
     }
 
     @Override
+    public boolean launchInVr(final Intent intent) {
+        DaydreamApi daydreamApi = DaydreamApi.create(mContext);
+        if (daydreamApi == null) return false;
+        daydreamApi.launchInVr(intent);
+        daydreamApi.close();
+        return true;
+    }
+
+    @Override
     public boolean exitFromVr(int requestCode, final Intent intent) {
         Activity activity = WindowAndroid.activityFromContext(mContext);
         Assert.assertNotNull(activity);

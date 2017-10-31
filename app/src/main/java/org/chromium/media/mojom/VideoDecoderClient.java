@@ -29,4 +29,9 @@ public interface VideoDecoderClient extends org.chromium.mojo.bindings.Interface
 VideoFrame frame, boolean canReadWithoutStalling, org.chromium.mojo.common.mojom.UnguessableToken releaseToken);
 
 
+
+    void requestOverlayInfo(
+boolean restartForTransitions);
+
+
 }

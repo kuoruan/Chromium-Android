@@ -176,9 +176,4 @@ public interface LocationBar extends UrlBarDelegate {
      * @return Whether suggestions are being shown for the location bar.
      */
     boolean isSuggestionsListShown();
-
-    /**
-     * @return Whether the suggestions list is scrolled any amount.
-     */
-    boolean isSuggestionsListScrolled();
 }

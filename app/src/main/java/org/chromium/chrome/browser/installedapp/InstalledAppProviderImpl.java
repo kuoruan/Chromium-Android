@@ -194,8 +194,10 @@ public class InstalledAppProviderImpl implements InstalledAppProvider {
      * @param frameUrl Returns false if the Android package does not declare association with the
      *                origin of this URL. Can be null.
      */
-    private boolean isAppInstalledAndAssociatedWithOrigin(
+    public static boolean isAppInstalledAndAssociatedWithOrigin(
             String packageName, URI frameUrl, PackageManager pm) {
+        // TODO(yusufo): Move this to a better/shared location before crbug.com/749876 is closed.
+
         ThreadUtils.assertOnBackgroundThread();
 
         if (frameUrl == null) return false;

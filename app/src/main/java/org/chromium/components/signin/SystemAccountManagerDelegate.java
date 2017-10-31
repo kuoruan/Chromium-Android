@@ -8,7 +8,6 @@ import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
-import android.accounts.AccountManagerFuture;
 import android.accounts.AuthenticatorDescription;
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
@@ -20,12 +19,15 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PatternMatcher;
 import android.os.Process;
 import android.os.SystemClock;
 
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.GooglePlayServicesAvailabilityException;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Callback;
@@ -48,13 +50,22 @@ import java.util.concurrent.TimeUnit;
 public class SystemAccountManagerDelegate implements AccountManagerDelegate {
     private final AccountManager mAccountManager;
     private final ObserverList<AccountsChangeObserver> mObservers = new ObserverList<>();
+    private boolean mRegisterObserversCalled;
 
     private static final String TAG = "Auth";
 
     public SystemAccountManagerDelegate() {
-        mAccountManager = AccountManager.get(ContextUtils.getApplicationContext());
+        Context context = ContextUtils.getApplicationContext();
+        mAccountManager = AccountManager.get(context);
+    }
 
-        BroadcastReceiver accountsChangedBroadcastReceiver = new BroadcastReceiver() {
+    @SuppressWarnings("deprecation")
+    @Override
+    public void registerObservers() {
+        assert !mRegisterObserversCalled;
+
+        Context context = ContextUtils.getApplicationContext();
+        BroadcastReceiver receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(final Context context, final Intent intent) {
                 fireOnAccountsChangedNotification();
@@ -62,22 +73,53 @@ public class SystemAccountManagerDelegate implements AccountManagerDelegate {
         };
         IntentFilter accountsChangedIntentFilter = new IntentFilter();
         accountsChangedIntentFilter.addAction(AccountManager.LOGIN_ACCOUNTS_CHANGED_ACTION);
-        ContextUtils.getApplicationContext().registerReceiver(
-                accountsChangedBroadcastReceiver, accountsChangedIntentFilter);
+        context.registerReceiver(receiver, accountsChangedIntentFilter);
+
+        IntentFilter gmsPackageReplacedFilter = new IntentFilter();
+        gmsPackageReplacedFilter.addAction(Intent.ACTION_PACKAGE_REPLACED);
+        gmsPackageReplacedFilter.addDataScheme("package");
+        gmsPackageReplacedFilter.addDataPath(
+                "com.google.android.gms", PatternMatcher.PATTERN_PREFIX);
+
+        context.registerReceiver(receiver, gmsPackageReplacedFilter);
+
+        mRegisterObserversCalled = true;
+    }
+
+    protected void checkCanUseGooglePlayServices() throws AccountManagerDelegateException {
+        Context context = ContextUtils.getApplicationContext();
+        final int resultCode =
+                GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context);
+        if (resultCode == ConnectionResult.SUCCESS) {
+            return;
+        }
+
+        if (GoogleApiAvailability.getInstance().isUserResolvableError(resultCode)) {
+            throw new GmsAvailabilityException(
+                    String.format("Can't use Google Play Services: %s",
+                            GoogleApiAvailability.getInstance().getErrorString(resultCode)),
+                    resultCode);
+        }
     }
 
     @Override
     public void addObserver(AccountsChangeObserver observer) {
+        assert mRegisterObserversCalled : "Should call registerObservers first";
         mObservers.addObserver(observer);
     }
 
     @Override
     public void removeObserver(AccountsChangeObserver observer) {
-        mObservers.removeObserver(observer);
+        boolean success = mObservers.removeObserver(observer);
+        assert success : "Can't find observer";
     }
 
     @Override
     public Account[] getAccountsSync() throws AccountManagerDelegateException {
+        // Account seeding relies on GoogleAuthUtil.getAccountId to get GAIA ids,
+        // so don't report any accounts if Google Play Services are out of date.
+        checkCanUseGooglePlayServices();
+
         if (!hasGetAccountsPermission()) {
             return new Account[] {};
         }
@@ -161,32 +203,24 @@ public class SystemAccountManagerDelegate implements AccountManagerDelegate {
         ThreadUtils.assertOnUiThread();
         if (!hasManageAccountsPermission()) {
             if (callback != null) {
-                ThreadUtils.postOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        callback.onResult(false);
-                    }
-                });
+                ThreadUtils.postOnUiThread(() -> callback.onResult(false));
             }
             return;
         }
 
-        AccountManagerCallback<Bundle> realCallback = new AccountManagerCallback<Bundle>() {
-            @Override
-            public void run(AccountManagerFuture<Bundle> future) {
-                Bundle bundle = null;
-                try {
-                    bundle = future.getResult();
-                } catch (AuthenticatorException | IOException e) {
-                    Log.e(TAG, "Error while update credentials: ", e);
-                } catch (OperationCanceledException e) {
-                    Log.w(TAG, "Updating credentials was cancelled.");
-                }
-                boolean success = bundle != null
-                        && bundle.getString(AccountManager.KEY_ACCOUNT_TYPE) != null;
-                if (callback != null) {
-                    callback.onResult(success);
-                }
+        AccountManagerCallback<Bundle> realCallback = future -> {
+            Bundle bundle = null;
+            try {
+                bundle = future.getResult();
+            } catch (AuthenticatorException | IOException e) {
+                Log.e(TAG, "Error while update credentials: ", e);
+            } catch (OperationCanceledException e) {
+                Log.w(TAG, "Updating credentials was cancelled.");
+            }
+            boolean success =
+                    bundle != null && bundle.getString(AccountManager.KEY_ACCOUNT_TYPE) != null;
+            if (callback != null) {
+                callback.onResult(success);
             }
         };
         // Android 4.4 throws NullPointerException if null is passed

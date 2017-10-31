@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.preferences.autofill;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -32,6 +33,12 @@ abstract class AutofillCreditCardEditor extends AutofillEditorBase {
             Bundle savedInstanceState) {
         View v = super.onCreateView(inflater, container, savedInstanceState);
 
+        // Do not use autofill for the fields.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getActivity().getWindow().getDecorView().setImportantForAutofill(
+                    View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS);
+        }
+
         // Populate the billing address dropdown.
         ArrayAdapter<AutofillProfile> profilesAdapter = new ArrayAdapter<AutofillProfile>(
                 getActivity(), android.R.layout.simple_spinner_item);
@@ -44,7 +51,9 @@ abstract class AutofillCreditCardEditor extends AutofillEditorBase {
         List<AutofillProfile> profiles = PersonalDataManager.getInstance().getProfilesForSettings();
         for (int i = 0; i < profiles.size(); i++) {
             AutofillProfile profile = profiles.get(i);
-            if (profile.getIsLocal()) profilesAdapter.add(profile);
+            if (profile.getIsLocal() && !TextUtils.isEmpty(profile.getStreetAddress())) {
+                profilesAdapter.add(profile);
+            }
         }
 
         mBillingAddress =

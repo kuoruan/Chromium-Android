@@ -14,6 +14,7 @@ import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation;
 import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animatable;
 import org.chromium.chrome.browser.compositor.layouts.Layout.Orientation;
 import org.chromium.chrome.browser.compositor.layouts.components.LayoutTab;
+import org.chromium.chrome.browser.compositor.layouts.phone.StackLayout;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.ui.interpolators.BakedBezierInterpolator;
 
@@ -434,10 +435,12 @@ public abstract class StackAnimation {
      */
     protected float getStaticTabPosition() {
         // The y position of the tab will depend on whether or not the toolbar is at the top or
-        // bottom of the screen.
+        // bottom of the screen. All values are in DP.
         float yPos = -mBorderTopHeight;
         if (!FeatureUtilities.isChromeHomeEnabled()) {
             yPos += mHeight - mHeightMinusBrowserControls;
+        } else {
+            yPos -= StackLayout.MODERN_TOP_MARGIN_DP;
         }
         return yPos;
     }

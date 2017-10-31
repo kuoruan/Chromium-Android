@@ -115,9 +115,11 @@ String audioDeviceId, org.chromium.mojo.bindings.InterfaceRequest<Renderer> rend
 
         @Override
         public void createCdm(
-org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionModule> cdm) {
+String keySystem, org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionModule> cdm) {
 
             InterfaceFactoryCreateCdmParams _message = new InterfaceFactoryCreateCdmParams();
+
+            _message.keySystem = keySystem;
 
             _message.cdm = cdm;
 
@@ -201,7 +203,7 @@ org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionModule> cdm) {
                         InterfaceFactoryCreateCdmParams data =
                                 InterfaceFactoryCreateCdmParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().createCdm(data.cdm);
+                        getImpl().createCdm(data.keySystem, data.cdm);
                         return true;
                     }
             
@@ -308,7 +310,7 @@ org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionModule> cdm) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(audioDecoder, 8, false);
+            encoder0.encode(this.audioDecoder, 8, false);
         }
     
         /**
@@ -335,7 +337,7 @@ org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionModule> cdm) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(audioDecoder);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.audioDecoder);
             return result;
         }
     }
@@ -400,7 +402,7 @@ org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionModule> cdm) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(videoDecoder, 8, false);
+            encoder0.encode(this.videoDecoder, 8, false);
         }
     
         /**
@@ -427,7 +429,7 @@ org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionModule> cdm) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(videoDecoder);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoDecoder);
             return result;
         }
     }
@@ -497,9 +499,9 @@ org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionModule> cdm) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(audioDeviceId, 8, false);
+            encoder0.encode(this.audioDeviceId, 8, false);
             
-            encoder0.encode(renderer, 16, false);
+            encoder0.encode(this.renderer, 16, false);
         }
     
         /**
@@ -528,8 +530,8 @@ org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionModule> cdm) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(audioDeviceId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(renderer);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.audioDeviceId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.renderer);
             return result;
         }
     }
@@ -539,9 +541,10 @@ org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionModule> cdm) {
     
     static final class InterfaceFactoryCreateCdmParams extends org.chromium.mojo.bindings.Struct {
     
-        private static final int STRUCT_SIZE = 16;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public String keySystem;
         public org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionModule> cdm;
     
         private InterfaceFactoryCreateCdmParams(int version) {
@@ -581,7 +584,11 @@ org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionModule> cdm) {
                 result = new InterfaceFactoryCreateCdmParams(mainDataHeader.elementsOrVersion);
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
-                    result.cdm = decoder0.readInterfaceRequest(8, false);
+                    result.keySystem = decoder0.readString(8, false);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.cdm = decoder0.readInterfaceRequest(16, false);
                 }
             } finally {
                 decoder0.decreaseStackDepth();
@@ -594,7 +601,9 @@ org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionModule> cdm) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(cdm, 8, false);
+            encoder0.encode(this.keySystem, 8, false);
+            
+            encoder0.encode(this.cdm, 16, false);
         }
     
         /**
@@ -609,6 +618,8 @@ org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionModule> cdm) {
             if (getClass() != object.getClass())
                 return false;
             InterfaceFactoryCreateCdmParams other = (InterfaceFactoryCreateCdmParams) object;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.keySystem, other.keySystem))
+                return false;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.cdm, other.cdm))
                 return false;
             return true;
@@ -621,7 +632,8 @@ org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionModule> cdm) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(cdm);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.keySystem);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cdm);
             return result;
         }
     }

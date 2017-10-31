@@ -43,6 +43,11 @@
         android:persistent="false"
         android:title="@string/prefs_site_settings" />
 
+    <org.chromium.chrome.browser.preferences.ClearBrowsingDataCheckBoxPreference
+        android:key="clear_media_licenses_checkbox"
+        android:persistent="false"
+        android:title="@string/clear_media_licenses_title" />
+
     <org.chromium.chrome.browser.preferences.ButtonPreference
         android:key="clear_button"
         android:title="@string/clear_data_delete" />

@@ -93,19 +93,19 @@ public final class PaymentDetailsModifier extends org.chromium.mojo.bindings.Str
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(total, 8, true);
+        encoder0.encode(this.total, 8, true);
         
-        if (additionalDisplayItems == null) {
+        if (this.additionalDisplayItems == null) {
             encoder0.encodeNullPointer(16, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(additionalDisplayItems.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < additionalDisplayItems.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.additionalDisplayItems.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.additionalDisplayItems.length; ++i0) {
                 
-                encoder1.encode(additionalDisplayItems[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                encoder1.encode(this.additionalDisplayItems[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
         
-        encoder0.encode(methodData, 24, false);
+        encoder0.encode(this.methodData, 24, false);
     }
 
     /**
@@ -136,9 +136,9 @@ public final class PaymentDetailsModifier extends org.chromium.mojo.bindings.Str
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(total);
-        result = prime * result + java.util.Arrays.deepHashCode(additionalDisplayItems);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(methodData);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.total);
+        result = prime * result + java.util.Arrays.deepHashCode(this.additionalDisplayItems);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.methodData);
         return result;
     }
 }

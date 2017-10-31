@@ -12,8 +12,8 @@ import android.widget.PopupWindow;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.chrome.R;
 import org.chromium.ui.DropdownPopupWindow;
-import org.chromium.ui.R;
 import org.chromium.ui.base.WindowAndroid;
 
 /**
@@ -54,12 +54,7 @@ public class PasswordGenerationPopupBridge implements AdapterView.OnItemClickLis
             mPopup = null;
             // Prevent destroying the native counterpart when it's about to derefence its own
             // members in UpdateBoundsAndRedrawPopup().
-            new Handler().post(new Runnable() {
-                @Override
-                public void run() {
-                    onDismiss();
-                }
-            });
+            new Handler().post(() -> onDismiss());
         } else {
             mPopup = new DropdownPopupWindow(mContext, anchorView);
             mPopup.setOnItemClickListener(this);

@@ -3,15 +3,20 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/name"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/content"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:drawablePadding="20dp"
-    android:gravity="center_vertical"
-    android:minHeight="?android:attr/listPreferredItemHeightSmall"
-    android:paddingEnd="15dp"
-    android:paddingStart="15dp"
-    android:singleLine="true"
-    android:textAppearance="?android:attr/textAppearanceMedium"
-    android:textColor="@color/dark_mode_tint" />
+    android:layout_marginStart="@dimen/list_item_default_margin"
+    android:paddingTop="@dimen/list_item_top_bottom_padding"
+    android:paddingBottom="@dimen/list_item_top_bottom_padding"
+    android:orientation="horizontal" >
+
+    <include layout="@layout/modern_list_item_view" />
+
+    <org.chromium.chrome.browser.widget.TintedImageButton
+        android:id="@+id/selected_view"
+        style="@style/ListItemEndIcon"
+        android:src="@drawable/ic_check_googblue_24dp" />
+</LinearLayout>

@@ -50,7 +50,6 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
     public boolean emulateShaderPrecision;
     public boolean enableGpuServiceLogging;
     public boolean enableGpuServiceTracing;
-    public boolean enableEs3Apis;
     public boolean usePassthroughCmdDecoder;
 
     private GpuPreferences(int version) {
@@ -198,11 +197,7 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.enableEs3Apis = decoder0.readBoolean(11, 3);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.usePassthroughCmdDecoder = decoder0.readBoolean(11, 4);
+                result.usePassthroughCmdDecoder = decoder0.readBoolean(11, 3);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
@@ -228,69 +223,67 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(singleProcess, 8, 0);
+        encoder0.encode(this.singleProcess, 8, 0);
         
-        encoder0.encode(inProcessGpu, 8, 1);
+        encoder0.encode(this.inProcessGpu, 8, 1);
         
-        encoder0.encode(uiPrioritizeInGpuProcess, 8, 2);
+        encoder0.encode(this.uiPrioritizeInGpuProcess, 8, 2);
         
-        encoder0.encode(enableGpuScheduler, 8, 3);
+        encoder0.encode(this.enableGpuScheduler, 8, 3);
         
-        encoder0.encode(disableAcceleratedVideoDecode, 8, 4);
+        encoder0.encode(this.disableAcceleratedVideoDecode, 8, 4);
         
-        encoder0.encode(disableVaapiAcceleratedVideoEncode, 8, 5);
+        encoder0.encode(this.disableVaapiAcceleratedVideoEncode, 8, 5);
         
-        encoder0.encode(disableWebRtcHwEncoding, 8, 6);
+        encoder0.encode(this.disableWebRtcHwEncoding, 8, 6);
         
-        encoder0.encode(enableLowLatencyDxva, 8, 7);
+        encoder0.encode(this.enableLowLatencyDxva, 8, 7);
         
-        encoder0.encode(enableZeroCopyDxgiVideo, 9, 0);
+        encoder0.encode(this.enableZeroCopyDxgiVideo, 9, 0);
         
-        encoder0.encode(enableNv12DxgiVideo, 9, 1);
+        encoder0.encode(this.enableNv12DxgiVideo, 9, 1);
         
-        encoder0.encode(compileShaderAlwaysSucceeds, 9, 2);
+        encoder0.encode(this.compileShaderAlwaysSucceeds, 9, 2);
         
-        encoder0.encode(disableGlErrorLimit, 9, 3);
+        encoder0.encode(this.disableGlErrorLimit, 9, 3);
         
-        encoder0.encode(disableGlslTranslator, 9, 4);
+        encoder0.encode(this.disableGlslTranslator, 9, 4);
         
-        encoder0.encode(disableGpuDriverBugWorkarounds, 9, 5);
+        encoder0.encode(this.disableGpuDriverBugWorkarounds, 9, 5);
         
-        encoder0.encode(disableShaderNameHashing, 9, 6);
+        encoder0.encode(this.disableShaderNameHashing, 9, 6);
         
-        encoder0.encode(enableGpuCommandLogging, 9, 7);
+        encoder0.encode(this.enableGpuCommandLogging, 9, 7);
         
-        encoder0.encode(enableGpuDebugging, 10, 0);
+        encoder0.encode(this.enableGpuDebugging, 10, 0);
         
-        encoder0.encode(enableGpuServiceLoggingGpu, 10, 1);
+        encoder0.encode(this.enableGpuServiceLoggingGpu, 10, 1);
         
-        encoder0.encode(enableGpuDriverDebugLogging, 10, 2);
+        encoder0.encode(this.enableGpuDriverDebugLogging, 10, 2);
         
-        encoder0.encode(disableGpuProgramCache, 10, 3);
+        encoder0.encode(this.disableGpuProgramCache, 10, 3);
         
-        encoder0.encode(enforceGlMinimums, 10, 4);
+        encoder0.encode(this.enforceGlMinimums, 10, 4);
         
-        encoder0.encode(disableGpuShaderDiskCache, 10, 5);
+        encoder0.encode(this.disableGpuShaderDiskCache, 10, 5);
         
-        encoder0.encode(enableThreadedTextureMailboxes, 10, 6);
+        encoder0.encode(this.enableThreadedTextureMailboxes, 10, 6);
         
-        encoder0.encode(glShaderIntermOutput, 10, 7);
+        encoder0.encode(this.glShaderIntermOutput, 10, 7);
         
-        encoder0.encode(emulateShaderPrecision, 11, 0);
+        encoder0.encode(this.emulateShaderPrecision, 11, 0);
         
-        encoder0.encode(enableGpuServiceLogging, 11, 1);
+        encoder0.encode(this.enableGpuServiceLogging, 11, 1);
         
-        encoder0.encode(enableGpuServiceTracing, 11, 2);
+        encoder0.encode(this.enableGpuServiceTracing, 11, 2);
         
-        encoder0.encode(enableEs3Apis, 11, 3);
+        encoder0.encode(this.usePassthroughCmdDecoder, 11, 3);
         
-        encoder0.encode(usePassthroughCmdDecoder, 11, 4);
+        encoder0.encode(this.enableAcceleratedVpxDecode, 12);
         
-        encoder0.encode(enableAcceleratedVpxDecode, 12);
+        encoder0.encode(this.forceGpuMemAvailable, 16);
         
-        encoder0.encode(forceGpuMemAvailable, 16);
-        
-        encoder0.encode(gpuProgramCacheSize, 20);
+        encoder0.encode(this.gpuProgramCacheSize, 20);
     }
 
     /**
@@ -365,8 +358,6 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
             return false;
         if (this.enableGpuServiceTracing!= other.enableGpuServiceTracing)
             return false;
-        if (this.enableEs3Apis!= other.enableEs3Apis)
-            return false;
         if (this.usePassthroughCmdDecoder!= other.usePassthroughCmdDecoder)
             return false;
         return true;
@@ -379,38 +370,37 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(singleProcess);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(inProcessGpu);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(uiPrioritizeInGpuProcess);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(enableGpuScheduler);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(disableAcceleratedVideoDecode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(disableVaapiAcceleratedVideoEncode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(disableWebRtcHwEncoding);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(enableAcceleratedVpxDecode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(enableLowLatencyDxva);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(enableZeroCopyDxgiVideo);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(enableNv12DxgiVideo);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(compileShaderAlwaysSucceeds);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(disableGlErrorLimit);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(disableGlslTranslator);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(disableGpuDriverBugWorkarounds);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(disableShaderNameHashing);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(enableGpuCommandLogging);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(enableGpuDebugging);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(enableGpuServiceLoggingGpu);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(enableGpuDriverDebugLogging);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(disableGpuProgramCache);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(enforceGlMinimums);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(forceGpuMemAvailable);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(gpuProgramCacheSize);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(disableGpuShaderDiskCache);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(enableThreadedTextureMailboxes);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(glShaderIntermOutput);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(emulateShaderPrecision);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(enableGpuServiceLogging);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(enableGpuServiceTracing);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(enableEs3Apis);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(usePassthroughCmdDecoder);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.singleProcess);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.inProcessGpu);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.uiPrioritizeInGpuProcess);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableGpuScheduler);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableAcceleratedVideoDecode);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableVaapiAcceleratedVideoEncode);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableWebRtcHwEncoding);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableAcceleratedVpxDecode);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableLowLatencyDxva);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableZeroCopyDxgiVideo);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableNv12DxgiVideo);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.compileShaderAlwaysSucceeds);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableGlErrorLimit);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableGlslTranslator);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableGpuDriverBugWorkarounds);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableShaderNameHashing);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableGpuCommandLogging);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableGpuDebugging);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableGpuServiceLoggingGpu);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableGpuDriverDebugLogging);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableGpuProgramCache);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enforceGlMinimums);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.forceGpuMemAvailable);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.gpuProgramCacheSize);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableGpuShaderDiskCache);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableThreadedTextureMailboxes);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.glShaderIntermOutput);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.emulateShaderPrecision);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableGpuServiceLogging);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableGpuServiceTracing);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.usePassthroughCmdDecoder);
         return result;
     }
 }

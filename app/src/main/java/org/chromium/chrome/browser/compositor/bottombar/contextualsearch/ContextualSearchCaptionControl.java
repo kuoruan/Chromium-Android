@@ -13,19 +13,18 @@ import android.widget.TextView;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.compositor.animation.CompositorAnimator;
+import org.chromium.chrome.browser.compositor.animation.CompositorAnimator.AnimatorUpdateListener;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanelAnimation;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanelTextViewInflater;
-import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation;
-import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animatable;
 import org.chromium.ui.resources.dynamics.DynamicResourceLoader;
 
 /**
  * Controls the Caption View that is shown at the bottom of the control and used
  * as a dynamic resource.
  */
-public class ContextualSearchCaptionControl extends OverlayPanelTextViewInflater
-        implements ChromeAnimation.Animatable<ContextualSearchCaptionControl.AnimationType> {
+public class ContextualSearchCaptionControl extends OverlayPanelTextViewInflater {
     private static final float ANIMATION_PERCENTAGE_ZERO = 0.f;
     private static final float ANIMATION_PERCENTAGE_COMPLETE = 1.f;
     private static final float EXPANDED_CAPTION_THRESHOLD = 0.5f;
@@ -36,13 +35,6 @@ public class ContextualSearchCaptionControl extends OverlayPanelTextViewInflater
      */
     @VisibleForTesting
     public static final int EXPANED_CAPTION_ID = R.string.contextmenu_open_in_new_tab;
-
-    /**
-     * Animation properties.
-     */
-    protected enum AnimationType {
-        APPEARANCE
-    }
 
     /**
      * The caption View.
@@ -80,6 +72,9 @@ public class ContextualSearchCaptionControl extends OverlayPanelTextViewInflater
      * ANIMATION_PERCENTAGE_ZERO when it is expanded.
      */
     private float mAnimationPercentage = ANIMATION_PERCENTAGE_ZERO;
+
+    /** The animator responsible for transitioning the caption. */
+    private CompositorAnimator mTransitionAnimator;
 
     /**
      * Whether a new snapshot has been captured by the system yet - this is false when we have
@@ -133,7 +128,7 @@ public class ContextualSearchCaptionControl extends OverlayPanelTextViewInflater
     public void onUpdateFromPeekToExpand(float percentage) {
         if (!mShouldShowExpandedCaption) {
             if (mHasPeekingCaption) {
-                mOverlayPanel.cancelAnimation(this, AnimationType.APPEARANCE);
+                if (mTransitionAnimator != null) mTransitionAnimator.cancel();
                 mAnimationPercentage = 1.f - percentage;
             }
             return;
@@ -259,18 +254,16 @@ public class ContextualSearchCaptionControl extends OverlayPanelTextViewInflater
     // ============================================================================================
 
     private void animateTransitionIn() {
-        mOverlayPanel.addToAnimation(this, AnimationType.APPEARANCE, ANIMATION_PERCENTAGE_ZERO,
-                ANIMATION_PERCENTAGE_COMPLETE, OverlayPanelAnimation.BASE_ANIMATION_DURATION_MS,
-                0, false, ANIMATION_INTERPOLATOR);
+        AnimatorUpdateListener listener = new AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(CompositorAnimator animator) {
+                mAnimationPercentage = animator.getAnimatedValue();
+            }
+        };
+        mTransitionAnimator = CompositorAnimator.ofFloat(mOverlayPanel.getAnimationHandler(),
+                ANIMATION_PERCENTAGE_ZERO, ANIMATION_PERCENTAGE_COMPLETE,
+                OverlayPanelAnimation.BASE_ANIMATION_DURATION_MS, listener);
+        mTransitionAnimator.setInterpolator(ANIMATION_INTERPOLATOR);
+        mTransitionAnimator.start();
     }
-
-    @Override
-    public void setProperty(AnimationType type, float value) {
-        if (type == AnimationType.APPEARANCE) {
-            mAnimationPercentage = value;
-        }
-    }
-
-    @Override
-    public void onPropertyAnimationFinished(AnimationType prop) {}
 }

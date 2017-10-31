@@ -42,6 +42,7 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Callback;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ChromeVersionInfo;
 import org.chromium.chrome.browser.payments.ShippingStrings;
 import org.chromium.chrome.browser.payments.ui.PaymentRequestSection.LineItemBreakdownSection;
@@ -551,25 +552,40 @@ public class PaymentRequestUI implements DialogInterface.OnDismissListener, View
         mShippingOptionSection.setCanAddItems(false);
         mPaymentMethodSection.setCanAddItems(canAddCards);
 
+        // Put payment method section on top of address section for
+        // WEB_PAYMENTS_METHOD_SECTION_ORDER_V2.
+        boolean methodSectionOrderV2 =
+                ChromeFeatureList.isEnabled(ChromeFeatureList.WEB_PAYMENTS_METHOD_SECTION_ORDER_V2);
+
         // Add the necessary sections to the layout.
         mPaymentContainerLayout.addView(mOrderSummarySection, new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-        mSectionSeparators.add(new SectionSeparator(mPaymentContainerLayout));
+        if (methodSectionOrderV2) {
+            mSectionSeparators.add(new SectionSeparator(mPaymentContainerLayout));
+            mPaymentContainerLayout.addView(mPaymentMethodSection,
+                    new LinearLayout.LayoutParams(
+                            LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        }
         if (mRequestShipping) {
+            mSectionSeparators.add(new SectionSeparator(mPaymentContainerLayout));
             // The shipping breakout sections are only added if they are needed.
             mPaymentContainerLayout.addView(mShippingAddressSection,
                     new LinearLayout.LayoutParams(
                             LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-            mSectionSeparators.add(new SectionSeparator(mPaymentContainerLayout));
         }
-        mPaymentContainerLayout.addView(mPaymentMethodSection, new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        if (!methodSectionOrderV2) {
+            mSectionSeparators.add(new SectionSeparator(mPaymentContainerLayout));
+            mPaymentContainerLayout.addView(mPaymentMethodSection,
+                    new LinearLayout.LayoutParams(
+                            LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        }
         if (mRequestContactDetails) {
             // Contact details are optional, depending on the merchant website.
             mSectionSeparators.add(new SectionSeparator(mPaymentContainerLayout));
             mPaymentContainerLayout.addView(mContactDetailsSection, new LinearLayout.LayoutParams(
                     LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         }
+
         mRequestView.addOnLayoutChangeListener(new FadeInAnimator());
         mRequestView.addOnLayoutChangeListener(new PeekingAnimator());
 

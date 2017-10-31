@@ -35,12 +35,13 @@ public abstract class BackendItems extends ArrayList<DownloadHistoryItemWrapper>
             if (item.isVisibleToUser(DownloadFilter.FILTER_ALL) && !filePaths.contains(path)) {
                 totalSize += item.getFileSize();
             }
-            if (!path.isEmpty()) filePaths.add(path);
+            if (path != null && !path.isEmpty()) filePaths.add(path);
         }
         return totalSize;
     }
 
     /**
+     * TODO(shaktisahu) : Remove this when not needed.
      * Filters out items that match the query and are displayed in this list for the current filter.
      * @param filterType    Filter to use.
      * @param query         The text to match.

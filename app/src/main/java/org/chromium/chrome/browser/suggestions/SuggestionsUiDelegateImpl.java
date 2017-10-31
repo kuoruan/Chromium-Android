@@ -10,6 +10,7 @@ import org.chromium.base.DiscardableReferencePool;
 import org.chromium.chrome.browser.NativePageHost;
 import org.chromium.chrome.browser.ntp.snippets.SuggestionsSource;
 import org.chromium.chrome.browser.profiles.Profile;
+import org.chromium.chrome.browser.snackbar.SnackbarManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,7 @@ public class SuggestionsUiDelegateImpl implements SuggestionsUiDelegate {
     private final SuggestionsNavigationDelegate mSuggestionsNavigationDelegate;
     private final NativePageHost mHost;
     private final ImageFetcher mImageFetcher;
+    private final SnackbarManager mSnackbarManager;
 
     private final DiscardableReferencePool mReferencePool;
 
@@ -33,12 +35,13 @@ public class SuggestionsUiDelegateImpl implements SuggestionsUiDelegate {
     public SuggestionsUiDelegateImpl(SuggestionsSource suggestionsSource,
             SuggestionsEventReporter eventReporter,
             SuggestionsNavigationDelegate navigationDelegate, Profile profile, NativePageHost host,
-            DiscardableReferencePool referencePool) {
+            DiscardableReferencePool referencePool, SnackbarManager snackbarManager) {
         mSuggestionsSource = suggestionsSource;
         mSuggestionsRanker = new SuggestionsRanker();
         mSuggestionsEventReporter = eventReporter;
         mSuggestionsNavigationDelegate = navigationDelegate;
-        mImageFetcher = new ImageFetcher(suggestionsSource, profile, host);
+        mImageFetcher = new ImageFetcher(suggestionsSource, profile, referencePool, host);
+        mSnackbarManager = snackbarManager;
 
         mHost = host;
         mReferencePool = referencePool;
@@ -64,6 +67,11 @@ public class SuggestionsUiDelegateImpl implements SuggestionsUiDelegate {
     @Override
     public SuggestionsNavigationDelegate getNavigationDelegate() {
         return mSuggestionsNavigationDelegate;
+    }
+
+    @Override
+    public SnackbarManager getSnackbarManager() {
+        return mSnackbarManager;
     }
 
     @Override

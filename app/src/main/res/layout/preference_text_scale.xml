@@ -37,6 +37,7 @@
         android:background="#fafafa"
         android:padding="16dp"
         android:text="@string/font_size_preview_text"
-        android:textColor="?android:attr/textColorPrimary" />
+        android:textColor="?android:attr/textColorPrimary"
+        android:lineSpacingExtra="6dp" />
 
 </LinearLayout>

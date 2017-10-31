@@ -53,7 +53,7 @@ public class SingleTabModel implements TabModel {
 
     @Override
     public Profile getProfile() {
-        return mTab.getProfile();
+        return mTab == null ? null : mTab.getProfile();
     }
 
     @Override

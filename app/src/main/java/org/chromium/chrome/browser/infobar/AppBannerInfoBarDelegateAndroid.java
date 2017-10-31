@@ -60,11 +60,6 @@ public class AppBannerInfoBarDelegateAndroid implements InstallerDelegate.Observ
     }
 
     @CalledByNative
-    private void openApp(String packageName) {
-        mInstallerDelegate.openApp(packageName);
-    }
-
-    @CalledByNative
     private void showAppDetails(Tab tab, AppData appData) {
         tab.getWindowAndroid().showIntent(appData.detailsIntent(), null, null);
     }

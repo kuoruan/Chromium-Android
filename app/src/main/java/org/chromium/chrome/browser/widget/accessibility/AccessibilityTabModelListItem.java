@@ -10,6 +10,7 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.text.TextUtils;
@@ -22,17 +23,20 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.UsedByReflection;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tab.TabObserver;
+import org.chromium.chrome.browser.util.FeatureUtilities;
+import org.chromium.chrome.browser.widget.TintedImageButton;
+import org.chromium.chrome.browser.widget.TintedImageView;
 
 /**
  * A widget that shows a single row of the {@link AccessibilityTabModelListView} list.
@@ -53,6 +57,10 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
 
     private final float mSwipeCommitDistance;
     private final float mFlingCommitDistance;
+    private final int mDefaultLevel;
+    private final int mIncognitoLevel;
+    private final ColorStateList mDarkIconColor;
+    private final ColorStateList mLightIconColor;
 
     // Keeps track of how a tab was closed
     //  < 0 : swiped to the left.
@@ -63,8 +71,9 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
     // The children on the standard view.
     private LinearLayout mTabContents;
     private TextView mTitleView;
+    private TextView mDescriptionView;
     private ImageView mFaviconView;
-    private ImageButton mCloseButton;
+    private TintedImageButton mCloseButton;
 
     // The children on the undo view.
     private LinearLayout mUndoContents;
@@ -205,6 +214,12 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
 
         mDefaultHeight =
                 context.getResources().getDimensionPixelOffset(R.dimen.accessibility_tab_height);
+        mDarkIconColor =
+                ApiCompatibilityUtils.getColorStateList(getResources(), R.color.dark_mode_tint);
+        mLightIconColor =
+                ApiCompatibilityUtils.getColorStateList(getResources(), R.color.light_mode_tint);
+        mDefaultLevel = getResources().getInteger(R.integer.list_item_level_default);
+        mIncognitoLevel = getResources().getInteger(R.integer.list_item_level_incognito);
 
         mCloseAnimationDurationMs = CLOSE_ANIMATION_DURATION_MS;
         mDefaultAnimationDurationMs = DEFAULT_ANIMATION_DURATION_MS;
@@ -214,13 +229,27 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
     @Override
     public void onFinishInflate() {
         super.onFinishInflate();
-        mTabContents = (LinearLayout) findViewById(R.id.tab_contents);
-        mTitleView = (TextView) findViewById(R.id.tab_title);
-        mFaviconView = (ImageView) findViewById(R.id.tab_favicon);
-        mCloseButton = (ImageButton) findViewById(R.id.close_btn);
+        if (FeatureUtilities.isChromeHomeEnabled()) {
+            mTabContents = findViewById(R.id.tab_contents_modern);
+            mTitleView = mTabContents.findViewById(R.id.title);
+            mDescriptionView = mTabContents.findViewById(R.id.description);
+            mFaviconView = mTabContents.findViewById(R.id.icon_view);
+            mCloseButton = mTabContents.findViewById(R.id.close_btn_modern);
+            mFaviconView.setBackgroundResource(R.drawable.list_item_icon_modern_bg);
+        } else {
+            mTabContents = (LinearLayout) findViewById(R.id.tab_contents);
+            mTitleView = (TextView) findViewById(R.id.tab_title);
+            mFaviconView = (ImageView) findViewById(R.id.tab_favicon);
+            mCloseButton = (TintedImageButton) findViewById(R.id.close_btn);
+        }
+        mTabContents.setVisibility(View.VISIBLE);
 
         mUndoContents = (LinearLayout) findViewById(R.id.undo_contents);
         mUndoButton = (Button) findViewById(R.id.undo_button);
+        if (FeatureUtilities.isChromeHomeEnabled()) {
+            findViewById(R.id.undo_start_space).setVisibility(View.VISIBLE);
+            ApiCompatibilityUtils.setTextAppearance(mUndoButton, R.style.BlueButtonText2);
+        }
 
         setClickable(true);
         setFocusable(true);
@@ -240,7 +269,7 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
         mTab = tab;
         tab.addObserver(mTabObserver);
         mCanUndo = canUndo;
-        updateTabTitle();
+        updateTabText();
         updateFavicon();
     }
 
@@ -251,7 +280,7 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
         } else {
             mTabContents.setVisibility(View.VISIBLE);
             mUndoContents.setVisibility(View.INVISIBLE);
-            updateTabTitle();
+            updateTabText();
             updateFavicon();
         }
     }
@@ -266,11 +295,13 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
         mCanScrollListener = canScrollListener;
     }
 
-    private void updateTabTitle() {
+    private void updateTabText() {
         String title = null;
+        String url = null;
         if (mTab != null) {
             title = mTab.getTitle();
-            if (TextUtils.isEmpty(title)) title = mTab.getUrl();
+            url = mTab.getUrl();
+            if (TextUtils.isEmpty(title)) title = url;
         }
         if (TextUtils.isEmpty(title)) {
             title = getContext().getResources().getString(R.string.tab_loading_default_title);
@@ -283,6 +314,33 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
         if (!accessibilityString.equals(getContentDescription())) {
             setContentDescription(getContext().getString(R.string.accessibility_tabstrip_tab,
                     title));
+            mCloseButton.setContentDescription(
+                    getContext().getString(R.string.accessibility_tabstrip_btn_close_tab, title));
+        }
+
+        if (FeatureUtilities.isChromeHomeEnabled()) {
+            if (mTab.isIncognito()) {
+                setBackgroundResource(R.color.incognito_primary_color);
+                mFaviconView.getBackground().setLevel(mIncognitoLevel);
+                ApiCompatibilityUtils.setTextAppearance(mTitleView, R.style.WhiteDenseListText1);
+                ApiCompatibilityUtils.setTextAppearance(
+                        mDescriptionView, R.style.WhiteDenseListText2);
+                mCloseButton.setTint(mLightIconColor);
+            } else {
+                setBackgroundResource(R.color.modern_primary_color);
+                mFaviconView.getBackground().setLevel(mDefaultLevel);
+                ApiCompatibilityUtils.setTextAppearance(mTitleView, R.style.BlackDenseListText1);
+                ApiCompatibilityUtils.setTextAppearance(
+                        mDescriptionView, R.style.BlackDenseListText2);
+                mCloseButton.setTint(mDarkIconColor);
+            }
+
+            if (TextUtils.isEmpty(url)) {
+                mDescriptionView.setVisibility(View.GONE);
+            } else {
+                mDescriptionView.setText(url);
+                mDescriptionView.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -293,6 +351,10 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
                 mFaviconView.setImageBitmap(bitmap);
             } else {
                 mFaviconView.setImageResource(R.drawable.globe_incognito_favicon);
+            }
+
+            if (FeatureUtilities.isChromeHomeEnabled()) {
+                ((TintedImageView) mFaviconView).setTint(bitmap != null ? null : mDarkIconColor);
             }
         }
     }
@@ -337,7 +399,7 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
         super.onAttachedToWindow();
         if (mTab != null) {
             updateFavicon();
-            updateTabTitle();
+            updateTabText();
             mTab.addObserver(mTabObserver);
         }
     }
@@ -370,13 +432,13 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
 
         @Override
         public void onTitleUpdated(Tab tab) {
-            updateTabTitle();
+            updateTabText();
             notifyTabUpdated(tab);
         }
 
         @Override
         public void onUrlUpdated(Tab tab) {
-            updateTabTitle();
+            updateTabText();
             notifyTabUpdated(tab);
         }
     };

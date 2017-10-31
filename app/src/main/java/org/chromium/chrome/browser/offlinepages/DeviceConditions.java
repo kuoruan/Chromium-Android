@@ -4,12 +4,15 @@
 
 package org.chromium.chrome.browser.offlinepages;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.BatteryManager;
+import android.os.Build;
+import android.os.PowerManager;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.net.ConnectionType;
@@ -20,6 +23,7 @@ public class DeviceConditions {
     private final boolean mPowerConnected;
     private final int mBatteryPercentage;
     private final int mNetConnectionType;
+    private final boolean mPowerSaveOn;
 
     /**
      * Creates set of device network and power conditions.
@@ -27,10 +31,12 @@ public class DeviceConditions {
      * @param batteryPercentage percentage (0-100) of remaining battery power
      * @param connectionType the org.chromium.net.ConnectionType value for the network connection
      */
-    public DeviceConditions(boolean powerConnected, int batteryPercentage, int netConnectionType) {
+    public DeviceConditions(boolean powerConnected, int batteryPercentage, int netConnectionType,
+            boolean powerSaveOn) {
         mPowerConnected = powerConnected;
         mBatteryPercentage = batteryPercentage;
         mNetConnectionType = netConnectionType;
+        mPowerSaveOn = powerSaveOn;
     }
 
     @VisibleForTesting
@@ -38,6 +44,7 @@ public class DeviceConditions {
         mPowerConnected = false;
         mBatteryPercentage = 0;
         mNetConnectionType = ConnectionType.CONNECTION_NONE;
+        mPowerSaveOn = false;
     }
 
     /** Returns the current device conditions. May be overridden for testing. */
@@ -45,54 +52,13 @@ public class DeviceConditions {
         Intent batteryStatus = getBatteryStatus(context);
         if (batteryStatus == null) return null;
 
-        return new DeviceConditions(isPowerConnected(batteryStatus),
-                getBatteryPercentage(batteryStatus), getConnectionType(context));
+        return new DeviceConditions(isPowerConnected(context), getBatteryPercentage(context),
+                getNetConnectionType(context), getInPowerSaveMode(context));
     }
 
     /** @return Whether power is connected. */
     public static boolean isPowerConnected(Context context) {
-        return isPowerConnected(getBatteryStatus(context));
-    }
-
-    /** @return Battery percentage. */
-    public static int getBatteryPercentage(Context context) {
-        return getBatteryPercentage(getBatteryStatus(context));
-    }
-
-    /**
-     * @return Network connection type, where possible values are defined by
-     *     org.chromium.net.ConnectionType.
-     */
-    public static int getNetConnectionType(Context context) {
-        return getConnectionType(context);
-    }
-
-    /** @return Whether power is connected. */
-    public boolean isPowerConnected() {
-        return mPowerConnected;
-    }
-
-    /** @return Battery percentage. */
-    public int getBatteryPercentage() {
-        return mBatteryPercentage;
-    }
-
-    /**
-     * @return Network connection type, where possible values are defined by
-     *     org.chromium.net.ConnectionType.
-     */
-    public int getNetConnectionType() {
-        return mNetConnectionType;
-    }
-
-    private static Intent getBatteryStatus(Context context) {
-        IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        // Note this is a sticky intent, so we aren't really registering a receiver, just getting
-        // the sticky intent.  That means that we don't need to unregister the filter later.
-        return context.registerReceiver(null, filter);
-    }
-
-    private static boolean isPowerConnected(Intent batteryStatus) {
+        Intent batteryStatus = getBatteryStatus(context);
         if (batteryStatus == null) return false;
 
         int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
@@ -101,7 +67,9 @@ public class DeviceConditions {
         return isConnected;
     }
 
-    private static int getBatteryPercentage(Intent batteryStatus) {
+    /** @return Battery percentage. */
+    public static int getBatteryPercentage(Context context) {
+        Intent batteryStatus = getBatteryStatus(context);
         if (batteryStatus == null) return 0;
 
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
@@ -112,7 +80,28 @@ public class DeviceConditions {
         return percentage;
     }
 
-    private static int getConnectionType(Context context) {
+    /**
+     * @return true if the device is in power save mode.
+     */
+    public static boolean getInPowerSaveMode(Context context) {
+        // The PowerSaver feature is only available in Lollipop+, return false if earlier OS.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            return false;
+        }
+        return getInPowerSaveModeLollipop(context);
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private static boolean getInPowerSaveModeLollipop(Context context) {
+        PowerManager powerManager = (PowerManager) context.getSystemService(context.POWER_SERVICE);
+        return powerManager.isPowerSaveMode();
+    }
+
+    /**
+     * @return Network connection type, where possible values are defined by
+     *     org.chromium.net.ConnectionType.
+     */
+    public static int getNetConnectionType(Context context) {
         int connectionType = ConnectionType.CONNECTION_NONE;
 
         // If we are starting in the background, native portion might not be initialized.
@@ -134,6 +123,47 @@ public class DeviceConditions {
             }
         }
         return connectionType;
+    }
+
+    /**
+     * @return true if the active network is a metered network
+     */
+    public static boolean isActiveNetworkMetered(Context context) {
+        ConnectivityManager cm =
+                (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        return cm.isActiveNetworkMetered();
+    }
+
+    /** @return Whether power is connected. */
+    public boolean isPowerConnected() {
+        return mPowerConnected;
+    }
+
+    /** @return Battery percentage. */
+    public int getBatteryPercentage() {
+        return mBatteryPercentage;
+    }
+
+    /**
+     * @return Network connection type, where possible values are defined by
+     *     org.chromium.net.ConnectionType.
+     */
+    public int getNetConnectionType() {
+        return mNetConnectionType;
+    }
+
+    /**
+     * @return true if the device is in power save mode.
+     */
+    public boolean inPowerSaveMode() {
+        return mPowerSaveOn;
+    }
+
+    private static Intent getBatteryStatus(Context context) {
+        IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        // Note this is a sticky intent, so we aren't really registering a receiver, just getting
+        // the sticky intent.  That means that we don't need to unregister the filter later.
+        return context.registerReceiver(null, filter);
     }
 
     /** Returns the NCN network type corresponding to the connectivity manager network type */

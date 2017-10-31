@@ -14,7 +14,7 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="52dp">
+        android:layout_marginBottom="68dp">
 
         <!-- The view that allows the user to choose the sign in account -->
         <org.chromium.chrome.browser.signin.AccountSigninChooseView
@@ -41,8 +41,7 @@
                     android:paddingEnd="@dimen/signin_chooser_padding"
                     android:paddingBottom="@dimen/signin_chooser_padding"
                     android:background="@color/signin_head_background"
-                    android:textColor="@color/default_text_color"
-                    android:textSize="@dimen/fre_title_text_size"
+                    android:textAppearance="@style/BlackHeadline1"
                     android:text="@string/sign_in_to_chrome"/>
 
                 <View style="@style/Divider"/>
@@ -54,8 +53,7 @@
                     android:padding="@dimen/signin_chooser_padding"
                     android:lineSpacingMultiplier="1.4"
                     android:text="@string/signin_account_choice_description"
-                    android:textColor="@color/default_text_color"
-                    android:textSize="@dimen/fre_normal_text_size"/>
+                    android:textAppearance="@style/BlackBodyDefault"/>
             </LinearLayout>
         </org.chromium.chrome.browser.signin.AccountSigninChooseView>
 
@@ -98,8 +96,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        android:textColor="@color/default_text_color"
-                        android:textSize="@dimen/fre_title_text_size"
+                        android:textAppearance="@style/BlackHeadline1"
                         android:ellipsize="end"
                         android:maxLines="1"/>
 
@@ -109,7 +106,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
                         android:textColor="@color/descriptive_text_color"
-                        android:textSize="@dimen/fre_normal_text_size"
+                        android:textSize="@dimen/text_size_medium"
                         android:ellipsize="end"
                         android:maxLines="1"/>
                 </LinearLayout>
@@ -117,7 +114,6 @@
                 <View style="@style/Divider"/>
 
                 <TextView
-                    style="@style/RobotoMediumStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
@@ -125,8 +121,7 @@
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:text="@string/sync_confirmation_chrome_sync_title"
-                    android:textColor="@color/default_text_color"
-                    android:textSize="@dimen/fre_normal_text_size"
+                    android:textAppearance="@style/BlackTitle2"
                     android:drawableStart="@drawable/chrome_sync_logo"
                     android:drawablePadding="16dp"/>
 
@@ -139,7 +134,7 @@
                     android:lineSpacingMultiplier="1.4"
                     android:text="@string/sync_confirmation_chrome_sync_message"
                     android:textColor="@color/descriptive_text_color"
-                    android:textSize="@dimen/fre_normal_text_size" />
+                    android:textSize="@dimen/text_size_medium" />
 
                 <View
                     style="@style/Divider"
@@ -147,7 +142,6 @@
                     android:layout_marginEnd="16dp"/>
 
                 <TextView
-                    style="@style/RobotoMediumStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
@@ -155,8 +149,7 @@
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:text="@string/sync_confirmation_personalize_services_title"
-                    android:textColor="@color/default_text_color"
-                    android:textSize="@dimen/fre_normal_text_size"
+                    android:textAppearance="@style/BlackTitle2"
                     android:drawableStart="@drawable/googleg"
                     android:drawablePadding="16dp"/>
 
@@ -170,7 +163,7 @@
                     android:lineSpacingMultiplier="1.4"
                     android:text="@string/sync_confirmation_personalize_services_body"
                     android:textColor="@color/descriptive_text_color"
-                    android:textSize="@dimen/fre_normal_text_size"/>
+                    android:textSize="@dimen/text_size_medium"/>
 
                 <org.chromium.ui.widget.TextViewWithClickableSpans
                     android:id="@+id/signin_settings_control"
@@ -182,7 +175,7 @@
                     android:lineSpacingMultiplier="1.4"
                     android:text="@string/signin_signed_in_settings_description"
                     android:textColor="@color/descriptive_text_color"
-                    android:textSize="@dimen/fre_normal_text_size" />
+                    android:textSize="@dimen/text_size_medium" />
             </LinearLayout>
         </org.chromium.chrome.browser.signin.AccountSigninConfirmationView>
     </FrameLayout>
@@ -190,10 +183,9 @@
     <LinearLayout
         android:id="@+id/button_bar"
         android:layout_width="match_parent"
-        android:layout_height="52dp"
+        android:layout_height="68dp"
         android:layout_gravity="bottom"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
+        android:padding="16dp"
         android:orientation="horizontal" >
 
         <!--suppress ButtonStyle -->
@@ -224,8 +216,7 @@
             android:paddingEnd="@dimen/fre_button_padding"
             android:text="@string/choose_account_sign_in"
             android:textAllCaps="true"
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
+            style="@style/WhiteBody"
             chrome:buttonColor="@color/light_active_color"
             chrome:buttonRaised="false"/>
 
@@ -237,7 +228,7 @@
             android:text="@string/more"
             android:textAllCaps="true"
             android:textColor="@color/light_active_color"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_size_medium"
             android:drawableEnd="@drawable/down_arrow"
             android:drawablePadding="8dp"
             android:visibility="gone"/>

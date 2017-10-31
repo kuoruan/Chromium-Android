@@ -4,27 +4,14 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file.
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical" >
-
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="4dp"
-        android:layout_marginBottom="-4dp"
-        android:background="@drawable/bookmark_title_bar_shadow" />
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:chrome="http://schemas.android.com/apk/res-auto" >
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent" >
+        android:layout_height="match_parent"
+        android:paddingTop="@dimen/toolbar_height_no_shadow"
+        android:clipToPadding="false" >
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -85,4 +72,19 @@
             </org.chromium.chrome.browser.widget.FloatLabelLayout>
         </LinearLayout>
     </ScrollView>
-</LinearLayout>
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/toolbar_height_no_shadow"
+        style="@style/ModernToolbar"
+        android:background="@color/modern_toolbar_bg" />
+
+    <View
+        android:id="@+id/shadow"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_marginTop="@dimen/toolbar_height_no_shadow"
+        android:background="@drawable/bookmark_title_bar_shadow"
+        android:visibility="gone" />
+</merge>

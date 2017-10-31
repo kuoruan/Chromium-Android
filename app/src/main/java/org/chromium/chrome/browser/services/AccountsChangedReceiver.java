@@ -12,10 +12,8 @@ import android.os.AsyncTask;
 
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.Log;
-import org.chromium.base.ObserverList;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.SuppressFBWarnings;
-import org.chromium.base.library_loader.LibraryProcessType;
 import org.chromium.base.library_loader.ProcessInitException;
 import org.chromium.chrome.browser.ChromeApplication;
 import org.chromium.chrome.browser.init.BrowserParts;
@@ -23,8 +21,6 @@ import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
 import org.chromium.chrome.browser.init.EmptyBrowserParts;
 import org.chromium.chrome.browser.signin.AccountTrackerService;
 import org.chromium.chrome.browser.signin.SigninHelper;
-import org.chromium.content.browser.BrowserStartupController;
-import org.chromium.content.browser.BrowserStartupController.StartupCallback;
 
 /**
  * This receiver is notified when accounts are added, accounts are removed, or
@@ -33,39 +29,6 @@ import org.chromium.content.browser.BrowserStartupController.StartupCallback;
  */
 public class AccountsChangedReceiver extends BroadcastReceiver {
     private static final String TAG = "AccountsChangedRx";
-
-    /**
-     * Observer that receives account change notifications from {@link AccountManager}.
-     * Use {@link #addObserver} and {@link #removeObserver} to update registrations.
-     *
-     * The callback will only ever be called after the browser process has been initialized.
-     */
-    public interface AccountsChangedObserver {
-        /**
-         * Called on every change to the accounts.
-         */
-        void onAccountsChanged();
-    }
-
-    private static ObserverList<AccountsChangedObserver> sObservers = new ObserverList<>();
-
-    /**
-     * Adds an observer to receive accounts change notifications from {@link AccountManager}.
-     * @param observer the observer to add.
-     */
-    public static void addObserver(AccountsChangedObserver observer) {
-        ThreadUtils.assertOnUiThread();
-        sObservers.addObserver(observer);
-    }
-
-    /**
-     * Removes an observer that was previously added using {@link #addObserver}.
-     * @param observer the observer to remove.
-     */
-    public static void removeObserver(AccountsChangedObserver observer) {
-        ThreadUtils.assertOnUiThread();
-        sObservers.removeObserver(observer);
-    }
 
     @Override
     public void onReceive(Context context, final Intent intent) {
@@ -97,7 +60,6 @@ public class AccountsChangedReceiver extends BroadcastReceiver {
             // Notify SigninHelper of changed accounts (via shared prefs).
             SigninHelper.markAccountsChangedPref(context);
         }
-        notifyAccountsChangedOnBrowserStartup(context);
     }
 
     @SuppressFBWarnings("DM_EXIT")
@@ -127,25 +89,5 @@ public class AccountsChangedReceiver extends BroadcastReceiver {
             Log.e(TAG, "Unable to load native library.", e);
             ChromeApplication.reportStartupErrorAndExit(e);
         }
-    }
-
-    private static void notifyAccountsChangedOnBrowserStartup(final Context context) {
-        StartupCallback notifyAccountsChangedCallback = new StartupCallback() {
-            @Override
-            public void onSuccess(boolean alreadyStarted) {
-                for (AccountsChangedObserver observer : sObservers) {
-                    observer.onAccountsChanged();
-                }
-            }
-
-            @Override
-            public void onFailure() {
-                // Startup failed, so ignore call.
-            }
-        };
-        // If the browser process has already been loaded, a task will be posted immediately to
-        // call the |notifyAccountsChangedCallback| passed in as a parameter.
-        BrowserStartupController.get(LibraryProcessType.PROCESS_BROWSER)
-                .addStartupCompletedObserver(notifyAccountsChangedCallback);
     }
 }

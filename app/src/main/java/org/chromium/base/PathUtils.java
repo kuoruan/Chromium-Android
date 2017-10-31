@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.os.AsyncTask;
 import android.os.Environment;
-import android.os.StrictMode;
 import android.os.SystemClock;
 
 import org.chromium.base.annotations.CalledByNative;
@@ -68,13 +67,10 @@ public abstract class PathUtils {
             // already finished.
             if (sDirPathFetchTask.cancel(false)) {
                 // Allow disk access here because we have no other choice.
-                StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
-                try {
+                try (StrictModeContext unused = StrictModeContext.allowDiskWrites()) {
                     // sDirPathFetchTask did not complete. We have to run the code it was supposed
                     // to be responsible for synchronously on the UI thread.
                     return PathUtils.setPrivateDataDirectorySuffixInternal();
-                } finally {
-                    StrictMode.setThreadPolicy(oldPolicy);
                 }
             } else {
                 // sDirPathFetchTask succeeded, and the values we need should be ready to access
@@ -193,18 +189,15 @@ public abstract class PathUtils {
     @CalledByNative
     private static String getDownloadsDirectory() {
         // Temporarily allowing disk access while fixing. TODO: http://crbug.com/508615
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-        String downloadsPath;
-        try {
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
             long time = SystemClock.elapsedRealtime();
-            downloadsPath = Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_DOWNLOADS).getPath();
+            String downloadsPath =
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                            .getPath();
             RecordHistogram.recordTimesHistogram("Android.StrictMode.DownloadsDir",
                     SystemClock.elapsedRealtime() - time, TimeUnit.MILLISECONDS);
-        } finally {
-            StrictMode.setThreadPolicy(oldPolicy);
+            return downloadsPath;
         }
-        return downloadsPath;
     }
 
     /**

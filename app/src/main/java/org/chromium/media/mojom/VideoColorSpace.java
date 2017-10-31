@@ -175,13 +175,13 @@ public final class VideoColorSpace extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(primaries, 8);
+        encoder0.encode(this.primaries, 8);
         
-        encoder0.encode(transfer, 12);
+        encoder0.encode(this.transfer, 12);
         
-        encoder0.encode(matrix, 16);
+        encoder0.encode(this.matrix, 16);
         
-        encoder0.encode(range, 20);
+        encoder0.encode(this.range, 20);
     }
 
     /**
@@ -214,10 +214,10 @@ public final class VideoColorSpace extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(primaries);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(transfer);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(matrix);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(range);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.primaries);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.transfer);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.matrix);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.range);
         return result;
     }
 }

@@ -204,7 +204,7 @@ ServiceManagerListener listener) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(listener, 8, false, ServiceManagerListener.MANAGER);
+            encoder0.encode(this.listener, 8, false, ServiceManagerListener.MANAGER);
         }
     
         /**
@@ -231,7 +231,7 @@ ServiceManagerListener listener) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(listener);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.listener);
             return result;
         }
     }

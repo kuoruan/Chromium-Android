@@ -5,16 +5,17 @@
 package org.chromium.chrome.browser.suggestions;
 
 import android.os.SystemClock;
+import android.support.annotation.Nullable;
 
 import org.chromium.base.Callback;
 import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.content_public.browser.NavigationController;
+import org.chromium.content_public.browser.WebContents;
 import org.chromium.content_public.browser.WebContentsObserver;
 import org.chromium.ui.base.PageTransition;
 
-import javax.annotation.Nullable;
 
 /**
  * Records stats related to a page visit, such as the time spent on the website, or if the user
@@ -22,7 +23,8 @@ import javax.annotation.Nullable;
  */
 public class NavigationRecorder extends EmptyTabObserver {
     private final Callback<VisitData> mVisitEndCallback;
-    private final int mNavigationStackIndex;
+
+    @Nullable
     private final WebContentsObserver mWebContentsObserver;
 
     private long mStartTimeMs;
@@ -38,23 +40,30 @@ public class NavigationRecorder extends EmptyTabObserver {
 
     /** Private because users should not hold to references to the instance. */
     private NavigationRecorder(final Tab tab, Callback<VisitData> visitEndCallback) {
-        assert tab.getWebContents() != null;
-
         mVisitEndCallback = visitEndCallback;
 
         // onLoadUrl below covers many exit conditions to stop recording but not all,
         // such as navigating back. We therefore stop recording if a navigation stack change
         // indicates we are back to our starting point.
-        final NavigationController navController = tab.getWebContents().getNavigationController();
-        mNavigationStackIndex = navController.getLastCommittedEntryIndex();
-        mWebContentsObserver = new WebContentsObserver() {
-            @Override
-            public void navigationEntryCommitted() {
-                if (mNavigationStackIndex != navController.getLastCommittedEntryIndex()) return;
-                endRecording(tab, tab.getUrl());
-            }
-        };
-        tab.getWebContents().addObserver(mWebContentsObserver);
+        WebContents webContents = tab.getWebContents();
+        if (webContents != null) {
+            // if no WebContents is available now, the navigation has been started in a new tab.
+            // Svelte devices do not start loading until we switch to the new tab, see
+            // https://crbug.com/748916. In that case, closing or moving away will be the end
+            // trigger anyway, no need to care about the navigation stack.
+            final NavigationController navController = webContents.getNavigationController();
+            int startStackIndex = navController.getLastCommittedEntryIndex();
+            mWebContentsObserver = new WebContentsObserver() {
+                @Override
+                public void navigationEntryCommitted() {
+                    if (startStackIndex != navController.getLastCommittedEntryIndex()) return;
+                    endRecording(tab, tab.getUrl());
+                }
+            };
+            webContents.addObserver(mWebContentsObserver);
+        } else {
+            mWebContentsObserver = null;
+        }
 
         if (!tab.isHidden()) mStartTimeMs = SystemClock.elapsedRealtime();
     }
@@ -88,7 +97,7 @@ public class NavigationRecorder extends EmptyTabObserver {
     private void endRecording(@Nullable Tab removeObserverFromTab, @Nullable String endUrl) {
         if (removeObserverFromTab != null) {
             removeObserverFromTab.removeObserver(this);
-            if (removeObserverFromTab.getWebContents() != null) {
+            if (removeObserverFromTab.getWebContents() != null && mWebContentsObserver != null) {
                 removeObserverFromTab.getWebContents().removeObserver(mWebContentsObserver);
             }
         }

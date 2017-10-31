@@ -34,4 +34,9 @@ long surfaceKey);
 );
 
 
+
+    void onPowerEfficientState(
+boolean isPowerEfficient);
+
+
 }

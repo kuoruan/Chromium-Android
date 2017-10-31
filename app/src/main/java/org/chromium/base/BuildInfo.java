@@ -18,6 +18,18 @@ import org.chromium.base.annotations.CalledByNative;
  * primarily of use for accessing package information from native code.
  */
 public class BuildInfo {
+    /**
+     * Array index to access field in {@link BuildInfo#getAll()}.
+     */
+    public static final int BRAND_INDEX = 0;
+    public static final int DEVICE_INDEX = 1;
+    public static final int ANDROID_BUILD_ID_INDEX = 2;
+    public static final int MODEL_INDEX = 4;
+    public static final int ANDROID_BUILD_FP_INDEX = 11;
+    public static final int GMS_CORE_VERSION_INDEX = 12;
+    public static final int INSTALLER_PACKAGE_NAME_INDEX = 13;
+    public static final int ABI_NAME_INDEX = 14;
+
     private static final String TAG = "BuildInfo";
     private static final int MAX_FINGERPRINT_LENGTH = 128;
 
@@ -28,7 +40,7 @@ public class BuildInfo {
 
     @SuppressWarnings("deprecation")
     @CalledByNative
-    private static String[] getAll() {
+    public static String[] getAll() {
         try {
             String packageName = ContextUtils.getApplicationContext().getPackageName();
             PackageManager pm = ContextUtils.getApplicationContext().getPackageManager();

@@ -127,16 +127,12 @@ public class ContextualSearchSceneLayer extends SceneOverlayLayer {
         float touchHighlightXOffset = searchBarControl.getTouchHighlightXOffsetPx();
         float touchHighlightWidth = searchBarControl.getTouchHighlightWidthPx();
 
-        int barHandleResId = panel.getBarHandleResourceId();
-        float barHandleOffsetY = panel.getBarHandleOffsetY();
-        float barPaddingBottom = panel.getBarPaddingBottom();
-
         WebContents panelWebContents = panel.getContentViewCore() != null
                 ? panel.getContentViewCore().getWebContents() : null;
 
         nativeUpdateContextualSearchLayer(mNativePtr, R.drawable.contextual_search_bar_background,
                 searchContextViewId, searchTermViewId, searchCaptionViewId,
-                R.drawable.contextual_search_bar_shadow, R.drawable.googleg, quickActionIconResId,
+                R.drawable.modern_toolbar_shadow, R.drawable.googleg, quickActionIconResId,
                 R.drawable.breadcrumb_arrow, ContextualSearchPanel.CLOSE_ICON_DRAWABLE_ID,
                 R.drawable.progress_bar_background, R.drawable.progress_bar_foreground,
                 searchPromoViewId, R.drawable.contextual_search_promo_ripple,
@@ -156,8 +152,7 @@ public class ContextualSearchSceneLayer extends SceneOverlayLayer {
                 progressBarHeight * mDpToPx, progressBarOpacity, progressBarCompletion,
                 dividerLineVisibilityPercentage, dividerLineWidth, dividerLineHeight,
                 dividerLineColor, dividerLineXOffset, touchHighlightVisible, touchHighlightXOffset,
-                touchHighlightWidth, barHandleResId, barHandleOffsetY, barPaddingBottom,
-                Profile.getLastUsedProfile());
+                touchHighlightWidth, Profile.getLastUsedProfile());
     }
 
     @CalledByNative
@@ -228,6 +223,5 @@ public class ContextualSearchSceneLayer extends SceneOverlayLayer {
             float progressBarHeight, float progressBarOpacity, int progressBarCompletion,
             float dividerLineVisibilityPercentage, float dividerLineWidth, float dividerLineHeight,
             int dividerLineColor, float dividerLineXOffset, boolean touchHighlightVisible,
-            float touchHighlightXOffset, float toucHighlightWidth, int barHandleResId,
-            float barHandleOffsetY, float barPaddingBottom, Profile profile);
+            float touchHighlightXOffset, float toucHighlightWidth, Profile profile);
 }

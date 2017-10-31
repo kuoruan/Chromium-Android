@@ -83,11 +83,11 @@ public final class HdrMetadata extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(masteringMetadata, 8, false);
+        encoder0.encode(this.masteringMetadata, 8, false);
         
-        encoder0.encode(maxContentLightLevel, 16);
+        encoder0.encode(this.maxContentLightLevel, 16);
         
-        encoder0.encode(maxFrameAverageLightLevel, 20);
+        encoder0.encode(this.maxFrameAverageLightLevel, 20);
     }
 
     /**
@@ -118,9 +118,9 @@ public final class HdrMetadata extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(masteringMetadata);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(maxContentLightLevel);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(maxFrameAverageLightLevel);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.masteringMetadata);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.maxContentLightLevel);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.maxFrameAverageLightLevel);
         return result;
     }
 }

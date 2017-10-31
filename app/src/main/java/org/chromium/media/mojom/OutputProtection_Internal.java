@@ -340,11 +340,11 @@ EnableProtectionResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(success, 8, 0);
+            encoder0.encode(this.success, 8, 0);
             
-            encoder0.encode(linkMask, 12);
+            encoder0.encode(this.linkMask, 12);
             
-            encoder0.encode(protectionMask, 16);
+            encoder0.encode(this.protectionMask, 16);
         }
     
         /**
@@ -375,9 +375,9 @@ EnableProtectionResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(success);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(linkMask);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(protectionMask);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.success);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.linkMask);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.protectionMask);
             return result;
         }
     }
@@ -507,7 +507,7 @@ EnableProtectionResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(desiredProtectionMask, 8);
+            encoder0.encode(this.desiredProtectionMask, 8);
         }
     
         /**
@@ -534,7 +534,7 @@ EnableProtectionResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(desiredProtectionMask);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.desiredProtectionMask);
             return result;
         }
     }
@@ -599,7 +599,7 @@ EnableProtectionResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(success, 8, 0);
+            encoder0.encode(this.success, 8, 0);
         }
     
         /**
@@ -626,7 +626,7 @@ EnableProtectionResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(success);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.success);
             return result;
         }
     }

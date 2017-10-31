@@ -11,6 +11,7 @@ import static android.view.View.SYSTEM_UI_FLAG_LOW_PROFILE;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.Nullable;
 import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnLayoutChangeListener;
@@ -43,11 +44,11 @@ public class FullscreenHtmlApiHandler {
     private final Handler mHandler;
     private final FullscreenHtmlApiDelegate mDelegate;
 
-    // We still need this since we are setting fullscreen UI state on the contentviewcore's
-    // container view, and a tab can have null content view core, i.e., if you navigate
+    // We still need this since we are setting fullscreen UI state on the ContentViewCore's
+    // container view, and a Tab can change to have null content view core, i.e., if you navigate
     // to a native page.
-    private ContentViewCore mContentViewCoreInFullscreen;
-    private Tab mTabInFullscreen;
+    @Nullable private ContentViewCore mContentViewCoreInFullscreen;
+    @Nullable private Tab mTabInFullscreen;
     private boolean mIsPersistentMode;
 
     // Toast at the top of the screen that is shown when user enters fullscreen for the
@@ -105,15 +106,18 @@ public class FullscreenHtmlApiHandler {
             if (msg == null) return;
             FullscreenHtmlApiHandler fullscreenHtmlApiHandler = mFullscreenHtmlApiHandler.get();
             if (fullscreenHtmlApiHandler == null) return;
+
+            final ContentViewCore cvc = fullscreenHtmlApiHandler.mContentViewCoreInFullscreen;
+            if (cvc == null) return;
+
+            final View contentView = cvc.getContainerView();
+            int systemUiVisibility = contentView.getSystemUiVisibility();
+
             switch (msg.what) {
                 case MSG_ID_SET_FULLSCREEN_SYSTEM_UI_FLAGS: {
                     assert fullscreenHtmlApiHandler.getPersistentFullscreenMode() :
                         "Calling after we exited fullscreen";
-                    final ContentViewCore contentViewCore =
-                            fullscreenHtmlApiHandler.mContentViewCoreInFullscreen;
-                    if (contentViewCore == null) return;
-                    final View contentView = contentViewCore.getContainerView();
-                    int systemUiVisibility = contentView.getSystemUiVisibility();
+
                     if ((systemUiVisibility & SYSTEM_UI_FLAG_FULLSCREEN)
                             == SYSTEM_UI_FLAG_FULLSCREEN) {
                         return;
@@ -144,20 +148,16 @@ public class FullscreenHtmlApiHandler {
                 }
                 case MSG_ID_CLEAR_LAYOUT_FULLSCREEN_FLAG: {
                     // Change this assert to simply ignoring the message to work around
-                    // http://crbug/365638
+                    // https://crbug/365638
                     // TODO(aberent): Fix bug
                     // assert mIsPersistentMode : "Calling after we exited fullscreen";
                     if (!fullscreenHtmlApiHandler.getPersistentFullscreenMode()) return;
-                    final ContentViewCore contentViewCore =
-                            fullscreenHtmlApiHandler.mContentViewCoreInFullscreen;
-                    if (contentViewCore == null) return;
-                    final View view = contentViewCore.getContainerView();
-                    int systemUiVisibility = view.getSystemUiVisibility();
+
                     if ((systemUiVisibility & SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN) == 0) {
                         return;
                     }
                     systemUiVisibility &= ~SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
-                    view.setSystemUiVisibility(systemUiVisibility);
+                    contentView.setSystemUiVisibility(systemUiVisibility);
                     break;
                 }
                 default:

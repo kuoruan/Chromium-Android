@@ -3,29 +3,16 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
-<LinearLayout
+<merge
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:chrome="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:minHeight="@dimen/bookmark_minimum_dialog_size_tablet"
-    android:orientation="vertical" >
-
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="4dp"
-        android:layout_marginBottom="-4dp"
-        android:background="@drawable/bookmark_title_bar_shadow" />
+    android:minHeight="@dimen/bookmark_minimum_dialog_size_tablet" >
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent" >
+        android:layout_height="match_parent"
+        android:paddingTop="@dimen/toolbar_height_no_shadow"
+        android:clipToPadding="false" >
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -43,7 +30,7 @@
                 android:hint="@string/title"
                 android:imeOptions="flagNoExtractUi"
                 android:inputType="textCapSentences|textAutoCorrect"
-                android:textSize="24sp"
+                android:textAppearance="@style/BlackHeadline1"
                 chrome:alertMessage="@string/bookmark_missing_title"  />
 
             <TextView
@@ -55,7 +42,7 @@
                 android:layout_marginTop="24dp"
                 android:text="@string/bookmark_parent_folder"
                 android:textColor="@color/bookmark_detail_section"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_size_medium"
                 android:textStyle="bold" />
 
             <TextView
@@ -66,8 +53,23 @@
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="32dp"
                 android:textColor="@color/dark_mode_tint"
-                android:textSize="16sp" />
+                android:textSize="@dimen/text_size_large" />
         </LinearLayout>
     </ScrollView>
 
-</LinearLayout>
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/toolbar_height_no_shadow"
+        style="@style/ModernToolbar"
+        android:background="@color/modern_toolbar_bg" />
+
+    <View
+        android:id="@+id/shadow"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_marginTop="@dimen/toolbar_height_no_shadow"
+        android:background="@drawable/bookmark_title_bar_shadow"
+        android:visibility="gone" />
+
+</merge>

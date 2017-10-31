@@ -156,7 +156,7 @@ public abstract class RecurringTask extends InternalBase
         Preconditions.checkState(scheduler.isRunningOnThread(), "Not on scheduler thread");
         isScheduled = false;
         if (runTask()) {
-          // The task asked to be rescheduled, so reschedule it after a timeout has occured.
+          // The task asked to be rescheduled, so reschedule it after a timeout has occurred.
           Preconditions.checkState((delayGenerator != null) || (initialDelayMs != 0),
               "Spinning: No exp back off and initialdelay is zero");
           ensureScheduled(true, "Retry");

@@ -19,6 +19,7 @@ import android.support.annotation.Nullable;
 
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
+import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.util.ConversionUtils;
 
@@ -26,7 +27,9 @@ import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -36,12 +39,17 @@ public class DecoderServiceHost extends IDecoderServiceCallback.Stub {
     // A tag for logging error messages.
     private static final String TAG = "ImageDecoderHost";
 
+    // A callback to use for testing to see if decoder is ready.
+    static ServiceReadyCallback sReadyCallbackForTesting;
+
     IDecoderService mIRemoteService;
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             mIRemoteService = IDecoderService.Stub.asInterface(service);
             mBound = true;
-            mCallback.serviceReady();
+            for (ServiceReadyCallback callback : mCallbacks) {
+                callback.serviceReady();
+            }
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -102,8 +110,8 @@ public class DecoderServiceHost extends IDecoderServiceCallback.Stub {
         return mRequests;
     }
 
-    // The callback used to notify the client when the service is ready.
-    private ServiceReadyCallback mCallback;
+    // The callbacks used to notify the clients when the service is ready.
+    List<ServiceReadyCallback> mCallbacks = new ArrayList<ServiceReadyCallback>();
 
     // Flag indicating whether we are bound to the service.
     private boolean mBound;
@@ -115,7 +123,10 @@ public class DecoderServiceHost extends IDecoderServiceCallback.Stub {
      * @param callback The callback to use when communicating back to the client.
      */
     public DecoderServiceHost(ServiceReadyCallback callback, Context context) {
-        mCallback = callback;
+        mCallbacks.add(callback);
+        if (sReadyCallbackForTesting != null) {
+            mCallbacks.add(sReadyCallbackForTesting);
+        }
         mContext = context;
     }
 
@@ -271,5 +282,11 @@ public class DecoderServiceHost extends IDecoderServiceCallback.Stub {
      */
     public void cancelDecodeImage(String filePath) {
         mRequests.remove(filePath);
+    }
+
+    /** Sets a callback to use when the service is ready. For testing use only. */
+    @VisibleForTesting
+    public static void setReadyCallback(ServiceReadyCallback callback) {
+        sReadyCallbackForTesting = callback;
     }
 }

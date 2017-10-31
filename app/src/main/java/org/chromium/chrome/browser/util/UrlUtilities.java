@@ -128,15 +128,6 @@ public class UrlUtilities {
     }
 
     /**
-     * Determines whether or not the given URLs have the same host.
-     * Unlike the above sameDomainOrHost(...) method, this does a simpler host matching, so
-     * http://news.google.com and http://finance.google.com do not have the same host.
-     */
-    public static boolean sameHost(String primaryUrl, String secondaryUrl) {
-        return nativeSameHost(primaryUrl, secondaryUrl);
-    }
-
-    /**
      * This function works by calling net::registry_controlled_domains::GetDomainAndRegistry
      *
      * @param uri A URI
@@ -326,7 +317,6 @@ public class UrlUtilities {
     private static native boolean nativeIsAcceptedScheme(String url);
     private static native boolean nativeSameDomainOrHost(String primaryUrl, String secondaryUrl,
             boolean includePrivateRegistries);
-    private static native boolean nativeSameHost(String primaryUrl, String secondaryUrl);
     private static native String nativeGetDomainAndRegistry(String url,
             boolean includePrivateRegistries);
     public static native boolean nativeIsGoogleSearchUrl(String url);

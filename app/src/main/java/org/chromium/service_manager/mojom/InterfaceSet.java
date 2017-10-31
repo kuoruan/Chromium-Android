@@ -80,13 +80,13 @@ public final class InterfaceSet extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        if (interfaces == null) {
+        if (this.interfaces == null) {
             encoder0.encodeNullPointer(8, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(interfaces.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < interfaces.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.interfaces.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.interfaces.length; ++i0) {
                 
-                encoder1.encode(interfaces[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                encoder1.encode(this.interfaces[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
     }
@@ -115,7 +115,7 @@ public final class InterfaceSet extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + java.util.Arrays.deepHashCode(interfaces);
+        result = prime * result + java.util.Arrays.deepHashCode(this.interfaces);
         return result;
     }
 }

@@ -7,7 +7,6 @@ package org.chromium.chrome.browser;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -470,13 +469,10 @@ public class ItemChooserDialog {
         mConfirmButton = (Button) dialogContainer.findViewById(R.id.positive);
         mConfirmButton.setText(labels.positiveButton);
         mConfirmButton.setEnabled(false);
-        mConfirmButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mItemSelectedCallback.onItemSelected(mItemAdapter.getSelectedItemKey());
-                mDialog.setOnDismissListener(null);
-                mDialog.dismiss();
-            }
+        mConfirmButton.setOnClickListener(v -> {
+            mItemSelectedCallback.onItemSelected(mItemAdapter.getSelectedItemKey());
+            mDialog.setOnDismissListener(null);
+            mDialog.dismiss();
         });
 
         mItemAdapter = new ItemAdapter(mActivity, R.layout.item_chooser_dialog_row);
@@ -520,7 +516,7 @@ public class ItemChooserDialog {
         // Round to (an integer + 0.5) times LIST_ROW_HEIGHT.
         heightDp = (Math.round(heightDp / LIST_ROW_HEIGHT_DP - 0.5f) + 0.5f) * LIST_ROW_HEIGHT_DP;
         heightDp = MathUtils.clamp(heightDp, MIN_HEIGHT_DP, MAX_HEIGHT_DP);
-        return (int) Math.round(heightDp * density);
+        return Math.round(heightDp * density);
     }
 
     private void showDialogForView(View view) {
@@ -537,12 +533,7 @@ public class ItemChooserDialog {
         mDialog.addContentView(view,
                 new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                                               LinearLayout.LayoutParams.MATCH_PARENT));
-        mDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialog) {
-                mItemSelectedCallback.onItemSelected("");
-            }
-        });
+        mDialog.setOnDismissListener(dialog -> mItemSelectedCallback.onItemSelected(""));
 
         Window window = mDialog.getWindow();
         if (!DeviceFormFactor.isTablet()) {

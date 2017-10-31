@@ -16,6 +16,7 @@ import android.view.View;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
+import org.chromium.chrome.browser.suggestions.SuggestionsConfig;
 import org.chromium.chrome.browser.suggestions.SuggestionsNavigationDelegate;
 import org.chromium.ui.base.WindowAndroid.OnCloseContextMenuListener;
 import org.chromium.ui.mojom.WindowOpenDisposition;
@@ -30,7 +31,7 @@ import java.util.TreeMap;
  */
 public class ContextMenuManager implements OnCloseContextMenuListener {
     @IntDef({ID_OPEN_IN_NEW_WINDOW, ID_OPEN_IN_NEW_TAB, ID_OPEN_IN_INCOGNITO_TAB,
-            ID_SAVE_FOR_OFFLINE, ID_REMOVE})
+            ID_SAVE_FOR_OFFLINE, ID_REMOVE, ID_LEARN_MORE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface ContextMenuItemId {}
 
@@ -41,6 +42,7 @@ public class ContextMenuManager implements OnCloseContextMenuListener {
     public static final int ID_OPEN_IN_INCOGNITO_TAB = 2;
     public static final int ID_SAVE_FOR_OFFLINE = 3;
     public static final int ID_REMOVE = 4;
+    public static final int ID_LEARN_MORE = 5;
 
     private final Activity mActivity;
     private final SuggestionsNavigationDelegate mNavigationDelegate;
@@ -90,7 +92,7 @@ public class ContextMenuManager implements OnCloseContextMenuListener {
      *            are tapped.
      */
     public void createContextMenu(ContextMenu menu, View associatedView, Delegate delegate) {
-        OnMenuItemClickListener listener = new ItemClickListener(delegate);
+        OnMenuItemClickListener listener = new ItemClickListener(delegate, mNavigationDelegate);
         boolean hasItems = false;
 
         for (@ContextMenuItemId int itemId : MenuItemLabelMatcher.STRING_MAP.keySet()) {
@@ -156,6 +158,9 @@ public class ContextMenuManager implements OnCloseContextMenuListener {
             }
             case ID_REMOVE:
                 return true;
+            case ID_LEARN_MORE:
+                // With Scroll to Load enabled, the Learn More link is moved into the Context Menu.
+                return SuggestionsConfig.scrollToLoad();
 
             default:
                 assert false;
@@ -171,15 +176,18 @@ public class ContextMenuManager implements OnCloseContextMenuListener {
                 put(ID_OPEN_IN_INCOGNITO_TAB, R.string.contextmenu_open_in_incognito_tab);
                 put(ID_SAVE_FOR_OFFLINE, R.string.contextmenu_save_link);
                 put(ID_REMOVE, R.string.remove);
+                put(ID_LEARN_MORE, R.string.learn_more);
             }
         };
     }
 
     private static class ItemClickListener implements OnMenuItemClickListener {
         private final Delegate mDelegate;
+        private final SuggestionsNavigationDelegate mNavigationDelegate;
 
-        ItemClickListener(Delegate delegate) {
+        ItemClickListener(Delegate delegate, SuggestionsNavigationDelegate navigationDelegate) {
             mDelegate = delegate;
+            mNavigationDelegate = navigationDelegate;
         }
 
         @Override
@@ -204,6 +212,10 @@ public class ContextMenuManager implements OnCloseContextMenuListener {
                 case ID_REMOVE:
                     mDelegate.removeItem();
                     RecordUserAction.record("Suggestions.ContextMenu.RemoveItem");
+                    return true;
+                case ID_LEARN_MORE:
+                    mNavigationDelegate.navigateToHelpPage();
+                    RecordUserAction.record("Suggestions.ContextMenu.LearnMore");
                     return true;
                 default:
                     return false;

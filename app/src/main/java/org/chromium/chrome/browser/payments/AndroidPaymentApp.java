@@ -7,8 +7,6 @@ package org.chromium.chrome.browser.payments;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -37,6 +35,7 @@ import org.chromium.ui.base.WindowAndroid;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -100,21 +99,25 @@ public class AndroidPaymentApp
     private InstrumentsCallback mInstrumentsCallback;
     private InstrumentDetailsCallback mInstrumentDetailsCallback;
     private ServiceConnection mServiceConnection;
+    @Nullable
+    private URI mCanDedupedApplicationId;
     private boolean mIsReadyToPayQueried;
 
     /**
      * Builds the point of interaction with a locally installed 3rd party native Android payment
      * app.
      *
-     * @param webContents The web contents.
-     * @param packageName The name of the package of the payment app.
-     * @param activity    The name of the payment activity in the payment app.
-     * @param label       The UI label to use for the payment app.
-     * @param icon        The icon to use in UI for the payment app.
-     * @param isIncognito Whether the user is in incognito mode.
+     * @param webContents             The web contents.
+     * @param packageName             The name of the package of the payment app.
+     * @param activity                The name of the payment activity in the payment app.
+     * @param label                   The UI label to use for the payment app.
+     * @param icon                    The icon to use in UI for the payment app.
+     * @param isIncognito             Whether the user is in incognito mode.
+     * @param canDedupedApplicationId The corresponding app Id this app can deduped.
      */
     public AndroidPaymentApp(WebContents webContents, String packageName, String activity,
-            String label, Drawable icon, boolean isIncognito) {
+            String label, Drawable icon, boolean isIncognito,
+            @Nullable URI canDedupedApplicationId) {
         super(packageName, label, null, icon);
         ThreadUtils.assertOnUiThread();
         mHandler = new Handler();
@@ -126,6 +129,7 @@ public class AndroidPaymentApp
         mPayIntent.setAction(ACTION_PAY);
         mMethodNames = new HashSet<>();
         mIsIncognito = isIncognito;
+        mCanDedupedApplicationId = canDedupedApplicationId;
     }
 
     /** @param methodName A payment method that this app supports, e.g., "https://bobpay.com". */
@@ -140,8 +144,8 @@ public class AndroidPaymentApp
 
     @Override
     public void getInstruments(Map<String, PaymentMethodData> methodDataMap, String origin,
-            String iframeOrigin, @Nullable byte[][] certificateChain, PaymentItem total,
-            InstrumentsCallback callback) {
+            String iframeOrigin, @Nullable byte[][] certificateChain,
+            Map<String, PaymentDetailsModifier> modifiers, InstrumentsCallback callback) {
         assert mMethodNames.containsAll(methodDataMap.keySet());
         assert mInstrumentsCallback
                 == null : "Have not responded to previous request for instruments yet";
@@ -171,7 +175,7 @@ public class AndroidPaymentApp
 
         mIsReadyToPayIntent.putExtras(buildExtras(null /* id */, null /* merchantName */,
                 removeUrlScheme(origin), removeUrlScheme(iframeOrigin), certificateChain,
-                methodDataMap, total, null /* displayItems */, null /* modifiers */));
+                methodDataMap, null /* total */, null /* displayItems */, null /* modifiers */));
         try {
             if (!ContextUtils.getApplicationContext().bindService(
                         mIsReadyToPayIntent, mServiceConnection, Context.BIND_AUTO_CREATE)) {
@@ -183,11 +187,8 @@ public class AndroidPaymentApp
             return;
         }
 
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (!mIsReadyToPayQueried) respondToGetInstrumentsQuery(null);
-            }
+        mHandler.postDelayed(() -> {
+            if (!mIsReadyToPayQueried) respondToGetInstrumentsQuery(null);
         }, SERVICE_CONNECTION_TIMEOUT_MS);
     }
 
@@ -198,19 +199,16 @@ public class AndroidPaymentApp
         }
 
         if (mInstrumentsCallback == null) return;
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                ThreadUtils.assertOnUiThread();
-                if (mInstrumentsCallback == null) return;
-                List<PaymentInstrument> instruments = null;
-                if (instrument != null) {
-                    instruments = new ArrayList<>();
-                    instruments.add(instrument);
-                }
-                mInstrumentsCallback.onInstrumentsReady(AndroidPaymentApp.this, instruments);
-                mInstrumentsCallback = null;
+        mHandler.post(() -> {
+            ThreadUtils.assertOnUiThread();
+            if (mInstrumentsCallback == null) return;
+            List<PaymentInstrument> instruments = null;
+            if (instrument != null) {
+                instruments = new ArrayList<>();
+                instruments.add(instrument);
             }
+            mInstrumentsCallback.onInstrumentsReady(AndroidPaymentApp.this, instruments);
+            mInstrumentsCallback = null;
         });
     }
 
@@ -235,12 +233,7 @@ public class AndroidPaymentApp
             respondToGetInstrumentsQuery(null);
             return;
         }
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                respondToGetInstrumentsQuery(null);
-            }
-        }, READY_TO_PAY_TIMEOUT_MS);
+        mHandler.postDelayed(() -> respondToGetInstrumentsQuery(null), READY_TO_PAY_TIMEOUT_MS);
     }
 
     @Override
@@ -249,6 +242,11 @@ public class AndroidPaymentApp
         Set<String> methodNames = new HashSet<>(methodsAndData.keySet());
         methodNames.retainAll(getAppMethodNames());
         return !methodNames.isEmpty();
+    }
+
+    @Override
+    public URI getCanDedupedApplicationId() {
+        return mCanDedupedApplicationId;
     }
 
     @Override
@@ -293,27 +291,13 @@ public class AndroidPaymentApp
                 .setTitle(R.string.external_app_leave_incognito_warning_title)
                 .setMessage(R.string.external_payment_app_leave_incognito_warning)
                 .setPositiveButton(R.string.ok,
-                        new OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                launchPaymentApp(id, merchantName, schemelessOrigin,
-                                        schemelessIframeOrigin, certificateChain, methodDataMap,
-                                        total, displayItems, modifiers);
-                            }
-                        })
+                        (OnClickListener) (dialog, which) -> launchPaymentApp(id, merchantName,
+                                schemelessOrigin,
+                                schemelessIframeOrigin, certificateChain, methodDataMap,
+                                total, displayItems, modifiers))
                 .setNegativeButton(R.string.cancel,
-                        new OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                notifyErrorInvokingPaymentApp();
-                            }
-                        })
-                .setOnCancelListener(new OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
-                        notifyErrorInvokingPaymentApp();
-                    }
-                })
+                        (OnClickListener) (dialog, which) -> notifyErrorInvokingPaymentApp())
+                .setOnCancelListener(dialog -> notifyErrorInvokingPaymentApp())
                 .show();
     }
 
@@ -353,7 +337,7 @@ public class AndroidPaymentApp
 
     private static Bundle buildExtras(@Nullable String id, @Nullable String merchantName,
             String origin, String iframeOrigin, @Nullable byte[][] certificateChain,
-            Map<String, PaymentMethodData> methodDataMap, PaymentItem total,
+            Map<String, PaymentMethodData> methodDataMap, @Nullable PaymentItem total,
             @Nullable List<PaymentItem> displayItems,
             @Nullable Map<String, PaymentDetailsModifier> modifiers) {
         Bundle extras = new Bundle();
@@ -387,9 +371,11 @@ public class AndroidPaymentApp
             extras.putString(EXTRA_MODIFIERS, serializeModifiers(modifiers.values()));
         }
 
-        String serializedTotalAmount = serializeTotalAmount(total.amount);
-        extras.putString(EXTRA_TOTAL,
-                serializedTotalAmount == null ? EMPTY_JSON_DATA : serializedTotalAmount);
+        if (total != null) {
+            String serializedTotalAmount = serializeTotalAmount(total.amount);
+            extras.putString(EXTRA_TOTAL,
+                    serializedTotalAmount == null ? EMPTY_JSON_DATA : serializedTotalAmount);
+        }
 
         return addDeprecatedExtras(id, origin, iframeOrigin, serializedCertificateChain,
                 methodDataMap, methodDataBundle, total, displayItems, extras);
@@ -398,7 +384,7 @@ public class AndroidPaymentApp
     private static Bundle addDeprecatedExtras(@Nullable String id, String origin,
             String iframeOrigin, @Nullable Parcelable[] serializedCertificateChain,
             Map<String, PaymentMethodData> methodDataMap, Bundle methodDataBundle,
-            PaymentItem total, @Nullable List<PaymentItem> displayItems, Bundle extras) {
+            @Nullable PaymentItem total, @Nullable List<PaymentItem> displayItems, Bundle extras) {
         if (id != null) extras.putString(EXTRA_DEPRECATED_ID, id);
 
         extras.putString(EXTRA_DEPRECATED_ORIGIN, origin);
@@ -419,7 +405,7 @@ public class AndroidPaymentApp
 
         extras.putParcelable(EXTRA_DEPRECATED_DATA_MAP, methodDataBundle);
 
-        String details = serializeDetails(total, displayItems);
+        String details = deprecatedSerializeDetails(total, displayItems);
         extras.putString(EXTRA_DEPRECATED_DETAILS, details == null ? EMPTY_JSON_DATA : details);
 
         return extras;
@@ -436,33 +422,28 @@ public class AndroidPaymentApp
     }
 
     private void notifyErrorInvokingPaymentApp() {
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                mInstrumentDetailsCallback.onInstrumentDetailsError();
-            }
-        });
+        mHandler.post(() -> mInstrumentDetailsCallback.onInstrumentDetailsError());
     }
 
-    private static String serializeDetails(
-            PaymentItem total, @Nullable List<PaymentItem> displayItems) {
+    private static String deprecatedSerializeDetails(
+            @Nullable PaymentItem total, @Nullable List<PaymentItem> displayItems) {
         StringWriter stringWriter = new StringWriter();
         JsonWriter json = new JsonWriter(stringWriter);
         try {
             // details {{{
             json.beginObject();
 
-            // total {{{
-            json.name("total");
-            serializePaymentItem(total, json);
-            // }}} total
+            if (total != null) {
+                // total {{{
+                json.name("total");
+                serializeTotal(total, json);
+                // }}} total
+            }
 
             // displayitems {{{
             if (displayItems != null) {
                 json.name("displayItems").beginArray();
-                for (int i = 0; i < displayItems.size(); i++) {
-                    serializePaymentItem(displayItems.get(i), json);
-                }
+                // Do not pass any display items to the payment app.
                 json.endArray();
             }
             // }}} displayItems
@@ -492,10 +473,14 @@ public class AndroidPaymentApp
         return stringWriter.toString();
     }
 
-    private static void serializePaymentItem(PaymentItem item, JsonWriter json) throws IOException {
+    private static void serializeTotal(PaymentItem item, JsonWriter json)
+            throws IOException {
         // item {{{
         json.beginObject();
-        json.name("label").value(item.label);
+        // Sanitize the total name, because the payment app does not need it to complete the
+        // transaction. Matches the behavior of:
+        // https://w3c.github.io/payment-handler/#total-attribute
+        json.name("label").value("");
 
         // amount {{{
         json.name("amount").beginObject();
@@ -531,7 +516,7 @@ public class AndroidPaymentApp
         // total {{{
         if (modifier.total != null) {
             json.name("total");
-            serializePaymentItem(modifier.total, json);
+            serializeTotal(modifier.total, json);
         } else {
             json.name("total").nullValue();
         }
@@ -574,9 +559,4 @@ public class AndroidPaymentApp
 
     @Override
     public void dismissInstrument() {}
-
-    @Override
-    public int getAdditionalAppTextResourceId() {
-        return 0;
-    }
 }

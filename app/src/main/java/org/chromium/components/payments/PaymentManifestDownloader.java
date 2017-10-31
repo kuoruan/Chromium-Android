@@ -14,7 +14,7 @@ import java.net.URI;
 
 /**
  * See comment in:
- * components/payments/content/payment_manifest_downloader.h
+ * components/payments/core/payment_manifest_downloader.h
  */
 @JNINamespace("payments")
 public class PaymentManifestDownloader {

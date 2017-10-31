@@ -16,7 +16,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:textAppearance="@style/TextAppearance.Design.Tab"
-        android:visibility="visible" />
+        android:visibility="visible"
+        android:singleLine="true" />
     <ProgressBar
         android:id="@+id/translate_infobar_tab_progressbar"
         android:layout_width="@dimen/infobar_small_icon_size"

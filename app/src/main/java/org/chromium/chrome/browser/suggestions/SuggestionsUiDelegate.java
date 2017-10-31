@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.suggestions;
 
 import org.chromium.base.DiscardableReferencePool;
 import org.chromium.chrome.browser.ntp.snippets.SuggestionsSource;
+import org.chromium.chrome.browser.snackbar.SnackbarManager;
 
 /**
  * Interface between the suggestion surface and the rest of the browser.
@@ -27,8 +28,11 @@ public interface SuggestionsUiDelegate {
     /** Convenience method to access the {@link SuggestionsNavigationDelegate}. */
     SuggestionsNavigationDelegate getNavigationDelegate();
 
-    /** Convenience method to access the {@link ImageFetcher} */
+    /** Convenience method to access the {@link ImageFetcher}. */
     ImageFetcher getImageFetcher();
+
+    /** Convenience method to access the {@link SnackbarManager}. */
+    SnackbarManager getSnackbarManager();
 
     /**
      * @return The reference pool to use for large objects that should be dropped under

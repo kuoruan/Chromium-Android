@@ -4,10 +4,9 @@
 
 package org.chromium.chrome.browser.metrics;
 
-import android.util.Pair;
-
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.metrics.CachedMetrics;
+import org.chromium.blink_public.platform.WebDisplayMode;
 import org.chromium.content_public.browser.WebContents;
 
 import java.util.ArrayList;
@@ -20,24 +19,36 @@ import java.util.List;
  */
 @JNINamespace("metrics")
 public class LaunchMetrics {
-    // Each list item is a pair of the url and where it was added from e.g. from the add to
-    // homescreen menu item, an app banner, or unknown. The mapping of int source values to
-    // their string names is found in the C++ ShortcutInfo struct.
-    private static final List<Pair<String, Integer>> sActivityUrls =
-            new ArrayList<Pair<String, Integer>>();
-    private static final List<Pair<String, Integer>> sTabUrls =
-            new ArrayList<Pair<String, Integer>>();
+    private static class HomeScreenLaunch {
+        public final String mUrl;
+        public final boolean mIsShortcut;
+        // Corresponds to C++ ShortcutInfo::Source
+        public final int mSource;
+        @WebDisplayMode
+        public final int mDisplayMode;
 
-    private static final List<Long> sWebappHistogramTimes = new ArrayList<Long>();
+        public HomeScreenLaunch(
+                String url, boolean isShortcut, int source, @WebDisplayMode int displayMode) {
+            mUrl = url;
+            mIsShortcut = isShortcut;
+            mSource = source;
+            mDisplayMode = displayMode;
+        }
+    }
+
+    private static final List<HomeScreenLaunch> sHomeScreenLaunches = new ArrayList<>();
+    private static final List<Long> sWebappHistogramTimes = new ArrayList<>();
 
     /**
      * Records the launch of a standalone Activity for a URL (i.e. a WebappActivity)
      * added from a specific source.
      * @param url URL that kicked off the Activity's creation.
      * @param source integer id of the source from where the URL was added.
+     * @param displayMode integer id of the {@link WebDisplayMode} of the web app.
      */
-    public static void recordHomeScreenLaunchIntoStandaloneActivity(String url, int source) {
-        sActivityUrls.add(new Pair<String, Integer>(url, source));
+    public static void recordHomeScreenLaunchIntoStandaloneActivity(
+            String url, int source, @WebDisplayMode int displayMode) {
+        sHomeScreenLaunches.add(new HomeScreenLaunch(url, false, source, displayMode));
     }
 
     /**
@@ -46,7 +57,7 @@ public class LaunchMetrics {
      * @param source integer id of the source from where the URL was added.
      */
     public static void recordHomeScreenLaunchIntoTab(String url, int source) {
-        sTabUrls.add(new Pair<String, Integer>(url, source));
+        sHomeScreenLaunches.add(new HomeScreenLaunch(url, true, source, WebDisplayMode.UNDEFINED));
     }
 
     /**
@@ -64,15 +75,11 @@ public class LaunchMetrics {
      * @param webContents WebContents for the current Tab.
      */
     public static void commitLaunchMetrics(WebContents webContents) {
-        for (Pair<String, Integer> item : sActivityUrls) {
-            nativeRecordLaunch(true, item.first, item.second, webContents);
+        for (HomeScreenLaunch launch : sHomeScreenLaunches) {
+            nativeRecordLaunch(launch.mIsShortcut, launch.mUrl, launch.mSource, launch.mDisplayMode,
+                    webContents);
         }
-        sActivityUrls.clear();
-
-        for (Pair<String, Integer> item : sTabUrls) {
-            nativeRecordLaunch(false, item.first, item.second, webContents);
-        }
-        sTabUrls.clear();
+        sHomeScreenLaunches.clear();
 
         // Record generic cached events.
         CachedMetrics.commitCachedMetrics();
@@ -93,8 +100,8 @@ public class LaunchMetrics {
         nativeRecordHomePageLaunchMetrics(showHomeButton, homepageIsNtp, homepageUrl);
     }
 
-    private static native void nativeRecordLaunch(
-            boolean standalone, String url, int source, WebContents webContents);
+    private static native void nativeRecordLaunch(boolean isShortcut, String url, int source,
+            @WebDisplayMode int displayMode, WebContents webContents);
     private static native void nativeRecordHomePageLaunchMetrics(
             boolean showHomeButton, boolean homepageIsNtp, String homepageUrl);
 }

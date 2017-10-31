@@ -9,6 +9,7 @@ import android.support.annotation.IntDef;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.BottomSheetContent;
+import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.StateChangeReason;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -23,37 +24,21 @@ public class BottomSheetMetrics extends EmptyBottomSheetObserver {
      * histogram and should therefore be treated as append-only.
      */
     @IntDef({OPENED_BY_SWIPE, OPENED_BY_OMNIBOX_FOCUS, OPENED_BY_NEW_TAB_CREATION,
-            OPENED_BY_EXPAND_BUTTON})
+            OPENED_BY_EXPAND_BUTTON, OPENED_BY_STARTUP})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface SheetOpenReason {}
-    public static final int OPENED_BY_SWIPE = 0;
-    public static final int OPENED_BY_OMNIBOX_FOCUS = 1;
-    public static final int OPENED_BY_NEW_TAB_CREATION = 2;
-    public static final int OPENED_BY_EXPAND_BUTTON = 3;
-    private static final int OPENED_BY_BOUNDARY = 4;
-
-    /** The different ways that the bottom sheet can be closed. */
-    @IntDef({CLOSED_BY_NONE, CLOSED_BY_SWIPE, CLOSED_BY_BACK_PRESS, CLOSED_BY_TAP_SCRIM,
-            CLOSED_BY_NAVIGATION})
-    public @interface SheetCloseReason {}
-    private static final int CLOSED_BY_NONE = -1;
-    public static final int CLOSED_BY_SWIPE = 0;
-    public static final int CLOSED_BY_BACK_PRESS = 1;
-    public static final int CLOSED_BY_TAP_SCRIM = 2;
-    public static final int CLOSED_BY_NAVIGATION = 3;
+    private @interface SheetOpenReason {}
+    private static final int OPENED_BY_SWIPE = 0;
+    private static final int OPENED_BY_OMNIBOX_FOCUS = 1;
+    private static final int OPENED_BY_NEW_TAB_CREATION = 2;
+    private static final int OPENED_BY_EXPAND_BUTTON = 3;
+    private static final int OPENED_BY_STARTUP = 4;
+    private static final int OPENED_BY_BOUNDARY = 5;
 
     /** Whether the sheet is currently open. */
     private boolean mIsSheetOpen;
 
     /** The last {@link BottomSheetContent} that was displayed. */
     private BottomSheetContent mLastContent;
-
-    /**
-     * The current reason the sheet might become closed. This may change before the sheet actually
-     * reaches the closed state.
-     */
-    @SheetCloseReason
-    private int mSheetCloseReason;
 
     /** When this class was created. Used as a proxy for when the app was started. */
     private long mCreationTime;
@@ -69,7 +54,7 @@ public class BottomSheetMetrics extends EmptyBottomSheetObserver {
     }
 
     @Override
-    public void onSheetOpened() {
+    public void onSheetOpened(int reason) {
         mIsSheetOpen = true;
 
         boolean isFirstOpen = mLastOpenTime == 0;
@@ -83,13 +68,14 @@ public class BottomSheetMetrics extends EmptyBottomSheetObserver {
                     "Android.ChromeHome.TimeBetweenCloseAndNextOpen",
                     mLastOpenTime - mLastCloseTime, TimeUnit.MILLISECONDS);
         }
+
+        recordSheetOpenReason(reason);
     }
 
     @Override
-    public void onSheetClosed() {
+    public void onSheetClosed(@StateChangeReason int reason) {
         mIsSheetOpen = false;
-        recordSheetCloseReason(mSheetCloseReason);
-        mSheetCloseReason = CLOSED_BY_NONE;
+        recordSheetCloseReason(reason);
 
         mLastCloseTime = System.currentTimeMillis();
         RecordHistogram.recordMediumTimesHistogram("Android.ChromeHome.DurationOpen",
@@ -110,7 +96,7 @@ public class BottomSheetMetrics extends EmptyBottomSheetObserver {
         // Return early if the sheet content is being set during initialization (previous content
         // is null) or while the sheet is closed (sheet content being reset), so that we only
         // record actions when the user explicitly takes an action.
-        if (mLastContent == null || !mIsSheetOpen) {
+        if (mLastContent == null || !mIsSheetOpen || newContent == null) {
             mLastContent = newContent;
             return;
         }
@@ -125,67 +111,68 @@ public class BottomSheetMetrics extends EmptyBottomSheetObserver {
             RecordUserAction.record("Android.ChromeHome.ShowHistory");
         } else if (newContent.getType() == BottomSheetContentController.TYPE_INCOGNITO_HOME) {
             RecordUserAction.record("Android.ChromeHome.ShowIncognitoHome");
-        } else if (newContent.getType() == BottomSheetContentController.TYPE_PLACEHOLDER) {
-            // Intentionally do nothing; the placeholder is not user triggered.
-        } else {
-            assert false;
         }
         mLastContent = newContent;
     }
 
     /**
-     * Set the reason the bottom sheet is currently closing. This value is not recorded until after
-     * the sheet is actually closed.
-     * @param reason The {@link SheetCloseReason} that the sheet is closing.
-     */
-    public void setSheetCloseReason(@SheetCloseReason int reason) {
-        mSheetCloseReason = reason;
-    }
-
-    /**
      * Records the reason the sheet was opened.
-     * @param reason The {@link SheetOpenReason} that caused the bottom sheet to open.
+     * @param reason The {@link StateChangeReason} that caused the bottom sheet to open.
      */
-    public void recordSheetOpenReason(@SheetOpenReason int reason) {
+    public void recordSheetOpenReason(@StateChangeReason int reason) {
+        @SheetOpenReason
+        int metricsReason = OPENED_BY_SWIPE;
         switch (reason) {
-            case OPENED_BY_SWIPE:
+            case StateChangeReason.SWIPE:
+                metricsReason = OPENED_BY_SWIPE;
                 RecordUserAction.record("Android.ChromeHome.OpenedBySwipe");
                 break;
-            case OPENED_BY_OMNIBOX_FOCUS:
+            case StateChangeReason.OMNIBOX_FOCUS:
+                metricsReason = OPENED_BY_OMNIBOX_FOCUS;
                 RecordUserAction.record("Android.ChromeHome.OpenedByOmnibox");
                 break;
-            case OPENED_BY_NEW_TAB_CREATION:
+            case StateChangeReason.NEW_TAB:
+                metricsReason = OPENED_BY_NEW_TAB_CREATION;
                 RecordUserAction.record("Android.ChromeHome.OpenedByNTP");
                 break;
-            case OPENED_BY_EXPAND_BUTTON:
+            case StateChangeReason.EXPAND_BUTTON:
+                metricsReason = OPENED_BY_EXPAND_BUTTON;
                 RecordUserAction.record("Android.ChromeHome.OpenedByExpandButton");
+                break;
+            case StateChangeReason.STARTUP:
+                metricsReason = OPENED_BY_STARTUP;
+                RecordUserAction.record("Android.ChromeHome.OpenedByStartup");
+                break;
+            case StateChangeReason.NONE:
+                // Intentionally empty.
                 break;
             default:
                 assert false;
         }
+
         RecordHistogram.recordEnumeratedHistogram(
-                "Android.ChromeHome.OpenReason", reason, OPENED_BY_BOUNDARY);
+                "Android.ChromeHome.OpenReason", metricsReason, OPENED_BY_BOUNDARY);
     }
 
     /**
      * Records the reason the sheet was closed.
-     * @param reason The {@link SheetCloseReason} that cause the bottom sheet to close.
+     * @param reason The {@link StateChangeReason} that cause the bottom sheet to close.
      */
-    public void recordSheetCloseReason(@SheetCloseReason int reason) {
+    private void recordSheetCloseReason(@StateChangeReason int reason) {
         switch (reason) {
-            case CLOSED_BY_SWIPE:
+            case StateChangeReason.SWIPE:
                 RecordUserAction.record("Android.ChromeHome.ClosedBySwipe");
                 break;
-            case CLOSED_BY_BACK_PRESS:
+            case StateChangeReason.BACK_PRESS:
                 RecordUserAction.record("Android.ChromeHome.ClosedByBackPress");
                 break;
-            case CLOSED_BY_TAP_SCRIM:
+            case StateChangeReason.TAP_SCRIM:
                 RecordUserAction.record("Android.ChromeHome.ClosedByTapScrim");
                 break;
-            case CLOSED_BY_NAVIGATION:
+            case StateChangeReason.NAVIGATION:
                 RecordUserAction.record("Android.ChromeHome.ClosedByNavigation");
                 break;
-            case CLOSED_BY_NONE:
+            case StateChangeReason.NONE:
                 RecordUserAction.record("Android.ChromeHome.Closed");
                 break;
             default:
@@ -199,5 +186,12 @@ public class BottomSheetMetrics extends EmptyBottomSheetObserver {
      */
     public void recordNativeNewTabPageShown() {
         RecordUserAction.record("Android.ChromeHome.NativeNTPShown");
+    }
+
+    /**
+     * Records that the user tapped the app menu item that triggers the in-product help bubble.
+     */
+    public void recordInProductHelpMenuItemClicked() {
+        RecordUserAction.record("Android.ChromeHome.IPHMenuItemClicked");
     }
 }

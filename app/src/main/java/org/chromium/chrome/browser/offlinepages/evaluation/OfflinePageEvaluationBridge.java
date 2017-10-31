@@ -21,9 +21,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-
 import java.text.SimpleDateFormat;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -89,13 +87,11 @@ public class OfflinePageEvaluationBridge {
      * @param profile The profile used to get bridge.
      * @param useEvaluationScheduler True if using the evaluation scheduler instead of the
      *                               GCMNetworkManager one.
-     * @param useBackgroundLoader True if using background loader. False for prerenderer.
      */
-    public OfflinePageEvaluationBridge(
-            Profile profile, boolean useEvaluationScheduler, boolean useBackgroundLoader) {
+    public OfflinePageEvaluationBridge(Profile profile, boolean useEvaluationScheduler) {
         ThreadUtils.assertOnUiThread();
         mNativeOfflinePageEvaluationBridge =
-                nativeCreateBridgeForProfile(profile, useEvaluationScheduler, useBackgroundLoader);
+                nativeCreateBridgeForProfile(profile, useEvaluationScheduler);
     }
 
     private static final String TAG = "OPEvalBridge";
@@ -247,21 +243,31 @@ public class OfflinePageEvaluationBridge {
 
     @CalledByNative
     private static void createOfflinePageAndAddToList(List<OfflinePageItem> offlinePagesList,
-            String url, long offlineId, String clientNamespace, String clientId, String filePath,
-            long fileSize, long creationTime, int accessCount, long lastAccessTimeMs) {
-        offlinePagesList.add(createOfflinePageItem(url, offlineId, clientNamespace, clientId,
-                filePath, fileSize, creationTime, accessCount, lastAccessTimeMs));
+            String url, long offlineId, String clientNamespace, String clientId, String title,
+            String filePath, long fileSize, long creationTime, int accessCount,
+            long lastAccessTimeMs, String requestOrigin) {
+        offlinePagesList.add(createOfflinePageItem(url, offlineId, clientNamespace, clientId, title,
+                filePath, fileSize, creationTime, accessCount, lastAccessTimeMs, requestOrigin));
+    }
+
+    // This is added as a utility method in the bridge because SavePageRequest_jni.h is supposed
+    // only to be included in one bridge (OfflinePageBridge). So as a testing bridge, this will be
+    // used to create SavePageRequest on the native side.
+    @CalledByNative
+    private static SavePageRequest createSavePageRequest(
+            int state, long requestId, String url, String clientIdNamespace, String clientIdId) {
+        return SavePageRequest.create(state, requestId, url, clientIdNamespace, clientIdId);
     }
 
     private static OfflinePageItem createOfflinePageItem(String url, long offlineId,
-            String clientNamespace, String clientId, String filePath, long fileSize,
-            long creationTime, int accessCount, long lastAccessTimeMs) {
-        return new OfflinePageItem(url, offlineId, clientNamespace, clientId, filePath, fileSize,
-                creationTime, accessCount, lastAccessTimeMs);
+            String clientNamespace, String clientId, String title, String filePath, long fileSize,
+            long creationTime, int accessCount, long lastAccessTimeMs, String requestOrigin) {
+        return new OfflinePageItem(url, offlineId, clientNamespace, clientId, title, filePath,
+                fileSize, creationTime, accessCount, lastAccessTimeMs, requestOrigin);
     }
 
     private native long nativeCreateBridgeForProfile(
-            Profile profile, boolean useEvaluationScheduler, boolean useBackgroundLoader);
+            Profile profile, boolean useEvaluationScheduler);
     private native void nativeDestroy(long nativeOfflinePageEvaluationBridge);
 
     private native void nativeGetAllPages(long nativeOfflinePageEvaluationBridge,

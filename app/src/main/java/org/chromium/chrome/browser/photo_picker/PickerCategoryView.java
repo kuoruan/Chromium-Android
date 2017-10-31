@@ -27,6 +27,7 @@ import org.chromium.chrome.browser.util.ConversionUtils;
 import org.chromium.chrome.browser.widget.selection.SelectableListLayout;
 import org.chromium.chrome.browser.widget.selection.SelectionDelegate;
 import org.chromium.ui.PhotoPickerListener;
+import org.chromium.ui.UiUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -210,8 +211,7 @@ public class PickerCategoryView extends RelativeLayout
         mDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
             @Override
             public void onCancel(DialogInterface dialog) {
-                recordFinalUmaStats(ACTION_CANCEL);
-                mListener.onPickerUserAction(PhotoPickerListener.Action.CANCEL, null);
+                executeAction(PhotoPickerListener.Action.CANCEL, null, ACTION_CANCEL);
             }
         });
     }
@@ -257,14 +257,10 @@ public class PickerCategoryView extends RelativeLayout
     @Override
     public void onClick(View view) {
         if (view.getId() == R.id.done) {
-            recordFinalUmaStats(ACTION_PHOTO_PICKED);
             notifyPhotosSelected();
         } else {
-            recordFinalUmaStats(ACTION_CANCEL);
-            mListener.onPickerUserAction(PhotoPickerListener.Action.CANCEL, null);
+            executeAction(PhotoPickerListener.Action.CANCEL, null, ACTION_CANCEL);
         }
-
-        mDialog.dismiss();
     }
 
     /**
@@ -319,16 +315,14 @@ public class PickerCategoryView extends RelativeLayout
      * Notifies the listener that the user selected to launch the gallery.
      */
     public void showGallery() {
-        recordFinalUmaStats(ACTION_BROWSE);
-        mListener.onPickerUserAction(PhotoPickerListener.Action.LAUNCH_GALLERY, null);
+        executeAction(PhotoPickerListener.Action.LAUNCH_GALLERY, null, ACTION_BROWSE);
     }
 
     /**
      * Notifies the listener that the user selected to launch the camera intent.
      */
     public void showCamera() {
-        recordFinalUmaStats(ACTION_NEW_PHOTO);
-        mListener.onPickerUserAction(PhotoPickerListener.Action.LAUNCH_CAMERA, null);
+        executeAction(PhotoPickerListener.Action.LAUNCH_CAMERA, null, ACTION_NEW_PHOTO);
     }
 
     /**
@@ -381,7 +375,7 @@ public class PickerCategoryView extends RelativeLayout
             photos[i++] = bitmap.getFilePath();
         }
 
-        mListener.onPickerUserAction(PhotoPickerListener.Action.PHOTOS_SELECTED, photos);
+        executeAction(PhotoPickerListener.Action.PHOTOS_SELECTED, photos, ACTION_PHOTO_PICKED);
     }
 
     /**
@@ -419,6 +413,19 @@ public class PickerCategoryView extends RelativeLayout
 
             outRect.set(left, top, right, bottom);
         }
+    }
+
+    /**
+     * Report back what the user selected in the dialog, report UMA and clean up.
+     * @param action The action taken.
+     * @param photos The photos that were selected (if any).
+     * @param umaId The UMA value to record with the action.
+     */
+    private void executeAction(PhotoPickerListener.Action action, String[] photos, int umaId) {
+        mListener.onPickerUserAction(action, photos);
+        mDialog.dismiss();
+        UiUtils.onPhotoPickerDismissed();
+        recordFinalUmaStats(umaId);
     }
 
     /**

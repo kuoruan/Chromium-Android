@@ -34,8 +34,13 @@ public class BrowsingHistoryBridge implements HistoryProvider {
     }
 
     @Override
-    public void queryHistory(String query, long endQueryTime) {
-        nativeQueryHistory(mNativeHistoryBridge, new ArrayList<HistoryItem>(), query, endQueryTime);
+    public void queryHistory(String query) {
+        nativeQueryHistory(mNativeHistoryBridge, new ArrayList<HistoryItem>(), query);
+    }
+
+    @Override
+    public void queryHistoryContinuation() {
+        nativeQueryHistoryContinuation(mNativeHistoryBridge, new ArrayList<HistoryItem>());
     }
 
     @Override
@@ -88,16 +93,18 @@ public class BrowsingHistoryBridge implements HistoryProvider {
     }
 
     @CalledByNative
-    public void hasOtherFormsOfBrowsingData(boolean hasOtherForms, boolean hasSyncedResults) {
+    public void hasOtherFormsOfBrowsingData(boolean hasOtherForms) {
         if (mObserver != null) {
-            mObserver.hasOtherFormsOfBrowsingData(hasOtherForms, hasSyncedResults);
+            mObserver.hasOtherFormsOfBrowsingData(hasOtherForms);
         }
     }
 
     private native long nativeInit(boolean isIncognito);
     private native void nativeDestroy(long nativeBrowsingHistoryBridge);
-    private native void nativeQueryHistory(long nativeBrowsingHistoryBridge,
-            List<HistoryItem> historyItems, String query, long queryEndTime);
+    private native void nativeQueryHistory(
+            long nativeBrowsingHistoryBridge, List<HistoryItem> historyItems, String query);
+    private native void nativeQueryHistoryContinuation(
+            long nativeBrowsingHistoryBridge, List<HistoryItem> historyItems);
     private native void nativeMarkItemForRemoval(
             long nativeBrowsingHistoryBridge, String url, long[] nativeTimestamps);
     private native void nativeRemoveItems(long nativeBrowsingHistoryBridge);

@@ -26,6 +26,7 @@ import org.chromium.base.BuildInfo;
 import org.chromium.base.CollectionUtil;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
+import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.components.signin.ChromeSigninController;
@@ -251,19 +252,21 @@ public class InvalidationClientService extends AndroidListener {
             return;
         }
 
-        // Attempt to retrieve a token for the user. This method will also invalidate
-        // invalidAuthToken if it is non-null.
-        AccountManagerFacade.get().getNewAuthToken(account, invalidAuthToken,
-                getOAuth2ScopeWithType(), new AccountManagerFacade.GetAuthTokenCallback() {
-                    @Override
-                    public void tokenAvailable(String token) {
-                        setAuthToken(InvalidationClientService.this.getApplicationContext(),
-                                pendingIntent, token, getOAuth2ScopeWithType());
-                    }
+        ThreadUtils.runOnUiThread(() -> {
+            // Attempt to retrieve a token for the user. This method will also invalidate
+            // invalidAuthToken if it is non-null.
+            AccountManagerFacade.get().getNewAuthToken(account, invalidAuthToken,
+                    getOAuth2ScopeWithType(), new AccountManagerFacade.GetAuthTokenCallback() {
+                        @Override
+                        public void tokenAvailable(String token) {
+                            setAuthToken(InvalidationClientService.this.getApplicationContext(),
+                                    pendingIntent, token, getOAuth2ScopeWithType());
+                        }
 
-                    @Override
-                    public void tokenUnavailable(boolean isTransientError) {}
-                });
+                        @Override
+                        public void tokenUnavailable(boolean isTransientError) {}
+                    });
+        });
     }
 
     @Override

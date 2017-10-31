@@ -17,7 +17,6 @@ import org.chromium.content_public.common.ResourceRequestBody;
  */
 @JNINamespace("web_contents_delegate_android")
 public class WebContentsDelegateAndroid {
-
     // Equivalent of WebCore::WebConsoleMessage::LevelTip.
     public static final int LOG_LEVEL_TIP = 0;
     // Equivalent of WebCore::WebConsoleMessage::LevelLog.
@@ -42,28 +41,22 @@ public class WebContentsDelegateAndroid {
      */
     @CalledByNative
     public void openNewTab(String url, String extraHeaders, ResourceRequestBody postData,
-            int disposition, boolean isRendererInitiated) {
-    }
+            int disposition, boolean isRendererInitiated) {}
 
     @CalledByNative
-    public void activateContents() {
-    }
+    public void activateContents() {}
 
     @CalledByNative
-    public void closeContents() {
-    }
+    public void closeContents() {}
 
     @CalledByNative
-    public void loadingStateChanged(boolean toDifferentDocument) {
-    }
+    public void loadingStateChanged(boolean toDifferentDocument) {}
 
     @CalledByNative
-    public void navigationStateChanged(int flags) {
-    }
+    public void navigationStateChanged(int flags) {}
 
     @CalledByNative
-    public void visibleSSLStateChanged() {
-    }
+    public void visibleSSLStateChanged() {}
 
     @SuppressWarnings("unused")
     @CalledByNative
@@ -75,22 +68,19 @@ public class WebContentsDelegateAndroid {
     /**
      * @param progress The load progress [0, 100] for the current web contents.
      */
-    public void onLoadProgressChanged(int progress) {
-    }
+    public void onLoadProgressChanged(int progress) {}
 
     /**
      * Signaled when the renderer has been deemed to be unresponsive.
      */
     @CalledByNative
-    public void rendererUnresponsive() {
-    }
+    public void rendererUnresponsive() {}
 
     /**
      * Signaled when the render has been deemed to be responsive.
      */
     @CalledByNative
-    public void rendererResponsive() {
-    }
+    public void rendererResponsive() {}
 
     @CalledByNative
     public void webContentsCreated(WebContents sourceWebContents, long openerRenderProcessId,
@@ -103,8 +93,7 @@ public class WebContentsDelegateAndroid {
     }
 
     @CalledByNative
-    public void onUpdateUrl(String url) {
-    }
+    public void onUpdateUrl(String url) {}
 
     @CalledByNative
     public boolean takeFocus(boolean reverse) {
@@ -127,8 +116,7 @@ public class WebContentsDelegateAndroid {
      * @return true if the client will handle logging the message.
      */
     @CalledByNative
-    public boolean addMessageToConsole(int level, String message, int lineNumber,
-            String sourceId) {
+    public boolean addMessageToConsole(int level, String message, int lineNumber, String sourceId) {
         return false;
     }
 
@@ -138,12 +126,10 @@ public class WebContentsDelegateAndroid {
      * NavigationController.CancelPendingReload.
      */
     @CalledByNative
-    public void showRepostFormWarningDialog() {
-    }
+    public void showRepostFormWarningDialog() {}
 
     @CalledByNative
-    public void toggleFullscreenModeForTab(boolean enterFullscreen) {
-    }
+    public void toggleFullscreenModeForTab(boolean enterFullscreen) {}
 
     @CalledByNative
     public boolean isFullscreenForTabOrPending() {

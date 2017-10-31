@@ -3,32 +3,30 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:minHeight="@dimen/bookmark_minimum_dialog_size_tablet"
-    android:orientation="vertical" >
-
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="4dp"
-        android:layout_marginBottom="-4dp"
-        android:background="@drawable/bookmark_title_bar_shadow" />
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minHeight="@dimen/bookmark_minimum_dialog_size_tablet" >
 
     <ListView
         android:id="@+id/bookmark_folder_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingBottom="8dp"
-        android:paddingTop="8dp"
+        android:paddingTop="@dimen/bookmark_list_view_padding_top"
         android:clipToPadding="false"
         android:divider="@null"
         android:dividerHeight="0dp" />
 
-</LinearLayout>
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/toolbar_height_no_shadow"
+        style="@style/ModernToolbar"
+        android:background="@color/modern_toolbar_bg" />
+
+    <View
+        android:id="@+id/shadow"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_marginTop="@dimen/toolbar_height_no_shadow"
+        android:background="@drawable/bookmark_title_bar_shadow"
+        android:visibility="gone" />
+</merge>

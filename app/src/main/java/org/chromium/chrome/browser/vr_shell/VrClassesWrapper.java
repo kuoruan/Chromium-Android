@@ -17,11 +17,6 @@ import org.chromium.chrome.browser.tabmodel.TabModelSelector;
  */
 public interface VrClassesWrapper {
     /**
-     * Creates a NonPresentingGvrContextImpl instance.
-     */
-    public NonPresentingGvrContext createNonPresentingGvrContext(ChromeActivity activity);
-
-    /**
      * Creates a VrShellImpl instance.
      */
     public VrShell createVrShell(

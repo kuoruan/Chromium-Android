@@ -205,7 +205,7 @@ org.chromium.gfx.mojom.Rect rect) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(rect, 8, false);
+            encoder0.encode(this.rect, 8, false);
         }
     
         /**
@@ -232,7 +232,7 @@ org.chromium.gfx.mojom.Rect rect) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(rect);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.rect);
             return result;
         }
     }

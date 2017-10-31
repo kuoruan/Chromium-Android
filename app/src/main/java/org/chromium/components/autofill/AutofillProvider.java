@@ -7,6 +7,7 @@ package org.chromium.components.autofill;
 import android.util.SparseArray;
 import android.view.ViewGroup;
 import android.view.ViewStructure;
+import android.view.autofill.AutofillValue;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -42,7 +43,7 @@ public abstract class AutofillProvider {
      * @param values the array of autofill values, the key is virtual id of form
      *            field.
      */
-    public abstract void autofill(final SparseArray<Object> values);
+    public abstract void autofill(final SparseArray<AutofillValue> values);
 
     /**
      * Invoked when autofill service needs the form structure.
@@ -55,13 +56,9 @@ public abstract class AutofillProvider {
     /**
      * @return whether query autofill suggestion.
      */
-    // TODO(michaelbai): Change it to abstract after DEP roll.
-    public boolean shouldQueryAutofillSuggestion() {
-        return false;
-    }
+    public abstract boolean shouldQueryAutofillSuggestion();
 
-    // TODO(michaelbai): Change it to abstract after DEP roll.
-    public void queryAutofillSuggestion() {}
+    public abstract void queryAutofillSuggestion();
 
     /**
      * Invoked when filling form is need. AutofillProvider shall ask autofill

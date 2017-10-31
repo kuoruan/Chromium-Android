@@ -31,6 +31,7 @@ public class NotificationConstants {
      */
     public static final String EXTRA_NOTIFICATION_ID = "notification_id";
     static final String EXTRA_NOTIFICATION_INFO_ORIGIN = "notification_info_origin";
+    static final String EXTRA_NOTIFICATION_INFO_SCOPE = "notification_info_scope";
     static final String EXTRA_NOTIFICATION_INFO_PROFILE_ID = "notification_info_profile_id";
     static final String EXTRA_NOTIFICATION_INFO_PROFILE_INCOGNITO =
             "notification_info_profile_incognito";
@@ -59,6 +60,11 @@ public class NotificationConstants {
      * Unique identifier for Browser Actions notification.
      */
     public static final int NOTIFICATION_ID_BROWSER_ACTIONS = 4;
+
+    /**
+     * Unique identifier for standalone Web App actions notification.
+     */
+    public static final int NOTIFICATION_ID_WEBAPP_ACTIONS = 5;
 
     /**
      * Unique identifier for the summary notification for downloads.  Using the ID this summary was
@@ -92,4 +98,6 @@ public class NotificationConstants {
     // For example, 'Web:chromium.org' for a notification from chromium.org.
     static final String GROUP_WEB_PREFIX = "Web:";
 
+    // Default notificationId until it has been set.
+    public static final int DEFAULT_NOTIFICATION_ID = -1;
 }

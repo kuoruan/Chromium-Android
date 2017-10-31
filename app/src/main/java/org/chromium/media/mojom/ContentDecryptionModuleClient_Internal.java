@@ -327,11 +327,11 @@ String sessionId, double newExpiryTimeSec) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(sessionId, 8, false);
+            encoder0.encode(this.sessionId, 8, false);
             
-            encoder0.encode(messageType, 16);
+            encoder0.encode(this.messageType, 16);
             
-            encoder0.encode(message, 24, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            encoder0.encode(this.message, 24, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
         }
     
         /**
@@ -362,9 +362,9 @@ String sessionId, double newExpiryTimeSec) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sessionId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(messageType);
-            result = prime * result + java.util.Arrays.hashCode(message);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.messageType);
+            result = prime * result + java.util.Arrays.hashCode(this.message);
             return result;
         }
     }
@@ -429,7 +429,7 @@ String sessionId, double newExpiryTimeSec) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(sessionId, 8, false);
+            encoder0.encode(this.sessionId, 8, false);
         }
     
         /**
@@ -456,7 +456,7 @@ String sessionId, double newExpiryTimeSec) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sessionId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionId);
             return result;
         }
     }
@@ -540,17 +540,17 @@ String sessionId, double newExpiryTimeSec) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(sessionId, 8, false);
+            encoder0.encode(this.sessionId, 8, false);
             
-            encoder0.encode(hasAdditionalUsableKey, 16, 0);
+            encoder0.encode(this.hasAdditionalUsableKey, 16, 0);
             
-            if (keysInfo == null) {
+            if (this.keysInfo == null) {
                 encoder0.encodeNullPointer(24, false);
             } else {
-                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(keysInfo.length, 24, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                for (int i0 = 0; i0 < keysInfo.length; ++i0) {
+                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.keysInfo.length, 24, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                for (int i0 = 0; i0 < this.keysInfo.length; ++i0) {
                     
-                    encoder1.encode(keysInfo[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                    encoder1.encode(this.keysInfo[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
                 }
             }
         }
@@ -583,9 +583,9 @@ String sessionId, double newExpiryTimeSec) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sessionId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(hasAdditionalUsableKey);
-            result = prime * result + java.util.Arrays.deepHashCode(keysInfo);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.hasAdditionalUsableKey);
+            result = prime * result + java.util.Arrays.deepHashCode(this.keysInfo);
             return result;
         }
     }
@@ -655,9 +655,9 @@ String sessionId, double newExpiryTimeSec) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(sessionId, 8, false);
+            encoder0.encode(this.sessionId, 8, false);
             
-            encoder0.encode(newExpiryTimeSec, 16);
+            encoder0.encode(this.newExpiryTimeSec, 16);
         }
     
         /**
@@ -686,8 +686,8 @@ String sessionId, double newExpiryTimeSec) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sessionId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(newExpiryTimeSec);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.newExpiryTimeSec);
             return result;
         }
     }

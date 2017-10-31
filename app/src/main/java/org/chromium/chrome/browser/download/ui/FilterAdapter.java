@@ -4,8 +4,8 @@
 
 package org.chromium.chrome.browser.download.ui;
 
-import android.graphics.drawable.Drawable;
 import android.support.annotation.LayoutRes;
+import android.support.graphics.drawable.VectorDrawableCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,9 +13,10 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.download.ui.DownloadManagerUi.DownloadUiObserver;
-import org.chromium.chrome.browser.widget.TintedDrawable;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 
 /** An adapter that allows selecting an item from a dropdown spinner. */
 class FilterAdapter
@@ -43,8 +44,11 @@ class FilterAdapter
                 getTextViewFromResource(convertView, R.layout.download_manager_spinner_drop_down);
         labelView.setText(DownloadFilter.getStringIdForFilter(position));
         int iconId = DownloadFilter.getDrawableForFilter(position);
-        Drawable iconDrawable = TintedDrawable.constructTintedDrawable(
-                mManagerUi.getActivity().getResources(), iconId, R.color.descriptive_text_color);
+        VectorDrawableCompat iconDrawable =
+                VectorDrawableCompat.create(mManagerUi.getActivity().getResources(), iconId,
+                        mManagerUi.getActivity().getTheme());
+        iconDrawable.setTintList(ApiCompatibilityUtils.getColorStateList(
+                mManagerUi.getActivity().getResources(), R.color.dark_mode_tint));
         labelView.setCompoundDrawablesWithIntrinsicBounds(iconDrawable, null, null, null);
 
         return labelView;
@@ -56,6 +60,9 @@ class FilterAdapter
                 getTextViewFromResource(convertView, R.layout.download_manager_spinner);
         labelView.setText(position == 0 ? R.string.menu_downloads
                                         : DownloadFilter.getStringIdForFilter(position));
+        if (!FeatureUtilities.isChromeHomeEnabled()) {
+            ApiCompatibilityUtils.setTextAppearance(labelView, R.style.BlackHeadline2);
+        }
         return labelView;
     }
 

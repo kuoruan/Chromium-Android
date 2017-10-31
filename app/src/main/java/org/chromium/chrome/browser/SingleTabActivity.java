@@ -16,6 +16,7 @@ import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.document.TabDelegate;
+import org.chromium.content_public.browser.ChildProcessImportance;
 import org.chromium.content_public.browser.LoadUrlParams;
 
 import java.io.File;
@@ -66,6 +67,7 @@ public abstract class SingleTabActivity extends ChromeActivity {
         Tab tab = createTab();
         getTabModelSelector().setTab(tab);
         tab.show(TabSelectionType.FROM_NEW);
+        tab.setImportance(ChildProcessImportance.MODERATE);
     }
 
     @Override
@@ -93,13 +95,13 @@ public abstract class SingleTabActivity extends ChromeActivity {
         if (tabId != Tab.INVALID_TAB_ID && tabUrl != null && getActivityDirectory() != null) {
             // Restore the tab.
             TabState tabState = TabState.restoreTabState(getActivityDirectory(), tabId);
-            tab = new Tab(tabId, Tab.INVALID_TAB_ID, false, this, getWindowAndroid(),
+            tab = new Tab(tabId, Tab.INVALID_TAB_ID, false, getWindowAndroid(),
                     TabLaunchType.FROM_RESTORE, TabCreationState.FROZEN_ON_RESTORE, tabState);
             unfreeze = true;
         }
 
         if (tab == null) {
-            tab = new Tab(Tab.INVALID_TAB_ID, Tab.INVALID_TAB_ID, false, this, getWindowAndroid(),
+            tab = new Tab(Tab.INVALID_TAB_ID, Tab.INVALID_TAB_ID, false, getWindowAndroid(),
                     TabLaunchType.FROM_CHROME_UI, null, null);
         }
 

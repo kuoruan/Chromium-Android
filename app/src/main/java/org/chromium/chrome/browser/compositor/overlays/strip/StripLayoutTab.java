@@ -9,6 +9,7 @@ import static org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Ani
 import android.content.Context;
 import android.graphics.RectF;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.ObserverList;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
@@ -151,9 +152,6 @@ public class StripLayoutTab
         mCloseButton.setIncognito(mIncognito);
         mCloseButton.setBounds(getCloseRect());
         mCloseButton.setClickSlop(0.f);
-        String description =
-                context.getResources().getString(R.string.accessibility_tabstrip_btn_close_tab);
-        mCloseButton.setAccessibilityDescription(description, description);
     }
 
     /** @param observer The observer to add. */
@@ -178,10 +176,15 @@ public class StripLayoutTab
     }
 
     /**
+     * Set strip tab and close button accessibility description.
      * @param description   A description for accessibility events.
+     * @param title The title of the tab.
      */
-    public void setAccessibilityDescription(String description) {
+    public void setAccessibilityDescription(String description, String title) {
         mAccessibilityDescription = description;
+        String closeButtonDescription = ContextUtils.getApplicationContext().getString(
+                R.string.accessibility_tabstrip_btn_close_tab, title);
+        mCloseButton.setAccessibilityDescription(closeButtonDescription, closeButtonDescription);
     }
 
     @Override

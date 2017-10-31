@@ -161,45 +161,45 @@ public final class PaymentMethodData extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        if (supportedMethods == null) {
+        if (this.supportedMethods == null) {
             encoder0.encodeNullPointer(8, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(supportedMethods.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < supportedMethods.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.supportedMethods.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.supportedMethods.length; ++i0) {
                 
-                encoder1.encode(supportedMethods[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                encoder1.encode(this.supportedMethods[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
         
-        encoder0.encode(stringifiedData, 16, false);
+        encoder0.encode(this.stringifiedData, 16, false);
         
-        encoder0.encode(environment, 24);
+        encoder0.encode(this.environment, 24);
         
-        encoder0.encode(tokenizationType, 28);
+        encoder0.encode(this.tokenizationType, 28);
         
-        encoder0.encode(merchantName, 32, true);
+        encoder0.encode(this.merchantName, 32, true);
         
-        encoder0.encode(merchantId, 40, true);
+        encoder0.encode(this.merchantId, 40, true);
         
-        encoder0.encode(allowedCardNetworks, 48, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+        encoder0.encode(this.allowedCardNetworks, 48, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
         
-        if (parameters == null) {
+        if (this.parameters == null) {
             encoder0.encodeNullPointer(56, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(parameters.length, 56, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < parameters.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.parameters.length, 56, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.parameters.length; ++i0) {
                 
-                encoder1.encode(parameters[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                encoder1.encode(this.parameters[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
         
-        encoder0.encode(minGooglePlayServicesVersion, 64);
+        encoder0.encode(this.minGooglePlayServicesVersion, 64);
         
-        encoder0.encode(apiVersion, 68);
+        encoder0.encode(this.apiVersion, 68);
         
-        encoder0.encode(supportedNetworks, 72, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+        encoder0.encode(this.supportedNetworks, 72, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
         
-        encoder0.encode(supportedTypes, 80, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+        encoder0.encode(this.supportedTypes, 80, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
     }
 
     /**
@@ -248,18 +248,18 @@ public final class PaymentMethodData extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + java.util.Arrays.deepHashCode(supportedMethods);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(stringifiedData);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(environment);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(merchantName);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(merchantId);
-        result = prime * result + java.util.Arrays.hashCode(allowedCardNetworks);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(tokenizationType);
-        result = prime * result + java.util.Arrays.deepHashCode(parameters);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(minGooglePlayServicesVersion);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(apiVersion);
-        result = prime * result + java.util.Arrays.hashCode(supportedNetworks);
-        result = prime * result + java.util.Arrays.hashCode(supportedTypes);
+        result = prime * result + java.util.Arrays.deepHashCode(this.supportedMethods);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.stringifiedData);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.environment);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.merchantName);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.merchantId);
+        result = prime * result + java.util.Arrays.hashCode(this.allowedCardNetworks);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.tokenizationType);
+        result = prime * result + java.util.Arrays.deepHashCode(this.parameters);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.minGooglePlayServicesVersion);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.apiVersion);
+        result = prime * result + java.util.Arrays.hashCode(this.supportedNetworks);
+        result = prime * result + java.util.Arrays.hashCode(this.supportedTypes);
         return result;
     }
 }

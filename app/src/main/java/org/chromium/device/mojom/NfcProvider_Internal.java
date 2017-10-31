@@ -211,9 +211,9 @@ int hostId, org.chromium.mojo.bindings.InterfaceRequest<Nfc> nfc) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(hostId, 8);
+            encoder0.encode(this.hostId, 8);
             
-            encoder0.encode(nfc, 12, false);
+            encoder0.encode(this.nfc, 12, false);
         }
     
         /**
@@ -242,8 +242,8 @@ int hostId, org.chromium.mojo.bindings.InterfaceRequest<Nfc> nfc) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(hostId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(nfc);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.hostId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.nfc);
             return result;
         }
     }

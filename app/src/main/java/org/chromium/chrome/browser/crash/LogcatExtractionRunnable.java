@@ -60,6 +60,9 @@ public class LogcatExtractionRunnable implements Runnable {
     private static final Pattern DOMAIN_NAME =
             Pattern.compile("(" + HOST_NAME + "|" + IP_ADDRESS + ")");
 
+    private static final Pattern LIKELY_EXCEPTION_LOG =
+            Pattern.compile("\\sat\\sorg\\.chromium\\.[^ ]+.");
+
     private static final Pattern WEB_URL =
             Pattern.compile("(?:\\b|^)((?:(http|https|Http|Https|rtsp|Rtsp):"
                     + "\\/\\/(?:(?:[a-zA-Z0-9\\$\\-\\_\\.\\+\\!\\*\\'\\(\\)"
@@ -120,7 +123,41 @@ public class LogcatExtractionRunnable implements Runnable {
 
     @Override
     public void run() {
+        uploadMinidumpWithLogcat(false);
+    }
+
+    /**
+     * @param uploadNow If this flag is set to true, we will upload the minidump immediately,
+     * otherwise the upload is controlled by the job scheduler.
+     */
+    public void uploadMinidumpWithLogcat(boolean uploadNow) {
         Log.i(TAG, "Trying to extract logcat for minidump %s.", mMinidumpFile.getName());
+        File fileToUpload = attachLogcatToMinidump();
+
+        // Regardless of success, initiate the upload. That way, even if there are errors augmenting
+        // the minidump with logcat data, the service can still upload the unaugmented minidump.
+        try {
+            if (uploadNow) {
+                MinidumpUploadService.tryUploadCrashDumpNow(fileToUpload);
+            } else if (MinidumpUploadService.shouldUseJobSchedulerForUploads()) {
+                MinidumpUploadService.scheduleUploadJob();
+            } else {
+                MinidumpUploadService.tryUploadCrashDump(fileToUpload);
+            }
+        } catch (SecurityException e) {
+            // For KitKat and below, there was a framework bug which causes us to not be able to
+            // find our own crash uploading service. Ignore a SecurityException here on older
+            // OS versions since the crash will eventually get uploaded on next start.
+            // crbug/542533
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                Log.w(TAG, e.toString());
+                if (!uploadNow) throw e;
+            }
+        }
+    }
+
+    @VisibleForTesting
+    public File attachLogcatToMinidump() {
         CrashFileManager fileManager =
                 new CrashFileManager(ContextUtils.getApplicationContext().getCacheDir());
         File fileToUpload = mMinidumpFile;
@@ -131,24 +168,7 @@ public class LogcatExtractionRunnable implements Runnable {
         } catch (IOException | InterruptedException e) {
             Log.w(TAG, e.toString());
         }
-
-        // Regardless of success, initiate the upload. That way, even if there are errors augmenting
-        // the minidump with logcat data, the service can still upload the unaugmented minidump.
-        if (MinidumpUploadService.shouldUseJobSchedulerForUploads()) {
-            MinidumpUploadService.scheduleUploadJob();
-        } else {
-            try {
-                MinidumpUploadService.tryUploadCrashDump(fileToUpload);
-            } catch (SecurityException e) {
-                // For KitKat and below, there was a framework bug which causes us to not be able to
-                // find our own crash uploading service. Ignore a SecurityException here on older
-                // OS versions since the crash will eventually get uploaded on next start.
-                // crbug/542533
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    throw e;
-                }
-            }
-        }
+        return fileToUpload;
     }
 
     private List<String> getElidedLogcat() throws IOException, InterruptedException {
@@ -265,6 +285,8 @@ public class LogcatExtractionRunnable implements Runnable {
      */
     @VisibleForTesting
     protected static String elideUrl(String original) {
+        // Url-matching is fussy. If something looks like an exception message, just return.
+        if (LIKELY_EXCEPTION_LOG.matcher(original).find()) return original;
         StringBuilder buffer = new StringBuilder(original);
         Matcher matcher = WEB_URL.matcher(buffer);
         int start = 0;

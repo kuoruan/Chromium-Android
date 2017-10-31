@@ -7,18 +7,18 @@ package org.chromium.chrome.browser.history;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.support.annotation.VisibleForTesting;
 import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.util.AttributeSet;
 import android.view.View;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.favicon.LargeIconBridge.LargeIconCallback;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.RoundedIconGenerator;
 import org.chromium.chrome.browser.widget.TintedImageButton;
 import org.chromium.chrome.browser.widget.selection.SelectableItemView;
@@ -27,10 +27,7 @@ import org.chromium.chrome.browser.widget.selection.SelectableItemView;
  * The SelectableItemView for items displayed in the browsing history UI.
  */
 public class HistoryItemView extends SelectableItemView<HistoryItem> implements LargeIconCallback {
-    private TextView mTitle;
-    private TextView mDomain;
     private TintedImageButton mRemoveButton;
-    private ImageView mIconImageView;
     private VectorDrawableCompat mBlockedVisitDrawable;
     private View mContentView;
 
@@ -54,18 +51,20 @@ public class HistoryItemView extends SelectableItemView<HistoryItem> implements 
         int textSize = getResources().getDimensionPixelSize(R.dimen.default_favicon_icon_text_size);
         int iconColor = ApiCompatibilityUtils.getColor(
                 getResources(), R.color.default_favicon_background_color);
-        mIconGenerator = new RoundedIconGenerator(mDisplayedIconSize , mDisplayedIconSize,
-                mCornerRadius, iconColor, textSize);
+        mIconGenerator = new RoundedIconGenerator(mDisplayedIconSize, mDisplayedIconSize,
+                FeatureUtilities.isChromeHomeEnabled() ? mDisplayedIconSize / 2 : mCornerRadius,
+                iconColor, textSize);
         mEndPadding = context.getResources().getDimensionPixelSize(
-                R.dimen.selectable_list_layout_row_end_padding);
+                R.dimen.selectable_list_layout_row_padding);
+
+        mIconColorList = ApiCompatibilityUtils.getColorStateList(
+                context.getResources(), R.color.white_mode_tint);
     }
 
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-        mTitle = (TextView) findViewById(R.id.title);
-        mDomain = (TextView) findViewById(R.id.domain);
-        mIconImageView = (ImageView) findViewById(R.id.icon_view);
+        mIconView.setImageResource(R.drawable.default_favicon);
         mContentView = findViewById(R.id.content);
         mRemoveButton = (TintedImageButton) findViewById(R.id.remove);
         mRemoveButton.setOnClickListener(new OnClickListener() {
@@ -80,18 +79,12 @@ public class HistoryItemView extends SelectableItemView<HistoryItem> implements 
 
     @Override
     public void setItem(HistoryItem item) {
-        if (getItem() == item) {
-            // If the item is being set again, it means the HistoryAdapter contents have likely
-            // changed. This item may have changed group positions, so the background should be
-            // updated.
-            setBackgroundResourceForGroupPosition();
-            return;
-        }
+        if (getItem() == item) return;
 
         super.setItem(item);
 
-        mTitle.setText(item.getTitle());
-        mDomain.setText(item.getDomain());
+        mTitleView.setText(item.getTitle());
+        mDescriptionView.setText(item.getDomain());
         mIsItemRemoved = false;
 
         if (item.wasBlockedVisit()) {
@@ -100,18 +93,17 @@ public class HistoryItemView extends SelectableItemView<HistoryItem> implements 
                         getContext().getResources(), R.drawable.ic_block_red,
                         getContext().getTheme());
             }
-            mIconImageView.setImageDrawable(mBlockedVisitDrawable);
-            mTitle.setTextColor(
+            setIconDrawable(mBlockedVisitDrawable);
+            mTitleView.setTextColor(
                     ApiCompatibilityUtils.getColor(getResources(), R.color.google_red_700));
         } else {
-            mIconImageView.setImageResource(R.drawable.default_favicon);
+            setIconDrawable(
+                    ApiCompatibilityUtils.getDrawable(getResources(), R.drawable.default_favicon));
             if (mHistoryManager != null) requestIcon();
 
-            mTitle.setTextColor(
+            mTitleView.setTextColor(
                     ApiCompatibilityUtils.getColor(getResources(), R.color.default_text_color));
         }
-
-        setBackgroundResourceForGroupPosition();
     }
 
     /**
@@ -156,7 +148,8 @@ public class HistoryItemView extends SelectableItemView<HistoryItem> implements 
     }
 
     @Override
-    protected void onClick() {
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    public void onClick() {
         if (getItem() != null) getItem().open();
     }
 
@@ -167,13 +160,13 @@ public class HistoryItemView extends SelectableItemView<HistoryItem> implements 
         if (icon == null) {
             mIconGenerator.setBackgroundColor(fallbackColor);
             icon = mIconGenerator.generateIconForUrl(getItem().getUrl());
-            mIconImageView.setImageDrawable(new BitmapDrawable(getResources(), icon));
+            setIconDrawable(new BitmapDrawable(getResources(), icon));
         } else {
             RoundedBitmapDrawable roundedIcon = RoundedBitmapDrawableFactory.create(
                     getResources(),
                     Bitmap.createScaledBitmap(icon, mDisplayedIconSize, mDisplayedIconSize, false));
             roundedIcon.setCornerRadius(mCornerRadius);
-            mIconImageView.setImageDrawable(roundedIcon);
+            setIconDrawable(roundedIcon);
         }
     }
 
@@ -194,15 +187,5 @@ public class HistoryItemView extends SelectableItemView<HistoryItem> implements 
         ApiCompatibilityUtils.setPaddingRelative(mContentView,
                 ApiCompatibilityUtils.getPaddingStart(mContentView),
                 mContentView.getPaddingTop(), endPadding, mContentView.getPaddingBottom());
-    }
-
-    /**
-     * Sets the background resource for this view using the item's positioning in its group.
-     */
-    public void setBackgroundResourceForGroupPosition() {
-        if (getItem() == null) return;
-
-        setBackgroundResourceForGroupPosition(
-                getItem().isFirstInGroup(), getItem().isLastInGroup());
     }
 }

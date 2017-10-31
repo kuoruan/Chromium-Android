@@ -17,11 +17,11 @@ import org.chromium.mojo.bindings.DeserializationException;
 public final class PaymentComplete {
 
 
-    public static final int SUCCESS = 0;
+    public static final int FAIL = 0;
 
-    public static final int FAIL = SUCCESS + 1;
+    public static final int SUCCESS = FAIL + 1;
 
-    public static final int UNKNOWN = FAIL + 1;
+    public static final int UNKNOWN = SUCCESS + 1;
 
 
     private static final boolean IS_EXTENSIBLE = false;

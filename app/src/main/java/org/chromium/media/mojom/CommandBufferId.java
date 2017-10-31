@@ -78,9 +78,9 @@ public final class CommandBufferId extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(channelToken, 8, false);
+        encoder0.encode(this.channelToken, 8, false);
         
-        encoder0.encode(routeId, 16);
+        encoder0.encode(this.routeId, 16);
     }
 
     /**
@@ -109,8 +109,8 @@ public final class CommandBufferId extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(channelToken);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(routeId);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.channelToken);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.routeId);
         return result;
     }
 }

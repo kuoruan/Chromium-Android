@@ -31,7 +31,7 @@ import android.widget.TextView;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.signin.AccountManagementFragment;
+import org.chromium.chrome.browser.signin.ProfileDataCache;
 import org.chromium.components.url_formatter.UrlFormatter;
 import org.chromium.ui.base.WindowAndroid;
 import org.chromium.ui.widget.Toast;
@@ -273,7 +273,7 @@ public class AccountChooserDialog
         if (mIsDestroyed) return;
         assert index >= 0 && index < mCredentials.length;
         assert mCredentials[index] != null;
-        Drawable avatar = AccountManagementFragment.makeRoundUserPicture(mContext, avatarBitmap);
+        Drawable avatar = ProfileDataCache.makeRoundAvatar(mContext.getResources(), avatarBitmap);
         mCredentials[index].setAvatar(avatar);
         ListView view = mDialog.getListView();
         if (index >= view.getFirstVisiblePosition() && index <= view.getLastVisiblePosition()) {

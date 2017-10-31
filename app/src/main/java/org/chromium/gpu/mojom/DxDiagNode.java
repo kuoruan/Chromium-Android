@@ -144,15 +144,15 @@ public final class DxDiagNode extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        if (values == null) {
+        if (this.values == null) {
             encoder0.encodeNullPointer(8, false);
         } else {
             org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encoderForMap(8);
-            int size0 = values.size();
+            int size0 = this.values.size();
             String[] keys0 = new String[size0];
             String[] values0 = new String[size0];
             int index0 = 0;
-            for (java.util.Map.Entry<String, String> entry0 : values.entrySet()) {
+            for (java.util.Map.Entry<String, String> entry0 : this.values.entrySet()) {
                 keys0[index0] = entry0.getKey();
                 values0[index0] = entry0.getValue();
                 ++index0;
@@ -175,15 +175,15 @@ public final class DxDiagNode extends org.chromium.mojo.bindings.Struct {
             }
         }
         
-        if (children == null) {
+        if (this.children == null) {
             encoder0.encodeNullPointer(16, false);
         } else {
             org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encoderForMap(16);
-            int size0 = children.size();
+            int size0 = this.children.size();
             String[] keys0 = new String[size0];
             DxDiagNode[] values0 = new DxDiagNode[size0];
             int index0 = 0;
-            for (java.util.Map.Entry<String, DxDiagNode> entry0 : children.entrySet()) {
+            for (java.util.Map.Entry<String, DxDiagNode> entry0 : this.children.entrySet()) {
                 keys0[index0] = entry0.getKey();
                 values0[index0] = entry0.getValue();
                 ++index0;
@@ -233,8 +233,8 @@ public final class DxDiagNode extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(values);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(children);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.values);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.children);
         return result;
     }
 }

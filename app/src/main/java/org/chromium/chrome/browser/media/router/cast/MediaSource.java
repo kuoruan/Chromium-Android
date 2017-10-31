@@ -22,6 +22,9 @@ public class MediaSource {
     public static final String AUTOJOIN_TAB_AND_ORIGIN_SCOPED = "tab_and_origin_scoped";
     public static final String AUTOJOIN_ORIGIN_SCOPED = "origin_scoped";
     public static final String AUTOJOIN_PAGE_SCOPED = "page_scoped";
+    private static final List<String> AUTOJOIN_POLICIES =
+            Arrays.asList(AUTOJOIN_CUSTOM_CONTROLLER_SCOPED, AUTOJOIN_TAB_AND_ORIGIN_SCOPED,
+                    AUTOJOIN_ORIGIN_SCOPED, AUTOJOIN_PAGE_SCOPED);
 
     private static final String CAST_SOURCE_ID_SEPARATOR = "/";
     private static final String CAST_SOURCE_ID_APPLICATION_ID = "__castAppId__";
@@ -30,13 +33,28 @@ public class MediaSource {
     private static final String CAST_APP_CAPABILITIES_PREFIX = "(";
     private static final String CAST_APP_CAPABILITIES_SUFFIX = ")";
     private static final String CAST_APP_CAPABILITIES_SEPARATOR = ",";
-    private static final String CAST_APP_CAPABILITIES[] = {
-        "video_out",
-        "audio_out",
-        "video_in",
-        "audio_in",
-        "multizone_group"
-    };
+    private static final List<String> CAST_APP_CAPABILITIES =
+            Arrays.asList("video_out", "audio_out", "video_in", "audio_in", "multizone_group");
+
+    /**
+     * The protocol for Cast Presentation URLs.
+     */
+    private static final String CAST_URL_PROTOCOL = "cast:";
+
+    /**
+     * The query parameter key for Cast Client ID in a Cast Presentation URL.
+     */
+    private static final String CAST_URL_CLIENT_ID = "clientId";
+
+    /**
+     * The query parameter key for autojoin policy in a Cast Presentation URL.
+     */
+    private static final String CAST_URL_AUTOJOIN_POLICY = "autoJoinPolicy";
+
+    /**
+     * The query parameter key for app capabilities in a Cast Presentation URL.
+     */
+    private static final String CAST_URL_CAPABILITIES = "capabilities";
 
     /**
      * The original presentation URL that the {@link MediaSource} object was created from.
@@ -74,30 +92,8 @@ public class MediaSource {
     @Nullable
     public static MediaSource from(String sourceId) {
         assert sourceId != null;
-
-        Uri sourceUri = Uri.parse(sourceId);
-
-        String uriFragment = sourceUri.getFragment();
-        if (uriFragment == null) return null;
-
-        String[] parameters = uriFragment.split(CAST_SOURCE_ID_SEPARATOR);
-
-        String applicationId = extractParameter(parameters, CAST_SOURCE_ID_APPLICATION_ID);
-        if (applicationId == null) return null;
-
-        String[] capabilities = null;
-        int capabilitiesIndex = applicationId.indexOf(CAST_APP_CAPABILITIES_PREFIX);
-        if (capabilitiesIndex != -1) {
-            capabilities = extractCapabilities(applicationId.substring(capabilitiesIndex));
-            if (capabilities == null) return null;
-
-            applicationId = applicationId.substring(0, capabilitiesIndex);
-        }
-
-        String clientId = extractParameter(parameters, CAST_SOURCE_ID_CLIENT_ID);
-        String autoJoinPolicy = extractParameter(parameters, CAST_SOURCE_ID_AUTOJOIN_POLICY);
-
-        return new MediaSource(sourceId, applicationId, clientId, autoJoinPolicy, capabilities);
+        return sourceId.startsWith(CAST_URL_PROTOCOL) ? fromCastUrl(sourceId)
+                                                      : fromLegacyUrl(sourceId);
     }
 
     /**
@@ -186,15 +182,81 @@ public class MediaSource {
             return null;
         }
 
-        List<String> supportedCapabilities = Arrays.asList(CAST_APP_CAPABILITIES);
-
         String capabilitiesList = capabilitiesParameter.substring(
                 CAST_APP_CAPABILITIES_PREFIX.length(),
                 capabilitiesParameter.length() - CAST_APP_CAPABILITIES_SUFFIX.length());
         String[] capabilities = capabilitiesList.split(CAST_APP_CAPABILITIES_SEPARATOR);
         for (String capability : capabilities) {
-            if (!supportedCapabilities.contains(capability)) return null;
+            if (!CAST_APP_CAPABILITIES.contains(capability)) return null;
         }
         return capabilities;
+    }
+
+    /**
+     * Helper method to create a MediaSource object from a Cast (cast:) presentation URL.
+     * @param sourceId the source id for the Cast media source.
+     * @return an initialized media source if the uri is a valid Cast presentation URL, null
+     * otherwise.
+     */
+    @Nullable
+    private static MediaSource fromCastUrl(String sourceId) {
+        // Strip the scheme as the Uri parser works better without it.
+        Uri sourceUri = Uri.parse(sourceId.substring(CAST_URL_PROTOCOL.length()));
+        String applicationId = sourceUri.getPath();
+        if (applicationId == null) return null;
+
+        String clientId = sourceUri.getQueryParameter(CAST_URL_CLIENT_ID);
+        String autoJoinPolicy = sourceUri.getQueryParameter(CAST_URL_AUTOJOIN_POLICY);
+        if (autoJoinPolicy != null && !AUTOJOIN_POLICIES.contains(autoJoinPolicy)) {
+            return null;
+        }
+
+        String[] capabilities = null;
+        String capabilitiesParam = sourceUri.getQueryParameter(CAST_URL_CAPABILITIES);
+        if (capabilitiesParam != null) {
+            capabilities = capabilitiesParam.split(CAST_APP_CAPABILITIES_SEPARATOR);
+            for (String capability : capabilities) {
+                if (!CAST_APP_CAPABILITIES.contains(capability)) return null;
+            }
+        }
+
+        return new MediaSource(sourceId, applicationId, clientId, autoJoinPolicy, capabilities);
+    }
+
+    /**
+     * @deprecated Legacy Cast Presentation URLs are deprecated in favor of cast: URLs.
+     * TODO(crbug.com/757358): remove this method when we drop support for legacy URLs.
+     * Helper method to create a MediaSource object from a legacy (https:) presentation URL.
+     * @param sourceId the source id for the Cast media source.
+     * @return an initialized media source if the uri is a valid https presentation URL, null
+     * otherwise.
+     */
+    @Deprecated
+    @Nullable
+    private static MediaSource fromLegacyUrl(String sourceId) {
+        Uri sourceUri = Uri.parse(sourceId);
+        String uriFragment = sourceUri.getFragment();
+        if (uriFragment == null) return null;
+
+        String[] parameters = uriFragment.split(CAST_SOURCE_ID_SEPARATOR);
+
+        String applicationId = extractParameter(parameters, CAST_SOURCE_ID_APPLICATION_ID);
+        if (applicationId == null) return null;
+
+        String[] capabilities = null;
+        int capabilitiesIndex = applicationId.indexOf(CAST_APP_CAPABILITIES_PREFIX);
+        if (capabilitiesIndex != -1) {
+            capabilities = extractCapabilities(applicationId.substring(capabilitiesIndex));
+            if (capabilities == null) return null;
+
+            applicationId = applicationId.substring(0, capabilitiesIndex);
+        }
+
+        String clientId = extractParameter(parameters, CAST_SOURCE_ID_CLIENT_ID);
+        String autoJoinPolicy = extractParameter(parameters, CAST_SOURCE_ID_AUTOJOIN_POLICY);
+        if (autoJoinPolicy != null && !AUTOJOIN_POLICIES.contains(autoJoinPolicy)) {
+            return null;
+        }
+        return new MediaSource(sourceId, applicationId, clientId, autoJoinPolicy, capabilities);
     }
 }

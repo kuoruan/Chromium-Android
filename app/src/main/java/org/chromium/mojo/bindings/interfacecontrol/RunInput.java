@@ -38,48 +38,48 @@ public final class RunInput extends org.chromium.mojo.bindings.Union {
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setQueryVersion(QueryVersion queryVersion) {
-        mTag_ = Tag.QueryVersion;
-        mQueryVersion = queryVersion;
+        this.mTag_ = Tag.QueryVersion;
+        this.mQueryVersion = queryVersion;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public QueryVersion getQueryVersion() {
-        assert mTag_ == Tag.QueryVersion;
-        return mQueryVersion;
+        assert this.mTag_ == Tag.QueryVersion;
+        return this.mQueryVersion;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setFlushForTesting(FlushForTesting flushForTesting) {
-        mTag_ = Tag.FlushForTesting;
-        mFlushForTesting = flushForTesting;
+        this.mTag_ = Tag.FlushForTesting;
+        this.mFlushForTesting = flushForTesting;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public FlushForTesting getFlushForTesting() {
-        assert mTag_ == Tag.FlushForTesting;
-        return mFlushForTesting;
+        assert this.mTag_ == Tag.FlushForTesting;
+        return this.mFlushForTesting;
     }
 
 
     @Override
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder0, int offset) {
         encoder0.encode(org.chromium.mojo.bindings.BindingsHelper.UNION_SIZE, offset);
-        encoder0.encode(mTag_, offset + 4);
+        encoder0.encode(this.mTag_, offset + 4);
         switch (mTag_) {
             case Tag.QueryVersion: {
                 
-                encoder0.encode(mQueryVersion, offset + 8, false);
+                encoder0.encode(this.mQueryVersion, offset + 8, false);
                 break;
             }
             case Tag.FlushForTesting: {
                 
-                encoder0.encode(mFlushForTesting, offset + 8, false);
+                encoder0.encode(this.mFlushForTesting, offset + 8, false);
                 break;
             }
             default: {
@@ -132,13 +132,13 @@ public final class RunInput extends org.chromium.mojo.bindings.Union {
         if (getClass() != object.getClass())
             return false;
         RunInput other = (RunInput) object;
-        if (mTag_ != other.mTag_)
+        if (this.mTag_ != other.mTag_)
             return false;
-        switch (mTag_) {
+        switch (this.mTag_) {
             case Tag.QueryVersion:
-                return org.chromium.mojo.bindings.BindingsHelper.equals(mQueryVersion, other.mQueryVersion);
+                return org.chromium.mojo.bindings.BindingsHelper.equals(this.mQueryVersion, other.mQueryVersion);
             case Tag.FlushForTesting:
-                return org.chromium.mojo.bindings.BindingsHelper.equals(mFlushForTesting, other.mFlushForTesting);
+                return org.chromium.mojo.bindings.BindingsHelper.equals(this.mFlushForTesting, other.mFlushForTesting);
             default:
                 break;
         }
@@ -153,13 +153,13 @@ public final class RunInput extends org.chromium.mojo.bindings.Union {
         final int prime = 31;
         int result = prime + getClass().hashCode();
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mTag_);
-        switch (mTag_) {
+        switch (this.mTag_) {
             case Tag.QueryVersion: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mQueryVersion);
+                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mQueryVersion);
                 break;
             }
             case Tag.FlushForTesting: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mFlushForTesting);
+                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mFlushForTesting);
                 break;
             }
             default: {

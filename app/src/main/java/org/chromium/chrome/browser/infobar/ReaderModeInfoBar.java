@@ -4,14 +4,18 @@
 
 package org.chromium.chrome.browser.infobar;
 
+import static android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO;
+
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.StateChangeReason;
 import org.chromium.chrome.browser.dom_distiller.ReaderModeManager;
@@ -32,7 +36,7 @@ public class ReaderModeInfoBar extends InfoBar {
         @Override
         public void onClick(View v) {
             if (getReaderModeManager() == null || mIsHiding) return;
-            getReaderModeManager().navigateToReaderMode();
+            getReaderModeManager().activateReaderMode();
         }
     };
 
@@ -56,7 +60,11 @@ public class ReaderModeInfoBar extends InfoBar {
     @Override
     protected void createCompactLayoutContent(InfoBarCompactLayout layout) {
         TextView prompt = new TextView(getContext());
-        prompt.setText(R.string.reader_view_text);
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.ALLOW_READER_FOR_ACCESSIBILITY)) {
+            prompt.setText(R.string.reader_view_text_alt);
+        } else {
+            prompt.setText(R.string.reader_view_text);
+        }
         prompt.setTextSize(TypedValue.COMPLEX_UNIT_PX,
                 getContext().getResources().getDimension(R.dimen.infobar_text_size));
         prompt.setTextColor(
@@ -64,11 +72,22 @@ public class ReaderModeInfoBar extends InfoBar {
         prompt.setGravity(Gravity.CENTER_VERTICAL);
         prompt.setOnClickListener(mNavigateListener);
 
-        layout.findViewById(R.id.infobar_icon).setOnClickListener(mNavigateListener);
+        ImageView iconView = layout.findViewById(R.id.infobar_icon);
+        iconView.setOnClickListener(mNavigateListener);
+        iconView.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
         final int messagePadding = getContext().getResources().getDimensionPixelOffset(
                 R.dimen.reader_mode_infobar_text_padding);
         prompt.setPadding(0, messagePadding, 0, messagePadding);
         layout.addContent(prompt, 1f);
+    }
+
+    @Override
+    protected CharSequence getAccessibilityMessage(CharSequence defaultMessage) {
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.ALLOW_READER_FOR_ACCESSIBILITY)) {
+            return getContext().getString(R.string.reader_view_text_alt);
+        } else {
+            return getContext().getString(R.string.reader_view_text);
+        }
     }
 
     @Override

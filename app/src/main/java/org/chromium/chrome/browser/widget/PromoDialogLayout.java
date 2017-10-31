@@ -84,15 +84,17 @@ public final class PromoDialogLayout extends BoundedLinearLayout {
         assert params.primaryButtonStringResource != 0;
         mParams = params;
 
-        if (mParams.drawableResource == 0 && mParams.vectorDrawableResource == 0) {
-            // Dialogs with no illustration make the header stay visible at all times instead of
-            // scrolling off on small screens.
-            ((ViewGroup) mIllustrationView.getParent()).removeView(mIllustrationView);
+        if (mParams.drawableInstance != null) {
+            mIllustrationView.setImageDrawable(mParams.drawableInstance);
         } else if (mParams.vectorDrawableResource != 0) {
             mIllustrationView.setImageDrawable(VectorDrawableCompat.create(
                     getResources(), mParams.vectorDrawableResource, getContext().getTheme()));
-        } else {
+        } else if (mParams.drawableResource != 0) {
             mIllustrationView.setImageResource(mParams.drawableResource);
+        } else {
+            // Dialogs with no illustration make the header stay visible at all times instead of
+            // scrolling off on small screens.
+            ((ViewGroup) mIllustrationView.getParent()).removeView(mIllustrationView);
         }
 
         // Create the header.
@@ -135,7 +137,10 @@ public final class PromoDialogLayout extends BoundedLinearLayout {
      * @return Whether the layout needed to be adjusted.
      */
     private boolean fixupHeader() {
-        if (mParams.drawableResource != 0 || mParams.vectorDrawableResource != 0) return false;
+        if (mParams.drawableResource != 0 || mParams.vectorDrawableResource != 0
+                || mParams.drawableInstance != null) {
+            return false;
+        }
 
         int minScrollHeight =
                 getResources().getDimensionPixelSize(R.dimen.promo_dialog_min_scrollable_height);

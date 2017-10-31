@@ -114,8 +114,7 @@ class ValidationMessageBubble {
         mPopup.setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
         mPopup.setWidth(ViewGroup.LayoutParams.WRAP_CONTENT);
         mPopup.getContentView().setLayoutParams(
-                new RelativeLayout.LayoutParams(
-                        RelativeLayout.LayoutParams.WRAP_CONTENT,
+                new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
                         RelativeLayout.LayoutParams.WRAP_CONTENT));
         mPopup.getContentView().measure(
                 View.MeasureSpec.makeMeasureSpec(viewportWidthPx, View.MeasureSpec.AT_MOST),
@@ -126,8 +125,8 @@ class ValidationMessageBubble {
         final View root = mPopup.getContentView();
         final int width = root.getMeasuredWidth();
         final int arrowWidth = root.findViewById(R.id.arrow_image).getMeasuredWidth();
-        return ApiCompatibilityUtils.isLayoutRtl(root)
-                ? (width * 3 / 4 - arrowWidth / 2) : (width / 4 + arrowWidth / 2);
+        return ApiCompatibilityUtils.isLayoutRtl(root) ? (width * 3 / 4 - arrowWidth / 2)
+                                                       : (width / 4 + arrowWidth / 2);
     }
 
     /**

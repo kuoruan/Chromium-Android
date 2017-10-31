@@ -77,9 +77,9 @@ public final class VideoMemoryProcessStats extends org.chromium.mojo.bindings.St
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(videoMemoryBytes, 8);
+        encoder0.encode(this.videoMemoryBytes, 8);
         
-        encoder0.encode(hasDuplicates, 16, 0);
+        encoder0.encode(this.hasDuplicates, 16, 0);
     }
 
     /**
@@ -108,8 +108,8 @@ public final class VideoMemoryProcessStats extends org.chromium.mojo.bindings.St
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(videoMemoryBytes);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(hasDuplicates);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoMemoryBytes);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.hasDuplicates);
         return result;
     }
 }

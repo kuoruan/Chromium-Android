@@ -14,7 +14,6 @@ import android.widget.TextView;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.firstrun.FirstRunChooserView;
-import org.chromium.chrome.browser.firstrun.ProfileDataCache;
 
 import java.util.List;
 
@@ -52,14 +51,14 @@ public class AccountSigninChooseView extends FirstRunChooserView {
     }
 
     /**
-    * Updates candidate accounts to sign in.
-    *
-    * @param accounts The candidate accounts.
-    * @param accountToSelect The index of the default selected account to sign in.
-    * @param profileData The ProfileDataCache contains accounts' info.
-    */
+     * Updates candidate accounts to sign in.
+     *
+     * @param accounts The candidate accounts.
+     * @param accountToSelect The index of the default selected account to sign in.
+     * @param profileDataCache The ProfileDataCache contains accounts' info.
+     */
     public void updateAccounts(
-            List<String> accounts, int accountToSelect, ProfileDataCache profileData) {
+            List<String> accounts, int accountToSelect, ProfileDataCache profileDataCache) {
         mRootChildView.removeViews(
                 mAccountViewStartIndex, mRootChildView.getChildCount() - mAccountViewStartIndex);
         if (accounts.isEmpty()) return;
@@ -72,7 +71,8 @@ public class AccountSigninChooseView extends FirstRunChooserView {
             // Sets account profile image and name.
             String accountName = accounts.get(i);
             ((ImageView) view.findViewById(R.id.account_image))
-                    .setImageDrawable(profileData.getImage(accountName));
+                    .setImageDrawable(
+                            profileDataCache.getProfileDataOrDefault(accountName).getImage());
             ((TextView) view.findViewById(R.id.account_name)).setText(accountName);
 
             view.setOnClickListener(new View.OnClickListener() {
@@ -114,18 +114,19 @@ public class AccountSigninChooseView extends FirstRunChooserView {
     }
 
     /**
-    * Updates candidate accounts' profile image.
-    *
-    * @param profileData The ProfileDataCache contains accounts' profile image.
-    */
-    public void updateAccountProfileImages(ProfileDataCache profileData) {
+     * Updates candidate accounts' profile image.
+     *
+     * @param profileDataCache The ProfileDataCache contains accounts' profile image.
+     */
+    public void updateAccountProfileImages(ProfileDataCache profileDataCache) {
         // Do not update the last "Add account" view.
         for (int i = mAccountViewStartIndex; i < mRootChildView.getChildCount() - 1; i++) {
             View view = mRootChildView.getChildAt(i);
             String accountEmail =
                     ((TextView) view.findViewById(R.id.account_name)).getText().toString();
             ((ImageView) view.findViewById(R.id.account_image))
-                    .setImageDrawable(profileData.getImage(accountEmail));
+                    .setImageDrawable(
+                            profileDataCache.getProfileDataOrDefault(accountEmail).getImage());
         }
     }
 

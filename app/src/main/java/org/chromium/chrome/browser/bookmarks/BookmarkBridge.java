@@ -13,6 +13,7 @@ import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.components.bookmarks.BookmarkId;
 import org.chromium.components.bookmarks.BookmarkType;
+import org.chromium.components.url_formatter.UrlFormatter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -190,6 +191,11 @@ public class BookmarkBridge {
         /** @return Url of the bookmark item. */
         public String getUrl() {
             return mUrl;
+        }
+
+        /** @return The string to display for the item's url. */
+        public String getUrlForDisplay() {
+            return UrlFormatter.formatUrlForSecurityDisplay(getUrl(), false);
         }
 
         /** @return Id of the bookmark item. */
@@ -430,7 +436,7 @@ public class BookmarkBridge {
     }
 
     /**
-     * @return BokmarkId representing special "desktop" folder, namely "bookmark bar".
+     * @return BookmarkId representing special "desktop" folder, namely "bookmark bar".
      */
     public BookmarkId getDesktopFolderId() {
         assert mIsNativeBookmarkModelLoaded;

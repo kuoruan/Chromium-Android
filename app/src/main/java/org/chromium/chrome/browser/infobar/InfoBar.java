@@ -133,23 +133,26 @@ public abstract class InfoBar implements InfoBarView {
     }
 
     /**
-     * Returns the accessibility message from the view to announce when this infobar is first shown.
+     * Returns the accessibility message to announce when this infobar is first shown.
      */
-    protected CharSequence getAccessibilityMessage(TextView messageView) {
-        return messageView.getText();
+    protected CharSequence getAccessibilityMessage(CharSequence defaultTitle) {
+        return defaultTitle == null ? "" : defaultTitle;
     }
 
     @Override
     public CharSequence getAccessibilityText() {
         if (mView == null) return "";
-        // Compact layout doesn't have a proper view to provide meaningful message, so we return a
-        // general message to let users know there is a bar on the bottom.
-        // TODO(googleo): Fetch the accessibility message from the compact layout.
-        if (usesCompactLayout()) return mContext.getString(R.string.bottom_bar_screen_position);
-        TextView messageView = (TextView) mView.findViewById(R.id.infobar_message);
-        if (messageView == null) return "";
-        return getAccessibilityMessage(messageView)
-                + mContext.getString(R.string.bottom_bar_screen_position);
+
+        CharSequence title = null;
+        if (usesCompactLayout()) {
+            title = getAccessibilityMessage(title);
+        } else {
+            // For normal infobar, make an announcement only when a proper TextView is assigned.
+            TextView messageView = (TextView) mView.findViewById(R.id.infobar_message);
+            if (messageView == null) return "";
+            title = getAccessibilityMessage(messageView.getText());
+        }
+        return title + mContext.getString(R.string.bottom_bar_screen_position);
     }
 
     @Override

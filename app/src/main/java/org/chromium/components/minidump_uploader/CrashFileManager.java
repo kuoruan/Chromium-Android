@@ -68,12 +68,8 @@ public class CrashFileManager {
     private static final Pattern MINIDUMP_READY_FOR_UPLOAD_PATTERN =
             Pattern.compile("\\.(dmp|forced)([0-9]*)(\\.try([0-9]+))\\z");
 
-    // TODO(isherman): The ".tryN" suffix is currently optional, so that old uploaded minidump files
-    // will continue to be detected as such. However, new uploads are guaranteed to include this
-    // suffix. Tighten this regex (by removing the final '?') in roughly the M61 timeframe:
-    // http://crbug.com/719120
     private static final Pattern UPLOADED_MINIDUMP_PATTERN =
-            Pattern.compile("\\.up([0-9]*)(\\.try([0-9]+))?\\z");
+            Pattern.compile("\\.up([0-9]*)(\\.try([0-9]+))\\z");
 
     private static final String NOT_YET_UPLOADED_MINIDUMP_SUFFIX = ".dmp";
 

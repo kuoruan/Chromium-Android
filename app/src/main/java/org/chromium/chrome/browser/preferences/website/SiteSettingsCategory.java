@@ -46,6 +46,7 @@ public class SiteSettingsCategory {
     public static final String CATEGORY_NOTIFICATIONS = "notifications";
     public static final String CATEGORY_POPUPS = "popups";
     public static final String CATEGORY_PROTECTED_MEDIA = "protected_content";
+    public static final String CATEGORY_SOUND = "sound";
     public static final String CATEGORY_USE_STORAGE = "use_storage";
     public static final String CATEGORY_USB = "usb";
 
@@ -131,6 +132,10 @@ public class SiteSettingsCategory {
             return new SiteSettingsCategory(CATEGORY_PROTECTED_MEDIA, "",
                     ContentSettingsType.CONTENT_SETTINGS_TYPE_PROTECTED_MEDIA_IDENTIFIER);
         }
+        if (CATEGORY_SOUND.equals(category)) {
+            return new SiteSettingsCategory(
+                    CATEGORY_SOUND, "", ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND);
+        }
         if (CATEGORY_USE_STORAGE.equals(category)) {
             return new SiteSettingsCategory(CATEGORY_USE_STORAGE, "", -1);
         }
@@ -181,6 +186,9 @@ public class SiteSettingsCategory {
         if (contentSettingsType
                 == ContentSettingsType.CONTENT_SETTINGS_TYPE_PROTECTED_MEDIA_IDENTIFIER) {
             return fromString(CATEGORY_PROTECTED_MEDIA);
+        }
+        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND) {
+            return fromString(CATEGORY_SOUND);
         }
         if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_USB_CHOOSER_DATA) {
             return fromString(CATEGORY_USB);
@@ -281,6 +289,13 @@ public class SiteSettingsCategory {
     public boolean showProtectedMediaSites() {
         return mContentSettingsType
                 == ContentSettingsType.CONTENT_SETTINGS_TYPE_PROTECTED_MEDIA_IDENTIFIER;
+    }
+
+    /**
+     * Returns whether this category is the Sound category.
+     */
+    public boolean showSoundSites() {
+        return mContentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND;
     }
 
     /**

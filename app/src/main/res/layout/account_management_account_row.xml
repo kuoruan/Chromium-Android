@@ -14,10 +14,10 @@
 
     <ImageView
         android:id="@android:id/icon"
-        android:layout_width="40dp"
+        android:layout_width="56dp"
         android:layout_height="40dp"
-        android:layout_marginEnd="16dp"
-        android:contentDescription="@null" />
+        android:contentDescription="@null"
+        android:scaleType="fitStart" />
 
     <!-- Padding asymmetry (16dp top vs 18dp bottom) is necessary to move text 1dp up according to
          the Material spec. See https://crbug.com/701221#c37. -->

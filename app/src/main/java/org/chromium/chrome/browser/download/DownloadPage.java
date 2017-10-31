@@ -50,13 +50,10 @@ public class DownloadPage extends BasicNativePage {
         // own ActivityStateListener. If multiple tabs are showing the downloads page, multiple
         // requests to check for externally removed downloads will be issued when the activity is
         // resumed.
-        mActivityStateListener = new ActivityStateListener() {
-            @Override
-            public void onActivityStateChange(Activity activity, int newState) {
-                if (newState == ActivityState.RESUMED) {
-                    DownloadUtils.checkForExternallyRemovedDownloads(
-                            mManager.getBackendProvider(), host.isIncognito());
-                }
+        mActivityStateListener = (activity1, newState) -> {
+            if (newState == ActivityState.RESUMED) {
+                DownloadUtils.checkForExternallyRemovedDownloads(
+                        mManager.getBackendProvider(), host.isIncognito());
             }
         };
         ApplicationStatus.registerStateListenerForActivity(mActivityStateListener, activity);

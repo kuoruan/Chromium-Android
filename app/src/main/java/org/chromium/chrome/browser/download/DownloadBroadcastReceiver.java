@@ -67,17 +67,15 @@ public class DownloadBroadcastReceiver extends BroadcastReceiver {
 
         String downloadFilename = IntentUtils.safeGetStringExtra(
                 intent, DownloadNotificationService.EXTRA_DOWNLOAD_FILE_PATH);
-        boolean isSupportedMimeType =  IntentUtils.safeGetBooleanExtra(
+        boolean isSupportedMimeType = IntentUtils.safeGetBooleanExtra(
                 intent, DownloadNotificationService.EXTRA_IS_SUPPORTED_MIME_TYPE, false);
         boolean isOffTheRecord = IntentUtils.safeGetBooleanExtra(
                 intent, DownloadNotificationService.EXTRA_IS_OFF_THE_RECORD, false);
-        String originalUrl = IntentUtils.safeGetStringExtra(
-                intent, Intent.EXTRA_ORIGINATING_URI);
+        String originalUrl = IntentUtils.safeGetStringExtra(intent, Intent.EXTRA_ORIGINATING_URI);
         String referrer = IntentUtils.safeGetStringExtra(intent, Intent.EXTRA_REFERRER);
         ContentId contentId = DownloadNotificationService.getContentIdFromIntent(intent);
-        DownloadManagerService.openDownloadedContent(
-                context, downloadFilename, isSupportedMimeType, isOffTheRecord, contentId.id, id,
-                originalUrl, referrer);
+        DownloadManagerService.openDownloadedContent(context, downloadFilename, isSupportedMimeType,
+                isOffTheRecord, contentId.id, id, originalUrl, referrer);
     }
 
     /**

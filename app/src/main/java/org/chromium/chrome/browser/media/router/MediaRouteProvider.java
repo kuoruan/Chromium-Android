@@ -7,14 +7,18 @@ package org.chromium.chrome.browser.media.router;
 /**
  * An interface components providing media sinks and routes need to implement to hooks up into
  * {@link ChromeMediaRouter}.
+ *
+ * Note: Empty-string origins passed through this interface should be considered
+ * "unique origins" from url::Origin for the purposes of comparison.
  */
 public interface MediaRouteProvider {
     /**
-     * Builder for {@link MediaRouteProvider}.
+     * Factory for {@link MediaRouteProvider}s.
      */
-    interface Builder {
-        MediaRouteProvider create(MediaRouteManager manager);
+    interface Factory {
+        void addProviders(MediaRouteManager manager);
     }
+
     /**
      * @param sourceId The id of the source to check.
      * @return if the specified source is supported by this route provider.

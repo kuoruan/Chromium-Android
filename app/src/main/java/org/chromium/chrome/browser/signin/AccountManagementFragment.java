@@ -14,14 +14,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
-import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -32,9 +27,6 @@ import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
 import android.support.annotation.Nullable;
-import android.support.v7.content.res.AppCompatResources;
-import android.text.TextUtils;
-import android.util.Pair;
 import android.widget.ListView;
 
 import org.chromium.base.ApiCompatibilityUtils;
@@ -50,7 +42,6 @@ import org.chromium.chrome.browser.preferences.PreferencesLauncher;
 import org.chromium.chrome.browser.preferences.SyncPreference;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.profiles.ProfileAccountManagementMetrics;
-import org.chromium.chrome.browser.profiles.ProfileDownloader;
 import org.chromium.chrome.browser.signin.SignOutDialogFragment.SignOutDialogListener;
 import org.chromium.chrome.browser.signin.SigninManager.SignInStateObserver;
 import org.chromium.chrome.browser.sync.ProfileSyncService;
@@ -59,8 +50,6 @@ import org.chromium.chrome.browser.sync.ui.SyncCustomizationFragment;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.components.signin.ChromeSigninController;
-
-import java.util.HashMap;
 
 /**
  * The settings screen with information and settings related to the user's accounts.
@@ -72,9 +61,8 @@ import java.util.HashMap;
  * Note: This can be triggered from a web page, e.g. a GAIA sign-in page.
  */
 public class AccountManagementFragment extends PreferenceFragment
-        implements SignOutDialogListener, ProfileDownloader.Observer,
-                SyncStateChangedListener, SignInStateObserver,
-                ConfirmManagedSyncDataDialog.Listener {
+        implements SignOutDialogListener, SyncStateChangedListener, SignInStateObserver,
+                   ConfirmManagedSyncDataDialog.Listener, ProfileDataCache.Observer {
     private static final String TAG = "AcctManagementPref";
 
     public static final String SIGN_OUT_DIALOG_TAG = "sign_out_dialog_tag";
@@ -95,11 +83,6 @@ public class AccountManagementFragment extends PreferenceFragment
      */
     private static final String SIGN_OUT_ALLOWED = "auto_signed_in_school_account";
 
-    private static final HashMap<String, Pair<String, Drawable>> sToNamePicture = new HashMap<>();
-
-    private static String sChildAccountId;
-    private static Drawable sCachedBadgedPicture;
-
     public static final String PREF_ACCOUNTS_CATEGORY = "accounts_category";
     public static final String PREF_PARENTAL_SETTINGS = "parental_settings";
     public static final String PREF_PARENT_ACCOUNTS = "parent_accounts";
@@ -117,6 +100,7 @@ public class AccountManagementFragment extends PreferenceFragment
 
     private Profile mProfile;
     private String mSignedInAccountName;
+    private ProfileDataCache mProfileDataCache;
 
     @Override
     public void onCreate(Bundle savedState) {
@@ -141,7 +125,19 @@ public class AccountManagementFragment extends PreferenceFragment
                 ProfileAccountManagementMetrics.VIEW,
                 mGaiaServiceType);
 
-        startFetchingAccountsInformation(getActivity(), mProfile);
+        int avatarImageSize = getResources().getDimensionPixelSize(R.dimen.user_picture_size);
+        ProfileDataCache.BadgeConfig badgeConfig = null;
+        if (mProfile.isChild()) {
+            Bitmap badge =
+                    BitmapFactory.decodeResource(getResources(), R.drawable.ic_account_child_20dp);
+            int badgePositionX = getResources().getDimensionPixelOffset(R.dimen.badge_position_x);
+            int badgePositionY = getResources().getDimensionPixelOffset(R.dimen.badge_position_y);
+            int badgeBorderSize = getResources().getDimensionPixelSize(R.dimen.badge_border_size);
+            badgeConfig = new ProfileDataCache.BadgeConfig(
+                    badge, new Point(badgePositionX, badgePositionY), badgeBorderSize);
+        }
+        mProfileDataCache =
+                new ProfileDataCache(getActivity(), mProfile, avatarImageSize, badgeConfig);
     }
 
     @Override
@@ -156,12 +152,13 @@ public class AccountManagementFragment extends PreferenceFragment
     public void onResume() {
         super.onResume();
         SigninManager.get(getActivity()).addSignInStateObserver(this);
-        ProfileDownloader.addObserver(this);
+        mProfileDataCache.addObserver(this);
         ProfileSyncService syncService = ProfileSyncService.get();
         if (syncService != null) {
             syncService.addSyncStateChangedListener(this);
         }
 
+        mProfileDataCache.update(AccountManagerFacade.get().tryGetGoogleAccountNames());
         update();
     }
 
@@ -169,7 +166,7 @@ public class AccountManagementFragment extends PreferenceFragment
     public void onPause() {
         super.onPause();
         SigninManager.get(getActivity()).removeSignInStateObserver(this);
-        ProfileDownloader.removeObserver(this);
+        mProfileDataCache.removeObserver(this);
         ProfileSyncService syncService = ProfileSyncService.get();
         if (syncService != null) {
             syncService.removeSyncStateChangedListener(this);
@@ -184,20 +181,6 @@ public class AccountManagementFragment extends PreferenceFragment
         ProfileSyncService syncService = ProfileSyncService.get();
         if (syncService != null) {
             syncService.setSetupInProgress(false);
-        }
-    }
-
-    /**
-     * Initiate fetching the user accounts data (images and the full name).
-     * Fetched data will be sent to observers of ProfileDownloader.
-     *
-     * @param context A context to get resources, current theme, etc.
-     * @param profile Profile to use.
-     */
-    private static void startFetchingAccountsInformation(Context context, Profile profile) {
-        Account[] accounts = AccountManagerFacade.get().tryGetGoogleAccounts();
-        for (Account account : accounts) {
-            startFetchingAccountInformation(context, profile, account.name);
         }
     }
 
@@ -217,12 +200,8 @@ public class AccountManagementFragment extends PreferenceFragment
 
         addPreferencesFromResource(R.xml.account_management_preferences);
 
-        String fullName = getCachedUserName(mSignedInAccountName);
-        if (TextUtils.isEmpty(fullName)) {
-            fullName = ProfileDownloader.getCachedFullName(mProfile);
-        }
-        if (TextUtils.isEmpty(fullName)) fullName = mSignedInAccountName;
-
+        String fullName = mProfileDataCache.getProfileDataOrDefault(mSignedInAccountName)
+                                  .getFullNameOrEmail();
         getActivity().setTitle(fullName);
 
         configureSignOutSwitch();
@@ -380,14 +359,12 @@ public class AccountManagementFragment extends PreferenceFragment
 
         accountsCategory.removeAll();
 
-        boolean isChildAccount = mProfile.isChild();
         Account[] accounts = AccountManagerFacade.get().tryGetGoogleAccounts();
         for (final Account account : accounts) {
             Preference pref = new Preference(getActivity());
             pref.setLayoutResource(R.layout.account_management_account_row);
             pref.setTitle(account.name);
-            pref.setIcon(isChildAccount ? getBadgedUserPicture(getActivity(), account.name)
-                                        : getUserPicture(getActivity(), account.name));
+            pref.setIcon(mProfileDataCache.getProfileDataOrDefault(account.name).getImage());
 
             pref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
                 @Override
@@ -401,7 +378,7 @@ public class AccountManagementFragment extends PreferenceFragment
             accountsCategory.addPreference(pref);
         }
 
-        if (!isChildAccount) {
+        if (!mProfile.isChild()) {
             accountsCategory.addPreference(createAddAccountPreference());
         }
     }
@@ -439,12 +416,9 @@ public class AccountManagementFragment extends PreferenceFragment
         return addAccountPreference;
     }
 
-    // ProfileDownloader.Observer implementation:
-
+    // ProfileDataCache.Observer implementation:
     @Override
-    public void onProfileDownloaded(String accountId, String fullName, String givenName,
-            Bitmap bitmap) {
-        updateUserNamePictureCache(getActivity(), accountId, fullName, bitmap);
+    public void onProfileDataUpdated(String accountId) {
         updateAccountsList();
     }
 
@@ -555,154 +529,6 @@ public class AccountManagementFragment extends PreferenceFragment
         arguments.putInt(SHOW_GAIA_SERVICE_TYPE_EXTRA, serviceType);
         intent.putExtra(Preferences.EXTRA_SHOW_FRAGMENT_ARGUMENTS, arguments);
         ContextUtils.getApplicationContext().startActivity(intent);
-    }
-
-    /**
-     * Converts a square user picture to a round user picture.
-     *
-     * @param context A context to get resources, current theme, etc.
-     * @param bitmap A bitmap to convert.
-     * @return A rounded picture bitmap.
-     */
-    public static Drawable makeRoundUserPicture(Context context, Bitmap bitmap) {
-        if (bitmap == null) return null;
-
-        int imageSizePx = context.getResources().getDimensionPixelSize(R.dimen.user_picture_size);
-        Bitmap output = Bitmap.createBitmap(imageSizePx, imageSizePx, Config.ARGB_8888);
-        Canvas canvas = new Canvas(output);
-
-        final Paint paint = new Paint();
-        canvas.drawARGB(0, 0, 0, 0);
-        paint.setAntiAlias(true);
-        paint.setColor(0xFFFFFFFF);
-        canvas.drawCircle(imageSizePx * 0.5f, imageSizePx * 0.5f, imageSizePx * 0.5f, paint);
-        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-
-        Rect srcRect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
-        Rect dstRect = new Rect(0, 0, imageSizePx, imageSizePx);
-        canvas.drawBitmap(bitmap, srcRect, dstRect, paint);
-        return new BitmapDrawable(context.getResources(), output);
-    }
-
-    /**
-     * Creates a new image with the picture overlaid by the badge.
-     * @param userPicture A bitmap to overlay on.
-     * @param badge A bitmap to overlay with.
-     * @return A bitmap with the badge overlaying the {@code userPicture}.
-     */
-    private static Drawable overlayChildBadgeOnUserPicture(
-            Drawable userPicture, Bitmap badge, Resources resources) {
-        int imageSizePx = resources.getDimensionPixelOffset(R.dimen.user_picture_size);
-        int borderSize = resources.getDimensionPixelOffset(R.dimen.badge_border_size);
-        int badgeRadius = resources.getDimensionPixelOffset(R.dimen.badge_radius);
-
-        // Create a larger image to accommodate the badge which spills the original picture.
-        int badgedPictureWidth =
-                resources.getDimensionPixelOffset(R.dimen.badged_user_picture_width);
-        int badgedPictureHeight =
-                resources.getDimensionPixelOffset(R.dimen.badged_user_picture_height);
-        Bitmap badgedPicture = Bitmap.createBitmap(badgedPictureWidth, badgedPictureHeight,
-                Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(badgedPicture);
-        userPicture.setBounds(0, 0, imageSizePx, imageSizePx);
-        userPicture.draw(canvas);
-
-        // Cut a transparent hole through the background image.
-        // This will serve as a border to the badge being overlaid.
-        Paint paint = new Paint();
-        paint.setAntiAlias(true);
-        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
-        int badgeCenterX = badgedPictureWidth - badgeRadius;
-        int badgeCenterY = badgedPictureHeight - badgeRadius;
-        canvas.drawCircle(badgeCenterX, badgeCenterY, badgeRadius + borderSize, paint);
-
-        // Draw the badge
-        canvas.drawBitmap(badge, badgeCenterX - badgeRadius, badgeCenterY - badgeRadius, null);
-        return new BitmapDrawable(resources, badgedPicture);
-    }
-
-    /**
-     * Updates the user name and picture in the cache.
-     *
-     * @param context A context to get resources, current theme, etc.
-     * @param accountId User's account id.
-     * @param fullName User name.
-     * @param bitmap User picture.
-     */
-    public static void updateUserNamePictureCache(
-            Context context, String accountId, String fullName, Bitmap bitmap) {
-        sChildAccountId = null;
-        sCachedBadgedPicture = null;
-        Drawable userPicture = bitmap != null ? makeRoundUserPicture(context, bitmap)
-                                              : getAvatarPlaceholder(context);
-        sToNamePicture.put(accountId, new Pair<>(fullName, userPicture));
-    }
-
-    /**
-     * @param accountId An account.
-     * @return A cached user name for a given account.
-     */
-    public static String getCachedUserName(String accountId) {
-        Pair<String, Drawable> pair = sToNamePicture.get(accountId);
-        return pair != null ? pair.first : null;
-    }
-
-    /**
-     * Gets the user picture for the account from the cache, or returns the default picture if
-     * unavailable.
-     *
-     * @param context A context to get resources, current theme, etc.
-     * @param accountId A child account.
-     * @return A user picture with badge for a given child account.
-     */
-    private static Drawable getBadgedUserPicture(Context context, String accountId) {
-        if (sChildAccountId != null) {
-            assert TextUtils.equals(accountId, sChildAccountId);
-            return sCachedBadgedPicture;
-        }
-        sChildAccountId = accountId;
-        Drawable picture = getUserPicture(context, accountId);
-        Bitmap badge = BitmapFactory.decodeResource(
-                context.getResources(), R.drawable.ic_account_child_20dp);
-        sCachedBadgedPicture =
-                overlayChildBadgeOnUserPicture(picture, badge, context.getResources());
-        return sCachedBadgedPicture;
-    }
-
-    /**
-     * Gets the user picture for the account from the cache, or returns the default picture if
-     * unavailable.
-     *
-     * @param context A context to get resources, current theme, etc.
-     * @param accountId Name of the account to get picture for.
-     * @return A user picture for a given account.
-     */
-    public static Drawable getUserPicture(Context context, String accountId) {
-        Pair<String, Drawable> pair = sToNamePicture.get(accountId);
-        return pair != null ? pair.second : getAvatarPlaceholder(context);
-    }
-
-    private static Drawable getAvatarPlaceholder(Context context) {
-        return AppCompatResources.getDrawable(context, R.drawable.logo_avatar_anonymous);
-    }
-
-    /**
-     * Initiate fetching of an image and a picture of a given account. Fetched data will be sent to
-     * observers of ProfileDownloader.
-     *
-     * @param context A context to get resources, current theme, etc.
-     * @param profile A profile.
-     * @param accountName An account name.
-     */
-    public static void startFetchingAccountInformation(
-            Context context, Profile profile, String accountName) {
-        if (TextUtils.isEmpty(accountName)) return;
-        if (sToNamePicture.get(accountName) != null) return;
-
-        final int imageSidePixels =
-                context.getResources().getDimensionPixelOffset(R.dimen.user_picture_size);
-        ProfileDownloader.startFetchingAccountInfoFor(
-                context, profile, accountName, imageSidePixels, false);
     }
 
     /**

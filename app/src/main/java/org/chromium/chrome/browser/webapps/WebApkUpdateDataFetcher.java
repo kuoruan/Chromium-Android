@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.text.TextUtils;
 
 import org.chromium.base.annotations.CalledByNative;
+import org.chromium.blink_public.platform.WebDisplayMode;
 import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.content_public.browser.WebContents;
@@ -21,12 +22,6 @@ import java.util.HashMap;
 public class WebApkUpdateDataFetcher extends EmptyTabObserver {
     /** Observes fetching of the Web Manifest. */
     public interface Observer {
-        /**
-         * Called when the initial URL load has completed and the page has no Web Manifest or the
-         * Web Manifest is not WebAPK compatible.
-         */
-        void onWebManifestForInitialUrlNotWebApkCompatible();
-
         /**
          * Called when the Web Manifest has been successfully fetched (including on the initial URL
          * load).
@@ -103,8 +98,8 @@ public class WebApkUpdateDataFetcher extends EmptyTabObserver {
     protected void onDataAvailable(String manifestStartUrl, String scopeUrl, String name,
             String shortName, String primaryIconUrl, String primaryIconMurmur2Hash,
             Bitmap primaryIconBitmap, String badgeIconUrl, String badgeIconMurmur2Hash,
-            Bitmap badgeIconBitmap, String[] iconUrls, int displayMode, int orientation,
-            long themeColor, long backgroundColor) {
+            Bitmap badgeIconBitmap, String[] iconUrls, @WebDisplayMode int displayMode,
+            int orientation, long themeColor, long backgroundColor) {
         HashMap<String, String> iconUrlToMurmur2HashMap = new HashMap<String, String>();
         for (String iconUrl : iconUrls) {
             String murmur2Hash = null;
@@ -116,22 +111,12 @@ public class WebApkUpdateDataFetcher extends EmptyTabObserver {
             iconUrlToMurmur2HashMap.put(iconUrl, murmur2Hash);
         }
 
-        WebApkInfo info = WebApkInfo.create(mOldInfo.id(), mOldInfo.uri().toString(),
-                mOldInfo.shouldForceNavigation(), scopeUrl, new WebApkInfo.Icon(primaryIconBitmap),
-                new WebApkInfo.Icon(badgeIconBitmap), name, shortName, displayMode, orientation,
-                mOldInfo.source(), themeColor, backgroundColor, mOldInfo.webApkPackageName(),
-                mOldInfo.shellApkVersion(), mOldInfo.manifestUrl(), manifestStartUrl,
-                iconUrlToMurmur2HashMap);
+        WebApkInfo info = WebApkInfo.create(mOldInfo.id(), mOldInfo.uri().toString(), scopeUrl,
+                new WebApkInfo.Icon(primaryIconBitmap), new WebApkInfo.Icon(badgeIconBitmap), name,
+                shortName, displayMode, orientation, mOldInfo.source(), themeColor, backgroundColor,
+                mOldInfo.webApkPackageName(), mOldInfo.shellApkVersion(), mOldInfo.manifestUrl(),
+                manifestStartUrl, iconUrlToMurmur2HashMap, mOldInfo.shouldForceNavigation());
         mObserver.onGotManifestData(info, primaryIconUrl, badgeIconUrl);
-    }
-
-    /**
-     * Called when the initial URL load has completed and the page has no Web Manifest or the
-     * Web Manifest is not WebAPK compatible.
-     */
-    @CalledByNative
-    private void onWebManifestForInitialUrlNotWebApkCompatible() {
-        mObserver.onWebManifestForInitialUrlNotWebApkCompatible();
     }
 
     private native long nativeInitialize(String scope, String webManifestUrl);

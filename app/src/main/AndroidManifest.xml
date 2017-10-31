@@ -16,7 +16,7 @@ by a child template that "extends" this file.
     tools:ignore="MissingVersion">
     <!-- android:versionCode and android:versionName is set through gyp. See build/common.gypi -->
 
-    <uses-sdk android:minSdkVersion="16" android:targetSdkVersion="23" />
+    <uses-sdk android:minSdkVersion="16" android:targetSdkVersion="26" />
     <uses-feature android:glEsVersion="0x00020000" />
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
@@ -31,10 +31,10 @@ by a child template that "extends" this file.
       permission on Android M and later without a prompt.
     -->
         <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
-    <uses-permission-sdk-m android:name="android.permission.BLUETOOTH"/>
-    <uses-permission-sdk-m android:name="android.permission.BLUETOOTH_ADMIN"/>
-    <uses-permission-sdk-m android:name="android.permission.REORDER_TASKS"/>
-    <uses-permission-sdk-m android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+    <uses-permission-sdk-23 android:name="android.permission.BLUETOOTH"/>
+    <uses-permission-sdk-23 android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission-sdk-23 android:name="android.permission.REORDER_TASKS"/>
+    <uses-permission-sdk-23 android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
@@ -57,6 +57,12 @@ by a child template that "extends" this file.
     <uses-feature android:name="android.software.vr.mode" android:required="false"/>
     <!-- Indicates use of VR features that are available only on Daydream-ready devices. -->
     <uses-feature android:name="android.hardware.vr.high_performance" android:required="false"/>
+    <!--
+      Indicates that we don't need Chrome to be available on devices that only support landscape
+      orientation. This is needed because we have VR specific activities that declare the
+      android:orientation attribute.
+    -->
+    <uses-feature android:name="android.hardware.screen.landscape" android:required="false"/>
 
     <permission android:name="org.chromium.chrome.permission.CHILD_SERVICE" android:protectionLevel="signature" />
     <permission android:name="org.chromium.chrome.permission.READ_WRITE_BOOKMARK_FOLDERS" android:protectionLevel="signatureOrSystem" />
@@ -114,10 +120,8 @@ by a child template that "extends" this file.
         <!-- Samsung MultiWindow Support -->
         <meta-data android:name="com.samsung.android.sdk.multiwindow.enable"
             android:value="true" />
-        <meta-data android:name="com.samsung.android.sdk.multiwindow.multiinstance.enable"
-            android:value="true" />
-        <meta-data android:name="com.samsung.android.sdk.multiwindow.multiinstance.launchmode"
-            android:value="singleTask" />
+
+
         <meta-data android:name="com.samsung.android.sdk.multiwindow.penwindow.enable"
             android:value="true"/>
 
@@ -139,17 +143,12 @@ by a child template that "extends" this file.
             android:excludeFromRecents="true"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize">
         </activity>
-        <activity-alias android:name="com.google.android.apps.chrome.Main"
+        <activity-alias android:name="com.google.android.apps.chrome.IntentDispatcher"
             android:targetActivity="org.chromium.chrome.browser.document.ChromeLauncherActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <category android:name="android.intent.category.APP_BROWSER" />
                 <category android:name="android.intent.category.NOTIFICATION_PREFERENCES" />
-                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
             </intent-filter>
             <!-- Matches the common case of intents with no MIME type.
                  Make sure to keep in sync with the next filter.  -->
@@ -230,8 +229,6 @@ by a child template that "extends" this file.
             </intent-filter>
             <meta-data android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
-            <meta-data android:name="android.app.shortcuts"
-                android:resource="@xml/launchershortcuts" />
 
                         <intent-filter>
                 <action android:name="org.chromium.chrome.browser.dummy.action" />
@@ -276,7 +273,7 @@ by a child template that "extends" this file.
             android:persistableMode="persistAcrossReboots"
             android:autoRemoveFromRecents="false"
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 >
         </activity>
@@ -291,7 +288,7 @@ by a child template that "extends" this file.
             android:persistableMode="persistNever"
             android:autoRemoveFromRecents="false"
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 >
         </activity>
@@ -304,7 +301,7 @@ by a child template that "extends" this file.
             android:theme="@style/MainTheme"
             android:exported="false"
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
                         android:supportsPictureInPicture="true"
@@ -325,7 +322,7 @@ by a child template that "extends" this file.
             android:persistableMode="persistNever"
             android:autoRemoveFromRecents="false"
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
                         android:supportsPictureInPicture="true"
@@ -347,7 +344,7 @@ by a child template that "extends" this file.
             android:persistableMode="persistNever"
             android:taskAffinity=""
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
                         android:supportsPictureInPicture="true"
@@ -369,7 +366,7 @@ by a child template that "extends" this file.
             android:persistableMode="persistNever"
             android:taskAffinity=""
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
                         android:supportsPictureInPicture="true"
@@ -391,7 +388,7 @@ by a child template that "extends" this file.
             android:persistableMode="persistNever"
             android:taskAffinity=""
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
                         android:supportsPictureInPicture="true"
@@ -413,7 +410,7 @@ by a child template that "extends" this file.
             android:persistableMode="persistNever"
             android:taskAffinity=""
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
                         android:supportsPictureInPicture="true"
@@ -435,7 +432,7 @@ by a child template that "extends" this file.
             android:persistableMode="persistNever"
             android:taskAffinity=""
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
                         android:supportsPictureInPicture="true"
@@ -457,7 +454,7 @@ by a child template that "extends" this file.
             android:persistableMode="persistNever"
             android:taskAffinity=""
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
                         android:supportsPictureInPicture="true"
@@ -479,7 +476,7 @@ by a child template that "extends" this file.
             android:persistableMode="persistNever"
             android:taskAffinity=""
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
                         android:supportsPictureInPicture="true"
@@ -501,7 +498,7 @@ by a child template that "extends" this file.
             android:persistableMode="persistNever"
             android:taskAffinity=""
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
                         android:supportsPictureInPicture="true"
@@ -523,7 +520,7 @@ by a child template that "extends" this file.
             android:persistableMode="persistNever"
             android:taskAffinity=""
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
                         android:supportsPictureInPicture="true"
@@ -545,7 +542,30 @@ by a child template that "extends" this file.
             android:persistableMode="persistNever"
             android:taskAffinity=""
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
+            android:hardwareAccelerated="false"
+
+                        android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+
+        >
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
+        </activity>
+        <activity android:name="org.chromium.chrome.browser.vr.VrMainActivity"
+            android:theme="@style/VrSupportTheme"
+            android:screenOrientation="landscape"
+            android:exported="true"
+            android:enableVrMode="@string/gvr_vr_mode_component"
+            android:taskAffinity=""
+            android:persistableMode="persistNever"
+            android:autoRemoveFromRecents="false"
+                        android:windowSoftInputMode="adjustResize"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
                         android:supportsPictureInPicture="true"
@@ -568,7 +588,7 @@ by a child template that "extends" this file.
             android:supportsPictureInPicture="true"
             android:resizeableActivity="true"
             android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
         >
             <!--
@@ -582,13 +602,33 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
         </activity>
+        <activity-alias android:name="com.google.android.apps.chrome.Main"
+            android:targetActivity="org.chromium.chrome.browser.ChromeTabbedActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.APP_BROWSER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts"
+                android:resource="@xml/launchershortcuts" />
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
+        </activity-alias>
         <activity android:name="org.chromium.chrome.browser.ChromeTabbedActivity2"
             android:theme="@style/TabbedModeTheme"
             android:exported="false"
             android:taskAffinity="org.chromium.chrome.ChromeTabbedActivity2"
             android:launchMode="singleTask"
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
                         android:supportsPictureInPicture="true"
@@ -606,7 +646,7 @@ by a child template that "extends" this file.
             android:theme="@style/TabbedModeTheme"
             android:exported="false"
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 >
         </activity>
@@ -615,7 +655,7 @@ by a child template that "extends" this file.
             android:exported="false"
             android:noHistory="true"
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
                         android:supportsPictureInPicture="true"
@@ -644,6 +684,7 @@ by a child template that "extends" this file.
         </activity>
         <activity android:name="org.chromium.chrome.browser.vr_shell.VrFirstRunActivity"
             android:exported="false"
+            android:launchMode="singleInstance"
             android:theme="@style/VrActivityTheme"
             android:excludeFromRecents="true"
             android:enableVrMode="@string/gvr_vr_mode_component"
@@ -754,7 +795,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -783,7 +824,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -810,7 +851,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -837,7 +878,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -864,7 +905,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -891,7 +932,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -918,7 +959,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -945,7 +986,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -972,7 +1013,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -999,7 +1040,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -1026,7 +1067,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -1053,7 +1094,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -1075,7 +1116,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -1097,7 +1138,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -1119,7 +1160,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -1141,7 +1182,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -1163,7 +1204,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -1185,7 +1226,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -1207,7 +1248,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -1229,7 +1270,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -1251,7 +1292,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -1273,7 +1314,7 @@ by a child template that "extends" this file.
             android:resizeableActivity="true"
 
                         android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 
         >
@@ -1391,13 +1432,21 @@ by a child template that "extends" this file.
             </intent-filter>
         </activity>
 
+        <service android:name="org.chromium.chrome.browser.browseractions.BrowserActionsService"
+            android:exported="false">
+        </service>
+
         <!-- Service for Broadcasting a Physical Web URL -->
         <service
             android:name="org.chromium.chrome.browser.physicalweb.PhysicalWebBroadcastService"
             android:exported="false">
         </service>
 
-        <!-- Service for decoding images in a sandboxed process. -->
+        <!-- Service for decoding images in a sandboxed process.  When
+             use_order_profiling is set, all processes need to be able to write
+             profiling information and thus cannot be sandboxed. Order profiling
+             is used only on bots to optimize binary layout, and is never used
+             for a released version of chrome. -->
         <service
             android:description="@string/decoder_description"
             android:name="org.chromium.chrome.browser.photo_picker.DecoderService"
@@ -1444,6 +1493,16 @@ by a child template that "extends" this file.
                 <action android:name="android.accounts.LOGIN_ACCOUNTS_CHANGED" />
             </intent-filter>
         </receiver>
+
+        <!-- Download foreground service -->
+        <service android:name="org.chromium.chrome.browser.download.DownloadForegroundService"
+            android:exported="false">
+        </service>
+
+        <!-- Download broadcast manager service -->
+        <service android:name="org.chromium.chrome.browser.download.DownloadBroadcastManager"
+            android:exported="false">
+        </service>
 
         <!-- Download service -->
         <service android:name="org.chromium.chrome.browser.download.DownloadNotificationService"
@@ -1632,120 +1691,200 @@ by a child template that "extends" this file.
         <meta-data android:name="org.chromium.content.browser.SANDBOXED_SERVICES_NAME"
             android:value="org.chromium.content.app.SandboxedProcessService"/>
 
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService0"
             android:process=":sandboxed_process0"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService1"
             android:process=":sandboxed_process1"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService2"
             android:process=":sandboxed_process2"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService3"
             android:process=":sandboxed_process3"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService4"
             android:process=":sandboxed_process4"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService5"
             android:process=":sandboxed_process5"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService6"
             android:process=":sandboxed_process6"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService7"
             android:process=":sandboxed_process7"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService8"
             android:process=":sandboxed_process8"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService9"
             android:process=":sandboxed_process9"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService10"
             android:process=":sandboxed_process10"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService11"
             android:process=":sandboxed_process11"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService12"
             android:process=":sandboxed_process12"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService13"
             android:process=":sandboxed_process13"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService14"
             android:process=":sandboxed_process14"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService15"
             android:process=":sandboxed_process15"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService16"
             android:process=":sandboxed_process16"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService17"
             android:process=":sandboxed_process17"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService18"
             android:process=":sandboxed_process18"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="false"
              />
+        <!-- When use_order_profiling is set, the renderer processes need to be
+             able to write profiling information and thus cannot be
+             sandboxed. Order profiling is used only on bots to optimize binary
+             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService19"
             android:process=":sandboxed_process19"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
@@ -1790,11 +1929,16 @@ android:value="true" />
             </intent-filter>
         </receiver>
 
-        <receiver android:name="org.chromium.chrome.browser.ntp.ContentSuggestionsNotificationHelper$OpenUrlReceiver"
+        <receiver android:name="org.chromium.chrome.browser.ntp.ContentSuggestionsNotifier$OpenUrlReceiver"
             android:exported="false"/>
-        <receiver android:name="org.chromium.chrome.browser.ntp.ContentSuggestionsNotificationHelper$DeleteReceiver"
+        <receiver android:name="org.chromium.chrome.browser.ntp.ContentSuggestionsNotifier$DeleteReceiver"
             android:exported="false"/>
-        <receiver android:name="org.chromium.chrome.browser.ntp.ContentSuggestionsNotificationHelper$TimeoutReceiver"
+        <receiver android:name="org.chromium.chrome.browser.ntp.ContentSuggestionsNotifier$TimeoutReceiver"
+            android:exported="false"/>
+
+        <receiver android:name="org.chromium.chrome.browser.offlinepages.prefetch.PrefetchedPagesNotifier$ClickReceiver"
+            android:exported="false"/>
+        <receiver android:name="org.chromium.chrome.browser.offlinepages.prefetch.PrefetchedPagesNotifier$SettingsReceiver"
             android:exported="false"/>
 
         <service android:name="org.chromium.chrome.browser.media.MediaCaptureNotificationService"
@@ -1835,9 +1979,6 @@ android:value="true" />
             </intent-filter>
         </receiver>
 
-
-        <meta-data android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
 
         <meta-data android:name="org.chromium.content.browser.SMART_CLIP_PROVIDER"
             android:value="org.chromium.content.browser.SmartClipProvider"/>

@@ -26,7 +26,7 @@ public final class PaymentCurrencyAmount extends org.chromium.mojo.bindings.Stru
 
     private PaymentCurrencyAmount(int version) {
         super(STRUCT_SIZE, version);
-        currencySystem = (String) "urn:iso:std:iso:4217";
+        this.currencySystem = (String) "urn:iso:std:iso:4217";
     }
 
     public PaymentCurrencyAmount() {
@@ -83,11 +83,11 @@ public final class PaymentCurrencyAmount extends org.chromium.mojo.bindings.Stru
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(currency, 8, false);
+        encoder0.encode(this.currency, 8, false);
         
-        encoder0.encode(value, 16, false);
+        encoder0.encode(this.value, 16, false);
         
-        encoder0.encode(currencySystem, 24, false);
+        encoder0.encode(this.currencySystem, 24, false);
     }
 
     /**
@@ -118,9 +118,9 @@ public final class PaymentCurrencyAmount extends org.chromium.mojo.bindings.Stru
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(currency);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(value);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(currencySystem);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.currency);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.value);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.currencySystem);
         return result;
     }
 }

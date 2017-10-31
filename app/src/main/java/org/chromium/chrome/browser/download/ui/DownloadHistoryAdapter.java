@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import org.chromium.base.ContextUtils;
@@ -22,18 +23,18 @@ import org.chromium.chrome.browser.download.DownloadItem;
 import org.chromium.chrome.browser.download.DownloadSharedPreferenceHelper;
 import org.chromium.chrome.browser.download.DownloadUtils;
 import org.chromium.chrome.browser.download.ui.BackendProvider.DownloadDelegate;
-import org.chromium.chrome.browser.download.ui.BackendProvider.OfflinePageDelegate;
 import org.chromium.chrome.browser.download.ui.DownloadHistoryItemWrapper.DownloadItemWrapper;
-import org.chromium.chrome.browser.download.ui.DownloadHistoryItemWrapper.OfflinePageItemWrapper;
+import org.chromium.chrome.browser.download.ui.DownloadHistoryItemWrapper.OfflineItemWrapper;
 import org.chromium.chrome.browser.download.ui.DownloadManagerUi.DownloadUiObserver;
-import org.chromium.chrome.browser.offlinepages.downloads.OfflinePageDownloadBridge;
-import org.chromium.chrome.browser.offlinepages.downloads.OfflinePageDownloadItem;
 import org.chromium.chrome.browser.widget.DateDividedAdapter;
-import org.chromium.chrome.browser.widget.displaystyle.MarginResizer;
+import org.chromium.chrome.browser.widget.DateDividedAdapter.TimedItem;
 import org.chromium.chrome.browser.widget.displaystyle.UiConfig;
-import org.chromium.chrome.browser.widget.selection.SelectableListLayout;
 import org.chromium.chrome.browser.widget.selection.SelectionDelegate;
 import org.chromium.components.offline_items_collection.ContentId;
+import org.chromium.components.offline_items_collection.OfflineContentProvider;
+import org.chromium.components.offline_items_collection.OfflineItem;
+import org.chromium.components.offline_items_collection.OfflineItemFilter;
+import org.chromium.components.offline_items_collection.OfflineItemState;
 import org.chromium.content_public.browser.DownloadState;
 
 import java.util.ArrayList;
@@ -42,19 +43,23 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 /** Bridges the user's download history and the UI used to display it. */
 public class DownloadHistoryAdapter extends DateDividedAdapter
-        implements DownloadUiObserver, DownloadSharedPreferenceHelper.Observer {
+        implements DownloadUiObserver, DownloadSharedPreferenceHelper.Observer,
+                   OfflineContentProvider.Observer {
     private static final String TAG = "DownloadAdapter";
 
     /** Alerted about changes to internal state. */
     static interface TestObserver {
         abstract void onDownloadItemCreated(DownloadItem item);
         abstract void onDownloadItemUpdated(DownloadItem item);
+        abstract void onOfflineItemCreated(OfflineItem item);
+        abstract void onOfflineItemUpdated(OfflineItem item);
     }
 
     private class BackendItemsImpl extends BackendItems {
@@ -150,7 +155,7 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
 
     private final BackendItems mRegularDownloadItems = new BackendItemsImpl();
     private final BackendItems mIncognitoDownloadItems = new BackendItemsImpl();
-    private final BackendItems mOfflinePageItems = new BackendItemsImpl();
+    private final BackendItems mOfflineItems = new BackendItemsImpl();
 
     private final FilePathsToDownloadItemsMap mFilePathsToItemsMap =
             new FilePathsToDownloadItemsMap();
@@ -163,10 +168,10 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
     private final List<DownloadItemView> mViews = new ArrayList<>();
 
     private BackendProvider mBackendProvider;
-    private OfflinePageDownloadBridge.Observer mOfflinePageObserver;
     private int mFilter = DownloadFilter.FILTER_ALL;
     private String mSearchQuery = EMPTY_QUERY;
     private SpaceDisplay mSpaceDisplay;
+    private HeaderItem mSpaceDisplayHeaderItem;
     private boolean mIsSearching;
     private boolean mShouldShowStorageInfoHeader;
 
@@ -191,6 +196,8 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
         mBackendProvider = provider;
         mUiConfig = uiConfig;
 
+        generateHeaderItems();
+
         DownloadItemSelectionDelegate selectionDelegate =
                 (DownloadItemSelectionDelegate) mBackendProvider.getSelectionDelegate();
         selectionDelegate.initialize(this);
@@ -201,12 +208,16 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
         downloadManager.getAllDownloads(false);
         if (mShowOffTheRecord) downloadManager.getAllDownloads(true);
 
-        initializeOfflinePageBridge();
+        getOfflineContentProvider().addObserver(this);
 
         sDeletedFileTracker.incrementInstanceCount();
         mShouldShowStorageInfoHeader = ContextUtils.getAppSharedPreferences().getBoolean(
                 PREF_SHOW_STORAGE_INFO_HEADER,
                 ChromeFeatureList.isEnabled(ChromeFeatureList.DOWNLOAD_HOME_SHOW_STORAGE_INFO));
+    }
+
+    private OfflineContentProvider getOfflineContentProvider() {
+        return mBackendProvider.getOfflineContentProvider();
     }
 
     /** Called when the user's regular or incognito download history has been loaded. */
@@ -269,22 +280,6 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
         return true;
     }
 
-    /** Called when the user's offline page history has been gathered. */
-    private void onAllOfflinePagesRetrieved(List<OfflinePageDownloadItem> result) {
-        if (mOfflinePageItems.isInitialized()) return;
-        assert mOfflinePageItems.size() == 0;
-
-        for (OfflinePageDownloadItem item : result) {
-            addDownloadHistoryItemWrapper(createOfflinePageItemWrapper(item));
-        }
-
-        RecordHistogram.recordCountHistogram("Android.DownloadManager.InitialCount.OfflinePage",
-                result.size());
-
-        mOfflinePageItems.setIsInitialized();
-        onItemsRetrieved(LoadingStateDelegate.OFFLINE_PAGES);
-    }
-
     /**
      * Should be called when download items or offline pages have been retrieved.
      */
@@ -300,7 +295,7 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
         long totalSize = 0;
         totalSize += mRegularDownloadItems.getTotalBytes();
         totalSize += mIncognitoDownloadItems.getTotalBytes();
-        totalSize += mOfflinePageItems.getTotalBytes();
+        totalSize += mOfflineItems.getTotalBytes();
         return totalSize;
     }
 
@@ -321,7 +316,6 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
                         .inflate(R.layout.offline_download_header, parent, false);
         offlineHeader.setAdapter(this);
         offlineHeader.setSelectionDelegate((DownloadItemSelectionDelegate) getSelectionDelegate());
-        if (mUiConfig != null) offlineHeader.configureWideDisplayStyle(mUiConfig);
         return new SubsectionHeaderViewHolder(offlineHeader);
     }
 
@@ -334,23 +328,10 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
     }
 
     @Override
-    protected DateViewHolder createDateViewHolder(ViewGroup parent) {
-        DateViewHolder viewHolder = super.createDateViewHolder(parent);
-        if (mUiConfig != null) {
-            MarginResizer.createAndAttach(viewHolder.itemView, mUiConfig,
-                    parent.getResources().getDimensionPixelSize(R.dimen.list_item_default_margin),
-                    SelectableListLayout.getDefaultListItemLateralShadowSizePx(
-                            parent.getResources()));
-        }
-        return viewHolder;
-    }
-
-    @Override
     public ViewHolder createViewHolder(ViewGroup parent) {
         DownloadItemView v = (DownloadItemView) LayoutInflater.from(parent.getContext()).inflate(
                 R.layout.download_item_view, parent, false);
         v.setSelectionDelegate(getSelectionDelegate());
-        if (mUiConfig != null) v.configureWideDisplayStyle(mUiConfig);
         mViews.add(v);
         return new DownloadHistoryItemViewHolder(v);
     }
@@ -364,26 +345,24 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
     }
 
     @Override
+    protected void bindViewHolderForHeaderItem(ViewHolder viewHolder, HeaderItem headerItem) {
+        super.bindViewHolderForHeaderItem(viewHolder, headerItem);
+        mSpaceDisplay.onChanged();
+    }
+
+    @Override
     protected ItemGroup createGroup(long timeStamp) {
         return new DownloadItemGroup(timeStamp);
     }
 
-    @Override
-    protected BasicViewHolder createHeader(ViewGroup parent) {
-        if (mSpaceDisplay == null) {
-            mSpaceDisplay = new SpaceDisplay(parent, this);
-            registerAdapterDataObserver(mSpaceDisplay);
-            if (mUiConfig != null) {
-                MarginResizer.createAndAttach(mSpaceDisplay.getView(), mUiConfig,
-                        parent.getResources().getDimensionPixelSize(
-                                R.dimen.list_item_default_margin),
-                        SelectableListLayout.getDefaultListItemLateralShadowSizePx(
-                                parent.getResources()));
-            }
-        }
-
-        mSpaceDisplay.onChanged();
-        return new BasicViewHolder(mSpaceDisplay.getView());
+    /**
+     * Initialize space display view in storage info header and generate header item for it.
+     */
+    void generateHeaderItems() {
+        mSpaceDisplay = new SpaceDisplay(null, this);
+        View view = mSpaceDisplay.getViewContainer();
+        registerAdapterDataObserver(mSpaceDisplay);
+        mSpaceDisplayHeaderItem = new HeaderItem(0, view);
     }
 
     /** Called when a new DownloadItem has been created by the native DownloadManager. */
@@ -482,7 +461,7 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
     @Override
     public void onManagerDestroyed() {
         getDownloadDelegate().removeDownloadHistoryAdapter(this);
-        getOfflinePageBridge().removeObserver(mOfflinePageObserver);
+        getOfflineContentProvider().removeObserver(this);
         sDeletedFileTracker.decrementInstanceCount();
         if (mSpaceDisplay != null) unregisterAdapterDataObserver(mSpaceDisplay);
     }
@@ -572,12 +551,18 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
         return mBackendProvider.getDownloadDelegate();
     }
 
-    private OfflinePageDelegate getOfflinePageBridge() {
-        return mBackendProvider.getOfflinePageBridge();
-    }
-
     private SelectionDelegate<DownloadHistoryItemWrapper> getSelectionDelegate() {
         return mBackendProvider.getSelectionDelegate();
+    }
+
+    private boolean matchesQuery(DownloadHistoryItemWrapper item, String query) {
+        if (TextUtils.isEmpty(query)) return true;
+
+        query = query.toLowerCase(Locale.getDefault());
+        Locale locale = Locale.getDefault();
+
+        return item.getDisplayHostname().toLowerCase(locale).contains(query)
+                || item.getDisplayFileName().toLowerCase(locale).contains(query);
     }
 
     /** Filters the list of downloads to show only files of a specific type. */
@@ -588,53 +573,59 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
         mRegularDownloadItems.filter(mFilter, mSearchQuery, filteredTimedItems);
         mIncognitoDownloadItems.filter(mFilter, mSearchQuery, filteredTimedItems);
 
-        if (TextUtils.isEmpty(mSearchQuery)) {
-            filterOfflinePageItems(filteredTimedItems);
-        } else {
-            // In presence of an active search text, the suggested offline pages are shown directly
-            // instead of being grouped into subsections.
-            mOfflinePageItems.filter(mFilter, mSearchQuery, filteredTimedItems);
-        }
+        filter(mFilter, mSearchQuery, mOfflineItems, filteredTimedItems);
 
         clear(false);
         if (!filteredTimedItems.isEmpty() && !mIsSearching && mShouldShowStorageInfoHeader) {
-            addHeader();
+            setHeaders(mSpaceDisplayHeaderItem);
         }
 
         loadItems(filteredTimedItems);
     }
 
     /**
-     * Filters the offline pages based on the current filter and search text.
+     * Filters the list based on the current filter and search text.
      * If there are suggested pages, they are filtered based on whether or not the subsection for
-     * that date is expanded. Also a TimedItem is added to each subsection to represent the header
-     * for the suggested pages.
-     * @param filteredTimedItems List for appending items that match the filter.
+     * that date is expanded. Also a header is added for each subsection if any.
+     * @param filterType The filter to use.
+     * @param query The search text to match.
+     * @param inputList The input item list.
+     * @param filteredItems The output item list which is append-only.
      */
-    private void filterOfflinePageItems(List<TimedItem> filteredTimedItems) {
-        Map<Date, List<DownloadHistoryItemWrapper>> suggestedPageMap = new HashMap<>();
+    private void filter(int filterType, String query, List<DownloadHistoryItemWrapper> inputList,
+            List<TimedItem> filteredItems) {
+        boolean shouldShowSubsectionHeaders = TextUtils.isEmpty(mSearchQuery);
+        List<DownloadHistoryItemWrapper> suggestedItems = new ArrayList<>();
 
-        List<TimedItem> filteredOfflinePageItems = new ArrayList<>();
-        mOfflinePageItems.filter(mFilter, mSearchQuery, filteredOfflinePageItems);
+        for (DownloadHistoryItemWrapper item : inputList) {
+            if (!item.isVisibleToUser(filterType)) continue;
+            if (!matchesQuery(item, query)) continue;
 
-        for (TimedItem item : filteredOfflinePageItems) {
-            OfflinePageItemWrapper offlineItem = (OfflinePageItemWrapper) item;
-
-            // Add the suggested pages to the adapter only if the section is expanded for that date.
-            if (offlineItem.isSuggested()) {
-                addItemToSuggestedPagesMap(offlineItem, suggestedPageMap);
-                if (!isSubsectionExpanded(
-                            DownloadUtils.getDateAtMidnight(offlineItem.getTimestamp()))) {
-                    continue;
-                }
+            if (shouldShowSubsectionHeaders && item.isSuggested()) {
+                suggestedItems.add(item);
+            } else {
+                filteredItems.add(item);
             }
-            filteredTimedItems.add(offlineItem);
         }
 
-        generateSubsectionHeaders(filteredTimedItems, suggestedPageMap);
+        if (!shouldShowSubsectionHeaders) return;
+
+        Map<Date, List<DownloadHistoryItemWrapper>> suggestedPageMap = new HashMap<>();
+
+        for (DownloadHistoryItemWrapper offlineItem : suggestedItems) {
+            // Add the suggested pages to the adapter only if the section is expanded for that date.
+            addItemToSuggestedPagesMap(offlineItem, suggestedPageMap);
+            if (!isSubsectionExpanded(
+                        DownloadUtils.getDateAtMidnight(offlineItem.getTimestamp()))) {
+                continue;
+            }
+            filteredItems.add(offlineItem);
+        }
+
+        generateSubsectionHeaders(filteredItems, suggestedPageMap);
     }
 
-    private void addItemToSuggestedPagesMap(OfflinePageItemWrapper offlineItem,
+    private void addItemToSuggestedPagesMap(DownloadHistoryItemWrapper offlineItem,
             Map<Date, List<DownloadHistoryItemWrapper>> suggestedPageMap) {
         Date date = DownloadUtils.getDateAtMidnight(offlineItem.getTimestamp());
 
@@ -700,54 +691,6 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
         return timedItem instanceof SubsectionHeader;
     }
 
-    private void initializeOfflinePageBridge() {
-        mOfflinePageObserver = new OfflinePageDownloadBridge.Observer() {
-            @Override
-            public void onItemsLoaded() {
-                onAllOfflinePagesRetrieved(getOfflinePageBridge().getAllItems());
-            }
-
-            @Override
-            public void onItemAdded(OfflinePageDownloadItem item) {
-                addDownloadHistoryItemWrapper(createOfflinePageItemWrapper(item));
-                updateDisplayedItems();
-            }
-
-            @Override
-            public void onItemDeleted(String guid) {
-                if (mOfflinePageItems.removeItem(guid) != null) updateDisplayedItems();
-            }
-
-            @Override
-            public void onItemUpdated(OfflinePageDownloadItem item) {
-                int index = mOfflinePageItems.findItemIndex(item.getGuid());
-                assert index != BackendItems.INVALID_INDEX;
-
-                DownloadHistoryItemWrapper existingWrapper = mOfflinePageItems.get(index);
-                existingWrapper.replaceItem(item);
-                // Re-add the file mapping once it finishes downloading. This accounts for the
-                // backend creating Offline Pages with a null file path, then updating it after the
-                // download starts. Doing it once after completion instead of at every update
-                // is a compromise that prevents us from rapidly and repeatedly updating the map
-                // with the same info is progress is reported.
-                if (item.getDownloadState()
-                        == org.chromium.components.offlinepages.downloads.DownloadState.COMPLETE) {
-                    mFilePathsToItemsMap.addItem(existingWrapper);
-                }
-
-                updateDisplayedItems();
-            }
-
-            /** Re-filter the items if needed. */
-            private void updateDisplayedItems() {
-                if (mFilter == DownloadFilter.FILTER_ALL || mFilter == DownloadFilter.FILTER_PAGE) {
-                    filter(mFilter);
-                }
-            }
-        };
-        getOfflinePageBridge().addObserver(mOfflinePageObserver);
-    }
-
     private BackendItems getDownloadItemList(boolean isOffTheRecord) {
         return isOffTheRecord ? mIncognitoDownloadItems : mRegularDownloadItems;
     }
@@ -756,16 +699,12 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
         if (wrapper instanceof DownloadItemWrapper) {
             return getDownloadItemList(wrapper.isOffTheRecord());
         } else {
-            return mOfflinePageItems;
+            return mOfflineItems;
         }
     }
 
     private DownloadItemWrapper createDownloadItemWrapper(DownloadItem item) {
         return new DownloadItemWrapper(item, mBackendProvider, mParentComponent);
-    }
-
-    private OfflinePageItemWrapper createOfflinePageItemWrapper(OfflinePageDownloadItem item) {
-        return new OfflinePageItemWrapper(item, mBackendProvider, mParentComponent);
     }
 
     private void recordDownloadCountHistograms(int[] itemCounts) {
@@ -785,11 +724,120 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
         // The total count intentionally leaves out incognito downloads. This should be revisited
         // if/when incognito downloads are persistently available in downloads home.
         RecordHistogram.recordCountHistogram("Android.DownloadManager.InitialCount.Total",
-                mRegularDownloadItems.size() + mOfflinePageItems.size());
+                mRegularDownloadItems.size() + mOfflineItems.size());
     }
 
     /** Returns the {@link SpaceDisplay}. */
     public SpaceDisplay getSpaceDisplayForTests() {
         return mSpaceDisplay;
+    }
+
+    @Override
+    public void onItemsAvailable() {
+        List<OfflineItem> offlineItems = getOfflineContentProvider().getAllItems();
+        for (OfflineItem item : offlineItems) {
+            if (item.isTransient) continue;
+            DownloadHistoryItemWrapper wrapper = createDownloadHistoryItemWrapper(item);
+            addDownloadHistoryItemWrapper(wrapper);
+        }
+
+        recordOfflineItemCountHistograms();
+        onItemsRetrieved(LoadingStateDelegate.OFFLINE_ITEMS);
+    }
+
+    private void recordOfflineItemCountHistograms() {
+        int[] itemCounts = new int[OfflineItemFilter.FILTER_BOUNDARY];
+        for (DownloadHistoryItemWrapper item : mOfflineItems) {
+            OfflineItemWrapper offlineItem = (OfflineItemWrapper) item;
+            if (offlineItem.isOffTheRecord()) continue;
+            itemCounts[offlineItem.getOfflineItemFilter()]++;
+        }
+
+        // TODO(shaktisahu): UMA for initial counts of offline pages, regular downloads and download
+        // file types and file extensions.
+        RecordHistogram.recordCountHistogram("Android.DownloadManager.InitialCount.OfflinePage",
+                itemCounts[OfflineItemFilter.FILTER_PAGE]);
+    }
+
+    @Override
+    public void onItemsAdded(ArrayList<OfflineItem> items) {
+        boolean wasAdded = false;
+        boolean visible = false;
+        for (OfflineItem item : items) {
+            if (item.isTransient) continue;
+
+            assert mOfflineItems.findItemIndex(item.id.id) == BackendItems.INVALID_INDEX;
+
+            DownloadHistoryItemWrapper wrapper = createDownloadHistoryItemWrapper(item);
+            wasAdded |= addDownloadHistoryItemWrapper(wrapper);
+            visible |= wrapper.isVisibleToUser(mFilter);
+            for (TestObserver observer : mObservers) observer.onOfflineItemCreated(item);
+        }
+
+        if (wasAdded && visible) filter(mFilter);
+    }
+
+    @Override
+    public void onItemRemoved(ContentId id) {
+        if (mOfflineItems.removeItem(id.id) != null) {
+            filter(mFilter);
+        }
+    }
+
+    @Override
+    public void onItemUpdated(OfflineItem item) {
+        if (item.isTransient) return;
+
+        DownloadHistoryItemWrapper newWrapper = createDownloadHistoryItemWrapper(item);
+        if (newWrapper.isOffTheRecord() && !mShowOffTheRecord) return;
+
+        // Check if the item has already been deleted.
+        if (updateDeletedFileMap(newWrapper)) return;
+
+        BackendItems list = mOfflineItems;
+        int index = list.findItemIndex(newWrapper.getId());
+        if (index == BackendItems.INVALID_INDEX) {
+            // TODO(shaktisahu) : Remove this after crbug/765348 is fixed.
+            Log.e(TAG, "Tried to update OfflineItem that didn't exist, id: " + item.id);
+            return;
+        }
+
+        // Update the old one.
+        DownloadHistoryItemWrapper existingWrapper = list.get(index);
+        boolean isUpdated = existingWrapper.replaceItem(item);
+
+        // Re-add the file mapping once it finishes downloading. This accounts for the backend
+        // creating DownloadItems with a null file path, then updating it after the download starts.
+        // Doing it once after completion instead of at every update is a compromise that prevents
+        // us from rapidly and repeatedly updating the map with the same info.
+        if (item.state == OfflineItemState.COMPLETE) {
+            mFilePathsToItemsMap.addItem(existingWrapper);
+        }
+
+        if (item.state == OfflineItemState.CANCELLED) {
+            // The old one is being removed.
+            filter(mFilter);
+        } else if (existingWrapper.isVisibleToUser(mFilter)) {
+            if (existingWrapper.getPosition() == TimedItem.INVALID_POSITION) {
+                filter(mFilter);
+                for (TestObserver observer : mObservers) observer.onOfflineItemUpdated(item);
+            } else if (isUpdated) {
+                // Directly alert DownloadItemViews displaying information about the item that it
+                // has changed instead of notifying the RecyclerView that a particular item has
+                // changed.  This prevents the RecyclerView from detaching and immediately
+                // reattaching the same view, causing janky animations.
+                for (DownloadItemView view : mViews) {
+                    if (TextUtils.equals(item.id.id, view.getItem().getId())) {
+                        view.displayItem(mBackendProvider, existingWrapper);
+                    }
+                }
+
+                for (TestObserver observer : mObservers) observer.onOfflineItemUpdated(item);
+            }
+        }
+    }
+
+    private DownloadHistoryItemWrapper createDownloadHistoryItemWrapper(OfflineItem item) {
+        return new OfflineItemWrapper(item, mBackendProvider, mParentComponent);
     }
 }

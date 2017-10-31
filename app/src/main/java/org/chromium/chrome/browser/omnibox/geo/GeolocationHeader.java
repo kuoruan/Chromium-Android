@@ -245,16 +245,6 @@ public class GeolocationHeader {
         }
     }
 
-    /**
-     * Returns whether the X-Geo header is allowed to be sent for the current URL.
-     *
-     * @param url The URL of the request with which this header will be sent.
-     * @param isIncognito Whether the request will happen in an incognito tab.
-     */
-    public static boolean isGeoHeaderEnabledForUrl(String url, boolean isIncognito) {
-        return geoHeaderStateForUrl(url, isIncognito, false) == HEADER_ENABLED;
-    }
-
     @HeaderState
     private static int geoHeaderStateForUrl(String url, boolean isIncognito, boolean recordUma) {
         // Only send X-Geo in normal mode.
@@ -426,14 +416,10 @@ public class GeolocationHeader {
      * geolocation infobar).
      */
     static boolean isLocationDisabledForUrl(Uri uri, boolean isIncognito) {
-        if (ChromeFeatureList.isEnabled(ChromeFeatureList.CONSISTENT_OMNIBOX_GEOLOCATION)) {
-            boolean enabled = WebsitePreferenceBridge.shouldUseDSEGeolocationSetting(
-                                      uri.toString(), isIncognito)
-                    && WebsitePreferenceBridge.getDSEGeolocationSetting();
-            return !enabled;
-        } else {
-            return locationContentSettingForUrl(uri, isIncognito) == ContentSetting.BLOCK;
-        }
+        boolean enabled =
+                WebsitePreferenceBridge.shouldUseDSEGeolocationSetting(uri.toString(), isIncognito)
+                && WebsitePreferenceBridge.getDSEGeolocationSetting();
+        return !enabled;
     }
 
     /**

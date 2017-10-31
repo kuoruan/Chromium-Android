@@ -50,7 +50,11 @@ import java.lang.annotation.RetentionPolicy;
     ContentSettingsType.CONTENT_SETTINGS_TYPE_PUSH_MESSAGING,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_PASSWORD_PROTECTION,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIA_ENGAGEMENT,
-    ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND, ContentSettingsType.CONTENT_SETTINGS_NUM_TYPES
+    ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND,
+    ContentSettingsType.CONTENT_SETTINGS_TYPE_CLIENT_HINTS,
+    ContentSettingsType.CONTENT_SETTINGS_TYPE_SENSORS,
+    ContentSettingsType.CONTENT_SETTINGS_TYPE_ACCESSIBILITY_EVENTS,
+    ContentSettingsType.CONTENT_SETTINGS_NUM_TYPES
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface ContentSettingsType {
@@ -115,9 +119,32 @@ public @interface ContentSettingsType {
    */
   int CONTENT_SETTINGS_TYPE_MEDIA_ENGAGEMENT = 32;
   /**
-   * Website setting which stores whether or not the site can play audible sound. This will not
+   * Content setting which stores whether or not the site can play audible sound. This will not
    * block playback but instead the user will not hear it.
    */
   int CONTENT_SETTINGS_TYPE_SOUND = 33;
-  int CONTENT_SETTINGS_NUM_TYPES = 34;
+  /**
+   * Website setting which stores the list of client hints (and the preference expiration time for
+   * each of the client hints) that the origin requested the browser to remember. Spec:
+   * http://httpwg.org/http-extensions/client-hints.html#accept-ch-lifetime. The setting is stored
+   * as a dictionary that includes the mapping from different client hints to their respective
+   * expiration times (seconds since epoch). The browser is expected to send all the unexpired
+   * client hints in the HTTP request headers for every resource requested from that origin.
+   */
+  int CONTENT_SETTINGS_TYPE_CLIENT_HINTS = 34;
+  /**
+   * Generic Sensor API covering ambient-light-sensor, accelerometer, gyroscope and magnetometer are
+   * all mapped to a single content_settings_type. Setting for the Generic Sensor API covering
+   * ambient-light-sensor, accelerometer, gyroscope and magnetometer. These are all mapped to a
+   * single ContentSettingsType.
+   */
+  int CONTENT_SETTINGS_TYPE_SENSORS = 35;
+  /**
+   * Content setting which stores whether or not the user has granted the site permission to respond
+   * to accessibility events, which can be used to provide a custom accessibility experience.
+   * Requires explicit user consent because some users may not want sites to know they're using
+   * assistive technology.
+   */
+  int CONTENT_SETTINGS_TYPE_ACCESSIBILITY_EVENTS = 36;
+  int CONTENT_SETTINGS_NUM_TYPES = 37;
 }

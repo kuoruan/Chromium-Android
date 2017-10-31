@@ -121,8 +121,7 @@ public class OverlayPanelEventFilter extends GestureEventFilter {
 
         @Override
         public boolean onSingleTapUp(MotionEvent event) {
-            mPanel.handleClick(event.getEventTime(), event.getX() * mPxToDp,
-                    event.getY() * mPxToDp);
+            mPanel.handleClick(event.getX() * mPxToDp, event.getY() * mPxToDp);
             return true;
         }
     }

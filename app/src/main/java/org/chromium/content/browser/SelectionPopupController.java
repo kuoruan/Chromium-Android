@@ -18,6 +18,7 @@ import android.content.res.Resources;
 import android.graphics.Rect;
 import android.os.Build;
 import android.provider.Browser;
+import android.support.annotation.Nullable;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.style.CharacterStyle;
@@ -44,6 +45,7 @@ import org.chromium.content.browser.input.LegacyPastePopupMenu;
 import org.chromium.content.browser.input.PastePopupMenu;
 import org.chromium.content.browser.input.PastePopupMenu.PastePopupMenuDelegate;
 import org.chromium.content_public.browser.ActionModeCallbackHelper;
+import org.chromium.content_public.browser.SelectionClient;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.base.DeviceFormFactor;
 import org.chromium.ui.base.WindowAndroid;
@@ -93,6 +95,8 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
     private final RenderCoordinates mRenderCoordinates;
     private ActionMode.Callback mCallback;
 
+    private SelectionClient.ResultCallback mResultCallback;
+
     // Used to customize PastePopupMenu
     private ActionMode.Callback mNonSelectionCallback;
 
@@ -129,19 +133,13 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
     private PastePopupMenu mPastePopupMenu;
     private boolean mWasPastePopupShowingOnInsertionDragStart;
 
-    // The client that processes textual selection, or null if none exists.
+    /** The {@link SelectionClient} that processes textual selection, or {@code null} if none
+     * exists. */
     private SelectionClient mSelectionClient;
 
     // The classificaton result of the selected text if the selection exists and
-    // SmartSelectionProvider was able to classify it, otherwise null.
-    private SmartSelectionProvider.Result mClassificationResult;
-
-    // The resource ID for Assist menu item.
-    private int mAssistMenuItemId;
-
-    // This variable is set to true when showActionMode() is postponed till classification result
-    // arrives or till the selection is adjusted based on the classification result.
-    private boolean mPendingShowActionMode;
+    // SelectionClient was able to classify it, otherwise null.
+    private SelectionClient.Result mClassificationResult;
 
     // Whether a scroll is in progress.
     private boolean mScrollInProgress;
@@ -156,6 +154,26 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
      */
     public SelectionPopupController(Context context, WindowAndroid window, WebContents webContents,
             View view, RenderCoordinates renderCoordinates) {
+        this(context, window, webContents, view, renderCoordinates, /* initialNative = */ true);
+    }
+
+    /**
+     * Create {@link SelectionPopupController} instance. Note that it will create an instance with
+     * no link to native side.
+     * @param context Context for action mode.
+     * @param window WindowAndroid instance.
+     * @param webContents WebContents instance.
+     * @param view Container view.
+     * @param renderCoordinates Coordinates info used to position elements.
+     */
+    public static SelectionPopupController createForTesting(Context context, WindowAndroid window,
+            WebContents webContents, View view, RenderCoordinates renderCoordinates) {
+        return new SelectionPopupController(
+                context, window, webContents, view, renderCoordinates, /* initialNative = */ false);
+    }
+
+    private SelectionPopupController(Context context, WindowAndroid window, WebContents webContents,
+            View view, RenderCoordinates renderCoordinates, boolean initializeNative) {
         mContext = context;
         mWindowAndroid = window;
         mWebContents = webContents;
@@ -175,18 +193,11 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
             }
         };
 
-        mSelectionClient =
-                SmartSelectionClient.create(new SmartSelectionCallback(), window, webContents);
+        mResultCallback = new SmartSelectionCallback();
 
         mLastSelectedText = "";
-        // TODO(timav): Use android.R.id.textAssist for the Assist item id once we switch to
-        // Android O SDK and remove |mAssistMenuItemId|.
-        if (BuildInfo.isAtLeastO()) {
-            mAssistMenuItemId =
-                    mContext.getResources().getIdentifier("textAssist", "id", "android");
-        }
 
-        nativeInit(webContents);
+        if (initializeNative) nativeInit(webContents);
     }
 
     /**
@@ -215,6 +226,21 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         mNonSelectionCallback = callback;
     }
 
+    public SelectionClient.ResultCallback getResultCallback() {
+        return mResultCallback;
+    }
+
+    public SelectionClient.Result getClassificationResult() {
+        return mClassificationResult;
+    }
+
+    /**
+     * Gets the current {@link SelectionClient}.
+     */
+    public SelectionClient getSelectionClient() {
+        return mSelectionClient;
+    }
+
     @Override
     public boolean isActionModeValid() {
         return mActionMode != null;
@@ -230,10 +256,11 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         mAllowedMenuItems = allowedMenuItems;
     }
 
+    @VisibleForTesting
     @CalledByNative
-    private void showSelectionMenu(int left, int top, int right, int bottom, boolean isEditable,
+    public void showSelectionMenu(int left, int top, int right, int bottom, boolean isEditable,
             boolean isPasswordType, String selectionText, boolean canSelectAll,
-            boolean canRichlyEdit, boolean shouldSuggest) {
+            boolean canRichlyEdit, boolean shouldSuggest, boolean fromSelectionAdjustment) {
         mSelectionRect.set(left, top, right, bottom);
         mEditable = isEditable;
         mLastSelectedText = selectionText;
@@ -243,15 +270,17 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         mCanEditRichly = canRichlyEdit;
         mUnselectAllOnDismiss = true;
         if (hasSelection()) {
-            if (mSelectionClient != null
-                    && mSelectionClient.requestSelectionPopupUpdates(shouldSuggest)) {
-                // Rely on |mSelectionClient| sending a classification request and the request
-                // always calling onClassified() callback.
-                mPendingShowActionMode = true;
-            } else {
+            // From selection adjustment, show menu directly.
+            if (fromSelectionAdjustment) {
                 showActionModeOrClearOnFailure();
+                return;
             }
 
+            // Show menu if there is no updates from SelectionClient.
+            if (mSelectionClient == null
+                    || !mSelectionClient.requestSelectionPopupUpdates(shouldSuggest)) {
+                showActionModeOrClearOnFailure();
+            }
         } else {
             createAndShowPastePopup();
         }
@@ -265,8 +294,6 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
      * <p> If the action mode cannot be created the selection is cleared.
      */
     public void showActionModeOrClearOnFailure() {
-        mPendingShowActionMode = false;
-
         if (!isActionModeSupported() || !hasSelection()) return;
 
         // Just refresh the view if action mode already exists.
@@ -384,7 +411,6 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
      */
     @Override
     public void finishActionMode() {
-        mPendingShowActionMode = false;
         mHidden = false;
         if (mView != null) mView.removeCallbacks(mRepeatingHideRunnable);
 
@@ -501,18 +527,22 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         }
     }
 
+    @TargetApi(Build.VERSION_CODES.O)
+    public static void setPasteAsPlainTextMenuItemTitle(Menu menu) {
+        MenuItem item = menu.findItem(R.id.select_action_menu_paste_as_plain_text);
+        if (item == null) return;
+        // android.R.string.paste_as_plain_text is available in SDK since O.
+        assert BuildInfo.isAtLeastO();
+        item.setTitle(android.R.string.paste_as_plain_text);
+    }
+
     private void createActionMenu(ActionMode mode, Menu menu) {
         initializeMenu(mContext, mode, menu);
 
         mActionMenuDescriptor = createActionMenuDescriptor();
         mActionMenuDescriptor.apply(menu);
 
-        // TODO(ctzsm): Remove runtime title set after O SDK rolls.
-        MenuItem item = menu.findItem(R.id.select_action_menu_paste_as_plain_text);
-        if (item != null) {
-            item.setTitle(mContext.getResources().getIdentifier(
-                    "paste_as_plain_text", "string", "android"));
-        }
+        setPasteAsPlainTextMenuItemTitle(menu);
 
         if (!hasSelection() || isSelectionPassword()) return;
 
@@ -616,16 +646,10 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
 
     private void updateAssistMenuItem(MenuDescriptor descriptor) {
         // There is no Assist functionality before Android O.
-        if (!BuildInfo.isAtLeastO() || mAssistMenuItemId == 0) return;
-
-        // The assist menu item ID has to be equal to android.R.id.textAssist. Until we compile
-        // with Android O SDK where this ID is defined we replace the corresponding inflated
-        // item with an item with the proper ID.
-        // TODO(timav): Use android.R.id.textAssist for the Assist item id once we switch to
-        // Android O SDK and remove |mAssistMenuItemId|.
+        if (!BuildInfo.isAtLeastO()) return;
 
         if (mClassificationResult != null && mClassificationResult.hasNamedAction()) {
-            descriptor.addItem(R.id.select_action_menu_assist_items, mAssistMenuItemId, 1,
+            descriptor.addItem(R.id.select_action_menu_assist_items, android.R.id.textAssist, 1,
                     mClassificationResult.label, mClassificationResult.icon);
         }
     }
@@ -672,7 +696,7 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         int id = item.getItemId();
         int groupId = item.getGroupId();
 
-        if (BuildInfo.isAtLeastO() && id == mAssistMenuItemId) {
+        if (BuildInfo.isAtLeastO() && id == android.R.id.textAssist) {
             doAssistAction();
             mode.finish();
         } else if (id == R.id.select_action_menu_select_all) {
@@ -978,11 +1002,7 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
 
             case SelectionEventType.SELECTION_HANDLES_MOVED:
                 mSelectionRect.set(left, top, right, bottom);
-                if (mPendingShowActionMode) {
-                    showActionModeOrClearOnFailure();
-                } else {
-                    invalidateContentRect();
-                }
+                invalidateContentRect();
                 break;
 
             case SelectionEventType.SELECTION_HANDLES_CLEARED:
@@ -1067,6 +1087,14 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         mClassificationResult = null;
     }
 
+    /**
+     * @return The context used for SelectionPopupController.
+     */
+    @CalledByNative
+    private Context getContext() {
+        return mContext;
+    }
+
     @CalledByNative
     private void onSelectionChanged(String text) {
         mLastSelectedText = text;
@@ -1075,13 +1103,14 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
         }
     }
 
-    // The client that implements selection augmenting functionality, or null if none exists.
-    void setSelectionClient(SelectionClient selectionClient) {
+    /**
+     * Sets the client that implements selection augmenting functionality, or null if none exists.
+     */
+    void setSelectionClient(@Nullable SelectionClient selectionClient) {
         mSelectionClient = selectionClient;
 
         mClassificationResult = null;
 
-        assert !mPendingShowActionMode;
         assert !mHidden;
     }
 
@@ -1138,41 +1167,13 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
                 PackageManager.MATCH_DEFAULT_ONLY).size() > 0;
     }
 
-    // TODO(timav): Use |TextClassifier| instead of |Object| after we switch to Android SDK 26.
-    /**
-     * Sets TextClassifier for Smart Text selection.
-     */
-    public void setTextClassifier(Object textClassifier) {
-        if (mSelectionClient != null) mSelectionClient.setTextClassifier(textClassifier);
-    }
-
-    // TODO(timav): Use |TextClassifier| instead of |Object| after we switch to Android SDK 26.
-    /**
-     * Returns TextClassifier that is used for Smart Text selection. If the custom classifier
-     * has been set with setTextClassifier, returns that object, otherwise returns the system
-     * classifier.
-     */
-    public Object getTextClassifier() {
-        return mSelectionClient == null ? null : mSelectionClient.getTextClassifier();
-    }
-
-    // TODO(timav): Use |TextClassifier| instead of |Object| after we switch to Android SDK 26.
-    /**
-     * Returns the TextClassifier which has been set with setTextClassifier(), or null.
-     */
-    public Object getCustomTextClassifier() {
-        return mSelectionClient == null ? null : mSelectionClient.getCustomTextClassifier();
-    }
-
-    // The callback class that delivers result from a SmartSelectionClient.
-    private class SmartSelectionCallback implements SmartSelectionProvider.ResultCallback {
+    // The callback class that delivers the result from a SmartSelectionClient.
+    private class SmartSelectionCallback implements SelectionClient.ResultCallback {
         @Override
-        public void onClassified(SmartSelectionProvider.Result result) {
+        public void onClassified(SelectionClient.Result result) {
             // If the selection does not exist any more, discard |result|.
             if (!hasSelection()) {
-                assert !mHidden;
-                assert mClassificationResult == null;
-                mPendingShowActionMode = false;
+                mClassificationResult = null;
                 return;
             }
 
@@ -1183,7 +1184,6 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
             // remove this check.
             if (result.startAdjust > 0 || result.endAdjust < 0) {
                 mClassificationResult = null;
-                mPendingShowActionMode = false;
                 showActionModeOrClearOnFailure();
                 return;
             }
@@ -1192,20 +1192,12 @@ public class SelectionPopupController extends ActionModeCallbackHelper {
             // mode has been dismissed.
             mClassificationResult = result;
 
-            // Do not recreate the action mode if it has been cancelled (by ActionMode.finish())
-            // and not recreated after that.
-            if (!mPendingShowActionMode && !isActionModeValid()) {
-                assert !mHidden;
-                return;
-            }
-
             // Update the selection range if needed.
             if (!(result.startAdjust == 0 && result.endAdjust == 0)) {
-                // This call causes SELECTION_HANDLES_MOVED event.
-                mWebContents.adjustSelectionByCharacterOffset(result.startAdjust, result.endAdjust);
-
-                // Remain pending until SELECTION_HANDLES_MOVED arrives.
-                if (mPendingShowActionMode) return;
+                // This call will cause showSelectionMenu again.
+                mWebContents.adjustSelectionByCharacterOffset(
+                        result.startAdjust, result.endAdjust, /* show_selection_menu = */ true);
+                return;
             }
 
             // Rely on this method to clear |mHidden| and unhide the action mode.

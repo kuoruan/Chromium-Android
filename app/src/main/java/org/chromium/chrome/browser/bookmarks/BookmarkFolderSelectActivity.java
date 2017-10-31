@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -23,7 +24,10 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.SynchronousInitializationActivity;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkItem;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkModelObserver;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.TintedDrawable;
+import org.chromium.chrome.browser.widget.TintedImageButton;
+import org.chromium.chrome.browser.widget.TintedImageView;
 import org.chromium.components.bookmarks.BookmarkId;
 
 import java.util.ArrayList;
@@ -147,6 +151,13 @@ public class BookmarkFolderSelectActivity extends SynchronousInitializationActiv
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         updateFolderList();
+
+        if (!FeatureUtilities.isChromeHomeEnabled()) {
+            findViewById(R.id.shadow).setVisibility(View.VISIBLE);
+            toolbar.setTitleTextAppearance(toolbar.getContext(), R.style.BlackHeadline2);
+            toolbar.setBackgroundColor(
+                    ApiCompatibilityUtils.getColor(getResources(), R.color.modern_primary_color));
+        }
     }
 
     private void updateFolderList() {
@@ -310,13 +321,14 @@ public class BookmarkFolderSelectActivity extends SynchronousInitializationActiv
                 convertView = LayoutInflater.from(parent.getContext()).inflate(
                         R.layout.bookmark_folder_select_item, parent, false);
             }
-            TextView textView = (TextView) convertView;
+            TextView textView = (TextView) convertView.findViewById(R.id.title);
             textView.setText(entry.mTitle);
+            convertView.findViewById(R.id.description).setVisibility(View.GONE);
 
-            setUpIcons(entry, textView);
-            setUpPadding(entry, textView);
+            setUpIcons(entry, convertView);
+            setUpPadding(entry, convertView);
 
-            return textView;
+            return convertView;
         }
 
         void setEntryList(List<FolderListEntry> entryList) {
@@ -328,32 +340,51 @@ public class BookmarkFolderSelectActivity extends SynchronousInitializationActiv
          * Sets compound drawables (icons) for different kinds of list entries,
          * i.e. New Folder, Normal and Selected.
          */
-        private void setUpIcons(FolderListEntry entry, TextView textView) {
-            int iconId = 0;
+        private void setUpIcons(FolderListEntry entry, View view) {
+            TintedImageView startIcon = view.findViewById(R.id.icon_view);
+            TintedImageButton endIcon = view.findViewById(R.id.selected_view);
+
+            Drawable iconDrawable;
             if (entry.mType == FolderListEntry.TYPE_NORMAL) {
-                iconId = R.drawable.bookmark_folder;
-            } else if (entry.mType == FolderListEntry.TYPE_NEW_FOLDER) {
+                iconDrawable = BookmarkUtils.getFolderIcon(view.getResources());
+            } else {
                 // For new folder, start_icon is different.
-                iconId = R.drawable.bookmark_add_folder;
+                VectorDrawableCompat vectorDrawable = VectorDrawableCompat.create(
+                        view.getResources(), R.drawable.ic_add, view.getContext().getTheme());
+                vectorDrawable.setTintList(ApiCompatibilityUtils.getColorStateList(
+                        view.getResources(), R.color.dark_mode_tint));
+                iconDrawable = vectorDrawable;
             }
 
-            Drawable drawableStart = TintedDrawable.constructTintedDrawable(textView.getResources(),
-                    iconId);
-            // Selected entry has an end_icon, a blue check mark.
-            Drawable drawableEnd = entry.mIsSelected ? ApiCompatibilityUtils.getDrawable(
-                    textView.getResources(), R.drawable.ic_check_googblue_24dp) : null;
-            ApiCompatibilityUtils.setCompoundDrawablesRelativeWithIntrinsicBounds(textView,
-                    drawableStart, null, drawableEnd, null);
+            if (FeatureUtilities.isChromeHomeEnabled()) {
+                startIcon.setBackgroundResource(R.drawable.list_item_icon_modern_bg);
+                startIcon.setImageDrawable(entry.mIsSelected
+                                ? TintedDrawable.constructTintedDrawable(view.getResources(),
+                                          R.drawable.ic_check_googblue_24dp,
+                                          R.color.white_mode_tint)
+                                : iconDrawable);
+                startIcon.getBackground().setLevel(entry.mIsSelected
+                                ? view.getResources().getInteger(R.integer.list_item_level_selected)
+                                : view.getResources().getInteger(
+                                          R.integer.list_item_level_default));
+                endIcon.setVisibility(View.GONE);
+            } else {
+                // Selected entry has an end_icon, a blue check mark.
+                startIcon.setImageDrawable(iconDrawable);
+                endIcon.setVisibility(entry.mIsSelected ? View.VISIBLE : View.GONE);
+            }
         }
 
         /**
          * Sets up padding for the entry
          */
-        private void setUpPadding(FolderListEntry entry, TextView textView) {
+        private void setUpPadding(FolderListEntry entry, View view) {
             int paddingStart = mBasePadding + Math.min(entry.mDepth, MAX_FOLDER_DEPTH)
                     * mPaddingIncrement;
-            ApiCompatibilityUtils.setPaddingRelative(textView, paddingStart, 0,
-                    mBasePadding, 0);
+            View endIcon = view.findViewById(R.id.selected_view);
+            ApiCompatibilityUtils.setPaddingRelative(view, paddingStart, view.getPaddingTop(),
+                    (endIcon.getVisibility() == View.VISIBLE) ? 0 : mBasePadding,
+                    view.getPaddingBottom());
         }
     }
 }

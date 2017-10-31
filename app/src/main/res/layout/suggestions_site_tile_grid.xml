@@ -9,8 +9,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="16dp"
-    android:layout_marginStart="12dp"
-    android:layout_marginEnd="12dp"
+    android:layout_marginStart="@dimen/tile_grid_layout_padding_start"
+    android:layout_marginEnd="@dimen/tile_grid_layout_padding_end"
     android:layout_gravity="center_horizontal"
     android:paddingTop="@dimen/tile_grid_layout_padding_top"
     android:paddingBottom="4dp" />

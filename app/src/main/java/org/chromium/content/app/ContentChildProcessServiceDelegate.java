@@ -31,6 +31,8 @@ import org.chromium.content.common.IGpuProcessCallback;
 import org.chromium.content.common.SurfaceWrapper;
 import org.chromium.content_public.common.ContentProcessInfo;
 
+import java.util.List;
+
 /**
  * This implementation of {@link ChildProcessServiceDelegate} loads the native library potentially
  * using the custom linker, provides access to view surfaces.
@@ -69,8 +71,10 @@ public class ContentChildProcessServiceDelegate implements ChildProcessServiceDe
     }
 
     @Override
-    public void onConnectionSetup(Bundle connectionBundle, IBinder callback) {
-        mGpuCallback = callback != null ? IGpuProcessCallback.Stub.asInterface(callback) : null;
+    public void onConnectionSetup(Bundle connectionBundle, List<IBinder> clientInterfaces) {
+        mGpuCallback = clientInterfaces != null && !clientInterfaces.isEmpty()
+                ? IGpuProcessCallback.Stub.asInterface(clientInterfaces.get(0))
+                : null;
 
         mCpuCount = connectionBundle.getInt(ContentChildProcessConstants.EXTRA_CPU_COUNT);
         mCpuFeatures = connectionBundle.getLong(ContentChildProcessConstants.EXTRA_CPU_FEATURES);

@@ -71,13 +71,15 @@ public class ContextMenuDialog extends AlwaysDismissedDialog {
             @Override
             public void onLayoutChange(View v, int left, int top, int right, int bottom,
                     int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                ViewGroup group = (ViewGroup) v;
-                for (int i = 0; i < group.getChildCount(); i++) {
-                    if (group.getChildAt(i).getMeasuredHeight() == 0
-                            && group.getChildAt(i).getVisibility() == View.VISIBLE) {
-                        // Return early because not all the views have been measured, so animation
-                        // pivots will be off.
-                        return;
+                if (v instanceof ViewGroup) {
+                    ViewGroup group = (ViewGroup) v;
+                    for (int i = 0; i < group.getChildCount(); i++) {
+                        if (group.getChildAt(i).getMeasuredHeight() == 0
+                                && group.getChildAt(i).getVisibility() == View.VISIBLE) {
+                            // Return early because not all the views have been measured, so
+                            // animation pivots will be off.
+                            return;
+                        }
                     }
                 }
                 mContentView.setVisibility(View.VISIBLE);

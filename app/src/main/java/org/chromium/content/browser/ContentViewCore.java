@@ -10,12 +10,10 @@ import android.app.assist.AssistStructure.ViewNode;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.util.Pair;
 import android.view.ActionMode;
 import android.view.HapticFeedbackConstants;
 import android.view.InputDevice;
@@ -31,6 +29,7 @@ import android.view.accessibility.AccessibilityManager.AccessibilityStateChangeL
 import android.view.accessibility.AccessibilityNodeProvider;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
+import android.view.textclassifier.TextClassifier;
 
 import org.chromium.base.ObserverList;
 import org.chromium.base.ObserverList.RewindableIterator;
@@ -48,28 +47,27 @@ import org.chromium.content.browser.input.SelectPopup;
 import org.chromium.content.browser.input.SelectPopupDialog;
 import org.chromium.content.browser.input.SelectPopupDropdown;
 import org.chromium.content.browser.input.SelectPopupItem;
+import org.chromium.content.browser.input.TextSuggestionHost;
 import org.chromium.content_public.browser.AccessibilitySnapshotCallback;
 import org.chromium.content_public.browser.AccessibilitySnapshotNode;
 import org.chromium.content_public.browser.ActionModeCallbackHelper;
 import org.chromium.content_public.browser.GestureStateListener;
 import org.chromium.content_public.browser.ImeEventObserver;
+import org.chromium.content_public.browser.SelectionClient;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.content_public.browser.WebContentsObserver;
 import org.chromium.device.gamepad.GamepadList;
 import org.chromium.ui.base.DeviceFormFactor;
 import org.chromium.ui.base.EventForwarder;
 import org.chromium.ui.base.ViewAndroidDelegate;
+import org.chromium.ui.base.ViewUtils;
 import org.chromium.ui.base.WindowAndroid;
 import org.chromium.ui.display.DisplayAndroid;
 import org.chromium.ui.display.DisplayAndroid.DisplayAndroidObserver;
 
-import java.lang.annotation.Annotation;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Provides a Java-side 'wrapper' around a WebContent (native) instance.
@@ -88,29 +86,6 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
     // Used to avoid enabling zooming in / out if resulting zooming will
     // produce little visible difference.
     private static final float ZOOM_CONTROLS_EPSILON = 0.007f;
-
-    // If the embedder adds a JavaScript interface object that contains an indirect reference to
-    // the ContentViewCore, then storing a strong ref to the interface object on the native
-    // side would prevent garbage collection of the ContentViewCore (as that strong ref would
-    // create a new GC root).
-    // For that reason, we store only a weak reference to the interface object on the
-    // native side. However we still need a strong reference on the Java side to
-    // prevent garbage collection if the embedder doesn't maintain their own ref to the
-    // interface object - the Java side ref won't create a new GC root.
-    // This map stores those references. We put into the map on addJavaScriptInterface()
-    // and remove from it in removeJavaScriptInterface(). The annotation class is stored for
-    // the purpose of migrating injected objects from one instance of CVC to another, which
-    // is used by Android WebView to support WebChromeClient.onCreateWindow scenario.
-    private final Map<String, Pair<Object, Class>> mJavaScriptInterfaces =
-            new HashMap<String, Pair<Object, Class>>();
-
-    // Additionally, we keep track of all Java bound JS objects that are in use on the
-    // current page to ensure that they are not garbage collected until the page is
-    // navigated. This includes interface objects that have been removed
-    // via the removeJavaScriptInterface API and transient objects returned from methods
-    // on the interface object. Note we use HashSet rather than Set as the native side
-    // expects HashSet (no bindings for interfaces).
-    private final HashSet<Object> mRetainedJavaScriptObjects = new HashSet<Object>();
 
     /**
      * A {@link WebContentsObserver} that listens to frame navigation events.
@@ -217,6 +192,8 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
 
     // Only valid when focused on a text / password field.
     private ImeAdapter mImeAdapter;
+
+    private TextSuggestionHost mTextSuggestionHost;
 
     // Size of the viewport in physical pixels as set from onSizeChanged.
     private int mViewportWidthPix;
@@ -328,7 +305,6 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
     /**
      * @return The context used for creating this ContentViewCore.
      */
-    @CalledByNative
     public Context getContext() {
         return mContext;
     }
@@ -367,6 +343,19 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
     @VisibleForTesting
     public void setSelectionPopupControllerForTesting(SelectionPopupController actionMode) {
         mSelectionPopupController = actionMode;
+    }
+
+    /**
+     * @return The TextSuggestionHost that handles displaying the text suggestion menu.
+     */
+    @VisibleForTesting
+    public TextSuggestionHost getTextSuggestionHostForTesting() {
+        return mTextSuggestionHost;
+    }
+
+    @VisibleForTesting
+    public void setTextSuggestionHostForTesting(TextSuggestionHost textSuggestionHost) {
+        mTextSuggestionHost = textSuggestionHost;
     }
 
     @Override
@@ -450,16 +439,17 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
         mRenderCoordinates.reset();
         mRenderCoordinates.setDeviceScaleFactor(dipScale, windowAndroid.getContext());
 
-        mNativeContentViewCore = nativeInit(webContents, mViewAndroidDelegate, windowNativePointer,
-                dipScale, mRetainedJavaScriptObjects);
+        mNativeContentViewCore =
+                nativeInit(webContents, mViewAndroidDelegate, windowNativePointer, dipScale);
         mWebContents = nativeGetWebContentsAndroid(mNativeContentViewCore);
 
         setContainerViewInternals(internalDispatcher);
 
-        initPopupZoomer(mContext);
+        mPopupZoomer = new PopupZoomer(mContext, mWebContents, mContainerView);
         mImeAdapter = new ImeAdapter(
                 mWebContents, mContainerView, new InputMethodManagerWrapper(mContext));
         mImeAdapter.addEventObserver(this);
+        mTextSuggestionHost = new TextSuggestionHost(this);
 
         mSelectionPopupController = new SelectionPopupController(
                 mContext, windowAndroid, webContents, mContainerView, mRenderCoordinates);
@@ -469,7 +459,8 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
         mWebContentsObserver = new ContentViewWebContentsObserver(this);
 
         mShouldRequestUnbufferedDispatch = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
-                && ContentFeatureList.isEnabled(ContentFeatureList.REQUEST_UNBUFFERED_DISPATCH);
+                && ContentFeatureList.isEnabled(ContentFeatureList.REQUEST_UNBUFFERED_DISPATCH)
+                && !nativeUsingSynchronousCompositing(mNativeContentViewCore);
     }
 
     /**
@@ -513,6 +504,10 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
      */
     public void setNonSelectionActionModeCallback(ActionMode.Callback callback) {
         mSelectionPopupController.setNonSelectionCallback(callback);
+    }
+
+    public SelectionClient.ResultCallback getPopupControllerResultCallback() {
+        return mSelectionPopupController.getResultCallback();
     }
 
     private void addDisplayAndroidObserverIfNeeded() {
@@ -586,55 +581,6 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
     }
 
     @VisibleForTesting
-    void initPopupZoomer(Context context) {
-        mPopupZoomer = new PopupZoomer(context);
-        mPopupZoomer.setOnVisibilityChangedListener(new PopupZoomer.OnVisibilityChangedListener() {
-            // mContainerView can change, but this OnVisibilityChangedListener can only be used
-            // to add and remove views from the mContainerViewAtCreation.
-            private final ViewGroup mContainerViewAtCreation = mContainerView;
-
-            @Override
-            public void onPopupZoomerShown(final PopupZoomer zoomer) {
-                mContainerViewAtCreation.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (mContainerViewAtCreation.indexOfChild(zoomer) == -1) {
-                            mContainerViewAtCreation.addView(zoomer);
-                        }
-                    }
-                });
-            }
-
-            @Override
-            public void onPopupZoomerHidden(final PopupZoomer zoomer) {
-                mContainerViewAtCreation.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (mContainerViewAtCreation.indexOfChild(zoomer) != -1) {
-                            mContainerViewAtCreation.removeView(zoomer);
-                            mContainerViewAtCreation.invalidate();
-                        }
-                    }
-                });
-            }
-        });
-        PopupZoomer.OnTapListener listener = new PopupZoomer.OnTapListener() {
-            // mContainerView can change, but this OnTapListener can only be used
-            // with the mContainerViewAtCreation.
-            private final ViewGroup mContainerViewAtCreation = mContainerView;
-
-            @Override
-            public void onResolveTapDisambiguation(
-                    long timeMs, float x, float y, boolean isLongPress) {
-                if (mNativeContentViewCore == 0) return;
-                mContainerViewAtCreation.requestFocus();
-                nativeResolveTapDisambiguation(mNativeContentViewCore, timeMs, x, y, isLongPress);
-            }
-        };
-        mPopupZoomer.setOnTapListener(listener);
-    }
-
-    @VisibleForTesting
     public void setPopupZoomerForTest(PopupZoomer popupZoomer) {
         mPopupZoomer = popupZoomer;
     }
@@ -659,8 +605,6 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
         mImeAdapter.resetAndHideKeyboard();
         mWebContents = null;
         mNativeContentViewCore = 0;
-        mJavaScriptInterfaces.clear();
-        mRetainedJavaScriptObjects.clear();
         for (mGestureStateListenersIterator.rewind(); mGestureStateListenersIterator.hasNext();) {
             mGestureStateListenersIterator.next().onDestroyed();
         }
@@ -869,15 +813,6 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
         return false;
     }
 
-    @SuppressWarnings("unused")
-    @CalledByNative
-    private void requestFocus() {
-        if (mContainerView.isFocusable() && mContainerView.isFocusableInTouchMode()
-                && !mContainerView.isFocused()) {
-            mContainerView.requestFocus();
-        }
-    }
-
     @VisibleForTesting
     public void sendDoubleTapForTest(long timeMs, int x, int y) {
         if (mNativeContentViewCore == 0) return;
@@ -990,6 +925,7 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
         destroyPastePopup();
         hideSelectPopupWithCancelMessage();
         mPopupZoomer.hide(false);
+        mTextSuggestionHost.hidePopups();
         if (mWebContents != null) mWebContents.dismissTextHandles();
     }
 
@@ -999,6 +935,7 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
         destroyPastePopup();
         hideSelectPopupWithCancelMessage();
         mPopupZoomer.hide(false);
+        mTextSuggestionHost.hidePopups();
     }
 
     private void restoreSelectionPopupsIfNecessary() {
@@ -1019,6 +956,13 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
     private void resetGestureDetection() {
         if (mNativeContentViewCore == 0) return;
         nativeResetGestureDetection(mNativeContentViewCore);
+    }
+
+    /**
+     * Whether or not the associated ContentView is currently attached to a window.
+     */
+    public boolean isAttachedToWindow() {
+        return mAttachedToWindow;
     }
 
     /**
@@ -1172,7 +1116,7 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
      * the View focus state.
      */
     public void onResume() {
-        onFocusChanged(getContainerView().hasFocus(), true);
+        onFocusChanged(ViewUtils.hasFocus(getContainerView()), true);
     }
 
     /**
@@ -1631,19 +1575,6 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
 
     @SuppressWarnings("unused")
     @CalledByNative
-    private void showDisambiguationPopup(Rect targetRect, Bitmap zoomedBitmap) {
-        mPopupZoomer.setBitmap(zoomedBitmap);
-        mPopupZoomer.show(targetRect);
-    }
-
-    @SuppressWarnings("unused")
-    @CalledByNative
-    private MotionEventSynthesizer createMotionEventSynthesizer() {
-        return new MotionEventSynthesizer(getContainerView(), this);
-    }
-
-    @SuppressWarnings("unused")
-    @CalledByNative
     private void performLongPressHapticFeedback() {
         mContainerView.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
     }
@@ -1657,14 +1588,6 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
     private void onRenderProcessChange() {
         // Immediately sync closed caption settings to the new render process.
         mSystemCaptioningBridge.syncToListener(this);
-    }
-
-    /**
-     * @see View#hasFocus()
-     */
-    @CalledByNative
-    private boolean hasFocus() {
-        return ViewUtils.hasFocus(mContainerView);
     }
 
     /**
@@ -1757,112 +1680,6 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
         nativePinchEnd(mNativeContentViewCore, timeMs);
 
         return true;
-    }
-
-    /**
-     * Enables or disables inspection of JavaScript objects added via
-     * {@link #addJavascriptInterface(Object, String)} by means of Object.keys() method and
-     * &quot;for .. in&quot; loop. Being able to inspect JavaScript objects is useful
-     * when debugging hybrid Android apps, but can't be enabled for legacy applications due
-     * to compatibility risks.
-     *
-     * @param allow Whether to allow JavaScript objects inspection.
-     */
-    public void setAllowJavascriptInterfacesInspection(boolean allow) {
-        nativeSetAllowJavascriptInterfacesInspection(mNativeContentViewCore, allow);
-    }
-
-    /**
-     * Returns JavaScript interface objects previously injected via
-     * {@link #addJavascriptInterface(Object, String)}.
-     *
-     * @return the mapping of names to interface objects and corresponding annotation classes
-     */
-    public Map<String, Pair<Object, Class>> getJavascriptInterfaces() {
-        return mJavaScriptInterfaces;
-    }
-
-    /**
-     * This will mimic {@link #addPossiblyUnsafeJavascriptInterface(Object, String, Class)}
-     * and automatically pass in {@link JavascriptInterface} as the required annotation.
-     *
-     * @param object The Java object to inject into the ContentViewCore's JavaScript context.  Null
-     *               values are ignored.
-     * @param name   The name used to expose the instance in JavaScript.
-     */
-    public void addJavascriptInterface(Object object, String name) {
-        addPossiblyUnsafeJavascriptInterface(object, name, JavascriptInterface.class);
-    }
-
-    /**
-     * This method injects the supplied Java object into the ContentViewCore.
-     * The object is injected into the JavaScript context of the main frame,
-     * using the supplied name. This allows the Java object to be accessed from
-     * JavaScript. Note that that injected objects will not appear in
-     * JavaScript until the page is next (re)loaded. For example:
-     * <pre> view.addJavascriptInterface(new Object(), "injectedObject");
-     * view.loadData("<!DOCTYPE html><title></title>", "text/html", null);
-     * view.loadUrl("javascript:alert(injectedObject.toString())");</pre>
-     * <p><strong>IMPORTANT:</strong>
-     * <ul>
-     * <li> addJavascriptInterface() can be used to allow JavaScript to control
-     * the host application. This is a powerful feature, but also presents a
-     * security risk. Use of this method in a ContentViewCore containing
-     * untrusted content could allow an attacker to manipulate the host
-     * application in unintended ways, executing Java code with the permissions
-     * of the host application. Use extreme care when using this method in a
-     * ContentViewCore which could contain untrusted content. Particular care
-     * should be taken to avoid unintentional access to inherited methods, such
-     * as {@link Object#getClass()}. To prevent access to inherited methods,
-     * pass an annotation for {@code requiredAnnotation}.  This will ensure
-     * that only methods with {@code requiredAnnotation} are exposed to the
-     * Javascript layer.  {@code requiredAnnotation} will be passed to all
-     * subsequently injected Java objects if any methods return an object.  This
-     * means the same restrictions (or lack thereof) will apply.  Alternatively,
-     * {@link #addJavascriptInterface(Object, String)} can be called, which
-     * automatically uses the {@link JavascriptInterface} annotation.
-     * <li> JavaScript interacts with Java objects on a private, background
-     * thread of the ContentViewCore. Care is therefore required to maintain
-     * thread safety.</li>
-     * </ul></p>
-     *
-     * @param object             The Java object to inject into the
-     *                           ContentViewCore's JavaScript context. Null
-     *                           values are ignored.
-     * @param name               The name used to expose the instance in
-     *                           JavaScript.
-     * @param requiredAnnotation Restrict exposed methods to ones with this
-     *                           annotation.  If {@code null} all methods are
-     *                           exposed.
-     *
-     */
-    public void addPossiblyUnsafeJavascriptInterface(Object object, String name,
-            Class<? extends Annotation> requiredAnnotation) {
-        if (mNativeContentViewCore != 0 && object != null) {
-            mJavaScriptInterfaces.put(name, new Pair<Object, Class>(object, requiredAnnotation));
-            nativeAddJavascriptInterface(mNativeContentViewCore, object, name, requiredAnnotation);
-        }
-    }
-
-    /**
-     * Removes a previously added JavaScript interface with the given name.
-     *
-     * @param name The name of the interface to remove.
-     */
-    public void removeJavascriptInterface(String name) {
-        mJavaScriptInterfaces.remove(name);
-        if (mNativeContentViewCore != 0) {
-            nativeRemoveJavascriptInterface(mNativeContentViewCore, name);
-        }
-    }
-
-    /**
-     * Return the current scale of the ContentView.
-     * @return The current page scale factor.
-     */
-    @VisibleForTesting
-    public float getScale() {
-        return mRenderCoordinates.getPageScaleFactor();
     }
 
     @Override
@@ -2085,11 +1902,6 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
         return mIsMobileOptimizedHint;
     }
 
-    @CalledByNative
-    private static Rect createRect(int x, int y, int right, int bottom) {
-        return new Rect(x, y, right, bottom);
-    }
-
     public void setBackgroundOpaque(boolean opaque) {
         if (mNativeContentViewCore != 0) {
             nativeSetBackgroundOpaque(mNativeContentViewCore, opaque);
@@ -2143,6 +1955,7 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
             hidePopupsAndPreserveSelection();
             showSelectActionMode();
         }
+        mTextSuggestionHost.hidePopups();
 
         int rotationDegrees = 0;
         switch (rotation) {
@@ -2189,42 +2002,42 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
         return mFullscreenRequiredForOrientationLock;
     }
 
-    /**
-     * Sets the client that can process and augment existing text selection, e.g. Contextual Search.
-     * @param selectionClient The client that receives related notifications.
-     */
+    /** Sets the given {@link SelectionClient} in the selection popup controller. */
     public void setSelectionClient(SelectionClient selectionClient) {
         mSelectionPopupController.setSelectionClient(selectionClient);
     }
 
-    // TODO(timav): Use |TextClassifier| instead of |Object| after we switch to Android SDK 26.
     /**
      * Sets TextClassifier for Smart Text selection.
      */
-    public void setTextClassifier(Object textClassifier) {
-        mSelectionPopupController.setTextClassifier(textClassifier);
+    public void setTextClassifier(TextClassifier textClassifier) {
+        assert Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
+        SelectionClient client = mSelectionPopupController.getSelectionClient();
+        if (client != null) client.setTextClassifier(textClassifier);
     }
 
-    // TODO(timav): Use |TextClassifier| instead of |Object| after we switch to Android SDK 26.
     /**
      * Returns TextClassifier that is used for Smart Text selection. If the custom classifier
      * has been set with setTextClassifier, returns that object, otherwise returns the system
      * classifier.
      */
-    public Object getTextClassifier() {
-        return mSelectionPopupController.getTextClassifier();
+    public TextClassifier getTextClassifier() {
+        assert Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
+        SelectionClient client = mSelectionPopupController.getSelectionClient();
+        return client == null ? null : client.getTextClassifier();
     }
 
-    // TODO(timav): Use |TextClassifier| instead of |Object| after we switch to Android SDK 26.
     /**
      * Returns the TextClassifier which has been set with setTextClassifier(), or null.
      */
-    public Object getCustomTextClassifier() {
-        return mSelectionPopupController.getCustomTextClassifier();
+    public TextClassifier getCustomTextClassifier() {
+        assert Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
+        SelectionClient client = mSelectionPopupController.getSelectionClient();
+        return client == null ? null : client.getCustomTextClassifier();
     }
 
     private native long nativeInit(WebContents webContents, ViewAndroidDelegate viewAndroidDelegate,
-            long windowAndroidPtr, float dipScale, HashSet<Object> retainedObjectSet);
+            long windowAndroidPtr, float dipScale);
     private static native ContentViewCore nativeFromWebContentsAndroid(WebContents webContents);
 
     private native void nativeUpdateWindowAndroid(
@@ -2257,9 +2070,6 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
 
     private native void nativeDoubleTap(long nativeContentViewCore, long timeMs, float x, float y);
 
-    private native void nativeResolveTapDisambiguation(
-            long nativeContentViewCore, long timeMs, float x, float y, boolean isLongPress);
-
     private native void nativePinchBegin(long nativeContentViewCore, long timeMs, float x, float y);
 
     private native void nativePinchEnd(long nativeContentViewCore, long timeMs);
@@ -2283,13 +2093,7 @@ public class ContentViewCore implements AccessibilityStateChangeListener, Displa
 
     private native int nativeGetCurrentRenderProcessId(long nativeContentViewCore);
 
-    private native void nativeSetAllowJavascriptInterfacesInspection(
-            long nativeContentViewCore, boolean allow);
-
-    private native void nativeAddJavascriptInterface(
-            long nativeContentViewCore, Object object, String name, Class requiredAnnotation);
-
-    private native void nativeRemoveJavascriptInterface(long nativeContentViewCore, String name);
+    private native boolean nativeUsingSynchronousCompositing(long nativeContentViewCore);
 
     private native void nativeWasResized(long nativeContentViewCore);
 

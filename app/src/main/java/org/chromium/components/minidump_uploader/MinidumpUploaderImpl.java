@@ -143,13 +143,6 @@ public class MinidumpUploaderImpl implements MinidumpUploader {
                 }
             }
 
-            // Prior to M60, the ".tryN" suffix was optional for files ready to be uploaded; it is
-            // now required. Give clients a chance to migrate previously saved off minidumps to the
-            // new naming scheme, if necessary. Do this after attempting to upload existing crash
-            // dumps, to ensure that if the task is rescheduled, it has a chance to make progress on
-            // the most important task first.
-            mDelegate.migrateMinidumpFilenamesIfNeeded(fileManager);
-
             // Clean out old/uploaded minidumps. Note that this clean-up method is more strict than
             // our copying mechanism in the sense that it keeps fewer minidumps.
             fileManager.cleanOutAllNonFreshMinidumpFiles();

@@ -51,12 +51,12 @@ public class DropdownItemBase implements DropdownItem {
 
     @Override
     public int getLabelFontSizeResId() {
-        return R.dimen.dropdown_item_label_font_size;
+        return R.dimen.text_size_large;
     }
 
     @Override
     public int getSublabelFontSizeResId() {
-        return R.dimen.dropdown_item_sublabel_font_size;
+        return R.dimen.text_size_small;
     }
 
     @Override

@@ -23,6 +23,7 @@ public final class AndroidOverlayConfig extends org.chromium.mojo.bindings.Struc
     public org.chromium.mojo.common.mojom.UnguessableToken routingToken;
     public org.chromium.gfx.mojom.Rect rect;
     public boolean secure;
+    public boolean powerEfficient;
 
     private AndroidOverlayConfig(int version) {
         super(STRUCT_SIZE, version);
@@ -73,6 +74,10 @@ public final class AndroidOverlayConfig extends org.chromium.mojo.bindings.Struc
                 
                 result.secure = decoder0.readBoolean(24, 0);
             }
+            if (mainDataHeader.elementsOrVersion >= 0) {
+                
+                result.powerEfficient = decoder0.readBoolean(24, 1);
+            }
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -84,11 +89,13 @@ public final class AndroidOverlayConfig extends org.chromium.mojo.bindings.Struc
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(routingToken, 8, false);
+        encoder0.encode(this.routingToken, 8, false);
         
-        encoder0.encode(rect, 16, false);
+        encoder0.encode(this.rect, 16, false);
         
-        encoder0.encode(secure, 24, 0);
+        encoder0.encode(this.secure, 24, 0);
+        
+        encoder0.encode(this.powerEfficient, 24, 1);
     }
 
     /**
@@ -109,6 +116,8 @@ public final class AndroidOverlayConfig extends org.chromium.mojo.bindings.Struc
             return false;
         if (this.secure!= other.secure)
             return false;
+        if (this.powerEfficient!= other.powerEfficient)
+            return false;
         return true;
     }
 
@@ -119,9 +128,10 @@ public final class AndroidOverlayConfig extends org.chromium.mojo.bindings.Struc
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(routingToken);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(rect);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(secure);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.routingToken);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.rect);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.secure);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.powerEfficient);
         return result;
     }
 }

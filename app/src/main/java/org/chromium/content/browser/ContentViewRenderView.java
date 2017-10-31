@@ -32,6 +32,9 @@ public class ContentViewRenderView extends FrameLayout {
     private final SurfaceView mSurfaceView;
     protected ContentViewCore mContentViewCore;
 
+    private int mWidth;
+    private int mHeight;
+
     /**
      * Constructs a new ContentViewRenderView.
      * This should be called and the {@link ContentViewRenderView} should be added to the view
@@ -81,6 +84,13 @@ public class ContentViewRenderView extends FrameLayout {
                 assert mNativeContentViewRenderView != 0;
                 nativeSurfaceCreated(mNativeContentViewRenderView);
 
+                // On pre-M Android, layers start in the hidden state until a relayout happens.
+                // There is a bug that manifests itself when entering overlay mode on pre-M devices,
+                // where a relayout never happens. This bug is out of Chromium's control, but can be
+                // worked around by forcibly re-setting the visibility of the surface view.
+                // Otherwise, the screen stays black, and some tests fail.
+                mSurfaceView.setVisibility(mSurfaceView.getVisibility());
+
                 onReadyToRender();
             }
 
@@ -92,6 +102,15 @@ public class ContentViewRenderView extends FrameLayout {
         };
         mSurfaceView.getHolder().addCallback(mSurfaceCallback);
         mSurfaceView.setVisibility(VISIBLE);
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        mWidth = w;
+        mHeight = h;
+        WebContents webContents =
+                mContentViewCore != null ? mContentViewCore.getWebContents() : null;
+        if (webContents != null) webContents.setSize(w, h);
     }
 
     /**
@@ -130,7 +149,7 @@ public class ContentViewRenderView extends FrameLayout {
         WebContents webContents = contentViewCore != null ? contentViewCore.getWebContents() : null;
         if (webContents != null) {
             nativeOnPhysicalBackingSizeChanged(
-                    mNativeContentViewRenderView, webContents, getWidth(), getHeight());
+                    mNativeContentViewRenderView, webContents, mWidth, mHeight);
         }
         nativeSetCurrentWebContents(mNativeContentViewRenderView, webContents);
     }

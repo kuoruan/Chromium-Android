@@ -10,30 +10,9 @@
 
     <LinearLayout
         android:id="@+id/bookmark_row"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal" >
+        style="@style/ListItemContainer">
 
-        <ImageView
-            android:id="@+id/bookmark_image"
-            android:layout_width="@dimen/selectable_list_layout_start_icon_width"
-            android:layout_height="match_parent"
-            android:contentDescription="@null"
-            android:scaleType="center"/>
-
-        <TextView
-            android:id="@+id/title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:minHeight="48dp"
-            android:singleLine="true"
-            android:gravity="center_vertical"
-            android:textAlignment="viewStart"
-            android:textColor="@color/default_text_color"
-            android:textSize="16sp"
-            android:paddingStart="16dp"  />
+        <include layout="@layout/modern_list_item_view" />
 
         <org.chromium.chrome.browser.widget.TintedImageButton
             android:id="@+id/more"
@@ -42,9 +21,9 @@
             android:visibility="gone"
             android:background="@null"
             android:contentDescription="@string/accessibility_bookmark_more_info"
-            android:paddingEnd="16dp"
-            android:paddingStart="16dp"
-            android:src="@drawable/btn_menu"
+            android:paddingStart="@dimen/selectable_list_layout_row_padding"
+            android:paddingEnd="@dimen/selectable_list_layout_row_padding"
+            android:src="@drawable/ic_more_vert_black_24dp"
             chrome:chrometint="@color/dark_mode_tint" />
     </LinearLayout>
 

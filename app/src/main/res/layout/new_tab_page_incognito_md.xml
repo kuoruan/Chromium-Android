@@ -29,7 +29,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="start"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingStart="@dimen/md_incognito_ntp_padding_left" >
 
             <ImageView
                 android:id="@+id/new_tab_incognito_icon"
@@ -51,7 +52,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/new_tab_otr_subtitle"
                 android:textColor="@color/incognito_header"
-                android:lineSpacingExtra="6sp" />
+                android:lineSpacingExtra="@dimen/md_incognito_ntp_line_spacing" />
 
             <LinearLayout
                 android:id="@+id/new_tab_incognito_bulletpoints_container"
@@ -65,14 +66,14 @@
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:textColor="@color/incognito_text"
-                  android:lineSpacingExtra="6sp" />
+                  android:lineSpacingExtra="@dimen/md_incognito_ntp_line_spacing" />
 
               <TextView
                   android:id="@+id/new_tab_incognito_warning"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:textColor="@color/incognito_text"
-                  android:lineSpacingExtra="6sp" />
+                  android:lineSpacingExtra="@dimen/md_incognito_ntp_line_spacing" />
 
             </LinearLayout>
 
@@ -84,7 +85,7 @@
                 android:focusable="true"
                 android:text="@string/learn_more"
                 android:textColor="@color/google_blue_300"
-                android:lineSpacingExtra="6sp" />
+                android:lineSpacingExtra="@dimen/md_incognito_ntp_line_spacing" />
 
         </LinearLayout>
 

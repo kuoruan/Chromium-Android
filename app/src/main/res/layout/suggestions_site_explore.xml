@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2017 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+
+<org.chromium.chrome.browser.suggestions.SiteExploreViewPager
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/site_explore_pager"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/tile_grid_layout_padding_start"
+    android:layout_marginEnd="@dimen/tile_grid_layout_padding_end"
+    android:layout_gravity="center_horizontal"
+    android:paddingBottom="20dp">
+
+    <android.support.design.widget.TabLayout
+        android:id="@+id/tab_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:clipToPadding="false"
+        chrome:tabTextAppearance="@android:style/TextAppearance.Widget.TabWidget"
+        chrome:tabGravity="fill"
+        chrome:tabMode="scrollable"
+        />
+
+        <org.chromium.chrome.browser.suggestions.SiteExplorePageIndicatorView
+            android:id="@+id/tile_section_indicator_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:paddingTop="10dp"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            />
+    </org.chromium.chrome.browser.suggestions.SiteExploreViewPager>

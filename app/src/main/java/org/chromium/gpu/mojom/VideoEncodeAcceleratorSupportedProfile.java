@@ -89,13 +89,13 @@ public final class VideoEncodeAcceleratorSupportedProfile extends org.chromium.m
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(profile, 8);
+        encoder0.encode(this.profile, 8);
         
-        encoder0.encode(maxFramerateNumerator, 12);
+        encoder0.encode(this.maxFramerateNumerator, 12);
         
-        encoder0.encode(maxResolution, 16, false);
+        encoder0.encode(this.maxResolution, 16, false);
         
-        encoder0.encode(maxFramerateDenominator, 24);
+        encoder0.encode(this.maxFramerateDenominator, 24);
     }
 
     /**
@@ -128,10 +128,10 @@ public final class VideoEncodeAcceleratorSupportedProfile extends org.chromium.m
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(profile);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(maxResolution);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(maxFramerateNumerator);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(maxFramerateDenominator);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.profile);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.maxResolution);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.maxFramerateNumerator);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.maxFramerateDenominator);
         return result;
     }
 }

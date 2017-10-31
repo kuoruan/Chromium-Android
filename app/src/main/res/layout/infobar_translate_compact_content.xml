@@ -33,5 +33,5 @@
         android:background="?attr/selectableItemBackground"
         android:contentDescription="@string/accessibility_toolbar_btn_menu"
         android:src="@drawable/btn_menu"
-        app:chrometint="@color/dark_mode_tint" />
+        app:chrometint="@color/light_normal_color" />
 </LinearLayout>

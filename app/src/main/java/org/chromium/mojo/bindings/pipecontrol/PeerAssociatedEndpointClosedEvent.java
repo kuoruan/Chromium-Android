@@ -78,9 +78,9 @@ public final class PeerAssociatedEndpointClosedEvent extends org.chromium.mojo.b
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(id, 8);
+        encoder0.encode(this.id, 8);
         
-        encoder0.encode(disconnectReason, 16, true);
+        encoder0.encode(this.disconnectReason, 16, true);
     }
 
     /**
@@ -109,8 +109,8 @@ public final class PeerAssociatedEndpointClosedEvent extends org.chromium.mojo.b
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(id);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(disconnectReason);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.id);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disconnectReason);
         return result;
     }
 }

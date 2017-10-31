@@ -68,9 +68,10 @@ public class OfflineContentAggregatorBridge implements OfflineContentProvider {
     }
 
     @Override
-    public void resumeDownload(ContentId id) {
+    public void resumeDownload(ContentId id, boolean hasUserGesture) {
         if (mNativeOfflineContentAggregatorBridge == 0) return;
-        nativeResumeDownload(mNativeOfflineContentAggregatorBridge, id.namespace, id.id);
+        nativeResumeDownload(
+                mNativeOfflineContentAggregatorBridge, id.namespace, id.id, hasUserGesture);
     }
 
     @Override
@@ -186,8 +187,8 @@ public class OfflineContentAggregatorBridge implements OfflineContentProvider {
             long nativeOfflineContentAggregatorBridge, String nameSpace, String id);
     private native void nativePauseDownload(
             long nativeOfflineContentAggregatorBridge, String nameSpace, String id);
-    private native void nativeResumeDownload(
-            long nativeOfflineContentAggregatorBridge, String nameSpace, String id);
+    private native void nativeResumeDownload(long nativeOfflineContentAggregatorBridge,
+            String nameSpace, String id, boolean hasUserGesture);
     private native OfflineItem nativeGetItemById(
             long nativeOfflineContentAggregatorBridge, String nameSpace, String id);
     private native ArrayList<OfflineItem> nativeGetAllItems(

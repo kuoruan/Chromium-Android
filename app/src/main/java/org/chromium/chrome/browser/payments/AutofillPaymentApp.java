@@ -15,7 +15,7 @@ import org.chromium.chrome.browser.autofill.PersonalDataManager.CreditCard;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.payments.mojom.BasicCardNetwork;
 import org.chromium.payments.mojom.BasicCardType;
-import org.chromium.payments.mojom.PaymentItem;
+import org.chromium.payments.mojom.PaymentDetailsModifier;
 import org.chromium.payments.mojom.PaymentMethodData;
 
 import java.util.ArrayList;
@@ -49,8 +49,8 @@ public class AutofillPaymentApp implements PaymentApp {
 
     @Override
     public void getInstruments(Map<String, PaymentMethodData> methodDataMap, String unusedOrigin,
-            String unusedIFRameOrigin, byte[][] unusedCertificateChain, PaymentItem unusedTotal,
-            final InstrumentsCallback callback) {
+            String unusedIFRameOrigin, byte[][] unusedCertificateChain,
+            Map<String, PaymentDetailsModifier> modifiers, final InstrumentsCallback callback) {
         PersonalDataManager pdm = PersonalDataManager.getInstance();
         List<CreditCard> cards = pdm.getCreditCardsToSuggest();
         final List<PaymentInstrument> instruments = new ArrayList<>(cards.size());
@@ -97,12 +97,7 @@ public class AutofillPaymentApp implements PaymentApp {
             }
         }
 
-        new Handler().post(new Runnable() {
-            @Override
-            public void run() {
-                callback.onInstrumentsReady(AutofillPaymentApp.this, instruments);
-            }
-        });
+        new Handler().post(() -> callback.onInstrumentsReady(AutofillPaymentApp.this, instruments));
     }
 
     /** @return A set of card networks (e.g., "visa", "amex") accepted by "basic-card" method. */
@@ -134,7 +129,7 @@ public class AutofillPaymentApp implements PaymentApp {
         result.add(CardType.UNKNOWN);
 
         Map<Integer, Integer> cardTypes = getCardTypes();
-        if (data == null || data.supportedTypes == null || data.supportedTypes.length == 0) {
+        if (!isBasicCardTypeSpecified(data)) {
             // Merchant website supports all card types.
             result.addAll(cardTypes.values());
         } else {
@@ -146,6 +141,11 @@ public class AutofillPaymentApp implements PaymentApp {
         }
 
         return result;
+    }
+
+    /** @return True if supported card type is specified in data for "basic-card" method. */
+    public static boolean isBasicCardTypeSpecified(PaymentMethodData data) {
+        return data != null && data.supportedTypes != null && data.supportedTypes.length != 0;
     }
 
     private static Map<Integer, String> getNetworks() {

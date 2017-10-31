@@ -25,6 +25,7 @@
         android:contentDescription="@string/accessibility_new_incognito_tab_page" >
 
         <LinearLayout
+            android:id="@+id/new_tab_incognito_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
@@ -35,6 +36,7 @@
             android:paddingBottom="16dp" >
 
             <ImageView
+                android:id="@+id/new_tab_incognito_icon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="19dp"
@@ -42,11 +44,12 @@
                 android:src="@drawable/incognito_splash"/>
 
             <TextView
+                android:id="@+id/ntp_incognito_header"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-light"
                 android:text="@string/new_tab_incognito_header"
-                android:textColor="#d2d2d2"
+                android:textColor="@color/incognito_ntp_header"
                 android:textSize="24sp" />
 
             <TextView
@@ -57,7 +60,7 @@
                 android:layout_marginTop="32dp"
                 android:layout_marginBottom="10dp"
                 android:text="@null"
-                android:textColor="#bdbdbd" />
+                android:textColor="@color/google_grey_400" />
 
             <TextView
                 android:id="@+id/learn_more"
@@ -65,7 +68,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/learn_more"
-                android:textColor="#03a9f4" />
+                android:textColor="@color/incognito_ntp_learn_more_link" />
 
         </LinearLayout>
 

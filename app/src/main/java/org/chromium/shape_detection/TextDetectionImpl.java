@@ -4,6 +4,7 @@
 
 package org.chromium.shape_detection;
 
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.SparseArray;
 
@@ -15,6 +16,7 @@ import com.google.android.gms.vision.text.TextRecognizer;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
+import org.chromium.gfx.mojom.PointF;
 import org.chromium.gfx.mojom.RectF;
 import org.chromium.mojo.system.MojoException;
 import org.chromium.services.service_manager.InterfaceFactory;
@@ -36,13 +38,6 @@ public class TextDetectionImpl implements TextDetection {
 
     @Override
     public void detect(org.chromium.skia.mojom.Bitmap bitmapData, DetectResponse callback) {
-        if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(
-                    ContextUtils.getApplicationContext())
-                != ConnectionResult.SUCCESS) {
-            Log.e(TAG, "Google Play Services not available");
-            callback.call(new TextDetectionResult[0]);
-            return;
-        }
         // The vision library will be downloaded the first time the API is used
         // on the device; this happens "fast", but it might have not completed,
         // bail in this case. Also, the API was disabled between and v.9.0 and
@@ -65,13 +60,21 @@ public class TextDetectionImpl implements TextDetection {
         TextDetectionResult[] detectedTextArray = new TextDetectionResult[textBlocks.size()];
         for (int i = 0; i < textBlocks.size(); i++) {
             detectedTextArray[i] = new TextDetectionResult();
-            detectedTextArray[i].rawValue = textBlocks.valueAt(i).getValue();
-            final Rect rect = textBlocks.valueAt(i).getBoundingBox();
+            final TextBlock textBlock = textBlocks.valueAt(i);
+            detectedTextArray[i].rawValue = textBlock.getValue();
+            final Rect rect = textBlock.getBoundingBox();
             detectedTextArray[i].boundingBox = new RectF();
             detectedTextArray[i].boundingBox.x = rect.left;
             detectedTextArray[i].boundingBox.y = rect.top;
             detectedTextArray[i].boundingBox.width = rect.width();
             detectedTextArray[i].boundingBox.height = rect.height();
+            final Point[] corners = textBlock.getCornerPoints();
+            detectedTextArray[i].cornerPoints = new PointF[corners.length];
+            for (int j = 0; j < corners.length; j++) {
+                detectedTextArray[i].cornerPoints[j] = new PointF();
+                detectedTextArray[i].cornerPoints[j].x = corners[j].x;
+                detectedTextArray[i].cornerPoints[j].y = corners[j].y;
+            }
         }
         callback.call(detectedTextArray);
     }
@@ -94,6 +97,12 @@ public class TextDetectionImpl implements TextDetection {
 
         @Override
         public TextDetection createImpl() {
+            if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(
+                        ContextUtils.getApplicationContext())
+                    != ConnectionResult.SUCCESS) {
+                Log.e(TAG, "Google Play Services not available");
+                return null;
+            }
             return new TextDetectionImpl();
         }
     }

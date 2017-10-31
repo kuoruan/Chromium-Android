@@ -92,17 +92,17 @@ public final class BarcodeDetectionResult extends org.chromium.mojo.bindings.Str
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(rawValue, 8, false);
+        encoder0.encode(this.rawValue, 8, false);
         
-        encoder0.encode(boundingBox, 16, false);
+        encoder0.encode(this.boundingBox, 16, false);
         
-        if (cornerPoints == null) {
+        if (this.cornerPoints == null) {
             encoder0.encodeNullPointer(24, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(cornerPoints.length, 24, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < cornerPoints.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.cornerPoints.length, 24, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.cornerPoints.length; ++i0) {
                 
-                encoder1.encode(cornerPoints[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                encoder1.encode(this.cornerPoints[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
     }
@@ -135,9 +135,9 @@ public final class BarcodeDetectionResult extends org.chromium.mojo.bindings.Str
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(rawValue);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(boundingBox);
-        result = prime * result + java.util.Arrays.deepHashCode(cornerPoints);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.rawValue);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.boundingBox);
+        result = prime * result + java.util.Arrays.deepHashCode(this.cornerPoints);
         return result;
     }
 }

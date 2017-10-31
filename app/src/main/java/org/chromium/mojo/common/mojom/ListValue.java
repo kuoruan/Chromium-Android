@@ -81,13 +81,13 @@ public final class ListValue extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        if (values == null) {
+        if (this.values == null) {
             encoder0.encodeNullPointer(8, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodeUnionArray(values.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < values.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodeUnionArray(this.values.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.values.length; ++i0) {
                 
-                encoder1.encode(values[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + 
+                encoder1.encode(this.values[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + 
                 org.chromium.mojo.bindings.BindingsHelper.UNION_SIZE * i0, false);
             }
         }
@@ -117,7 +117,7 @@ public final class ListValue extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + java.util.Arrays.deepHashCode(values);
+        result = prime * result + java.util.Arrays.deepHashCode(this.values);
         return result;
     }
 }

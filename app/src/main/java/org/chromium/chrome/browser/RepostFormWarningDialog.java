@@ -70,20 +70,14 @@ public class RepostFormWarningDialog extends DialogFragment {
         if (savedInstanceState == null) {
             assert mTab != null;
             builder.setNegativeButton(R.string.cancel,
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int id) {
-                            if (!mTab.isInitialized()) return;
-                            mTab.getWebContents().getNavigationController().cancelPendingReload();
-                        }
+                    (DialogInterface.OnClickListener) (dialog, id) -> {
+                        if (!mTab.isInitialized()) return;
+                        mTab.getWebContents().getNavigationController().cancelPendingReload();
                     });
             builder.setPositiveButton(R.string.http_post_warning_resend,
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int id) {
-                            if (!mTab.isInitialized()) return;
-                            mTab.getWebContents().getNavigationController().continuePendingReload();
-                        }
+                    (DialogInterface.OnClickListener) (dialog, id) -> {
+                        if (!mTab.isInitialized()) return;
+                        mTab.getWebContents().getNavigationController().continuePendingReload();
                     });
         }
 

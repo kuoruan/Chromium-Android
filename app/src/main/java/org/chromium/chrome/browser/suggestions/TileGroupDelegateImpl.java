@@ -4,29 +4,21 @@
 
 package org.chromium.chrome.browser.suggestions;
 
-import android.annotation.TargetApi;
 import android.content.Context;
-import android.os.Build;
 
 import org.chromium.base.Callback;
-import org.chromium.base.CommandLine;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.ChromeFeatureList;
-import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.ntp.NewTabPageUma;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.snackbar.Snackbar;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;
 import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarController;
-import org.chromium.chrome.browser.tabmodel.TabModel;
-import org.chromium.chrome.browser.tabmodel.TabModelSelector;
-import org.chromium.chrome.browser.tabmodel.TabModelUtils;
-import org.chromium.chrome.browser.util.UrlUtilities;
-import org.chromium.content_public.browser.LoadUrlParams;
-import org.chromium.ui.base.PageTransition;
 import org.chromium.ui.mojom.WindowOpenDisposition;
+
+import java.util.List;
 
 /**
  * Reusable implementation of {@link TileGroup.Delegate}. Performs work in parts of the system that
@@ -36,7 +28,6 @@ public class TileGroupDelegateImpl implements TileGroup.Delegate {
 
     private final Context mContext;
     private final SnackbarManager mSnackbarManager;
-    private final TabModelSelector mTabModelSelector;
     private final SuggestionsNavigationDelegate mNavigationDelegate;
     private final MostVisitedSites mMostVisitedSites;
 
@@ -44,11 +35,9 @@ public class TileGroupDelegateImpl implements TileGroup.Delegate {
     private SnackbarController mTileRemovedSnackbarController;
 
     public TileGroupDelegateImpl(ChromeActivity activity, Profile profile,
-            TabModelSelector tabModelSelector, SuggestionsNavigationDelegate navigationDelegate,
-            SnackbarManager snackbarManager) {
+            SuggestionsNavigationDelegate navigationDelegate, SnackbarManager snackbarManager) {
         mContext = activity;
         mSnackbarManager = snackbarManager;
-        mTabModelSelector = tabModelSelector;
         mNavigationDelegate = navigationDelegate;
         mMostVisitedSites =
                 SuggestionsDependencyFactory.getInstance().createMostVisitedSites(profile);
@@ -73,12 +62,7 @@ public class TileGroupDelegateImpl implements TileGroup.Delegate {
             recordOpenedTile(item);
         }
 
-        if (windowDisposition == WindowOpenDisposition.CURRENT_TAB && switchToExistingTab(url)) {
-            return;
-        }
-
-        mNavigationDelegate.openUrl(
-                windowDisposition, new LoadUrlParams(url, PageTransition.AUTO_BOOKMARK));
+        mNavigationDelegate.navigateToSuggestionUrl(windowDisposition, url);
     }
 
     @Override
@@ -89,22 +73,21 @@ public class TileGroupDelegateImpl implements TileGroup.Delegate {
     }
 
     @Override
-    public void onLoadingComplete(Tile[] tiles) {
+    public void onLoadingComplete(List<Tile> tiles) {
         // This method is called after network calls complete. It could happen after the suggestions
         // surface is destroyed.
         if (mIsDestroyed) return;
 
-        for (int i = 0; i < tiles.length; i++) {
-            mMostVisitedSites.recordTileImpression(
-                    i, tiles[i].getType(), tiles[i].getSource(), tiles[i].getUrl());
+        for (Tile tile : tiles) {
+            mMostVisitedSites.recordTileImpression(tile);
         }
 
-        mMostVisitedSites.recordPageImpression(tiles.length);
+        mMostVisitedSites.recordPageImpression(tiles.size());
 
         if (ChromeFeatureList.isEnabled(ChromeFeatureList.NTP_OFFLINE_PAGES_FEATURE_NAME)) {
-            for (int i = 0; i < tiles.length; i++) {
-                if (tiles[i].isOfflineAvailable()) {
-                    SuggestionsMetrics.recordTileOfflineAvailability(i);
+            for (Tile tile : tiles) {
+                if (tile.isOfflineAvailable()) {
+                    SuggestionsMetrics.recordTileOfflineAvailability(tile.getIndex());
                 }
             }
         }
@@ -149,35 +132,6 @@ public class TileGroupDelegateImpl implements TileGroup.Delegate {
         RecordUserAction.record("MobileNTPMostVisited");
         NewTabPageUma.recordExplicitUserNavigation(
                 tile.getUrl(), NewTabPageUma.RAPPOR_ACTION_VISITED_SUGGESTED_TILE);
-        mMostVisitedSites.recordOpenedMostVisitedItem(
-                tile.getIndex(), tile.getType(), tile.getSource());
-    }
-
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private boolean switchToExistingTab(String url) {
-        String matchPattern =
-                CommandLine.getInstance().getSwitchValue(ChromeSwitches.NTP_SWITCH_TO_EXISTING_TAB);
-        boolean matchByHost;
-        if ("url".equals(matchPattern)) {
-            matchByHost = false;
-        } else if ("host".equals(matchPattern)) {
-            matchByHost = true;
-        } else {
-            return false;
-        }
-
-        TabModel tabModel = mTabModelSelector.getModel(false);
-        for (int i = tabModel.getCount() - 1; i >= 0; --i) {
-            if (matchURLs(tabModel.getTabAt(i).getUrl(), url, matchByHost)) {
-                TabModelUtils.setIndex(tabModel, i);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean matchURLs(String url1, String url2, boolean matchByHost) {
-        if (url1 == null || url2 == null) return false;
-        return matchByHost ? UrlUtilities.sameHost(url1, url2) : url1.equals(url2);
+        mMostVisitedSites.recordOpenedMostVisitedItem(tile);
     }
 }

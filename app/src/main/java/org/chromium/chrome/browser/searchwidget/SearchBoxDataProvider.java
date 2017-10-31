@@ -50,6 +50,11 @@ class SearchBoxDataProvider implements ToolbarDataProvider {
     }
 
     @Override
+    public boolean hasTab() {
+        return mTab != null;
+    }
+
+    @Override
     public int getPrimaryColor() {
         return 0;
     }
@@ -62,5 +67,10 @@ class SearchBoxDataProvider implements ToolbarDataProvider {
     @Override
     public String getCurrentUrl() {
         return SearchWidgetProvider.getDefaultSearchEngineUrl();
+    }
+
+    @Override
+    public boolean isOfflinePage() {
+        return false;
     }
 }

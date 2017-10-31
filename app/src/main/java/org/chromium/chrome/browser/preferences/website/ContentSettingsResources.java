@@ -118,9 +118,8 @@ public class ContentSettingsResources {
                                  R.string.javascript_permission_title, ContentSetting.ALLOW,
                                  ContentSetting.BLOCK,
                                  R.string.website_settings_category_javascript_allowed, 0));
-            localMap.put(
-                    ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA,
-                    new ResourceItem(R.drawable.permission_camera,
+            localMap.put(ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA,
+                    new ResourceItem(R.drawable.ic_videocam_white_24dp,
                             R.string.website_settings_use_camera, R.string.camera_permission_title,
                             ContentSetting.ASK, ContentSetting.BLOCK,
                             R.string.website_settings_category_camera_ask, 0));
@@ -156,6 +155,10 @@ public class ContentSettingsResources {
             localMap.put(ContentSettingsType.CONTENT_SETTINGS_TYPE_USB_CHOOSER_DATA,
                     new ResourceItem(R.drawable.settings_usb, 0, 0, ContentSetting.ASK,
                                  ContentSetting.BLOCK, 0, 0));
+            localMap.put(ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND,
+                    new ResourceItem(R.drawable.ic_volume_up_grey600_24dp,
+                            R.string.sound_permission_title, R.string.sound_permission_title,
+                            ContentSetting.ALLOW, ContentSetting.BLOCK, 0, 0));
             sResourceInfo = localMap;
         }
         return sResourceInfo;
@@ -173,6 +176,16 @@ public class ContentSettingsResources {
      */
     public static int getIcon(int contentType) {
         return getResourceItem(contentType).getIcon();
+    }
+
+    /**
+     * Creates a {@link Drawable} for the given content type with the correct tint applied.
+     */
+    public static Drawable getTintedIcon(int contentType, Resources resources) {
+        Drawable icon = ApiCompatibilityUtils.getDrawable(resources, getIcon(contentType));
+        icon.setColorFilter(ApiCompatibilityUtils.getColor(resources, R.color.toolbar_light_tint),
+                PorterDuff.Mode.SRC_IN);
+        return icon;
     }
 
     /**

@@ -4,9 +4,12 @@
 
 package org.chromium.chrome.browser.util;
 
+import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Region;
 import android.support.annotation.DrawableRes;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -123,5 +126,42 @@ public class ViewUtils {
         int bottom = view.getPaddingBottom();
         view.setBackgroundResource(resource);
         view.setPadding(left, top, right, bottom);
+    }
+
+    /**
+     *  Converts density-independent pixels (dp) to pixels on the screen (px).
+     *
+     *  @param dp Density-independent pixels are based on the physical density of the screen.
+     *  @return   The physical pixels on the screen which correspond to this many
+     *            density-independent pixels for this screen.
+     */
+    public static int dpToPx(Context context, float dp) {
+        return dpToPx(context.getResources().getDisplayMetrics(), dp);
+    }
+
+    /**
+     *  Converts density-independent pixels (dp) to pixels on the screen (px).
+     *
+     *  @param dp Density-independent pixels are based on the physical density of the screen.
+     *  @return   The physical pixels on the screen which correspond to this many
+     *            density-independent pixels for this screen.
+     */
+    public static int dpToPx(DisplayMetrics metrics, float dp) {
+        return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, metrics));
+    }
+
+    /**
+     * Sets clip children for the provided ViewGroup and all of its ancestors.
+     * @param view The ViewGroup whose children should (not) be clipped.
+     * @param clip Whether to clip children to the parent bounds.
+     */
+    public static void setAncestorsShouldClipChildren(ViewGroup view, boolean clip) {
+        ViewGroup parent = view;
+        while (parent != null) {
+            parent.setClipChildren(clip);
+            if (!(parent.getParent() instanceof ViewGroup)) break;
+            if (parent.getId() == android.R.id.content) break;
+            parent = (ViewGroup) parent.getParent();
+        }
     }
 }

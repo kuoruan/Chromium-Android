@@ -144,4 +144,12 @@ public class SuggestionsCategoryInfo {
                 break;
         }
     }
+
+    /**
+     * Whether the Category supports fetching more content. Only Articles supports this at this
+     * time.
+     */
+    public boolean isFetchMoreSupported() {
+        return mCategory == KnownCategories.ARTICLES;
+    }
 }

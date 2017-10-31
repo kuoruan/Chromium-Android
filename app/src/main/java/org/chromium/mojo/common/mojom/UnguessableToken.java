@@ -77,9 +77,9 @@ public final class UnguessableToken extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(high, 8);
+        encoder0.encode(this.high, 8);
         
-        encoder0.encode(low, 16);
+        encoder0.encode(this.low, 16);
     }
 
     /**
@@ -108,8 +108,8 @@ public final class UnguessableToken extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(high);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(low);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.high);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.low);
         return result;
     }
 }

@@ -53,6 +53,8 @@ class VideoDecoder_Internal {
 
     private static final int ON_RELEASE_MAILBOX_ORDINAL = 4;
 
+    private static final int ON_OVERLAY_INFO_CHANGED_ORDINAL = 5;
+
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements VideoDecoder.Proxy {
 
@@ -170,6 +172,23 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
         }
 
 
+        @Override
+        public void onOverlayInfoChanged(
+OverlayInfo overlayInfo) {
+
+            VideoDecoderOnOverlayInfoChangedParams _message = new VideoDecoderOnOverlayInfoChangedParams();
+
+            _message.overlayInfo = overlayInfo;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(ON_OVERLAY_INFO_CHANGED_ORDINAL)));
+
+        }
+
+
     }
 
     static final class Stub extends org.chromium.mojo.bindings.Interface.Stub<VideoDecoder> {
@@ -222,6 +241,19 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
                                 VideoDecoderOnReleaseMailboxParams.deserialize(messageWithHeader.getPayload());
             
                         getImpl().onReleaseMailbox(data.releaseToken, data.releaseSyncToken);
+                        return true;
+                    }
+            
+            
+            
+            
+            
+                    case ON_OVERLAY_INFO_CHANGED_ORDINAL: {
+            
+                        VideoDecoderOnOverlayInfoChangedParams data =
+                                VideoDecoderOnOverlayInfoChangedParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().onOverlayInfoChanged(data.overlayInfo);
                         return true;
                     }
             
@@ -299,6 +331,8 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
             
             
             
+            
+            
                     default:
                         return false;
                 }
@@ -323,7 +357,7 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
     
         private VideoDecoderConstructParams(int version) {
             super(STRUCT_SIZE, version);
-            decoderBufferPipe = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+            this.decoderBufferPipe = org.chromium.mojo.system.InvalidHandle.INSTANCE;
         }
     
         public VideoDecoderConstructParams() {
@@ -385,13 +419,13 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(client, 8, false);
+            encoder0.encode(this.client, 8, false);
             
-            encoder0.encode(mediaLog, 16, false);
+            encoder0.encode(this.mediaLog, 16, false);
             
-            encoder0.encode(decoderBufferPipe, 24, false);
+            encoder0.encode(this.decoderBufferPipe, 24, false);
             
-            encoder0.encode(commandBufferId, 32, true);
+            encoder0.encode(this.commandBufferId, 32, true);
         }
     
         /**
@@ -424,10 +458,10 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(client);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mediaLog);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(decoderBufferPipe);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(commandBufferId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.client);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mediaLog);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.decoderBufferPipe);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.commandBufferId);
             return result;
         }
     }
@@ -498,9 +532,9 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(config, 8, false);
+            encoder0.encode(this.config, 8, false);
             
-            encoder0.encode(lowDelay, 16, 0);
+            encoder0.encode(this.lowDelay, 16, 0);
         }
     
         /**
@@ -529,8 +563,8 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(config);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(lowDelay);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.config);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.lowDelay);
             return result;
         }
     }
@@ -605,11 +639,11 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(success, 8, 0);
+            encoder0.encode(this.success, 8, 0);
             
-            encoder0.encode(needsBitstreamConversion, 8, 1);
+            encoder0.encode(this.needsBitstreamConversion, 8, 1);
             
-            encoder0.encode(maxDecodeRequests, 12);
+            encoder0.encode(this.maxDecodeRequests, 12);
         }
     
         /**
@@ -640,9 +674,9 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(success);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(needsBitstreamConversion);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(maxDecodeRequests);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.success);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.needsBitstreamConversion);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.maxDecodeRequests);
             return result;
         }
     }
@@ -773,7 +807,7 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(buffer, 8, false);
+            encoder0.encode(this.buffer, 8, false);
         }
     
         /**
@@ -800,7 +834,7 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(buffer);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.buffer);
             return result;
         }
     }
@@ -866,7 +900,7 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(status, 8);
+            encoder0.encode(this.status, 8);
         }
     
         /**
@@ -893,7 +927,7 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(status);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.status);
             return result;
         }
     }
@@ -1245,9 +1279,9 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(releaseToken, 8, false);
+            encoder0.encode(this.releaseToken, 8, false);
             
-            encoder0.encode(releaseSyncToken, 16, false);
+            encoder0.encode(this.releaseSyncToken, 16, false);
         }
     
         /**
@@ -1276,8 +1310,101 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(releaseToken);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(releaseSyncToken);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.releaseToken);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.releaseSyncToken);
+            return result;
+        }
+    }
+
+
+
+    
+    static final class VideoDecoderOnOverlayInfoChangedParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public OverlayInfo overlayInfo;
+    
+        private VideoDecoderOnOverlayInfoChangedParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public VideoDecoderOnOverlayInfoChangedParams() {
+            this(0);
+        }
+    
+        public static VideoDecoderOnOverlayInfoChangedParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static VideoDecoderOnOverlayInfoChangedParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static VideoDecoderOnOverlayInfoChangedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            VideoDecoderOnOverlayInfoChangedParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new VideoDecoderOnOverlayInfoChangedParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.overlayInfo = OverlayInfo.decode(decoder1);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.overlayInfo, 8, false);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            VideoDecoderOnOverlayInfoChangedParams other = (VideoDecoderOnOverlayInfoChangedParams) object;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.overlayInfo, other.overlayInfo))
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.overlayInfo);
             return result;
         }
     }

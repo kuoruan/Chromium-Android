@@ -5,20 +5,32 @@
 package org.chromium.chrome.browser.dom_distiller;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.customtabs.CustomTabsIntent;
 import android.text.TextUtils;
 
 import org.chromium.base.CommandLine;
+import org.chromium.base.SysUtils;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.StateChangeReason;
+import org.chromium.chrome.browser.customtabs.CustomTabActivity;
+import org.chromium.chrome.browser.customtabs.CustomTabIntentDataProvider;
+import org.chromium.chrome.browser.document.ChromeLauncherActivity;
 import org.chromium.chrome.browser.infobar.ReaderModeInfoBar;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.TabModelSelectorTabObserver;
-import org.chromium.chrome.browser.util.AccessibilityUtil;
+import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.components.dom_distiller.content.DistillablePageUtils;
 import org.chromium.components.dom_distiller.core.DomDistillerUrlUtils;
+import org.chromium.components.navigation_interception.InterceptNavigationDelegate;
+import org.chromium.components.navigation_interception.NavigationParams;
+import org.chromium.content.browser.ContentViewCore;
+import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.content_public.browser.NavigationController;
 import org.chromium.content_public.browser.NavigationEntry;
 import org.chromium.content_public.browser.WebContents;
@@ -44,6 +56,13 @@ public class ReaderModeManager extends TabModelSelectorTabObserver {
     /** STARTED means reader mode is currently in reader mode. */
     public static final int STARTED = 2;
 
+    /** The scheme used to access DOM-Distiller. */
+    public static final String DOM_DISTILLER_SCHEME = "chrome-distiller";
+
+    /** The intent extra that indicates origin from Reader Mode */
+    public static final String EXTRA_READER_MODE_PARENT =
+            "org.chromium.chrome.browser.dom_distiller.EXTRA_READER_MODE_PARENT";
+
     /** The url of the last page visited if the last page was reader mode page.  Otherwise null. */
     private String mReaderModePageUrl;
 
@@ -61,6 +80,9 @@ public class ReaderModeManager extends TabModelSelectorTabObserver {
 
     /** If Reader Mode is detecting all pages as distillable. */
     private boolean mIsReaderHeuristicAlwaysTrue;
+
+    // Hold on to the InterceptNavigationDelegate that the custom tab uses.
+    InterceptNavigationDelegate mCustomTabNavigationDelegate;
 
     public ReaderModeManager(TabModelSelector selector, ChromeActivity activity) {
         super(selector);
@@ -98,6 +120,43 @@ public class ReaderModeManager extends TabModelSelectorTabObserver {
     }
 
     // TabModelSelectorTabObserver:
+
+    @Override
+    public void onLoadUrl(Tab tab, LoadUrlParams params, int loadType) {
+        // If a distiller URL was loaded and this is a custom tab, add a navigation
+        // handler to bring any navigations back to the main chrome activity.
+        if (tab == null || !mChromeActivity.isCustomTab()
+                || !DomDistillerUrlUtils.isDistilledPage(params.getUrl())) {
+            return;
+        }
+
+        ContentViewCore cvc = tab.getContentViewCore();
+        if (cvc == null) return;
+
+        mCustomTabNavigationDelegate = new InterceptNavigationDelegate() {
+            @Override
+            public boolean shouldIgnoreNavigation(NavigationParams params) {
+                if (DomDistillerUrlUtils.isDistilledPage(params.url) || params.isExternalProtocol) {
+                    return false;
+                }
+
+                Intent returnIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(params.url));
+                returnIntent.setClassName(mChromeActivity, ChromeLauncherActivity.class.getName());
+
+                // Set the parent ID of the tab to be created.
+                returnIntent.putExtra(EXTRA_READER_MODE_PARENT,
+                        IntentUtils.safeGetInt(mChromeActivity.getIntent().getExtras(),
+                                EXTRA_READER_MODE_PARENT, Tab.INVALID_TAB_ID));
+
+                mChromeActivity.startActivity(returnIntent);
+                mChromeActivity.finish();
+                return true;
+            }
+        };
+
+        DomDistillerTabUtils.setInterceptNavigationDelegate(
+                mCustomTabNavigationDelegate, cvc.getWebContents());
+    }
 
     @Override
     public void onShown(Tab shownTab) {
@@ -373,20 +432,27 @@ public class ReaderModeManager extends TabModelSelectorTabObserver {
 
         if (!mTabStatusMap.containsKey(currentTabId) || usingRequestDesktopSite
                 || mTabStatusMap.get(currentTabId).getStatus() != POSSIBLE
-                || mTabStatusMap.get(currentTabId).isDismissed()
-                || AccessibilityUtil.isAccessibilityEnabled()) {
+                || mTabStatusMap.get(currentTabId).isDismissed()) {
             return;
         }
 
         ReaderModeInfoBar.showReaderModeInfoBar(mTabModelSelector.getCurrentTab());
     }
 
+    public void activateReaderMode() {
+        RecordHistogram.recordBooleanHistogram("DomDistiller.InfoBarUsage", true);
+
+        if (DomDistillerTabUtils.isCctMode() && !SysUtils.isLowEndDevice()) {
+            distillInCustomTab();
+        } else {
+            navigateToReaderMode();
+        }
+    }
+
     /**
      * Navigate the current tab to a Reader Mode URL.
      */
-    public void navigateToReaderMode() {
-        RecordHistogram.recordBooleanHistogram("DomDistiller.InfoBarUsage", true);
-
+    private void navigateToReaderMode() {
         WebContents baseWebContents = getBasePageWebContents();
         if (baseWebContents == null || mChromeActivity == null || mTabModelSelector == null) return;
 
@@ -399,6 +465,36 @@ public class ReaderModeManager extends TabModelSelectorTabObserver {
         // Make sure to exit fullscreen mode before navigating.
         mTabModelSelector.getCurrentTab().toggleFullscreenMode(false);
         DomDistillerTabUtils.distillCurrentPageAndView(getBasePageWebContents());
+    }
+
+    private void distillInCustomTab() {
+        WebContents baseWebContents = getBasePageWebContents();
+        if (baseWebContents == null || mChromeActivity == null || mTabModelSelector == null) return;
+
+        String url = baseWebContents.getLastCommittedUrl();
+        if (url == null) return;
+
+        ReaderModeTabInfo info = mTabStatusMap.get(mTabModelSelector.getCurrentTabId());
+        if (info != null) info.onStartedReaderMode();
+
+        DomDistillerTabUtils.distillCurrentPage(baseWebContents);
+
+        String distillerUrl =
+                DomDistillerUrlUtils.getDistillerViewUrlFromUrl(DOM_DISTILLER_SCHEME, url);
+
+        CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+        builder.setShowTitle(true);
+        CustomTabsIntent customTabsIntent = builder.build();
+        customTabsIntent.intent.setClassName(mChromeActivity, CustomTabActivity.class.getName());
+
+        // Customize items on menu as Reader Mode UI to show 'Find in page' and 'Preference' only.
+        CustomTabIntentDataProvider.addReaderModeUIExtras(customTabsIntent.intent);
+
+        // Add the parent ID as an intent extra for back button functionality.
+        customTabsIntent.intent.putExtra(
+                EXTRA_READER_MODE_PARENT, mTabModelSelector.getCurrentTabId());
+
+        customTabsIntent.launchUrl(mChromeActivity, Uri.parse(distillerUrl));
     }
 
     /**
@@ -468,5 +564,16 @@ public class ReaderModeManager extends TabModelSelectorTabObserver {
                            ChromeSwitches.DISABLE_READER_MODE_BOTTOM_BAR)
                 && DomDistillerTabUtils.isDistillerHeuristicsEnabled();
         return enabled;
+    }
+
+    /**
+     * Determine if Reader Mode created the intent for a tab being created.
+     * @param intent The Intent creating a new tab.
+     * @return True whether the intent was created by Reader Mode.
+     */
+    public static boolean isReaderModeCreatedIntent(@NonNull Intent intent) {
+        int readerParentId = IntentUtils.safeGetInt(
+                intent.getExtras(), ReaderModeManager.EXTRA_READER_MODE_PARENT, Tab.INVALID_TAB_ID);
+        return readerParentId != Tab.INVALID_TAB_ID;
     }
 }

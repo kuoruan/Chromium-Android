@@ -122,4 +122,10 @@
     <item type="id" name="browser_actions_custom_item_four" />
     <item type="id" name="browser_actions_custom_item_five" />
 
+    <!-- VR constants -->
+    <item type="id" name="vr_overlay_view" />
+
+    <!-- Tags -->
+    <item type="id" name="highlight_state" />
+
 </resources>

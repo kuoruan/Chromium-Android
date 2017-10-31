@@ -889,6 +889,10 @@ public final class PrefServiceBridge {
         return nativeGetSupervisedUserSecondCustodianProfileImageURL();
     }
 
+    public void setChromeHomePersonalizedOmniboxSuggestionsEnabled(boolean enabled) {
+        nativeSetChromeHomePersonalizedOmniboxSuggestionsEnabled(enabled);
+    }
+
     private native boolean nativeIsContentSettingEnabled(int contentSettingType);
     private native boolean nativeIsContentSettingManaged(int contentSettingType);
     private native void nativeSetContentSettingEnabled(int contentSettingType, boolean allow);
@@ -1056,4 +1060,5 @@ public final class PrefServiceBridge {
     private native void nativeSetLatestVersionWhenClickedUpdateMenuItem(String version);
     private native String nativeGetLatestVersionWhenClickedUpdateMenuItem();
     private native void nativeSetSupervisedUserId(String supervisedUserId);
+    private native void nativeSetChromeHomePersonalizedOmniboxSuggestionsEnabled(boolean enabled);
 }

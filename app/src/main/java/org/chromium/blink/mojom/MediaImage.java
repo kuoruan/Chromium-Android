@@ -93,17 +93,17 @@ public final class MediaImage extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(src, 8, false);
+        encoder0.encode(this.src, 8, false);
         
-        encoder0.encode(type, 16, false);
+        encoder0.encode(this.type, 16, false);
         
-        if (sizes == null) {
+        if (this.sizes == null) {
             encoder0.encodeNullPointer(24, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(sizes.length, 24, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < sizes.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.sizes.length, 24, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.sizes.length; ++i0) {
                 
-                encoder1.encode(sizes[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                encoder1.encode(this.sizes[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
     }
@@ -136,9 +136,9 @@ public final class MediaImage extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(src);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(type);
-        result = prime * result + java.util.Arrays.deepHashCode(sizes);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.src);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.type);
+        result = prime * result + java.util.Arrays.deepHashCode(this.sizes);
         return result;
     }
 }

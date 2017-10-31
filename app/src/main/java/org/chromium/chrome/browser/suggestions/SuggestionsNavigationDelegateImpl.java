@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.suggestions;
 import android.support.annotation.Nullable;
 
 import org.chromium.base.metrics.RecordUserAction;
+import org.chromium.blink_public.web.WebReferrerPolicy;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.NativePageHost;
@@ -95,6 +96,12 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
     }
 
     @Override
+    public void navigateToSuggestionUrl(int windowOpenDisposition, String url) {
+        LoadUrlParams loadUrlParams = new LoadUrlParams(url, PageTransition.AUTO_BOOKMARK);
+        openUrl(windowOpenDisposition, loadUrlParams);
+    }
+
+    @Override
     public void openSnippet(int windowOpenDisposition, SnippetArticle article) {
         NewTabPageUma.recordAction(NewTabPageUma.ACTION_OPENED_SNIPPET);
 
@@ -136,16 +143,12 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
         // to filter out these history entries for NTP tiles.
         // TODO(mastiz): Extend this with support for other categories.
         if (article.mCategory == KnownCategories.ARTICLES) {
-            loadUrlParams.setReferrer(new Referrer(
-                    CHROME_CONTENT_SUGGESTIONS_REFERRER, Referrer.REFERRER_POLICY_ALWAYS));
+            loadUrlParams.setReferrer(new Referrer(CHROME_CONTENT_SUGGESTIONS_REFERRER,
+                    WebReferrerPolicy.WEB_REFERRER_POLICY_ALWAYS));
         }
 
         Tab loadingTab = openUrl(windowOpenDisposition, loadUrlParams);
-        if (loadingTab != null && loadingTab.getWebContents() != null) {
-            // TODO(https://crbug.com/665915): Handle cases where webcontents is null by waiting
-            // for it to be added, probably using TabObserver#webContentsCreated().
-            SuggestionsMetrics.recordVisit(loadingTab, article);
-        }
+        if (loadingTab != null) SuggestionsMetrics.recordVisit(loadingTab, article);
     }
 
     @Override

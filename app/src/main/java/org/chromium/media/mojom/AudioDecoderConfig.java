@@ -112,21 +112,21 @@ public final class AudioDecoderConfig extends org.chromium.mojo.bindings.Struct 
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(codec, 8);
+        encoder0.encode(this.codec, 8);
         
-        encoder0.encode(sampleFormat, 12);
+        encoder0.encode(this.sampleFormat, 12);
         
-        encoder0.encode(channelLayout, 16);
+        encoder0.encode(this.channelLayout, 16);
         
-        encoder0.encode(samplesPerSecond, 20);
+        encoder0.encode(this.samplesPerSecond, 20);
         
-        encoder0.encode(extraData, 24, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+        encoder0.encode(this.extraData, 24, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
         
-        encoder0.encode(seekPreroll, 32, false);
+        encoder0.encode(this.seekPreroll, 32, false);
         
-        encoder0.encode(codecDelay, 40);
+        encoder0.encode(this.codecDelay, 40);
         
-        encoder0.encode(encryptionScheme, 48, false);
+        encoder0.encode(this.encryptionScheme, 48, false);
     }
 
     /**
@@ -167,14 +167,14 @@ public final class AudioDecoderConfig extends org.chromium.mojo.bindings.Struct 
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(codec);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sampleFormat);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(channelLayout);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(samplesPerSecond);
-        result = prime * result + java.util.Arrays.hashCode(extraData);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(seekPreroll);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(codecDelay);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(encryptionScheme);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.codec);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sampleFormat);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.channelLayout);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.samplesPerSecond);
+        result = prime * result + java.util.Arrays.hashCode(this.extraData);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.seekPreroll);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.codecDelay);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.encryptionScheme);
         return result;
     }
 }

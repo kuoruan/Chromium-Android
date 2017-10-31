@@ -109,7 +109,6 @@ public class OfflinePageTabObserver
      */
     public static void addObserverForTab(Tab tab) {
         OfflinePageTabObserver observer = getObserverForActivity(tab.getActivity());
-        assert observer != null;
         observer.startObservingTab(tab);
         observer.maybeShowReloadSnackbar(tab, false);
     }

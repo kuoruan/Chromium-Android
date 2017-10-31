@@ -293,11 +293,11 @@ int error) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(inputCount, 8);
+            encoder0.encode(this.inputCount, 8);
             
-            encoder0.encode(outputBufferSize, 12);
+            encoder0.encode(this.outputBufferSize, 12);
             
-            encoder0.encode(inputCodedSize, 16, false);
+            encoder0.encode(this.inputCodedSize, 16, false);
         }
     
         /**
@@ -328,9 +328,9 @@ int error) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(inputCount);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(inputCodedSize);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(outputBufferSize);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.inputCount);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.inputCodedSize);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.outputBufferSize);
             return result;
         }
     }
@@ -411,13 +411,13 @@ int error) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(bitstreamBufferId, 8);
+            encoder0.encode(this.bitstreamBufferId, 8);
             
-            encoder0.encode(payloadSize, 12);
+            encoder0.encode(this.payloadSize, 12);
             
-            encoder0.encode(keyFrame, 16, 0);
+            encoder0.encode(this.keyFrame, 16, 0);
             
-            encoder0.encode(timestamp, 24, false);
+            encoder0.encode(this.timestamp, 24, false);
         }
     
         /**
@@ -450,10 +450,10 @@ int error) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(bitstreamBufferId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(payloadSize);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(keyFrame);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(timestamp);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.bitstreamBufferId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.payloadSize);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.keyFrame);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.timestamp);
             return result;
         }
     }
@@ -519,7 +519,7 @@ int error) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(error, 8);
+            encoder0.encode(this.error, 8);
         }
     
         /**
@@ -546,7 +546,7 @@ int error) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(error);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.error);
             return result;
         }
     }

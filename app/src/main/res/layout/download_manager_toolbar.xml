@@ -6,4 +6,5 @@
 <org.chromium.chrome.browser.download.ui.DownloadManagerToolbar
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" />
+    android:layout_height="match_parent"
+    style="@style/ModernToolbar" />

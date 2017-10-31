@@ -195,6 +195,7 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
 
     @Override
     public void setCloseButtonImageResource(Drawable drawable) {
+        mCloseButton.setVisibility(drawable != null ? View.VISIBLE : View.GONE);
         mCloseButton.setImageDrawable(drawable);
     }
 
@@ -253,9 +254,7 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
 
     @Override
     public boolean shouldEmphasizeHttpsScheme() {
-        int securityLevel = getSecurityLevel();
-        return securityLevel == ConnectionSecurityLevel.DANGEROUS
-                || securityLevel == ConnectionSecurityLevel.SECURE_WITH_POLICY_INSTALLED_CERT;
+        return !mToolbarDataProvider.isUsingBrandColor();
     }
 
     @Override
@@ -387,7 +386,6 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
         }
 
         if (mUrlBar.setUrl(url, displayText)) {
-            mUrlBar.deEmphasizeUrl();
             mUrlBar.emphasizeUrl();
         }
     }
@@ -430,8 +428,8 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
         mTitleBar.setTextColor(titleTextColor);
 
         if (getProgressBar() != null) {
-            if (!ColorUtils.isUsingDefaultToolbarColor(getResources(),
-                    getBackground().getColor())) {
+            if (ColorUtils.isUsingDefaultToolbarColor(
+                        getResources(), false, false, getBackground().getColor())) {
                 getProgressBar().setThemeColor(getBackground().getColor(), false);
             } else {
                 getProgressBar().setBackgroundColor(ApiCompatibilityUtils.getColor(resources,
@@ -579,7 +577,10 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
         int locationBarLayoutChildIndex = -1;
         for (int i = 0; i < getChildCount(); i++) {
             View childView = getChildAt(i);
-            if (childView.getVisibility() != GONE) {
+            if (childView == mCloseButton && childView.getVisibility() == GONE) {
+                startMargin += getResources().getDimensionPixelSize(
+                        R.dimen.custom_tabs_toolbar_horizontal_margin_no_close);
+            } else if (childView.getVisibility() != GONE) {
                 LayoutParams childLayoutParams = (LayoutParams) childView.getLayoutParams();
                 if (ApiCompatibilityUtils.getMarginStart(childLayoutParams) != startMargin) {
                     ApiCompatibilityUtils.setMarginStart(childLayoutParams, startMargin);
@@ -774,12 +775,6 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
 
     @Override
     public boolean isSuggestionsListShown() {
-        // Custom tabs do not support suggestions.
-        return false;
-    }
-
-    @Override
-    public boolean isSuggestionsListScrolled() {
         // Custom tabs do not support suggestions.
         return false;
     }

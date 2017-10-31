@@ -5,6 +5,8 @@
 package org.chromium.chrome.browser.dom_distiller;
 
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.chrome.browser.ChromeFeatureList;
+import org.chromium.components.navigation_interception.InterceptNavigationDelegate;
 import org.chromium.content_public.browser.WebContents;
 
 /**
@@ -28,7 +30,17 @@ public class DomDistillerTabUtils {
     }
 
     /**
-     * Starts distillation in the source @{link WebContents} while navigating the destination
+     * Starts distillation in the source {@link WebContents}. The viewer needs to be handled
+     * elsewhere.
+     *
+     * @param webContents the WebContents to distill.
+     */
+    public static void distillCurrentPage(WebContents webContents) {
+        nativeDistillCurrentPage(webContents);
+    }
+
+    /**
+     * Starts distillation in the source {@link WebContents} while navigating the destination
      * {@link WebContents} to view the distilled content. This does not take ownership of any
      * of the WebContents.
      *
@@ -39,6 +51,7 @@ public class DomDistillerTabUtils {
             WebContents sourceWebContents, WebContents destinationWebContents) {
         nativeDistillAndView(sourceWebContents, destinationWebContents);
     }
+
     /**
      * Returns the formatted version of the original URL of a distillation, given the original URL.
      *
@@ -68,11 +81,33 @@ public class DomDistillerTabUtils {
         return nativeIsHeuristicAlwaysTrue();
     }
 
+    /**
+     * Check if the distilled content should be shown in a Chrome Custom Tab (CCT).
+     *
+     * @return True if it should.
+     */
+    public static boolean isCctMode() {
+        if (!ChromeFeatureList.isInitialized()) return false;
+        return ChromeFeatureList.isEnabled(ChromeFeatureList.READER_MODE_IN_CCT);
+    }
+
+    /**
+     * Set an InterceptNavigationDelegate on a WebContents.
+     * @param delegate The navigation delegate.
+     * @param webContents The WebContents to bind the delegate to.
+     */
+    public static void setInterceptNavigationDelegate(
+            InterceptNavigationDelegate delegate, WebContents webContents) {
+        nativeSetInterceptNavigationDelegate(delegate, webContents);
+    }
 
     private static native void nativeDistillCurrentPageAndView(WebContents webContents);
+    private static native void nativeDistillCurrentPage(WebContents webContents);
     private static native void nativeDistillAndView(
             WebContents sourceWebContents, WebContents destinationWebContents);
     private static native String nativeGetFormattedUrlFromOriginalDistillerUrl(String url);
     private static native boolean nativeIsDistillerHeuristicsEnabled();
     private static native boolean nativeIsHeuristicAlwaysTrue();
+    private static native void nativeSetInterceptNavigationDelegate(
+            InterceptNavigationDelegate delegate, WebContents webContents);
 }

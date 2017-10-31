@@ -7,12 +7,10 @@ package org.chromium.chrome.browser.payments;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ResolveInfo;
-import android.content.res.Resources;
 import android.text.TextUtils;
 
 import org.chromium.base.Log;
 import org.chromium.chrome.browser.ChromeActivity;
-import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.payments.PaymentAppFactory.PaymentAppCreatedCallback;
 import org.chromium.chrome.browser.payments.PaymentManifestVerifier.ManifestVerifyCallback;
 import org.chromium.components.payments.PaymentManifestDownloader;
@@ -20,16 +18,13 @@ import org.chromium.components.payments.PaymentManifestParser;
 import org.chromium.content_public.browser.WebContents;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import javax.annotation.Nullable;
 
 /**
  * Finds installed native Android payment apps and verifies their signatures according to the
@@ -39,14 +34,14 @@ import javax.annotation.Nullable;
  * app.
  */
 public class AndroidPaymentAppFinder implements ManifestVerifyCallback {
-    private static final String TAG = "cr_PaymentAppFinder";
+    private static final String TAG = "PaymentAppFinder";
 
     /** The maximum number of payment method manifests to download. */
     private static final int MAX_NUMBER_OF_MANIFESTS = 10;
 
     /** The name of the intent for the service to check whether an app is ready to pay. */
     /* package */ static final String ACTION_IS_READY_TO_PAY =
-                          "org.chromium.intent.action.IS_READY_TO_PAY";
+            "org.chromium.intent.action.IS_READY_TO_PAY";
 
     /**
      * Meta data name of an app's supported payment method names.
@@ -71,21 +66,58 @@ public class AndroidPaymentAppFinder implements ManifestVerifyCallback {
     private final boolean mIsIncognito;
 
     /**
-     * A map of payment method names to the list of (yet) unverified Android apps that claim to
-     * handle these methods. Example payment method names in this data structure:
-     * "https://bobpay.com", "https://android.com/pay". Items in the supportedNonUriPaymentMethods
-     * are excluded.
+     * A mapping from an Android package name to the payment app with that package name. The apps
+     * will be sent to the <code>PaymentAppCreatedCallback</code> once all of their payment methods
+     * have been validated. The package names are used for identification because they are unique on
+     * Android. Example contents:
+     *
+     * {"com.bobpay.app.v1": androidPaymentApp1, "com.alicepay.app.v1": androidPaymentApp2}
      */
-    private final Map<URI, Set<ResolveInfo>> mPendingApps;
+    private final Map<String, AndroidPaymentApp> mValidApps = new HashMap<>();
 
     /**
-     * List of payment manifest verifiers. Note that each non basic card payment method has a
-     * dedicated payment manifest verifier.
+     * A mapping from origins of payment apps to the URI payment methods of these apps. Used to look
+     * up payment apps in <code>mVerifiedPaymentMethods</code> based on the supported origins that
+     * have been verified in <code>PaymentManifestVerifier</code>. Example contents:
+     *
+     * {"https://bobpay.com": ("https://bobpay.com/personal", "https://bobpay.com/business")}
      */
-    private final List<PaymentManifestVerifier> mManifestVerifiers;
+    private final Map<URI, Set<URI>> mOriginToUriDefaultMethodsMapping = new HashMap<>();
 
-    /** A map of Android package name to the payment app. */
-    private final Map<String, AndroidPaymentApp> mResult;
+    /**
+     * A mapping from URI payment methods to the applications that support this payment method,
+     * but not as their default payment method. Used to find all apps that claim support for a given
+     * URI payment method when the payment manifest of this method contains
+     * "supported_origins": "*". Example contents:
+     *
+     * {"https://bobpay.com/public-standard": (resolveInfo1, resolveInfo2, resolveInfo3)}
+     */
+    private final Map<URI, Set<ResolveInfo>> mMethodToSupportedAppsMapping = new HashMap<>();
+
+    /** Contains information about a URI payment method. */
+    private static final class PaymentMethod {
+        /** The default applications for this payment method. */
+        public final Set<ResolveInfo> defaultApplications = new HashSet<>();
+
+        /** The supported origins of this payment method. */
+        public final Set<URI> supportedOrigins = new HashSet<>();
+
+        /** Whether all origins are supported. */
+        public boolean supportsAllOrigins;
+    }
+
+    /**
+     * A mapping from URI payment methods to the verified information about these methods. Used to
+     * accumulate the incremental information that arrives from
+     * <code>PaymentManifestVerifier</code>s for each of the payment method manifests that need to
+     * be downloaded. Example contents:
+     *
+     * { "https://bobpay.com/business": method1, "https://bobpay.com/personal": method2}
+     */
+    private final Map<URI, PaymentMethod> mVerifiedPaymentMethods = new HashMap<>();
+
+    private int mPendingVerifiersCount;
+    private int mPendingResourceUsersCount;
 
     /**
      * Finds native Android payment apps.
@@ -129,20 +161,9 @@ public class AndroidPaymentAppFinder implements ManifestVerifyCallback {
             assert !TextUtils.isEmpty(method);
             if (supportedNonUriPaymentMethods.contains(method)) {
                 mNonUriPaymentMethods.add(method);
-            } else if (method.startsWith(UrlConstants.HTTPS_URL_PREFIX)) {
-                URI uri;
-                try {
-                    // Don't use java.net.URL, because it performs a synchronous DNS lookup in
-                    // the constructor.
-                    uri = new URI(method);
-                } catch (URISyntaxException e) {
-                    continue;
-                }
-
-                if (uri.isAbsolute()) {
-                    assert UrlConstants.HTTPS_SCHEME.equals(uri.getScheme());
-                    mUriPaymentMethods.add(uri);
-                }
+            } else if (UriUtils.looksLikeUriMethod(method)) {
+                URI uri = UriUtils.parseUriFromString(method);
+                if (uri != null) mUriPaymentMethods.add(uri);
             }
         }
 
@@ -151,175 +172,269 @@ public class AndroidPaymentAppFinder implements ManifestVerifyCallback {
         mParser = parser;
         mPackageManagerDelegate = packageManagerDelegate;
         mCallback = callback;
-        mPendingApps = new HashMap<>();
-        mManifestVerifiers = new ArrayList<>();
-        mResult = new HashMap<>();
         ChromeActivity activity = ChromeActivity.fromWebContents(mWebContents);
         mIsIncognito = activity != null && activity.getCurrentTabModel() != null
                 && activity.getCurrentTabModel().isIncognito();
     }
 
+    /**
+     * Finds and validates the installed android payment apps that support the payment method names
+     * that the merchant is using.
+     */
     private void findAndroidPaymentApps() {
-        Intent payIntent = new Intent(AndroidPaymentApp.ACTION_PAY);
-        List<ResolveInfo> apps =
-                mPackageManagerDelegate.getActivitiesThatCanRespondToIntentWithMetaData(payIntent);
-        if (apps.isEmpty()) {
-            onSearchFinished();
+        List<ResolveInfo> allInstalledPaymentApps =
+                mPackageManagerDelegate.getActivitiesThatCanRespondToIntentWithMetaData(
+                        new Intent(AndroidPaymentApp.ACTION_PAY));
+        if (allInstalledPaymentApps.isEmpty()) {
+            onAllAppsFound();
             return;
         }
 
-        List<Set<String>> appSupportedMethods = new ArrayList<>();
-        for (int i = 0; i < apps.size(); i++) {
-            appSupportedMethods.add(getPaymentMethodNames(apps.get(i).activityInfo));
+        // All URI methods for which manifests should be downloaded. For example, if merchant
+        // supports "https://bobpay.com/personal" payment method, but user also has Alice Pay app
+        // that has the default payment method name of "https://alicepay.com/webpay" that claims to
+        // support "https://bobpay.com/personal" method as well, then both of these methods will be
+        // in this set:
+        //
+        // ("https://bobpay.com/personal", "https://alicepay.com/webpay")
+        Set<URI> uriMethods = new HashSet<>(mUriPaymentMethods);
+
+        // A mapping from all known payment method names to the corresponding payment apps that
+        // claim to support these payment methods. Example contents:
+        //
+        // {"basic-card": (bobPay, alicePay), "https://alicepay.com/webpay": (alicePay)}
+        //
+        // In case of non-URI payment methods, such as "basic-card", all apps that claim to support
+        // it are considered valid. In case of URI payment methods, if no apps claim to support a
+        // URI method, then no information will be downloaded for this method.
+        Map<String, Set<ResolveInfo>> methodToAppsMapping = new HashMap<>();
+
+        // A mapping from URI payment method names to the corresponding default payment apps. The
+        // payment manifest verifiers compare these apps against the information in
+        // "default_applications" of the payment method manifests to determine the validity of these
+        // apps. Example contents:
+        //
+        // {"https://bobpay.com/personal": (bobPay), "https://alicepay.com/webpay": (alicePay)}
+        Map<URI, Set<ResolveInfo>> uriMethodToDefaultAppsMapping = new HashMap<>();
+
+        // A mapping from URI payment method names to the origins of the payment apps that support
+        // that method name. The payment manifest verifiers compare these origins against the
+        // information in "supported_origins" of the payment method manifests to determine validity
+        // of these origins. Example contents:
+        //
+        // {"https://bobpay.com/personal": ("https://alicepay.com")}
+        Map<URI, Set<URI>> uriMethodToSupportedOriginsMapping = new HashMap<>();
+
+        for (int i = 0; i < allInstalledPaymentApps.size(); i++) {
+            ResolveInfo app = allInstalledPaymentApps.get(i);
+
+            String defaultMethod = app.activityInfo.metaData == null
+                    ? null
+                    : app.activityInfo.metaData.getString(
+                              META_DATA_NAME_OF_DEFAULT_PAYMENT_METHOD_NAME);
+
+            URI appOrigin = null;
+            URI defaultUriMethod = null;
+            if (!TextUtils.isEmpty(defaultMethod)) {
+                if (!methodToAppsMapping.containsKey(defaultMethod)) {
+                    methodToAppsMapping.put(defaultMethod, new HashSet<ResolveInfo>());
+                }
+                methodToAppsMapping.get(defaultMethod).add(app);
+
+                if (UriUtils.looksLikeUriMethod(defaultMethod)) {
+                    defaultUriMethod = UriUtils.parseUriFromString(defaultMethod);
+                    if (defaultUriMethod != null) {
+                        uriMethods.add(defaultUriMethod);
+
+                        if (!uriMethodToDefaultAppsMapping.containsKey(defaultUriMethod)) {
+                            uriMethodToDefaultAppsMapping.put(
+                                    defaultUriMethod, new HashSet<ResolveInfo>());
+                        }
+                        uriMethodToDefaultAppsMapping.get(defaultUriMethod).add(app);
+
+                        appOrigin = UriUtils.getOrigin(defaultUriMethod);
+                        if (!mOriginToUriDefaultMethodsMapping.containsKey(appOrigin)) {
+                            mOriginToUriDefaultMethodsMapping.put(appOrigin, new HashSet<URI>());
+                        }
+                        mOriginToUriDefaultMethodsMapping.get(appOrigin).add(defaultUriMethod);
+                    }
+                }
+            }
+
+            // Note that a payment app with non-URI default payment method (e.g., "basic-card")
+            // can support URI payment methods (e.g., "https://bobpay.com/public-standard").
+            Set<String> supportedMethods = getSupportedPaymentMethods(app.activityInfo);
+            for (String supportedMethod : supportedMethods) {
+                URI supportedUriMethod = UriUtils.looksLikeUriMethod(supportedMethod)
+                        ? UriUtils.parseUriFromString(supportedMethod)
+                        : null;
+                if (supportedUriMethod != null && supportedUriMethod.equals(defaultUriMethod)) {
+                    continue;
+                }
+
+                if (!methodToAppsMapping.containsKey(supportedMethod)) {
+                    methodToAppsMapping.put(supportedMethod, new HashSet<ResolveInfo>());
+                }
+                methodToAppsMapping.get(supportedMethod).add(app);
+
+                if (supportedUriMethod == null) continue;
+
+                if (!mMethodToSupportedAppsMapping.containsKey(supportedUriMethod)) {
+                    mMethodToSupportedAppsMapping.put(
+                            supportedUriMethod, new HashSet<ResolveInfo>());
+                }
+                mMethodToSupportedAppsMapping.get(supportedUriMethod).add(app);
+
+                if (appOrigin == null) continue;
+
+                if (!uriMethodToSupportedOriginsMapping.containsKey(supportedUriMethod)) {
+                    uriMethodToSupportedOriginsMapping.put(supportedUriMethod, new HashSet<URI>());
+                }
+                uriMethodToSupportedOriginsMapping.get(supportedUriMethod).add(appOrigin);
+            }
         }
 
-        for (URI uriMethodName : mUriPaymentMethods) {
-            List<ResolveInfo> supportedApps =
-                    filterAppsByMethodName(apps, appSupportedMethods, uriMethodName.toString());
-            if (supportedApps.isEmpty()) continue;
+        List<PaymentManifestVerifier> manifestVerifiers = new ArrayList<>();
+        for (URI uriMethodName : uriMethods) {
+            if (!methodToAppsMapping.containsKey(uriMethodName.toString())) continue;
 
-            // Start the parser utility process as soon as possible, once we know that a
-            // manifest file needs to be parsed. The startup can take up to 2 seconds.
+            // Start the parser utility process as soon as possible, once we know that a manifest
+            // file needs to be parsed. The startup can take up to 2 seconds.
             if (!mParser.isUtilityProcessRunning()) mParser.startUtilityProcess();
 
             // Initialize the native side of the downloader, once we know that a manifest file needs
             // to be downloaded.
             if (!mDownloader.isInitialized()) mDownloader.initialize(mWebContents);
 
-            mManifestVerifiers.add(
-                    new PaymentManifestVerifier(uriMethodName, supportedApps, mWebDataService,
-                            mDownloader, mParser, mPackageManagerDelegate, this /* callback */));
-            mPendingApps.put(uriMethodName, new HashSet<>(supportedApps));
+            manifestVerifiers.add(new PaymentManifestVerifier(uriMethodName,
+                    uriMethodToDefaultAppsMapping.get(uriMethodName),
+                    uriMethodToSupportedOriginsMapping.get(uriMethodName), mWebDataService,
+                    mDownloader, mParser, mPackageManagerDelegate, this /* callback */));
 
-            if (mManifestVerifiers.size() == MAX_NUMBER_OF_MANIFESTS) {
-                Log.d(TAG, "Reached maximum number of allowed payment app manifests.");
+            if (manifestVerifiers.size() == MAX_NUMBER_OF_MANIFESTS) {
+                Log.e(TAG, "Reached maximum number of allowed payment app manifests.");
                 break;
             }
         }
 
         for (String nonUriMethodName : mNonUriPaymentMethods) {
-            List<ResolveInfo> supportedApps =
-                    filterAppsByMethodName(apps, appSupportedMethods, nonUriMethodName);
-            for (int i = 0; i < supportedApps.size(); i++) {
-                // Chrome does not verify app manifests for non-URI payment method support.
-                onValidPaymentApp(nonUriMethodName, supportedApps.get(i));
+            if (methodToAppsMapping.containsKey(nonUriMethodName)) {
+                Set<ResolveInfo> supportedApps = methodToAppsMapping.get(nonUriMethodName);
+                for (ResolveInfo supportedApp : supportedApps) {
+                    // Chrome does not verify app manifests for non-URI payment method support.
+                    onValidPaymentAppForPaymentMethodName(supportedApp, nonUriMethodName);
+                }
             }
         }
 
-        if (mManifestVerifiers.isEmpty()) {
-            onSearchFinished();
+        if (manifestVerifiers.isEmpty()) {
+            onAllAppsFound();
             return;
         }
 
-        for (int i = 0; i < mManifestVerifiers.size(); i++) {
-            mManifestVerifiers.get(i).verify();
+        mPendingVerifiersCount = mPendingResourceUsersCount = manifestVerifiers.size();
+        for (PaymentManifestVerifier manifestVerifier : manifestVerifiers) {
+            manifestVerifier.verify();
         }
     }
 
-    @Nullable
-    private Set<String> getPaymentMethodNames(ActivityInfo activityInfo) {
+    /**
+     * Queries the Android app metadata for the names of the non-default payment methods that the
+     * given app supports.
+     *
+     * @param activityInfo The application information to query.
+     * @return The set of non-default payment method names that this application supports. Never
+     *         null.
+     */
+    private Set<String> getSupportedPaymentMethods(ActivityInfo activityInfo) {
         Set<String> result = new HashSet<>();
         if (activityInfo.metaData == null) return result;
-
-        String defaultMethodName =
-                activityInfo.metaData.getString(META_DATA_NAME_OF_DEFAULT_PAYMENT_METHOD_NAME);
-        if (!TextUtils.isEmpty(defaultMethodName)) result.add(defaultMethodName);
 
         int resId = activityInfo.metaData.getInt(META_DATA_NAME_OF_PAYMENT_METHOD_NAMES);
         if (resId == 0) return result;
 
-        Resources resources =
-                mPackageManagerDelegate.getResourcesForApplication(activityInfo.applicationInfo);
-        if (resources == null) return result;
+        String[] nonDefaultPaymentMethodNames =
+                mPackageManagerDelegate.getStringArrayResourceForApplication(
+                        activityInfo.applicationInfo, resId);
+        if (nonDefaultPaymentMethodNames == null) return result;
 
-        String[] methodNames = resources.getStringArray(resId);
-        if (methodNames == null) return result;
-
-        for (int i = 0; i < methodNames.length; i++) {
-            result.add(methodNames[i]);
-        }
+        Collections.addAll(result, nonDefaultPaymentMethodNames);
 
         return result;
     }
 
-    private static List<ResolveInfo> filterAppsByMethodName(
-            List<ResolveInfo> apps, List<Set<String>> methodNames, String targetMethodName) {
-        assert apps.size() == methodNames.size();
+    @Override
+    public void onValidDefaultPaymentApp(URI methodName, ResolveInfo resolveInfo) {
+        getOrCreateVerifiedPaymentMethod(methodName).defaultApplications.add(resolveInfo);
+    }
 
-        // Note that apps and  methodNames must have the same size. The information at the same
-        // index must correspond to the same app.
-        List<ResolveInfo> supportedApps = new ArrayList<>();
-        for (int i = 0; i < apps.size(); i++) {
-            if (methodNames.get(i).contains(targetMethodName)) {
-                supportedApps.add(apps.get(i));
+    @Override
+    public void onValidSupportedOrigin(URI methodName, URI supportedOrigin) {
+        getOrCreateVerifiedPaymentMethod(methodName).supportedOrigins.add(supportedOrigin);
+    }
+
+    @Override
+    public void onAllOriginsSupported(URI methodName) {
+        getOrCreateVerifiedPaymentMethod(methodName).supportsAllOrigins = true;
+    }
+
+    private PaymentMethod getOrCreateVerifiedPaymentMethod(URI methodName) {
+        PaymentMethod verifiedPaymentManifest = mVerifiedPaymentMethods.get(methodName);
+        if (verifiedPaymentManifest == null) {
+            verifiedPaymentManifest = new PaymentMethod();
+            mVerifiedPaymentMethods.put(methodName, verifiedPaymentManifest);
+        }
+        return verifiedPaymentManifest;
+    }
+
+    @Override
+    public void onFinishedVerification() {
+        mPendingVerifiersCount--;
+        if (mPendingVerifiersCount != 0) return;
+
+        for (Map.Entry<URI, PaymentMethod> nameAndMethod : mVerifiedPaymentMethods.entrySet()) {
+            URI methodName = nameAndMethod.getKey();
+            if (!mUriPaymentMethods.contains(methodName)) continue;
+
+            PaymentMethod method = nameAndMethod.getValue();
+            for (ResolveInfo app : method.defaultApplications) {
+                onValidPaymentAppForPaymentMethodName(app, methodName.toString());
+            }
+
+            // Chrome does not verify payment apps if they claim to support URI payment methods
+            // that support all origins.
+            if (method.supportsAllOrigins) {
+                Set<ResolveInfo> supportedApps = mMethodToSupportedAppsMapping.get(methodName);
+                if (supportedApps == null) continue;
+                for (ResolveInfo supportedApp : supportedApps) {
+                    onValidPaymentAppForPaymentMethodName(supportedApp, methodName.toString());
+                }
                 continue;
             }
-        }
-        return supportedApps;
-    }
 
-    @Override
-    public void onValidPaymentApp(URI methodName, ResolveInfo resolveInfo) {
-        onValidPaymentApp(methodName.toString(), resolveInfo);
-        removePendingApp(methodName, resolveInfo);
-    }
+            for (URI supportedOrigin : method.supportedOrigins) {
+                Set<URI> supportedAppMethodNames =
+                        mOriginToUriDefaultMethodsMapping.get(supportedOrigin);
+                if (supportedAppMethodNames == null) continue;
 
-    /** Same as above, but also works for non-URI method names, e.g., "basic-card". */
-    private void onValidPaymentApp(String methodName, ResolveInfo resolveInfo) {
-        String packageName = resolveInfo.activityInfo.packageName;
-        AndroidPaymentApp app = mResult.get(packageName);
-        if (app == null) {
-            CharSequence label = mPackageManagerDelegate.getAppLabel(resolveInfo);
-            if (TextUtils.isEmpty(label)) {
-                Log.d(TAG,
-                        String.format(Locale.getDefault(), "Skipping '%s' because of empty label.",
-                                packageName));
-                return;
+                for (URI supportedAppMethodName : supportedAppMethodNames) {
+                    PaymentMethod supportedAppMethod =
+                            mVerifiedPaymentMethods.get(supportedAppMethodName);
+                    if (supportedAppMethod == null) continue;
+
+                    for (ResolveInfo supportedApp : supportedAppMethod.defaultApplications) {
+                        onValidPaymentAppForPaymentMethodName(supportedApp, methodName.toString());
+                    }
+                }
             }
-            app = new AndroidPaymentApp(mWebContents, packageName, resolveInfo.activityInfo.name,
-                    label.toString(), mPackageManagerDelegate.getAppIcon(resolveInfo),
-                    mIsIncognito);
-            mResult.put(packageName, app);
         }
-        app.addMethodName(methodName);
+
+        onAllAppsFound();
     }
 
-    @Override
-    public void onInvalidPaymentApp(URI methodName, ResolveInfo resolveInfo) {
-        removePendingApp(methodName, resolveInfo);
-    }
-
-    /** Removes the (method, app) pair from the list of pending information to be verified. */
-    private void removePendingApp(URI methodName, ResolveInfo resolveInfo) {
-        Set<ResolveInfo> pendingAppsForMethod = mPendingApps.get(methodName);
-        pendingAppsForMethod.remove(resolveInfo);
-        if (pendingAppsForMethod.isEmpty()) mPendingApps.remove(methodName);
-        if (mPendingApps.isEmpty()) onSearchFinished();
-    }
-
-    @Override
-    public void onInvalidManifest(URI methodName) {
-        mPendingApps.remove(methodName);
-        if (mPendingApps.isEmpty()) onSearchFinished();
-    }
-
-    @Override
-    public void onVerifyFinished(PaymentManifestVerifier verifier) {
-        mManifestVerifiers.remove(verifier);
-        if (!mManifestVerifiers.isEmpty()) return;
-
-        assert mPendingApps.isEmpty();
-        mWebDataService.destroy();
-        if (mDownloader.isInitialized()) mDownloader.destroy();
-        if (mParser.isUtilityProcessRunning()) mParser.stopUtilityProcess();
-    }
-
-    /**
-     * Checks for IS_READY_TO_PAY service in each valid payment app and returns the valid apps
-     * to the caller. Called when finished verifying all payment methods and apps.
-     */
-    private void onSearchFinished() {
-        assert mPendingApps.isEmpty();
+    /** Notifies callback that all payment apps have been found. */
+    private void onAllAppsFound() {
+        assert mPendingVerifiersCount == 0;
 
         if (!mIsIncognito) {
             List<ResolveInfo> resolveInfos =
@@ -327,15 +442,58 @@ public class AndroidPaymentAppFinder implements ManifestVerifyCallback {
                             new Intent(ACTION_IS_READY_TO_PAY));
             for (int i = 0; i < resolveInfos.size(); i++) {
                 ResolveInfo resolveInfo = resolveInfos.get(i);
-                AndroidPaymentApp app = mResult.get(resolveInfo.serviceInfo.packageName);
+                AndroidPaymentApp app = mValidApps.get(resolveInfo.serviceInfo.packageName);
                 if (app != null) app.setIsReadyToPayAction(resolveInfo.serviceInfo.name);
             }
         }
 
-        for (Map.Entry<String, AndroidPaymentApp> entry : mResult.entrySet()) {
+        for (Map.Entry<String, AndroidPaymentApp> entry : mValidApps.entrySet()) {
             mCallback.onPaymentAppCreated(entry.getValue());
         }
 
         mCallback.onAllPaymentAppsCreated();
+    }
+
+    /**
+     * Enables the given payment app to use this method name.
+     *
+     * @param resolveInfo The payment app that's allowed to use the method name.
+     * @param methodName  The method name that can be used by the app.
+     */
+    private void onValidPaymentAppForPaymentMethodName(ResolveInfo resolveInfo, String methodName) {
+        String packageName = resolveInfo.activityInfo.packageName;
+        AndroidPaymentApp app = mValidApps.get(packageName);
+        if (app == null) {
+            CharSequence label = mPackageManagerDelegate.getAppLabel(resolveInfo);
+            if (TextUtils.isEmpty(label)) {
+                Log.e(TAG, "Skipping \"%s\" because of empty label.", packageName);
+                return;
+            }
+
+            // Dedupe corresponding ServiceWorkerPaymentApp which is registered with the default
+            // payment method name as the scope and the scope is used as the app Id.
+            String webAppIdCanDeduped = resolveInfo.activityInfo.metaData == null
+                    ? null
+                    : resolveInfo.activityInfo.metaData.getString(
+                              META_DATA_NAME_OF_DEFAULT_PAYMENT_METHOD_NAME);
+            app = new AndroidPaymentApp(mWebContents, packageName, resolveInfo.activityInfo.name,
+                    label.toString(), mPackageManagerDelegate.getAppIcon(resolveInfo), mIsIncognito,
+                    webAppIdCanDeduped == null ? null
+                                               : UriUtils.parseUriFromString(webAppIdCanDeduped));
+            mValidApps.put(packageName, app);
+        }
+
+        // The same method may be added multiple times.
+        app.addMethodName(methodName);
+    }
+
+    @Override
+    public void onFinishedUsingResources() {
+        mPendingResourceUsersCount--;
+        if (mPendingResourceUsersCount != 0) return;
+
+        mWebDataService.destroy();
+        if (mDownloader.isInitialized()) mDownloader.destroy();
+        if (mParser.isUtilityProcessRunning()) mParser.stopUtilityProcess();
     }
 }

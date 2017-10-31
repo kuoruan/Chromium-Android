@@ -45,6 +45,7 @@ public class LargeIconBridge {
          *
          * @param icon The icon, or null if none is available.
          * @param fallbackColor The fallback color to use if icon is null.
+         * @param isFallbackColorDefault Whether the fallback color is the default color.
          */
         @CalledByNative("LargeIconCallback")
         void onLargeIconAvailable(

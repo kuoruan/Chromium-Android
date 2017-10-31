@@ -130,8 +130,8 @@ public class ChromeTabCreator extends TabCreatorManager.TabCreator {
 
                 assert TabModelUtils.getTabIndexById(mTabModel, assignedTabId)
                         == TabModel.INVALID_TAB_INDEX;
-                tab = Tab.createLiveTab(assignedTabId, mActivity, mIncognito,
-                        mNativeWindow, type, parentId, !openInForeground);
+                tab = Tab.createLiveTab(assignedTabId, mIncognito, mNativeWindow, type, parentId,
+                        !openInForeground);
                 tab.initialize(
                         webContents, mTabContentManager, delegateFactory, !openInForeground, false);
                 tab.setParentIntent(parentIntent);
@@ -140,17 +140,16 @@ public class ChromeTabCreator extends TabCreatorManager.TabCreator {
                 // On low memory devices the tabs opened in background are not loaded automatically
                 // to preserve resources (cpu, memory, strong renderer binding) for the foreground
                 // tab.
-                tab = Tab.createTabForLazyLoad(mActivity, mIncognito, mNativeWindow, type,
-                        parentId, loadUrlParams);
+                tab = Tab.createTabForLazyLoad(
+                        mIncognito, mNativeWindow, type, parentId, loadUrlParams);
                 tab.initialize(null, mTabContentManager, delegateFactory, !openInForeground, false);
             } else {
-                tab = Tab.createLiveTab(Tab.INVALID_TAB_ID, mActivity, mIncognito,
-                        mNativeWindow, type, parentId, !openInForeground);
+                tab = Tab.createLiveTab(Tab.INVALID_TAB_ID, mIncognito, mNativeWindow, type,
+                        parentId, !openInForeground);
                 tab.initialize(null, mTabContentManager, delegateFactory, !openInForeground, false);
                 tab.loadUrl(loadUrlParams);
             }
             tab.getTabRedirectHandler().updateIntent(intent);
-
             if (intent != null && intent.hasExtra(ServiceTabLauncher.LAUNCH_REQUEST_ID_EXTRA)) {
                 ServiceTabLauncher.onWebContentsForRequestAvailable(
                         intent.getIntExtra(ServiceTabLauncher.LAUNCH_REQUEST_ID_EXTRA, 0),
@@ -178,8 +177,8 @@ public class ChromeTabCreator extends TabCreatorManager.TabCreator {
         boolean openInForeground = mOrderController.willOpenInForeground(type, mIncognito);
         TabDelegateFactory delegateFactory = parent == null ? createDefaultTabDelegateFactory()
                 : parent.getDelegateFactory();
-        Tab tab = Tab.createLiveTab(Tab.INVALID_TAB_ID, mActivity, mIncognito,
-                mNativeWindow, type, parentId, !openInForeground);
+        Tab tab = Tab.createLiveTab(
+                Tab.INVALID_TAB_ID, mIncognito, mNativeWindow, type, parentId, !openInForeground);
         tab.initialize(webContents, mTabContentManager, delegateFactory, !openInForeground, false);
         mTabModel.addTab(tab, position, type);
         return true;
@@ -241,7 +240,8 @@ public class ChromeTabCreator extends TabCreatorManager.TabCreator {
             loadUrlParams.setIntentReceivedTimestamp(intentTimestamp);
             loadUrlParams.setVerbatimHeaders(headers);
             if (referer != null) {
-                loadUrlParams.setReferrer(new Referrer(referer, Referrer.REFERRER_POLICY_DEFAULT));
+                loadUrlParams.setReferrer(
+                        new Referrer(referer, IntentHandler.getReferrerPolicyFromIntent(intent)));
             }
             return createNewTab(loadUrlParams, TabLaunchType.FROM_EXTERNAL_APP, null, intent);
         }
@@ -277,7 +277,7 @@ public class ChromeTabCreator extends TabCreatorManager.TabCreator {
     @Override
     public Tab createFrozenTab(TabState state, int id, int index) {
         Tab tab = Tab.createFrozenTabFromState(
-                id, mActivity, state.isIncognito(), mNativeWindow, state.parentId, state);
+                id, state.isIncognito(), mNativeWindow, state.parentId, state);
         boolean selectTab = mOrderController.willOpenInForeground(TabLaunchType.FROM_RESTORE,
                 state.isIncognito());
         tab.initialize(
@@ -298,6 +298,7 @@ public class ChromeTabCreator extends TabCreatorManager.TabCreator {
             case FROM_RESTORE:
             case FROM_LINK:
             case FROM_EXTERNAL_APP:
+            case FROM_BROWSER_ACTIONS:
                 transition = PageTransition.LINK | PageTransition.FROM_API;
                 break;
             case FROM_CHROME_UI:

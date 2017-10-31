@@ -20,6 +20,12 @@ import org.chromium.base.Callback;
  */
 public interface AccountManagerDelegate {
     /**
+     * Registers internal observers used for notifying {@link AccountsChangeObserver}. Must be
+     * invoked before calling {@link #addObserver}.
+     */
+    void registerObservers();
+
+    /**
      * Adds an observer to get notified about accounts changes.
      * @param observer the observer to add.
      */
@@ -34,8 +40,7 @@ public interface AccountManagerDelegate {
     void removeObserver(AccountsChangeObserver observer);
 
     /**
-     * Get all the accounts.
-     * This method shouldn't be called on the UI thread (violated due to crbug.com/517697).
+     * Get all the accounts synchronously.
      */
     @WorkerThread
     Account[] getAccountsSync() throws AccountManagerDelegateException;
@@ -84,4 +89,14 @@ public interface AccountManagerDelegate {
     @AnyThread
     void updateCredentials(
             Account account, Activity activity, @Nullable Callback<Boolean> callback);
+
+    /**
+     * Gets profile data source.
+     * @return {@link ProfileDataSource} if this delegate provides it, null otherwise.
+     */
+    @MainThread
+    @Nullable
+    default ProfileDataSource getProfileDataSource() {
+        return null;
+    }
 }

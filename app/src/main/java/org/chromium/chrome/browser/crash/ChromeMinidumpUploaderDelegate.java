@@ -10,7 +10,6 @@ import android.os.Build;
 import android.os.PersistableBundle;
 
 import org.chromium.chrome.browser.preferences.privacy.PrivacyPreferencesManager;
-import org.chromium.components.minidump_uploader.CrashFileManager;
 import org.chromium.components.minidump_uploader.MinidumpUploaderDelegate;
 import org.chromium.components.minidump_uploader.util.CrashReportingPermissionManager;
 import org.chromium.components.minidump_uploader.util.NetworkPermissionUtil;
@@ -98,11 +97,5 @@ public class ChromeMinidumpUploaderDelegate implements MinidumpUploaderDelegate 
     @Override
     public void recordUploadFailure(File minidump) {
         MinidumpUploadService.incrementCrashFailureUploadCount(minidump.getAbsolutePath());
-    }
-
-    @Override
-    public void migrateMinidumpFilenamesIfNeeded(CrashFileManager crashFileManager) {
-        // Minidump filenames are migrated as part of attaching logcats within the
-        // ProcessInitializationHandler, and hence there is no need to migrate them here.
     }
 }

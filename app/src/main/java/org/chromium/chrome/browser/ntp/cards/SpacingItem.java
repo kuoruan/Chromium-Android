@@ -52,7 +52,10 @@ public class SpacingItem extends OptionalLeaf {
     }
 
     /** Schedules a recalculation of the space occupied by the item. */
+    @SuppressWarnings("deprecation") // notifyItemChanged(int)
     public void refresh() {
+        // Usage of the deprecated method is intentional, we want to trigger a full update of the
+        // spacer, partial updates don't mean much here.
         if (isVisible()) notifyItemChanged(0);
     }
 

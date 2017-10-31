@@ -20,6 +20,7 @@ import org.chromium.chrome.browser.preferences.ButtonPreference;
 import org.chromium.chrome.browser.preferences.ChromeSwitchPreference;
 import org.chromium.chrome.browser.preferences.ManagedPreferenceDelegate;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
+import org.chromium.chrome.browser.preferences.PreferenceUtils;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.ui.widget.Toast;
 
@@ -34,7 +35,7 @@ public class TranslatePreferences extends PreferenceFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        addPreferencesFromResource(R.xml.translate_preferences);
+        PreferenceUtils.addPreferencesFromResource(this, R.xml.translate_preferences);
         getActivity().setTitle(R.string.google_translate);
         setHasOptionsMenu(true);
 

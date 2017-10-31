@@ -212,9 +212,9 @@ int[] watchIds, NfcMessage message) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(watchIds, 8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            encoder0.encode(this.watchIds, 8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
             
-            encoder0.encode(message, 16, false);
+            encoder0.encode(this.message, 16, false);
         }
     
         /**
@@ -243,8 +243,8 @@ int[] watchIds, NfcMessage message) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + java.util.Arrays.hashCode(watchIds);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(message);
+            result = prime * result + java.util.Arrays.hashCode(this.watchIds);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.message);
             return result;
         }
     }

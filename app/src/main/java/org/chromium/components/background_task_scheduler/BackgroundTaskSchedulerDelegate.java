@@ -11,7 +11,7 @@ import android.content.Context;
  * system APIs ({@link android.app.job.JobScheduler} on newer platforms and GCM
  * ({@link com.google.android.gms.gcm.GcmNetworkManager}) on older platforms.
  */
-public interface BackgroundTaskSchedulerDelegate {
+interface BackgroundTaskSchedulerDelegate {
     /**
      * Schedules a background task. See {@link TaskInfo} for information on what types of tasks that
      * can be scheduled.

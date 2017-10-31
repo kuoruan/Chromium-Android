@@ -135,37 +135,37 @@ public final class PaymentAddress extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(country, 8, false);
+        encoder0.encode(this.country, 8, false);
         
-        if (addressLine == null) {
+        if (this.addressLine == null) {
             encoder0.encodeNullPointer(16, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(addressLine.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < addressLine.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.addressLine.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.addressLine.length; ++i0) {
                 
-                encoder1.encode(addressLine[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                encoder1.encode(this.addressLine[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
         
-        encoder0.encode(region, 24, false);
+        encoder0.encode(this.region, 24, false);
         
-        encoder0.encode(city, 32, false);
+        encoder0.encode(this.city, 32, false);
         
-        encoder0.encode(dependentLocality, 40, false);
+        encoder0.encode(this.dependentLocality, 40, false);
         
-        encoder0.encode(postalCode, 48, false);
+        encoder0.encode(this.postalCode, 48, false);
         
-        encoder0.encode(sortingCode, 56, false);
+        encoder0.encode(this.sortingCode, 56, false);
         
-        encoder0.encode(languageCode, 64, false);
+        encoder0.encode(this.languageCode, 64, false);
         
-        encoder0.encode(scriptCode, 72, false);
+        encoder0.encode(this.scriptCode, 72, false);
         
-        encoder0.encode(organization, 80, false);
+        encoder0.encode(this.organization, 80, false);
         
-        encoder0.encode(recipient, 88, false);
+        encoder0.encode(this.recipient, 88, false);
         
-        encoder0.encode(phone, 96, false);
+        encoder0.encode(this.phone, 96, false);
     }
 
     /**
@@ -214,18 +214,18 @@ public final class PaymentAddress extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(country);
-        result = prime * result + java.util.Arrays.deepHashCode(addressLine);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(region);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(city);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(dependentLocality);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(postalCode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sortingCode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(languageCode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(scriptCode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(organization);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(recipient);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(phone);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.country);
+        result = prime * result + java.util.Arrays.deepHashCode(this.addressLine);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.region);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.city);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.dependentLocality);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.postalCode);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sortingCode);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.languageCode);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.scriptCode);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.organization);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.recipient);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.phone);
         return result;
     }
 }

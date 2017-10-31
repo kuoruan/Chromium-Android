@@ -31,7 +31,7 @@ public final class SharedBufferVideoFrameData extends org.chromium.mojo.bindings
 
     private SharedBufferVideoFrameData(int version) {
         super(STRUCT_SIZE, version);
-        frameData = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+        this.frameData = org.chromium.mojo.system.InvalidHandle.INSTANCE;
     }
 
     public SharedBufferVideoFrameData() {
@@ -108,21 +108,21 @@ public final class SharedBufferVideoFrameData extends org.chromium.mojo.bindings
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(frameData, 8, false);
+        encoder0.encode(this.frameData, 8, false);
         
-        encoder0.encode(yStride, 12);
+        encoder0.encode(this.yStride, 12);
         
-        encoder0.encode(frameDataSize, 16);
+        encoder0.encode(this.frameDataSize, 16);
         
-        encoder0.encode(uStride, 24);
+        encoder0.encode(this.uStride, 24);
         
-        encoder0.encode(vStride, 28);
+        encoder0.encode(this.vStride, 28);
         
-        encoder0.encode(yOffset, 32);
+        encoder0.encode(this.yOffset, 32);
         
-        encoder0.encode(uOffset, 40);
+        encoder0.encode(this.uOffset, 40);
         
-        encoder0.encode(vOffset, 48);
+        encoder0.encode(this.vOffset, 48);
     }
 
     /**
@@ -163,14 +163,14 @@ public final class SharedBufferVideoFrameData extends org.chromium.mojo.bindings
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(frameData);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(frameDataSize);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(yStride);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(uStride);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(vStride);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(yOffset);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(uOffset);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(vOffset);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.frameData);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.frameDataSize);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.yStride);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.uStride);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.vStride);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.yOffset);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.uOffset);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.vOffset);
         return result;
     }
 }

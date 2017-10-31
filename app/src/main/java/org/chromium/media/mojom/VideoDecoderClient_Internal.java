@@ -45,6 +45,8 @@ class VideoDecoderClient_Internal {
 
     private static final int ON_VIDEO_FRAME_DECODED_ORDINAL = 0;
 
+    private static final int REQUEST_OVERLAY_INFO_ORDINAL = 1;
+
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements VideoDecoderClient.Proxy {
 
@@ -71,6 +73,23 @@ VideoFrame frame, boolean canReadWithoutStalling, org.chromium.mojo.common.mojom
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
                             new org.chromium.mojo.bindings.MessageHeader(ON_VIDEO_FRAME_DECODED_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void requestOverlayInfo(
+boolean restartForTransitions) {
+
+            VideoDecoderClientRequestOverlayInfoParams _message = new VideoDecoderClientRequestOverlayInfoParams();
+
+            _message.restartForTransitions = restartForTransitions;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(REQUEST_OVERLAY_INFO_ORDINAL)));
 
         }
 
@@ -112,6 +131,19 @@ VideoFrame frame, boolean canReadWithoutStalling, org.chromium.mojo.common.mojom
                     }
             
             
+            
+            
+            
+                    case REQUEST_OVERLAY_INFO_ORDINAL: {
+            
+                        VideoDecoderClientRequestOverlayInfoParams data =
+                                VideoDecoderClientRequestOverlayInfoParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().requestOverlayInfo(data.restartForTransitions);
+                        return true;
+                    }
+            
+            
                     default:
                         return false;
                 }
@@ -135,6 +167,8 @@ VideoFrame frame, boolean canReadWithoutStalling, org.chromium.mojo.common.mojom
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), VideoDecoderClient_Internal.MANAGER, messageWithHeader, receiver);
+            
+            
             
             
             
@@ -220,11 +254,11 @@ VideoFrame frame, boolean canReadWithoutStalling, org.chromium.mojo.common.mojom
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(frame, 8, false);
+            encoder0.encode(this.frame, 8, false);
             
-            encoder0.encode(canReadWithoutStalling, 16, 0);
+            encoder0.encode(this.canReadWithoutStalling, 16, 0);
             
-            encoder0.encode(releaseToken, 24, true);
+            encoder0.encode(this.releaseToken, 24, true);
         }
     
         /**
@@ -255,9 +289,101 @@ VideoFrame frame, boolean canReadWithoutStalling, org.chromium.mojo.common.mojom
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(frame);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(canReadWithoutStalling);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(releaseToken);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.frame);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.canReadWithoutStalling);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.releaseToken);
+            return result;
+        }
+    }
+
+
+
+    
+    static final class VideoDecoderClientRequestOverlayInfoParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public boolean restartForTransitions;
+    
+        private VideoDecoderClientRequestOverlayInfoParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public VideoDecoderClientRequestOverlayInfoParams() {
+            this(0);
+        }
+    
+        public static VideoDecoderClientRequestOverlayInfoParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static VideoDecoderClientRequestOverlayInfoParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static VideoDecoderClientRequestOverlayInfoParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            VideoDecoderClientRequestOverlayInfoParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new VideoDecoderClientRequestOverlayInfoParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.restartForTransitions = decoder0.readBoolean(8, 0);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.restartForTransitions, 8, 0);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            VideoDecoderClientRequestOverlayInfoParams other = (VideoDecoderClientRequestOverlayInfoParams) object;
+            if (this.restartForTransitions!= other.restartForTransitions)
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.restartForTransitions);
             return result;
         }
     }

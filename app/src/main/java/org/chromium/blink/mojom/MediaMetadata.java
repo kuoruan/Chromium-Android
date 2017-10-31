@@ -99,19 +99,19 @@ public final class MediaMetadata extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(title, 8, false);
+        encoder0.encode(this.title, 8, false);
         
-        encoder0.encode(artist, 16, false);
+        encoder0.encode(this.artist, 16, false);
         
-        encoder0.encode(album, 24, false);
+        encoder0.encode(this.album, 24, false);
         
-        if (artwork == null) {
+        if (this.artwork == null) {
             encoder0.encodeNullPointer(32, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(artwork.length, 32, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < artwork.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.artwork.length, 32, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.artwork.length; ++i0) {
                 
-                encoder1.encode(artwork[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                encoder1.encode(this.artwork[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
     }
@@ -146,10 +146,10 @@ public final class MediaMetadata extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(title);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(artist);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(album);
-        result = prime * result + java.util.Arrays.deepHashCode(artwork);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.title);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.artist);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.album);
+        result = prime * result + java.util.Arrays.deepHashCode(this.artwork);
         return result;
     }
 }

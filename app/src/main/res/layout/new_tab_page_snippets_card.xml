@@ -21,32 +21,17 @@
         android:layout_alignParentStart="true"
         android:layout_toStartOf="@+id/article_thumbnail"
         android:ellipsize="end"
-        android:textSize="16sp"
-        android:textColor="@color/snippets_headline_text_color"
+        android:textAppearance="@style/BlackTitle1"
         chrome:leading="24sp" />
-
-    <org.chromium.ui.widget.TextViewWithLeading
-        android:id="@+id/article_snippet"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/article_headline"
-        android:layout_toStartOf="@+id/article_thumbnail"
-        android:layout_marginTop="8dp"
-        android:maxLines="2"
-        android:ellipsize="end"
-        android:textSize="14sp"
-        android:textColor="@color/snippets_text_color"
-        chrome:leading="20sp" />
 
     <LinearLayout
         tools:ignore="UseCompoundDrawables"
         android:id="@+id/publisher_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/snippets_publisher_margin_top_with_article_snippet"
+        android:layout_marginTop="@dimen/snippets_publisher_margin_top"
         android:layout_alignParentStart="true"
-        android:layout_below="@+id/article_snippet"
+        android:layout_below="@+id/article_headline"
         android:orientation="horizontal">
 
         <!-- The following attributes:
@@ -106,15 +91,4 @@
         android:scaleType="centerCrop"
         android:contentDescription="@null"
         android:src="@null" />
-
-    <ImageView
-        android:id="@+id/article_thumbnail_video_overlay"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_alignTop="@+id/article_thumbnail"
-        android:layout_alignStart="@+id/article_thumbnail"
-        android:layout_marginStart="18dp"
-        android:layout_marginTop="18dp"
-        android:contentDescription="@null"
-        app:srcCompat="@drawable/ic_play_circle_filled" />
 </RelativeLayout>

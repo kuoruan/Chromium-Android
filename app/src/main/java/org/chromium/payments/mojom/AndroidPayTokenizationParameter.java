@@ -77,9 +77,9 @@ public final class AndroidPayTokenizationParameter extends org.chromium.mojo.bin
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(key, 8, true);
+        encoder0.encode(this.key, 8, true);
         
-        encoder0.encode(value, 16, true);
+        encoder0.encode(this.value, 16, true);
     }
 
     /**
@@ -108,8 +108,8 @@ public final class AndroidPayTokenizationParameter extends org.chromium.mojo.bin
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(key);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(value);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.key);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.value);
         return result;
     }
 }

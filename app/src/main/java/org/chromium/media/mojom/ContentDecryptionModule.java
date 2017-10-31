@@ -31,7 +31,7 @@ ContentDecryptionModuleClient client);
 
 
     void initialize(
-String keySystem, String securityOrigin, CdmConfig cdmConfig, 
+String keySystem, org.chromium.url.mojom.Origin securityOrigin, CdmConfig cdmConfig, 
 InitializeResponse callback);
 
     interface InitializeResponse extends org.chromium.mojo.bindings.Callbacks.Callback3<CdmPromiseResult, Integer, Decryptor> { }
@@ -43,6 +43,14 @@ byte[] certificateData,
 SetServerCertificateResponse callback);
 
     interface SetServerCertificateResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<CdmPromiseResult> { }
+
+
+
+    void getStatusForPolicy(
+int minHdcpVersion, 
+GetStatusForPolicyResponse callback);
+
+    interface GetStatusForPolicyResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<CdmPromiseResult, Integer> { }
 
 
 

@@ -16,6 +16,7 @@ import android.view.animation.Interpolator;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.browser.compositor.LayerTitleCache;
+import org.chromium.chrome.browser.compositor.animation.CompositorAnimationHandler;
 import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animatable;
 import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animation;
 import org.chromium.chrome.browser.compositor.layouts.components.LayoutTab;
@@ -111,7 +112,7 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
     private int mNextTabId = Tab.INVALID_TAB_ID;
 
     // The ratio of dp to px.
-    private final float mDpToPx;
+    protected final float mDpToPx;
 
     /**
      * The {@link Layout} is not usable until sizeChanged is called.
@@ -132,6 +133,13 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
 
         mCurrentOrientation = Orientation.UNSET;
         mDpToPx = context.getResources().getDisplayMetrics().density;
+    }
+
+    /**
+     * @return The handler responsible for running compositor animations.
+     */
+    public CompositorAnimationHandler getAnimationHandler() {
+        return mUpdateHost.getAnimationHandler();
     }
 
     /**
@@ -896,13 +904,6 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
     }
 
     /**
-     * @return whether or not the animation is currently being run.
-     */
-    protected boolean animationIsRunning() {
-        return mLayoutAnimations != null && !mLayoutAnimations.finished();
-    }
-
-    /**
      * Cancels any animation for the given object and property.
      * @param object The object being animated.
      * @param prop   The property to search for.
@@ -968,13 +969,6 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
      * @return True if the content decoration layer should be shown.
      */
     public boolean shouldDisplayContentOverlay() {
-        return false;
-    }
-
-    /**
-     * @return True if the currently active content view is shown in the normal interactive mode.
-     */
-    public boolean isTabInteractive() {
         return false;
     }
 
@@ -1088,5 +1082,16 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
     @VisibleForTesting
     public void finishAnimationsForTests() {
         if (mLayoutAnimations != null) mLayoutAnimations.updateAndFinish();
+    }
+
+    /**
+     * Gets the full screen manager.
+     * @return The {@link ChromeFullscreenManager} manager, possibly null
+     */
+    public ChromeFullscreenManager getFullscreenManager() {
+        if (mTabModelSelector == null) return null;
+        if (mTabModelSelector.getCurrentTab() == null) return null;
+        if (mTabModelSelector.getCurrentTab().getActivity() == null) return null;
+        return mTabModelSelector.getCurrentTab().getActivity().getFullscreenManager();
     }
 }

@@ -28,15 +28,24 @@ public abstract class PromoDialog extends AlwaysDismissedDialog
     public static class DialogParams {
         /**
          * Optional: Resource ID of the Drawable to use for the promo illustration.
-         * This parameter and {@link #vectorDrawableResource} are mutually exclusive.
+         * This parameter is mutually exclusive with {@link #vectorDrawableResource} and
+         * {@link #drawableInstance}.
          */
         public int drawableResource;
 
         /**
          * Optional: Resource ID of the VectorDrawable to use for the promo illustration.
-         * This parameter and {@link #drawableResource} are mutually exclusive.
+         * This parameter is mutually exclusive with {@link #drawableResource} and
+         * {@link #drawableInstance}.
          */
         public int vectorDrawableResource;
+
+        /**
+         * Optional: Drawable instance to use for the promo illustration.
+         * This parameter is mutually exclusive with {@link #drawableResource} and
+         * {@link #vectorDrawableResource}.
+         */
+        public Drawable drawableInstance;
 
         /** Resource ID of the String to show as the promo title. */
         public int headerStringResource;

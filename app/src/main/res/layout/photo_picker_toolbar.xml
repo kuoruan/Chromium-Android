@@ -21,7 +21,8 @@
         android:enabled="false"
         android:text="@string/done"
         android:textColor="@color/blue_when_enabled"
-        android:textSize="16sp"
-        app:textAllCaps="true" />
+        android:textSize="14sp"
+        app:textAllCaps="true"
+        style="@style/RobotoMediumStyle" />
 </org.chromium.chrome.browser.photo_picker.PhotoPickerToolbar>
 

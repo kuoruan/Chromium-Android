@@ -252,7 +252,7 @@ ParseWebAppManifestResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(content, 8, false);
+            encoder0.encode(this.content, 8, false);
         }
     
         /**
@@ -279,7 +279,7 @@ ParseWebAppManifestResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(content);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.content);
             return result;
         }
     }
@@ -372,27 +372,27 @@ ParseWebAppManifestResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            if (webAppManifestUrls == null) {
+            if (this.webAppManifestUrls == null) {
                 encoder0.encodeNullPointer(8, false);
             } else {
-                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(webAppManifestUrls.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                for (int i0 = 0; i0 < webAppManifestUrls.length; ++i0) {
+                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.webAppManifestUrls.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                for (int i0 = 0; i0 < this.webAppManifestUrls.length; ++i0) {
                     
-                    encoder1.encode(webAppManifestUrls[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                    encoder1.encode(this.webAppManifestUrls[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
                 }
             }
             
-            if (supportedOrigins == null) {
+            if (this.supportedOrigins == null) {
                 encoder0.encodeNullPointer(16, false);
             } else {
-                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(supportedOrigins.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                for (int i0 = 0; i0 < supportedOrigins.length; ++i0) {
+                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.supportedOrigins.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                for (int i0 = 0; i0 < this.supportedOrigins.length; ++i0) {
                     
-                    encoder1.encode(supportedOrigins[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                    encoder1.encode(this.supportedOrigins[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
                 }
             }
             
-            encoder0.encode(allOriginsSupported, 24, 0);
+            encoder0.encode(this.allOriginsSupported, 24, 0);
         }
     
         /**
@@ -423,9 +423,9 @@ ParseWebAppManifestResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + java.util.Arrays.deepHashCode(webAppManifestUrls);
-            result = prime * result + java.util.Arrays.deepHashCode(supportedOrigins);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(allOriginsSupported);
+            result = prime * result + java.util.Arrays.deepHashCode(this.webAppManifestUrls);
+            result = prime * result + java.util.Arrays.deepHashCode(this.supportedOrigins);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.allOriginsSupported);
             return result;
         }
     }
@@ -555,7 +555,7 @@ ParseWebAppManifestResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(content, 8, false);
+            encoder0.encode(this.content, 8, false);
         }
     
         /**
@@ -582,7 +582,7 @@ ParseWebAppManifestResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(content);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.content);
             return result;
         }
     }
@@ -656,13 +656,13 @@ ParseWebAppManifestResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            if (manifest == null) {
+            if (this.manifest == null) {
                 encoder0.encodeNullPointer(8, false);
             } else {
-                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(manifest.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                for (int i0 = 0; i0 < manifest.length; ++i0) {
+                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.manifest.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                for (int i0 = 0; i0 < this.manifest.length; ++i0) {
                     
-                    encoder1.encode(manifest[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                    encoder1.encode(this.manifest[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
                 }
             }
         }
@@ -691,7 +691,7 @@ ParseWebAppManifestResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + java.util.Arrays.deepHashCode(manifest);
+            result = prime * result + java.util.Arrays.deepHashCode(this.manifest);
             return result;
         }
     }

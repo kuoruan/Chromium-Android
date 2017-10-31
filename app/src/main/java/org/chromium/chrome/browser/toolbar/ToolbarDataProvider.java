@@ -4,6 +4,9 @@
 
 package org.chromium.chrome.browser.toolbar;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import org.chromium.chrome.browser.ntp.NewTabPage;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.tab.Tab;
@@ -15,11 +18,18 @@ public interface ToolbarDataProvider {
     /**
      * @return The tab that contains the information currently displayed in the toolbar.
      */
+    @Nullable
     Tab getTab();
 
     /**
-     * @return The current url for the current tab.
+     * @return Whether ToolbarDataProvider currently has a tab related to it.
      */
+    boolean hasTab();
+
+    /**
+     * @return The current url for the current tab. Returns empty string when there is no tab.
+     */
+    @NonNull
     String getCurrentUrl();
 
     /**
@@ -51,4 +61,9 @@ public interface ToolbarDataProvider {
      * @return Whether the current primary color is a brand color.
      */
     boolean isUsingBrandColor();
+
+    /**
+     * @return Whether the page currently shown is an offline page.
+     */
+    boolean isOfflinePage();
 }

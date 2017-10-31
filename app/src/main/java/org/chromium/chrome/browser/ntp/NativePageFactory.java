@@ -22,7 +22,7 @@ import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
-import org.chromium.chrome.browser.widget.bottomsheet.BottomSheetMetrics;
+import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.StateChangeReason;
 import org.chromium.content_public.browser.LoadUrlParams;
 
 /**
@@ -38,9 +38,7 @@ public class NativePageFactory {
             if (activity.getBottomSheet() != null) {
                 BottomSheet sheet = activity.getBottomSheet();
                 sheet.getBottomSheetMetrics().recordNativeNewTabPageShown();
-                sheet.getBottomSheetMetrics().recordSheetOpenReason(
-                        BottomSheetMetrics.OPENED_BY_NEW_TAB_CREATION);
-                sheet.setSheetState(BottomSheet.SHEET_STATE_FULL, true);
+                sheet.setSheetState(BottomSheet.SHEET_STATE_FULL, true, StateChangeReason.NEW_TAB);
                 return null;
             } else if (tab.isIncognito()) {
                 return new IncognitoNewTabPage(activity);

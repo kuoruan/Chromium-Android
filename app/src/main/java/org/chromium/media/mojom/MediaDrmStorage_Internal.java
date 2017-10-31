@@ -64,17 +64,20 @@ class MediaDrmStorage_Internal {
 
         @Override
         public void initialize(
-org.chromium.url.mojom.Origin origin) {
+
+InitializeResponse callback) {
 
             MediaDrmStorageInitializeParams _message = new MediaDrmStorageInitializeParams();
 
-            _message.origin = origin;
 
-
-            getProxyHandler().getMessageReceiver().accept(
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
-                            new org.chromium.mojo.bindings.MessageHeader(INITIALIZE_ORDINAL)));
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    INITIALIZE_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new MediaDrmStorageInitializeResponseParamsForwardToCallback(callback));
 
         }
 
@@ -194,17 +197,6 @@ RemovePersistentSessionResponse callback) {
             
             
             
-                    case INITIALIZE_ORDINAL: {
-            
-                        MediaDrmStorageInitializeParams data =
-                                MediaDrmStorageInitializeParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().initialize(data.origin);
-                        return true;
-                    }
-            
-            
-            
             
             
             
@@ -237,6 +229,18 @@ RemovePersistentSessionResponse callback) {
                                 getCore(), MediaDrmStorage_Internal.MANAGER, messageWithHeader, receiver);
             
             
+            
+            
+            
+            
+            
+                    case INITIALIZE_ORDINAL: {
+            
+                        MediaDrmStorageInitializeParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().initialize(new MediaDrmStorageInitializeResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
             
             
             
@@ -312,10 +316,9 @@ RemovePersistentSessionResponse callback) {
     
     static final class MediaDrmStorageInitializeParams extends org.chromium.mojo.bindings.Struct {
     
-        private static final int STRUCT_SIZE = 16;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final int STRUCT_SIZE = 8;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public org.chromium.url.mojom.Origin origin;
     
         private MediaDrmStorageInitializeParams(int version) {
             super(STRUCT_SIZE, version);
@@ -352,11 +355,6 @@ RemovePersistentSessionResponse callback) {
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
                 result = new MediaDrmStorageInitializeParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                    result.origin = org.chromium.url.mojom.Origin.decode(decoder1);
-                }
             } finally {
                 decoder0.decreaseStackDepth();
             }
@@ -366,9 +364,7 @@ RemovePersistentSessionResponse callback) {
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
-            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-            
-            encoder0.encode(origin, 8, false);
+            encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         }
     
         /**
@@ -382,8 +378,97 @@ RemovePersistentSessionResponse callback) {
                 return false;
             if (getClass() != object.getClass())
                 return false;
-            MediaDrmStorageInitializeParams other = (MediaDrmStorageInitializeParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.origin, other.origin))
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            return result;
+        }
+    }
+
+
+
+    
+    static final class MediaDrmStorageInitializeResponseParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public org.chromium.mojo.common.mojom.UnguessableToken originId;
+    
+        private MediaDrmStorageInitializeResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public MediaDrmStorageInitializeResponseParams() {
+            this(0);
+        }
+    
+        public static MediaDrmStorageInitializeResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static MediaDrmStorageInitializeResponseParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static MediaDrmStorageInitializeResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            MediaDrmStorageInitializeResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new MediaDrmStorageInitializeResponseParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.originId = org.chromium.mojo.common.mojom.UnguessableToken.decode(decoder1);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.originId, 8, false);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            MediaDrmStorageInitializeResponseParams other = (MediaDrmStorageInitializeResponseParams) object;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.originId, other.originId))
                 return false;
             return true;
         }
@@ -395,8 +480,69 @@ RemovePersistentSessionResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(origin);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.originId);
             return result;
+        }
+    }
+
+    static class MediaDrmStorageInitializeResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final MediaDrmStorage.InitializeResponse mCallback;
+
+        MediaDrmStorageInitializeResponseParamsForwardToCallback(MediaDrmStorage.InitializeResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(INITIALIZE_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                MediaDrmStorageInitializeResponseParams response = MediaDrmStorageInitializeResponseParams.deserialize(messageWithHeader.getPayload());
+
+                mCallback.call(response.originId);
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class MediaDrmStorageInitializeResponseParamsProxyToResponder implements MediaDrmStorage.InitializeResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        MediaDrmStorageInitializeResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call(org.chromium.mojo.common.mojom.UnguessableToken originId) {
+            MediaDrmStorageInitializeResponseParams _response = new MediaDrmStorageInitializeResponseParams();
+
+            _response.originId = originId;
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    INITIALIZE_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
         }
     }
 
@@ -541,7 +687,7 @@ RemovePersistentSessionResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(success, 8, 0);
+            encoder0.encode(this.success, 8, 0);
         }
     
         /**
@@ -568,7 +714,7 @@ RemovePersistentSessionResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(success);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.success);
             return result;
         }
     }
@@ -700,9 +846,9 @@ RemovePersistentSessionResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(sessionId, 8, false);
+            encoder0.encode(this.sessionId, 8, false);
             
-            encoder0.encode(sessionData, 16, false);
+            encoder0.encode(this.sessionData, 16, false);
         }
     
         /**
@@ -731,8 +877,8 @@ RemovePersistentSessionResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sessionId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sessionData);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionData);
             return result;
         }
     }
@@ -797,7 +943,7 @@ RemovePersistentSessionResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(success, 8, 0);
+            encoder0.encode(this.success, 8, 0);
         }
     
         /**
@@ -824,7 +970,7 @@ RemovePersistentSessionResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(success);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.success);
             return result;
         }
     }
@@ -950,7 +1096,7 @@ RemovePersistentSessionResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(sessionId, 8, false);
+            encoder0.encode(this.sessionId, 8, false);
         }
     
         /**
@@ -977,7 +1123,7 @@ RemovePersistentSessionResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sessionId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionId);
             return result;
         }
     }
@@ -1043,7 +1189,7 @@ RemovePersistentSessionResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(sessionData, 8, true);
+            encoder0.encode(this.sessionData, 8, true);
         }
     
         /**
@@ -1070,7 +1216,7 @@ RemovePersistentSessionResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sessionData);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionData);
             return result;
         }
     }
@@ -1196,7 +1342,7 @@ RemovePersistentSessionResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(sessionId, 8, false);
+            encoder0.encode(this.sessionId, 8, false);
         }
     
         /**
@@ -1223,7 +1369,7 @@ RemovePersistentSessionResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sessionId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionId);
             return result;
         }
     }
@@ -1288,7 +1434,7 @@ RemovePersistentSessionResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(success, 8, 0);
+            encoder0.encode(this.success, 8, 0);
         }
     
         /**
@@ -1315,7 +1461,7 @@ RemovePersistentSessionResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(success);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.success);
             return result;
         }
     }

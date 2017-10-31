@@ -100,6 +100,10 @@ public abstract class AsyncInitTaskRunner {
         assert mLoadTask == null;
         if (fetchVariationSeed && shouldFetchVariationsSeedDuringFirstRun()) {
             mFetchingVariations = true;
+
+            // Fetching variations restrict mode requires AccountManagerFacade to be initialized.
+            ProcessInitializationHandler.getInstance().initializePreNative();
+
             ChromeActivitySessionTracker sessionTracker =
                     ChromeActivitySessionTracker.getInstance();
             sessionTracker.getVariationsRestrictModeValue(new Callback<String>() {

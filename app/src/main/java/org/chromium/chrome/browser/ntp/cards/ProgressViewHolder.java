@@ -5,8 +5,10 @@
 package org.chromium.chrome.browser.ntp.cards;
 
 import android.view.LayoutInflater;
+import android.view.ViewGroup;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.suggestions.SuggestionsConfig;
 import org.chromium.chrome.browser.suggestions.SuggestionsRecyclerView;
 
 /**
@@ -21,6 +23,13 @@ public class ProgressViewHolder extends NewTabPageViewHolder {
         super(LayoutInflater.from(recyclerView.getContext())
                         .inflate(R.layout.new_tab_page_progress_indicator, recyclerView, false));
         mProgressIndicator = (ProgressIndicatorView) itemView.findViewById(R.id.snippets_progress);
+
+        if (SuggestionsConfig.scrollToLoad()) {
+            ViewGroup.MarginLayoutParams params =
+                    (ViewGroup.MarginLayoutParams) mProgressIndicator.getLayoutParams();
+            params.topMargin = 0;
+            mProgressIndicator.setLayoutParams(params);
+        }
     }
 
     public void onBindViewHolder(ProgressItem item) {

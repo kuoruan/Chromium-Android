@@ -100,12 +100,9 @@ class BindingManagerImpl implements BindingManager {
         }
 
         void addConnection(ManagedConnection managedConnection) {
+            assert !mConnections.contains(managedConnection);
             managedConnection.addModerateBinding();
-            if (managedConnection.mConnection.isModerateBindingBound()) {
-                addConnectionImpl(managedConnection);
-            } else {
-                removeConnectionImpl(managedConnection);
-            }
+            addConnectionImpl(managedConnection);
         }
 
         void removeConnection(ManagedConnection managedConnection) {
@@ -193,10 +190,6 @@ class BindingManagerImpl implements BindingManager {
         // This currently maps exactly to the initial binding.
         private boolean mBoostPriorityForPendingViews = true;
 
-        // True iff there is a strong binding kept on the service because it was bound for the
-        // application background period.
-        private boolean mBoundForBackgroundPeriod;
-
         /** Adds a strong service binding. */
         private void addStrongBinding() {
             mConnection.addStrongBinding();
@@ -205,8 +198,7 @@ class BindingManagerImpl implements BindingManager {
 
         /** Removes a strong service binding. */
         private void removeStrongBinding(final boolean keepAsModerate) {
-            // We have to fail gracefully if the strong binding is not present, as on low-end the
-            // binding could have been removed by dropOomBindings() when a new service was started.
+            // We have to fail gracefully if the strong binding is not present.
             if (!mConnection.isStrongBindingBound()) return;
 
             // This runnable performs the actual unbinding. It will be executed synchronously when
@@ -252,15 +244,6 @@ class BindingManagerImpl implements BindingManager {
             mConnection.addModerateBinding();
         }
 
-        /**
-         * Drops the service bindings. This is used on low-end to drop bindings of the current
-         * service when a new one is used in foreground.
-         */
-        private void dropBindings() {
-            assert mIsLowMemoryDevice;
-            mConnection.dropOomBindings();
-        }
-
         ManagedConnection(ChildProcessConnection connection) {
             mConnection = connection;
         }
@@ -288,34 +271,10 @@ class BindingManagerImpl implements BindingManager {
             mInForeground = foreground;
             mBoostPriorityForPendingViews = boostForPendingViews;
         }
-
-        /**
-         * Sets or removes additional binding when the service is main service during the embedder
-         * background period.
-         */
-        void setBoundForBackgroundPeriod(boolean boundForBackgroundPeriod) {
-            if (boundForBackgroundPeriod == mBoundForBackgroundPeriod) return;
-
-            if (boundForBackgroundPeriod) {
-                addStrongBinding();
-            } else {
-                removeStrongBinding(false);
-            }
-            mBoundForBackgroundPeriod = boundForBackgroundPeriod;
-        }
     }
 
     private final SparseArray<ManagedConnection> mManagedConnections =
             new SparseArray<ManagedConnection>();
-
-    // The connection that was most recently set as foreground (using setInForeground()). This is
-    // used to add additional binding on it when the embedder goes to background. On low-end, this
-    // is also used to drop process bindings when a new one is created, making sure that only one
-    // renderer process at a time is protected from oom killing.
-    private ManagedConnection mLastConnectionInForeground;
-
-    // The connection bound with additional binding in onSentToBackground().
-    private ManagedConnection mConnectionBoundForBackgroundPeriod;
 
     // Whether this instance is used on testing.
     private final boolean mOnTesting;
@@ -362,35 +321,18 @@ class BindingManagerImpl implements BindingManager {
             return;
         }
 
-        if (foreground && mIsLowMemoryDevice && mLastConnectionInForeground != null
-                && mLastConnectionInForeground != managedConnection) {
-            mLastConnectionInForeground.dropBindings();
-        }
-
         managedConnection.setPriority(foreground, boostForPendingViews);
-        if (foreground) mLastConnectionInForeground = managedConnection;
     }
 
     @Override
     public void onSentToBackground() {
         assert LauncherThread.runningOnLauncherThread();
-        assert mConnectionBoundForBackgroundPeriod == null;
-        // mLastConnectionInForeground can be null at this point as the embedding application could
-        // be used in foreground without spawning any renderers.
-        if (mLastConnectionInForeground != null) {
-            mLastConnectionInForeground.setBoundForBackgroundPeriod(true);
-            mConnectionBoundForBackgroundPeriod = mLastConnectionInForeground;
-        }
         if (mModerateBindingPool != null) mModerateBindingPool.onSentToBackground(mOnTesting);
     }
 
     @Override
     public void onBroughtToForeground() {
         assert LauncherThread.runningOnLauncherThread();
-        if (mConnectionBoundForBackgroundPeriod != null) {
-            mConnectionBoundForBackgroundPeriod.setBoundForBackgroundPeriod(false);
-            mConnectionBoundForBackgroundPeriod = null;
-        }
         if (mModerateBindingPool != null) mModerateBindingPool.onBroughtToForeground();
     }
 
@@ -401,12 +343,6 @@ class BindingManagerImpl implements BindingManager {
         if (managedConnection == null) return;
 
         mManagedConnections.remove(pid);
-        if (mLastConnectionInForeground == managedConnection) {
-            mLastConnectionInForeground = null;
-        }
-        if (mConnectionBoundForBackgroundPeriod == managedConnection) {
-            mConnectionBoundForBackgroundPeriod = null;
-        }
         if (mModerateBindingPool != null) mModerateBindingPool.removeConnection(managedConnection);
     }
 

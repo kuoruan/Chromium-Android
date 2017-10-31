@@ -36,27 +36,27 @@ public final class RunOrClosePipeInput extends org.chromium.mojo.bindings.Union 
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setRequireVersion(RequireVersion requireVersion) {
-        mTag_ = Tag.RequireVersion;
-        mRequireVersion = requireVersion;
+        this.mTag_ = Tag.RequireVersion;
+        this.mRequireVersion = requireVersion;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public RequireVersion getRequireVersion() {
-        assert mTag_ == Tag.RequireVersion;
-        return mRequireVersion;
+        assert this.mTag_ == Tag.RequireVersion;
+        return this.mRequireVersion;
     }
 
 
     @Override
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder0, int offset) {
         encoder0.encode(org.chromium.mojo.bindings.BindingsHelper.UNION_SIZE, offset);
-        encoder0.encode(mTag_, offset + 4);
+        encoder0.encode(this.mTag_, offset + 4);
         switch (mTag_) {
             case Tag.RequireVersion: {
                 
-                encoder0.encode(mRequireVersion, offset + 8, false);
+                encoder0.encode(this.mRequireVersion, offset + 8, false);
                 break;
             }
             default: {
@@ -102,11 +102,11 @@ public final class RunOrClosePipeInput extends org.chromium.mojo.bindings.Union 
         if (getClass() != object.getClass())
             return false;
         RunOrClosePipeInput other = (RunOrClosePipeInput) object;
-        if (mTag_ != other.mTag_)
+        if (this.mTag_ != other.mTag_)
             return false;
-        switch (mTag_) {
+        switch (this.mTag_) {
             case Tag.RequireVersion:
-                return org.chromium.mojo.bindings.BindingsHelper.equals(mRequireVersion, other.mRequireVersion);
+                return org.chromium.mojo.bindings.BindingsHelper.equals(this.mRequireVersion, other.mRequireVersion);
             default:
                 break;
         }
@@ -121,9 +121,9 @@ public final class RunOrClosePipeInput extends org.chromium.mojo.bindings.Union 
         final int prime = 31;
         int result = prime + getClass().hashCode();
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mTag_);
-        switch (mTag_) {
+        switch (this.mTag_) {
             case Tag.RequireVersion: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mRequireVersion);
+                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mRequireVersion);
                 break;
             }
             default: {

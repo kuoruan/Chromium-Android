@@ -5,6 +5,7 @@
 package org.chromium.webapk.lib.client;
 
 import android.content.Intent;
+import android.net.Uri;
 
 import org.chromium.webapk.lib.common.WebApkConstants;
 
@@ -23,16 +24,10 @@ public class WebApkNavigationClient {
      */
     public static Intent createLaunchWebApkIntent(
             String webApkPackageName, String url, boolean forceNavigation) {
-        Intent intent;
-        try {
-            intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
-        } catch (Exception e) {
-            return null;
-        }
-
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         intent.setPackage(webApkPackageName);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra(WebApkConstants.EXTRA_WEBAPK_FORCE_NAVIGATION, forceNavigation);
+        intent.putExtra(WebApkConstants.EXTRA_FORCE_NAVIGATION, forceNavigation);
         return intent;
     }
 }

@@ -148,6 +148,7 @@ public class WebappRegistry {
      * Returns the WebappDataStorage object whose scope most closely matches the provided URL, or
      * null if a matching web app cannot be found. The most closely matching scope is the longest
      * scope which has the same prefix as the URL to open.
+     * Note: this function skips any storage object associated with WebAPKs.
      * @param url The URL to search for.
      * @return The storage object for the web app, or null if one cannot be found.
      */
@@ -156,6 +157,8 @@ public class WebappRegistry {
         int largestOverlap = 0;
         for (HashMap.Entry<String, WebappDataStorage> entry : mStorages.entrySet()) {
             WebappDataStorage storage = entry.getValue();
+            if (storage.getId().startsWith(WebApkConstants.WEBAPK_ID_PREFIX)) continue;
+
             String scope = storage.getScope();
             if (url.startsWith(scope) && scope.length() > largestOverlap) {
                 bestMatch = storage;
@@ -173,6 +176,16 @@ public class WebappRegistry {
         // Wrap with unmodifiableSet to ensure it's never modified. See crbug.com/568369.
         return Collections.unmodifiableSet(openSharedPreferences().getStringSet(
                 KEY_WEBAPP_SET, Collections.<String>emptySet()));
+    }
+
+    @VisibleForTesting
+    void clearForTesting() {
+        Iterator<HashMap.Entry<String, WebappDataStorage>> it = mStorages.entrySet().iterator();
+        while (it.hasNext()) {
+            it.next().getValue().delete();
+            it.remove();
+        }
+        mPreferences.edit().putStringSet(KEY_WEBAPP_SET, mStorages.keySet()).apply();
     }
 
     /**

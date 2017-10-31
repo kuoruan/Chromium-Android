@@ -9,6 +9,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.provider.Browser;
 import android.text.TextUtils;
@@ -28,6 +29,7 @@ import org.chromium.chrome.browser.snackbar.SnackbarManager;
 import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarController;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.util.IntentUtils;
+import org.chromium.chrome.browser.widget.TintedDrawable;
 import org.chromium.components.bookmarks.BookmarkId;
 import org.chromium.components.bookmarks.BookmarkType;
 import org.chromium.ui.base.DeviceFormFactor;
@@ -260,6 +262,16 @@ public class BookmarkUtils {
         }
 
         return true;
+    }
+
+    /**
+     * @param res {@link Resources} used to retrieve the drawable.
+     * @return A {@link TintedDrawable} to use for displaying bookmark folders.
+     */
+    public static TintedDrawable getFolderIcon(Resources res) {
+        // TODO(twellington): Update tinting to 65% black to match mocks.
+        return TintedDrawable.constructTintedDrawable(
+                res, R.drawable.ic_folder_blue_24dp, R.color.dark_mode_tint);
     }
 
     private static void openUrl(Activity activity, String url, ComponentName componentName) {

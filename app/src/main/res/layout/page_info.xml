@@ -39,8 +39,7 @@
             android:layout_height="wrap_content"
             android:lineSpacingExtra="3dp"
             android:paddingTop="16dp"
-            android:textColor="@color/page_info_popup_text"
-            android:textSize="16sp"
+            android:textAppearance="@style/BlackTitle1"
             android:visibility="gone" />
 
         <TextView
@@ -49,8 +48,7 @@
             android:layout_height="wrap_content"
             android:lineSpacingExtra="3dp"
             android:paddingTop="8dp"
-            android:textColor="@color/page_info_popup_text"
-            android:textSize="14sp" />
+            android:textAppearance="@style/BlackBodyDefault" />
     </LinearLayout>
 
     <org.chromium.ui.widget.ButtonCompat

@@ -71,20 +71,11 @@ class TtsPlatformImpl {
     protected TtsPlatformImpl(long nativeTtsPlatformImplAndroid) {
         mInitialized = false;
         mNativeTtsPlatformImplAndroid = nativeTtsPlatformImplAndroid;
-        mTextToSpeech = new TextToSpeech(
-                ContextUtils.getApplicationContext(), new TextToSpeech.OnInitListener() {
-                    @Override
-                    public void onInit(int status) {
-                        if (status == TextToSpeech.SUCCESS) {
-                            ThreadUtils.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    initialize();
-                                }
-                            });
-                        }
-                    }
-                });
+        mTextToSpeech = new TextToSpeech(ContextUtils.getApplicationContext(), status -> {
+            if (status == TextToSpeech.SUCCESS) {
+                ThreadUtils.runOnUiThread(() -> initialize());
+            }
+        });
         addOnUtteranceProgressListener();
     }
 
@@ -196,12 +187,9 @@ class TtsPlatformImpl {
      * Post a task to the UI thread to send the TTS "end" event.
      */
     protected void sendEndEventOnUiThread(final String utteranceId) {
-        ThreadUtils.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (mNativeTtsPlatformImplAndroid != 0) {
-                    nativeOnEndEvent(mNativeTtsPlatformImplAndroid, Integer.parseInt(utteranceId));
-                }
+        ThreadUtils.runOnUiThread(() -> {
+            if (mNativeTtsPlatformImplAndroid != 0) {
+                nativeOnEndEvent(mNativeTtsPlatformImplAndroid, Integer.parseInt(utteranceId));
             }
         });
     }
@@ -210,13 +198,10 @@ class TtsPlatformImpl {
      * Post a task to the UI thread to send the TTS "error" event.
      */
     protected void sendErrorEventOnUiThread(final String utteranceId) {
-        ThreadUtils.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (mNativeTtsPlatformImplAndroid != 0) {
-                    nativeOnErrorEvent(mNativeTtsPlatformImplAndroid,
-                            Integer.parseInt(utteranceId));
-                }
+        ThreadUtils.runOnUiThread(() -> {
+            if (mNativeTtsPlatformImplAndroid != 0) {
+                nativeOnErrorEvent(mNativeTtsPlatformImplAndroid,
+                        Integer.parseInt(utteranceId));
             }
         });
     }
@@ -225,13 +210,10 @@ class TtsPlatformImpl {
      * Post a task to the UI thread to send the TTS "start" event.
      */
     protected void sendStartEventOnUiThread(final String utteranceId) {
-        ThreadUtils.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (mNativeTtsPlatformImplAndroid != 0) {
-                    nativeOnStartEvent(mNativeTtsPlatformImplAndroid,
-                            Integer.parseInt(utteranceId));
-                }
+        ThreadUtils.runOnUiThread(() -> {
+            if (mNativeTtsPlatformImplAndroid != 0) {
+                nativeOnStartEvent(mNativeTtsPlatformImplAndroid,
+                        Integer.parseInt(utteranceId));
             }
         });
     }

@@ -391,6 +391,8 @@ public class ExternalNavigationHandler {
         intent.putExtra(Browser.EXTRA_APPLICATION_ID, packageName);
         if (params.isOpenInNewTab()) intent.putExtra(Browser.EXTRA_CREATE_NEW_TAB, true);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        // Ensure intents re-target potential caller activity when we run in Herb/CCT mode.
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         mDelegate.maybeSetWindowId(intent);
         mDelegate.maybeRecordAppHandlersInIntent(intent, resolvingInfos);
 

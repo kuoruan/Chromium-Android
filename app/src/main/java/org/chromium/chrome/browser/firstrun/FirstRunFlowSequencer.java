@@ -27,7 +27,7 @@ import org.chromium.chrome.browser.services.AndroidEduAndChildAccountHelper;
 import org.chromium.chrome.browser.signin.SigninManager;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.IntentUtils;
-import org.chromium.chrome.browser.vr_shell.VrShellDelegate;
+import org.chromium.chrome.browser.vr_shell.VrIntentUtils;
 import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.components.signin.ChromeSigninController;
 
@@ -48,7 +48,6 @@ public abstract class FirstRunFlowSequencer  {
     private static final String TAG = "firstrun";
 
     private final Activity mActivity;
-    private final Bundle mLaunchProperties;
 
     // The following are initialized via initializeSharedState().
     private boolean mIsAndroidEduDevice;
@@ -65,9 +64,8 @@ public abstract class FirstRunFlowSequencer  {
      */
     public abstract void onFlowIsKnown(Bundle freProperties);
 
-    public FirstRunFlowSequencer(Activity activity, Bundle launcherProvidedProperties) {
+    public FirstRunFlowSequencer(Activity activity) {
         mActivity = activity;
-        mLaunchProperties = launcherProvidedProperties;
     }
 
     /**
@@ -114,7 +112,7 @@ public abstract class FirstRunFlowSequencer  {
 
     @VisibleForTesting
     protected boolean hasAnyUserSeenToS() {
-        return ToSAckedReceiver.checkAnyUserHasSeenToS(mActivity);
+        return ToSAckedReceiver.checkAnyUserHasSeenToS();
     }
 
     @VisibleForTesting
@@ -147,8 +145,7 @@ public abstract class FirstRunFlowSequencer  {
 
     @VisibleForTesting
     protected void setFirstRunFlowSignInComplete() {
-        FirstRunSignInProcessor.setFirstRunFlowSignInComplete(
-                mActivity.getApplicationContext(), true);
+        FirstRunSignInProcessor.setFirstRunFlowSignInComplete(true);
     }
 
     void initializeSharedState(boolean isAndroidEduDevice, boolean hasChildAccount) {
@@ -169,25 +166,12 @@ public abstract class FirstRunFlowSequencer  {
             return;
         }
 
-        if (!mLaunchProperties.getBoolean(FirstRunActivity.EXTRA_USE_FRE_FLOW_SEQUENCER)) {
-            // If EXTRA_USE_FRE_FLOW_SEQUENCER is not set, it means we should use the properties as
-            // provided instead of setting them up. However, the properties as provided may not yet
-            // have post-native properties computed, so the Runnable still needs to be passed.
-            onFlowIsKnown(mLaunchProperties);
-            return;
-        }
-
         Bundle freProperties = new Bundle();
-        freProperties.putAll(mLaunchProperties);
-        freProperties.remove(FirstRunActivity.EXTRA_USE_FRE_FLOW_SEQUENCER);
 
         // In the full FRE we always show the Welcome page, except on EDU devices.
         boolean showWelcomePage = !mForceEduSignIn;
         freProperties.putBoolean(FirstRunActivity.SHOW_WELCOME_PAGE, showWelcomePage);
         freProperties.putBoolean(AccountFirstRunFragment.IS_CHILD_ACCOUNT, mHasChildAccount);
-
-        // Set a boolean to indicate we need to do post native setup via the runnable below.
-        freProperties.putBoolean(FirstRunActivity.POST_NATIVE_SETUP_NEEDED, true);
 
         // Initialize usage and crash reporting according to the default value.
         // The user can explicitly enable or disable the reporting on the Welcome page.
@@ -203,12 +187,9 @@ public abstract class FirstRunFlowSequencer  {
 
     /**
      * Called onNativeInitialized() a given flow as completed.
-     * @param activity An activity.
      * @param data Resulting FRE properties bundle.
      */
     public void onNativeInitialized(Bundle freProperties) {
-        if (!freProperties.getBoolean(FirstRunActivity.POST_NATIVE_SETUP_NEEDED)) return;
-
         // We show the sign-in page if sync is allowed, and not signed in, and this is not
         // an EDU device, and
         // - no "skip the first use hints" is set, or
@@ -233,15 +214,14 @@ public abstract class FirstRunFlowSequencer  {
                 FirstRunActivity.SHOW_DATA_REDUCTION_PAGE, shouldShowDataReductionPage());
         freProperties.putBoolean(
                 FirstRunActivity.SHOW_SEARCH_ENGINE_PAGE, shouldShowSearchEnginePage());
-        freProperties.remove(FirstRunActivity.POST_NATIVE_SETUP_NEEDED);
     }
 
     /**
      * Marks a given flow as completed.
-     * @param activity An activity.
-     * @param data Resulting FRE properties bundle.
+     * @param signInAccountName The account name for the pending sign-in request. (Or null)
+     * @param showSignInSettings Whether the user selected to see the settings once signed in.
      */
-    public static void markFlowAsCompleted(Activity activity, Bundle data) {
+    public static void markFlowAsCompleted(String signInAccountName, boolean showSignInSettings) {
         // When the user accepts ToS in the Setup Wizard (see ToSAckedReceiver), we do not
         // show the ToS page to the user because the user has already accepted one outside FRE.
         if (!PrefServiceBridge.getInstance().isFirstRunEulaAccepted()) {
@@ -249,7 +229,7 @@ public abstract class FirstRunFlowSequencer  {
         }
 
         // Mark the FRE flow as complete and set the sign-in flow preferences if necessary.
-        FirstRunSignInProcessor.finalizeFirstRunFlowState(activity, data);
+        FirstRunSignInProcessor.finalizeFirstRunFlowState(signInAccountName, showSignInSettings);
     }
 
     /**
@@ -275,14 +255,14 @@ public abstract class FirstRunFlowSequencer  {
         // to the intent handling.
         final boolean fromChromeIcon =
                 fromIntent != null && TextUtils.equals(fromIntent.getAction(), Intent.ACTION_MAIN);
-        if (!fromChromeIcon && ToSAckedReceiver.checkAnyUserHasSeenToS(context)) return null;
+        if (!fromChromeIcon && ToSAckedReceiver.checkAnyUserHasSeenToS()) return null;
 
         final boolean baseFreComplete = FirstRunStatus.getFirstRunFlowComplete();
         if (!baseFreComplete) {
             if (preferLightweightFre) {
                 if (!FirstRunStatus.shouldSkipWelcomePage()
                         && !FirstRunStatus.getLightweightFirstRunFlowComplete()) {
-                    return createLightweightFirstRunIntent(context, fromChromeIcon);
+                    return createLightweightFirstRunIntent(context);
                 }
             } else {
                 return createGenericFirstRunIntent(context, fromChromeIcon);
@@ -293,24 +273,22 @@ public abstract class FirstRunFlowSequencer  {
         return null;
     }
 
-    private static Intent createLightweightFirstRunIntent(Context context, boolean fromChromeIcon) {
-        Intent intent = new Intent();
-        intent.setClassName(context, LightweightFirstRunActivity.class.getName());
-        intent.putExtra(FirstRunActivity.EXTRA_COMING_FROM_CHROME_ICON, fromChromeIcon);
-        intent.putExtra(FirstRunActivity.EXTRA_START_LIGHTWEIGHT_FRE, true);
-        return intent;
-    }
-
     /**
      * @return A generic intent to show the First Run Activity.
      * @param context        The context.
      * @param fromChromeIcon Whether Chrome is opened via the Chrome icon.
-    */
+     */
     public static Intent createGenericFirstRunIntent(Context context, boolean fromChromeIcon) {
         Intent intent = new Intent();
         intent.setClassName(context, FirstRunActivity.class.getName());
         intent.putExtra(FirstRunActivity.EXTRA_COMING_FROM_CHROME_ICON, fromChromeIcon);
-        intent.putExtra(FirstRunActivity.EXTRA_USE_FRE_FLOW_SEQUENCER, true);
+        return intent;
+    }
+
+    /** Returns an intent to show lightweight first run activity. */
+    public static Intent createLightweightFirstRunIntent(Context context) {
+        Intent intent = new Intent();
+        intent.setClassName(context, LightweightFirstRunActivity.class.getName());
         return intent;
     }
 
@@ -369,8 +347,7 @@ public abstract class FirstRunFlowSequencer  {
             List<WeakReference<Activity>> activities = ApplicationStatus.getRunningActivities();
             for (WeakReference<Activity> weakActivity : activities) {
                 Activity activity = weakActivity.get();
-                if (activity instanceof FirstRunActivity
-                        && !(activity instanceof LightweightFirstRunActivity)) {
+                if (activity instanceof FirstRunActivity) {
                     isGenericFreActive = true;
                     break;
                 }
@@ -382,19 +359,21 @@ public abstract class FirstRunFlowSequencer  {
                         caller, TextUtils.equals(intent.getAction(), Intent.ACTION_MAIN));
             }
 
-            boolean isVrIntent = VrShellDelegate.isVrIntent(intent);
+            boolean isVrIntent = VrIntentUtils.isVrIntent(intent);
+            Intent freCallerIntent = null;
             if (isVrIntent) {
-                // Remove VR-specific extras from the intent to Chrome because we don't want the
-                // VR intent to auto-present after the FRE is complete.
-                VrShellDelegate.removeVrExtras(intent);
+                // Modify the caller intent to handle FRE completion correctly for VR.
+                freCallerIntent = new Intent(intent);
+                VrIntentUtils.updateFreCallerIntent(caller, intent);
             }
             // Add a PendingIntent so that the intent used to launch Chrome will be resent when
             // First Run is completed or canceled.
             addPendingIntent(caller, freIntent, intent, requiresBroadcast);
-            freIntent.putExtra(FirstRunActivity.EXTRA_FINISH_ON_TOUCH_OUTSIDE, true);
 
             if (!(caller instanceof Activity)) freIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            if (isVrIntent) freIntent = VrShellDelegate.setupVrFreIntent(caller, freIntent);
+            if (isVrIntent) {
+                freIntent = VrIntentUtils.setupVrFreIntent(caller, freCallerIntent, freIntent);
+            }
             IntentUtils.safeStartActivity(caller, freIntent);
         } else {
             // First Run requires that the Intent contains NEW_TASK so that it doesn't sit on top

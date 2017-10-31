@@ -189,28 +189,22 @@ public class AddressEditor
 
         // If the user clicks [Cancel], send |toEdit| address back to the caller, which was the
         // original state (could be null, a complete address, a partial address).
-        mEditor.setCancelCallback(new Runnable() {
-            @Override
-            public void run() {
-                // This makes sure that onSubKeysReceived returns early if it's
-                // ever called when Cancel has already occurred.
-                mAdminAreasLoaded = true;
-                PersonalDataManager.getInstance().cancelPendingGetSubKeys();
-                callback.onResult(toEdit);
-            }
+        mEditor.setCancelCallback(() -> {
+            // This makes sure that onSubKeysReceived returns early if it's
+            // ever called when Cancel has already occurred.
+            mAdminAreasLoaded = true;
+            PersonalDataManager.getInstance().cancelPendingGetSubKeys();
+            callback.onResult(toEdit);
         });
 
         // If the user clicks [Done], save changes on disk, mark the address "complete," and send it
         // back to the caller.
-        mEditor.setDoneCallback(new Runnable() {
-            @Override
-            public void run() {
-                mAdminAreasLoaded = true;
-                PersonalDataManager.getInstance().cancelPendingGetSubKeys();
-                commitChanges(mProfile);
-                address.completeAddress(mProfile);
-                callback.onResult(address);
-            }
+        mEditor.setDoneCallback(() -> {
+            mAdminAreasLoaded = true;
+            PersonalDataManager.getInstance().cancelPendingGetSubKeys();
+            commitChanges(mProfile);
+            address.completeAddress(mProfile);
+            callback.onResult(address);
         });
 
         loadAdminAreasForCountry(mProfile.getCountryCode());

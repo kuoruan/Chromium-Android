@@ -8,14 +8,11 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
-import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
@@ -23,11 +20,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import org.chromium.base.ApiCompatibilityUtils;
-import org.chromium.base.ContextUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.omaha.UpdateMenuItemHelper;
-import org.chromium.chrome.browser.widget.PulseDrawable;
 import org.chromium.chrome.browser.widget.TintedImageButton;
+import org.chromium.chrome.browser.widget.ViewHighlighter;
 import org.chromium.ui.base.LocalizationUtils;
 import org.chromium.ui.interpolators.BakedBezierInterpolator;
 
@@ -104,12 +100,6 @@ class AppMenuAdapter extends BaseAdapter {
     private final Integer mHighlightedItemId;
     private final float mDpToPx;
     private final boolean mTranslateMenuItemsOnShow;
-
-    // Use a single PulseDrawable to spawn the other drawables so that the ConstantState gets
-    // shared.  This allows the animation to stay in step even as the views are recycled and the
-    // background gets changed.  This Drawable isn't just used directly because Drawables need to
-    // have a single owner or the internals of View can modify it's state as it gets cleared later.
-    private PulseDrawable mHighlightDrawableSource;
 
     public AppMenuAdapter(AppMenu appMenu, List<MenuItem> menuItems, LayoutInflater inflater,
             Integer highlightedItemId, boolean translateMenuItemsOnShow) {
@@ -258,12 +248,7 @@ class AppMenuAdapter extends BaseAdapter {
                 holder.title.setText(titleItem.getTitle());
                 holder.title.setEnabled(titleItem.isEnabled());
                 holder.title.setFocusable(titleItem.isEnabled());
-                holder.title.setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        mAppMenu.onItemClick(titleItem);
-                    }
-                });
+                holder.title.setOnClickListener(v -> mAppMenu.onItemClick(titleItem));
 
                 if (subItem.isCheckable()) {
                     // Display a checkbox for the MenuItem.
@@ -289,7 +274,11 @@ class AppMenuAdapter extends BaseAdapter {
                 assert false : "Unexpected MenuItem type";
         }
 
-        highlightItemIfNecessary(convertView, false, item.getItemId());
+        if (mHighlightedItemId != null && item.getItemId() == mHighlightedItemId) {
+            ViewHighlighter.turnOnHighlight(convertView, false);
+        } else {
+            ViewHighlighter.turnOffHighlight(convertView);
+        }
 
         return convertView;
     }
@@ -330,21 +319,15 @@ class AppMenuAdapter extends BaseAdapter {
             button.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_AUTO);
         }
 
-        button.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mAppMenu.onItemClick(item);
-            }
-        });
+        button.setOnClickListener(v -> mAppMenu.onItemClick(item));
 
-        button.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                return mAppMenu.onItemLongClick(item, v);
-            }
-        });
+        button.setOnLongClickListener(v -> mAppMenu.onItemLongClick(item, v));
 
-        highlightItemIfNecessary(button, true, item.getItemId());
+        if (mHighlightedItemId != null && item.getItemId() == mHighlightedItemId) {
+            ViewHighlighter.turnOnHighlight(button, true);
+        } else {
+            ViewHighlighter.turnOffHighlight(button);
+        }
 
         // Menu items may be hidden by command line flags before they get to this point.
         button.setVisibility(item.isVisible() ? View.VISIBLE : View.GONE);
@@ -366,12 +349,7 @@ class AppMenuAdapter extends BaseAdapter {
         // This will ensure that the item is not highlighted when selected.
         convertView.setEnabled(isEnabled);
 
-        convertView.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mAppMenu.onItemClick(item);
-            }
-        });
+        convertView.setOnClickListener(v -> mAppMenu.onItemClick(item));
     }
 
     /**
@@ -393,6 +371,9 @@ class AppMenuAdapter extends BaseAdapter {
             animation.setStartDelay(startDelay);
         } else {
             animation.playTogether(ObjectAnimator.ofFloat(view, View.ALPHA, 0.f, 1.f));
+            // Start delay is set to make sure disabling the animation in battery saver mode does
+            // not cause the view to stay at alpha 0 on Android O.
+            animation.setStartDelay(ENTER_ITEM_BASE_DELAY_MS);
         }
         animation.setDuration(ENTER_ITEM_DURATION_MS);
         animation.setInterpolator(BakedBezierInterpolator.FADE_IN_CURVE);
@@ -489,35 +470,6 @@ class AppMenuAdapter extends BaseAdapter {
         convertView.setFocusable(false);
         convertView.setEnabled(false);
         return convertView;
-    }
-
-    private void highlightItemIfNecessary(View view, boolean isIcon, int itemId) {
-        if (mHighlightedItemId == null) return;
-
-        Drawable background = (Drawable) view.getTag(R.id.menu_item_original_background);
-        if (background == null) return;
-
-        if (itemId != mHighlightedItemId) {
-            view.setBackground(background);
-            return;
-        }
-
-        if (mHighlightDrawableSource == null) {
-            mHighlightDrawableSource = isIcon ? PulseDrawable.createCircle(view.getContext())
-                                              : PulseDrawable.createHighlight();
-        }
-
-        Resources resources = ContextUtils.getApplicationContext().getResources();
-
-        PulseDrawable pulse =
-                (PulseDrawable) mHighlightDrawableSource.getConstantState().newDrawable(resources);
-        if (background.getConstantState() != null) {
-            background = background.getConstantState().newDrawable(resources);
-        }
-
-        LayerDrawable drawable = new LayerDrawable(new Drawable[] {background, pulse});
-        view.setBackground(drawable);
-        pulse.start();
     }
 
     static class StandardMenuItemViewHolder {

@@ -92,15 +92,15 @@ public final class GpuDevice extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(vendorId, 8);
+        encoder0.encode(this.vendorId, 8);
         
-        encoder0.encode(deviceId, 12);
+        encoder0.encode(this.deviceId, 12);
         
-        encoder0.encode(active, 16, 0);
+        encoder0.encode(this.active, 16, 0);
         
-        encoder0.encode(vendorString, 24, false);
+        encoder0.encode(this.vendorString, 24, false);
         
-        encoder0.encode(deviceString, 32, false);
+        encoder0.encode(this.deviceString, 32, false);
     }
 
     /**
@@ -135,11 +135,11 @@ public final class GpuDevice extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(vendorId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(deviceId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(active);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(vendorString);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(deviceString);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.vendorId);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.deviceId);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.active);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.vendorString);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.deviceString);
         return result;
     }
 }

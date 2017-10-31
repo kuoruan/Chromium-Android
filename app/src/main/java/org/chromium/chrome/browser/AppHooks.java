@@ -37,6 +37,7 @@ import org.chromium.chrome.browser.preferences.LocationSettings;
 import org.chromium.chrome.browser.rlz.RevenueStats;
 import org.chromium.chrome.browser.services.AndroidEduOwnerCheckCallback;
 import org.chromium.chrome.browser.signin.GoogleActivityController;
+import org.chromium.chrome.browser.survey.SurveyController;
 import org.chromium.chrome.browser.sync.GmsCoreSyncListener;
 import org.chromium.chrome.browser.tab.AuthenticatorNavigationInterceptor;
 import org.chromium.chrome.browser.tab.Tab;
@@ -45,6 +46,9 @@ import org.chromium.components.signin.AccountManagerDelegate;
 import org.chromium.components.signin.SystemAccountManagerDelegate;
 import org.chromium.policy.AppRestrictionsProvider;
 import org.chromium.policy.CombinedPolicyProvider;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Base class for defining methods where different behavior is required by downstream targets.
@@ -75,12 +79,7 @@ public abstract class AppHooks {
      * @param callback Callback that should receive the results of the AndroidEdu device check.
      */
     public void checkIsAndroidEduDevice(final AndroidEduOwnerCheckCallback callback) {
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                callback.onSchoolCheckDone(false);
-            }
-        });
+        new Handler(Looper.getMainLooper()).post(() -> callback.onSchoolCheckDone(false));
     }
 
     /**
@@ -121,6 +120,14 @@ public abstract class AppHooks {
      */
     public CustomTabsConnection createCustomTabsConnection() {
         return new CustomTabsConnection();
+    }
+
+    /**
+     * Creates a new {@link SurveyController}.
+     * @return The created {@link SurveyController}.
+     */
+    public SurveyController createSurveyController() {
+        return new SurveyController();
     }
 
     /**
@@ -294,5 +301,14 @@ public abstract class AppHooks {
     @CalledByNative
     public Callback<CCTRequestStatus> getOfflinePagesCCTRequestDoneCallback() {
         return null;
+    }
+
+    /**
+     * @return A list of whitelisted apps that are allowed to receive notification when the
+     * set of offlined pages downloaded on their behalf has changed. Apps are listed by their
+     * package name.
+     */
+    public List<String> getOfflinePagesCctWhitelist() {
+        return Collections.emptyList();
     }
 }

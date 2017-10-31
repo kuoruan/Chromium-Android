@@ -10,7 +10,6 @@ import android.preference.PreferenceGroup;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
-import android.text.style.TextAppearanceSpan;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageView;
@@ -45,19 +44,16 @@ public class ExpandablePreferenceGroup extends PreferenceGroup {
                 new SpannableStringBuilder(getContext().getResources().getString(resourceId));
         String prefCount = String.format(Locale.getDefault(), " - %d", count);
         spannable.append(prefCount);
-        spannable.setSpan(new TextAppearanceSpan(getContext(), R.style.RobotoMediumStyle), 0,
-                spannable.length() - prefCount.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Color the first part of the title blue.
-        ForegroundColorSpan blueSpan = new ForegroundColorSpan(
-                ApiCompatibilityUtils.getColor(getContext().getResources(),
-                        R.color.pref_accent_color));
+        ForegroundColorSpan blueSpan = new ForegroundColorSpan(ApiCompatibilityUtils.getColor(
+                getContext().getResources(), R.color.google_blue_700));
         spannable.setSpan(blueSpan, 0, spannable.length() - prefCount.length(),
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Gray out the total count of items.
-        int gray = ApiCompatibilityUtils.getColor(getContext().getResources(),
-                R.color.expandable_group_dark_gray);
+        int gray =
+                ApiCompatibilityUtils.getColor(getContext().getResources(), R.color.black_alpha_54);
         spannable.setSpan(new ForegroundColorSpan(gray),
                    spannable.length() - prefCount.length(),
                    spannable.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);

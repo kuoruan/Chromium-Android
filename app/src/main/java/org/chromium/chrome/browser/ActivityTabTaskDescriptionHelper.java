@@ -121,10 +121,7 @@ public class ActivityTabTaskDescriptionHelper {
 
             private boolean hasSecurityWarningOrError(Tab tab) {
                 int securityLevel = tab.getSecurityLevel();
-                return securityLevel == ConnectionSecurityLevel.DANGEROUS
-                        || securityLevel == ConnectionSecurityLevel.SECURITY_WARNING
-                        || securityLevel
-                        == ConnectionSecurityLevel.SECURE_WITH_POLICY_INSTALLED_CERT;
+                return securityLevel == ConnectionSecurityLevel.DANGEROUS;
             }
         };
 
@@ -246,16 +243,13 @@ public class ActivityTabTaskDescriptionHelper {
             final String currentUrl = mCurrentTab.getUrl();
             mFaviconHelper.getLocalFaviconImageForURL(
                     mCurrentTab.getProfile(), mCurrentTab.getUrl(), 0,
-                    new FaviconHelper.FaviconImageCallback() {
-                        @Override
-                        public void onFaviconAvailable(Bitmap image, String iconUrl) {
-                            if (mCurrentTab == null
-                                    || !TextUtils.equals(currentUrl, mCurrentTab.getUrl())) {
-                                return;
-                            }
-
-                            updateFavicon(image);
+                    (image, iconUrl) -> {
+                        if (mCurrentTab == null
+                                || !TextUtils.equals(currentUrl, mCurrentTab.getUrl())) {
+                            return;
                         }
+
+                        updateFavicon(image);
                     });
         }
         updateTaskDescription();

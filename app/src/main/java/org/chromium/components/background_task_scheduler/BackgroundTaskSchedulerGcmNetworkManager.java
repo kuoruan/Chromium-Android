@@ -36,7 +36,7 @@ class BackgroundTaskSchedulerGcmNetworkManager implements BackgroundTaskSchedule
 
     static BackgroundTask getBackgroundTaskFromTaskParams(@NonNull TaskParams taskParams) {
         String backgroundTaskClassName = getBackgroundTaskClassFromTaskParams(taskParams);
-        return BackgroundTaskScheduler.getBackgroundTaskFromClassName(backgroundTaskClassName);
+        return BackgroundTaskReflection.getBackgroundTaskFromClassName(backgroundTaskClassName);
     }
 
     private static String getBackgroundTaskClassFromTaskParams(@NonNull TaskParams taskParams) {
@@ -135,7 +135,7 @@ class BackgroundTaskSchedulerGcmNetworkManager implements BackgroundTaskSchedule
     @Override
     public boolean schedule(Context context, @NonNull TaskInfo taskInfo) {
         ThreadUtils.assertOnUiThread();
-        if (!BackgroundTaskScheduler.hasParameterlessPublicConstructor(
+        if (!BackgroundTaskReflection.hasParameterlessPublicConstructor(
                     taskInfo.getBackgroundTaskClass())) {
             Log.e(TAG,
                     "BackgroundTask " + taskInfo.getBackgroundTaskClass()
@@ -149,12 +149,13 @@ class BackgroundTaskSchedulerGcmNetworkManager implements BackgroundTaskSchedule
             return false;
         }
 
-        Task task = createTaskFromTaskInfo(taskInfo);
-
         try {
+            Task task = createTaskFromTaskInfo(taskInfo);
             gcmNetworkManager.schedule(task);
         } catch (IllegalArgumentException e) {
-            Log.e(TAG, "GcmNetworkManager failed to schedule task.");
+            String gcmErrorMessage = e.getMessage() == null ? "null." : e.getMessage();
+            Log.e(TAG,
+                    "GcmNetworkManager failed to schedule task, gcm message: " + gcmErrorMessage);
             return false;
         }
 

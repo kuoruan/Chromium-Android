@@ -6,18 +6,18 @@ package org.chromium.chrome.browser;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.os.SystemClock;
 
 import org.chromium.base.ActivityState;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.CommandLineInitUtil;
 import org.chromium.base.ContextUtils;
+import org.chromium.base.DiscardableReferencePool;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.TraceEvent;
 import org.chromium.base.annotations.MainDex;
 import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.library_loader.ProcessInitException;
+import org.chromium.build.BuildHooksAndroid;
 import org.chromium.chrome.browser.document.DocumentActivity;
 import org.chromium.chrome.browser.document.IncognitoDocumentActivity;
 import org.chromium.chrome.browser.init.InvalidStartupDialog;
@@ -36,16 +36,15 @@ import org.chromium.content.app.ContentApplication;
 public class ChromeApplication extends ContentApplication {
     public static final String COMMAND_LINE_FILE = "chrome-command-line";
     private static final String TAG = "ChromiumApplication";
-    private static final String PREF_BOOT_TIMESTAMP =
-            "com.google.android.apps.chrome.ChromeMobileApplication.BOOT_TIMESTAMP";
-    private static final long BOOT_TIMESTAMP_MARGIN_MS = 1000;
 
     private static DocumentTabModelSelector sDocumentTabModelSelector;
+    private DiscardableReferencePool mReferencePool;
 
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
         ContextUtils.initApplicationContext(this);
+        BuildHooksAndroid.initCustomResources(this);
     }
 
     /**
@@ -63,6 +62,17 @@ public class ChromeApplication extends ContentApplication {
         super.onCreate();
 
         TraceEvent.end("ChromeApplication.onCreate");
+    }
+
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        // The conditions are expressed using ranges to capture intermediate levels possibly added
+        // to the API in the future.
+        if ((level >= TRIM_MEMORY_RUNNING_LOW && level < TRIM_MEMORY_UI_HIDDEN)
+                || level >= TRIM_MEMORY_MODERATE) {
+            if (mReferencePool != null) mReferencePool.drain();
+        }
     }
 
     /**
@@ -83,55 +93,6 @@ public class ChromeApplication extends ContentApplication {
     }
 
     /**
-     * @return The user agent string of Chrome.
-     */
-    public static String getBrowserUserAgent() {
-        return nativeGetBrowserUserAgent();
-    }
-
-    /**
-     * The host activity should call this during its onPause() handler to ensure
-     * all state is saved when the app is suspended.  Calling ChromiumApplication.onStop() does
-     * this for you.
-     */
-    public static void flushPersistentData() {
-        try {
-            TraceEvent.begin("ChromiumApplication.flushPersistentData");
-            nativeFlushPersistentData();
-        } finally {
-            TraceEvent.end("ChromiumApplication.flushPersistentData");
-        }
-    }
-
-    /**
-     * Removes all session cookies (cookies with no expiration date) after device reboots.
-     * This function will incorrectly clear cookies when Daylight Savings Time changes the clock.
-     * Without a way to get a monotonically increasing system clock, the boot timestamp will be off
-     * by one hour.  However, this should only happen at most once when the clock changes since the
-     * updated timestamp is immediately saved.
-     */
-    public static void removeSessionCookies() {
-        long lastKnownBootTimestamp =
-                ContextUtils.getAppSharedPreferences().getLong(PREF_BOOT_TIMESTAMP, 0);
-        long bootTimestamp = System.currentTimeMillis() - SystemClock.uptimeMillis();
-        long difference = bootTimestamp - lastKnownBootTimestamp;
-
-        // Allow some leeway to account for fractions of milliseconds.
-        if (Math.abs(difference) > BOOT_TIMESTAMP_MARGIN_MS) {
-            nativeRemoveSessionCookies();
-
-            SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putLong(PREF_BOOT_TIMESTAMP, bootTimestamp);
-            editor.apply();
-        }
-    }
-
-    private static native void nativeRemoveSessionCookies();
-    private static native String nativeGetBrowserUserAgent();
-    private static native void nativeFlushPersistentData();
-
-    /**
      * Returns the singleton instance of the DocumentTabModelSelector.
      * TODO(dfalcantara): Find a better place for this once we differentiate between activity and
      *                    application-level TabModelSelectors.
@@ -147,5 +108,16 @@ public class ChromeApplication extends ContentApplication {
                     new StorageDelegate(), new TabDelegate(false), new TabDelegate(true));
         }
         return sDocumentTabModelSelector;
+    }
+
+    /**
+     * @return The DiscardableReferencePool for the application.
+     */
+    public DiscardableReferencePool getReferencePool() {
+        ThreadUtils.assertOnUiThread();
+        if (mReferencePool == null) {
+            mReferencePool = new DiscardableReferencePool();
+        }
+        return mReferencePool;
     }
 }

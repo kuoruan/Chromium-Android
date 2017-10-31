@@ -52,7 +52,6 @@ public class PaymentResponseHelper implements NormalizedAddressRequestDelegate {
         if (selectedContact != null) {
             // Contacts are created in PaymentRequestImpl.init(). These should all be instances of
             // AutofillContact.
-            assert selectedContact instanceof AutofillContact;
             mPaymentResponse.payerName = ((AutofillContact) selectedContact).getPayerName();
             mPaymentResponse.payerPhone = ((AutofillContact) selectedContact).getPayerPhone();
             mPaymentResponse.payerEmail = ((AutofillContact) selectedContact).getPayerEmail();
@@ -73,7 +72,6 @@ public class PaymentResponseHelper implements NormalizedAddressRequestDelegate {
         if (selectedShippingAddress != null) {
             // Shipping addresses are created in PaymentRequestImpl.init(). These should all be
             // instances of AutofillAddress.
-            assert selectedShippingAddress instanceof AutofillAddress;
             mSelectedShippingAddress = (AutofillAddress) selectedShippingAddress;
 
             // Addresses to be sent to the merchant should always be complete.

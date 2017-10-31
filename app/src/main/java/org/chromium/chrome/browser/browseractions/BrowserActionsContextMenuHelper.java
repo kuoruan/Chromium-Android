@@ -4,9 +4,15 @@
 
 package org.chromium.chrome.browser.browseractions;
 
+import android.app.Activity;
 import android.app.PendingIntent;
+import android.app.PendingIntent.CanceledException;
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.net.Uri;
 import android.support.customtabs.browseractions.BrowserActionItem;
 import android.support.customtabs.browseractions.BrowserActionsIntent;
+import android.support.customtabs.browseractions.BrowserActionsIntent.BrowserActionsItemId;
 import android.util.Pair;
 import android.util.SparseArray;
 import android.view.ContextMenu;
@@ -16,6 +22,8 @@ import android.view.View.OnAttachStateChangeListener;
 import android.view.View.OnCreateContextMenuListener;
 
 import org.chromium.base.Callback;
+import org.chromium.base.Log;
+import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.contextmenu.ChromeContextMenuItem;
 import org.chromium.chrome.browser.contextmenu.ContextMenuItem;
@@ -36,12 +44,34 @@ import java.util.List;
 public class BrowserActionsContextMenuHelper implements OnCreateContextMenuListener,
                                                         OnCloseContextMenuListener,
                                                         OnAttachStateChangeListener {
-    private static final boolean IS_NEW_UI_ENABLED = true;
+    /** Notified about events happening for Browser Actions tests. */
+    public interface BrowserActionsTestDelegate {
+        /** Called when menu is shown. */
+        void onBrowserActionsMenuShown();
 
-    private static final List<Integer> CUSTOM_BROWSER_ACTIONS_ID_GROUP =
+        /** Called when {@link BrowserActionActivity#finishNativeInitialization} is done. */
+        void onFinishNativeInitialization();
+
+        /** Called when Browser Actions start opening a tab in background */
+        void onOpenTabInBackgroundStart();
+
+        /** Called when Browser Actions start downloading a url */
+        void onDownloadStart();
+
+        /** Initializes data needed for testing. */
+        void initialize(SparseArray<PendingIntent> customActions,
+                List<Pair<Integer, List<ContextMenuItem>>> items,
+                ProgressDialog progressDialog);
+    }
+
+
+    static final List<Integer> CUSTOM_BROWSER_ACTIONS_ID_GROUP =
             Arrays.asList(R.id.browser_actions_custom_item_one,
                     R.id.browser_actions_custom_item_two, R.id.browser_actions_custom_item_three,
                     R.id.browser_actions_custom_item_four, R.id.browser_actions_custom_item_five);
+
+    private static final String TAG = "cr_BrowserActions";
+    private static final boolean IS_NEW_UI_ENABLED = true;
 
     // Items list that could be included in the Browser Actions context menu for type {@code LINK}.
     private final List<? extends ContextMenuItem> mBrowserActionsLinkGroup;
@@ -50,29 +80,44 @@ public class BrowserActionsContextMenuHelper implements OnCreateContextMenuListe
     private final SparseArray<PendingIntent> mCustomItemActionMap = new SparseArray<>();
 
     private final ContextMenuParams mCurrentContextMenuParams;
-    private final BrowserActionsContextMenuItemDelegate mDelegate;
-    private final BrowserActionActivity mActivity;
+    private final BrowserActionsContextMenuItemDelegate mMenuItemDelegate;
+    private final Activity mActivity;
     private final Callback<Integer> mItemSelectedCallback;
     private final Runnable mOnMenuShown;
     private final Runnable mOnMenuClosed;
+    private final Runnable mOnMenuShownListener;
     private final Callback<Boolean> mOnShareClickedRunnable;
+    private final PendingIntent mOnBrowserActionSelectedCallback;
 
     private final List<Pair<Integer, List<ContextMenuItem>>> mItems;
 
-    public BrowserActionsContextMenuHelper(BrowserActionActivity activity, ContextMenuParams params,
-            List<BrowserActionItem> customItems, String sourcePackageName) {
+    private final ProgressDialog mProgressDialog;
+
+    private BrowserActionsTestDelegate mTestDelegate;
+    private int mPendingItemId;
+    private boolean mIsNativeInitialized;
+
+    public BrowserActionsContextMenuHelper(Activity activity, ContextMenuParams params,
+            List<BrowserActionItem> customItems, String sourcePackageName,
+            PendingIntent onBrowserActionSelectedCallback, final Runnable listener) {
         mActivity = activity;
         mCurrentContextMenuParams = params;
+        mOnMenuShownListener = listener;
         mOnMenuShown = new Runnable() {
             @Override
             public void run() {
-                mActivity.onMenuShown();
+                mOnMenuShownListener.run();
+                if (mTestDelegate != null) {
+                    mTestDelegate.onBrowserActionsMenuShown();
+                }
             }
         };
         mOnMenuClosed = new Runnable() {
             @Override
             public void run() {
-                mActivity.finish();
+                if (mPendingItemId == 0) {
+                    mActivity.finish();
+                }
             }
         };
         mItemSelectedCallback = new Callback<Integer>() {
@@ -84,7 +129,7 @@ public class BrowserActionsContextMenuHelper implements OnCreateContextMenuListe
         mOnShareClickedRunnable = new Callback<Boolean>() {
             @Override
             public void onResult(Boolean isShareLink) {
-                mDelegate.share(true, mCurrentContextMenuParams.getLinkUrl());
+                mMenuItemDelegate.share(true, mCurrentContextMenuParams.getLinkUrl());
             }
         };
         ShareContextMenuItem shareItem = new ShareContextMenuItem(R.drawable.ic_share_white_24dp,
@@ -95,9 +140,21 @@ public class BrowserActionsContextMenuHelper implements OnCreateContextMenuListe
                         ChromeContextMenuItem.BROWSER_ACTIONS_OPEN_IN_INCOGNITO_TAB,
                         ChromeContextMenuItem.BROWSER_ACTION_SAVE_LINK_AS,
                         ChromeContextMenuItem.BROWSER_ACTIONS_COPY_ADDRESS, shareItem);
-        mDelegate = new BrowserActionsContextMenuItemDelegate(mActivity, sourcePackageName);
+        mMenuItemDelegate = new BrowserActionsContextMenuItemDelegate(mActivity, sourcePackageName);
+        mOnBrowserActionSelectedCallback = onBrowserActionSelectedCallback;
+        mProgressDialog = new ProgressDialog(mActivity);
 
         mItems = buildContextMenuItems(customItems);
+    }
+
+    /**
+     * Sets the {@link BrowserActionsTestDelegate} for testing.
+     * @param testDelegate The delegate used to notified Browser Actions events.
+     */
+    @VisibleForTesting
+    void setTestDelegateForTesting(BrowserActionsTestDelegate testDelegate) {
+        mTestDelegate = testDelegate;
+        mTestDelegate.initialize(mCustomItemActionMap, mItems, mProgressDialog);
     }
 
     /**
@@ -129,21 +186,60 @@ public class BrowserActionsContextMenuHelper implements OnCreateContextMenuListe
         }
     }
 
-    private boolean onItemSelected(int itemId) {
+    boolean onItemSelected(int itemId) {
         if (itemId == R.id.browser_actions_open_in_background) {
-            mDelegate.onOpenInBackground(mCurrentContextMenuParams.getLinkUrl());
+            if (mIsNativeInitialized) {
+                handleOpenInBackground();
+            } else {
+                mPendingItemId = itemId;
+                waitNativeInitialized();
+            }
         } else if (itemId == R.id.browser_actions_open_in_incognito_tab) {
-            mDelegate.onOpenInIncognitoTab(mCurrentContextMenuParams.getLinkUrl());
+            mMenuItemDelegate.onOpenInIncognitoTab(mCurrentContextMenuParams.getLinkUrl());
+            notifyBrowserActionSelected(BrowserActionsIntent.ITEM_OPEN_IN_INCOGNITO);
         } else if (itemId == R.id.browser_actions_save_link_as) {
-            mDelegate.startDownload(mCurrentContextMenuParams.getLinkUrl());
+            if (mIsNativeInitialized) {
+                handleDownload();
+            } else {
+                mPendingItemId = itemId;
+                waitNativeInitialized();
+            }
         } else if (itemId == R.id.browser_actions_copy_address) {
-            mDelegate.onSaveToClipboard(mCurrentContextMenuParams.getLinkUrl());
+            mMenuItemDelegate.onSaveToClipboard(mCurrentContextMenuParams.getLinkUrl());
+            notifyBrowserActionSelected(BrowserActionsIntent.ITEM_COPY);
         } else if (itemId == R.id.browser_actions_share) {
-            mDelegate.share(false, mCurrentContextMenuParams.getLinkUrl());
+            mMenuItemDelegate.share(false, mCurrentContextMenuParams.getLinkUrl());
+            notifyBrowserActionSelected(BrowserActionsIntent.ITEM_SHARE);
         } else if (mCustomItemActionMap.indexOfKey(itemId) >= 0) {
-            mDelegate.onCustomItemSelected(mCustomItemActionMap.get(itemId));
+            mMenuItemDelegate.onCustomItemSelected(mCustomItemActionMap.get(itemId));
         }
         return true;
+    }
+
+    private void notifyBrowserActionSelected(@BrowserActionsItemId int menuId) {
+        if (mOnBrowserActionSelectedCallback == null) return;
+        Intent additionalData = new Intent();
+        additionalData.setData(Uri.parse(String.valueOf(menuId)));
+        try {
+            mOnBrowserActionSelectedCallback.send(mActivity, 0, additionalData, null, null);
+        } catch (CanceledException e) {
+            Log.e(TAG, "Browser Actions failed to send default items' pending intent.");
+        }
+    }
+
+    /**
+     * Display a progress dialog to wait for native libraries initialized.
+     */
+    private void waitNativeInitialized() {
+        mProgressDialog.setMessage(
+                mActivity.getString(R.string.browser_actions_loading_native_message));
+        mProgressDialog.show();
+    }
+
+    private void dismissProgressDialog() {
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            mProgressDialog.dismiss();
+        }
     }
 
     /**
@@ -183,4 +279,36 @@ public class BrowserActionsContextMenuHelper implements OnCreateContextMenuListe
 
     @Override
     public void onViewDetachedFromWindow(View v) {}
+
+    /**
+     * Finishes all pending actions which requires Chrome native libraries.
+     */
+    public void onNativeInitialized() {
+        mIsNativeInitialized = true;
+        if (mTestDelegate != null) {
+            mTestDelegate.onFinishNativeInitialization();
+        }
+        if (mPendingItemId != 0) {
+            dismissProgressDialog();
+            onItemSelected(mPendingItemId);
+            mPendingItemId = 0;
+            mActivity.finish();
+        }
+    }
+
+    private void handleOpenInBackground() {
+        mMenuItemDelegate.onOpenInBackground(mCurrentContextMenuParams.getLinkUrl());
+        if (mTestDelegate != null) {
+            mTestDelegate.onOpenTabInBackgroundStart();
+        }
+        notifyBrowserActionSelected(BrowserActionsIntent.ITEM_OPEN_IN_NEW_TAB);
+    }
+
+    private void handleDownload() {
+        mMenuItemDelegate.startDownload(mCurrentContextMenuParams.getLinkUrl());
+        if (mTestDelegate != null) {
+            mTestDelegate.onDownloadStart();
+        }
+        notifyBrowserActionSelected(BrowserActionsIntent.ITEM_DOWNLOAD);
+    }
 }

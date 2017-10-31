@@ -61,6 +61,8 @@
     <org.chromium.chrome.browser.preferences.ChromeBaseListPreference
         android:key="autoplay_permission_list" />
     <org.chromium.chrome.browser.preferences.ChromeBaseListPreference
+        android:key="sound_permission_list" />
+    <org.chromium.chrome.browser.preferences.ChromeBaseListPreference
         android:key="midi_sysex_permission_list" />
 
     <org.chromium.chrome.browser.preferences.ButtonPreference

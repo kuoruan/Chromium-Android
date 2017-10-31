@@ -42,10 +42,7 @@ AddConfigurationResponse callback);
 
 
     void removeConfiguration(
-SensorConfiguration configuration, 
-RemoveConfigurationResponse callback);
-
-    interface RemoveConfigurationResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Boolean> { }
+SensorConfiguration configuration);
 
 
 

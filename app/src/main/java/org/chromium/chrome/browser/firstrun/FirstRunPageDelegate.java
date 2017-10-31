@@ -4,8 +4,6 @@
 
 package org.chromium.chrome.browser.firstrun;
 
-import android.app.Fragment;
-
 /**
  * Defines the host interface for First Run Experience pages.
  */
@@ -63,12 +61,6 @@ public interface FirstRunPageDelegate {
      * @param allowCrashUpload True if the user allows to upload crash dumps and collect stats.
      */
     void acceptTermsOfService(boolean allowCrashUpload);
-
-    /**
-     * Opens the Android account adder UI.
-     * @param fragment A fragment that needs the account adder UI.
-     */
-    void openAccountAdder(Fragment fragment);
 
     /**
      * Show an informational web page. The page doesn't show navigation control.

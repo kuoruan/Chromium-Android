@@ -15,4 +15,7 @@ public interface Printable {
 
     /** Get the title of the generated PDF document. */
     String getTitle();
+
+    /** Check if the current Printable can print. */
+    boolean canPrint();
 }

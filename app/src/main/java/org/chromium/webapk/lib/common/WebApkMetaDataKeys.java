@@ -13,6 +13,8 @@ public final class WebApkMetaDataKeys {
     public static final String RUNTIME_HOST_APPLICATION_NAME =
             "org.chromium.webapk.shell_apk.runtimeHostApplicationName";
     public static final String START_URL = "org.chromium.webapk.shell_apk.startUrl";
+    public static final String LOGGED_INTENT_URL_PARAM =
+            "org.chromium.webapk.shell_apk.loggedIntentUrlParam";
     public static final String NAME = "org.chromium.webapk.shell_apk.name";
     public static final String SHORT_NAME = "org.chromium.webapk.shell_apk.shortName";
     public static final String SCOPE = "org.chromium.webapk.shell_apk.scope";
@@ -28,7 +30,5 @@ public final class WebApkMetaDataKeys {
     public static final String ICON_URLS_AND_ICON_MURMUR2_HASHES =
             "org.chromium.webapk.shell_apk.iconUrlsAndIconMurmur2Hashes";
     public static final String WEB_MANIFEST_URL = "org.chromium.webapk.shell_apk.webManifestUrl";
-    // TODO(zpeng): crbug.com/715166. Assign value to {@link BADGE_ICON_ID} and sync it with
-    // WebAPK Android Manifest.
-    public static final String BADGE_ICON_ID = "";
+    public static final String BADGE_ICON_ID = "org.chromium.webapk.shell_apk.badgeIconId";
 }

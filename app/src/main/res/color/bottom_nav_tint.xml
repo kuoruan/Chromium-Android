@@ -4,6 +4,6 @@
      found in the LICENSE file.
 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_checked="true" android:color="@color/google_blue_700" />
-    <item android:color="@color/google_grey_600" />
+    <item android:state_checked="true" android:color="@color/light_active_color" />
+    <item android:color="@color/black_alpha_65" />
 </selector>

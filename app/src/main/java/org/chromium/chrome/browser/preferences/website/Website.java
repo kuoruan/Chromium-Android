@@ -40,6 +40,7 @@ public class Website implements Serializable {
     private NotificationInfo mNotificationInfo;
     private ContentSettingException mPopupException;
     private ProtectedMediaIdentifierInfo mProtectedMediaIdentifierInfo;
+    private ContentSettingException mSoundException;
     private final List<StorageInfo> mStorageInfo = new ArrayList<StorageInfo>();
     private int mStorageInfoCallbacksLeft;
     private final List<UsbInfo> mUsbInfo = new ArrayList<UsbInfo>();
@@ -278,6 +279,29 @@ public class Website implements Serializable {
      */
     public void setJavaScriptException(ContentSettingException exception) {
         mJavaScriptException = exception;
+    }
+
+    /**
+     * Returns what permission governs Sound access.
+     */
+    public ContentSetting getSoundPermission() {
+        return mSoundException != null ? mSoundException.getContentSetting() : null;
+    }
+
+    /**
+     * Configure Sound permission access setting for this site.
+     */
+    public void setSoundPermission(ContentSetting value) {
+        if (mSoundException != null) {
+            mSoundException.setContentSetting(value);
+        }
+    }
+
+    /**
+     * Sets the Sound exception info for this Website.
+     */
+    public void setSoundException(ContentSettingException exception) {
+        mSoundException = exception;
     }
 
     /**

@@ -15,9 +15,9 @@ import android.view.LayoutInflater;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.library_loader.ProcessInitException;
+import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.firstrun.ProfileDataCache;
 import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
 import org.chromium.chrome.browser.preferences.ManagedPreferencesUtils;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
@@ -36,31 +36,35 @@ public class AccountSigninActivity extends AppCompatActivity
     private static final String TAG = "AccountSigninActivity";
     private static final String INTENT_SIGNIN_ACCESS_POINT =
             "AccountSigninActivity.SigninAccessPoint";
+    private static final String INTENT_SIGNIN_FLOW_TYPE = "AccountSigninActivity.SigninFlowType";
+    private static final String INTENT_ACCOUNT_NAME = "AccountSigninActivity.AccountName";
+    private static final String INTENT_IS_DEFAULT_ACCOUNT =
+            "AccountSigninActivity.IsDefaultAccount";
+    private static final String INTENT_IS_FROM_PERSONALIZED_PROMO =
+            "AccountSigninActivity.IsFromPersonalizedPromo";
 
-    private AccountSigninView mView;
+    @IntDef({SIGNIN_FLOW_DEFAULT, SIGNIN_FLOW_CONFIRMATION_ONLY, SIGNIN_FLOW_ADD_NEW_ACCOUNT})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface SigninFlowType {}
+
+    private static final int SIGNIN_FLOW_DEFAULT = 0;
+    private static final int SIGNIN_FLOW_CONFIRMATION_ONLY = 1;
+    private static final int SIGNIN_FLOW_ADD_NEW_ACCOUNT = 2;
 
     @IntDef({SigninAccessPoint.SETTINGS, SigninAccessPoint.BOOKMARK_MANAGER,
             SigninAccessPoint.RECENT_TABS, SigninAccessPoint.SIGNIN_PROMO,
             SigninAccessPoint.NTP_CONTENT_SUGGESTIONS, SigninAccessPoint.AUTOFILL_DROPDOWN})
     @Retention(RetentionPolicy.SOURCE)
     public @interface AccessPoint {}
-    @AccessPoint private int mAccessPoint;
 
-    /**
-     * A convenience method to create a AccountSigninActivity passing the access point as an
-     * intent.
-     * @param accessPoint - A SigninAccessPoint designating where the activity is created from.
-     */
-    public static void startAccountSigninActivity(Context context, @AccessPoint int accessPoint) {
-        Intent intent = new Intent(context, AccountSigninActivity.class);
-        intent.putExtra(INTENT_SIGNIN_ACCESS_POINT, accessPoint);
-        context.startActivity(intent);
-    }
+    private @AccessPoint int mAccessPoint;
+    private @SigninFlowType int mSigninFlowType;
+    private boolean mIsFromPersonalizedPromo;
 
     /**
      * A convenience method to create a AccountSigninActivity passing the access point as an
      * intent. Checks if the sign in flow can be started before showing the activity.
-     * @param accessPoint - A SigninAccessPoint designating where the activity is created from.
+     * @param accessPoint {@link AccessPoint} for starting signin flow. Used in metrics.
      * @return {@code true} if sign in has been allowed.
      */
     public static boolean startIfAllowed(Context context, @AccessPoint int accessPoint) {
@@ -71,8 +75,61 @@ public class AccountSigninActivity extends AppCompatActivity
             return false;
         }
 
-        startAccountSigninActivity(context, accessPoint);
+        context.startActivity(createIntentForDefaultSigninFlow(context, accessPoint, false));
         return true;
+    }
+
+    /**
+     * Creates an {@link Intent} which can be used to start the default signin flow.
+     * @param accessPoint {@link AccessPoint} for starting signin flow. Used in metrics.
+     * @param isFromPersonalizedPromo Whether the signin activity is started from a personalized
+     *         promo.
+     */
+    public static Intent createIntentForDefaultSigninFlow(
+            Context context, @AccessPoint int accessPoint, boolean isFromPersonalizedPromo) {
+        Intent intent = new Intent(context, AccountSigninActivity.class);
+        intent.putExtra(INTENT_SIGNIN_ACCESS_POINT, accessPoint);
+        intent.putExtra(INTENT_SIGNIN_FLOW_TYPE, SIGNIN_FLOW_DEFAULT);
+        intent.putExtra(INTENT_IS_FROM_PERSONALIZED_PROMO, isFromPersonalizedPromo);
+        return intent;
+    }
+
+    /**
+     * Creates an {@link Intent} which can be used to start the signin flow from the confirmation
+     * screen.
+     * @param accessPoint {@link AccessPoint} for starting signin flow. Used in metrics.
+     * @param selectAccount Account for which signin confirmation page should be shown.
+     * @param isDefaultAccount Whether {@param selectedAccount} is the default account on
+     *         the device. Used in metrics.
+     * @param isFromPersonalizedPromo Whether the signin activity is started from a personalized
+     *         promo.
+     */
+    public static Intent createIntentForConfirmationOnlySigninFlow(Context context,
+            @AccessPoint int accessPoint, String selectAccount, boolean isDefaultAccount,
+            boolean isFromPersonalizedPromo) {
+        Intent intent = new Intent(context, AccountSigninActivity.class);
+        intent.putExtra(INTENT_SIGNIN_ACCESS_POINT, accessPoint);
+        intent.putExtra(INTENT_SIGNIN_FLOW_TYPE, SIGNIN_FLOW_CONFIRMATION_ONLY);
+        intent.putExtra(INTENT_ACCOUNT_NAME, selectAccount);
+        intent.putExtra(INTENT_IS_DEFAULT_ACCOUNT, isDefaultAccount);
+        intent.putExtra(INTENT_IS_FROM_PERSONALIZED_PROMO, isFromPersonalizedPromo);
+        return intent;
+    }
+
+    /**
+     * Creates an {@link Intent} which can be used to start the signin flow from the "Add Account"
+     * page.
+     * @param accessPoint {@link AccessPoint} for starting signin flow. Used in metrics.
+     * @param isFromPersonalizedPromo Whether the signin activity is started from a personalized
+     *         promo.
+     */
+    public static Intent createIntentForAddAccountSigninFlow(
+            Context context, @AccessPoint int accessPoint, boolean isFromPersonalizedPromo) {
+        Intent intent = new Intent(context, AccountSigninActivity.class);
+        intent.putExtra(INTENT_SIGNIN_ACCESS_POINT, accessPoint);
+        intent.putExtra(INTENT_SIGNIN_FLOW_TYPE, SIGNIN_FLOW_ADD_NEW_ACCOUNT);
+        intent.putExtra(INTENT_IS_FROM_PERSONALIZED_PROMO, isFromPersonalizedPromo);
+        return intent;
     }
 
     @Override
@@ -101,25 +158,49 @@ public class AccountSigninActivity extends AppCompatActivity
                 || mAccessPoint == SigninAccessPoint.AUTOFILL_DROPDOWN
                 : "invalid access point: " + mAccessPoint;
 
-        mView = (AccountSigninView) LayoutInflater.from(this).inflate(
-                R.layout.account_signin_view, null);
-        ProfileDataCache profileDataCache =
-                new ProfileDataCache(this, Profile.getLastUsedProfile());
-        mView.init(profileDataCache, false, null, this, this);
+        mIsFromPersonalizedPromo =
+                getIntent().getBooleanExtra(INTENT_IS_FROM_PERSONALIZED_PROMO, false);
 
-        if (getAccessPoint() == SigninAccessPoint.BOOKMARK_MANAGER
-                || getAccessPoint() == SigninAccessPoint.RECENT_TABS) {
-            mView.configureForRecentTabsOrBookmarksPage();
+        AccountSigninView view = (AccountSigninView) LayoutInflater.from(this).inflate(
+                R.layout.account_signin_view, null);
+
+        int imageSize = getResources().getDimensionPixelSize(R.dimen.signin_account_image_size);
+        ProfileDataCache profileDataCache =
+                new ProfileDataCache(this, Profile.getLastUsedProfile(), imageSize);
+
+        mSigninFlowType = getIntent().getIntExtra(INTENT_SIGNIN_FLOW_TYPE, -1);
+        switch (mSigninFlowType) {
+            case SIGNIN_FLOW_DEFAULT:
+                view.initFromSelectionPage(profileDataCache, false, this, this);
+                break;
+            case SIGNIN_FLOW_CONFIRMATION_ONLY: {
+                String accountName = getIntent().getStringExtra(INTENT_ACCOUNT_NAME);
+                if (accountName == null) {
+                    throw new IllegalArgumentException("Account name can't be null!");
+                }
+                boolean isDefaultAccount =
+                        getIntent().getBooleanExtra(INTENT_IS_DEFAULT_ACCOUNT, false);
+                view.initFromConfirmationPage(profileDataCache, false, accountName,
+                        isDefaultAccount, AccountSigninView.UNDO_ABORT, this, this);
+                break;
+            }
+            case SIGNIN_FLOW_ADD_NEW_ACCOUNT:
+                view.initFromAddAccountPage(profileDataCache, this, this);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown signin flow type: " + mSigninFlowType);
         }
 
-        setContentView(mView);
+        if (mAccessPoint == SigninAccessPoint.BOOKMARK_MANAGER
+                || mAccessPoint == SigninAccessPoint.RECENT_TABS) {
+            view.configureForRecentTabsOrBookmarksPage();
+        }
 
-        SigninManager.logSigninStartAccessPoint(getAccessPoint());
+        setContentView(view);
+
+        SigninManager.logSigninStartAccessPoint(mAccessPoint);
+        recordSigninStartedHistogramAccountInfo();
         recordSigninStartedUserAction();
-    }
-
-    @AccessPoint private int getAccessPoint() {
-        return mAccessPoint;
     }
 
     @Override
@@ -145,6 +226,7 @@ public class AccountSigninActivity extends AppCompatActivity
                     startActivity(intent);
                 }
 
+                recordSigninCompletedHistogramAccountInfo();
                 finish();
             }
 
@@ -156,8 +238,56 @@ public class AccountSigninActivity extends AppCompatActivity
     @Override
     public void onFailedToSetForcedAccount(String forcedAccountName) {}
 
+    private void recordSigninCompletedHistogramAccountInfo() {
+        if (!mIsFromPersonalizedPromo) {
+            return;
+        }
+
+        final String histogram;
+        switch (mSigninFlowType) {
+            case SIGNIN_FLOW_ADD_NEW_ACCOUNT:
+                histogram = "Signin.SigninCompletedAccessPoint.NewAccount";
+                break;
+            case SIGNIN_FLOW_CONFIRMATION_ONLY:
+                histogram = "Signin.SigninCompletedAccessPoint.WithDefault";
+                break;
+            case SIGNIN_FLOW_DEFAULT:
+                histogram = "Signin.SigninCompletedAccessPoint.NotDefault";
+                break;
+            default:
+                assert false : "Unexpected signin flow type!";
+                return;
+        }
+
+        RecordHistogram.recordEnumeratedHistogram(histogram, mAccessPoint, SigninAccessPoint.MAX);
+    }
+
+    private void recordSigninStartedHistogramAccountInfo() {
+        if (!mIsFromPersonalizedPromo) {
+            return;
+        }
+
+        final String histogram;
+        switch (mSigninFlowType) {
+            case SIGNIN_FLOW_ADD_NEW_ACCOUNT:
+                histogram = "Signin.SigninStartedAccessPoint.NewAccount";
+                break;
+            case SIGNIN_FLOW_CONFIRMATION_ONLY:
+                histogram = "Signin.SigninStartedAccessPoint.WithDefault";
+                break;
+            case SIGNIN_FLOW_DEFAULT:
+                histogram = "Signin.SigninStartedAccessPoint.NotDefault";
+                break;
+            default:
+                assert false : "Unexpected signin flow type!";
+                return;
+        }
+
+        RecordHistogram.recordEnumeratedHistogram(histogram, mAccessPoint, SigninAccessPoint.MAX);
+    }
+
     private void recordSigninStartedUserAction() {
-        switch (getAccessPoint()) {
+        switch (mAccessPoint) {
             case SigninAccessPoint.AUTOFILL_DROPDOWN:
                 RecordUserAction.record("Signin_Signin_FromAutofillDropdown");
                 break;

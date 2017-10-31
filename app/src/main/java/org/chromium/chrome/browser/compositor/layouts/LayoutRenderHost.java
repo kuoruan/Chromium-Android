@@ -62,11 +62,6 @@ public interface LayoutRenderHost {
     float getBrowserControlsUrlBarAlpha();
 
     /**
-     * @return Whether or not the toolbar is currently being faked.
-     */
-    boolean areBrowserControlsPermanentlyHidden();
-
-    /**
      * @return The {@link ResourceManager}.
      */
     ResourceManager getResourceManager();

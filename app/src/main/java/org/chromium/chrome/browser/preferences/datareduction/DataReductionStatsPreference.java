@@ -11,7 +11,9 @@ import static org.chromium.third_party.android.datausagechart.ChartDataUsageView
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.preference.Preference;
+import android.support.v7.app.AlertDialog;
 import android.text.format.DateUtils;
 import android.text.format.Formatter;
 import android.util.AttributeSet;
@@ -223,18 +225,55 @@ public class DataReductionStatsPreference extends Preference {
 
         mResetStatisticsButton = (Button) view.findViewById(R.id.data_reduction_reset_statistics);
         if (mResetStatisticsButton != null) {
-            mResetStatisticsButton.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    DataReductionProxySettings.getInstance().clearDataSavingStatistics();
-                    updateReductionStatistics();
-                    setDetailText();
-                    notifyChanged();
-                    DataReductionProxyUma.dataReductionProxyUIAction(
-                            DataReductionProxyUma.ACTION_STATS_RESET);
-                }
-            });
+            setUpResetStatisticsButton();
         }
+    }
+
+    private void setUpResetStatisticsButton() {
+        mResetStatisticsButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                DialogInterface.OnClickListener dialogListener = new AlertDialog.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (which == AlertDialog.BUTTON_POSITIVE) {
+                            // If the site breakdown hasn't been shown yet because there was
+                            // historical data, reset that state so that the site breakdown can
+                            // now be shown.
+                            long now = System.currentTimeMillis();
+                            if (ContextUtils.getAppSharedPreferences().getLong(
+                                        PREF_DATA_REDUCTION_SITE_BREAKDOWN_ALLOWED_DATE,
+                                        Long.MAX_VALUE)
+                                    > now) {
+                                ContextUtils.getAppSharedPreferences()
+                                        .edit()
+                                        .putLong(PREF_DATA_REDUCTION_SITE_BREAKDOWN_ALLOWED_DATE,
+                                                now)
+                                        .apply();
+                            }
+                            DataReductionProxySettings.getInstance().clearDataSavingStatistics();
+                            updateReductionStatistics();
+                            setDetailText();
+                            notifyChanged();
+                            DataReductionProxyUma.dataReductionProxyUIAction(
+                                    DataReductionProxyUma.ACTION_STATS_RESET);
+                        } else {
+                            // Do nothing if canceled.
+                        }
+                    }
+                };
+
+                new AlertDialog.Builder(getContext(), R.style.AlertDialogTheme)
+                        .setTitle(R.string.data_reduction_usage_reset_statistics_confirmation_title)
+                        .setMessage(
+                                R.string.data_reduction_usage_reset_statistics_confirmation_dialog)
+                        .setPositiveButton(
+                                R.string.data_reduction_usage_reset_statistics_confirmation_button,
+                                dialogListener)
+                        .setNegativeButton(R.string.cancel, dialogListener)
+                        .show();
+            }
+        });
     }
 
     /**

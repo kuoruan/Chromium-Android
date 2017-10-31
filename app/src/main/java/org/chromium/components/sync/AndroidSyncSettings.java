@@ -80,10 +80,10 @@ public class AndroidSyncSettings {
     }
 
     @VisibleForTesting
-    public static void overrideForTests(
-            Context context, SyncContentResolverDelegate contentResolver) {
+    public static void overrideForTests(Context context,
+            SyncContentResolverDelegate contentResolver, @Nullable Callback<Boolean> callback) {
         synchronized (CLASS_LOCK) {
-            sInstance = new AndroidSyncSettings(context, contentResolver);
+            sInstance = new AndroidSyncSettings(context, contentResolver, callback);
         }
     }
 
@@ -93,12 +93,24 @@ public class AndroidSyncSettings {
      */
     private AndroidSyncSettings(
             Context context, SyncContentResolverDelegate syncContentResolverDelegate) {
+        this(context, syncContentResolverDelegate, null);
+    }
+
+    /**
+     * @param context the context the ApplicationContext will be retrieved from.
+     * @param syncContentResolverDelegate an implementation of {@link SyncContentResolverDelegate}.
+     * @param callback Callback that will be called after updating account is finished. Boolean
+     *                 passed to the callback indicates whether syncability was changed.
+     */
+    private AndroidSyncSettings(Context context,
+            SyncContentResolverDelegate syncContentResolverDelegate,
+            @Nullable Callback<Boolean> callback) {
         mApplicationContext = context.getApplicationContext();
         mContractAuthority = mApplicationContext.getPackageName();
         mSyncContentResolverDelegate = syncContentResolverDelegate;
 
         mAccount = ChromeSigninController.get().getSignedInUser();
-        updateSyncability(null);
+        updateSyncability(callback);
         updateCachedSettings();
 
         mSyncContentResolverDelegate.addStatusChangeListener(

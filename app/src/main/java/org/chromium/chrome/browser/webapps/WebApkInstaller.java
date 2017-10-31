@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.webapps;
 
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 
 import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
@@ -49,11 +50,13 @@ public class WebApkInstaller {
      * @param version The version of WebAPK to install.
      * @param title The title of the WebAPK to display during installation.
      * @param token The token from WebAPK Server.
-     * @param url The start URL of the WebAPK to install.
+     * @param source The source (either app banner or menu) that the install of a WebAPK was
+     *               triggered.
+     * @param icon The primary icon of the WebAPK to install.
      */
     @CalledByNative
-    private void installWebApkAsync(final String packageName, int version, String title,
-            String token, String url, final int source) {
+    private void installWebApkAsync(final String packageName, int version, final String title,
+            String token, final int source, final Bitmap icon) {
         // Check whether the WebAPK package is already installed. The WebAPK may have been installed
         // by another Chrome version (e.g. Chrome Dev). We have to do this check because the Play
         // install API fails silently if the package is already installed.
@@ -87,7 +90,7 @@ public class WebApkInstaller {
                         });
             }
         };
-        mInstallDelegate.installAsync(packageName, version, title, token, url, callback);
+        mInstallDelegate.installAsync(packageName, version, title, token, callback);
     }
 
     private void notify(@WebApkInstallResult int result) {
@@ -102,11 +105,10 @@ public class WebApkInstaller {
      * @param version The version of WebAPK to install.
      * @param title The title of the WebAPK to display during installation.
      * @param token The token from WebAPK Server.
-     * @param url The start URL of the WebAPK to install.
      */
     @CalledByNative
     private void updateAsync(
-            String packageName, int version, String title, String token, String url) {
+            String packageName, int version, String title, String token) {
         if (mInstallDelegate == null) {
             notify(WebApkInstallResult.FAILURE);
             return;
@@ -118,7 +120,7 @@ public class WebApkInstaller {
                 WebApkInstaller.this.notify(result);
             }
         };
-        mInstallDelegate.updateAsync(packageName, version, title, token, url, callback);
+        mInstallDelegate.updateAsync(packageName, version, title, token, callback);
     }
 
     private boolean isWebApkInstalled(String packageName) {

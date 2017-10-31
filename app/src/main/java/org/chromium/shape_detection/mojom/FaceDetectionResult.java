@@ -87,15 +87,15 @@ public final class FaceDetectionResult extends org.chromium.mojo.bindings.Struct
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(boundingBox, 8, false);
+        encoder0.encode(this.boundingBox, 8, false);
         
-        if (landmarks == null) {
+        if (this.landmarks == null) {
             encoder0.encodeNullPointer(16, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(landmarks.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < landmarks.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.landmarks.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.landmarks.length; ++i0) {
                 
-                encoder1.encode(landmarks[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                encoder1.encode(this.landmarks[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
     }
@@ -126,8 +126,8 @@ public final class FaceDetectionResult extends org.chromium.mojo.bindings.Struct
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(boundingBox);
-        result = prime * result + java.util.Arrays.deepHashCode(landmarks);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.boundingBox);
+        result = prime * result + java.util.Arrays.deepHashCode(this.landmarks);
         return result;
     }
 }

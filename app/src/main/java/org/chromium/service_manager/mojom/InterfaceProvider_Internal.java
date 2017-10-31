@@ -159,7 +159,7 @@ String interfaceName, org.chromium.mojo.system.MessagePipeHandle pipe) {
     
         private InterfaceProviderGetInterfaceParams(int version) {
             super(STRUCT_SIZE, version);
-            pipe = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+            this.pipe = org.chromium.mojo.system.InvalidHandle.INSTANCE;
         }
     
         public InterfaceProviderGetInterfaceParams() {
@@ -212,9 +212,9 @@ String interfaceName, org.chromium.mojo.system.MessagePipeHandle pipe) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(interfaceName, 8, false);
+            encoder0.encode(this.interfaceName, 8, false);
             
-            encoder0.encode(pipe, 16, false);
+            encoder0.encode(this.pipe, 16, false);
         }
     
         /**
@@ -243,8 +243,8 @@ String interfaceName, org.chromium.mojo.system.MessagePipeHandle pipe) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(interfaceName);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(pipe);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.interfaceName);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pipe);
             return result;
         }
     }

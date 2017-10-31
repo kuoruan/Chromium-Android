@@ -19,8 +19,8 @@ public class ColorChooserAndroid {
     private final ColorPickerDialog mDialog;
     private final long mNativeColorChooserAndroid;
 
-    private ColorChooserAndroid(long nativeColorChooserAndroid,
-            Context context, int initialColor, ColorSuggestion[] suggestions) {
+    private ColorChooserAndroid(long nativeColorChooserAndroid, Context context, int initialColor,
+            ColorSuggestion[] suggestions) {
         OnColorChangedListener listener = new OnColorChangedListener() {
             @Override
             public void onColorChanged(int color) {
@@ -48,8 +48,8 @@ public class ColorChooserAndroid {
         if (windowAndroid == null) return null;
         Context windowContext = windowAndroid.getContext().get();
         if (WindowAndroid.activityFromContext(windowContext) == null) return null;
-        ColorChooserAndroid chooser = new ColorChooserAndroid(nativeColorChooserAndroid,
-                windowContext, initialColor, suggestions);
+        ColorChooserAndroid chooser = new ColorChooserAndroid(
+                nativeColorChooserAndroid, windowContext, initialColor, suggestions);
         chooser.openColorChooser();
         return chooser;
     }
@@ -66,8 +66,8 @@ public class ColorChooserAndroid {
      * @param label Label of the suggestion.
      */
     @CalledByNative
-    private static void addToColorSuggestionArray(ColorSuggestion[] array, int index,
-            int color, String label) {
+    private static void addToColorSuggestionArray(
+            ColorSuggestion[] array, int index, int color, String label) {
         array[index] = new ColorSuggestion(color, label);
     }
 

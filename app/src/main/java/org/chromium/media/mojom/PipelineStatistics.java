@@ -97,17 +97,17 @@ public final class PipelineStatistics extends org.chromium.mojo.bindings.Struct 
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(audioBytesDecoded, 8);
+        encoder0.encode(this.audioBytesDecoded, 8);
         
-        encoder0.encode(videoBytesDecoded, 16);
+        encoder0.encode(this.videoBytesDecoded, 16);
         
-        encoder0.encode(videoFramesDecoded, 24);
+        encoder0.encode(this.videoFramesDecoded, 24);
         
-        encoder0.encode(videoFramesDropped, 28);
+        encoder0.encode(this.videoFramesDropped, 28);
         
-        encoder0.encode(audioMemoryUsage, 32);
+        encoder0.encode(this.audioMemoryUsage, 32);
         
-        encoder0.encode(videoMemoryUsage, 40);
+        encoder0.encode(this.videoMemoryUsage, 40);
     }
 
     /**
@@ -144,12 +144,12 @@ public final class PipelineStatistics extends org.chromium.mojo.bindings.Struct 
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(audioBytesDecoded);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(videoBytesDecoded);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(videoFramesDecoded);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(videoFramesDropped);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(audioMemoryUsage);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(videoMemoryUsage);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.audioBytesDecoded);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoBytesDecoded);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoFramesDecoded);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoFramesDropped);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.audioMemoryUsage);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoMemoryUsage);
         return result;
     }
 }

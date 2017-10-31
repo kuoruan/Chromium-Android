@@ -507,7 +507,7 @@ HasWakeLockForTestsResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(wakeLock, 8, false);
+            encoder0.encode(this.wakeLock, 8, false);
         }
     
         /**
@@ -534,7 +534,7 @@ HasWakeLockForTestsResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(wakeLock);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.wakeLock);
             return result;
         }
     }
@@ -600,7 +600,7 @@ HasWakeLockForTestsResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(type, 8);
+            encoder0.encode(this.type, 8);
         }
     
         /**
@@ -627,7 +627,7 @@ HasWakeLockForTestsResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(type);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.type);
             return result;
         }
     }
@@ -692,7 +692,7 @@ HasWakeLockForTestsResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(result, 8, 0);
+            encoder0.encode(this.result, 8, 0);
         }
     
         /**
@@ -719,7 +719,7 @@ HasWakeLockForTestsResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(result);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.result);
             return result;
         }
     }
@@ -926,7 +926,7 @@ HasWakeLockForTestsResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(result, 8, 0);
+            encoder0.encode(this.result, 8, 0);
         }
     
         /**
@@ -953,7 +953,7 @@ HasWakeLockForTestsResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(result);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.result);
             return result;
         }
     }

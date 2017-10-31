@@ -219,11 +219,11 @@ org.chromium.mojo.bindings.InterfaceRequest<AndroidOverlay> overlay, AndroidOver
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(overlay, 8, false);
+            encoder0.encode(this.overlay, 8, false);
             
-            encoder0.encode(client, 12, false, AndroidOverlayClient.MANAGER);
+            encoder0.encode(this.client, 12, false, AndroidOverlayClient.MANAGER);
             
-            encoder0.encode(config, 24, false);
+            encoder0.encode(this.config, 24, false);
         }
     
         /**
@@ -254,9 +254,9 @@ org.chromium.mojo.bindings.InterfaceRequest<AndroidOverlay> overlay, AndroidOver
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(overlay);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(client);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(config);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.overlay);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.client);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.config);
             return result;
         }
     }

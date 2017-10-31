@@ -205,7 +205,7 @@ AudioBuffer buffer) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(buffer, 8, false);
+            encoder0.encode(this.buffer, 8, false);
         }
     
         /**
@@ -232,7 +232,7 @@ AudioBuffer buffer) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(buffer);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.buffer);
             return result;
         }
     }

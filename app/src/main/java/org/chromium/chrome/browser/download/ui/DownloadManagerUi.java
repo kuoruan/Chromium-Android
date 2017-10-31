@@ -9,12 +9,15 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.graphics.drawable.VectorDrawableCompat;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar.OnMenuItemClickListener;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
+import org.chromium.base.DiscardableReferencePool;
 import org.chromium.base.FileUtils;
 import org.chromium.base.ObserverList;
 import org.chromium.base.VisibleForTesting;
@@ -22,17 +25,22 @@ import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.BasicNativePage;
+import org.chromium.chrome.browser.ChromeApplication;
 import org.chromium.chrome.browser.download.DownloadManagerService;
 import org.chromium.chrome.browser.download.DownloadUtils;
-import org.chromium.chrome.browser.offlinepages.downloads.OfflinePageDownloadBridge;
+import org.chromium.chrome.browser.download.items.OfflineContentAggregatorFactory;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.snackbar.Snackbar;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;
 import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarController;
+import org.chromium.chrome.browser.util.FeatureUtilities;
+import org.chromium.chrome.browser.widget.ThumbnailProvider;
+import org.chromium.chrome.browser.widget.ThumbnailProviderImpl;
 import org.chromium.chrome.browser.widget.selection.SelectableListLayout;
 import org.chromium.chrome.browser.widget.selection.SelectableListToolbar;
 import org.chromium.chrome.browser.widget.selection.SelectableListToolbar.SearchDelegate;
 import org.chromium.chrome.browser.widget.selection.SelectionDelegate;
+import org.chromium.components.offline_items_collection.OfflineContentProvider;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -64,14 +72,12 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
     }
 
     private static class DownloadBackendProvider implements BackendProvider {
-        private OfflinePageDownloadBridge mOfflinePageBridge;
         private SelectionDelegate<DownloadHistoryItemWrapper> mSelectionDelegate;
         private ThumbnailProvider mThumbnailProvider;
 
-        DownloadBackendProvider() {
-            mOfflinePageBridge = new OfflinePageDownloadBridge(Profile.getLastUsedProfile());
+        DownloadBackendProvider(DiscardableReferencePool referencePool) {
             mSelectionDelegate = new DownloadItemSelectionDelegate();
-            mThumbnailProvider = new ThumbnailProviderImpl();
+            mThumbnailProvider = new ThumbnailProviderImpl(referencePool);
         }
 
         @Override
@@ -80,8 +86,9 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
         }
 
         @Override
-        public OfflinePageDownloadBridge getOfflinePageBridge() {
-            return mOfflinePageBridge;
+        public OfflineContentProvider getOfflineContentProvider() {
+            return OfflineContentAggregatorFactory.forProfile(
+                    Profile.getLastUsedProfile().getOriginalProfile());
         }
 
         @Override
@@ -96,8 +103,6 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
 
         @Override
         public void destroy() {
-            getOfflinePageBridge().destroy();
-
             mThumbnailProvider.destroy();
             mThumbnailProvider = null;
         }
@@ -162,6 +167,7 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
     private BasicNativePage mNativePage;
     private Activity mActivity;
     private ViewGroup mMainView;
+    private TextView mEmptyView;
     private DownloadManagerToolbar mToolbar;
     private SelectableListLayout<DownloadHistoryItemWrapper> mSelectableListLayout;
     private boolean mIsSeparateActivity;
@@ -180,8 +186,10 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
             ComponentName parentComponent, boolean isSeparateActivity,
             SnackbarManager snackbarManager) {
         mActivity = activity;
-        mBackendProvider =
-                sProviderForTests == null ? new DownloadBackendProvider() : sProviderForTests;
+        ChromeApplication application = (ChromeApplication) activity.getApplication();
+        mBackendProvider = sProviderForTests == null
+                ? new DownloadBackendProvider(application.getReferencePool())
+                : sProviderForTests;
         mSnackbarManager = snackbarManager;
 
         mMainView = (ViewGroup) LayoutInflater.from(activity).inflate(R.layout.download_main, null);
@@ -189,7 +197,7 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
         mSelectableListLayout = (SelectableListLayout<DownloadHistoryItemWrapper>)
                 mMainView.findViewById(R.id.selectable_list);
 
-        mSelectableListLayout.initializeEmptyView(
+        mEmptyView = mSelectableListLayout.initializeEmptyView(
                 VectorDrawableCompat.create(
                         mActivity.getResources(), R.drawable.downloads_big, mActivity.getTheme()),
                 R.string.download_manager_ui_empty, R.string.download_manager_no_results);
@@ -200,13 +208,24 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
         // Prevent every progress update from causing a transition animation.
         mRecyclerView.getItemAnimator().setChangeDuration(0);
 
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                updateInfoButtonVisibility();
+            }
+        });
+
         mFilterAdapter = new FilterAdapter();
         mFilterAdapter.initialize(this);
         addObserver(mFilterAdapter);
 
         mToolbar = (DownloadManagerToolbar) mSelectableListLayout.initializeToolbar(
                 R.layout.download_manager_toolbar, mBackendProvider.getSelectionDelegate(), 0, null,
-                R.id.normal_menu_group, R.id.selection_mode_menu_group, null, this, true);
+                R.id.normal_menu_group, R.id.selection_mode_menu_group,
+                FeatureUtilities.isChromeHomeEnabled() ? R.color.modern_toolbar_bg
+                                                       : R.color.modern_primary_color,
+                this, true);
+        mToolbar.setManager(this);
         mToolbar.initializeFilterSpinner(mFilterAdapter);
         mToolbar.initializeSearchView(this, R.string.download_manager_search, R.id.search_menu_id);
         mToolbar.setInfoMenuItem(R.id.info_menu_id);
@@ -264,6 +283,20 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
      */
     public ViewGroup getView() {
         return mMainView;
+    }
+
+    /**
+     * @return The {@link RecyclerView} that contains the list of download items.
+     */
+    public RecyclerView getRecyclerView() {
+        return mRecyclerView;
+    }
+
+    /**
+     * @return The {@link TextView} shown when there are no download items to be shown.
+     */
+    public TextView getEmptyView() {
+        return mEmptyView;
     }
 
     /**
@@ -454,6 +487,24 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
         mSnackbarManager.dismissSnackbars(mUndoDeletionSnackbarController);
     }
 
+    /**
+     * @return True if info menu item should be shown on download toolbar, false otherwise.
+     */
+    boolean shouldShowInfoButton() {
+        return mHistoryAdapter.getItemCount() > 0 && !mToolbar.isSearching()
+                && !mBackendProvider.getSelectionDelegate().isSelectionEnabled();
+    }
+
+    /**
+     * Update info button visibility based on whether info header is visible on download page.
+     */
+    void updateInfoButtonVisibility() {
+        LinearLayoutManager layoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+        boolean infoHeaderIsVisible = layoutManager.findFirstVisibleItemPosition() == 0;
+        mToolbar.updateInfoMenuItem(infoHeaderIsVisible && shouldShowInfoButton(),
+                mHistoryAdapter.shouldShowStorageInfoHeader());
+    }
+
     @VisibleForTesting
     public SnackbarManager getSnackbarManagerForTesting() {
         return mSnackbarManager;
@@ -475,5 +526,12 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
     @VisibleForTesting
     public static void setProviderForTests(BackendProvider provider) {
         sProviderForTests = provider;
+    }
+
+    /**
+     * Called to scroll to the top of the downloads list.
+     */
+    public void scrollToTop() {
+        mRecyclerView.smoothScrollToPosition(0);
     }
 }

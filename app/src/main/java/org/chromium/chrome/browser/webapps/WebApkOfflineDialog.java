@@ -4,11 +4,10 @@
 
 package org.chromium.chrome.browser.webapps;
 
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.view.ContextThemeWrapper;
+import android.support.v7.app.AlertDialog;
 
 import org.chromium.chrome.R;
 
@@ -29,9 +28,7 @@ public class WebApkOfflineDialog {
      * @param appName The name of the WebAPK for which the dialog is shown.
      */
     public void show(Context context, final DialogListener listener, String appName) {
-        // The context theme wrapper is needed for pre-L.
-        AlertDialog.Builder builder = new AlertDialog.Builder(
-                new ContextThemeWrapper(context, android.R.style.Theme_DeviceDefault_Light_Dialog));
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.AlertDialogTheme);
         builder.setMessage(context.getString(R.string.webapk_offline_dialog, appName))
                 .setNegativeButton(R.string.webapk_offline_dialog_quit_button,
                         new DialogInterface.OnClickListener() {

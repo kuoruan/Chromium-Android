@@ -27,8 +27,10 @@ class BackgroundTaskSchedulerUma {
     static final int BACKGROUND_TASK_OFFLINE_PREFETCH = 7;
     static final int BACKGROUND_TASK_DOWNLOAD_SERVICE = 8;
     static final int BACKGROUND_TASK_DOWNLOAD_CLEANUP = 9;
+    static final int BACKGROUND_TASK_WEBVIEW_VARIATIONS = 10;
+    static final int BACKGROUND_TASK_OFFLINE_CONTENT_NOTIFICATION = 11;
     // Keep this one at the end and increment appropriately when adding new tasks.
-    static final int BACKGROUND_TASK_COUNT = 10;
+    static final int BACKGROUND_TASK_COUNT = 12;
 
     static final String KEY_CACHED_UMA = "bts_cached_uma";
 
@@ -228,6 +230,10 @@ class BackgroundTaskSchedulerUma {
                 return BACKGROUND_TASK_DOWNLOAD_SERVICE;
             case TaskIds.DOWNLOAD_CLEANUP_JOB_ID:
                 return BACKGROUND_TASK_DOWNLOAD_CLEANUP;
+            case TaskIds.WEBVIEW_VARIATIONS_SEED_FETCH_JOB_ID:
+                return BACKGROUND_TASK_WEBVIEW_VARIATIONS;
+            case TaskIds.OFFLINE_PAGES_PREFETCH_NOTIFICATION_JOB_ID:
+                return BACKGROUND_TASK_OFFLINE_CONTENT_NOTIFICATION;
             default:
                 assert false;
         }

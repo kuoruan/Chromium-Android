@@ -5,7 +5,6 @@
 package org.chromium.chrome.browser.download.ui;
 
 import org.chromium.chrome.browser.download.ui.DownloadHistoryAdapter.SubsectionHeader;
-import org.chromium.chrome.browser.download.ui.DownloadHistoryItemWrapper.OfflinePageItemWrapper;
 import org.chromium.chrome.browser.widget.DateDividedAdapter;
 import org.chromium.chrome.browser.widget.DateDividedAdapter.TimedItem;
 
@@ -19,8 +18,8 @@ public class DownloadItemGroup extends DateDividedAdapter.ItemGroup {
     }
 
     private boolean isSuggestedOfflinePage(TimedItem timedItem) {
-        if (timedItem instanceof OfflinePageItemWrapper) {
-            return ((OfflinePageItemWrapper) timedItem).isSuggested();
+        if (timedItem instanceof DownloadHistoryItemWrapper) {
+            return ((DownloadHistoryItemWrapper) timedItem).isSuggested();
         }
 
         return false;

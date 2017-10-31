@@ -37,7 +37,7 @@ import org.chromium.base.ApplicationStatus;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.ChromeApplication;
+import org.chromium.chrome.browser.content.ContentUtils;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -477,16 +477,13 @@ public class OMADownloadHandler extends BroadcastReceiver
         textView = (TextView) v.findViewById(R.id.oma_download_description);
         textView.setText(omaInfo.getValue(OMA_DESCRIPTION));
 
-        DialogInterface.OnClickListener clickListener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (which == AlertDialog.BUTTON_POSITIVE) {
-                    downloadOMAContent(downloadId, downloadInfo, omaInfo);
-                } else {
-                    sendNotification(omaInfo, downloadInfo,
-                            DownloadItem.INVALID_DOWNLOAD_ID,
-                            DOWNLOAD_STATUS_USER_CANCELLED);
-                }
+        DialogInterface.OnClickListener clickListener = (dialog, which) -> {
+            if (which == AlertDialog.BUTTON_POSITIVE) {
+                downloadOMAContent(downloadId, downloadInfo, omaInfo);
+            } else {
+                sendNotification(omaInfo, downloadInfo,
+                        DownloadItem.INVALID_DOWNLOAD_ID,
+                        DOWNLOAD_STATUS_USER_CANCELLED);
             }
         };
         new AlertDialog.Builder(
@@ -512,13 +509,10 @@ public class OMADownloadHandler extends BroadcastReceiver
     private void showDownloadWarningDialog(
             int titleId, final OMAInfo omaInfo, final DownloadInfo downloadInfo,
             final String statusMessage) {
-        DialogInterface.OnClickListener clickListener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (which == AlertDialog.BUTTON_POSITIVE) {
-                    sendInstallNotificationAndNextStep(omaInfo, downloadInfo,
-                            DownloadItem.INVALID_DOWNLOAD_ID, statusMessage);
-                }
+        DialogInterface.OnClickListener clickListener = (dialog, which) -> {
+            if (which == AlertDialog.BUTTON_POSITIVE) {
+                sendInstallNotificationAndNextStep(omaInfo, downloadInfo,
+                        DownloadItem.INVALID_DOWNLOAD_ID, statusMessage);
             }
         };
         new AlertDialog.Builder(
@@ -540,16 +534,13 @@ public class OMADownloadHandler extends BroadcastReceiver
         }
         final String nextUrl = omaInfo.getValue(OMA_NEXT_URL);
         final Activity activity = ApplicationStatus.getLastTrackedFocusedActivity();
-        DialogInterface.OnClickListener clickListener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (which == AlertDialog.BUTTON_POSITIVE) {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(nextUrl));
-                    intent.putExtra(Browser.EXTRA_APPLICATION_ID, activity.getPackageName());
-                    intent.putExtra(Browser.EXTRA_CREATE_NEW_TAB, true);
-                    intent.setPackage(mContext.getPackageName());
-                    activity.startActivity(intent);
-                }
+        DialogInterface.OnClickListener clickListener = (dialog, which) -> {
+            if (which == AlertDialog.BUTTON_POSITIVE) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(nextUrl));
+                intent.putExtra(Browser.EXTRA_APPLICATION_ID, activity.getPackageName());
+                intent.putExtra(Browser.EXTRA_CREATE_NEW_TAB, true);
+                intent.setPackage(mContext.getPackageName());
+                activity.startActivity(intent);
             }
         };
         new AlertDialog.Builder(activity)
@@ -934,7 +925,7 @@ public class OMADownloadHandler extends BroadcastReceiver
                 urlConnection.setRequestMethod("POST");
                 String userAgent = mDownloadInfo.getUserAgent();
                 if (TextUtils.isEmpty(userAgent)) {
-                    userAgent = ChromeApplication.getBrowserUserAgent();
+                    userAgent = ContentUtils.getBrowserUserAgent();
                 }
                 urlConnection.setRequestProperty("User-Agent", userAgent);
                 urlConnection.setRequestProperty("cookie", mDownloadInfo.getCookie());

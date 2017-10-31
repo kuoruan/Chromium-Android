@@ -83,6 +83,10 @@ public class ShortcutHelper {
             "org.chromium.chrome.browser.webapp_shortcut_version";
     public static final String REUSE_URL_MATCHING_TAB_ELSE_NEW_TAB =
             "REUSE_URL_MATCHING_TAB_ELSE_NEW_TAB";
+    // Whether the webapp should navigate to the URL in {@link EXTRA_URL} if the webapp is already
+    // open. Applies to webapps and WebAPKs. Value contains "webapk" for backward compatibility.
+    public static final String EXTRA_FORCE_NAVIGATION =
+            "org.chromium.chrome.browser.webapk_force_navigation";
 
     // When a new field is added to the intent, this version should be incremented so that it will
     // be correctly populated into the WebappRegistry/WebappDataStorage.
@@ -156,8 +160,9 @@ public class ShortcutHelper {
     @CalledByNative
     private static void addWebapp(final String id, final String url, final String scopeUrl,
             final String userTitle, final String name, final String shortName, final String iconUrl,
-            final Bitmap icon, final int displayMode, final int orientation, final int source,
-            final long themeColor, final long backgroundColor, final long callbackPointer) {
+            final Bitmap icon, @WebDisplayMode final int displayMode, final int orientation,
+            final int source, final long themeColor, final long backgroundColor,
+            final long callbackPointer) {
         new AsyncTask<Void, Void, Intent>() {
             @Override
             protected Intent doInBackground(Void... args0) {
@@ -176,7 +181,6 @@ public class ShortcutHelper {
                         backgroundColor, iconUrl.isEmpty());
                 shortcutIntent.putExtra(EXTRA_MAC, getEncodedMac(context, url));
                 shortcutIntent.putExtra(EXTRA_SOURCE, source);
-                shortcutIntent.setPackage(context.getPackageName());
                 return shortcutIntent;
             }
             @Override
@@ -187,12 +191,9 @@ public class ShortcutHelper {
                 // process is complete, call back to native code to start the splash image
                 // download.
                 WebappRegistry.getInstance().register(
-                        id, new WebappRegistry.FetchWebappDataStorageCallback() {
-                            @Override
-                            public void onWebappDataStorageRetrieved(WebappDataStorage storage) {
-                                storage.updateFromShortcutIntent(resultIntent);
-                                nativeOnWebappDataStored(callbackPointer);
-                            }
+                        id, storage -> {
+                            storage.updateFromShortcutIntent(resultIntent);
+                            nativeOnWebappDataStored(callbackPointer);
                         });
                 if (shouldShowToastWhenAddingShortcut()) {
                     showAddedToHomescreenToast(userTitle);
@@ -288,7 +289,7 @@ public class ShortcutHelper {
         showToast(toastText);
     }
 
-    private static void showToast(String text) {
+    public static void showToast(String text) {
         assert ThreadUtils.runningOnUiThread();
         Toast toast =
                 Toast.makeText(ContextUtils.getApplicationContext(), text, Toast.LENGTH_SHORT);
@@ -355,11 +356,12 @@ public class ShortcutHelper {
      */
     public static Intent createWebappShortcutIntent(String id, String action, String url,
             String scope, String name, String shortName, String encodedIcon, int version,
-            int displayMode, int orientation, long themeColor, long backgroundColor,
+            @WebDisplayMode int displayMode, int orientation, long themeColor, long backgroundColor,
             boolean isIconGenerated) {
         // Create an intent as a launcher icon for a full-screen Activity.
         Intent shortcutIntent = new Intent();
-        shortcutIntent.setAction(action)
+        shortcutIntent.setPackage(ContextUtils.getApplicationContext().getPackageName())
+                .setAction(action)
                 .putExtra(EXTRA_ID, id)
                 .putExtra(EXTRA_URL, url)
                 .putExtra(EXTRA_SCOPE, scope)

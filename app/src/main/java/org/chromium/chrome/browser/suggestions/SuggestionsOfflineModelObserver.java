@@ -5,8 +5,10 @@
 package org.chromium.chrome.browser.suggestions;
 
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import org.chromium.base.Callback;
+import org.chromium.chrome.browser.ntp.NewTabPageUma;
 import org.chromium.chrome.browser.offlinepages.DeletedPageInfo;
 import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
 import org.chromium.chrome.browser.offlinepages.OfflinePageItem;
@@ -37,12 +39,12 @@ public abstract class SuggestionsOfflineModelObserver<T extends OfflinableSugges
 
     @Override
     public void offlinePageModelLoaded() {
-        updateOfflinableSuggestionsAvailability();
+        updateAllSuggestionsOfflineAvailability(/* reportPrefetchedSuggestionsCount = */ false);
     }
 
     @Override
     public void offlinePageAdded(OfflinePageItem addedPage) {
-        updateOfflinableSuggestionsAvailability();
+        updateAllSuggestionsOfflineAvailability(/* reportPrefetchedSuggestionsCount = */ false);
     }
 
     @Override
@@ -57,41 +59,100 @@ public abstract class SuggestionsOfflineModelObserver<T extends OfflinableSugges
             // The old value cannot be simply removed without a request to the
             // model, because there may be an older offline page for the same
             // URL.
-            updateOfflinableSuggestionAvailability(suggestion);
+            updateSuggestionOfflineAvailability(suggestion, /* prefetchedReporter = */ null);
         }
     }
 
-    public void updateOfflinableSuggestionsAvailability() {
+    /**
+     * Update offline information for all offlinable suggestions by querying offline page model.
+     * @param reportPrefetchedSuggestionsCount whether to report prefetched suggestions count after
+     *         querying the model.
+     */
+    public void updateAllSuggestionsOfflineAvailability(boolean reportPrefetchedSuggestionsCount) {
+        NumberPrefetchedReporter prefetchedReporter = null;
+        if (reportPrefetchedSuggestionsCount) {
+            int pendingRequestsCount = 0;
+            for (T suggestion : getOfflinableSuggestions()) {
+                ++pendingRequestsCount;
+            }
+            prefetchedReporter = new NumberPrefetchedReporter(pendingRequestsCount);
+        }
         for (T suggestion : getOfflinableSuggestions()) {
-            if (suggestion.requiresExactOfflinePage()) continue;
-            updateOfflinableSuggestionAvailability(suggestion);
+            if (suggestion.requiresExactOfflinePage()) {
+                if (prefetchedReporter != null) {
+                    prefetchedReporter.requestCompleted(/* prefetched = */ false);
+                }
+                continue;
+            }
+            updateSuggestionOfflineAvailability(suggestion, prefetchedReporter);
         }
     }
 
-    public void updateOfflinableSuggestionAvailability(final T suggestion) {
+    /**
+     * Update offline information for given offlinable suggestion by querying offline page model.
+     * @param suggestion given suggestion for which to update the offline information.
+     * @param prefetchedReporter reporter of prefetched suggestions count, null if reporting is
+     *         disabled.
+     */
+    public void updateSuggestionOfflineAvailability(
+            final T suggestion, @Nullable final NumberPrefetchedReporter prefetchedReporter) {
         // This method is not applicable to articles for which the exact offline id must specified.
         assert !suggestion.requiresExactOfflinePage();
-        if (!mOfflinePageBridge.isOfflinePageModelLoaded()) return;
+        if (!mOfflinePageBridge.isOfflinePageModelLoaded()) {
+            if (prefetchedReporter != null) {
+                prefetchedReporter.requestCompleted(/* prefetched = */ false);
+            }
+            return;
+        }
 
         // TabId is relevant only for recent tab offline pages, which we do not handle here, so we
         // do not care about tab id.
         mOfflinePageBridge.selectPageForOnlineUrl(
-                suggestion.getUrl(), /*tabId=*/0, new Callback<OfflinePageItem>() {
+                suggestion.getUrl(), /* tabId = */ 0, new Callback<OfflinePageItem>() {
                     @Override
                     public void onResult(OfflinePageItem item) {
-                        onSuggestionOfflineIdChanged(
-                                suggestion, item == null ? null : item.getOfflineId());
+                        if (prefetchedReporter != null) {
+                            prefetchedReporter.requestCompleted(isPrefetchedOfflinePage(item));
+                        }
+                        onSuggestionOfflineIdChanged(suggestion, item);
                     }
                 });
     }
 
     /**
+     * Returns whether OfflinePageItem corresponds to a prefetched page.
+     * @param item OfflinePageItem to check.
+     */
+    public static boolean isPrefetchedOfflinePage(@Nullable OfflinePageItem item) {
+        return item != null
+                && TextUtils.equals(item.getClientId().getNamespace(),
+                           OfflinePageBridge.SUGGESTED_ARTICLES_NAMESPACE);
+    }
+
+    /**
      * Called when the offline state of a suggestion is retrieved.
      * @param suggestion the suggestion for which the offline state was checked.
-     * @param id the new offline id of the suggestion.
+     * @param item corresponding offline page.
      */
-    public abstract void onSuggestionOfflineIdChanged(T suggestion, @Nullable Long id);
+    public abstract void onSuggestionOfflineIdChanged(T suggestion, OfflinePageItem item);
 
     /** Handle to the suggestions for which to observe changes. */
     public abstract Iterable<T> getOfflinableSuggestions();
+
+    private static class NumberPrefetchedReporter {
+        private int mRemainingRequests;
+        private int mPrefetched;
+
+        public NumberPrefetchedReporter(int requests) {
+            mRemainingRequests = requests;
+        }
+
+        public void requestCompleted(boolean prefetched) {
+            mRemainingRequests--;
+            if (prefetched) mPrefetched++;
+            if (mRemainingRequests == 0) {
+                NewTabPageUma.recordPrefetchedArticleSuggestionsCount(mPrefetched);
+            }
+        }
+    }
 }

@@ -1614,7 +1614,7 @@ this.break_points_=[];
 };
 l.setListener=function(L,M){
 if(!(%IsFunction(L))&&!(L===(void 0))&&!(L===null)){
-throw %make_type_error(36);
+throw %make_type_error(40);
 }
 %SetDebugEventListener(L,M);
 };
@@ -1645,11 +1645,11 @@ l.scriptSource=function(N){
 return this.findScript(N).source;
 };
 l.source=function(R){
-if(!(%IsFunction(R)))throw %make_type_error(36);
+if(!(%IsFunction(R)))throw %make_type_error(40);
 return %FunctionGetSourceCode(R);
 };
 l.sourcePosition=function(R){
-if(!(%IsFunction(R)))throw %make_type_error(36);
+if(!(%IsFunction(R)))throw %make_type_error(40);
 return %FunctionGetScriptSourcePosition(R);
 };
 l.findFunctionSourceLocation=function(S,T,U){
@@ -1692,7 +1692,7 @@ return[q[C].actual_location];
 return[];
 };
 l.setBreakPoint=function(S,T,U,Z){
-if(!(%IsFunction(S)))throw %make_type_error(36);
+if(!(%IsFunction(S)))throw %make_type_error(40);
 if(%FunctionIsAPIFunction(S)){
 throw %make_error(2,'Cannot set break point in native code.');
 }
@@ -1862,7 +1862,7 @@ l.isBreakOnUncaughtException=function(){
 return!!%IsBreakOnException(l.ExceptionBreak.Uncaught);
 };
 l.showBreakPoints=function(R,ab){
-if(!(%IsFunction(R)))throw %make_error(36);
+if(!(%IsFunction(R)))throw %make_error(40);
 var ac=ab?this.scriptSource(R):this.source(R);
 var ad=ab?0:this.sourcePosition(R);
 var B=%GetBreakLocations(R);
@@ -1908,7 +1908,7 @@ ak===l.StepAction.StepOut||
 ak===l.StepAction.StepNext){
 return %PrepareStep(this.break_id,ak);
 }
-throw %make_type_error(36);
+throw %make_type_error(40);
 };
 ExecutionState.prototype.evaluateGlobal=function(ac){
 return g(%DebugEvaluateGlobal(this.break_id,ac));
@@ -1919,14 +1919,14 @@ return %GetFrameCount(this.break_id);
 ExecutionState.prototype.frame=function(al){
 if(al==null)al=this.selected_frame;
 if(al<0||al>=this.frameCount()){
-throw %make_type_error(35);
+throw %make_type_error(39);
 }
 return new c(this.break_id,al);
 };
 ExecutionState.prototype.setSelectedFrame=function(am){
 var C=(%_ToNumber(am));
 if(C<0||C>=this.frameCount()){
-throw %make_type_error(35);
+throw %make_type_error(39);
 }
 this.selected_frame=C;
 };
@@ -2048,7 +2048,7 @@ b.InstallConstants(b,[
 ]);
 })
 
- liveedit}ì
+ liveedití
 (function(a,b){
 "use strict";
 var c=a.Debug.findScriptSourcePosition;
@@ -2811,10 +2811,13 @@ PosTranslator:PosTranslator,
 CompareStrings:CompareStrings,
 ApplySingleChunkPatch:ApplySingleChunkPatch
 };
+b.InstallConstants(b,[
+"SetScriptSource",bI.SetScriptSource,
+]);
 a.Debug.LiveEdit=bI;
 })
 
-4 prologueÙ"
+( prologueÙ"
 (function(a,b,c){
 "use strict";
 %CheckIsBootstrapping();
@@ -2922,25 +2925,7 @@ c.kPROMISE_REJECTED=2;
 %ToFastProperties(c);
 })
 
-max-mini
-(function(a,b){
-"use strict";
-%CheckIsBootstrapping();
-function MaxSimple(c,d){
-return c>d?c:d;
-}
-function MinSimple(c,d){
-return c>d?d:c;
-}
-%SetForceInlineFlag(MaxSimple);
-%SetForceInlineFlag(MinSimple);
-b.Export(function(e){
-e.MaxSimple=MaxSimple;
-e.MinSimple=MinSimple;
-});
-})
-
-$v8nativesÍ
+$v8natives•
 (function(a,b){
 "use strict";
 %CheckIsBootstrapping();
@@ -2948,44 +2933,35 @@ var c=a.Object;
 var d=b.ImportNow("iterator_symbol");
 %DefineMethodsInternal(c.prototype,class{
 toLocaleString(){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"Object.prototype.toLocaleString");
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"Object.prototype.toLocaleString");
 return this.toString();
 }},-1);
 function GetMethod(e,f){
 var g=e[f];
 if((g==null))return(void 0);
 if((typeof(g)==='function'))return g;
-throw %make_type_error(15,typeof g);
+throw %make_type_error(19,typeof g);
 }
-function ObjectConstructor(h){
-if(c!=new.target&&!(new.target===(void 0))){
-return this;
+function GetIterator(e,h){
+if((h===(void 0))){
+h=e[d];
 }
-if((h===null)||(h===(void 0)))return{};
-return(%_ToObject(h));
+if(!(typeof(h)==='function')){
+throw %make_type_error(80,e);
 }
-%SetNativeFlag(c);
-%SetCode(c,ObjectConstructor);
-function GetIterator(e,i){
-if((i===(void 0))){
-i=e[d];
+var i=%_Call(h,e);
+if(!(%_IsJSReceiver(i))){
+throw %make_type_error(73,i);
 }
-if(!(typeof(i)==='function')){
-throw %make_type_error(73,e);
+return i;
 }
-var j=%_Call(i,e);
-if(!(%_IsJSReceiver(j))){
-throw %make_type_error(68,j);
-}
-return j;
-}
-b.Export(function(k){
-k.GetIterator=GetIterator;
-k.GetMethod=GetMethod;
+b.Export(function(j){
+j.GetIterator=GetIterator;
+j.GetMethod=GetMethod;
 });
 })
 
-arrayŠ
+arrayò
 (function(a,b,c){
 "use strict";
 %CheckIsBootstrapping();
@@ -2993,70 +2969,67 @@ var d;
 var e;
 var f=a.Array;
 var g=b.InternalArray;
-var h=b.InternalPackedArray;
-var i;
-var j;
-var k=a.Object.prototype.hasOwnProperty;
-var l=a.Object.prototype.toString;
-var m=b.ImportNow("iterator_symbol");
-var n=b.ImportNow("unscopables_symbol");
-b.Import(function(o){
-d=o.GetIterator;
-e=o.GetMethod;
-i=o.MaxSimple;
-j=o.MinSimple;
+var h=a.Math.max;
+var i=a.Math.min;
+var j=a.Object.prototype.hasOwnProperty;
+var k=a.Object.prototype.toString;
+var l=b.ImportNow("iterator_symbol");
+var m=b.ImportNow("unscopables_symbol");
+b.Import(function(n){
+d=n.GetIterator;
+e=n.GetMethod;
 });
-function ArraySpeciesCreate(p,q){
-q=((q)+0);
-var r=%ArraySpeciesConstructor(p);
-return new r(q);
+function ArraySpeciesCreate(o,p){
+p=((p)+0);
+var q=%ArraySpeciesConstructor(o);
+return new q(p);
 }
-function KeySortCompare(s,t){
-return s-t;
+function KeySortCompare(r,s){
+return r-s;
 }
-function GetSortedArrayKeys(p,u){
-if((typeof(u)==='number')){
-var v=u;
-var w=new g();
-for(var x=0;x<v;++x){
-var y=p[x];
-if(!(y===(void 0))||x in p){
-w.push(x);
+function GetSortedArrayKeys(o,t){
+if((typeof(t)==='number')){
+var u=t;
+var v=new g();
+for(var w=0;w<u;++w){
+var x=o[w];
+if(!(x===(void 0))||w in o){
+v.push(w);
 }
 }
-return w;
+return v;
 }
-return InnerArraySort(u,u.length,KeySortCompare);
+return InnerArraySort(t,t.length,KeySortCompare);
 }
-function SparseJoinWithSeparatorJS(p,w,q,z,A){
-var B=w.length;
-var C=new g(B*2);
-for(var x=0;x<B;x++){
-var D=w[x];
-C[x*2]=D;
-C[x*2+1]=ConvertToString(z,p[D]);
+function SparseJoinWithSeparatorJS(o,v,p,y,z){
+var A=v.length;
+var B=new g(A*2);
+for(var w=0;w<A;w++){
+var C=v[w];
+B[w*2]=C;
+B[w*2+1]=ConvertToString(y,o[C]);
 }
-return %SparseJoinWithSeparator(C,q,A);
+return %SparseJoinWithSeparator(B,p,z);
 }
-function SparseJoin(p,w,z){
-var B=w.length;
-var C=new g(B);
-for(var x=0;x<B;x++){
-C[x]=ConvertToString(z,p[w[x]]);
+function SparseJoin(o,v,y){
+var A=v.length;
+var B=new g(A);
+for(var w=0;w<A;w++){
+B[w]=ConvertToString(y,o[v[w]]);
 }
-return %StringBuilderConcat(C,B,'');
+return %StringBuilderConcat(B,A,'');
 }
-function UseSparseVariant(p,q,E,F){
-if(!E||q<1000||%HasComplexElements(p)){
+function UseSparseVariant(o,p,D,E){
+if(!D||p<1000||%HasComplexElements(o)){
 return false;
 }
-if(!%_IsSmi(q)){
+if(!%_IsSmi(p)){
 return true;
 }
-var G=q>>2;
-var H=%EstimateNumberOfElements(p);
-return(H<G)&&
-(F>H*4);
+var F=p>>2;
+var G=%EstimateNumberOfElements(o);
+return(G<F)&&
+(E>G*4);
 }
 function Stack(){
 this.length=0;
@@ -3064,886 +3037,889 @@ this.values=new g();
 }
 Stack.prototype.length=null;
 Stack.prototype.values=null;
-function StackPush(I,J){
-I.values[I.length++]=J;
+function StackPush(H,I){
+H.values[H.length++]=I;
 }
-function StackPop(I){
-I.values[--I.length]=null
+function StackPop(H){
+H.values[--H.length]=null
 }
-function StackHas(I,K){
-var q=I.length;
-var L=I.values;
-for(var x=0;x<q;x++){
-if(L[x]===K)return true;
+function StackHas(H,J){
+var p=H.length;
+var K=H.values;
+for(var w=0;w<p;w++){
+if(K[w]===J)return true;
 }
 return false;
 }
-var M=new Stack();
-function DoJoin(p,q,E,A,z){
-if(UseSparseVariant(p,q,E,q)){
-%NormalizeElements(p);
-var w=GetSortedArrayKeys(p,%GetArrayKeys(p,q));
-if(A===''){
-if(w.length===0)return'';
-return SparseJoin(p,w,z);
+var L=new Stack();
+function DoJoin(o,p,D,z,y){
+if(UseSparseVariant(o,p,D,p)){
+%NormalizeElements(o);
+var v=GetSortedArrayKeys(o,%GetArrayKeys(o,p));
+if(z===''){
+if(v.length===0)return'';
+return SparseJoin(o,v,y);
 }else{
 return SparseJoinWithSeparatorJS(
-p,w,q,z,A);
+o,v,p,y,z);
 }
 }
-if(q===1){
-return ConvertToString(z,p[0]);
+if(p===1){
+return ConvertToString(y,o[0]);
 }
-var C=new g(q);
-for(var x=0;x<q;x++){
-C[x]=ConvertToString(z,p[x]);
+var B=new g(p);
+for(var w=0;w<p;w++){
+B[w]=ConvertToString(y,o[w]);
 }
-if(A===''){
-return %StringBuilderConcat(C,q,'');
+if(z===''){
+return %StringBuilderConcat(B,p,'');
 }else{
-return %StringBuilderJoin(C,q,A);
+return %StringBuilderJoin(B,p,z);
 }
 }
-function Join(p,q,A,z){
-if(q===0)return'';
-var E=(%_IsArray(p));
-if(E){
-if(StackHas(M,p))return'';
-StackPush(M,p);
+function Join(o,p,z,y){
+if(p===0)return'';
+var D=(%_IsArray(o));
+if(D){
+if(StackHas(L,o))return'';
+StackPush(L,o);
 }
 try{
-return DoJoin(p,q,E,A,z);
+return DoJoin(o,p,D,z,y);
 }finally{
-if(E)StackPop(M);
+if(D)StackPop(L);
 }
 }
-function ConvertToString(z,N){
-if((N==null))return'';
-return(%_ToString(z?N.toLocaleString():N));
+function ConvertToString(y,M){
+if((M==null))return'';
+return(%_ToString(y?M.toLocaleString():M));
 }
-function SparseSlice(p,O,P,Q,R){
-var u=%GetArrayKeys(p,O+P);
-if((typeof(u)==='number')){
-var v=u;
-for(var x=O;x<v;++x){
-var S=p[x];
-if(!(S===(void 0))||x in p){
-%CreateDataProperty(R,x-O,S);
-}
-}
-}else{
-var q=u.length;
-for(var T=0;T<q;++T){
-var D=u[T];
-if(D>=O){
-var S=p[D];
-if(!(S===(void 0))||D in p){
-%CreateDataProperty(R,D-O,S);
-}
-}
-}
-}
-}
-function SparseMove(p,O,P,Q,U){
-if(U===P)return;
-var V=new g(
-j(Q-P+U,0xffffffff));
-var W;
-var u=%GetArrayKeys(p,Q);
-if((typeof(u)==='number')){
-var v=u;
-for(var x=0;x<O&&x<v;++x){
-var S=p[x];
-if(!(S===(void 0))||x in p){
-V[x]=S;
-}
-}
-for(var x=O+P;x<v;++x){
-var S=p[x];
-if(!(S===(void 0))||x in p){
-V[x-P+U]=S;
+function SparseSlice(o,N,O,P,Q){
+var t=%GetArrayKeys(o,N+O);
+if((typeof(t)==='number')){
+var u=t;
+for(var w=N;w<u;++w){
+var R=o[w];
+if(!(R===(void 0))||w in o){
+%CreateDataProperty(Q,w-N,R);
 }
 }
 }else{
-var q=u.length;
-for(var T=0;T<q;++T){
-var D=u[T];
-if(D<O){
-var S=p[D];
-if(!(S===(void 0))||D in p){
-V[D]=S;
-}
-}else if(D>=O+P){
-var S=p[D];
-if(!(S===(void 0))||D in p){
-var X=D-P+U;
-V[X]=S;
-if(X>0xfffffffe){
-W=W||new g();
-W.push(X);
+var p=t.length;
+for(var S=0;S<p;++S){
+var C=t[S];
+if(C>=N){
+var R=o[C];
+if(!(R===(void 0))||C in o){
+%CreateDataProperty(Q,C-N,R);
 }
 }
 }
 }
 }
-%MoveArrayContents(V,p);
-if(!(W===(void 0))){
-var q=W.length;
-for(var x=0;x<q;++x){
-var D=W[x];
-p[D]=V[D];
+function SparseMove(o,N,O,P,T){
+if(T===O)return;
+var U=new g(
+i(P-O+T,0xffffffff));
+var V;
+var t=%GetArrayKeys(o,P);
+if((typeof(t)==='number')){
+var u=t;
+for(var w=0;w<N&&w<u;++w){
+var R=o[w];
+if(!(R===(void 0))||w in o){
+U[w]=R;
 }
 }
-}
-function SimpleSlice(p,O,P,Q,R){
-for(var x=0;x<P;x++){
-var Y=O+x;
-if(Y in p){
-var S=p[Y];
-%CreateDataProperty(R,x,S);
-}
-}
-}
-function SimpleMove(p,O,P,Q,U){
-if(U!==P){
-if(U>P){
-for(var x=Q-P;x>O;x--){
-var Z=x+P-1;
-var aa=x+U-1;
-if(Z in p){
-p[aa]=p[Z];
-}else{
-delete p[aa];
+for(var w=N+O;w<u;++w){
+var R=o[w];
+if(!(R===(void 0))||w in o){
+U[w-O+T]=R;
 }
 }
 }else{
-for(var x=O;x<Q-P;x++){
-var Z=x+P;
-var aa=x+U;
-if(Z in p){
-p[aa]=p[Z];
+var p=t.length;
+for(var S=0;S<p;++S){
+var C=t[S];
+if(C<N){
+var R=o[C];
+if(!(R===(void 0))||C in o){
+U[C]=R;
+}
+}else if(C>=N+O){
+var R=o[C];
+if(!(R===(void 0))||C in o){
+var W=C-O+T;
+U[W]=R;
+if(W>0xfffffffe){
+V=V||new g();
+V.push(W);
+}
+}
+}
+}
+}
+%MoveArrayContents(U,o);
+if(!(V===(void 0))){
+var p=V.length;
+for(var w=0;w<p;++w){
+var C=V[w];
+o[C]=U[C];
+}
+}
+}
+function SimpleSlice(o,N,O,P,Q){
+for(var w=0;w<O;w++){
+var X=N+w;
+if(X in o){
+var R=o[X];
+%CreateDataProperty(Q,w,R);
+}
+}
+}
+function SimpleMove(o,N,O,P,T){
+if(T!==O){
+if(T>O){
+for(var w=P-O;w>N;w--){
+var Y=w+O-1;
+var Z=w+T-1;
+if(Y in o){
+o[Z]=o[Y];
 }else{
-delete p[aa];
+delete o[Z];
 }
 }
-for(var x=Q;x>Q-P+U;x--){
-delete p[x-1];
+}else{
+for(var w=N;w<P-O;w++){
+var Y=w+O;
+var Z=w+T;
+if(Y in o){
+o[Z]=o[Y];
+}else{
+delete o[Z];
+}
+}
+for(var w=P;w>P-O+T;w--){
+delete o[w-1];
 }
 }
 }
 }
-var ab;
+var aa;
 %DefineMethodsInternal(f.prototype,class{toString(){
-var p;
-var ac;
+var o;
+var ab;
 if((%_IsArray(this))){
-ac=this.join;
-if(ac===ab){
+ab=this.join;
+if(ab===aa){
 return Join(this,this.length,',',false);
 }
-p=this;
+o=this;
 }else{
-p=(%_ToObject(this));
-ac=p.join;
+o=(%_ToObject(this));
+ab=o.join;
 }
-if(!(typeof(ac)==='function')){
-return %_Call(l,p);
+if(!(typeof(ab)==='function')){
+return %_Call(k,o);
 }
-return %_Call(ac,p);
+return %_Call(ab,o);
 }},-1);
-function InnerArrayToLocaleString(p,q){
-return Join(p,(%_ToLength(q)),',',true);
+function InnerArrayToLocaleString(o,p){
+return Join(o,(%_ToLength(p)),',',true);
 }
 %DefineMethodsInternal(f.prototype,class{toLocaleString(){
-var p=(%_ToObject(this));
-var ad=p.length;
-return InnerArrayToLocaleString(p,ad);
+var o=(%_ToObject(this));
+var ac=o.length;
+return InnerArrayToLocaleString(o,ac);
 }},-1);
-function InnerArrayJoin(A,p,q){
-if((A===(void 0))){
-A=',';
+function InnerArrayJoin(z,o,p){
+if((z===(void 0))){
+z=',';
 }else{
-A=(%_ToString(A));
+z=(%_ToString(z));
 }
-if(q===1){
-var y=p[0];
-if((y==null))return'';
-return(%_ToString(y));
+if(p===1){
+var x=o[0];
+if((x==null))return'';
+return(%_ToString(x));
 }
-return Join(p,q,A,false);
+return Join(o,p,z,false);
 }
-%DefineMethodsInternal(f.prototype,class{join(A){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"Array.prototype.join");
-var p=(%_ToObject(this));
-var q=(%_ToLength(p.length));
-return InnerArrayJoin(A,p,q);
+%DefineMethodsInternal(f.prototype,class{join(z){
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"Array.prototype.join");
+var o=(%_ToObject(this));
+var p=(%_ToLength(o.length));
+return InnerArrayJoin(z,o,p);
 }},-1);
 function ArrayPopFallback(){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"Array.prototype.pop");
-var p=(%_ToObject(this));
-var ae=(%_ToLength(p.length));
-if(ae==0){
-p.length=ae;
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"Array.prototype.pop");
+var o=(%_ToObject(this));
+var ad=(%_ToLength(o.length));
+if(ad==0){
+o.length=ad;
 return;
 }
-ae--;
-var J=p[ae];
-delete p[ae];
-p.length=ae;
-return J;
+ad--;
+var I=o[ad];
+delete o[ad];
+o.length=ad;
+return I;
 }
 function ArrayPushFallback(){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"Array.prototype.push");
-var p=(%_ToObject(this));
-var ae=(%_ToLength(p.length));
-var af=arguments.length;
-if(af>9007199254740991-ae)throw %make_type_error(234,af,ae);
-for(var x=0;x<af;x++){
-p[x+ae]=arguments[x];
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"Array.prototype.push");
+var o=(%_ToObject(this));
+var ad=(%_ToLength(o.length));
+var ae=arguments.length;
+if(ae>9007199254740991-ad)throw %make_type_error(243,ae,ad);
+for(var w=0;w<ae;w++){
+o[w+ad]=arguments[w];
 }
-var ag=ae+af;
-p.length=ag;
-return ag;
+var af=ad+ae;
+o.length=af;
+return af;
 }
-function SparseReverse(p,Q){
-var w=GetSortedArrayKeys(p,%GetArrayKeys(p,Q));
-var ah=w.length-1;
-var ai=0;
-while(ai<=ah){
-var x=w[ai];
-var aj=w[ah];
-var ak=Q-aj-1;
-var al,am;
-if(ak<=x){
-am=aj;
-while(w[--ah]==aj){}
-al=ak;
+function SparseReverse(o,P){
+var v=GetSortedArrayKeys(o,%GetArrayKeys(o,P));
+var ag=v.length-1;
+var ah=0;
+while(ah<=ag){
+var w=v[ah];
+var ai=v[ag];
+var aj=P-ai-1;
+var ak,al;
+if(aj<=w){
+al=ai;
+while(v[--ag]==ai){}
+ak=aj;
 }
-if(ak>=x){
-al=x;
-while(w[++ai]==x){}
-am=Q-x-1;
+if(aj>=w){
+ak=w;
+while(v[++ah]==w){}
+al=P-w-1;
 }
-var an=p[al];
-if(!(an===(void 0))||al in p){
-var ao=p[am];
-if(!(ao===(void 0))||am in p){
-p[al]=ao;
-p[am]=an;
+var am=o[ak];
+if(!(am===(void 0))||ak in o){
+var an=o[al];
+if(!(an===(void 0))||al in o){
+o[ak]=an;
+o[al]=am;
 }else{
-p[am]=an;
-delete p[al];
-}
-}else{
-var ao=p[am];
-if(!(ao===(void 0))||am in p){
-p[al]=ao;
-delete p[am];
-}
-}
-}
-}
-function PackedArrayReverse(p,Q){
-var aj=Q-1;
-for(var x=0;x<aj;x++,aj--){
-var an=p[x];
-var ao=p[aj];
-p[x]=ao;
-p[aj]=an;
-}
-return p;
-}
-function GenericArrayReverse(p,Q){
-var aj=Q-1;
-for(var x=0;x<aj;x++,aj--){
-if(x in p){
-var an=p[x];
-if(aj in p){
-var ao=p[aj];
-p[x]=ao;
-p[aj]=an;
-}else{
-p[aj]=an;
-delete p[x];
+o[al]=am;
+delete o[ak];
 }
 }else{
-if(aj in p){
-var ao=p[aj];
-p[x]=ao;
-delete p[aj];
+var an=o[al];
+if(!(an===(void 0))||al in o){
+o[ak]=an;
+delete o[al];
 }
 }
 }
-return p;
+}
+function PackedArrayReverse(o,P){
+var ai=P-1;
+for(var w=0;w<ai;w++,ai--){
+var am=o[w];
+var an=o[ai];
+o[w]=an;
+o[ai]=am;
+}
+return o;
+}
+function GenericArrayReverse(o,P){
+var ai=P-1;
+for(var w=0;w<ai;w++,ai--){
+if(w in o){
+var am=o[w];
+if(ai in o){
+var an=o[ai];
+o[w]=an;
+o[ai]=am;
+}else{
+o[ai]=am;
+delete o[w];
+}
+}else{
+if(ai in o){
+var an=o[ai];
+o[w]=an;
+delete o[ai];
+}
+}
+}
+return o;
 }
 %DefineMethodsInternal(f.prototype,class{reverse(){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"Array.prototype.reverse");
-var p=(%_ToObject(this));
-var Q=(%_ToLength(p.length));
-var ap=(%_IsArray(p));
-if(UseSparseVariant(p,Q,ap,Q)){
-%NormalizeElements(p);
-SparseReverse(p,Q);
-return p;
-}else if(ap&&%_HasFastPackedElements(p)){
-return PackedArrayReverse(p,Q);
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"Array.prototype.reverse");
+var o=(%_ToObject(this));
+var P=(%_ToLength(o.length));
+var ao=(%_IsArray(o));
+if(UseSparseVariant(o,P,ao,P)){
+%NormalizeElements(o);
+SparseReverse(o,P);
+return o;
+}else if(ao&&%_HasFastPackedElements(o)){
+return PackedArrayReverse(o,P);
 }else{
-return GenericArrayReverse(p,Q);
+return GenericArrayReverse(o,P);
 }
 }},-1);
 function ArrayShiftFallback(){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"Array.prototype.shift");
-var p=(%_ToObject(this));
-var Q=(%_ToLength(p.length));
-if(Q===0){
-p.length=0;
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"Array.prototype.shift");
+var o=(%_ToObject(this));
+var P=(%_ToLength(o.length));
+if(P===0){
+o.length=0;
 return;
 }
-if(%object_is_sealed(p))throw %make_type_error(13);
-var aq=p[0];
-if(UseSparseVariant(p,Q,(%_IsArray(p)),Q)){
-SparseMove(p,0,1,Q,0);
+if(%object_is_sealed(o))throw %make_type_error(13);
+var ap=o[0];
+if(UseSparseVariant(o,P,(%_IsArray(o)),P)){
+SparseMove(o,0,1,P,0);
 }else{
-SimpleMove(p,0,1,Q,0);
+SimpleMove(o,0,1,P,0);
 }
-p.length=Q-1;
-return aq;
+o.length=P-1;
+return ap;
 }
-function ArrayUnshiftFallback(ar){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"Array.prototype.unshift");
-var p=(%_ToObject(this));
-var Q=(%_ToLength(p.length));
-var as=arguments.length;
-if(Q>0&&UseSparseVariant(p,Q,(%_IsArray(p)),Q)&&
-!%object_is_sealed(p)){
-SparseMove(p,0,0,Q,as);
+function ArrayUnshiftFallback(aq){
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"Array.prototype.unshift");
+var o=(%_ToObject(this));
+var P=(%_ToLength(o.length));
+var ar=arguments.length;
+if(P>0&&UseSparseVariant(o,P,(%_IsArray(o)),P)&&
+!%object_is_sealed(o)){
+SparseMove(o,0,0,P,ar);
 }else{
-SimpleMove(p,0,0,Q,as);
+SimpleMove(o,0,0,P,ar);
 }
-for(var x=0;x<as;x++){
-p[x]=arguments[x];
+for(var w=0;w<ar;w++){
+o[w]=arguments[w];
 }
-var ag=Q+as;
-p.length=ag;
-return ag;
+var af=P+ar;
+o.length=af;
+return af;
 }
-function ArraySliceFallback(at,au){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"Array.prototype.slice");
-var p=(%_ToObject(this));
-var Q=(%_ToLength(p.length));
-var O=(%_ToInteger(at));
-var av=Q;
-if(!(au===(void 0)))av=(%_ToInteger(au));
-if(O<0){
-O+=Q;
-if(O<0)O=0;
+function ArraySliceFallback(as,at){
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"Array.prototype.slice");
+var o=(%_ToObject(this));
+var P=(%_ToLength(o.length));
+var N=(%_ToInteger(as));
+var au=P;
+if(!(at===(void 0)))au=(%_ToInteger(at));
+if(N<0){
+N+=P;
+if(N<0)N=0;
 }else{
-if(O>Q)O=Q;
+if(N>P)N=P;
 }
-if(av<0){
-av+=Q;
-if(av<0)av=0;
+if(au<0){
+au+=P;
+if(au<0)au=0;
 }else{
-if(av>Q)av=Q;
+if(au>P)au=P;
 }
-var aw=ArraySpeciesCreate(p,i(av-O,0));
-if(av<O)return aw;
-if(UseSparseVariant(p,Q,(%_IsArray(p)),av-O)){
-%NormalizeElements(p);
-if((%_IsArray(aw)))%NormalizeElements(aw);
-SparseSlice(p,O,av-O,Q,aw);
+var av=ArraySpeciesCreate(o,h(au-N,0));
+if(au<N)return av;
+if(UseSparseVariant(o,P,(%_IsArray(o)),au-N)){
+%NormalizeElements(o);
+if((%_IsArray(av)))%NormalizeElements(av);
+SparseSlice(o,N,au-N,P,av);
 }else{
-SimpleSlice(p,O,av-O,Q,aw);
+SimpleSlice(o,N,au-N,P,av);
 }
-aw.length=av-O;
-return aw;
+av.length=au-N;
+return av;
 }
-function ComputeSpliceStartIndex(O,Q){
-if(O<0){
-O+=Q;
-return O<0?0:O;
+function ComputeSpliceStartIndex(N,P){
+if(N<0){
+N+=P;
+return N<0?0:N;
 }
-return O>Q?Q:O;
+return N>P?P:N;
 }
-function ComputeSpliceDeleteCount(ax,as,Q,O){
-var P=0;
-if(as==1)
-return Q-O;
-P=(%_ToInteger(ax));
-if(P<0)
+function ComputeSpliceDeleteCount(aw,ar,P,N){
+var O=0;
+if(ar==1)
+return P-N;
+O=(%_ToInteger(aw));
+if(O<0)
 return 0;
-if(P>Q-O)
-return Q-O;
-return P;
+if(O>P-N)
+return P-N;
+return O;
 }
-function ArraySpliceFallback(at,ax){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"Array.prototype.splice");
-var as=arguments.length;
-var p=(%_ToObject(this));
-var Q=(%_ToLength(p.length));
-var O=ComputeSpliceStartIndex((%_ToInteger(at)),Q);
-var P=ComputeSpliceDeleteCount(ax,as,Q,
-O);
-var R=ArraySpeciesCreate(p,P);
-R.length=P;
-var ay=as>2?as-2:0;
-if(P!=ay&&%object_is_sealed(p)){
+function ArraySpliceFallback(as,aw){
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"Array.prototype.splice");
+var ar=arguments.length;
+var o=(%_ToObject(this));
+var P=(%_ToLength(o.length));
+var N=ComputeSpliceStartIndex((%_ToInteger(as)),P);
+var O=ComputeSpliceDeleteCount(aw,ar,P,
+N);
+var Q=ArraySpeciesCreate(o,O);
+Q.length=O;
+var ax=ar>2?ar-2:0;
+if(O!=ax&&%object_is_sealed(o)){
 throw %make_type_error(13);
-}else if(P>0&&%object_is_frozen(p)){
+}else if(O>0&&%object_is_frozen(o)){
 throw %make_type_error(12);
 }
-var az=P;
-if(ay!=P){
-az+=Q-O-P;
+var ay=O;
+if(ax!=O){
+ay+=P-N-O;
 }
-if(UseSparseVariant(p,Q,(%_IsArray(p)),az)){
-%NormalizeElements(p);
-if((%_IsArray(R)))%NormalizeElements(R);
-SparseSlice(p,O,P,Q,R);
-SparseMove(p,O,P,Q,ay);
+if(UseSparseVariant(o,P,(%_IsArray(o)),ay)){
+%NormalizeElements(o);
+if((%_IsArray(Q)))%NormalizeElements(Q);
+SparseSlice(o,N,O,P,Q);
+SparseMove(o,N,O,P,ax);
 }else{
-SimpleSlice(p,O,P,Q,R);
-SimpleMove(p,O,P,Q,ay);
+SimpleSlice(o,N,O,P,Q);
+SimpleMove(o,N,O,P,ax);
 }
-var x=O;
-var aA=2;
-var aB=arguments.length;
-while(aA<aB){
-p[x++]=arguments[aA++];
+var w=N;
+var az=2;
+var aA=arguments.length;
+while(az<aA){
+o[w++]=arguments[az++];
 }
-p.length=Q-P+ay;
-return R;
+o.length=P-O+ax;
+return Q;
 }
-function InnerArraySort(p,q,aC){
-if(!(typeof(aC)==='function')){
-aC=function(N,aD){
-if(N===aD)return 0;
-if(%_IsSmi(N)&&%_IsSmi(aD)){
-return %SmiLexicographicCompare(N,aD);
+function InnerArraySort(o,p,aB){
+if(!(typeof(aB)==='function')){
+aB=function(M,aC){
+if(M===aC)return 0;
+if(%_IsSmi(M)&&%_IsSmi(aC)){
+return %SmiLexicographicCompare(M,aC);
 }
-N=(%_ToString(N));
-aD=(%_ToString(aD));
-if(N==aD)return 0;
-else return N<aD?-1:1;
+M=(%_ToString(M));
+aC=(%_ToString(aC));
+if(M==aC)return 0;
+else return M<aC?-1:1;
 };
 }
-function InsertionSort(s,o,aE){
-for(var x=o+1;x<aE;x++){
-var aF=s[x];
-for(var aj=x-1;aj>=o;aj--){
-var aG=s[aj];
-var aH=aC(aG,aF);
-if(aH>0){
-s[aj+1]=aG;
+function InsertionSort(r,n,aD){
+for(var w=n+1;w<aD;w++){
+var aE=r[w];
+for(var ai=w-1;ai>=n;ai--){
+var aF=r[ai];
+var aG=aB(aF,aE);
+if(aG>0){
+r[ai+1]=aF;
 }else{
 break;
 }
 }
-s[aj+1]=aF;
+r[ai+1]=aE;
 }
 };
-function GetThirdIndex(s,o,aE){
-var aI=new g();
-var aJ=200+((aE-o)&15);
-var aj=0;
-o+=1;
-aE-=1;
-for(var x=o;x<aE;x+=aJ){
-aI[aj]=[x,s[x]];
-aj++;
+function GetThirdIndex(r,n,aD){
+var aH=new g();
+var aI=200+((aD-n)&15);
+var ai=0;
+n+=1;
+aD-=1;
+for(var w=n;w<aD;w+=aI){
+aH[ai]=[w,r[w]];
+ai++;
 }
-aI.sort(function(s,t){
-return aC(s[1],t[1]);
+aH.sort(function(r,s){
+return aB(r[1],s[1]);
 });
-var aK=aI[aI.length>>1][0];
-return aK;
+var aJ=aH[aH.length>>1][0];
+return aJ;
 }
-function QuickSort(s,o,aE){
-var aK=0;
+function QuickSort(r,n,aD){
+var aJ=0;
 while(true){
-if(aE-o<=10){
-InsertionSort(s,o,aE);
+if(aD-n<=10){
+InsertionSort(r,n,aD);
 return;
 }
-if(aE-o>1000){
-aK=GetThirdIndex(s,o,aE);
+if(aD-n>1000){
+aJ=GetThirdIndex(r,n,aD);
 }else{
-aK=o+((aE-o)>>1);
+aJ=n+((aD-n)>>1);
 }
-var aL=s[o];
-var aM=s[aE-1];
-var aN=s[aK];
-var aO=aC(aL,aM);
-if(aO>0){
-var aG=aL;
+var aK=r[n];
+var aL=r[aD-1];
+var aM=r[aJ];
+var aN=aB(aK,aL);
+if(aN>0){
+var aF=aK;
+aK=aL;
+aL=aF;
+}
+var aO=aB(aK,aM);
+if(aO>=0){
+var aF=aK;
+aK=aM;
+aM=aL;
+aL=aF;
+}else{
+var aP=aB(aL,aM);
+if(aP>0){
+var aF=aL;
 aL=aM;
-aM=aG;
-}
-var aP=aC(aL,aN);
-if(aP>=0){
-var aG=aL;
-aL=aN;
-aN=aM;
-aM=aG;
-}else{
-var aQ=aC(aM,aN);
-if(aQ>0){
-var aG=aM;
-aM=aN;
-aN=aG;
+aM=aF;
 }
 }
-s[o]=aL;
-s[aE-1]=aN;
-var aR=aM;
-var aS=o+1;
-var aT=aE-1;
-s[aK]=s[aS];
-s[aS]=aR;
-partition:for(var x=aS+1;x<aT;x++){
-var aF=s[x];
-var aH=aC(aF,aR);
-if(aH<0){
-s[x]=s[aS];
-s[aS]=aF;
-aS++;
-}else if(aH>0){
+r[n]=aK;
+r[aD-1]=aM;
+var aQ=aL;
+var aR=n+1;
+var aS=aD-1;
+r[aJ]=r[aR];
+r[aR]=aQ;
+partition:for(var w=aR+1;w<aS;w++){
+var aE=r[w];
+var aG=aB(aE,aQ);
+if(aG<0){
+r[w]=r[aR];
+r[aR]=aE;
+aR++;
+}else if(aG>0){
 do{
-aT--;
-if(aT==x)break partition;
-var aU=s[aT];
-aH=aC(aU,aR);
-}while(aH>0);
-s[x]=s[aT];
-s[aT]=aF;
-if(aH<0){
-aF=s[x];
-s[x]=s[aS];
-s[aS]=aF;
-aS++;
+aS--;
+if(aS==w)break partition;
+var aT=r[aS];
+aG=aB(aT,aQ);
+}while(aG>0);
+r[w]=r[aS];
+r[aS]=aE;
+if(aG<0){
+aE=r[w];
+r[w]=r[aR];
+r[aR]=aE;
+aR++;
 }
 }
 }
-if(aE-aT<aS-o){
-QuickSort(s,aT,aE);
-aE=aS;
+if(aD-aS<aR-n){
+QuickSort(r,aS,aD);
+aD=aR;
 }else{
-QuickSort(s,o,aS);
-o=aT;
+QuickSort(r,n,aR);
+n=aS;
 }
 }
 };
-function CopyFromPrototype(aV,q){
-var aW=0;
-for(var aX=%object_get_prototype_of(aV);aX;
-aX=%object_get_prototype_of(aX)){
-var u=(%_IsJSProxy(aX))?q:%GetArrayKeys(aX,q);
-if((typeof(u)==='number')){
-var aY=u;
-for(var x=0;x<aY;x++){
-if(!(%_Call(k,aV,x))&&(%_Call(k,aX,x))){
-aV[x]=aX[x];
-if(x>=aW){aW=x+1;}
+function CopyFromPrototype(aU,p){
+var aV=0;
+for(var aW=%object_get_prototype_of(aU);aW;
+aW=%object_get_prototype_of(aW)){
+var t=(%_IsJSProxy(aW))?p:%GetArrayKeys(aW,p);
+if((typeof(t)==='number')){
+var aX=t;
+for(var w=0;w<aX;w++){
+if(!(%_Call(j,aU,w))&&(%_Call(j,aW,w))){
+aU[w]=aW[w];
+if(w>=aV){aV=w+1;}
 }
 }
 }else{
-for(var x=0;x<u.length;x++){
-var Y=u[x];
-if(!(%_Call(k,aV,Y))&&(%_Call(k,aX,Y))){
-aV[Y]=aX[Y];
-if(Y>=aW){aW=Y+1;}
+for(var w=0;w<t.length;w++){
+var X=t[w];
+if(!(%_Call(j,aU,X))&&(%_Call(j,aW,X))){
+aU[X]=aW[X];
+if(X>=aV){aV=X+1;}
 }
 }
 }
 }
-return aW;
+return aV;
 };
-function ShadowPrototypeElements(aV,o,aE){
-for(var aX=%object_get_prototype_of(aV);aX;
-aX=%object_get_prototype_of(aX)){
-var u=(%_IsJSProxy(aX))?aE:%GetArrayKeys(aX,aE);
-if((typeof(u)==='number')){
-var aY=u;
-for(var x=o;x<aY;x++){
-if((%_Call(k,aX,x))){
-aV[x]=(void 0);
+function ShadowPrototypeElements(aU,n,aD){
+for(var aW=%object_get_prototype_of(aU);aW;
+aW=%object_get_prototype_of(aW)){
+var t=(%_IsJSProxy(aW))?aD:%GetArrayKeys(aW,aD);
+if((typeof(t)==='number')){
+var aX=t;
+for(var w=n;w<aX;w++){
+if((%_Call(j,aW,w))){
+aU[w]=(void 0);
 }
 }
 }else{
-for(var x=0;x<u.length;x++){
-var Y=u[x];
-if(o<=Y&&(%_Call(k,aX,Y))){
-aV[Y]=(void 0);
+for(var w=0;w<t.length;w++){
+var X=t[w];
+if(n<=X&&(%_Call(j,aW,X))){
+aU[X]=(void 0);
 }
 }
 }
 }
 };
-function SafeRemoveArrayHoles(aV){
-var aZ=0;
-var ba=q-1;
-var bb=0;
-while(aZ<ba){
-while(aZ<ba&&
-!(aV[aZ]===(void 0))){
-aZ++;
+function SafeRemoveArrayHoles(aU){
+var aY=0;
+var aZ=p-1;
+var ba=0;
+while(aY<aZ){
+while(aY<aZ&&
+!(aU[aY]===(void 0))){
+aY++;
 }
-if(!(%_Call(k,aV,aZ))){
-bb++;
+if(!(%_Call(j,aU,aY))){
+ba++;
 }
-while(aZ<ba&&
-(aV[ba]===(void 0))){
-if(!(%_Call(k,aV,ba))){
-bb++;
+while(aY<aZ&&
+(aU[aZ]===(void 0))){
+if(!(%_Call(j,aU,aZ))){
+ba++;
 }
-ba--;
+aZ--;
 }
-if(aZ<ba){
-aV[aZ]=aV[ba];
-aV[ba]=(void 0);
+if(aY<aZ){
+aU[aY]=aU[aZ];
+aU[aZ]=(void 0);
 }
 }
-if(!(aV[aZ]===(void 0)))aZ++;
-var x;
-for(x=aZ;x<q-bb;x++){
-aV[x]=(void 0);
+if(!(aU[aY]===(void 0)))aY++;
+var w;
+for(w=aY;w<p-ba;w++){
+aU[w]=(void 0);
 }
-for(x=q-bb;x<q;x++){
-if(x in %object_get_prototype_of(aV)){
-aV[x]=(void 0);
+for(w=p-ba;w<p;w++){
+if(w in %object_get_prototype_of(aU)){
+aU[w]=(void 0);
 }else{
-delete aV[x];
+delete aU[w];
 }
 }
-return aZ;
+return aY;
 };
-if(q<2)return p;
-var E=(%_IsArray(p));
-var bc;
-if(!E){
-bc=CopyFromPrototype(p,q);
+if(p<2)return o;
+var D=(%_IsArray(o));
+var bb;
+if(!D){
+bb=CopyFromPrototype(o,p);
 }
-var bd=%RemoveArrayHoles(p,q);
-if(bd==-1){
-bd=SafeRemoveArrayHoles(p);
+var bc=%RemoveArrayHoles(o,p);
+if(bc==-1){
+bc=SafeRemoveArrayHoles(o);
 }
-QuickSort(p,0,bd);
-if(!E&&(bd+1<bc)){
-ShadowPrototypeElements(p,bd,bc);
+QuickSort(o,0,bc);
+if(!D&&(bc+1<bb)){
+ShadowPrototypeElements(o,bc,bb);
 }
-return p;
+return o;
 }
-%DefineMethodsInternal(f.prototype,class{sort(aC){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"Array.prototype.sort");
-var p=(%_ToObject(this));
-var q=(%_ToLength(p.length));
-return InnerArraySort(p,q,aC);
+%DefineMethodsInternal(f.prototype,class{sort(aB){
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"Array.prototype.sort");
+if(!(aB===(void 0))&&!(typeof(aB)==='function')){
+throw %make_type_error(16,aB);
+}
+var o=(%_ToObject(this));
+var p=(%_ToLength(o.length));
+return InnerArraySort(o,p,aB);
 }},-1);
-%DefineMethodsInternal(f.prototype,class{lastIndexOf(aF,Y){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"Array.prototype.lastIndexOf");
-var p=this;
-var q=(%_ToLength(this.length));
-if(q==0)return-1;
+%DefineMethodsInternal(f.prototype,class{lastIndexOf(aE,X){
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"Array.prototype.lastIndexOf");
+var o=this;
+var p=(%_ToLength(this.length));
+if(p==0)return-1;
 if(arguments.length<2){
-Y=q-1;
+X=p-1;
 }else{
-Y=(((%_ToInteger(Y)))+0);
-if(Y<0)Y+=q;
-if(Y<0)return-1;
-else if(Y>=q)Y=q-1;
+X=(((%_ToInteger(X)))+0);
+if(X<0)X+=p;
+if(X<0)return-1;
+else if(X>=p)X=p-1;
 }
-var be=0;
-var aW=Y;
-if(UseSparseVariant(p,q,(%_IsArray(p)),Y)){
-%NormalizeElements(p);
-var u=%GetArrayKeys(p,Y+1);
-if((typeof(u)==='number')){
-aW=u;
+var bd=0;
+var aV=X;
+if(UseSparseVariant(o,p,(%_IsArray(o)),X)){
+%NormalizeElements(o);
+var t=%GetArrayKeys(o,X+1);
+if((typeof(t)==='number')){
+aV=t;
 }else{
-if(u.length==0)return-1;
-var bf=GetSortedArrayKeys(p,u);
-var x=bf.length-1;
-while(x>=0){
-var D=bf[x];
-if(p[D]===aF)return D;
-x--;
+if(t.length==0)return-1;
+var be=GetSortedArrayKeys(o,t);
+var w=be.length-1;
+while(w>=0){
+var C=be[w];
+if(o[C]===aE)return C;
+w--;
 }
 return-1;
 }
 }
-if(!(aF===(void 0))){
-for(var x=aW;x>=be;x--){
-if(p[x]===aF)return x;
+if(!(aE===(void 0))){
+for(var w=aV;w>=bd;w--){
+if(o[w]===aE)return w;
 }
 return-1;
 }
-for(var x=aW;x>=be;x--){
-if((p[x]===(void 0))&&x in p){
-return x;
+for(var w=aV;w>=bd;w--){
+if((o[w]===(void 0))&&w in o){
+return w;
 }
 }
 return-1;
 }},1);
-%DefineMethodsInternal(f.prototype,class{copyWithin(target,at,au){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"Array.prototype.copyWithin");
-var p=(%_ToObject(this));
-var q=(%_ToLength(p.length));
+%DefineMethodsInternal(f.prototype,class{copyWithin(target,as,at){
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"Array.prototype.copyWithin");
+var o=(%_ToObject(this));
+var p=(%_ToLength(o.length));
 target=(%_ToInteger(target));
-var aE;
+var aD;
 if(target<0){
-aE=i(q+target,0);
+aD=h(p+target,0);
 }else{
-aE=j(target,q);
+aD=i(target,p);
 }
-at=(%_ToInteger(at));
-var o;
+as=(%_ToInteger(as));
+var n;
+if(as<0){
+n=h(p+as,0);
+}else{
+n=i(as,p);
+}
+at=(at===(void 0))?p:(%_ToInteger(at));
+var bf;
 if(at<0){
-o=i(q+at,0);
+bf=h(p+at,0);
 }else{
-o=j(at,q);
+bf=i(at,p);
 }
-au=(au===(void 0))?q:(%_ToInteger(au));
-var bg;
-if(au<0){
-bg=i(q+au,0);
+var bg=i(bf-n,p-aD);
+var bh=1;
+if(n<aD&&aD<(n+bg)){
+bh=-1;
+n=n+bg-1;
+aD=aD+bg-1;
+}
+while(bg>0){
+if(n in o){
+o[aD]=o[n];
 }else{
-bg=j(au,q);
+delete o[aD];
 }
-var bh=j(bg-o,q-aE);
-var bi=1;
-if(o<aE&&aE<(o+bh)){
-bi=-1;
-o=o+bh-1;
-aE=aE+bh-1;
+n=n+bh;
+aD=aD+bh;
+bg--;
 }
-while(bh>0){
-if(o in p){
-p[aE]=p[o];
-}else{
-delete p[aE];
-}
-o=o+bi;
-aE=aE+bi;
-bh--;
-}
-return p;
+return o;
 }},2);
-function InnerArrayFind(bj,bk,p,q){
-if(!(typeof(bj)==='function')){
-throw %make_type_error(15,bj);
+function InnerArrayFind(bi,bj,o,p){
+if(!(typeof(bi)==='function')){
+throw %make_type_error(19,bi);
 }
-for(var x=0;x<q;x++){
-var aF=p[x];
-if(%_Call(bj,bk,aF,x,p)){
-return aF;
+for(var w=0;w<p;w++){
+var aE=o[w];
+if(%_Call(bi,bj,aE,w,o)){
+return aE;
 }
 }
 return;
 }
-%DefineMethodsInternal(f.prototype,class{find(bj,bk){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"Array.prototype.find");
-var p=(%_ToObject(this));
-var q=(%_ToInteger(p.length));
-return InnerArrayFind(bj,bk,p,q);
+%DefineMethodsInternal(f.prototype,class{find(bi,bj){
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"Array.prototype.find");
+var o=(%_ToObject(this));
+var p=(%_ToInteger(o.length));
+return InnerArrayFind(bi,bj,o,p);
 }},1);
-function InnerArrayFindIndex(bj,bk,p,q){
-if(!(typeof(bj)==='function')){
-throw %make_type_error(15,bj);
+function InnerArrayFindIndex(bi,bj,o,p){
+if(!(typeof(bi)==='function')){
+throw %make_type_error(19,bi);
 }
-for(var x=0;x<q;x++){
-var aF=p[x];
-if(%_Call(bj,bk,aF,x,p)){
-return x;
+for(var w=0;w<p;w++){
+var aE=o[w];
+if(%_Call(bi,bj,aE,w,o)){
+return w;
 }
 }
 return-1;
 }
-%DefineMethodsInternal(f.prototype,class{findIndex(bj,bk){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"Array.prototype.findIndex");
-var p=(%_ToObject(this));
-var q=(%_ToInteger(p.length));
-return InnerArrayFindIndex(bj,bk,p,q);
+%DefineMethodsInternal(f.prototype,class{findIndex(bi,bj){
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"Array.prototype.findIndex");
+var o=(%_ToObject(this));
+var p=(%_ToInteger(o.length));
+return InnerArrayFindIndex(bi,bj,o,p);
 }},1);
-%DefineMethodsInternal(f.prototype,class{fill(J,at,au){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"Array.prototype.fill");
-var p=(%_ToObject(this));
-var q=(%_ToLength(p.length));
-var x=(at===(void 0))?0:(%_ToInteger(at));
-var au=(au===(void 0))?q:(%_ToInteger(au));
-if(x<0){
-x+=q;
-if(x<0)x=0;
+%DefineMethodsInternal(f.prototype,class{fill(I,as,at){
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"Array.prototype.fill");
+var o=(%_ToObject(this));
+var p=(%_ToLength(o.length));
+var w=(as===(void 0))?0:(%_ToInteger(as));
+var at=(at===(void 0))?p:(%_ToInteger(at));
+if(w<0){
+w+=p;
+if(w<0)w=0;
 }else{
-if(x>q)x=q;
+if(w>p)w=p;
 }
-if(au<0){
-au+=q;
-if(au<0)au=0;
+if(at<0){
+at+=p;
+if(at<0)at=0;
 }else{
-if(au>q)au=q;
+if(at>p)at=p;
 }
-if((au-x)>0&&%object_is_frozen(p)){
+if((at-w)>0&&%object_is_frozen(o)){
 throw %make_type_error(12);
 }
-for(;x<au;x++)
-p[x]=J;
-return p;
+for(;w<at;w++)
+o[w]=I;
+return o;
 }},1);
 %DefineMethodsInternal(f,class{'from'(arrayLike,mapfn,receiver){
-var bl=(%_ToObject(arrayLike));
-var bm=!(mapfn===(void 0));
-if(bm){
+var bk=(%_ToObject(arrayLike));
+var bl=!(mapfn===(void 0));
+if(bl){
 if(!(typeof(mapfn)==='function')){
-throw %make_type_error(15,mapfn);
+throw %make_type_error(19,mapfn);
 }
 }
-var bn=e(bl,m);
-var T;
-var aw;
+var bm=e(bk,l);
+var S;
+var av;
+var bn;
 var bo;
-var bp;
-if(!(bn===(void 0))){
-aw=%IsConstructor(this)?new this():[];
-T=0;
-for(bp of
-{[m](){return d(bl,bn)}}){
-if(bm){
-bo=%_Call(mapfn,receiver,bp,T);
+if(!(bm===(void 0))){
+av=%IsConstructor(this)?new this():[];
+S=0;
+for(bo of
+{[l](){return d(bk,bm)}}){
+if(bl){
+bn=%_Call(mapfn,receiver,bo,S);
 }else{
-bo=bp;
+bn=bo;
 }
-%CreateDataProperty(aw,T,bo);
-T++;
+%CreateDataProperty(av,S,bn);
+S++;
 }
-aw.length=T;
-return aw;
+av.length=S;
+return av;
 }else{
-var Q=(%_ToLength(bl.length));
-aw=%IsConstructor(this)?new this(Q):new f(Q);
-for(T=0;T<Q;++T){
-bp=bl[T];
-if(bm){
-bo=%_Call(mapfn,receiver,bp,T);
+var P=(%_ToLength(bk.length));
+av=%IsConstructor(this)?new this(P):new f(P);
+for(S=0;S<P;++S){
+bo=bk[S];
+if(bl){
+bn=%_Call(mapfn,receiver,bo,S);
 }else{
-bo=bp;
+bn=bo;
 }
-%CreateDataProperty(aw,T,bo);
+%CreateDataProperty(av,S,bn);
 }
-aw.length=T;
-return aw;
+av.length=S;
+return av;
 }
 }},1);
 %DefineMethodsInternal(f,class{of(...args){
-var q=args.length;
-var r=this;
-var p=%IsConstructor(r)?new r(q):[];
-for(var x=0;x<q;x++){
-%CreateDataProperty(p,x,args[x]);
+var p=args.length;
+var q=this;
+var o=%IsConstructor(q)?new q(p):[];
+for(var w=0;w<p;w++){
+%CreateDataProperty(o,w,args[w]);
 }
-p.length=q;
-return p;
+o.length=p;
+return o;
 }},-1);
-var bq={
+var bp={
 __proto__:null,
 copyWithin:true,
 entries:true,
@@ -3953,62 +3929,56 @@ findIndex:true,
 includes:true,
 keys:true,
 };
-%ToFastProperties(bq);
-%AddNamedProperty(f.prototype,n,bq,
+%ToFastProperties(bp);
+%AddNamedProperty(f.prototype,m,bp,
 2|1);
-var br=f.prototype.indexOf;
-var ab=f.prototype.join;
-var bs=f.prototype.pop;
-var bt=f.prototype.push;
-var bu=f.prototype.slice;
-var bv=f.prototype.shift;
-var bw=f.prototype.sort;
-var bx=f.prototype.splice;
-var by=f.prototype.toString;
-var bz=f.prototype.unshift;
-var bA=f.prototype.entries;
-var bB=f.prototype.forEach;
-var bC=f.prototype.keys;
-var bD=f.prototype[m];
+var bq=f.prototype.indexOf;
+var aa=f.prototype.join;
+var br=f.prototype.pop;
+var bs=f.prototype.push;
+var bt=f.prototype.slice;
+var bu=f.prototype.shift;
+var bv=f.prototype.sort;
+var bw=f.prototype.splice;
+var bx=f.prototype.toString;
+var by=f.prototype.unshift;
+var bz=f.prototype.entries;
+var bA=f.prototype.forEach;
+var bB=f.prototype.keys;
+var bC=f.prototype[l];
 b.SetUpLockedPrototype(g,f(),[
-"indexOf",br,
-"join",ab,
-"pop",bs,
-"push",bt,
-"shift",bv,
-"sort",bw,
-"splice",bx
-]);
-b.SetUpLockedPrototype(h,f(),[
-"join",ab,
-"pop",bs,
-"push",bt,
-"shift",bv
+"indexOf",bq,
+"join",aa,
+"pop",br,
+"push",bs,
+"shift",bu,
+"sort",bv,
+"splice",bw
 ]);
 b.SetUpLockedPrototype(c.InternalPackedArray,f(),[
-"push",bt,
-"pop",bs,
-"shift",bv,
-"unshift",bz,
-"splice",bx,
-"slice",bu
+"push",bs,
+"pop",br,
+"shift",bu,
+"unshift",by,
+"splice",bw,
+"slice",bt
 ]);
-b.Export(function(aE){
-aE.ArrayJoin=ab;
-aE.ArrayPush=bt;
-aE.ArrayToString=by;
-aE.ArrayValues=bD;
-aE.InnerArrayFind=InnerArrayFind;
-aE.InnerArrayFindIndex=InnerArrayFindIndex;
-aE.InnerArrayJoin=InnerArrayJoin;
-aE.InnerArraySort=InnerArraySort;
-aE.InnerArrayToLocaleString=InnerArrayToLocaleString;
+b.Export(function(aD){
+aD.ArrayJoin=aa;
+aD.ArrayPush=bs;
+aD.ArrayToString=bx;
+aD.ArrayValues=bC;
+aD.InnerArrayFind=InnerArrayFind;
+aD.InnerArrayFindIndex=InnerArrayFindIndex;
+aD.InnerArrayJoin=InnerArrayJoin;
+aD.InnerArraySort=InnerArraySort;
+aD.InnerArrayToLocaleString=InnerArrayToLocaleString;
 });
 %InstallToContext([
-"array_entries_iterator",bA,
-"array_for_each_iterator",bB,
-"array_keys_iterator",bC,
-"array_values_iterator",bD,
+"array_entries_iterator",bz,
+"array_for_each_iterator",bA,
+"array_keys_iterator",bB,
+"array_values_iterator",bC,
 "array_pop",ArrayPopFallback,
 "array_push",ArrayPushFallback,
 "array_shift",ArrayShiftFallback,
@@ -4018,188 +3988,97 @@ aE.InnerArrayToLocaleString=InnerArrayToLocaleString;
 ]);
 });
 
-string•J
+string
 (function(a,b){
 "use strict";
 %CheckIsBootstrapping();
 var c=a.String;
 var d=b.ImportNow("match_symbol");
 var e=b.ImportNow("search_symbol");
-function HtmlEscape(f){
-return %RegExpInternalReplace(/"/g,(%_ToString(f)),"&quot;");
-}
 %DefineMethodsInternal(c.prototype,class{
 match(pattern){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.match");
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"String.prototype.match");
 if(!(pattern==null)){
-var g=pattern[d];
-if(!(g===(void 0))){
-return %_Call(g,pattern,this);
+var f=pattern[d];
+if(!(f===(void 0))){
+return %_Call(f,pattern,this);
 }
 }
-var h=(%_ToString(this));
-var i=%RegExpCreate(pattern);
-return i[d](h);
+var g=(%_ToString(this));
+var h=%RegExpCreate(pattern);
+return h[d](g);
 }
 search(pattern){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.search");
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"String.prototype.search");
 if(!(pattern==null)){
-var j=pattern[e];
-if(!(j===(void 0))){
-return %_Call(j,pattern,this);
+var i=pattern[e];
+if(!(i===(void 0))){
+return %_Call(i,pattern,this);
 }
 }
-var h=(%_ToString(this));
-var i=%RegExpCreate(pattern);
-return %_Call(i[e],i,h);
-}
-anchor(name){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.anchor");
-return"<a name=\""+HtmlEscape(name)+"\">"+(%_ToString(this))+
-"</a>";
-}
-big(){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.big");
-return"<big>"+(%_ToString(this))+"</big>";
-}
-blink(){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.blink");
-return"<blink>"+(%_ToString(this))+"</blink>";
-}
-bold(){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.bold");
-return"<b>"+(%_ToString(this))+"</b>";
-}
-fixed(){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.fixed");
-return"<tt>"+(%_ToString(this))+"</tt>";
-}
-fontcolor(color){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.fontcolor");
-return"<font color=\""+HtmlEscape(color)+"\">"+(%_ToString(this))+
-"</font>";
-}
-fontsize(size){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.fontsize");
-return"<font size=\""+HtmlEscape(size)+"\">"+(%_ToString(this))+
-"</font>";
-}
-italics(){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.italics");
-return"<i>"+(%_ToString(this))+"</i>";
-}
-link(s){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.link");
-return"<a href=\""+HtmlEscape(s)+"\">"+(%_ToString(this))+"</a>";
-}
-small(){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.small");
-return"<small>"+(%_ToString(this))+"</small>";
-}
-strike(){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.strike");
-return"<strike>"+(%_ToString(this))+"</strike>";
-}
-sub(){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.sub");
-return"<sub>"+(%_ToString(this))+"</sub>";
-}
-sup(){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.sup");
-return"<sup>"+(%_ToString(this))+"</sup>";
-}
-repeat(count){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.repeat");
-var k=(%_ToString(this));
-var l=(%_ToInteger(count));
-if(l<0||l===(1/0))throw %make_range_error(161);
-if(k.length===0)return"";
-if(l>%_MaxSmi())throw %make_range_error(170);
-var m="";
-while(true){
-if(l&1)m+=k;
-l>>=1;
-if(l===0)return m;
-k+=k;
-}
-}
-codePointAt(pos){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.codePointAt");
-var n=(%_ToString(this));
-var o=n.length;
-pos=(%_ToInteger(pos));
-if(pos<0||pos>=o){
-return(void 0);
-}
-var p=%_StringCharCodeAt(n,pos);
-if(p<0xD800||p>0xDBFF||pos+1==o){
-return p;
-}
-var q=%_StringCharCodeAt(n,pos+1);
-if(q<0xDC00||q>0xDFFF){
-return p;
-}
-return(p-0xD800)*0x400+q+0x2400;
+var g=(%_ToString(this));
+var h=%RegExpCreate(pattern);
+return %_Call(h[e],h,g);
 }
 },-1);
-function StringPad(r,s,t){
-s=(%_ToLength(s));
-var u=r.length;
-if(s<=u)return"";
-if((t===(void 0))){
-t=" ";
+function StringPad(j,k,l){
+k=(%_ToLength(k));
+var m=j.length;
+if(k<=m)return"";
+if((l===(void 0))){
+l=" ";
 }else{
-t=(%_ToString(t));
-if(t===""){
+l=(%_ToString(l));
+if(l===""){
 return"";
 }
 }
-var v=s-u;
-var w=(v/t.length)|0;
-var x=(v-t.length*w)|0;
-var y="";
+var n=k-m;
+var o=(n/l.length)|0;
+var p=(n-l.length*o)|0;
+var q="";
 while(true){
-if(w&1)y+=t;
-w>>=1;
-if(w===0)break;
-t+=t;
+if(o&1)q+=l;
+o>>=1;
+if(o===0)break;
+l+=l;
 }
-if(x){
-y+=%_SubString(t,0,x);
+if(p){
+q+=%_SubString(l,0,p);
 }
-return y;
+return q;
 }
 %DefineMethodsInternal(c.prototype,class{
-padStart(s,t){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.padStart");
-var r=(%_ToString(this));
-return StringPad(r,s,t)+r;
+padStart(k,l){
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"String.prototype.padStart");
+var j=(%_ToString(this));
+return StringPad(j,k,l)+j;
 }
-padEnd(s,t){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.padEnd");
-var r=(%_ToString(this));
-return r+StringPad(r,s,t);
+padEnd(k,l){
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"String.prototype.padEnd");
+var j=(%_ToString(this));
+return j+StringPad(j,k,l);
 }
 },1);
 %DefineMethodsInternal(c,class{
 raw(callSite){
-var z=arguments.length;
-var A=(%_ToObject(callSite));
-var B=(%_ToObject(A.raw));
-var C=(%_ToLength(B.length));
-if(C<=0)return"";
-var D=(%_ToString(B[0]));
-for(var E=1;E<C;++E){
-if(E<z){
-D+=(%_ToString(arguments[E]));
+var r=arguments.length;
+var s=(%_ToObject(callSite));
+var t=(%_ToObject(s.raw));
+var u=(%_ToLength(t.length));
+if(u<=0)return"";
+var v=(%_ToString(t[0]));
+for(var w=1;w<u;++w){
+if(w<r){
+v+=(%_ToString(arguments[w]));
 }
-D+=(%_ToString(B[E]));
+v+=(%_ToString(t[w]));
 }
-return D;
+return v;
 }},-1);
 })
 
-(typedarrayš‘
+(typedarraynv
 (function(a,b){
 "use strict";
 %CheckIsBootstrapping();
@@ -4216,8 +4095,8 @@ var l;
 var m;
 var n;
 var o=b.InternalArray;
-var p;
-var q;
+var p=a.Math.max;
+var q=a.Math.min;
 var r=b.ImportNow("iterator_symbol");
 var s=b.ImportNow("species_symbol");
 var t=b.ImportNow("to_string_tag_symbol");
@@ -4249,8 +4128,6 @@ k=E.InnerArrayFindIndex;
 l=E.InnerArrayJoin;
 m=E.InnerArraySort;
 n=E.InnerArrayToLocaleString;
-p=E.MaxSimple;
-q=E.MinSimple;
 });
 function SpeciesConstructor(F,G){
 var H=F.constructor;
@@ -4258,7 +4135,7 @@ if((H===(void 0))){
 return G;
 }
 if(!(%_IsJSReceiver(H))){
-throw %make_type_error(30);
+throw %make_type_error(34);
 }
 var I=H[s];
 if((I==null)){
@@ -4267,12 +4144,12 @@ return G;
 if(%IsConstructor(I)){
 return I;
 }
-throw %make_type_error(246);
+throw %make_type_error(255);
 }
 function ValidateTypedArray(J,K){
-if(!(%_IsTypedArray(J)))throw %make_type_error(76);
+if(!(%_IsTypedArray(J)))throw %make_type_error(83);
 if(%_ArrayBufferViewWasNeutered(J))
-throw %make_type_error(39,K);
+throw %make_type_error(43,K);
 }
 function TypedArrayDefaultConstructor(L){
 switch(%_ClassOf(L)){
@@ -4305,7 +4182,7 @@ return C;
 
 
 }
-throw %make_type_error(48,
+throw %make_type_error(53,
 "TypedArrayDefaultConstructor",this);
 }
 function TypedArrayCreate(H,M,N,O){
@@ -4316,7 +4193,7 @@ var P=new H(M,N,O);
 }
 ValidateTypedArray(P,"TypedArrayCreate");
 if((typeof(M)==='number')&&%_TypedArrayGetLength(P)<M){
-throw %make_type_error(262);
+throw %make_type_error(271);
 }
 return P;
 }
@@ -4375,7 +4252,7 @@ Uint8ArrayConstructByIterable(this,N,T);
 %typed_array_construct_by_length(this,N,1);
 }
 }else{
-throw %make_type_error(29,"Uint8Array")
+throw %make_type_error(33,"Uint8Array")
 }
 }
 function Uint8ArraySubArray(af,ag){
@@ -4457,7 +4334,7 @@ Int8ArrayConstructByIterable(this,N,T);
 %typed_array_construct_by_length(this,N,1);
 }
 }else{
-throw %make_type_error(29,"Int8Array")
+throw %make_type_error(33,"Int8Array")
 }
 }
 function Int8ArraySubArray(af,ag){
@@ -4539,7 +4416,7 @@ Uint16ArrayConstructByIterable(this,N,T);
 %typed_array_construct_by_length(this,N,2);
 }
 }else{
-throw %make_type_error(29,"Uint16Array")
+throw %make_type_error(33,"Uint16Array")
 }
 }
 function Uint16ArraySubArray(af,ag){
@@ -4621,7 +4498,7 @@ Int16ArrayConstructByIterable(this,N,T);
 %typed_array_construct_by_length(this,N,2);
 }
 }else{
-throw %make_type_error(29,"Int16Array")
+throw %make_type_error(33,"Int16Array")
 }
 }
 function Int16ArraySubArray(af,ag){
@@ -4703,7 +4580,7 @@ Uint32ArrayConstructByIterable(this,N,T);
 %typed_array_construct_by_length(this,N,4);
 }
 }else{
-throw %make_type_error(29,"Uint32Array")
+throw %make_type_error(33,"Uint32Array")
 }
 }
 function Uint32ArraySubArray(af,ag){
@@ -4785,7 +4662,7 @@ Int32ArrayConstructByIterable(this,N,T);
 %typed_array_construct_by_length(this,N,4);
 }
 }else{
-throw %make_type_error(29,"Int32Array")
+throw %make_type_error(33,"Int32Array")
 }
 }
 function Int32ArraySubArray(af,ag){
@@ -4867,7 +4744,7 @@ Float32ArrayConstructByIterable(this,N,T);
 %typed_array_construct_by_length(this,N,4);
 }
 }else{
-throw %make_type_error(29,"Float32Array")
+throw %make_type_error(33,"Float32Array")
 }
 }
 function Float32ArraySubArray(af,ag){
@@ -4949,7 +4826,7 @@ Float64ArrayConstructByIterable(this,N,T);
 %typed_array_construct_by_length(this,N,8);
 }
 }else{
-throw %make_type_error(29,"Float64Array")
+throw %make_type_error(33,"Float64Array")
 }
 }
 function Float64ArraySubArray(af,ag){
@@ -5031,7 +4908,7 @@ Uint8ClampedArrayConstructByIterable(this,N,T);
 %typed_array_construct_by_length(this,N,1);
 }
 }else{
-throw %make_type_error(29,"Uint8ClampedArray")
+throw %make_type_error(33,"Uint8ClampedArray")
 }
 }
 function Uint8ClampedArraySubArray(af,ag){
@@ -5095,130 +4972,34 @@ return %_Call(Uint8ClampedArraySubArray,this,af,ag);
 
 
 }
-throw %make_type_error(48,
+throw %make_type_error(53,
 "get %TypedArray%.prototype.subarray",this);
 }},-1);
-%SetForceInlineFlag(D.prototype.subarray);
-function TypedArraySetFromArrayLike(am,an,ao,ap){
-if(ap>0){
-for(var aq=0;aq<ao;aq++){
-am[ap+aq]=an[aq];
-}
-}
-else{
-for(var aq=0;aq<ao;aq++){
-am[aq]=an[aq];
-}
-}
-}
-function TypedArraySetFromOverlappingTypedArray(am,an,ap){
-var ar=an.BYTES_PER_ELEMENT;
-var as=am.BYTES_PER_ELEMENT;
-var ao=%_TypedArrayGetLength(an);
-function CopyLeftPart(){
-var at=%_ArrayBufferViewGetByteOffset(am)+
-(ap+1)*as;
-var au=%_ArrayBufferViewGetByteOffset(an);
-for(var av=0;
-av<ao&&at<=au;
-av++){
-am[ap+av]=an[av];
-at+=as;
-au+=ar;
-}
-return av;
-}
-var av=CopyLeftPart();
-function CopyRightPart(){
-var at=%_ArrayBufferViewGetByteOffset(am)+
-(ap+ao-1)*as;
-var au=%_ArrayBufferViewGetByteOffset(an)+
-ao*ar;
-for(var aw=ao-1;
-aw>=av&&at>=au;
-aw--){
-am[ap+aw]=an[aw];
-at-=as;
-au-=ar;
-}
-return aw;
-}
-var aw=CopyRightPart();
-var ax=new f(aw+1-av);
-for(var aq=av;aq<=aw;aq++){
-ax[aq-av]=an[aq];
-}
-for(aq=av;aq<=aw;aq++){
-am[ap+aq]=ax[aq-av];
-}
-}
-%DefineMethodsInternal(D.prototype,class{set(R,ap){
-var ay=(ap===(void 0))?0:(%_ToInteger(ap));
-if(ay<0)throw %make_type_error(183);
-if(ay>%_MaxSmi()){
-throw %make_range_error(184);
-}
-switch(%TypedArraySetFastCases(this,R,ay)){
-case 0:
-return;
-case 1:
-TypedArraySetFromOverlappingTypedArray(this,R,ay);
-return;
-case 2:
-if(ay===0){
-%TypedArrayCopyElements(this,R,%_TypedArrayGetLength(R));
-}else{
-TypedArraySetFromArrayLike(
-this,R,%_TypedArrayGetLength(R),ay);
-}
-return;
-case 3:
-var az=R.length;
-if((az===(void 0))){
-if((typeof(R)==='number')){
-throw %make_type_error(50);
-}
-return;
-}
-az=(%_ToLength(az));
-if(ay+az>%_TypedArrayGetLength(this)){
-throw %make_range_error(184);
-}
-TypedArraySetFromArrayLike(this,R,az,ay);
-return;
-}
-}},1);
-%DefineMethodsInternal(D.prototype,class{get[t](){
-if(!(%_IsTypedArray(this)))return;
-var aA=%_ClassOf(this);
-if((aA===(void 0)))return;
-return aA;
-}},-1);
-function InnerTypedArrayFilter(aB,aC,J,Z,aD){
-var aE=0;
+function InnerTypedArrayFilter(am,an,J,Z,ao){
+var ap=0;
 for(var aq=0;aq<Z;aq++){
 if(aq in J){
-var aF=J[aq];
-if(%_Call(aB,aC,aF,aq,J)){
-%CreateDataProperty(aD,aE,aF);
-aE++;
+var ar=J[aq];
+if(%_Call(am,an,ar,aq,J)){
+%CreateDataProperty(ao,ap,ar);
+ap++;
 }
 }
 }
-return aD;
+return ao;
 }
-%DefineMethodsInternal(D.prototype,class{filter(aB,thisArg){
+%DefineMethodsInternal(D.prototype,class{filter(am,thisArg){
 ValidateTypedArray(this,"%TypeArray%.prototype.filter");
 var Z=%_TypedArrayGetLength(this);
-if(!(typeof(aB)==='function'))throw %make_type_error(15,aB);
-var aD=new o();
-InnerTypedArrayFilter(aB,thisArg,this,Z,aD);
-var aG=aD.length;
-var aH=TypedArraySpeciesCreate(this,aG);
-for(var aq=0;aq<aG;aq++){
-aH[aq]=aD[aq];
+if(!(typeof(am)==='function'))throw %make_type_error(19,am);
+var ao=new o();
+InnerTypedArrayFilter(am,thisArg,this,Z,ao);
+var as=ao.length;
+var at=TypedArraySpeciesCreate(this,as);
+for(var aq=0;aq<as;aq++){
+at[aq]=ao[aq];
 }
-return aH;
+return at;
 }},1);
 %DefineMethodsInternal(D.prototype,class{find(predicate,thisArg){
 ValidateTypedArray(this,"%TypedArray%.prototype.find");
@@ -5232,6 +5013,9 @@ return k(predicate,thisArg,this,Z);
 }},1);
 %DefineMethodsInternal(D.prototype,class{sort(comparefn){
 ValidateTypedArray(this,"%TypedArray%.prototype.sort");
+if(!(comparefn===(void 0))&&!(typeof(comparefn)==='function')){
+throw %make_type_error(16,comparefn);
+}
 var Z=%_TypedArrayGetLength(this);
 if((comparefn===(void 0))){
 return %TypedArraySortFast(this);
@@ -5256,48 +5040,48 @@ J[aq]=arguments[aq];
 }
 return J;
 }},-1);
-function IterableToArrayLike(aI){
-var S=e(aI,r);
+function IterableToArrayLike(au){
+var S=e(au,r);
 if(!(S===(void 0))){
-var aJ=new o();
+var av=new o();
 var aq=0;
 for(var X of
-{[r](){return d(aI,S)}}){
-aJ[aq]=X;
+{[r](){return d(au,S)}}){
+av[aq]=X;
 aq++;
 }
 var J=[];
-%MoveArrayContents(aJ,J);
+%MoveArrayContents(av,J);
 return J;
 }
-return(%_ToObject(aI));
+return(%_ToObject(au));
 }
-%DefineMethodsInternal(D,class{'from'(an,mapfn,thisArg){
-if(!%IsConstructor(this))throw %make_type_error(70,this);
-var aK;
+%DefineMethodsInternal(D,class{'from'(source,mapfn,thisArg){
+if(!%IsConstructor(this))throw %make_type_error(75,this);
+var aw;
 if(!(mapfn===(void 0))){
-if(!(typeof(mapfn)==='function'))throw %make_type_error(15,this);
-aK=true;
+if(!(typeof(mapfn)==='function'))throw %make_type_error(19,this);
+aw=true;
 }else{
-aK=false;
+aw=false;
 }
-var aL=IterableToArrayLike(an);
-var Z=(%_ToLength(aL.length));
-var aM=TypedArrayCreate(this,Z);
-var X,aN;
+var ax=IterableToArrayLike(source);
+var Z=(%_ToLength(ax.length));
+var ay=TypedArrayCreate(this,Z);
+var X,az;
 for(var aq=0;aq<Z;aq++){
-X=aL[aq];
-if(aK){
-aN=%_Call(mapfn,thisArg,X,aq);
+X=ax[aq];
+if(aw){
+az=%_Call(mapfn,thisArg,X,aq);
 }else{
-aN=X;
+az=X;
 }
-aM[aq]=aN;
+ay[aq]=az;
 }
-return aM;
+return ay;
 }},1);
 function TypedArrayConstructor(){
-throw %make_type_error(26,"TypedArray");
+throw %make_type_error(30,"TypedArray");
 }
 %SetCode(D,TypedArrayConstructor);
 %AddNamedProperty(D.prototype,"toString",c,
@@ -5413,314 +5197,90 @@ throw %make_type_error(26,"TypedArray");
 
 })
 
-(collection‘K
+<weak-collectionI
 (function(a,b){
 "use strict";
 %CheckIsBootstrapping();
-var c=a.Map;
-var d=a.Object;
-var e=a.Set;
-var f=b.ImportNow("hash_code_symbol");
-var g=a.Math.random;
-var h;
-var i;
-b.Import(function(j){
-h=j.MapIterator;
-i=j.SetIterator;
-});
-function HashToEntry(k,l,m){
-var n=(l&((m)-1));
-return((%_FixedArrayGet(k,(3+(n))|0)));
-}
-%SetForceInlineFlag(HashToEntry);
-function SetFindEntry(k,m,o,l){
-var p=HashToEntry(k,l,m);
-if(p===-1)return p;
-var q=((%_FixedArrayGet(k,((3+(m)+((p)<<1)))|0)));
-if(o===q)return p;
-var r=(%IS_VAR(o)!==o);
-while(true){
-if(r&&(%IS_VAR(q)!==q)){
-return p;
-}
-p=((%_FixedArrayGet(k,((3+(m)+((p)<<1))+1)|0)));
-if(p===-1)return p;
-q=((%_FixedArrayGet(k,((3+(m)+((p)<<1)))|0)));
-if(o===q)return p;
-}
-return-1;
-}
-%SetForceInlineFlag(SetFindEntry);
-function MapFindEntry(k,m,o,l){
-var p=HashToEntry(k,l,m);
-if(p===-1)return p;
-var q=((%_FixedArrayGet(k,((3+(m)+((p)*3)))|0)));
-if(o===q)return p;
-var r=(%IS_VAR(o)!==o);
-while(true){
-if(r&&(%IS_VAR(q)!==q)){
-return p;
-}
-p=((%_FixedArrayGet(k,((3+(m)+((p)*3))+2)|0)));
-if(p===-1)return p;
-q=((%_FixedArrayGet(k,((3+(m)+((p)*3)))|0)));
-if(o===q)return p;
-}
-return-1;
-}
-%SetForceInlineFlag(MapFindEntry);
-function ComputeIntegerHash(o,s){
-var l=o;
-l=l^s;
-l=~l+(l<<15);
-l=l^(l>>>12);
-l=l+(l<<2);
-l=l^(l>>>4);
-l=(l*2057)|0;
-l=l^(l>>>16);
-return l&0x3fffffff;
-}
-%SetForceInlineFlag(ComputeIntegerHash);
-function GetExistingHash(o){
-if(%_IsSmi(o)){
-return ComputeIntegerHash(o,0);
-}
-if((typeof(o)==='string')){
-var t=%_StringGetRawHashField(o);
-if((t&1)===0){
-return t>>>2;
-}
-}else if((%_IsJSReceiver(o))&&!(%_IsJSProxy(o))&&!(%_ClassOf(o)==='global')){
-var l=(o[f]);
-return l;
-}
-return %GenericHash(o);
-}
-%SetForceInlineFlag(GetExistingHash);
-function GetHash(o){
-var l=GetExistingHash(o);
-if((l===(void 0))){
-l=(g()*0x40000000)|0;
-if(l===0)l=1;
-(o[f]=l);
-}
-return l;
-}
-%SetForceInlineFlag(GetHash);
-%DefineMethodsInternal(e.prototype,class{
-add(o){
-if(!(%_IsJSSet(this))){
-throw %make_type_error(48,'Set.prototype.add',this);
-}
-if(o===0){
-o=0;
-}
-var k=%_JSCollectionGetTable(this);
-var m=((%_FixedArrayGet(k,(2)|0)));
-var l=GetHash(o);
-if(SetFindEntry(k,m,o,l)!==-1)return this;
-var u=((%_FixedArrayGet(k,(0)|0)));
-var v=((%_FixedArrayGet(k,(1)|0)));
-var w=m<<1;
-if((u+v)>=w){
-%SetGrow(this);
-k=%_JSCollectionGetTable(this);
-m=((%_FixedArrayGet(k,(2)|0)));
-u=((%_FixedArrayGet(k,(0)|0)));
-v=((%_FixedArrayGet(k,(1)|0)));
-}
-var p=u+v;
-var x=(3+(m)+((p)<<1));
-var n=(l&((m)-1));
-var y=((%_FixedArrayGet(k,(3+(n))|0)));
-((%_FixedArraySet(k,(3+(n))|0,p)));
-(((%_FixedArraySet(k,(0)|0,(u+1)|0))));
-(%_FixedArraySet(k,(x)|0,o));
-((%_FixedArraySet(k,(x+1)|0,(y)|0)));
-return this;
-}
-delete(o){
-if(!(%_IsJSSet(this))){
-throw %make_type_error(48,
-'Set.prototype.delete',this);
-}
-var k=%_JSCollectionGetTable(this);
-var m=((%_FixedArrayGet(k,(2)|0)));
-var l=GetExistingHash(o);
-if((l===(void 0)))return false;
-var p=SetFindEntry(k,m,o,l);
-if(p===-1)return false;
-var u=((%_FixedArrayGet(k,(0)|0)))-1;
-var v=((%_FixedArrayGet(k,(1)|0)))+1;
-var x=(3+(m)+((p)<<1));
-(%_FixedArraySet(k,(x)|0,%_TheHole()));
-(((%_FixedArraySet(k,(0)|0,(u)|0))));
-(((%_FixedArraySet(k,(1)|0,(v)|0))));
-if(u<(m>>>1))%SetShrink(this);
-return true;
-}
-},-1);
-%DefineMethodsInternal(c.prototype,class{
-set(o,value){
-if(!(%_IsJSMap(this))){
-throw %make_type_error(48,
-'Map.prototype.set',this);
-}
-if(o===0){
-o=0;
-}
-var k=%_JSCollectionGetTable(this);
-var m=((%_FixedArrayGet(k,(2)|0)));
-var l=GetHash(o);
-var p=MapFindEntry(k,m,o,l);
-if(p!==-1){
-var z=(3+(m)+((p)*3));
-(%_FixedArraySet(k,(z+1)|0,value));
-return this;
-}
-var u=((%_FixedArrayGet(k,(0)|0)));
-var v=((%_FixedArrayGet(k,(1)|0)));
-var w=m<<1;
-if((u+v)>=w){
-%MapGrow(this);
-k=%_JSCollectionGetTable(this);
-m=((%_FixedArrayGet(k,(2)|0)));
-u=((%_FixedArrayGet(k,(0)|0)));
-v=((%_FixedArrayGet(k,(1)|0)));
-}
-p=u+v;
-var x=(3+(m)+((p)*3));
-var n=(l&((m)-1));
-var y=((%_FixedArrayGet(k,(3+(n))|0)));
-((%_FixedArraySet(k,(3+(n))|0,p)));
-(((%_FixedArraySet(k,(0)|0,(u+1)|0))));
-(%_FixedArraySet(k,(x)|0,o));
-(%_FixedArraySet(k,(x+1)|0,value));
-(%_FixedArraySet(k,(x+2)|0,y));
-return this;
-}
-delete(o){
-if(!(%_IsJSMap(this))){
-throw %make_type_error(48,
-'Map.prototype.delete',this);
-}
-var k=%_JSCollectionGetTable(this);
-var m=((%_FixedArrayGet(k,(2)|0)));
-var l=GetHash(o);
-var p=MapFindEntry(k,m,o,l);
-if(p===-1)return false;
-var u=((%_FixedArrayGet(k,(0)|0)))-1;
-var v=((%_FixedArrayGet(k,(1)|0)))+1;
-var x=(3+(m)+((p)*3));
-(%_FixedArraySet(k,(x)|0,%_TheHole()));
-(%_FixedArraySet(k,(x+1)|0,%_TheHole()));
-(((%_FixedArraySet(k,(0)|0,(u)|0))));
-(((%_FixedArraySet(k,(1)|0,(v)|0))));
-if(u<(m>>>1))%MapShrink(this);
-return true;
-}
-},-1);
-%InstallToContext([
-"map_set",c.prototype.set,
-"map_delete",c.prototype.delete,
-"set_add",e.prototype.add,
-"set_delete",e.prototype.delete,
-]);
-b.Export(function(A){
-A.GetExistingHash=GetExistingHash;
-A.GetHash=GetHash;
-});
-})
-
-<weak-collectionM
-(function(a,b){
-"use strict";
-%CheckIsBootstrapping();
-var c;
-var d;
-var e=a.WeakMap;
-var f=a.WeakSet;
-b.Import(function(g){
-c=g.GetExistingHash;
-d=g.GetHash;
-});
-function WeakMapConstructor(h){
+var c=a.WeakMap;
+var d=a.WeakSet;
+var e=a.Math.random;
+function WeakMapConstructor(f){
 if((new.target===(void 0))){
-throw %make_type_error(29,"WeakMap");
+throw %make_type_error(33,"WeakMap");
 }
 %WeakCollectionInitialize(this);
-if(!(h==null)){
-var i=this.set;
-if(!(typeof(i)==='function')){
-throw %make_type_error(91,i,'set',this);
+if(!(f==null)){
+var g=this.set;
+if(!(typeof(g)==='function')){
+throw %make_type_error(98,g,'set',this);
 }
-for(var j of h){
-if(!(%_IsJSReceiver(j))){
-throw %make_type_error(54,j);
+for(var h of f){
+if(!(%_IsJSReceiver(h))){
+throw %make_type_error(59,h);
 }
-%_Call(i,this,j[0],j[1]);
+%_Call(g,this,h[0],h[1]);
 }
 }
 }
-%DefineMethodsInternal(e.prototype,class{
+%DefineMethodsInternal(c.prototype,class{
 set(key,value){
 if(!(%_IsJSWeakMap(this))){
-throw %make_type_error(48,
+throw %make_type_error(53,
 'WeakMap.prototype.set',this);
 }
-if(!(%_IsJSReceiver(key)))throw %make_type_error(168);
-return %WeakCollectionSet(this,key,value,d(key));
+if(!(%_IsJSReceiver(key)))throw %make_type_error(175);
+return %WeakCollectionSet(this,key,value,%GenericHash(key));
 }
 delete(key){
 if(!(%_IsJSWeakMap(this))){
-throw %make_type_error(48,
+throw %make_type_error(53,
 'WeakMap.prototype.delete',this);
 }
 if(!(%_IsJSReceiver(key)))return false;
-var k=c(key);
-if((k===(void 0)))return false;
-return %WeakCollectionDelete(this,key,k);
+var i=%GetExistingHash(key);
+if((i===(void 0)))return false;
+return %WeakCollectionDelete(this,key,i);
 }
 },-1);
-%SetCode(e,WeakMapConstructor);
-%FunctionSetLength(e,0);
-function WeakSetConstructor(h){
+%SetCode(c,WeakMapConstructor);
+%FunctionSetLength(c,0);
+function WeakSetConstructor(f){
 if((new.target===(void 0))){
-throw %make_type_error(29,"WeakSet");
+throw %make_type_error(33,"WeakSet");
 }
 %WeakCollectionInitialize(this);
-if(!(h==null)){
-var i=this.add;
-if(!(typeof(i)==='function')){
-throw %make_type_error(91,i,'add',this);
+if(!(f==null)){
+var g=this.add;
+if(!(typeof(g)==='function')){
+throw %make_type_error(98,g,'add',this);
 }
-for(var l of h){
-%_Call(i,this,l);
+for(var j of f){
+%_Call(g,this,j);
 }
 }
 }
-%DefineMethodsInternal(f.prototype,class{
-add(l){
+%DefineMethodsInternal(d.prototype,class{
+add(j){
 if(!(%_IsJSWeakSet(this))){
-throw %make_type_error(48,
+throw %make_type_error(53,
 'WeakSet.prototype.add',this);
 }
-if(!(%_IsJSReceiver(l)))throw %make_type_error(169);
-return %WeakCollectionSet(this,l,true,d(l));
+if(!(%_IsJSReceiver(j)))throw %make_type_error(176);
+return %WeakCollectionSet(this,j,true,%GenericHash(j));
 }
-delete(l){
+delete(j){
 if(!(%_IsJSWeakSet(this))){
-throw %make_type_error(48,
+throw %make_type_error(53,
 'WeakSet.prototype.delete',this);
 }
-if(!(%_IsJSReceiver(l)))return false;
-var k=c(l);
-if((k===(void 0)))return false;
-return %WeakCollectionDelete(this,l,k);
+if(!(%_IsJSReceiver(j)))return false;
+var i=%GetExistingHash(j);
+if((i===(void 0)))return false;
+return %WeakCollectionDelete(this,j,i);
 }
 },-1);
-%SetCode(f,WeakSetConstructor);
-%FunctionSetLength(f,0);
+%SetCode(d,WeakSetConstructor);
+%FunctionSetLength(d,0);
 })
 
  messages}
@@ -5750,54 +5310,6 @@ b.SetUpLockedPrototype(c,[
 );
 });
 
-$templates
-(function(a,b){
-"use strict";
-%CheckIsBootstrapping();
-var c=a.Map;
-var d=b.InternalArray;
-var e=new c;
-var f=c.prototype.get;
-var g=c.prototype.set;
-function SameCallSiteElements(h,i){
-var j=h.length;
-var i=i.raw;
-if(j!==i.length)return false;
-for(var k=0;k<j;++k){
-if(h[k]!==i[k])return false;
-}
-return true;
-}
-function GetCachedCallSite(l,m){
-var n=%_Call(f,e,m);
-if((n===(void 0)))return;
-var j=n.length;
-for(var k=0;k<j;++k){
-if(SameCallSiteElements(l,n[k]))return n[k];
-}
-}
-function SetCachedCallSite(l,m){
-var n=%_Call(f,e,m);
-var o;
-if((n===(void 0))){
-o=new d(1);
-o[0]=l;
-%_Call(g,e,m,o);
-}else{
-n.push(l);
-}
-return l;
-}
-function GetTemplateCallSite(l,h,m){
-var p=GetCachedCallSite(h,m);
-if(!(p===(void 0)))return p;
-%AddNamedProperty(l,"raw",%object_freeze(h),
-1|2|4);
-return SetCachedCallSite(%object_freeze(l),m);
-}
-%InstallToContext(["get_template_call_site",GetTemplateCallSite]);
-})
-
 spread5
 (function(a,b){
 "use strict";
@@ -5816,7 +5328,7 @@ return e;
 }
 function SpreadIterable(j){
 if((j==null)){
-throw %make_type_error(73,j);
+throw %make_type_error(80,j);
 }
 var e=new c();
 for(var k of j){
@@ -5841,7 +5353,7 @@ return{proxy:d,revoke:()=>%JSProxyRevoke(d)};
 }},-1);
 })
 
-intlîÏ
+intlró
 (function(a,b){
 "use strict";
 %CheckIsBootstrapping();
@@ -5852,495 +5364,497 @@ var f=a.Intl;
 var g=f.DateTimeFormat;
 var h=f.NumberFormat;
 var i=f.Collator;
-var j=f.v8BreakIterator;
-var k=a.Number;
-var l=a.RegExp;
-var m=a.String;
-var n=b.ImportNow("intl_fallback_symbol");
-var o=b.InternalArray;
-var p;
-var q=a.Object.prototype.hasOwnProperty;
-var r=b.ImportNow("intl_pattern_symbol");
-var s=b.ImportNow("intl_resolved_symbol");
-var t=m.prototype.substr;
-var u=m.prototype.substring;
-b.Import(function(v){
-c=v.ArrayJoin;
-d=v.ArrayPush;
-p=v.MaxSimple;
+var j=b.ImportNow("PluralRules");
+var k=f.v8BreakIterator;
+var l=a.Number;
+var m=a.RegExp;
+var n=a.String;
+var o=b.ImportNow("intl_fallback_symbol");
+var p=b.InternalArray;
+var q=a.Math.max;
+var r=a.Object.prototype.hasOwnProperty;
+var s=a.Object.keys;
+var t=b.ImportNow("intl_pattern_symbol");
+var u=b.ImportNow("intl_resolved_symbol");
+var v=n.prototype.substr;
+var w=n.prototype.substring;
+b.Import(function(x){
+c=x.ArrayJoin;
+d=x.ArrayPush;
 });
 function AddBoundMethod(obj,methodName,implementation,length,typename,
 compat){
 %CheckIsBootstrapping();
-var w=%CreatePrivateSymbol(methodName);
+var y=%CreatePrivateSymbol(methodName);
 %DefineMethodsInternal(obj.prototype,class{get[methodName](){
-var x=Unwrap(this,typename,obj,methodName,compat);
-if((x[w]===(void 0))){
-var y;
+var z=Unwrap(this,typename,obj,methodName,compat);
+if((z[y]===(void 0))){
+var A;
 if((length===(void 0))||length===2){
-y=
-(0,((fst,snd)=>implementation(x,fst,snd)));
+A=
+(0,((fst,snd)=>implementation(z,fst,snd)));
 }else if(length===1){
-y=(0,(fst=>implementation(x,fst)));
+A=(0,(fst=>implementation(z,fst)));
 }else{
-y=(0,((...args)=>{
+A=(0,((...args)=>{
 if(args.length>0){
-return implementation(x,args[0]);
+return implementation(z,args[0]);
 }else{
-return implementation(x);
+return implementation(z);
 }
 }));
 }
-%SetNativeFlag(y);
-x[w]=y;
+%SetNativeFlag(A);
+z[y]=A;
 }
-return x[w];
+return z[y];
 }},-1);
 }
-function IntlConstruct(x,constructor,create,newTarget,args,
+function IntlConstruct(z,constructor,create,newTarget,args,
 compat){
-var z=args[0];
-var A=args[1];
-var B=create(z,A);
-if(compat&&(newTarget===(void 0))&&x instanceof constructor){
-%object_define_property(x,n,{value:B});
-return x;
+var B=args[0];
+var C=args[1];
+var D=create(B,C);
+if(compat&&(newTarget===(void 0))&&z instanceof constructor){
+%object_define_property(z,o,{value:D});
+return z;
 }
-return B;
+return D;
 }
-function Unwrap(x,C,D,E,F){
-if(!%IsInitializedIntlObjectOfType(x,C)){
-if(F&&x instanceof D){
-let fallback=x[n];
-if(%IsInitializedIntlObjectOfType(fallback,C)){
+function Unwrap(z,E,F,G,H){
+if(!%IsInitializedIntlObjectOfType(z,E)){
+if(H&&z instanceof F){
+let fallback=z[o];
+if(%IsInitializedIntlObjectOfType(fallback,E)){
 return fallback;
 }
 }
-throw %make_type_error(48,E,x);
+throw %make_type_error(53,G,z);
 }
-return x;
+return z;
 }
-var G={
+var I={
 'collator':(void 0),
 'numberformat':(void 0),
 'dateformat':(void 0),
-'breakiterator':(void 0)
+'breakiterator':(void 0),
+'pluralrules':(void 0),
 };
-var H=(void 0);
-function GetDefaultICULocaleJS(I){
-if((H===(void 0))){
-H=%GetDefaultICULocale();
-}
-return((I===(void 0))||
-(%_Call(q,getAvailableLocalesOf(I),H)))
-?H:"und";
-}
 var J=(void 0);
-function GetUnicodeExtensionRE(){
-if(((void 0)===(void 0))){
-J=new l('-u(-[a-z0-9]{2,8})+','g');
+function GetDefaultICULocaleJS(K){
+if((J===(void 0))){
+J=%GetDefaultICULocale();
 }
-return J;
-}
-var K=(void 0);
-function GetAnyExtensionRE(){
-if((K===(void 0))){
-K=new l('-[a-z0-9]{1}-.*','g');
-}
-return K;
+return((K===(void 0))||
+(%_Call(r,getAvailableLocalesOf(K),J)))
+?J:"und";
 }
 var L=(void 0);
-function GetQuotedStringRE(){
-if((L===(void 0))){
-L=new l("'[^']+'",'g');
+function GetUnicodeExtensionRE(){
+if(((void 0)===(void 0))){
+L=new m('-u(-[a-z0-9]{2,8})+','g');
 }
 return L;
 }
 var M=(void 0);
-function GetServiceRE(){
+function GetAnyExtensionRE(){
 if((M===(void 0))){
-M=
-new l('^(collator|numberformat|dateformat|breakiterator)$');
+M=new m('-[a-z0-9]{1}-.*','g');
 }
 return M;
 }
 var N=(void 0);
-function GetLanguageTagRE(){
+function GetQuotedStringRE(){
 if((N===(void 0))){
-BuildLanguageTagREs();
+N=new m("'[^']+'",'g');
 }
 return N;
 }
 var O=(void 0);
-function GetLanguageVariantRE(){
+function GetServiceRE(){
 if((O===(void 0))){
-BuildLanguageTagREs();
+O=
+new m('^('+%_Call(c,s(I),'|')+')$');
 }
 return O;
 }
 var P=(void 0);
-function GetLanguageSingletonRE(){
+function GetLanguageTagRE(){
 if((P===(void 0))){
 BuildLanguageTagREs();
 }
 return P;
 }
 var Q=(void 0);
-function GetTimezoneNameCheckRE(){
+function GetLanguageVariantRE(){
 if((Q===(void 0))){
-Q=new l(
-'^([A-Za-z]+)/([A-Za-z_-]+)((?:\/[A-Za-z_-]+)+)*$');
+BuildLanguageTagREs();
 }
 return Q;
 }
 var R=(void 0);
-function GetTimezoneNameLocationPartRE(){
+function GetLanguageSingletonRE(){
 if((R===(void 0))){
-R=
-new l('^([A-Za-z]+)((?:[_-][A-Za-z]+)+)*$');
+BuildLanguageTagREs();
 }
 return R;
 }
-function supportedLocalesOf(I,z,A){
-if((%regexp_internal_match(GetServiceRE(),I)===null)){
-throw %make_error(7,I);
+var S=(void 0);
+function GetTimezoneNameCheckRE(){
+if((S===(void 0))){
+S=new m(
+'^([A-Za-z]+)/([A-Za-z_-]+)((?:\/[A-Za-z_-]+)+)*$');
 }
-if((A===(void 0))){
-A={};
+return S;
+}
+var T=(void 0);
+function GetTimezoneNameLocationPartRE(){
+if((T===(void 0))){
+T=
+new m('^([A-Za-z]+)((?:[_-][A-Za-z]+)+)*$');
+}
+return T;
+}
+function supportedLocalesOf(K,B,C){
+if((%regexp_internal_match(GetServiceRE(),K)===null)){
+throw %make_error(7,K);
+}
+if((C===(void 0))){
+C={};
 }else{
-A=(%_ToObject(A));
+C=(%_ToObject(C));
 }
-var S=A.localeMatcher;
-if(!(S===(void 0))){
-S=(%_ToString(S));
-if(S!=='lookup'&&S!=='best fit'){
-throw %make_range_error(176,S);
+var U=C.localeMatcher;
+if(!(U===(void 0))){
+U=(%_ToString(U));
+if(U!=='lookup'&&U!=='best fit'){
+throw %make_range_error(183,U);
 }
 }else{
-S='best fit';
+U='best fit';
 }
-var T=initializeLocaleList(z);
-var U=getAvailableLocalesOf(I);
-if(S==='best fit'){
+var V=initializeLocaleList(B);
+var W=getAvailableLocalesOf(K);
+if(U==='best fit'){
 return initializeLocaleList(bestFitSupportedLocalesOf(
-T,U));
+V,W));
 }
 return initializeLocaleList(lookupSupportedLocalesOf(
-T,U));
+V,W));
 }
-function lookupSupportedLocalesOf(T,U){
-var V=new o();
-for(var W=0;W<T.length;++W){
-var X=%RegExpInternalReplace(
-GetUnicodeExtensionRE(),T[W],'');
+function lookupSupportedLocalesOf(V,W){
+var X=new p();
+for(var Y=0;Y<V.length;++Y){
+var Z=%RegExpInternalReplace(
+GetUnicodeExtensionRE(),V[Y],'');
 do{
-if(!(U[X]===(void 0))){
-%_Call(d,V,T[W]);
+if(!(W[Z]===(void 0))){
+%_Call(d,X,V[Y]);
 break;
 }
-var Y=%StringLastIndexOf(X,'-');
-if(Y===-1){
+var aa=%StringLastIndexOf(Z,'-');
+if(aa===-1){
 break;
 }
-X=%_Call(u,X,0,Y);
+Z=%_Call(w,Z,0,aa);
 }while(true);
 }
-return V;
+return X;
 }
-function bestFitSupportedLocalesOf(T,U){
-return lookupSupportedLocalesOf(T,U);
+function bestFitSupportedLocalesOf(V,W){
+return lookupSupportedLocalesOf(V,W);
 }
-function getGetOption(A,Z){
-if((A===(void 0)))throw %make_error(4,Z);
-var aa=function getOption(ab,ac,ad,ae){
-if(!(A[ab]===(void 0))){
-var af=A[ab];
-switch(ac){
+function getGetOption(C,ab){
+if((C===(void 0)))throw %make_error(4,ab);
+var ac=function getOption(ad,ae,af,ag){
+if(!(C[ad]===(void 0))){
+var ah=C[ad];
+switch(ae){
 case'boolean':
-af=(!!(af));
+ah=(!!(ah));
 break;
 case'string':
-af=(%_ToString(af));
+ah=(%_ToString(ah));
 break;
 case'number':
-af=(%_ToNumber(af));
+ah=(%_ToNumber(ah));
 break;
 default:
 throw %make_error(8);
 }
-if(!(ad===(void 0))&&%ArrayIndexOf(ad,af,0)===-1){
-throw %make_range_error(186,af,Z,ab);
+if(!(af===(void 0))&&%ArrayIndexOf(af,ah,0)===-1){
+throw %make_range_error(193,ah,ab,ad);
 }
-return af;
-}
-return ae;
-}
-return aa;
-}
-function resolveLocale(I,T,A){
-T=initializeLocaleList(T);
-var aa=getGetOption(A,I);
-var S=aa('localeMatcher','string',
-['lookup','best fit'],'best fit');
-var ag;
-if(S==='lookup'){
-ag=lookupMatcher(I,T);
-}else{
-ag=bestFitMatcher(I,T);
+return ah;
 }
 return ag;
 }
-function lookupMatcher(I,T){
-if((%regexp_internal_match(GetServiceRE(),I)===null)){
-throw %make_error(7,I);
+return ac;
 }
-var U=getAvailableLocalesOf(I);
-for(var W=0;W<T.length;++W){
-var X=%RegExpInternalReplace(
-GetAnyExtensionRE(),T[W],'');
+function resolveLocale(K,V,C){
+V=initializeLocaleList(V);
+var ac=getGetOption(C,K);
+var U=ac('localeMatcher','string',
+['lookup','best fit'],'best fit');
+var ai;
+if(U==='lookup'){
+ai=lookupMatcher(K,V);
+}else{
+ai=bestFitMatcher(K,V);
+}
+return ai;
+}
+function lookupMatcher(K,V){
+if((%regexp_internal_match(GetServiceRE(),K)===null)){
+throw %make_error(7,K);
+}
+var W=getAvailableLocalesOf(K);
+for(var Y=0;Y<V.length;++Y){
+var Z=%RegExpInternalReplace(
+GetAnyExtensionRE(),V[Y],'');
 do{
-if(!(U[X]===(void 0))){
-var ah=%regexp_internal_match(
-GetUnicodeExtensionRE(),T[W]);
-var ai=(ah===null)?'':ah[0];
-return{locale:X,extension:ai,position:W};
+if(!(W[Z]===(void 0))){
+var aj=%regexp_internal_match(
+GetUnicodeExtensionRE(),V[Y]);
+var ak=(aj===null)?'':aj[0];
+return{locale:Z,extension:ak,position:Y};
 }
-var Y=%StringLastIndexOf(X,'-');
-if(Y===-1){
+var aa=%StringLastIndexOf(Z,'-');
+if(aa===-1){
 break;
 }
-X=%_Call(u,X,0,Y);
+Z=%_Call(w,Z,0,aa);
 }while(true);
 }
 return{
-locale:GetDefaultICULocaleJS(I),
+locale:GetDefaultICULocaleJS(K),
 extension:'',
 position:-1
 };
 }
-function bestFitMatcher(I,T){
-return lookupMatcher(I,T);
+function bestFitMatcher(K,V){
+return lookupMatcher(K,V);
 }
-function parseExtension(ai){
-var aj=%StringSplit(ai,'-',4294967295);
-if(aj.length<=2||
-(aj[0]!==''&&aj[1]!=='u')){
+function parseExtension(ak){
+var al=%StringSplit(ak,'-',4294967295);
+if(al.length<=2||
+(al[0]!==''&&al[1]!=='u')){
 return{};
 }
-var ak={};
-var al=(void 0);
-var af=(void 0);
-for(var W=2;W<aj.length;++W){
-var am=aj[W].length;
-var an=aj[W];
-if(am===2){
-if(!(al===(void 0))){
-if(!(al in ak)){
-ak[al]=af;
+var am={};
+var an=(void 0);
+var ah=(void 0);
+for(var Y=2;Y<al.length;++Y){
+var ao=al[Y].length;
+var ap=al[Y];
+if(ao===2){
+if(!(an===(void 0))){
+if(!(an in am)){
+am[an]=ah;
 }
-af=(void 0);
+ah=(void 0);
 }
-al=an;
-}else if(am>=3&&am<=8&&!(al===(void 0))){
-if((af===(void 0))){
-af=an;
+an=ap;
+}else if(ao>=3&&ao<=8&&!(an===(void 0))){
+if((ah===(void 0))){
+ah=ap;
 }else{
-af=af+"-"+an;
+ah=ah+"-"+ap;
 }
 }else{
 return{};
 }
 }
-if(!(al===(void 0))&&!(al in ak)){
-ak[al]=af;
+if(!(an===(void 0))&&!(an in am)){
+am[an]=ah;
 }
-return ak;
+return am;
 }
-function setOptions(ao,ak,ap,aa,aq){
-var ai='';
-var ar=function updateExtension(al,af){
-return'-'+al+'-'+(%_ToString(af));
+function setOptions(aq,am,ar,ac,as){
+var ak='';
+var at=function updateExtension(an,ah){
+return'-'+an+'-'+(%_ToString(ah));
 }
-var as=function updateProperty(ab,ac,af){
-if(ac==='boolean'&&(typeof af==='string')){
-af=(af==='true')?true:false;
+var au=function updateProperty(ad,ae,ah){
+if(ae==='boolean'&&(typeof ah==='string')){
+ah=(ah==='true')?true:false;
 }
-if(!(ab===(void 0))){
-defineWEProperty(aq,ab,af);
+if(!(ad===(void 0))){
+defineWEProperty(as,ad,ah);
 }
 }
-for(var al in ap){
-if((%_Call(q,ap,al))){
-var af=(void 0);
-var at=ap[al];
-if(!(at.property===(void 0))){
-af=aa(at.property,at.type,at.values);
+for(var an in ar){
+if((%_Call(r,ar,an))){
+var ah=(void 0);
+var av=ar[an];
+if(!(av.property===(void 0))){
+ah=ac(av.property,av.type,av.values);
 }
-if(!(af===(void 0))){
-as(at.property,at.type,af);
-ai+=ar(al,af);
+if(!(ah===(void 0))){
+au(av.property,av.type,ah);
+ak+=at(an,ah);
 continue;
 }
-if((%_Call(q,ak,al))){
-af=ak[al];
-if(!(af===(void 0))){
-as(at.property,at.type,af);
-ai+=ar(al,af);
-}else if(at.type==='boolean'){
-as(at.property,at.type,true);
-ai+=ar(al,true);
+if((%_Call(r,am,an))){
+ah=am[an];
+if(!(ah===(void 0))){
+au(av.property,av.type,ah);
+ak+=at(an,ah);
+}else if(av.type==='boolean'){
+au(av.property,av.type,true);
+ak+=at(an,true);
 }
 }
 }
 }
-return ai===''?'':'-u'+ai;
+return ak===''?'':'-u'+ak;
 }
-function freezeArray(au){
-var av=[];
-var aw=au.length;
-for(var W=0;W<aw;W++){
-if(W in au){
-%object_define_property(av,W,{value:au[W],
+function freezeArray(aw){
+var ax=[];
+var ay=aw.length;
+for(var Y=0;Y<ay;Y++){
+if(Y in aw){
+%object_define_property(ax,Y,{value:aw[Y],
 configurable:false,
 writable:false,
 enumerable:true});
 }
 }
-%object_define_property(av,'length',{value:aw,writable:false});
-return av;
-}
-function makeArray(au){
-var av=[];
-%MoveArrayContents(au,av);
-return av;
-}
-function getAvailableLocalesOf(I){
-if(!(G[I]===(void 0))){
-return G[I];
-}
-var ax=%AvailableLocalesOf(I);
-for(var W in ax){
-if((%_Call(q,ax,W))){
-var ay=%regexp_internal_match(
-/^([a-z]{2,3})-([A-Z][a-z]{3})-([A-Z]{2})$/,W);
-if(!(ay===null)){
-ax[ay[1]+'-'+ay[3]]=null;
-}
-}
-}
-G[I]=ax;
+%object_define_property(ax,'length',{value:ay,writable:false});
 return ax;
 }
-function defineWEProperty(az,ab,af){
-%object_define_property(az,ab,
-{value:af,writable:true,enumerable:true});
+function makeArray(aw){
+var ax=[];
+%MoveArrayContents(aw,ax);
+return ax;
 }
-function addWEPropertyIfDefined(az,ab,af){
-if(!(af===(void 0))){
-defineWEProperty(az,ab,af);
+function getAvailableLocalesOf(K){
+if(!(I[K]===(void 0))){
+return I[K];
+}
+var az=%AvailableLocalesOf(K);
+for(var Y in az){
+if((%_Call(r,az,Y))){
+var aA=%regexp_internal_match(
+/^([a-z]{2,3})-([A-Z][a-z]{3})-([A-Z]{2})$/,Y);
+if(!(aA===null)){
+az[aA[1]+'-'+aA[3]]=null;
 }
 }
-function defineWECProperty(az,ab,af){
-%object_define_property(az,ab,{value:af,
+}
+I[K]=az;
+return az;
+}
+function defineWEProperty(aB,ad,ah){
+%object_define_property(aB,ad,
+{value:ah,writable:true,enumerable:true});
+}
+function addWEPropertyIfDefined(aB,ad,ah){
+if(!(ah===(void 0))){
+defineWEProperty(aB,ad,ah);
+}
+}
+function defineWECProperty(aB,ad,ah){
+%object_define_property(aB,ad,{value:ah,
 writable:true,
 enumerable:true,
 configurable:true});
 }
-function addWECPropertyIfDefined(az,ab,af){
-if(!(af===(void 0))){
-defineWECProperty(az,ab,af);
+function addWECPropertyIfDefined(aB,ad,ah){
+if(!(ah===(void 0))){
+defineWECProperty(aB,ad,ah);
 }
 }
-function toTitleCaseWord(aA){
-return %StringToUpperCaseIntl(%_Call(t,aA,0,1))+
-%StringToLowerCaseIntl(%_Call(t,aA,1));
+function toTitleCaseWord(aC){
+return %StringToUpperCaseIntl(%_Call(v,aC,0,1))+
+%StringToLowerCaseIntl(%_Call(v,aC,1));
 }
-function toTitleCaseTimezoneLocation(aB){
-var aC=%regexp_internal_match(GetTimezoneNameLocationPartRE(),aB)
-if((aC===null))throw %make_range_error(155,aB);
-var aD=toTitleCaseWord(aC[1]);
-if(!(aC[2]===(void 0))&&2<aC.length){
-var aE=%_Call(u,aC[2],0,1);
-var ay=%StringSplit(aC[2],aE,4294967295);
-for(var W=1;W<ay.length;W++){
-var aF=ay[W]
-var aG=%StringToLowerCaseIntl(aF);
-aD=aD+aE+
-((aG!=='es'&&
-aG!=='of'&&aG!=='au')?
-toTitleCaseWord(aF):aG);
+function toTitleCaseTimezoneLocation(aD){
+var aE=%regexp_internal_match(GetTimezoneNameLocationPartRE(),aD)
+if((aE===null))throw %make_range_error(162,aD);
+var aF=toTitleCaseWord(aE[1]);
+if(!(aE[2]===(void 0))&&2<aE.length){
+var aG=%_Call(w,aE[2],0,1);
+var aA=%StringSplit(aE[2],aG,4294967295);
+for(var Y=1;Y<aA.length;Y++){
+var aH=aA[Y]
+var aI=%StringToLowerCaseIntl(aH);
+aF=aF+aG+
+((aI!=='es'&&
+aI!=='of'&&aI!=='au')?
+toTitleCaseWord(aH):aI);
 }
 }
-return aD;
+return aF;
 }
-function canonicalizeLanguageTag(aH){
-if((!(typeof(aH)==='string')&&!(%_IsJSReceiver(aH)))||
-(aH===null)){
-throw %make_type_error(55);
+function canonicalizeLanguageTag(aJ){
+if((!(typeof(aJ)==='string')&&!(%_IsJSReceiver(aJ)))||
+(aJ===null)){
+throw %make_type_error(60);
 }
-if((typeof(aH)==='string')&&
-!(%regexp_internal_match(/^[a-z]{2,3}$/,aH)===null)){
-return aH;
-}
-var aI=(%_ToString(aH));
-if(isStructuallyValidLanguageTag(aI)===false){
-throw %make_range_error(167,aI);
-}
-var aJ=%CanonicalizeLanguageTag(aI);
-if(aJ==='invalid-tag'){
-throw %make_range_error(167,aI);
-}
+if((typeof(aJ)==='string')&&
+!(%regexp_internal_match(/^[a-z]{2,3}$/,aJ)===null)){
 return aJ;
 }
-function canonicalizeLocaleList(z){
-var aK=new o();
-if(!(z===(void 0))){
-if(typeof z==='string'){
-%_Call(d,aK,canonicalizeLanguageTag(z));
-return aK;
+var aK=(%_ToString(aJ));
+if(isStructuallyValidLanguageTag(aK)===false){
+throw %make_range_error(174,aK);
 }
-var aL=(%_ToObject(z));
-var aM=(%_ToLength(aL.length));
-for(var aN=0;aN<aM;aN++){
-if(aN in aL){
-var af=aL[aN];
-var aJ=canonicalizeLanguageTag(af);
-if(%ArrayIndexOf(aK,aJ,0)===-1){
-%_Call(d,aK,aJ);
+var aL=%CanonicalizeLanguageTag(aK);
+if(aL==='invalid-tag'){
+throw %make_range_error(174,aK);
+}
+return aL;
+}
+function canonicalizeLocaleList(B){
+var aM=new p();
+if(!(B===(void 0))){
+if(typeof B==='string'){
+%_Call(d,aM,canonicalizeLanguageTag(B));
+return aM;
+}
+var aN=(%_ToObject(B));
+var aO=(%_ToLength(aN.length));
+for(var aP=0;aP<aO;aP++){
+if(aP in aN){
+var ah=aN[aP];
+var aL=canonicalizeLanguageTag(ah);
+if(%ArrayIndexOf(aM,aL,0)===-1){
+%_Call(d,aM,aL);
 }
 }
 }
 }
-return aK;
+return aM;
 }
-function initializeLocaleList(z){
-return freezeArray(canonicalizeLocaleList(z));
+function initializeLocaleList(B){
+return freezeArray(canonicalizeLocaleList(B));
 }
-function isStructuallyValidLanguageTag(X){
-if((%regexp_internal_match(GetLanguageTagRE(),X)===null)){
+function isStructuallyValidLanguageTag(Z){
+if((%regexp_internal_match(GetLanguageTagRE(),Z)===null)){
 return false;
 }
-X=%StringToLowerCaseIntl(X);
-if(%StringIndexOf(X,'x-',0)===0){
+Z=%StringToLowerCaseIntl(Z);
+if(%StringIndexOf(Z,'x-',0)===0){
 return true;
 }
-X=%StringSplit(X,'-x-',4294967295)[0];
-var aO=new o();
-var aP=new o();
-var ay=%StringSplit(X,'-',4294967295);
-for(var W=1;W<ay.length;W++){
-var af=ay[W];
-if(!(%regexp_internal_match(GetLanguageVariantRE(),af)===null)&&
-aP.length===0){
-if(%ArrayIndexOf(aO,af,0)===-1){
-%_Call(d,aO,af);
+Z=%StringSplit(Z,'-x-',4294967295)[0];
+var aQ=new p();
+var aR=new p();
+var aA=%StringSplit(Z,'-',4294967295);
+for(var Y=1;Y<aA.length;Y++){
+var ah=aA[Y];
+if(!(%regexp_internal_match(GetLanguageVariantRE(),ah)===null)&&
+aR.length===0){
+if(%ArrayIndexOf(aQ,ah,0)===-1){
+%_Call(d,aQ,ah);
 }else{
 return false;
 }
 }
-if(!(%regexp_internal_match(GetLanguageSingletonRE(),af)===null)){
-if(%ArrayIndexOf(aP,af,0)===-1){
-%_Call(d,aP,af);
+if(!(%regexp_internal_match(GetLanguageSingletonRE(),ah)===null)){
+if(%ArrayIndexOf(aR,ah,0)===-1){
+%_Call(d,aR,ah);
 }else{
 return false;
 }
@@ -6349,91 +5863,91 @@ return false;
 return true;
 }
 function BuildLanguageTagREs(){
-var aQ='[a-zA-Z]';
-var aR='[0-9]';
-var aS='('+aQ+'|'+aR+')';
-var aT='(art-lojban|cel-gaulish|no-bok|no-nyn|zh-guoyu|zh-hakka|'+
+var aS='[a-zA-Z]';
+var aT='[0-9]';
+var aU='('+aS+'|'+aT+')';
+var aV='(art-lojban|cel-gaulish|no-bok|no-nyn|zh-guoyu|zh-hakka|'+
 'zh-min|zh-min-nan|zh-xiang)';
-var aU='(en-GB-oed|i-ami|i-bnn|i-default|i-enochian|i-hak|'+
+var aW='(en-GB-oed|i-ami|i-bnn|i-default|i-enochian|i-hak|'+
 'i-klingon|i-lux|i-mingo|i-navajo|i-pwn|i-tao|i-tay|'+
 'i-tsu|sgn-BE-FR|sgn-BE-NL|sgn-CH-DE)';
-var aV='('+aU+'|'+aT+')';
-var aW='(x(-'+aS+'{1,8})+)';
-var aX='('+aR+'|[A-WY-Za-wy-z])';
-P=new l('^'+aX+'$','i');
-var ai='('+aX+'(-'+aS+'{2,8})+)';
-var aY='('+aS+'{5,8}|('+aR+aS+'{3}))';
-O=new l('^'+aY+'$','i');
-var aZ='('+aQ+'{2}|'+aR+'{3})';
-var ba='('+aQ+'{4})';
-var bb='('+aQ+'{3}(-'+aQ+'{3}){0,2})';
-var bc='('+aQ+'{2,3}(-'+bb+')?|'+aQ+'{4}|'+
-aQ+'{5,8})';
-var bd=bc+'(-'+ba+')?(-'+aZ+')?(-'+
-aY+')*(-'+ai+')*(-'+aW+')?';
-var be=
-'^('+bd+'|'+aW+'|'+aV+')$';
-N=new l(be,'i');
+var aX='('+aW+'|'+aV+')';
+var aY='(x(-'+aU+'{1,8})+)';
+var aZ='('+aT+'|[A-WY-Za-wy-z])';
+R=new m('^'+aZ+'$','i');
+var ak='('+aZ+'(-'+aU+'{2,8})+)';
+var ba='('+aU+'{5,8}|('+aT+aU+'{3}))';
+Q=new m('^'+ba+'$','i');
+var bb='('+aS+'{2}|'+aT+'{3})';
+var bc='('+aS+'{4})';
+var bd='('+aS+'{3}(-'+aS+'{3}){0,2})';
+var be='('+aS+'{2,3}(-'+bd+')?|'+aS+'{4}|'+
+aS+'{5,8})';
+var bf=be+'(-'+bc+')?(-'+bb+')?(-'+
+ba+')*(-'+ak+')*(-'+aY+')?';
+var bg=
+'^('+bf+'|'+aY+'|'+aX+')$';
+P=new m(bg,'i');
 }
-%DefineMethodsInternal(f,class{getCanonicalLocales(z){
-return makeArray(canonicalizeLocaleList(z));
+%DefineMethodsInternal(f,class{getCanonicalLocales(B){
+return makeArray(canonicalizeLocaleList(B));
 }},-1);
-function CreateCollator(z,A){
-if((A===(void 0))){
-A={};
+function CreateCollator(B,C){
+if((C===(void 0))){
+C={};
 }
-var aa=getGetOption(A,'collator');
-var bf={};
-defineWEProperty(bf,'usage',aa(
+var ac=getGetOption(C,'collator');
+var bh={};
+defineWEProperty(bh,'usage',ac(
 'usage','string',['sort','search'],'sort'));
-var bg=aa('sensitivity','string',
+var bi=ac('sensitivity','string',
 ['base','accent','case','variant']);
-if((bg===(void 0))&&bf.usage==='sort'){
-bg='variant';
+if((bi===(void 0))&&bh.usage==='sort'){
+bi='variant';
 }
-defineWEProperty(bf,'sensitivity',bg);
-defineWEProperty(bf,'ignorePunctuation',aa(
+defineWEProperty(bh,'sensitivity',bi);
+defineWEProperty(bh,'ignorePunctuation',ac(
 'ignorePunctuation','boolean',(void 0),false));
-var X=resolveLocale('collator',z,A);
-var ak=parseExtension(X.extension);
-var bh={
+var Z=resolveLocale('collator',B,C);
+var am=parseExtension(Z.extension);
+var bj={
 'kn':{'property':'numeric','type':'boolean'},
 'kf':{'property':'caseFirst','type':'string',
 'values':['false','lower','upper']}
 };
 setOptions(
-A,ak,bh,aa,bf);
-var bi='default';
-var ai='';
-if((%_Call(q,ak,'co'))&&bf.usage==='sort'){
-var bj=[
+C,am,bj,ac,bh);
+var bk='default';
+var ak='';
+if((%_Call(r,am,'co'))&&bh.usage==='sort'){
+var bl=[
 'big5han','dict','direct','ducet','gb2312','phonebk','phonetic',
 'pinyin','reformed','searchjl','stroke','trad','unihan','zhuyin'
 ];
-if(%ArrayIndexOf(bj,ak.co,0)!==-1){
-ai='-u-co-'+ak.co;
-bi=ak.co;
+if(%ArrayIndexOf(bl,am.co,0)!==-1){
+ak='-u-co-'+am.co;
+bk=am.co;
 }
-}else if(bf.usage==='search'){
-ai='-u-co-search';
+}else if(bh.usage==='search'){
+ak='-u-co-search';
 }
-defineWEProperty(bf,'collation',bi);
-var bk=X.locale+ai;
-var ag=%object_define_properties({},{
+defineWEProperty(bh,'collation',bk);
+var bm=Z.locale+ak;
+var ai=%object_define_properties({},{
 caseFirst:{writable:true},
-collation:{value:bf.collation,writable:true},
+collation:{value:bh.collation,writable:true},
 ignorePunctuation:{writable:true},
 locale:{writable:true},
 numeric:{writable:true},
-requestedLocale:{value:bk,writable:true},
+requestedLocale:{value:bm,writable:true},
 sensitivity:{writable:true},
 strength:{writable:true},
-usage:{value:bf.usage,writable:true}
+usage:{value:bh.usage,writable:true}
 });
-var bl=%CreateCollator(bk,bf,ag);
-%MarkAsInitializedIntlObjectOfType(bl,'collator');
-bl[s]=ag;
-return bl;
+var bn=%CreateCollator(bm,bh,ai);
+%MarkAsInitializedIntlObjectOfType(bn,'collator');
+bn[u]=ai;
+return bn;
 }
 function CollatorConstructor(){
 return IntlConstruct(this,i,CreateCollator,new.target,
@@ -6441,102 +5955,176 @@ arguments);
 }
 %SetCode(i,CollatorConstructor);
 %DefineMethodsInternal(i.prototype,class{resolvedOptions(){
-var bm=Unwrap(this,'collator',i,'resolvedOptions',
+var bo=Unwrap(this,'collator',i,'resolvedOptions',
 false);
 return{
-locale:bm[s].locale,
-usage:bm[s].usage,
-sensitivity:bm[s].sensitivity,
-ignorePunctuation:bm[s].ignorePunctuation,
-numeric:bm[s].numeric,
-caseFirst:bm[s].caseFirst,
-collation:bm[s].collation
+locale:bo[u].locale,
+usage:bo[u].usage,
+sensitivity:bo[u].sensitivity,
+ignorePunctuation:bo[u].ignorePunctuation,
+numeric:bo[u].numeric,
+caseFirst:bo[u].caseFirst,
+collation:bo[u].collation
 };
 }},-1);
-%DefineMethodsInternal(i,class{supportedLocalesOf(z){
-return supportedLocalesOf('collator',z,arguments[1]);
+%DefineMethodsInternal(i,class{supportedLocalesOf(B){
+return supportedLocalesOf('collator',B,arguments[1]);
 }},-1);
-function compare(bl,bn,bo){
-return %InternalCompare(bl,(%_ToString(bn)),(%_ToString(bo)));
+function compare(bn,bp,bq){
+return %InternalCompare(bn,(%_ToString(bp)),(%_ToString(bq)));
 };
 AddBoundMethod(i,'compare',compare,2,'collator',false);
-function isWellFormedCurrencyCode(bp){
-return typeof bp==="string"&&bp.length===3&&
-(%regexp_internal_match(/[^A-Za-z]/,bp)===null);
+function PluralRulesConstructor(){
+if((new.target===(void 0))){
+throw %make_type_error(33,"PluralRules");
 }
-function defaultNumberOption(af,bq,br,bs,ab){
-if(!(af===(void 0))){
-af=(%_ToNumber(af));
-if((%IS_VAR(af)!==af)||af<bq||af>br){
-throw %make_range_error(179,ab);
+var B=arguments[0];
+var C=arguments[1];
+if((C===(void 0))){
+C={};
 }
-return %math_floor(af);
+var ac=getGetOption(C,'pluralrules');
+var Z=resolveLocale('pluralrules',B,C);
+var bh={};
+defineWEProperty(bh,'type',ac(
+'type','string',['cardinal','ordinal'],'cardinal'));
+SetNumberFormatDigitOptions(bh,C,0,3);
+var bm=Z.locale;
+var ai=%object_define_properties({},{
+type:{value:bh.type,writable:true},
+locale:{writable:true},
+maximumFractionDigits:{writable:true},
+minimumFractionDigits:{writable:true},
+minimumIntegerDigits:{writable:true},
+requestedLocale:{value:bm,writable:true},
+});
+if((%_Call(r,bh,'minimumSignificantDigits'))){
+defineWEProperty(ai,'minimumSignificantDigits',(void 0));
 }
-return bs;
+if((%_Call(r,bh,'maximumSignificantDigits'))){
+defineWEProperty(ai,'maximumSignificantDigits',(void 0));
 }
-function getNumberOption(A,ab,bq,br,bs){
-var af=A[ab];
-return defaultNumberOption(af,bq,br,bs,ab);
+defineWEProperty(ai,'pluralCategories',[]);
+var br=%CreatePluralRules(bm,bh,
+ai);
+%MarkAsInitializedIntlObjectOfType(br,'pluralrules');
+br[u]=ai;
+return br;
 }
-function SetNumberFormatDigitOptions(bf,A,
+%SetCode(j,PluralRulesConstructor);
+%DefineMethodsInternal(j.prototype,class{resolvedOptions(){
+if(!%IsInitializedIntlObjectOfType(this,'pluralrules')){
+throw %make_type_error(53,
+'Intl.PluralRules.prototype.resolvedOptions',
+this);
+}
+var aF={
+locale:this[u].locale,
+type:this[u].type,
+minimumIntegerDigits:this[u].minimumIntegerDigits,
+minimumFractionDigits:this[u].minimumFractionDigits,
+maximumFractionDigits:this[u].maximumFractionDigits,
+};
+if((%_Call(r,this[u],'minimumSignificantDigits'))){
+defineWECProperty(aF,'minimumSignificantDigits',
+this[u].minimumSignificantDigits);
+}
+if((%_Call(r,this[u],'maximumSignificantDigits'))){
+defineWECProperty(aF,'maximumSignificantDigits',
+this[u].maximumSignificantDigits);
+}
+defineWECProperty(aF,'pluralCategories',
+this[u].pluralCategories);
+return aF;
+}},-1);
+%DefineMethodsInternal(j,class{supportedLocalesOf(B){
+return supportedLocalesOf('pluralrules',B,arguments[1]);
+}},-1);
+%DefineMethodsInternal(j.prototype,class{select(ah){
+if(!%IsInitializedIntlObjectOfType(this,'pluralrules')){
+throw %make_type_error(53,
+'Intl.PluralRules.prototype.select',
+this);
+}
+return %PluralRulesSelect(this,(%_ToNumber(ah))+0);
+}},-1);
+function isWellFormedCurrencyCode(bs){
+return typeof bs==="string"&&bs.length===3&&
+(%regexp_internal_match(/[^A-Za-z]/,bs)===null);
+}
+function defaultNumberOption(ah,bt,bu,bv,ad){
+if(!(ah===(void 0))){
+ah=(%_ToNumber(ah));
+if((%IS_VAR(ah)!==ah)||ah<bt||ah>bu){
+throw %make_range_error(186,ad);
+}
+return %math_floor(ah);
+}
+return bv;
+}
+function getNumberOption(C,ad,bt,bu,bv){
+var ah=C[ad];
+return defaultNumberOption(ah,bt,bu,bv,ad);
+}
+function SetNumberFormatDigitOptions(bh,C,
 mnfdDefault,mxfdDefault){
-var bt=getNumberOption(A,'minimumIntegerDigits',1,21,1);
-defineWEProperty(bf,'minimumIntegerDigits',bt);
-var bu=getNumberOption(A,'minimumFractionDigits',0,20,
+var bw=getNumberOption(C,'minimumIntegerDigits',1,21,1);
+defineWEProperty(bh,'minimumIntegerDigits',bw);
+var bx=getNumberOption(C,'minimumFractionDigits',0,20,
 mnfdDefault);
-defineWEProperty(bf,'minimumFractionDigits',bu);
-var bv=p(bu,mxfdDefault);
-var bw=getNumberOption(A,'maximumFractionDigits',bu,20,
-bv);
-defineWEProperty(bf,'maximumFractionDigits',bw);
-var bx=A['minimumSignificantDigits'];
-var by=A['maximumSignificantDigits'];
-if(!(bx===(void 0))||!(by===(void 0))){
-bx=defaultNumberOption(bx,1,21,1,'minimumSignificantDigits');
-defineWEProperty(bf,'minimumSignificantDigits',bx);
-by=defaultNumberOption(by,bx,21,21,'maximumSignificantDigits');
-defineWEProperty(bf,'maximumSignificantDigits',by);
+defineWEProperty(bh,'minimumFractionDigits',bx);
+var by=q(bx,mxfdDefault);
+var bz=getNumberOption(C,'maximumFractionDigits',bx,20,
+by);
+defineWEProperty(bh,'maximumFractionDigits',bz);
+var bA=C['minimumSignificantDigits'];
+var bB=C['maximumSignificantDigits'];
+if(!(bA===(void 0))||!(bB===(void 0))){
+bA=defaultNumberOption(bA,1,21,1,'minimumSignificantDigits');
+defineWEProperty(bh,'minimumSignificantDigits',bA);
+bB=defaultNumberOption(bB,bA,21,21,'maximumSignificantDigits');
+defineWEProperty(bh,'maximumSignificantDigits',bB);
 }
 }
-function CreateNumberFormat(z,A){
-if((A===(void 0))){
-A={};
+function CreateNumberFormat(B,C){
+if((C===(void 0))){
+C={};
 }
-var aa=getGetOption(A,'numberformat');
-var X=resolveLocale('numberformat',z,A);
-var bf={};
-defineWEProperty(bf,'style',aa(
+var ac=getGetOption(C,'numberformat');
+var Z=resolveLocale('numberformat',B,C);
+var bh={};
+defineWEProperty(bh,'style',ac(
 'style','string',['decimal','percent','currency'],'decimal'));
-var bp=aa('currency','string');
-if(!(bp===(void 0))&&!isWellFormedCurrencyCode(bp)){
-throw %make_range_error(162,bp);
+var bs=ac('currency','string');
+if(!(bs===(void 0))&&!isWellFormedCurrencyCode(bs)){
+throw %make_range_error(169,bs);
 }
-if(bf.style==='currency'&&(bp===(void 0))){
-throw %make_type_error(31);
+if(bh.style==='currency'&&(bs===(void 0))){
+throw %make_type_error(35);
 }
-var bz,bA;
-var bB=aa(
+var bC,bD;
+var bE=ac(
 'currencyDisplay','string',['code','symbol','name'],'symbol');
-if(bf.style==='currency'){
-defineWEProperty(bf,'currency',%StringToUpperCaseIntl(bp));
-defineWEProperty(bf,'currencyDisplay',bB);
-bz=bA=%CurrencyDigits(bf.currency);
+if(bh.style==='currency'){
+defineWEProperty(bh,'currency',%StringToUpperCaseIntl(bs));
+defineWEProperty(bh,'currencyDisplay',bE);
+bC=bD=%CurrencyDigits(bh.currency);
 }else{
-bz=0;
-bA=bf.style==='percent'?0:3;
+bC=0;
+bD=bh.style==='percent'?0:3;
 }
-SetNumberFormatDigitOptions(bf,A,bz,
-bA);
-defineWEProperty(bf,'useGrouping',aa(
+SetNumberFormatDigitOptions(bh,C,bC,
+bD);
+defineWEProperty(bh,'useGrouping',ac(
 'useGrouping','boolean',(void 0),true));
-var ak=parseExtension(X.extension);
-var bC={
+var am=parseExtension(Z.extension);
+var bF={
 'nu':{'property':(void 0),'type':'string'}
 };
-var ai=setOptions(A,ak,bC,
-aa,bf);
-var bk=X.locale+ai;
-var ag=%object_define_properties({},{
+var ak=setOptions(C,am,bF,
+ac,bh);
+var bm=Z.locale+ak;
+var ai=%object_define_properties({},{
 currency:{writable:true},
 currencyDisplay:{writable:true},
 locale:{writable:true},
@@ -6544,25 +6132,25 @@ maximumFractionDigits:{writable:true},
 minimumFractionDigits:{writable:true},
 minimumIntegerDigits:{writable:true},
 numberingSystem:{writable:true},
-requestedLocale:{value:bk,writable:true},
-style:{value:bf.style,writable:true},
+requestedLocale:{value:bm,writable:true},
+style:{value:bh.style,writable:true},
 useGrouping:{writable:true}
 });
-if((%_Call(q,bf,'minimumSignificantDigits'))){
-defineWEProperty(ag,'minimumSignificantDigits',(void 0));
+if((%_Call(r,bh,'minimumSignificantDigits'))){
+defineWEProperty(ai,'minimumSignificantDigits',(void 0));
 }
-if((%_Call(q,bf,'maximumSignificantDigits'))){
-defineWEProperty(ag,'maximumSignificantDigits',(void 0));
+if((%_Call(r,bh,'maximumSignificantDigits'))){
+defineWEProperty(ai,'maximumSignificantDigits',(void 0));
 }
-var bD=%CreateNumberFormat(bk,bf,
-ag);
-if(bf.style==='currency'){
-%object_define_property(ag,'currencyDisplay',
-{value:bB,writable:true});
+var bG=%CreateNumberFormat(bm,bh,
+ai);
+if(bh.style==='currency'){
+%object_define_property(ai,'currencyDisplay',
+{value:bE,writable:true});
 }
-%MarkAsInitializedIntlObjectOfType(bD,'numberformat');
-bD[s]=ag;
-return bD;
+%MarkAsInitializedIntlObjectOfType(bG,'numberformat');
+bG[u]=ai;
+return bG;
 }
 function NumberFormatConstructor(){
 return IntlConstruct(this,h,CreateNumberFormat,
@@ -6570,207 +6158,207 @@ new.target,arguments,true);
 }
 %SetCode(h,NumberFormatConstructor);
 %DefineMethodsInternal(h.prototype,class{resolvedOptions(){
-var bE=Unwrap(this,'numberformat',h,
+var bH=Unwrap(this,'numberformat',h,
 'resolvedOptions',true);
-var aD={
-locale:bE[s].locale,
-numberingSystem:bE[s].numberingSystem,
-style:bE[s].style,
-useGrouping:bE[s].useGrouping,
-minimumIntegerDigits:bE[s].minimumIntegerDigits,
-minimumFractionDigits:bE[s].minimumFractionDigits,
-maximumFractionDigits:bE[s].maximumFractionDigits,
+var aF={
+locale:bH[u].locale,
+numberingSystem:bH[u].numberingSystem,
+style:bH[u].style,
+useGrouping:bH[u].useGrouping,
+minimumIntegerDigits:bH[u].minimumIntegerDigits,
+minimumFractionDigits:bH[u].minimumFractionDigits,
+maximumFractionDigits:bH[u].maximumFractionDigits,
 };
-if(aD.style==='currency'){
-defineWECProperty(aD,'currency',bE[s].currency);
-defineWECProperty(aD,'currencyDisplay',
-bE[s].currencyDisplay);
+if(aF.style==='currency'){
+defineWECProperty(aF,'currency',bH[u].currency);
+defineWECProperty(aF,'currencyDisplay',
+bH[u].currencyDisplay);
 }
-if((%_Call(q,bE[s],'minimumSignificantDigits'))){
-defineWECProperty(aD,'minimumSignificantDigits',
-bE[s].minimumSignificantDigits);
+if((%_Call(r,bH[u],'minimumSignificantDigits'))){
+defineWECProperty(aF,'minimumSignificantDigits',
+bH[u].minimumSignificantDigits);
 }
-if((%_Call(q,bE[s],'maximumSignificantDigits'))){
-defineWECProperty(aD,'maximumSignificantDigits',
-bE[s].maximumSignificantDigits);
+if((%_Call(r,bH[u],'maximumSignificantDigits'))){
+defineWECProperty(aF,'maximumSignificantDigits',
+bH[u].maximumSignificantDigits);
 }
-return aD;
+return aF;
 }},-1);
-%DefineMethodsInternal(h,class{supportedLocalesOf(z){
-return supportedLocalesOf('numberformat',z,arguments[1]);
+%DefineMethodsInternal(h,class{supportedLocalesOf(B){
+return supportedLocalesOf('numberformat',B,arguments[1]);
 }},-1);
-function formatNumber(bF,af){
-var bG=(%_ToNumber(af))+0;
-return %InternalNumberFormat(bF,bG);
+function formatNumber(bI,ah){
+var bJ=(%_ToNumber(ah))+0;
+return %InternalNumberFormat(bI,bJ);
 }
 AddBoundMethod(h,'format',formatNumber,1,
 'numberformat',true);
-function toLDMLString(A){
-var aa=getGetOption(A,'dateformat');
-var bH='';
-var bI=aa('weekday','string',['narrow','short','long']);
-bH+=appendToLDMLString(
-bI,{narrow:'EEEEE',short:'EEE',long:'EEEE'});
-bI=aa('era','string',['narrow','short','long']);
-bH+=appendToLDMLString(
-bI,{narrow:'GGGGG',short:'GGG',long:'GGGG'});
-bI=aa('year','string',['2-digit','numeric']);
-bH+=appendToLDMLString(bI,{'2-digit':'yy','numeric':'y'});
-bI=aa('month','string',
+function toLDMLString(C){
+var ac=getGetOption(C,'dateformat');
+var bK='';
+var bL=ac('weekday','string',['narrow','short','long']);
+bK+=appendToLDMLString(
+bL,{narrow:'EEEEE',short:'EEE',long:'EEEE'});
+bL=ac('era','string',['narrow','short','long']);
+bK+=appendToLDMLString(
+bL,{narrow:'GGGGG',short:'GGG',long:'GGGG'});
+bL=ac('year','string',['2-digit','numeric']);
+bK+=appendToLDMLString(bL,{'2-digit':'yy','numeric':'y'});
+bL=ac('month','string',
 ['2-digit','numeric','narrow','short','long']);
-bH+=appendToLDMLString(bI,{'2-digit':'MM','numeric':'M',
+bK+=appendToLDMLString(bL,{'2-digit':'MM','numeric':'M',
 'narrow':'MMMMM','short':'MMM','long':'MMMM'});
-bI=aa('day','string',['2-digit','numeric']);
-bH+=appendToLDMLString(
-bI,{'2-digit':'dd','numeric':'d'});
-var bJ=aa('hour12','boolean');
-bI=aa('hour','string',['2-digit','numeric']);
-if((bJ===(void 0))){
-bH+=appendToLDMLString(bI,{'2-digit':'jj','numeric':'j'});
-}else if(bJ===true){
-bH+=appendToLDMLString(bI,{'2-digit':'hh','numeric':'h'});
+bL=ac('day','string',['2-digit','numeric']);
+bK+=appendToLDMLString(
+bL,{'2-digit':'dd','numeric':'d'});
+var bM=ac('hour12','boolean');
+bL=ac('hour','string',['2-digit','numeric']);
+if((bM===(void 0))){
+bK+=appendToLDMLString(bL,{'2-digit':'jj','numeric':'j'});
+}else if(bM===true){
+bK+=appendToLDMLString(bL,{'2-digit':'hh','numeric':'h'});
 }else{
-bH+=appendToLDMLString(bI,{'2-digit':'HH','numeric':'H'});
+bK+=appendToLDMLString(bL,{'2-digit':'HH','numeric':'H'});
 }
-bI=aa('minute','string',['2-digit','numeric']);
-bH+=appendToLDMLString(bI,{'2-digit':'mm','numeric':'m'});
-bI=aa('second','string',['2-digit','numeric']);
-bH+=appendToLDMLString(bI,{'2-digit':'ss','numeric':'s'});
-bI=aa('timeZoneName','string',['short','long']);
-bH+=appendToLDMLString(bI,{short:'z',long:'zzzz'});
-return bH;
+bL=ac('minute','string',['2-digit','numeric']);
+bK+=appendToLDMLString(bL,{'2-digit':'mm','numeric':'m'});
+bL=ac('second','string',['2-digit','numeric']);
+bK+=appendToLDMLString(bL,{'2-digit':'ss','numeric':'s'});
+bL=ac('timeZoneName','string',['short','long']);
+bK+=appendToLDMLString(bL,{short:'z',long:'zzzz'});
+return bK;
 }
-function appendToLDMLString(bI,bK){
-if(!(bI===(void 0))){
-return bK[bI];
+function appendToLDMLString(bL,bN){
+if(!(bL===(void 0))){
+return bN[bL];
 }else{
 return'';
 }
 }
-function fromLDMLString(bH){
-bH=%RegExpInternalReplace(GetQuotedStringRE(),bH,'');
-var A={};
-var aC=%regexp_internal_match(/E{3,5}/,bH);
-A=appendToDateTimeObject(
-A,'weekday',aC,{EEEEE:'narrow',EEE:'short',EEEE:'long'});
-aC=%regexp_internal_match(/G{3,5}/,bH);
-A=appendToDateTimeObject(
-A,'era',aC,{GGGGG:'narrow',GGG:'short',GGGG:'long'});
-aC=%regexp_internal_match(/y{1,2}/,bH);
-A=appendToDateTimeObject(
-A,'year',aC,{y:'numeric',yy:'2-digit'});
-aC=%regexp_internal_match(/M{1,5}/,bH);
-A=appendToDateTimeObject(A,'month',aC,{MM:'2-digit',
+function fromLDMLString(bK){
+bK=%RegExpInternalReplace(GetQuotedStringRE(),bK,'');
+var C={};
+var aE=%regexp_internal_match(/E{3,5}/,bK);
+C=appendToDateTimeObject(
+C,'weekday',aE,{EEEEE:'narrow',EEE:'short',EEEE:'long'});
+aE=%regexp_internal_match(/G{3,5}/,bK);
+C=appendToDateTimeObject(
+C,'era',aE,{GGGGG:'narrow',GGG:'short',GGGG:'long'});
+aE=%regexp_internal_match(/y{1,2}/,bK);
+C=appendToDateTimeObject(
+C,'year',aE,{y:'numeric',yy:'2-digit'});
+aE=%regexp_internal_match(/M{1,5}/,bK);
+C=appendToDateTimeObject(C,'month',aE,{MM:'2-digit',
 M:'numeric',MMMMM:'narrow',MMM:'short',MMMM:'long'});
-aC=%regexp_internal_match(/L{1,5}/,bH);
-A=appendToDateTimeObject(A,'month',aC,{LL:'2-digit',
+aE=%regexp_internal_match(/L{1,5}/,bK);
+C=appendToDateTimeObject(C,'month',aE,{LL:'2-digit',
 L:'numeric',LLLLL:'narrow',LLL:'short',LLLL:'long'});
-aC=%regexp_internal_match(/d{1,2}/,bH);
-A=appendToDateTimeObject(
-A,'day',aC,{d:'numeric',dd:'2-digit'});
-aC=%regexp_internal_match(/h{1,2}/,bH);
-if(aC!==null){
-A['hour12']=true;
+aE=%regexp_internal_match(/d{1,2}/,bK);
+C=appendToDateTimeObject(
+C,'day',aE,{d:'numeric',dd:'2-digit'});
+aE=%regexp_internal_match(/h{1,2}/,bK);
+if(aE!==null){
+C['hour12']=true;
 }
-A=appendToDateTimeObject(
-A,'hour',aC,{h:'numeric',hh:'2-digit'});
-aC=%regexp_internal_match(/H{1,2}/,bH);
-if(aC!==null){
-A['hour12']=false;
+C=appendToDateTimeObject(
+C,'hour',aE,{h:'numeric',hh:'2-digit'});
+aE=%regexp_internal_match(/H{1,2}/,bK);
+if(aE!==null){
+C['hour12']=false;
 }
-A=appendToDateTimeObject(
-A,'hour',aC,{H:'numeric',HH:'2-digit'});
-aC=%regexp_internal_match(/m{1,2}/,bH);
-A=appendToDateTimeObject(
-A,'minute',aC,{m:'numeric',mm:'2-digit'});
-aC=%regexp_internal_match(/s{1,2}/,bH);
-A=appendToDateTimeObject(
-A,'second',aC,{s:'numeric',ss:'2-digit'});
-aC=%regexp_internal_match(/z|zzzz/,bH);
-A=appendToDateTimeObject(
-A,'timeZoneName',aC,{z:'short',zzzz:'long'});
-return A;
+C=appendToDateTimeObject(
+C,'hour',aE,{H:'numeric',HH:'2-digit'});
+aE=%regexp_internal_match(/m{1,2}/,bK);
+C=appendToDateTimeObject(
+C,'minute',aE,{m:'numeric',mm:'2-digit'});
+aE=%regexp_internal_match(/s{1,2}/,bK);
+C=appendToDateTimeObject(
+C,'second',aE,{s:'numeric',ss:'2-digit'});
+aE=%regexp_internal_match(/z|zzzz/,bK);
+C=appendToDateTimeObject(
+C,'timeZoneName',aE,{z:'short',zzzz:'long'});
+return C;
 }
-function appendToDateTimeObject(A,bI,aC,bK){
-if((aC===null)){
-if(!(%_Call(q,A,bI))){
-defineWEProperty(A,bI,(void 0));
+function appendToDateTimeObject(C,bL,aE,bN){
+if((aE===null)){
+if(!(%_Call(r,C,bL))){
+defineWEProperty(C,bL,(void 0));
 }
-return A;
+return C;
 }
-var ab=aC[0];
-defineWEProperty(A,bI,bK[ab]);
-return A;
+var ad=aE[0];
+defineWEProperty(C,bL,bN[ad]);
+return C;
 }
-function toDateTimeOptions(A,bL,bM){
-if((A===(void 0))){
-A={};
+function toDateTimeOptions(C,bO,bP){
+if((C===(void 0))){
+C={};
 }else{
-A=(%_ToObject(A));
+C=(%_ToObject(C));
 }
-A=%object_create(A);
-var bN=true;
-if((bL==='date'||bL==='any')&&
-(!(A.weekday===(void 0))||!(A.year===(void 0))||
-!(A.month===(void 0))||!(A.day===(void 0)))){
-bN=false;
+C=%object_create(C);
+var bQ=true;
+if((bO==='date'||bO==='any')&&
+(!(C.weekday===(void 0))||!(C.year===(void 0))||
+!(C.month===(void 0))||!(C.day===(void 0)))){
+bQ=false;
 }
-if((bL==='time'||bL==='any')&&
-(!(A.hour===(void 0))||!(A.minute===(void 0))||
-!(A.second===(void 0)))){
-bN=false;
+if((bO==='time'||bO==='any')&&
+(!(C.hour===(void 0))||!(C.minute===(void 0))||
+!(C.second===(void 0)))){
+bQ=false;
 }
-if(bN&&(bM==='date'||bM==='all')){
-%object_define_property(A,'year',{value:'numeric',
+if(bQ&&(bP==='date'||bP==='all')){
+%object_define_property(C,'year',{value:'numeric',
 writable:true,
 enumerable:true,
 configurable:true});
-%object_define_property(A,'month',{value:'numeric',
+%object_define_property(C,'month',{value:'numeric',
 writable:true,
 enumerable:true,
 configurable:true});
-%object_define_property(A,'day',{value:'numeric',
-writable:true,
-enumerable:true,
-configurable:true});
-}
-if(bN&&(bM==='time'||bM==='all')){
-%object_define_property(A,'hour',{value:'numeric',
-writable:true,
-enumerable:true,
-configurable:true});
-%object_define_property(A,'minute',{value:'numeric',
-writable:true,
-enumerable:true,
-configurable:true});
-%object_define_property(A,'second',{value:'numeric',
+%object_define_property(C,'day',{value:'numeric',
 writable:true,
 enumerable:true,
 configurable:true});
 }
-return A;
+if(bQ&&(bP==='time'||bP==='all')){
+%object_define_property(C,'hour',{value:'numeric',
+writable:true,
+enumerable:true,
+configurable:true});
+%object_define_property(C,'minute',{value:'numeric',
+writable:true,
+enumerable:true,
+configurable:true});
+%object_define_property(C,'second',{value:'numeric',
+writable:true,
+enumerable:true,
+configurable:true});
 }
-function CreateDateTimeFormat(z,A){
-if((A===(void 0))){
-A={};
+return C;
 }
-var X=resolveLocale('dateformat',z,A);
-A=toDateTimeOptions(A,'any','date');
-var aa=getGetOption(A,'dateformat');
-var S=aa('formatMatcher','string',
+function CreateDateTimeFormat(B,C){
+if((C===(void 0))){
+C={};
+}
+var Z=resolveLocale('dateformat',B,C);
+C=toDateTimeOptions(C,'any','date');
+var ac=getGetOption(C,'dateformat');
+var U=ac('formatMatcher','string',
 ['basic','best fit'],'best fit');
-var bH=toLDMLString(A);
-var bO=canonicalizeTimeZoneID(A.timeZone);
-var bf={};
-var ak=parseExtension(X.extension);
-var bP={
+var bK=toLDMLString(C);
+var bR=canonicalizeTimeZoneID(C.timeZone);
+var bh={};
+var am=parseExtension(Z.extension);
+var bS={
 'ca':{'property':(void 0),'type':'string'},
 'nu':{'property':(void 0),'type':'string'}
 };
-var ai=setOptions(A,ak,bP,
-aa,bf);
-var bk=X.locale+ai;
-var ag=%object_define_properties({},{
+var ak=setOptions(C,am,bS,
+ac,bh);
+var bm=Z.locale+ak;
+var ai=%object_define_properties({},{
 calendar:{writable:true},
 day:{writable:true},
 era:{writable:true},
@@ -6780,23 +6368,23 @@ locale:{writable:true},
 minute:{writable:true},
 month:{writable:true},
 numberingSystem:{writable:true},
-[r]:{writable:true},
-requestedLocale:{value:bk,writable:true},
+[t]:{writable:true},
+requestedLocale:{value:bm,writable:true},
 second:{writable:true},
 timeZone:{writable:true},
 timeZoneName:{writable:true},
-tz:{value:bO,writable:true},
+tz:{value:bR,writable:true},
 weekday:{writable:true},
 year:{writable:true}
 });
-var bQ=%CreateDateTimeFormat(
-bk,{skeleton:bH,timeZone:bO},ag);
-if(ag.timeZone==="Etc/Unknown"){
-throw %make_range_error(185,bO);
+var bT=%CreateDateTimeFormat(
+bm,{skeleton:bK,timeZone:bR},ai);
+if(ai.timeZone==="Etc/Unknown"){
+throw %make_range_error(192,bR);
 }
-%MarkAsInitializedIntlObjectOfType(bQ,'dateformat');
-bQ[s]=ag;
-return bQ;
+%MarkAsInitializedIntlObjectOfType(bT,'dateformat');
+bT[u]=ai;
+return bT;
 }
 function DateTimeFormatConstructor(){
 return IntlConstruct(this,g,CreateDateTimeFormat,
@@ -6804,163 +6392,163 @@ new.target,arguments,true);
 }
 %SetCode(g,DateTimeFormatConstructor);
 %DefineMethodsInternal(g.prototype,class{resolvedOptions(){
-var bE=Unwrap(this,'dateformat',g,
+var bH=Unwrap(this,'dateformat',g,
 'resolvedOptions',true);
-var bR={
+var bU={
 'gregorian':'gregory',
 'ethiopic-amete-alem':'ethioaa'
 };
-var bS=fromLDMLString(bE[s][r]);
-var bT=bR[bE[s].calendar];
-if((bT===(void 0))){
-bT=bE[s].calendar;
+var bV=fromLDMLString(bH[u][t]);
+var bW=bU[bH[u].calendar];
+if((bW===(void 0))){
+bW=bH[u].calendar;
 }
-var aD={
-locale:bE[s].locale,
-numberingSystem:bE[s].numberingSystem,
-calendar:bT,
-timeZone:bE[s].timeZone
+var aF={
+locale:bH[u].locale,
+numberingSystem:bH[u].numberingSystem,
+calendar:bW,
+timeZone:bH[u].timeZone
 };
-addWECPropertyIfDefined(aD,'timeZoneName',bS.timeZoneName);
-addWECPropertyIfDefined(aD,'era',bS.era);
-addWECPropertyIfDefined(aD,'year',bS.year);
-addWECPropertyIfDefined(aD,'month',bS.month);
-addWECPropertyIfDefined(aD,'day',bS.day);
-addWECPropertyIfDefined(aD,'weekday',bS.weekday);
-addWECPropertyIfDefined(aD,'hour12',bS.hour12);
-addWECPropertyIfDefined(aD,'hour',bS.hour);
-addWECPropertyIfDefined(aD,'minute',bS.minute);
-addWECPropertyIfDefined(aD,'second',bS.second);
-return aD;
+addWECPropertyIfDefined(aF,'timeZoneName',bV.timeZoneName);
+addWECPropertyIfDefined(aF,'era',bV.era);
+addWECPropertyIfDefined(aF,'year',bV.year);
+addWECPropertyIfDefined(aF,'month',bV.month);
+addWECPropertyIfDefined(aF,'day',bV.day);
+addWECPropertyIfDefined(aF,'weekday',bV.weekday);
+addWECPropertyIfDefined(aF,'hour12',bV.hour12);
+addWECPropertyIfDefined(aF,'hour',bV.hour);
+addWECPropertyIfDefined(aF,'minute',bV.minute);
+addWECPropertyIfDefined(aF,'second',bV.second);
+return aF;
 }},-1);
-%DefineMethodsInternal(g,class{supportedLocalesOf(z){
-return supportedLocalesOf('dateformat',z,arguments[1]);
+%DefineMethodsInternal(g,class{supportedLocalesOf(B){
+return supportedLocalesOf('dateformat',B,arguments[1]);
 }},-1);
-function formatDate(bF,bU){
-var bV;
-if((bU===(void 0))){
-bV=%DateCurrentTime();
+function formatDate(bI,bX){
+var bY;
+if((bX===(void 0))){
+bY=%DateCurrentTime();
 }else{
-bV=(%_ToNumber(bU));
+bY=(%_ToNumber(bX));
 }
-if(!(%_IsSmi(%IS_VAR(bV))||((bV==bV)&&(bV!=1/0)&&(bV!=-1/0))))throw %make_range_error(153);
-return %InternalDateFormat(bF,new e(bV));
+if(!(%_IsSmi(%IS_VAR(bY))||((bY==bY)&&(bY!=1/0)&&(bY!=-1/0))))throw %make_range_error(160);
+return %InternalDateFormat(bI,new e(bY));
 }
-%DefineMethodsInternal(g.prototype,class{formatToParts(bU){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"Intl.DateTimeFormat.prototype.formatToParts");
+%DefineMethodsInternal(g.prototype,class{formatToParts(bX){
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"Intl.DateTimeFormat.prototype.formatToParts");
 if(!(typeof(this)==='object')){
-throw %make_type_error(16,this);
+throw %make_type_error(20,this);
 }
 if(!%IsInitializedIntlObjectOfType(this,'dateformat')){
-throw %make_type_error(48,
+throw %make_type_error(53,
 'Intl.DateTimeFormat.prototype.formatToParts',
 this);
 }
-var bV;
-if((bU===(void 0))){
-bV=%DateCurrentTime();
+var bY;
+if((bX===(void 0))){
+bY=%DateCurrentTime();
 }else{
-bV=(%_ToNumber(bU));
+bY=(%_ToNumber(bX));
 }
-if(!(%_IsSmi(%IS_VAR(bV))||((bV==bV)&&(bV!=1/0)&&(bV!=-1/0))))throw %make_range_error(153);
-return %InternalDateFormatToParts(this,new e(bV));
+if(!(%_IsSmi(%IS_VAR(bY))||((bY==bY)&&(bY!=1/0)&&(bY!=-1/0))))throw %make_range_error(160);
+return %InternalDateFormatToParts(this,new e(bY));
 }},-1);
 AddBoundMethod(g,'format',formatDate,1,'dateformat',
 true);
-function canonicalizeTimeZoneID(bW){
-if((bW===(void 0))){
-return bW;
-}
-bW=(%_ToString(bW));
-var bX=%StringToUpperCaseIntl(bW);
-if(bX==='UTC'||bX==='GMT'||
-bX==='ETC/UTC'||bX==='ETC/GMT'){
-return'UTC';
-}
-var aC=%regexp_internal_match(GetTimezoneNameCheckRE(),bW);
-if((aC===null))throw %make_range_error(154,bW);
-var aD=toTitleCaseTimezoneLocation(aC[1])+'/'+
-toTitleCaseTimezoneLocation(aC[2]);
-if(!(aC[3]===(void 0))&&3<aC.length){
-var bY=%StringSplit(aC[3],'/',4294967295);
-for(var W=1;W<bY.length;W++){
-aD=aD+'/'+toTitleCaseTimezoneLocation(bY[W]);
-}
-}
-return aD;
-}
-function CreateBreakIterator(z,A){
-if((A===(void 0))){
-A={};
-}
-var aa=getGetOption(A,'breakiterator');
-var bf={};
-defineWEProperty(bf,'type',aa(
-'type','string',['character','word','sentence','line'],'word'));
-var X=resolveLocale('breakiterator',z,A);
-var ag=%object_define_properties({},{
-requestedLocale:{value:X.locale,writable:true},
-type:{value:bf.type,writable:true},
-locale:{writable:true}
-});
-var bZ=%CreateBreakIterator(X.locale,bf,ag);
-%MarkAsInitializedIntlObjectOfType(bZ,'breakiterator');
-bZ[s]=ag;
+function canonicalizeTimeZoneID(bZ){
+if((bZ===(void 0))){
 return bZ;
 }
+bZ=(%_ToString(bZ));
+var ca=%StringToUpperCaseIntl(bZ);
+if(ca==='UTC'||ca==='GMT'||
+ca==='ETC/UTC'||ca==='ETC/GMT'){
+return'UTC';
+}
+var aE=%regexp_internal_match(GetTimezoneNameCheckRE(),bZ);
+if((aE===null))throw %make_range_error(161,bZ);
+var aF=toTitleCaseTimezoneLocation(aE[1])+'/'+
+toTitleCaseTimezoneLocation(aE[2]);
+if(!(aE[3]===(void 0))&&3<aE.length){
+var cb=%StringSplit(aE[3],'/',4294967295);
+for(var Y=1;Y<cb.length;Y++){
+aF=aF+'/'+toTitleCaseTimezoneLocation(cb[Y]);
+}
+}
+return aF;
+}
+function CreateBreakIterator(B,C){
+if((C===(void 0))){
+C={};
+}
+var ac=getGetOption(C,'breakiterator');
+var bh={};
+defineWEProperty(bh,'type',ac(
+'type','string',['character','word','sentence','line'],'word'));
+var Z=resolveLocale('breakiterator',B,C);
+var ai=%object_define_properties({},{
+requestedLocale:{value:Z.locale,writable:true},
+type:{value:bh.type,writable:true},
+locale:{writable:true}
+});
+var cc=%CreateBreakIterator(Z.locale,bh,ai);
+%MarkAsInitializedIntlObjectOfType(cc,'breakiterator');
+cc[u]=ai;
+return cc;
+}
 function v8BreakIteratorConstructor(){
-return IntlConstruct(this,j,CreateBreakIterator,
+return IntlConstruct(this,k,CreateBreakIterator,
 new.target,arguments);
 }
-%SetCode(j,v8BreakIteratorConstructor);
-%DefineMethodsInternal(j.prototype,class{resolvedOptions(){
+%SetCode(k,v8BreakIteratorConstructor);
+%DefineMethodsInternal(k.prototype,class{resolvedOptions(){
 if(!(new.target===(void 0))){
-throw %make_type_error(86);
+throw %make_type_error(93);
 }
-var ca=Unwrap(this,'breakiterator',j,
+var cd=Unwrap(this,'breakiterator',k,
 'resolvedOptions',false);
 return{
-locale:ca[s].locale,
-type:ca[s].type
+locale:cd[u].locale,
+type:cd[u].type
 };
 }},-1);
-%DefineMethodsInternal(j,class{supportedLocalesOf(z){
+%DefineMethodsInternal(k,class{supportedLocalesOf(B){
 if(!(new.target===(void 0))){
-throw %make_type_error(86);
+throw %make_type_error(93);
 }
-return supportedLocalesOf('breakiterator',z,arguments[1]);
+return supportedLocalesOf('breakiterator',B,arguments[1]);
 }},-1);
-function adoptText(bZ,cb){
-%BreakIteratorAdoptText(bZ,(%_ToString(cb)));
+function adoptText(cc,ce){
+%BreakIteratorAdoptText(cc,(%_ToString(ce)));
 }
-function first(bZ){
-return %BreakIteratorFirst(bZ);
+function first(cc){
+return %BreakIteratorFirst(cc);
 }
-function next(bZ){
-return %BreakIteratorNext(bZ);
+function next(cc){
+return %BreakIteratorNext(cc);
 }
-function current(bZ){
-return %BreakIteratorCurrent(bZ);
+function current(cc){
+return %BreakIteratorCurrent(cc);
 }
-function breakType(bZ){
-return %BreakIteratorBreakType(bZ);
+function breakType(cc){
+return %BreakIteratorBreakType(cc);
 }
-AddBoundMethod(j,'adoptText',adoptText,1,
+AddBoundMethod(k,'adoptText',adoptText,1,
 'breakiterator');
-AddBoundMethod(j,'first',first,0,'breakiterator');
-AddBoundMethod(j,'next',next,0,'breakiterator');
-AddBoundMethod(j,'current',current,0,
+AddBoundMethod(k,'first',first,0,'breakiterator');
+AddBoundMethod(k,'next',next,0,'breakiterator');
+AddBoundMethod(k,'current',current,0,
 'breakiterator');
-AddBoundMethod(j,'breakType',breakType,0,
+AddBoundMethod(k,'breakType',breakType,0,
 'breakiterator');
-var cc={
+var cf={
 'collator':i,
 'numberformat':h,
 'dateformatall':g,
 'dateformatdate':g,
 'dateformattime':g
 };
-var cd={
+var cg={
 'collator':(void 0),
 'numberformat':(void 0),
 'dateformatall':(void 0),
@@ -6968,107 +6556,198 @@ var cd={
 'dateformattime':(void 0),
 };
 function clearDefaultObjects(){
-cd['dateformatall']=(void 0);
-cd['dateformatdate']=(void 0);
-cd['dateformattime']=(void 0);
+cg['dateformatall']=(void 0);
+cg['dateformatdate']=(void 0);
+cg['dateformattime']=(void 0);
 }
-var ce=0;
+var ch=0;
 function checkDateCacheCurrent(){
-var cf=%DateCacheVersion();
-if(cf==ce){
+var ci=%DateCacheVersion();
+if(ci==ch){
 return;
 }
-ce=cf;
+ch=ci;
 clearDefaultObjects();
 }
-function cachedOrNewService(I,z,A,bM){
-var cg=((bM===(void 0)))?A:bM;
-if((z===(void 0))&&(A===(void 0))){
+function cachedOrNewService(K,B,C,bP){
+var cj=((bP===(void 0)))?C:bP;
+if((B===(void 0))&&(C===(void 0))){
 checkDateCacheCurrent();
-if((cd[I]===(void 0))){
-cd[I]=new cc[I](z,cg);
+if((cg[K]===(void 0))){
+cg[K]=new cf[K](B,cj);
 }
-return cd[I];
+return cg[K];
 }
-return new cc[I](z,cg);
+return new cf[K](B,cj);
 }
-function LocaleConvertCase(ch,z,ci){
-var bc;
-if((z===(void 0))){
-bc=GetDefaultICULocaleJS();
-}else if((typeof(z)==='string')){
-bc=canonicalizeLanguageTag(z);
+function LocaleConvertCase(ck,B,cl){
+var be;
+if((B===(void 0))){
+be=GetDefaultICULocaleJS();
+}else if((typeof(B)==='string')){
+be=canonicalizeLanguageTag(B);
 }else{
-var z=initializeLocaleList(z);
-bc=z.length>0?z[0]:GetDefaultICULocaleJS();
+var B=initializeLocaleList(B);
+be=B.length>0?B[0]:GetDefaultICULocaleJS();
 }
-var Y=%StringIndexOf(bc,'-',0);
-if(Y!==-1){
-bc=%_Call(u,bc,0,Y);
+var aa=%StringIndexOf(be,'-',0);
+if(aa!==-1){
+be=%_Call(w,be,0,aa);
 }
-return %StringLocaleConvertCase(ch,ci,bc);
+return %StringLocaleConvertCase(ck,cl,be);
 }
-%DefineMethodsInternal(m.prototype,class{localeCompare(that){
+%DefineMethodsInternal(n.prototype,class{localeCompare(that){
 if((this==null)){
-throw %make_type_error(57);
+throw %make_type_error(62);
 }
-var z=arguments[1];
-var A=arguments[2];
-var bl=cachedOrNewService('collator',z,A);
-return compare(bl,this,that);
+var B=arguments[1];
+var C=arguments[2];
+var bn=cachedOrNewService('collator',B,C);
+return compare(bn,this,that);
 }},-1);
-var cj={};
-%DefineMethodsInternal(m.prototype,class{
-toLocaleLowerCase(z){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.toLocaleLowerCase");
-return LocaleConvertCase((%_ToString(this)),z,false);
+var cm={};
+%DefineMethodsInternal(n.prototype,class{
+toLocaleLowerCase(B){
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"String.prototype.toLocaleLowerCase");
+return LocaleConvertCase((%_ToString(this)),B,false);
 }
-toLocaleUpperCase(z){
-if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(17,"String.prototype.toLocaleUpperCase");
-return LocaleConvertCase((%_ToString(this)),z,true);
+toLocaleUpperCase(B){
+if((%IS_VAR(this)===null)||(this===(void 0)))throw %make_type_error(21,"String.prototype.toLocaleUpperCase");
+return LocaleConvertCase((%_ToString(this)),B,true);
 }
 },0);
-%DefineMethodsInternal(k.prototype,class{toLocaleString(){
-if(!(this instanceof k)&&typeof(this)!=='number'){
-throw %make_type_error(58,"Number");
+%DefineMethodsInternal(l.prototype,class{toLocaleString(){
+if(!(this instanceof l)&&typeof(this)!=='number'){
+throw %make_type_error(63,"Number");
 }
-var z=arguments[0];
-var A=arguments[1];
-var bD=cachedOrNewService('numberformat',z,A);
-return formatNumber(bD,this);
+var B=arguments[0];
+var C=arguments[1];
+var bG=cachedOrNewService('numberformat',B,C);
+return formatNumber(bG,this);
 }},-1);
-function toLocaleDateTime(ck,z,A,bL,bM,I){
-if(!(ck instanceof e)){
-throw %make_type_error(58,"Date");
+function toLocaleDateTime(cn,B,C,bO,bP,K){
+if(!(cn instanceof e)){
+throw %make_type_error(63,"Date");
 }
-var bU=(%_ToNumber(ck));
-if((%IS_VAR(bU)!==bU))return'Invalid Date';
-var bf=toDateTimeOptions(A,bL,bM);
-var bQ=
-cachedOrNewService(I,z,A,bf);
-return formatDate(bQ,ck);
+var bX=(%_ToNumber(cn));
+if((%IS_VAR(bX)!==bX))return'Invalid Date';
+var bh=toDateTimeOptions(C,bO,bP);
+var bT=
+cachedOrNewService(K,B,C,bh);
+return formatDate(bT,cn);
 }
 %DefineMethodsInternal(e.prototype,class{toLocaleString(){
-var z=arguments[0];
-var A=arguments[1];
+var B=arguments[0];
+var C=arguments[1];
 return toLocaleDateTime(
-this,z,A,'any','all','dateformatall');
+this,B,C,'any','all','dateformatall');
 }},-1);
 %DefineMethodsInternal(e.prototype,class{toLocaleDateString(){
-var z=arguments[0];
-var A=arguments[1];
+var B=arguments[0];
+var C=arguments[1];
 return toLocaleDateTime(
-this,z,A,'date','date','dateformatdate');
+this,B,C,'date','date','dateformatdate');
 }},-1);
 %DefineMethodsInternal(e.prototype,class{toLocaleTimeString(){
-var z=arguments[0];
-var A=arguments[1];
+var B=arguments[0];
+var C=arguments[1];
 return toLocaleDateTime(
-this,z,A,'time','time','dateformattime');
+this,B,C,'time','time','dateformattime');
 }},-1);
 })
 
- 4CommonStringsI
+ @CommonOperations/
+(function(global, binding, v8) {
+  'use strict';
+  const _queue = v8.createPrivateSymbol('[[queue]]');
+  const _queueTotalSize = v8.createPrivateSymbol('[[queueTotalSize]]');
+  const Boolean = global.Boolean;
+  const Number = global.Number;
+  const Number_isFinite = Number.isFinite;
+  const Number_isNaN = Number.isNaN;
+  const undefined = global.undefined;
+  const RangeError = global.RangeError;
+  const TypeError = global.TypeError;
+  const hasOwnProperty = v8.uncurryThis(global.Object.hasOwnProperty);
+  function hasOwnPropertyNoThrow(x, property) {
+    return Boolean(x) && hasOwnProperty(x, property);
+  }
+  function streamInternalError() {
+    throw new RangeError('Stream API Internal Error');
+  }
+  function rejectPromise(p, reason) {
+    if (!v8.isPromise(p)) {
+      streamInternalError();
+    }
+    v8.rejectPromise(p, reason);
+  }
+  function resolvePromise(p, value) {
+    if (!v8.isPromise(p)) {
+      streamInternalError();
+    }
+    v8.resolvePromise(p, value);
+  }
+  function markPromiseAsHandled(p) {
+    if (!v8.isPromise(p)) {
+      streamInternalError();
+    }
+    v8.markPromiseAsHandled(p);
+  }
+  function promiseState(p) {
+    if (!v8.isPromise(p)) {
+      streamInternalError();
+    }
+    return v8.promiseState(p);
+  }
+  function DequeueValue(container) {
+    const pair = container[_queue].shift();
+    container[_queueTotalSize] -= pair.size;
+    if (container[_queueTotalSize] < 0) {
+      container[_queueTotalSize] = 0;
+    }
+    return pair.value;
+  }
+  function EnqueueValueWithSize(container, value, size) {
+    size = Number(size);
+    if (!IsFiniteNonNegativeNumber(size)) {
+      throw new RangeError(binding.streamErrors.invalidSize);
+    }
+    container[_queue].push({value, size});
+    container[_queueTotalSize] += size;
+  }
+  function PeekQueueValue(container) {
+    const pair = container[_queue].peek();
+    return pair.value;
+  }
+  function ResetQueue(container) {
+    container[_queue] = new binding.SimpleQueue();
+    container[_queueTotalSize] = 0;
+  }
+  function IsFiniteNonNegativeNumber(v) {
+    return Number_isFinite(v) && v >= 0;
+  }
+  function ValidateAndNormalizeQueuingStrategy(size, highWaterMark) {
+    if (size !== undefined && typeof size !== 'function') {
+      throw new TypeError(binding.streamErrors.sizeNotAFunction);
+    }
+    highWaterMark = Number(highWaterMark);
+    if (Number_isNaN(highWaterMark)) {
+      throw new RangeError(binding.streamErrors.invalidHWM);
+    }
+    if (highWaterMark < 0) {
+      throw new RangeError(binding.streamErrors.invalidHWM);
+    }
+    return {size, highWaterMark};
+  }
+  binding.streamOperations = { _queue, _queueTotalSize,
+                               hasOwnPropertyNoThrow, rejectPromise,
+                               resolvePromise, markPromiseAsHandled,
+                               promiseState, DequeueValue,
+                               EnqueueValueWithSize, PeekQueueValue,
+                               ResetQueue,
+                               ValidateAndNormalizeQueuingStrategy };
+});
+4CommonStringsI
 (function(global, binding, v8) {
   'use strict';
   binding.streamErrors = {
@@ -7225,7 +6904,7 @@ PCountQueuingStrategyý
   binding.createBuiltInCountQueuingStrategy = highWaterMark =>
       new BuiltInCountQueuingStrategy(highWaterMark);
 });
-8ReadableStream–
+8ReadableStream:þ
 (function(global, binding, v8) {
   'use strict';
   const _reader = v8.createPrivateSymbol('[[reader]]');
@@ -7247,8 +6926,6 @@ PCountQueuingStrategyý
   const _underlyingSource = v8.createPrivateSymbol('[[underlyingSource]]');
   const _controlledReadableStream =
       v8.createPrivateSymbol('[[controlledReadableStream]]');
-  const _queue = v8.createPrivateSymbol('[[queue]]');
-  const _totalQueuedSize = v8.createPrivateSymbol('[[totalQueuedSize]]');
   const _strategySize = v8.createPrivateSymbol('[[strategySize]]');
   const _strategyHWM = v8.createPrivateSymbol('[[strategyHWM]]');
   const _readableStreamDefaultControllerBits = v8.createPrivateSymbol(
@@ -7259,20 +6936,21 @@ PCountQueuingStrategyý
   const PULL_AGAIN = 0b1000;
   const EXTERNALLY_CONTROLLED = 0b10000;
   const undefined = global.undefined;
-  const Infinity = global.Infinity;
   const defineProperty = global.Object.defineProperty;
-  const hasOwnProperty = v8.uncurryThis(global.Object.hasOwnProperty);
   const callFunction = v8.uncurryThis(global.Function.prototype.call);
   const applyFunction = v8.uncurryThis(global.Function.prototype.apply);
   const TypeError = global.TypeError;
   const RangeError = global.RangeError;
-  const Number = global.Number;
-  const Number_isNaN = Number.isNaN;
-  const Number_isFinite = Number.isFinite;
+  const Boolean = global.Boolean;
+  const String = global.String;
   const Promise = global.Promise;
   const thenPromise = v8.uncurryThis(Promise.prototype.then);
   const Promise_resolve = v8.simpleBind(Promise.resolve, Promise);
   const Promise_reject = v8.simpleBind(Promise.reject, Promise);
+  const { _queue, _queueTotalSize, hasOwnPropertyNoThrow, rejectPromise,
+          resolvePromise, markPromiseAsHandled, DequeueValue,
+          EnqueueValueWithSize,
+          ValidateAndNormalizeQueuingStrategy } = binding.streamOperations;
   const streamErrors = binding.streamErrors;
   const errCancelLockedStream =
       'Cannot cancel a readable stream that is locked to a reader';
@@ -7306,27 +6984,12 @@ PCountQueuingStrategyý
   const errCannotPipeLockedStream = 'Cannot pipe a locked stream';
   const errCannotPipeToALockedStream = 'Cannot pipe to a locked stream';
   const errDestinationStreamClosed = 'Destination stream closed';
-  function internalError() {
-    throw new RangeError('ReadableStream Internal Error');
-  }
-  function rejectPromise(p, reason) {
-    if (!v8.isPromise(p)) {
-      internalError();
-    }
-    v8.rejectPromise(p, reason);
-  }
-  function resolvePromise(p, value) {
-    if (!v8.isPromise(p)) {
-      internalError();
-    }
-    v8.resolvePromise(p, value);
-  }
-  function markPromiseAsHandled(p) {
-    if (!v8.isPromise(p)) {
-      internalError();
-    }
-    v8.markPromiseAsHandled(p);
-  }
+  const errPipeThroughUndefinedWritable =
+        'Failed to execute \'pipeThrough\' on \'ReadableStream\': parameter ' +
+        '1\'s \'writable\' property is undefined.';
+  const errPipeThroughUndefinedReadable =
+        'Failed to execute \'pipeThrough\' on \'ReadableStream\': parameter ' +
+        '1\'s \'readable\' property is undefined.';
   class ReadableStream {
     constructor() {
       const underlyingSource = arguments[0] === undefined ? {} : arguments[0];
@@ -7379,6 +7042,12 @@ PCountQueuingStrategyý
       throw new RangeError(errGetReaderBadMode);
     }
     pipeThrough({writable, readable}, options) {
+      if (writable === undefined) {
+        throw new TypeError(errPipeThroughUndefinedWritable);
+      }
+      if (readable === undefined) {
+        throw new TypeError(errPipeThroughUndefinedReadable);
+      }
       const promise = this.pipeTo(writable, options);
       if (v8.isPromise(promise)) {
         markPromiseAsHandled(promise);
@@ -7560,7 +7229,7 @@ PCountQueuingStrategyý
       this[_controlledReadableStream] = stream;
       this[_underlyingSource] = underlyingSource;
       this[_queue] = new binding.SimpleQueue();
-      this[_totalQueuedSize] = 0;
+      this[_queueTotalSize] = 0;
       this[_readableStreamDefaultControllerBits] = 0b0;
       if (isExternallyControlled === true) {
         this[_readableStreamDefaultControllerBits] |= EXTERNALLY_CONTROLLED;
@@ -7813,11 +7482,10 @@ PCountQueuingStrategyý
     resolvePromise(reader[_closedPromise], undefined);
   }
   function ReadableStreamDefaultControllerGetDesiredSize(controller) {
-    const queueSize = GetTotalQueueSize(controller);
-    return controller[_strategyHWM] - queueSize;
+    return controller[_strategyHWM] - controller[_queueTotalSize];
   }
   function IsReadableStream(x) {
-    return hasOwnProperty(x, _controller);
+    return hasOwnPropertyNoThrow(x, _controller);
   }
   function IsReadableStreamDisturbed(stream) {
     return stream[_readableStreamBits] & DISTURBED;
@@ -7826,10 +7494,10 @@ PCountQueuingStrategyý
     return stream[_reader] !== undefined;
   }
   function IsReadableStreamDefaultController(x) {
-    return hasOwnProperty(x, _controlledReadableStream);
+    return hasOwnPropertyNoThrow(x, _controlledReadableStream);
   }
   function IsReadableStreamDefaultReader(x) {
-    return hasOwnProperty(x, _readRequests);
+    return hasOwnPropertyNoThrow(x, _readRequests);
   }
   function IsReadableStreamReadable(stream) {
     return ReadableStreamGetState(stream) === STATE_READABLE;
@@ -8008,33 +7676,6 @@ PCountQueuingStrategyý
       return promise;
     }
   }
-  function DequeueValue(controller) {
-    const result = controller[_queue].shift();
-    controller[_totalQueuedSize] -= result.size;
-    return result.value;
-  }
-  function EnqueueValueWithSize(controller, value, size) {
-    size = Number(size);
-    if (Number_isNaN(size) || size === +Infinity || size < 0) {
-      throw new RangeError(streamErrors.invalidSize);
-    }
-    controller[_totalQueuedSize] += size;
-    controller[_queue].push({value, size});
-  }
-  function GetTotalQueueSize(controller) { return controller[_totalQueuedSize]; }
-  function ValidateAndNormalizeQueuingStrategy(size, highWaterMark) {
-    if (size !== undefined && typeof size !== 'function') {
-      throw new TypeError(streamErrors.sizeNotAFunction);
-    }
-    highWaterMark = Number(highWaterMark);
-    if (Number_isNaN(highWaterMark)) {
-      throw new RangeError(streamErrors.invalidHWM);
-    }
-    if (highWaterMark < 0) {
-      throw new RangeError(streamErrors.invalidHWM);
-    }
-    return {size, highWaterMark};
-  }
   function CallOrNoop(O, P, arg, nameForError) {
     const method = O[P];
     if (method === undefined) {
@@ -8091,7 +7732,7 @@ PCountQueuingStrategyý
             underlyingSource, strategy, createWithExternalControllerSentinel);
       };
 });
-8WritableStreamâá
+8WritableStream6Å
 (function(global, binding, v8) {
   'use strict';
   const _closeRequest = v8.createPrivateSymbol('[[closeRequest]]');
@@ -8111,8 +7752,6 @@ PCountQueuingStrategyý
   const _readyPromise = v8.createPrivateSymbol('[[readyPromise]]');
   const _controlledWritableStream =
       v8.createPrivateSymbol('[[controlledWritableStream]]');
-  const _queue = v8.createPrivateSymbol('[[queue]]');
-  const _queueTotalSize = v8.createPrivateSymbol('[[queueTotalSize]]');
   const _started = v8.createPrivateSymbol('[[started]]');
   const _strategyHWM = v8.createPrivateSymbol('[[strategyHWM]]');
   const _strategySize = v8.createPrivateSymbol('[[strategySize]]');
@@ -8131,13 +7770,14 @@ PCountQueuingStrategyý
   const TypeError = global.TypeError;
   const RangeError = global.RangeError;
   const Boolean = global.Boolean;
-  const Number = global.Number;
-  const Number_isNaN = Number.isNaN;
-  const Number_isFinite = Number.isFinite;
   const Promise = global.Promise;
   const thenPromise = v8.uncurryThis(Promise.prototype.then);
   const Promise_resolve = v8.simpleBind(Promise.resolve, Promise);
   const Promise_reject = v8.simpleBind(Promise.reject, Promise);
+  const { _queue, _queueTotalSize, hasOwnPropertyNoThrow, rejectPromise,
+          resolvePromise, markPromiseAsHandled, promiseState, DequeueValue,
+          EnqueueValueWithSize, PeekQueueValue, ResetQueue,
+          ValidateAndNormalizeQueuingStrategy } = binding.streamOperations;
   const streamErrors = binding.streamErrors;
   const errAbortLockedStream = 'Cannot abort a writable stream that is locked to a writer';
   const errStreamAborted = 'The stream has been aborted';
@@ -8163,33 +7803,6 @@ PCountQueuingStrategyý
   function createCannotActionOnStateStreamError(action, state) {
     return new TypeError(
         templateErrorCannotActionOnStateStream(action, stateNames[state]));
-  }
-  function internalError() {
-    throw new RangeError('WritableStream Internal Error');
-  }
-  function rejectPromise(p, reason) {
-    if (!v8.isPromise(p)) {
-      internalError();
-    }
-    v8.rejectPromise(p, reason);
-  }
-  function resolvePromise(p, value) {
-    if (!v8.isPromise(p)) {
-      internalError();
-    }
-    v8.resolvePromise(p, value);
-  }
-  function markPromiseAsHandled(p) {
-    if (!v8.isPromise(p)) {
-      internalError();
-    }
-    v8.markPromiseAsHandled(p);
-  }
-  function promiseState(p) {
-    if (!v8.isPromise(p)) {
-      internalError();
-    }
-    return v8.promiseState(p);
   }
   function rejectPromises(queue, e) {
     queue.forEach(promise => rejectPromise(promise, e));
@@ -8240,7 +7853,7 @@ PCountQueuingStrategyý
     return new WritableStreamDefaultWriter(stream);
   }
   function IsWritableStream(x) {
-    return hasOwnProperty(x, _writableStreamController);
+    return hasOwnPropertyNoThrow(x, _writableStreamController);
   }
   function IsWritableStreamLocked(stream) {
     return stream[_writer] !== undefined;
@@ -8526,7 +8139,7 @@ PCountQueuingStrategyý
     }
   }
   function IsWritableStreamDefaultWriter(x) {
-    return hasOwnProperty(x, _ownerWritableStream);
+    return hasOwnPropertyNoThrow(x, _ownerWritableStream);
   }
   function WritableStreamDefaultWriterAbort(writer, reason) {
     const stream = writer[_ownerWritableStream];
@@ -8690,7 +8303,7 @@ PCountQueuingStrategyý
         });
   }
   function IsWritableStreamDefaultController(x) {
-    return hasOwnProperty(x, _underlyingSink);
+    return hasOwnPropertyNoThrow(x, _underlyingSink);
   }
   function WritableStreamDefaultControllerClose(controller) {
     EnqueueValueWithSize(controller, 'close', 0);
@@ -8808,30 +8421,6 @@ PCountQueuingStrategyý
     const stream = controller[_controlledWritableStream];
     WritableStreamStartErroring(stream, error);
   }
-  function DequeueValue(container) {
-    const pair = container[_queue].shift();
-    container[_queueTotalSize] -= pair.size;
-    if (container[_queueTotalSize] < 0) {
-      container[_queueTotalSize] = 0;
-    }
-    return pair.value;
-  }
-  function EnqueueValueWithSize(container, value, size) {
-    size = Number(size);
-    if (!IsFiniteNonNegativeNumber(size)) {
-      throw new RangeError(streamErrors.invalidSize);
-    }
-    container[_queue].push({value, size});
-    container[_queueTotalSize] += size;
-  }
-  function PeekQueueValue(container) {
-    const pair = container[_queue].peek();
-    return pair.value;
-  }
-  function ResetQueue(container) {
-    container[_queue] = new binding.SimpleQueue();
-    container[_queueTotalSize] = 0;
-  }
   function InvokeOrNoop(O, P, args) {
     if (args === undefined) {
       args = [];
@@ -8845,28 +8434,12 @@ PCountQueuingStrategyý
     }
     return Function_apply(method, O, args);
   }
-  function IsFiniteNonNegativeNumber(v) {
-    return Number_isFinite(v) && v >= 0;
-  }
   function PromiseInvokeOrNoop(O, P, args) {
     try {
       return Promise_resolve(InvokeOrNoop(O, P, args));
     } catch (e) {
       return Promise_reject(e);
     }
-  }
-  function ValidateAndNormalizeQueuingStrategy(size, highWaterMark) {
-    if (size !== undefined && typeof size !== 'function') {
-      throw new TypeError(streamErrors.sizeNotAFunction);
-    }
-    highWaterMark = Number(highWaterMark);
-    if (Number_isNaN(highWaterMark)) {
-      throw new RangeError(streamErrors.invalidHWM);
-    }
-    if (highWaterMark < 0) {
-      throw new RangeError(streamErrors.invalidHWM);
-    }
-    return {size, highWaterMark};
   }
   defineProperty(global, 'WritableStream', {
     value: WritableStream,

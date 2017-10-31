@@ -33,8 +33,7 @@
         android:minHeight="24dp"
         android:singleLine="true"
         android:textAlignment="viewStart"
-        android:textColor="@color/ntp_list_header_text"
-        android:textSize="16sp" />
+        android:textAppearance="@style/BlackTitle1" />
 
     <TextView
         android:id="@+id/time_label"

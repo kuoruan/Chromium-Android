@@ -38,7 +38,7 @@ public class SuggestionsEventReporterBridge implements SuggestionsEventReporter 
         int categoryIndex = suggestionsRanker.getCategoryRank(suggestion.mCategory);
         nativeOnSuggestionOpened(suggestion.getGlobalRank(), suggestion.mCategory, categoryIndex,
                 suggestion.getPerSectionRank(), suggestion.mPublishTimestampMilliseconds,
-                suggestion.mScore, windowOpenDisposition);
+                suggestion.mScore, windowOpenDisposition, suggestion.isPrefetched());
     }
 
     @Override
@@ -93,7 +93,7 @@ public class SuggestionsEventReporterBridge implements SuggestionsEventReporter 
             int positionInCategory, long publishTimestampMs, float score, long fetchTimestampMs);
     private static native void nativeOnSuggestionOpened(int globalPosition, int category,
             int categoryIndex, int positionInCategory, long publishTimestampMs, float score,
-            int windowOpenDisposition);
+            int windowOpenDisposition, boolean isPrefetched);
     private static native void nativeOnSuggestionMenuOpened(int globalPosition, int category,
             int positionInCategory, long publishTimestampMs, float score);
     private static native void nativeOnMoreButtonShown(int category, int position);

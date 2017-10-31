@@ -193,14 +193,15 @@ class MediaCodecBridge {
     }
 
     @CalledByNative
-    private static MediaCodecBridge create(String mime, int codecType, int direction) {
+    private static MediaCodecBridge create(
+            String mime, int codecType, int direction, MediaCrypto mediaCrypto) {
         MediaCodecUtil.CodecCreationInfo info = new MediaCodecUtil.CodecCreationInfo();
         try {
             if (direction == MediaCodecDirection.ENCODER) {
                 info = MediaCodecUtil.createEncoder(mime);
             } else {
                 // |codecType| only applies to decoders not encoders.
-                info = MediaCodecUtil.createDecoder(mime, codecType);
+                info = MediaCodecUtil.createDecoder(mime, codecType, mediaCrypto);
             }
         } catch (Exception e) {
             Log.e(TAG, "Failed to create MediaCodec: %s, codecType: %d, direction: %d", mime,

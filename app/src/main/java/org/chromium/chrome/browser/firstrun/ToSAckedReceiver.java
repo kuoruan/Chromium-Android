@@ -48,10 +48,9 @@ public class ToSAckedReceiver extends BroadcastReceiver {
 
     /**
      * Checks whether any of the current google accounts has seen the ToS in setup wizard.
-     * @param context Context for the app.
      * @return Whether or not the the ToS has been seen.
      */
-    public static boolean checkAnyUserHasSeenToS(Context context) {
+    public static boolean checkAnyUserHasSeenToS() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) return false;
 
         Set<String> toSAckedAccounts =

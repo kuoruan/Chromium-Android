@@ -51,12 +51,12 @@ public final class DefaultBrowserInfo {
             MobileDefaultBrowserState.BOUNDARY,
     })
     private @interface MobileDefaultBrowserState {
-    int NO_DEFAULT = 0;
-    int CHROME_SYSTEM_DEFAULT = 1;
-    int CHROME_INSTALLED_DEFAULT = 2;
-    int OTHER_SYSTEM_DEFAULT = 3;
-    int OTHER_INSTALLED_DEFAULT = 4;
-    int BOUNDARY = 5;
+        int NO_DEFAULT = 0;
+        int CHROME_SYSTEM_DEFAULT = 1;
+        int CHROME_INSTALLED_DEFAULT = 2;
+        int OTHER_SYSTEM_DEFAULT = 3;
+        int OTHER_INSTALLED_DEFAULT = 4;
+        int BOUNDARY = 5;
     }
 
     /**
@@ -129,9 +129,13 @@ public final class DefaultBrowserInfo {
      * @return Default ResolveInfo to handle a VIEW intent for a url.
      * @param pm The PackageManager of current context.
      */
-    public static ResolveInfo getResolveInfoForViewIntent(PackageManager pm) {
+    private static ResolveInfo getResolveInfoForViewIntent(PackageManager pm) {
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(SAMPLE_URL));
-        return pm.resolveActivity(intent, 0);
+        try {
+            return pm.resolveActivity(intent, 0);
+        } catch (NullPointerException e) {
+            return null;
+        }
     }
 
     /**

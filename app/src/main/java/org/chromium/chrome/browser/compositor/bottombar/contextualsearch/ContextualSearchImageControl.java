@@ -3,39 +3,30 @@
 // found in the LICENSE file.
 package org.chromium.chrome.browser.compositor.bottombar.contextualsearch;
 
-import android.content.Context;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.support.v4.view.animation.PathInterpolatorCompat;
 import android.text.TextUtils;
 import android.view.animation.Interpolator;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.compositor.animation.CompositorAnimator;
+import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanelAnimation;
-import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation;
 
 /**
  * Controls the image shown in the Bar. Owns animating between the search provider icon and
  * custom image (either a thumbnail or quick action icon) for the current query.
  */
-public class ContextualSearchImageControl
-        implements ChromeAnimation.Animatable<ContextualSearchImageControl.AnimationType> {
-    /**
-      * Animation properties.
-      */
-    protected enum AnimationType { CUSTOM_IMAGE_VISIBILITY }
-
-    /** The current context. */
-    private final Context mContext;
-
-    /** The OverlayPanelAnimation used to add animations. */
-    private final OverlayPanelAnimation mOverlayPanelAnimation;
+public class ContextualSearchImageControl {
+    /** The {@link OverlayPanel} that this class belongs to. */
+    private final OverlayPanel mPanel;
 
     /** The percentage the panel is expanded. 1.f is fully expanded and 0.f is peeked. */
     private float mExpandedPercentage;
 
-    public ContextualSearchImageControl(OverlayPanelAnimation overlayPanelAnimation,
-            Context context) {
-        mContext = context;
-        mOverlayPanelAnimation = overlayPanelAnimation;
+    public ContextualSearchImageControl(OverlayPanel panel) {
+        mPanel = panel;
     }
 
     /**
@@ -161,7 +152,7 @@ public class ContextualSearchImageControl
         if ((mThumbnailVisible || mQuickActionIconVisible) && animate) {
             animateCustomImageVisibility(false);
         } else {
-            mOverlayPanelAnimation.cancelAnimation(this, AnimationType.CUSTOM_IMAGE_VISIBILITY);
+            if (mImageVisibilityAnimator != null) mImageVisibilityAnimator.cancel();
             onCustomImageHidden();
         }
     }
@@ -171,7 +162,7 @@ public class ContextualSearchImageControl
      */
     public int getBarImageSize() {
         if (mBarImageSize == 0) {
-            mBarImageSize = mContext.getResources().getDimensionPixelSize(
+            mBarImageSize = mPanel.getContext().getResources().getDimensionPixelSize(
                     R.dimen.contextual_search_bar_image_size);
         }
         return mBarImageSize;
@@ -202,6 +193,8 @@ public class ContextualSearchImageControl
     // Thumbnail Animation
     // ============================================================================================
 
+    private CompositorAnimator mImageVisibilityAnimator;
+
     private Interpolator mCustomImageVisibilityInterpolator;
 
     private void animateCustomImageVisibility(boolean visible) {
@@ -214,30 +207,27 @@ public class ContextualSearchImageControl
                     PathInterpolatorCompat.create(0.4f, 0.f, 0.6f, 1.f);
         }
 
-        mOverlayPanelAnimation.cancelAnimation(this, AnimationType.CUSTOM_IMAGE_VISIBILITY);
+        if (mImageVisibilityAnimator != null) mImageVisibilityAnimator.cancel();
 
-        float endValue = visible ? 1.f : 0.f;
-        mOverlayPanelAnimation.addToAnimation(this, AnimationType.CUSTOM_IMAGE_VISIBILITY,
-                mCustomImageVisibilityPercentage, endValue,
-                OverlayPanelAnimation.BASE_ANIMATION_DURATION_MS, 0, false,
-                mCustomImageVisibilityInterpolator);
-    }
-
-    @Override
-    public void setProperty(AnimationType prop, float val) {
-        if (prop == AnimationType.CUSTOM_IMAGE_VISIBILITY) {
-            // If the panel is expanded, #onUpdateFromPeekedToExpanded() is responsible for setting
-            // mCustomImageVisiblityPercentage.
-            if (mExpandedPercentage == 0.f) mCustomImageVisibilityPercentage = val;
-        }
-    }
-
-    @Override
-    public void onPropertyAnimationFinished(AnimationType prop) {
-        if (prop == AnimationType.CUSTOM_IMAGE_VISIBILITY) {
-            if (mCustomImageVisibilityPercentage == 0.f) {
-                onCustomImageHidden();
+        mImageVisibilityAnimator = new CompositorAnimator(mPanel.getAnimationHandler());
+        mImageVisibilityAnimator.setDuration(OverlayPanelAnimation.BASE_ANIMATION_DURATION_MS);
+        mImageVisibilityAnimator.setInterpolator(mCustomImageVisibilityInterpolator);
+        mImageVisibilityAnimator.setValues(mCustomImageVisibilityPercentage, visible ? 1.f : 0.f);
+        mImageVisibilityAnimator.addUpdateListener(new CompositorAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(CompositorAnimator animator) {
+                if (mExpandedPercentage > 0.f) return;
+                mCustomImageVisibilityPercentage = animator.getAnimatedValue();
             }
-        }
+        });
+        mImageVisibilityAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if (mCustomImageVisibilityPercentage == 0.f) onCustomImageHidden();
+                mImageVisibilityAnimator.removeAllListeners();
+                mImageVisibilityAnimator = null;
+            }
+        });
+        mImageVisibilityAnimator.start();
     }
 }

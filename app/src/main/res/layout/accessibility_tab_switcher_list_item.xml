@@ -18,7 +18,9 @@
         android:orientation="horizontal"
         android:background="@color/accessibility_tab_switcher_list_item"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:visibility="gone" >
+
         <ImageView
             android:id="@+id/tab_favicon"
             android:layout_width="wrap_content"
@@ -49,10 +51,23 @@
             android:minWidth="48dp"
             android:padding="4dp"
             android:background="?attr/selectableItemBackground"
-            android:contentDescription="@string/accessibility_tabstrip_btn_close_tab"
             android:src="@drawable/btn_close"
             chrome:chrometint="@color/light_mode_tint"
             android:gravity="end|center_vertical" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/tab_contents_modern"
+        style="@style/ListItemContainer"
+        android:visibility="gone" >
+
+        <include layout="@layout/modern_list_item_view" />
+
+        <org.chromium.chrome.browser.widget.TintedImageButton
+            android:id="@+id/close_btn_modern"
+            style="@style/ListItemEndIcon"
+            android:src="@drawable/btn_close"
+            chrome:chrometint="@color/dark_mode_tint" />
     </LinearLayout>
 
     <LinearLayout
@@ -61,6 +76,12 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="invisible">
+
+        <Space
+            android:id="@+id/undo_start_space"
+            android:layout_width="24dp"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/undo_button"

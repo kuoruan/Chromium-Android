@@ -6,7 +6,7 @@ package org.chromium.chrome.browser.customtabs;
 
 import android.view.ViewGroup;
 
-import org.chromium.chrome.browser.compositor.layouts.LayoutManagerDocument;
+import org.chromium.chrome.browser.compositor.layouts.LayoutManager;
 import org.chromium.chrome.browser.compositor.layouts.LayoutManagerHost;
 import org.chromium.chrome.browser.compositor.layouts.content.TabContentManager;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchManagementDelegate;
@@ -23,8 +23,7 @@ import org.chromium.ui.resources.dynamics.DynamicResourceLoader;
 /**
  * A simple LayoutManager that shows multiple tabs without animation.
  */
-public class CustomTabLayoutManager extends LayoutManagerDocument {
-
+public class CustomTabLayoutManager extends LayoutManager {
     TabModelObserver mTabModelObserver = new EmptyTabModelObserver() {
         @Override
         public void didAddTab(Tab tab, TabLaunchType type) {

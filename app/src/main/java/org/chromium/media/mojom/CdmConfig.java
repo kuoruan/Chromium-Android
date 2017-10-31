@@ -17,12 +17,9 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class CdmConfig extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 16;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+    private static final int STRUCT_SIZE = 8;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    public boolean allowDistinctiveIdentifier;
-    public boolean allowPersistentState;
-    public boolean useHwSecureCodecs;
 
     private CdmConfig(int version) {
         super(STRUCT_SIZE, version);
@@ -59,18 +56,6 @@ public final class CdmConfig extends org.chromium.mojo.bindings.Struct {
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
             result = new CdmConfig(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.allowDistinctiveIdentifier = decoder0.readBoolean(8, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.allowPersistentState = decoder0.readBoolean(8, 1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.useHwSecureCodecs = decoder0.readBoolean(8, 2);
-            }
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -80,13 +65,7 @@ public final class CdmConfig extends org.chromium.mojo.bindings.Struct {
     @SuppressWarnings("unchecked")
     @Override
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
-        org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        
-        encoder0.encode(allowDistinctiveIdentifier, 8, 0);
-        
-        encoder0.encode(allowPersistentState, 8, 1);
-        
-        encoder0.encode(useHwSecureCodecs, 8, 2);
+        encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
     }
 
     /**
@@ -100,13 +79,6 @@ public final class CdmConfig extends org.chromium.mojo.bindings.Struct {
             return false;
         if (getClass() != object.getClass())
             return false;
-        CdmConfig other = (CdmConfig) object;
-        if (this.allowDistinctiveIdentifier!= other.allowDistinctiveIdentifier)
-            return false;
-        if (this.allowPersistentState!= other.allowPersistentState)
-            return false;
-        if (this.useHwSecureCodecs!= other.useHwSecureCodecs)
-            return false;
         return true;
     }
 
@@ -117,9 +89,6 @@ public final class CdmConfig extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(allowDistinctiveIdentifier);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(allowPersistentState);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(useHwSecureCodecs);
         return result;
     }
 }

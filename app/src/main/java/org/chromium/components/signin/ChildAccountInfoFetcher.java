@@ -10,7 +10,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
-import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
@@ -70,12 +69,8 @@ public final class ChildAccountInfoFetcher {
 
     private void fetch() {
         Log.d(TAG, "Checking child account status for %s", mAccount.name);
-        AccountManagerFacade.get().checkChildAccount(mAccount, new Callback<Boolean>() {
-            @Override
-            public void onResult(Boolean isChildAccount) {
-                setIsChildAccount(isChildAccount);
-            }
-        });
+        AccountManagerFacade.get().checkChildAccount(
+                mAccount, isChildAccount -> setIsChildAccount(isChildAccount));
     }
 
     @CalledByNative
@@ -91,9 +86,8 @@ public final class ChildAccountInfoFetcher {
 
     @CalledByNative
     private static void initializeForTests() {
-        Context context = ContextUtils.getApplicationContext();
         AccountManagerDelegate delegate = new SystemAccountManagerDelegate();
-        AccountManagerFacade.overrideAccountManagerFacadeForTests(context, delegate);
+        AccountManagerFacade.overrideAccountManagerFacadeForTests(delegate);
     }
 
     private static native void nativeSetIsChildAccount(

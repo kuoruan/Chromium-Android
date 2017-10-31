@@ -151,6 +151,12 @@ public abstract class WebContentsObserver {
     public void didChangeThemeColor(int color) {}
 
     /**
+     * Called when the Web Contents leaves or enters fullscreen mode.
+     * @param isFullscreen whether fullscreen is being entered or left.
+     */
+    public void hasEffectivelyFullscreenVideoChange(boolean isFullscreen) {}
+
+    /**
      * Stop observing the web contents and clean up associated references.
      */
     public void destroy() {

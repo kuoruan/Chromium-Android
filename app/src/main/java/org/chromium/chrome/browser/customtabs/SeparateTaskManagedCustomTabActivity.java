@@ -50,7 +50,6 @@ public class SeparateTaskManagedCustomTabActivity extends SeparateTaskCustomTabA
     @Override
     public ChromeTabCreator getTabCreator(boolean incognito) {
         TabCreator tabCreator = super.getTabCreator(incognito);
-        assert tabCreator instanceof ChromeTabCreator;
         return (ChromeTabCreator) tabCreator;
     }
 

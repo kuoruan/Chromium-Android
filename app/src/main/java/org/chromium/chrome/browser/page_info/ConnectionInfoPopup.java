@@ -144,8 +144,8 @@ public class ConnectionInfoPopup implements OnClickListener {
         assert mCertificateViewer == null;
         mCertificateViewer = new TextView(mContext);
         mCertificateViewer.setText(label);
-        mCertificateViewer.setTextColor(ApiCompatibilityUtils.getColor(
-                mContext.getResources(), R.color.page_info_popup_text_link));
+        mCertificateViewer.setTextColor(
+                ApiCompatibilityUtils.getColor(mContext.getResources(), R.color.google_blue_700));
         mCertificateViewer.setTextSize(DESCRIPTION_TEXT_SIZE_SP);
         mCertificateViewer.setOnClickListener(this);
         mCertificateViewer.setPadding(0, mPaddingThin, 0, 0);
@@ -179,8 +179,8 @@ public class ConnectionInfoPopup implements OnClickListener {
         mMoreInfoLink = new TextView(mContext);
         mLinkUrl = HELP_URL;
         mMoreInfoLink.setText(linkText);
-        mMoreInfoLink.setTextColor(ApiCompatibilityUtils.getColor(
-                mContext.getResources(), R.color.page_info_popup_text_link));
+        mMoreInfoLink.setTextColor(
+                ApiCompatibilityUtils.getColor(mContext.getResources(), R.color.google_blue_700));
         mMoreInfoLink.setTextSize(DESCRIPTION_TEXT_SIZE_SP);
         mMoreInfoLink.setPadding(0, mPaddingThin, 0, 0);
         mMoreInfoLink.setOnClickListener(this);

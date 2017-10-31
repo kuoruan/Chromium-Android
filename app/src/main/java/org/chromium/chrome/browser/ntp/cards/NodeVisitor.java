@@ -74,4 +74,9 @@ public class NodeVisitor {
      * @param adapter The adapter that holds all information displayed in the carousel.
      */
     public void visitCarouselItem(SuggestionsCarouselAdapter adapter) {}
+
+    /**
+     * Visits a card placeholder item.
+     */
+    public void visitPlaceholderItem() {}
 }

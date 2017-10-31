@@ -26,6 +26,9 @@ import android.text.TextUtils;
 import android.util.Pair;
 import android.widget.RemoteViews;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import org.chromium.base.BaseChromiumApplication;
 import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
@@ -35,15 +38,20 @@ import org.chromium.base.TimeUtils;
 import org.chromium.base.TraceEvent;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.SuppressFBWarnings;
+import org.chromium.base.library_loader.LibraryProcessType;
 import org.chromium.base.library_loader.ProcessInitException;
 import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.blink_public.web.WebReferrerPolicy;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.AppHooks;
 import org.chromium.chrome.browser.ChromeApplication;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.WarmupManager;
+import org.chromium.chrome.browser.browserservices.BrowserSessionContentUtils;
+import org.chromium.chrome.browser.browserservices.PostMessageHandler;
 import org.chromium.chrome.browser.device.DeviceClassManager;
+import org.chromium.chrome.browser.init.ChainedTasks;
 import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
 import org.chromium.chrome.browser.metrics.PageLoadMetrics;
 import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
@@ -53,6 +61,7 @@ import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.chrome.browser.util.UrlUtilities;
+import org.chromium.content.browser.BrowserStartupController;
 import org.chromium.content.browser.ChildProcessLauncherHelper;
 import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.content_public.browser.WebContents;
@@ -106,6 +115,11 @@ public class CustomTabsConnection {
     private static final int SPECULATION_STATUS_ON_SWAP_PRERENDER_TAKEN = 2;
     private static final int SPECULATION_STATUS_ON_SWAP_PRERENDER_NOT_MATCHED = 3;
     private static final int SPECULATION_STATUS_ON_SWAP_MAX = 4;
+
+    // Constants for sending connection characteristics.
+    private static final String EFFECTIVE_CONNECTION_TYPE = "effectiveConnectionType";
+    private static final String HTTP_RTT_MS = "httpRttMs";
+    private static final String TRANSPORT_RTT_MS = "transportRttMs";
 
     // For testing only, DO NOT USE.
     @VisibleForTesting
@@ -183,15 +197,18 @@ public class CustomTabsConnection {
     SpeculationParams mSpeculation;
     protected final Context mContext;
     protected final ClientManager mClientManager;
-    private final boolean mLogRequests;
+    protected final boolean mLogRequests;
     private final AtomicBoolean mWarmupHasBeenCalled = new AtomicBoolean();
     private final AtomicBoolean mWarmupHasBeenFinished = new AtomicBoolean();
     private ExternalPrerenderHandler mExternalPrerenderHandler;
     private boolean mForcePrerenderForTesting;
+    private volatile Runnable mWarmupFinishedCallback;
 
     // Conversion between native TimeTicks and SystemClock.uptimeMillis().
     private long mNativeTickOffsetUs;
     private boolean mNativeTickOffsetUsComputed;
+
+    private volatile ChainedTasks mWarmupTasks;
 
     /**
      * <strong>DO NOT CALL</strong>
@@ -243,6 +260,48 @@ public class CustomTabsConnection {
         Log.w(TAG, "%s args = %s", name, args);
     }
 
+    /**
+     * Converts a Bundle to JSON.
+     *
+     * The conversion is limited to Bundles not containing any array, and some elements are
+     * converted into strings.
+     *
+     * @param Bundle a Bundle to convert.
+     * @return A JSON object, empty object if the parameter is null.
+     */
+    protected static JSONObject bundleToJson(Bundle bundle) {
+        JSONObject json = new JSONObject();
+        if (bundle == null) return json;
+        for (String key : bundle.keySet()) {
+            Object o = bundle.get(key);
+            try {
+                if (o instanceof Bundle) {
+                    json.put(key, bundleToJson((Bundle) o));
+                } else if (o instanceof Integer || o instanceof Long || o instanceof Boolean) {
+                    json.put(key, o);
+                } else {
+                    json.put(key, o.toString());
+                }
+            } catch (JSONException e) {
+                // Ok, only used for logging.
+            }
+        }
+        return json;
+    }
+
+    /*
+     * Logging for page load metrics callback, if service has enabled logging.
+     *
+     * No rate-limiting, can be spammy if the app is misbehaved.
+     *
+     * @param args arguments of the callback.
+     */
+    void logPageLoadMetricsCallback(Bundle args) {
+        if (!mLogRequests) return; // Don't build args if not necessary.
+        logCallback(
+                "extraCallback(" + PAGE_LOAD_METRICS_CALLBACK + ")", bundleToJson(args).toString());
+    }
+
     public boolean newSession(CustomTabsSessionToken session) {
         boolean success = newSessionInternal(session);
         if (mForcePrerenderForTesting) mClientManager.setPrerenderCellularForSession(session, true);
@@ -262,6 +321,20 @@ public class CustomTabsConnection {
         return mClientManager.newSession(session, Binder.getCallingUid(), onDisconnect, handler);
     }
 
+    /**
+     * Overrides the given session's packageName if it is generated by Chrome. To be used for
+     * testing only. To be called before the session given is associated with a tab.
+     * @param session The session for which the package name should be overridden.
+     * @param packageName The new package name to set.
+     */
+    void overridePackageNameForSessionForTesting(
+            CustomTabsSessionToken session, String packageName) {
+        String originalPackage = getClientPackageNameForSession(session);
+        String selfPackage = ContextUtils.getApplicationContext().getPackageName();
+        if (TextUtils.isEmpty(originalPackage) || !selfPackage.equals(originalPackage)) return;
+        mClientManager.overridePackageNameForSession(session, packageName);
+    }
+
     /** Warmup activities that should only happen once. */
     @SuppressFBWarnings("DM_EXIT")
     private static void initializeBrowser(final Context context) {
@@ -275,19 +348,13 @@ public class CustomTabsConnection {
             System.exit(-1);
         }
         ChildProcessLauncherHelper.warmUp(context);
-        ChromeBrowserInitializer.initNetworkChangeNotifier(context);
-        WarmupManager.getInstance().initializeViewHierarchy(
-                context, R.layout.custom_tabs_control_container, R.layout.custom_tabs_toolbar);
     }
 
     public boolean warmup(long flags) {
-        try {
-            TraceEvent.begin("CustomTabsConnection.warmup");
+        try (TraceEvent e = TraceEvent.scoped("CustomTabsConnection.warmup")) {
             boolean success = warmupInternal(true);
             logCall("warmup()", success);
             return success;
-        } finally {
-            TraceEvent.end("CustomTabsConnection.warmup");
         }
     }
 
@@ -309,46 +376,86 @@ public class CustomTabsConnection {
         if (!isCallerForegroundOrSelf()) return false;
         mClientManager.recordUidHasCalledWarmup(Binder.getCallingUid());
         final boolean initialized = !mWarmupHasBeenCalled.compareAndSet(false, true);
-        // The call is non-blocking and this must execute on the UI thread, post a task.
-        ThreadUtils.postOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    TraceEvent.begin("CustomTabsConnection.warmupInternal");
-                    // Ordering of actions here:
-                    // 1. Initializing the browser needs to be done once, and first.
-                    // 2. Creating a spare renderer takes time, in other threads and processes, so
-                    //    start it sooner rather than later. Can be done several times.
-                    // 3. Initializing the LoadingPredictor is done once, and triggers
-                    //    work on other threads, start it early.
-                    // 4. RequestThrottler first access has to be done only once.
 
-                    // (1)
-                    if (!initialized) initializeBrowser(mContext);
+        // The call is non-blocking and this must execute on the UI thread, post chained tasks.
+        ChainedTasks tasks = new ChainedTasks();
 
-                    // (2)
-                    if (mayCreateSpareWebContents && mSpeculation == null) {
+        // Ordering of actions here:
+        // 1. Initializing the browser needs to be done once, and first.
+        // 2. Creating a spare renderer takes time, in other threads and processes, so start it
+        //    sooner rather than later. Can be done several times.
+        // 3. UI inflation has to be done for any new activity.
+        // 4. Initializing the LoadingPredictor is done once, and triggers work on other threads,
+        //    start it early.
+        // 5. RequestThrottler first access has to be done only once.
+
+        // (1)
+        if (!initialized) {
+            tasks.add(new Runnable() {
+                @Override
+                public void run() {
+                    try (TraceEvent e =
+                                    TraceEvent.scoped("CustomTabsConnection.initializeBrowser()")) {
+                        initializeBrowser(mContext);
+                        ChromeBrowserInitializer.initNetworkChangeNotifier(mContext);
+                        mWarmupHasBeenFinished.set(true);
+                    }
+                }
+            });
+        }
+
+        // (2)
+        if (mayCreateSpareWebContents && mSpeculation == null) {
+            tasks.add(new Runnable() {
+                @Override
+                public void run() {
+                    try (TraceEvent e = TraceEvent.scoped("CreateSpareWebContents")) {
                         WarmupManager.getInstance().createSpareWebContents();
                     }
+                }
+            });
+        }
 
-                    if (!initialized) {
-                        // (3)
+        // (3)
+        tasks.add(new Runnable() {
+            @Override
+            public void run() {
+                try (TraceEvent e = TraceEvent.scoped("InitializeViewHierarchy")) {
+                    WarmupManager.getInstance().initializeViewHierarchy(mContext,
+                            R.layout.custom_tabs_control_container, R.layout.custom_tabs_toolbar);
+                }
+            }
+        });
+
+        if (!initialized) {
+            tasks.add(new Runnable() {
+                @Override
+                public void run() {
+                    try (TraceEvent e = TraceEvent.scoped("WarmupInternalFinishInitialization")) {
+                        // (4)
                         Profile profile = Profile.getLastUsedProfile();
                         new LoadingPredictor(profile).startInitialization();
 
-                        // (4)
+                        // (5)
                         // The throttling database uses shared preferences, that can cause a
                         // StrictMode violation on the first access. Make sure that this access is
                         // not in mayLauchUrl.
                         RequestThrottler.loadInBackground(mContext);
                     }
-                } finally {
-                    TraceEvent.end("CustomTabsConnection.warmupInternal");
                 }
-                mWarmupHasBeenFinished.set(true);
-            }
-        });
+            });
+        }
+        if (mWarmupFinishedCallback != null) tasks.add(mWarmupFinishedCallback);
+
+        tasks.start(false);
+        mWarmupTasks = tasks;
         return true;
+    }
+
+    /** Sets a callback to be notified of the completion of all the warmup() tasks. */
+    @VisibleForTesting
+    void setWarmupCompletedCallbackForTesting(Runnable cb) {
+        mWarmupFinishedCallback = cb;
     }
 
     /** @return the URL or null if it's invalid. */
@@ -420,17 +527,14 @@ public class CustomTabsConnection {
 
     public boolean mayLaunchUrl(CustomTabsSessionToken session, Uri url, Bundle extras,
             List<Bundle> otherLikelyBundles) {
-        try {
-            TraceEvent.begin("CustomTabsConnection.mayLaunchUrl");
+        try (TraceEvent e = TraceEvent.scoped("CustomTabsConnection.mayLaunchUrl")) {
             boolean success = mayLaunchUrlInternal(session, url, extras, otherLikelyBundles);
             logCall("mayLaunchUrl(" + url + ")", success);
             return success;
-        } finally {
-            TraceEvent.end("CustomTabsConnection.mayLaunchUrl");
         }
     }
 
-    private boolean mayLaunchUrlInternal(final CustomTabsSessionToken session, Uri url,
+    private boolean mayLaunchUrlInternal(final CustomTabsSessionToken session, final Uri url,
             final Bundle extras, final List<Bundle> otherLikelyBundles) {
         final boolean lowConfidence =
                 (url == null || TextUtils.isEmpty(url.toString())) && otherLikelyBundles != null;
@@ -449,23 +553,41 @@ public class CustomTabsConnection {
                     session, uid, urlString, otherLikelyBundles != null)) {
             return false;
         }
-        ThreadUtils.postOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    TraceEvent.begin("CustomTabsConnection.mayLaunchUrlInternal");
-                    if (lowConfidence) {
-                        lowConfidenceMayLaunchUrl(otherLikelyBundles);
-                    } else {
-                        highConfidenceMayLaunchUrl(
-                                session, uid, urlString, extras, otherLikelyBundles);
-                    }
-                } finally {
-                    TraceEvent.end("CustomTabsConnection.mayLaunchUrlInternal");
-                }
-            }
+
+        ThreadUtils.postOnUiThread(() -> {
+            doMayLaunchUrlOnUiThread(
+                    lowConfidence, session, uid, urlString, extras, otherLikelyBundles, true);
         });
         return true;
+    }
+
+    private void doMayLaunchUrlOnUiThread(final boolean lowConfidence,
+            final CustomTabsSessionToken session, final int uid, final String urlString,
+            final Bundle extras, final List<Bundle> otherLikelyBundles, boolean retryIfNotLoaded) {
+        ThreadUtils.assertOnUiThread();
+        try (TraceEvent e = TraceEvent.scoped("CustomTabsConnection.mayLaunchUrlOnUiThread")) {
+            // doMayLaunchUrlInternal() is always called once the native level initialization is
+            // done, at least the initial profile load. However, at that stage the startup callback
+            // may not have run, which causes Profile.getLastUsedProfile() to throw an
+            // exception. But the tasks have been posted by then, so reschedule ourselves, only
+            // once.
+            if (!BrowserStartupController.get(LibraryProcessType.PROCESS_BROWSER)
+                            .isStartupSuccessfullyCompleted()) {
+                if (retryIfNotLoaded) {
+                    ThreadUtils.postOnUiThread(() -> {
+                        doMayLaunchUrlOnUiThread(lowConfidence, session, uid, urlString, extras,
+                                otherLikelyBundles, false);
+                    });
+                }
+                return;
+            }
+
+            if (lowConfidence) {
+                lowConfidenceMayLaunchUrl(otherLikelyBundles);
+            } else {
+                highConfidenceMayLaunchUrl(session, uid, urlString, extras, otherLikelyBundles);
+            }
+        }
     }
 
     public Bundle extraCommand(String commandName, Bundle args) {
@@ -487,8 +609,8 @@ public class CustomTabsConnection {
                     result &= ThreadUtils.runOnUiThreadBlocking(new Callable<Boolean>() {
                         @Override
                         public Boolean call() throws Exception {
-                            return CustomTabActivity.updateCustomButton(session, id,
-                                    bitmap, description);
+                            return BrowserSessionContentUtils.updateCustomButton(
+                                    session, id, bitmap, description);
                         }
                     });
                 } catch (ExecutionException e) {
@@ -507,8 +629,8 @@ public class CustomTabsConnection {
                 result &= ThreadUtils.runOnUiThreadBlocking(new Callable<Boolean>() {
                     @Override
                     public Boolean call() throws Exception {
-                        return CustomTabActivity.updateRemoteViews(session,
-                                remoteViews, clickableIDs, pendingIntent);
+                        return BrowserSessionContentUtils.updateRemoteViews(
+                                session, remoteViews, clickableIDs, pendingIntent);
                     }
                 });
             } catch (ExecutionException e) {
@@ -530,7 +652,7 @@ public class CustomTabsConnection {
     private boolean requestPostMessageChannelInternal(final CustomTabsSessionToken session,
             final Uri postMessageOrigin) {
         if (!mWarmupHasBeenCalled.get()) return false;
-        if (!isCallerForegroundOrSelf() && !CustomTabActivity.isActiveSession(session)) {
+        if (!isCallerForegroundOrSelf() && !BrowserSessionContentUtils.isActiveSession(session)) {
             return false;
         }
         if (!mClientManager.bindToPostMessageServiceForSession(session)) return false;
@@ -548,7 +670,7 @@ public class CustomTabsConnection {
                 Uri verifiedOrigin = verifyOriginForSession(session, uid, postMessageOrigin);
                 if (verifiedOrigin == null) {
                     mClientManager.verifyAndInitializeWithPostMessageOriginForSession(
-                            session, postMessageOrigin);
+                            session, postMessageOrigin, CustomTabsService.RELATION_USE_AS_ORIGIN);
                 } else {
                     mClientManager.initializeWithPostMessageOriginForSession(
                             session, verifiedOrigin);
@@ -572,10 +694,18 @@ public class CustomTabsConnection {
         return null;
     }
 
+    /**
+     * See {@link ClientManager#canSessionLaunchInTrustedWebActivity(CustomTabsSessionToken, Uri)}
+     */
+    protected boolean canSessionLaunchInTrustedWebActivity(
+            CustomTabsSessionToken session, Uri origin) {
+        return mClientManager.canSessionLaunchInTrustedWebActivity(session, origin);
+    }
+
     public int postMessage(CustomTabsSessionToken session, String message, Bundle extras) {
         int result;
         if (!mWarmupHasBeenCalled.get()) result = CustomTabsService.RESULT_FAILURE_DISALLOWED;
-        if (!isCallerForegroundOrSelf() && !CustomTabActivity.isActiveSession(session)) {
+        if (!isCallerForegroundOrSelf() && !BrowserSessionContentUtils.isActiveSession(session)) {
             result = CustomTabsService.RESULT_FAILURE_DISALLOWED;
         }
         // If called before a validatePostMessageOrigin, the post message origin will be invalid and
@@ -583,6 +713,11 @@ public class CustomTabsConnection {
         result = mClientManager.postMessage(session, message);
         logCall("postMessage", result);
         return result;
+    }
+
+    public boolean validateRelationship(
+            CustomTabsSessionToken sessionToken, int relation, Uri origin, Bundle extras) {
+        return mClientManager.validateRelationship(sessionToken, relation, origin, extras);
     }
 
     /**
@@ -699,8 +834,7 @@ public class CustomTabsConnection {
      * @return The hidden tab, or null.
      */
     Tab takeHiddenTab(CustomTabsSessionToken session, String url, String referrer) {
-        try {
-            TraceEvent.begin("CustomTabsConnection.takeHiddenTab");
+        try (TraceEvent e = TraceEvent.scoped("CustomTabsConnection.takeHiddenTab")) {
             if (mSpeculation == null || session == null) return null;
             if (session.equals(mSpeculation.session) && mSpeculation.tab != null) {
                 Tab tab = mSpeculation.tab;
@@ -723,8 +857,6 @@ public class CustomTabsConnection {
                     tab.destroy();
                 }
             }
-        } finally {
-            TraceEvent.end("CustomTabsConnection.takeHiddenTab");
         }
         return null;
     }
@@ -736,10 +868,23 @@ public class CustomTabsConnection {
      * @param url URL extracted from the intent.
      * @param intent incoming intent.
      */
-    void onHandledIntent(CustomTabsSessionToken session, String url, Intent intent) {
+    public void onHandledIntent(CustomTabsSessionToken session, String url, Intent intent) {
+        if (mLogRequests) {
+            Log.w(TAG, "onHandledIntent, URL = " + url);
+            Bundle extras = intent.getExtras();
+            if (extras != null) {
+                for (String key : extras.keySet()) {
+                    Log.w(TAG, "  extra: " + key + " = " + extras.get(key));
+                }
+            }
+        }
+
+        // If we still have pending warmup tasks, don't continue as they would only delay intent
+        // processing from now on.
+        if (mWarmupTasks != null) mWarmupTasks.cancel();
+
         // For the preconnection to not be a no-op, we need more than just the native library.
-        Context context = ContextUtils.getApplicationContext();
-        if (!ChromeBrowserInitializer.getInstance(context).hasNativeInitializationCompleted()) {
+        if (!ChromeBrowserInitializer.getInstance(mContext).hasNativeInitializationCompleted()) {
             return;
         }
         if (!ChromeFeatureList.isEnabled(ChromeFeatureList.CCT_REDIRECT_PRECONNECT)) return;
@@ -867,7 +1012,7 @@ public class CustomTabsConnection {
         try {
             callback.extraCallback(BOTTOM_BAR_SCROLL_STATE_CALLBACK, args);
         } catch (Exception e) {
-            // Pokemon exception handling, see above and crbug.com/517023.
+            // Pokemon exception handling, see below and crbug.com/517023.
             return;
         }
         if (mLogRequests) {
@@ -888,12 +1033,10 @@ public class CustomTabsConnection {
     boolean notifyNavigationEvent(CustomTabsSessionToken session, int navigationEvent) {
         CustomTabsCallback callback = mClientManager.getCallbackForSession(session);
         if (callback == null) return false;
-        // SystemClock.uptimeMillis() is used here as it (as of June 2017) uses the same system call
-        // as all the native side of Chrome, and this is the same clock used for page load metrics.
-        Bundle extras = new Bundle();
-        extras.putLong("timestampUptimeMillis", SystemClock.uptimeMillis());
+
         try {
-            callback.onNavigationEvent(navigationEvent, extras);
+            callback.onNavigationEvent(
+                    navigationEvent, getExtrasBundleForNavigationEventForSession(session));
         } catch (Exception e) {
             // Catching all exceptions is really bad, but we need it here,
             // because Android exposes us to client bugs by throwing a variety
@@ -905,7 +1048,19 @@ public class CustomTabsConnection {
     }
 
     /**
-     * Notifies the application of a page load metric.
+     * @return The {@link Bundle} to use as extra to
+     *         {@link CustomTabsCallback#onNavigationEvent(int, Bundle)}
+     */
+    protected Bundle getExtrasBundleForNavigationEventForSession(CustomTabsSessionToken session) {
+        // SystemClock.uptimeMillis() is used here as it (as of June 2017) uses the same system call
+        // as all the native side of Chrome, and this is the same clock used for page load metrics.
+        Bundle extras = new Bundle();
+        extras.putLong("timestampUptimeMillis", SystemClock.uptimeMillis());
+        return extras;
+    }
+
+    /**
+     * Notifies the application of a page load metric for a single metric.
      *
      * TODD(lizeb): Move this to a proper method in {@link CustomTabsCallback} once one is
      * available.
@@ -913,14 +1068,10 @@ public class CustomTabsConnection {
      * @param session Session identifier.
      * @param metricName Name of the page load metric.
      * @param navigationStartTick Absolute navigation start time, as TimeTicks taken from native.
-     *
-     * @param offsetMs Offset in ms from navigationStart.
+     * @param offsetMs Offset in ms from navigationStart for the page load metric.
      */
-    boolean notifyPageLoadMetric(CustomTabsSessionToken session, String metricName,
+    boolean notifySinglePageLoadMetric(CustomTabsSessionToken session, String metricName,
             long navigationStartTick, long offsetMs) {
-        CustomTabsCallback callback = mClientManager.getCallbackForSession(session);
-        if (callback == null) return false;
-
         if (!mNativeTickOffsetUsComputed) {
             // Compute offset from time ticks to uptimeMillis.
             mNativeTickOffsetUsComputed = true;
@@ -928,32 +1079,39 @@ public class CustomTabsConnection {
             long javaNowUs = SystemClock.uptimeMillis() * 1000;
             mNativeTickOffsetUs = nativeNowUs - javaNowUs;
         }
-
+        Bundle args = new Bundle();
+        args.putLong(metricName, offsetMs);
         // SystemClock.uptimeMillis() is used here as it (as of June 2017) uses the same system call
         // as all the native side of Chrome, that is clock_gettime(CLOCK_MONOTONIC). Meaning that
         // the offset relative to navigationStart is to be compared with a
         // SystemClock.uptimeMillis() value.
-        Bundle args = new Bundle();
         args.putLong(PageLoadMetrics.NAVIGATION_START,
                 (navigationStartTick - mNativeTickOffsetUs) / 1000);
-        args.putLong(metricName, offsetMs);
+
+        return notifyPageLoadMetrics(session, args);
+    }
+
+    /**
+     * Notifies the application of a general page load metrics.
+     *
+     * TODD(lizeb): Move this to a proper method in {@link CustomTabsCallback} once one is
+     * available.
+     *
+     * @param session Session identifier.
+     * @param args Bundle containing metric information to update. Each item in the bundle
+     *     should be a key specifying the metric name and the metric value as the value.
+     */
+    boolean notifyPageLoadMetrics(CustomTabsSessionToken session, Bundle args) {
+        CustomTabsCallback callback = mClientManager.getCallbackForSession(session);
+        if (callback == null) return false;
+
         try {
             callback.extraCallback(PAGE_LOAD_METRICS_CALLBACK, args);
         } catch (Exception e) {
             // Pokemon exception handling, see above and crbug.com/517023.
             return false;
         }
-        if (mLogRequests) { // Don't always build the args.
-            // Pseudo-JSON (trailing comma).
-            StringBuilder argsStringBuilder = new StringBuilder("{");
-            for (String key : args.keySet()) {
-                argsStringBuilder.append("\"").append(key).append("\": \"").append(args.get(key));
-                argsStringBuilder.append("\", ");
-            }
-            argsStringBuilder.append("}");
-            logCallback("extraCallback(" + PAGE_LOAD_METRICS_CALLBACK + ")",
-                    argsStringBuilder.toString());
-        }
+        logPageLoadMetricsCallback(args);
         return true;
     }
 
@@ -1242,7 +1400,8 @@ public class CustomTabsConnection {
         LoadUrlParams loadParams = new LoadUrlParams(url);
         String referrer = getReferrer(session, extrasIntent);
         if (referrer != null && !referrer.isEmpty()) {
-            loadParams.setReferrer(new Referrer(referrer, Referrer.REFERRER_POLICY_DEFAULT));
+            loadParams.setReferrer(
+                    new Referrer(referrer, WebReferrerPolicy.WEB_REFERRER_POLICY_DEFAULT));
         }
         mSpeculation = SpeculationParams.forHiddenTab(session, url, tab, referrer, extras);
         mSpeculation.tab.loadUrl(loadParams);

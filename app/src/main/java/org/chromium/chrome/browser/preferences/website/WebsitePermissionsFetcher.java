@@ -78,6 +78,8 @@ public class WebsitePermissionsFetcher {
         queue.add(new AdsExceptionInfoFetcher());
         // JavaScript exceptions are host-based patterns.
         queue.add(new JavaScriptExceptionInfoFetcher());
+        // Sound exceptions are host-based patterns.
+        queue.add(new SoundExceptionInfoFetcher());
         // Protected media identifier permission is per-origin and per-embedder.
         queue.add(new ProtectedMediaIdentifierInfoFetcher());
         // Notification permission is per-origin.
@@ -138,6 +140,9 @@ public class WebsitePermissionsFetcher {
         } else if (category.showJavaScriptSites()) {
             // JavaScript exceptions are host-based patterns.
             queue.add(new JavaScriptExceptionInfoFetcher());
+        } else if (category.showSoundSites()) {
+            // Sound exceptions are host-based patterns.
+            queue.add(new SoundExceptionInfoFetcher());
         } else if (category.showNotificationsSites()) {
             // Push notification permission is per-origin.
             queue.add(new NotificationInfoFetcher());
@@ -198,6 +203,9 @@ public class WebsitePermissionsFetcher {
                     break;
                 case ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS:
                     site.setPopupException(exception);
+                    break;
+                case ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND:
+                    site.setSoundException(exception);
                     break;
                 default:
                     assert false : "Unexpected content setting type received: "
@@ -284,6 +292,13 @@ public class WebsitePermissionsFetcher {
         @Override
         public void run() {
             setException(ContentSettingsType.CONTENT_SETTINGS_TYPE_JAVASCRIPT);
+        }
+    }
+
+    private class SoundExceptionInfoFetcher extends Task {
+        @Override
+        public void run() {
+            setException(ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND);
         }
     }
 

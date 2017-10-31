@@ -24,7 +24,7 @@ public class PrintShareActivity extends ShareActivity {
     public static boolean featureIsAvailable(Tab currentTab) {
         PrintingController printingController = PrintingControllerImpl.getInstance();
         return (printingController != null && !currentTab.isNativePage()
-                && !printingController.isBusy()
+                && !currentTab.isShowingInterstitialPage() && !printingController.isBusy()
                 && PrefServiceBridge.getInstance().isPrintingEnabled());
     }
 }

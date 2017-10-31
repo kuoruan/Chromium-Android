@@ -50,174 +50,174 @@ public final class Value extends org.chromium.mojo.bindings.Union {
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setNullValue(NullValue nullValue) {
-        mTag_ = Tag.NullValue;
-        mNullValue = nullValue;
+        this.mTag_ = Tag.NullValue;
+        this.mNullValue = nullValue;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public NullValue getNullValue() {
-        assert mTag_ == Tag.NullValue;
-        return mNullValue;
+        assert this.mTag_ == Tag.NullValue;
+        return this.mNullValue;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setBoolValue(boolean boolValue) {
-        mTag_ = Tag.BoolValue;
-        mBoolValue = boolValue;
+        this.mTag_ = Tag.BoolValue;
+        this.mBoolValue = boolValue;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public boolean getBoolValue() {
-        assert mTag_ == Tag.BoolValue;
-        return mBoolValue;
+        assert this.mTag_ == Tag.BoolValue;
+        return this.mBoolValue;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setIntValue(int intValue) {
-        mTag_ = Tag.IntValue;
-        mIntValue = intValue;
+        this.mTag_ = Tag.IntValue;
+        this.mIntValue = intValue;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public int getIntValue() {
-        assert mTag_ == Tag.IntValue;
-        return mIntValue;
+        assert this.mTag_ == Tag.IntValue;
+        return this.mIntValue;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setDoubleValue(double doubleValue) {
-        mTag_ = Tag.DoubleValue;
-        mDoubleValue = doubleValue;
+        this.mTag_ = Tag.DoubleValue;
+        this.mDoubleValue = doubleValue;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public double getDoubleValue() {
-        assert mTag_ == Tag.DoubleValue;
-        return mDoubleValue;
+        assert this.mTag_ == Tag.DoubleValue;
+        return this.mDoubleValue;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setStringValue(String stringValue) {
-        mTag_ = Tag.StringValue;
-        mStringValue = stringValue;
+        this.mTag_ = Tag.StringValue;
+        this.mStringValue = stringValue;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public String getStringValue() {
-        assert mTag_ == Tag.StringValue;
-        return mStringValue;
+        assert this.mTag_ == Tag.StringValue;
+        return this.mStringValue;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setBinaryValue(byte[] binaryValue) {
-        mTag_ = Tag.BinaryValue;
-        mBinaryValue = binaryValue;
+        this.mTag_ = Tag.BinaryValue;
+        this.mBinaryValue = binaryValue;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public byte[] getBinaryValue() {
-        assert mTag_ == Tag.BinaryValue;
-        return mBinaryValue;
+        assert this.mTag_ == Tag.BinaryValue;
+        return this.mBinaryValue;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setDictionaryValue(DictionaryValue dictionaryValue) {
-        mTag_ = Tag.DictionaryValue;
-        mDictionaryValue = dictionaryValue;
+        this.mTag_ = Tag.DictionaryValue;
+        this.mDictionaryValue = dictionaryValue;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public DictionaryValue getDictionaryValue() {
-        assert mTag_ == Tag.DictionaryValue;
-        return mDictionaryValue;
+        assert this.mTag_ == Tag.DictionaryValue;
+        return this.mDictionaryValue;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setListValue(ListValue listValue) {
-        mTag_ = Tag.ListValue;
-        mListValue = listValue;
+        this.mTag_ = Tag.ListValue;
+        this.mListValue = listValue;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public ListValue getListValue() {
-        assert mTag_ == Tag.ListValue;
-        return mListValue;
+        assert this.mTag_ == Tag.ListValue;
+        return this.mListValue;
     }
 
 
     @Override
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder0, int offset) {
         encoder0.encode(org.chromium.mojo.bindings.BindingsHelper.UNION_SIZE, offset);
-        encoder0.encode(mTag_, offset + 4);
+        encoder0.encode(this.mTag_, offset + 4);
         switch (mTag_) {
             case Tag.NullValue: {
                 
-                encoder0.encode(mNullValue, offset + 8, true);
+                encoder0.encode(this.mNullValue, offset + 8, true);
                 break;
             }
             case Tag.BoolValue: {
                 
-                encoder0.encode(mBoolValue, offset + 8, 0);
+                encoder0.encode(this.mBoolValue, offset + 8, 0);
                 break;
             }
             case Tag.IntValue: {
                 
-                encoder0.encode(mIntValue, offset + 8);
+                encoder0.encode(this.mIntValue, offset + 8);
                 break;
             }
             case Tag.DoubleValue: {
                 
-                encoder0.encode(mDoubleValue, offset + 8);
+                encoder0.encode(this.mDoubleValue, offset + 8);
                 break;
             }
             case Tag.StringValue: {
                 
-                encoder0.encode(mStringValue, offset + 8, false);
+                encoder0.encode(this.mStringValue, offset + 8, false);
                 break;
             }
             case Tag.BinaryValue: {
                 
-                encoder0.encode(mBinaryValue, offset + 8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                encoder0.encode(this.mBinaryValue, offset + 8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
                 break;
             }
             case Tag.DictionaryValue: {
                 
-                encoder0.encode(mDictionaryValue, offset + 8, false);
+                encoder0.encode(this.mDictionaryValue, offset + 8, false);
                 break;
             }
             case Tag.ListValue: {
                 
-                encoder0.encode(mListValue, offset + 8, false);
+                encoder0.encode(this.mListValue, offset + 8, false);
                 break;
             }
             default: {
@@ -307,25 +307,25 @@ public final class Value extends org.chromium.mojo.bindings.Union {
         if (getClass() != object.getClass())
             return false;
         Value other = (Value) object;
-        if (mTag_ != other.mTag_)
+        if (this.mTag_ != other.mTag_)
             return false;
-        switch (mTag_) {
+        switch (this.mTag_) {
             case Tag.NullValue:
-                return org.chromium.mojo.bindings.BindingsHelper.equals(mNullValue, other.mNullValue);
+                return org.chromium.mojo.bindings.BindingsHelper.equals(this.mNullValue, other.mNullValue);
             case Tag.BoolValue:
-                return mBoolValue== other.mBoolValue;
+                return this.mBoolValue== other.mBoolValue;
             case Tag.IntValue:
-                return mIntValue== other.mIntValue;
+                return this.mIntValue== other.mIntValue;
             case Tag.DoubleValue:
-                return mDoubleValue== other.mDoubleValue;
+                return this.mDoubleValue== other.mDoubleValue;
             case Tag.StringValue:
-                return org.chromium.mojo.bindings.BindingsHelper.equals(mStringValue, other.mStringValue);
+                return org.chromium.mojo.bindings.BindingsHelper.equals(this.mStringValue, other.mStringValue);
             case Tag.BinaryValue:
-                return java.util.Arrays.equals(mBinaryValue, other.mBinaryValue);
+                return java.util.Arrays.equals(this.mBinaryValue, other.mBinaryValue);
             case Tag.DictionaryValue:
-                return org.chromium.mojo.bindings.BindingsHelper.equals(mDictionaryValue, other.mDictionaryValue);
+                return org.chromium.mojo.bindings.BindingsHelper.equals(this.mDictionaryValue, other.mDictionaryValue);
             case Tag.ListValue:
-                return org.chromium.mojo.bindings.BindingsHelper.equals(mListValue, other.mListValue);
+                return org.chromium.mojo.bindings.BindingsHelper.equals(this.mListValue, other.mListValue);
             default:
                 break;
         }
@@ -340,37 +340,37 @@ public final class Value extends org.chromium.mojo.bindings.Union {
         final int prime = 31;
         int result = prime + getClass().hashCode();
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mTag_);
-        switch (mTag_) {
+        switch (this.mTag_) {
             case Tag.NullValue: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mNullValue);
+                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mNullValue);
                 break;
             }
             case Tag.BoolValue: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mBoolValue);
+                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mBoolValue);
                 break;
             }
             case Tag.IntValue: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mIntValue);
+                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mIntValue);
                 break;
             }
             case Tag.DoubleValue: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mDoubleValue);
+                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mDoubleValue);
                 break;
             }
             case Tag.StringValue: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mStringValue);
+                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mStringValue);
                 break;
             }
             case Tag.BinaryValue: {
-                result = prime * result + java.util.Arrays.hashCode(mBinaryValue);
+                result = prime * result + java.util.Arrays.hashCode(this.mBinaryValue);
                 break;
             }
             case Tag.DictionaryValue: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mDictionaryValue);
+                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mDictionaryValue);
                 break;
             }
             case Tag.ListValue: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mListValue);
+                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mListValue);
                 break;
             }
             default: {

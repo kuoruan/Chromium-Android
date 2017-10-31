@@ -33,7 +33,6 @@ public class SectionHeader extends OptionalLeaf {
 
     @Override
     protected void onBindViewHolder(NewTabPageViewHolder holder) {
-        assert holder instanceof SectionHeaderViewHolder;
         ((SectionHeaderViewHolder) holder).onBindViewHolder(this);
     }
 

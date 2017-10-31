@@ -9,7 +9,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <android.support.design.widget.CoordinatorLayout
+        <org.chromium.chrome.browser.coordinator.CoordinatorLayoutForPointer
             android:id="@+id/coordinator"
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -23,12 +23,13 @@
            <FrameLayout
                 android:id="@+id/overview_list_layout_holder"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:visibility="gone" />
 
             <org.chromium.chrome.browser.snackbar.BottomContainer
                 android:id="@+id/bottom_container"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_gravity="start|bottom">
 
                 <HorizontalScrollView
@@ -42,7 +43,7 @@
                     android:scrollbars="none"
                     android:visibility="gone" />
 
-                </org.chromium.chrome.browser.snackbar.BottomContainer>
+            </org.chromium.chrome.browser.snackbar.BottomContainer>
 
             <ViewStub
                 android:id="@+id/bottombar_stub"
@@ -92,9 +93,9 @@
            <FrameLayout
                 android:id="@+id/bottom_sheet_snackbar_container"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_gravity="start|bottom"
-                android:layout_marginTop="@dimen/bottom_nav_height_inverse" />
+                android:layout_marginBottom="@dimen/bottom_nav_height" />
 
             <ViewStub
                 android:id="@+id/empty_container_stub"
@@ -102,8 +103,7 @@
                 android:layout="@layout/empty_background_view_tablet"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
-
-        </android.support.design.widget.CoordinatorLayout>
+        </org.chromium.chrome.browser.coordinator.CoordinatorLayoutForPointer>
 
     </LinearLayout>
 

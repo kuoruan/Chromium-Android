@@ -149,8 +149,8 @@ public class SearchActivity extends AsyncInitializationActivity
         super.finishNativeInitialization();
 
         mTab = new Tab(TabIdManager.getInstance().generateValidId(Tab.INVALID_TAB_ID),
-                Tab.INVALID_TAB_ID, false, this, getWindowAndroid(),
-                TabLaunchType.FROM_EXTERNAL_APP, null, null);
+                Tab.INVALID_TAB_ID, false, getWindowAndroid(), TabLaunchType.FROM_EXTERNAL_APP,
+                null, null);
         mTab.initialize(WebContentsFactory.createWebContents(false, false), null,
                 new TabDelegateFactory(), false, false);
         mTab.loadUrl(new LoadUrlParams("about:blank"));

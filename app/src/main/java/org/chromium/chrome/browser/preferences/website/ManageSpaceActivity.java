@@ -34,6 +34,7 @@ import org.chromium.chrome.browser.ChromeVersionInfo;
 import org.chromium.chrome.browser.init.BrowserParts;
 import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
 import org.chromium.chrome.browser.init.EmptyBrowserParts;
+import org.chromium.chrome.browser.notifications.channels.SiteChannelsManager;
 import org.chromium.chrome.browser.preferences.AboutChromePreferences;
 import org.chromium.chrome.browser.preferences.Preferences;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
@@ -259,6 +260,9 @@ public class ManageSpaceActivity extends AppCompatActivity implements View.OnCli
                     }
 
                     SearchWidgetProvider.reset();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        SiteChannelsManager.getInstance().deleteAllSiteChannels();
+                    }
                     activityManager.clearApplicationUserData();
                 }
             });

@@ -27,10 +27,10 @@ public final class BatteryStatus extends org.chromium.mojo.bindings.Struct {
 
     private BatteryStatus(int version) {
         super(STRUCT_SIZE, version);
-        charging = (boolean) true;
-        chargingTime = (double) 0.0;
-        dischargingTime = (double) java.lang.Double.POSITIVE_INFINITY;
-        level = (double) 1.0;
+        this.charging = (boolean) true;
+        this.chargingTime = (double) 0.0;
+        this.dischargingTime = (double) java.lang.Double.POSITIVE_INFINITY;
+        this.level = (double) 1.0;
     }
 
     public BatteryStatus() {
@@ -91,13 +91,13 @@ public final class BatteryStatus extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(charging, 8, 0);
+        encoder0.encode(this.charging, 8, 0);
         
-        encoder0.encode(chargingTime, 16);
+        encoder0.encode(this.chargingTime, 16);
         
-        encoder0.encode(dischargingTime, 24);
+        encoder0.encode(this.dischargingTime, 24);
         
-        encoder0.encode(level, 32);
+        encoder0.encode(this.level, 32);
     }
 
     /**
@@ -130,10 +130,10 @@ public final class BatteryStatus extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(charging);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(chargingTime);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(dischargingTime);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(level);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.charging);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.chargingTime);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.dischargingTime);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.level);
         return result;
     }
 }

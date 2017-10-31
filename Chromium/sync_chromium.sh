@@ -29,8 +29,9 @@ sync_components() {
 		${components}/crash/android/java/src/* \
 		${components}/dom_distiller/content/browser/android/java/src/* \
 		${components}/dom_distiller/core/android/java/src/* \
-		${components}/feature_engagement_tracker/internal/android/java/src/* \
-		${components}/feature_engagement_tracker/public/android/java/src/* \
+		${components}/download/internal/android/java/src/* \
+		${components}/feature_engagement/internal/android/java/src/* \
+		${components}/feature_engagement/public/android/java/src/* \
 		${components}/gcm_driver/android/java/src/* \
 		${components}/gcm_driver/instance_id/android/java/src/* \
 		${components}/invalidation/impl/android/java/src/* \
@@ -41,21 +42,23 @@ sync_components() {
 		${components}/offline_items_collection/core/android/java/src/* \
 		${components}/payments/content/android/java/src/* \
 		${components}/policy/android/java/src/* \
-		${components}/safe_browsing_db/android/java/src/* \
+		${components}/safe_browsing/android/java/src/* \
 		${components}/safe_json/android/java/src/* \
 		${components}/signin/core/browser/android/java/src/* \
 		${components}/spellcheck/browser/android/java/src/* \
 		${components}/sync/android/java/src/* \
 		${components}/url_formatter/android/java/src/* \
 		${components}/variations/android/java/src/* \
-		${components}/web_contents_delegate_android/android/java/src/* \
+		${components}/web_contents_delegate_android/java/src/* \
 		${components}/web_restrictions/browser/java/src/* \
 		"${APP_DIR}/src/main/java"
 
 	cp -r ${components}/autofill/android/java/res/* \
+		${RELEASE_DIR}/gen/components/autofill/android/autofill_strings_grd_grit_output/* \
 		"${MODULES_DIR}/components/autofill/src/main/res"
 
-	cp -r ${components}/web_contents_delegate_android/android/java/res/* \
+	cp -r ${components}/web_contents_delegate_android/java/res/* \
+		${RELEASE_DIR}/gen/components/web_contents_delegate_android/web_contents_delegate_android_strings_grd_grit_output/* \
 		"${MODULES_DIR}/components/web_contents_delegate/src/main/res"
 
 	cp -r ${RELEASE_DIR}/gen/components/strings/java/res/* \
@@ -110,7 +113,9 @@ sync_chrome() {
 	local res_dir="${APP_DIR}/src/main/res"
 
 	cp -r ${BASE_DIR}/base/android/java/src/* \
+		${BASE_DIR}/build/android/buildhooks/java/* \
 		${BASE_DIR}/chrome/android/java/src/* \
+		${BASE_DIR}/chrome/android/third_party/widget_bottomsheet_base/java/src/* \
 		${BASE_DIR}/chrome/android/webapk/libs/client/src/* \
 		${BASE_DIR}/chrome/android/webapk/libs/common/src/* \
 		${BASE_DIR}/chrome/android/webapk/libs/runtime_library/src/* \
@@ -119,6 +124,7 @@ sync_chrome() {
 		${BASE_DIR}/device/geolocation/android/java/src/* \
 		${BASE_DIR}/device/sensors/android/java/src/* \
 		${BASE_DIR}/device/usb/android/java/src/* \
+		${BASE_DIR}/device/vr/android/java/src/* \
 		${BASE_DIR}/media/base/android/java/src/* \
 		${BASE_DIR}/media/capture/content/android/java/src/* \
 		${BASE_DIR}/media/capture/video/android/java/src/* \
@@ -189,10 +195,10 @@ sync_assets() {
 }
 
 sync_libs() {
-	local gcm_lib="${APP_DIR}/libs/third_party/android_tools"
-	mkdir -p "${gcm_lib}"
+	local lib="${APP_DIR}/libs"
+	mkdir -p "${lib}"
 
-	cp ${RELEASE_DIR}/lib.java/third_party/android_tools/gcm.jar "$gcm_lib"
+	cp ${RELEASE_DIR}/lib.java/third_party/android_tools/support/gcm.jar "$lib"
 }
 
 sync_jniLibs() {

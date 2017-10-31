@@ -11,10 +11,12 @@ import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceFragment;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ContentSettingsType;
 import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
 import org.chromium.chrome.browser.preferences.LocationSettings;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
+import org.chromium.chrome.browser.preferences.PreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +48,7 @@ public class SiteSettingsPreferences extends PreferenceFragment
     static final String NOTIFICATIONS_KEY = "notifications";
     static final String POPUPS_KEY = "popups";
     static final String PROTECTED_CONTENT_KEY = "protected_content";
+    static final String SOUND_KEY = "sound";
     static final String STORAGE_KEY = "use_storage";
     static final String TRANSLATE_KEY = "translate";
     static final String USB_KEY = "usb";
@@ -59,7 +62,7 @@ public class SiteSettingsPreferences extends PreferenceFragment
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        addPreferencesFromResource(R.xml.site_settings_preferences);
+        PreferenceUtils.addPreferencesFromResource(this, R.xml.site_settings_preferences);
         getActivity().setTitle(R.string.prefs_site_settings);
 
         mProtectedContentMenuAvailable = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
@@ -100,6 +103,8 @@ public class SiteSettingsPreferences extends PreferenceFragment
             return ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS;
         } else if (PROTECTED_CONTENT_KEY.equals(key)) {
             return ContentSettingsType.CONTENT_SETTINGS_TYPE_PROTECTED_MEDIA_IDENTIFIER;
+        } else if (SOUND_KEY.equals(key)) {
+            return ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND;
         }
         return -1;
     }
@@ -119,6 +124,7 @@ public class SiteSettingsPreferences extends PreferenceFragment
             getPreferenceScreen().removePreference(findPreference(MICROPHONE_KEY));
             getPreferenceScreen().removePreference(findPreference(NOTIFICATIONS_KEY));
             getPreferenceScreen().removePreference(findPreference(POPUPS_KEY));
+            getPreferenceScreen().removePreference(findPreference(SOUND_KEY));
             getPreferenceScreen().removePreference(findPreference(STORAGE_KEY));
             getPreferenceScreen().removePreference(findPreference(TRANSLATE_KEY));
             getPreferenceScreen().removePreference(findPreference(USB_KEY));
@@ -137,6 +143,9 @@ public class SiteSettingsPreferences extends PreferenceFragment
             // great to dynamically remove the preference in this way.
             if (!SiteSettingsCategory.adsCategoryEnabled()) {
                 getPreferenceScreen().removePreference(findPreference(ADS_KEY));
+            }
+            if (!ChromeFeatureList.isEnabled(ChromeFeatureList.SOUND_CONTENT_SETTING)) {
+                getPreferenceScreen().removePreference(findPreference(SOUND_KEY));
             }
         }
     }
@@ -170,6 +179,9 @@ public class SiteSettingsPreferences extends PreferenceFragment
             websitePrefs.add(MICROPHONE_KEY);
             websitePrefs.add(NOTIFICATIONS_KEY);
             websitePrefs.add(POPUPS_KEY);
+            if (ChromeFeatureList.isEnabled(ChromeFeatureList.SOUND_CONTENT_SETTING)) {
+                websitePrefs.add(SOUND_KEY);
+            }
         }
 
         // Initialize the summary and icon for all preferences that have an
@@ -218,12 +230,14 @@ public class SiteSettingsPreferences extends PreferenceFragment
                 p.setSummary(ContentSettingsResources.getGeolocationAllowedSummary());
             } else if (ADS_KEY.equals(prefName) && !checked) {
                 p.setSummary(ContentSettingsResources.getAdsBlockedListSummary());
+            } else if (SOUND_KEY.equals(prefName)) {
+                // Don't set the summary for Sound, since the default setting cannot be changed.
             } else {
                 p.setSummary(ContentSettingsResources.getCategorySummary(contentType, checked));
             }
 
             if (p.isEnabled()) {
-                p.setIcon(ContentSettingsResources.getIcon(contentType));
+                p.setIcon(ContentSettingsResources.getTintedIcon(contentType, getResources()));
             } else {
                 p.setIcon(ContentSettingsResources.getDisabledIcon(contentType, getResources()));
             }

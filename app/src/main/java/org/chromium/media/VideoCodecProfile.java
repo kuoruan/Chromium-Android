@@ -34,7 +34,9 @@ import java.lang.annotation.RetentionPolicy;
     VideoCodecProfile.HEVCPROFILE_MAX, VideoCodecProfile.DOLBYVISION_MIN,
     VideoCodecProfile.DOLBYVISION_PROFILE0, VideoCodecProfile.DOLBYVISION_PROFILE4,
     VideoCodecProfile.DOLBYVISION_PROFILE5, VideoCodecProfile.DOLBYVISION_PROFILE7,
-    VideoCodecProfile.DOLBYVISION_MAX, VideoCodecProfile.VIDEO_CODEC_PROFILE_MAX
+    VideoCodecProfile.DOLBYVISION_MAX, VideoCodecProfile.THEORAPROFILE_MIN,
+    VideoCodecProfile.THEORAPROFILE_ANY, VideoCodecProfile.THEORAPROFILE_MAX,
+    VideoCodecProfile.VIDEO_CODEC_PROFILE_MAX
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface VideoCodecProfile {
@@ -77,5 +79,8 @@ public @interface VideoCodecProfile {
   int DOLBYVISION_PROFILE5 = 21;
   int DOLBYVISION_PROFILE7 = 22;
   int DOLBYVISION_MAX = DOLBYVISION_PROFILE7;
-  int VIDEO_CODEC_PROFILE_MAX = DOLBYVISION_MAX;
+  int THEORAPROFILE_MIN = 23;
+  int THEORAPROFILE_ANY = THEORAPROFILE_MIN;
+  int THEORAPROFILE_MAX = THEORAPROFILE_ANY;
+  int VIDEO_CODEC_PROFILE_MAX = THEORAPROFILE_ANY;
 }

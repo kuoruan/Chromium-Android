@@ -5,41 +5,35 @@
 package org.chromium.chrome.browser.ntp.snippets;
 
 import android.support.annotation.LayoutRes;
-import android.text.TextUtils;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeFeatureList;
+import org.chromium.chrome.browser.metrics.ImpressionTracker;
 import org.chromium.chrome.browser.ntp.ContextMenuManager;
 import org.chromium.chrome.browser.ntp.ContextMenuManager.ContextMenuItemId;
+import org.chromium.chrome.browser.ntp.NewTabPageUma;
 import org.chromium.chrome.browser.ntp.cards.CardViewHolder;
-import org.chromium.chrome.browser.ntp.cards.ImpressionTracker;
 import org.chromium.chrome.browser.ntp.cards.NewTabPageViewHolder;
+import org.chromium.chrome.browser.ntp.cards.SectionList;
 import org.chromium.chrome.browser.ntp.cards.SuggestionsCategoryInfo;
+import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
 import org.chromium.chrome.browser.suggestions.SuggestionsBinder;
-import org.chromium.chrome.browser.suggestions.SuggestionsConfig;
 import org.chromium.chrome.browser.suggestions.SuggestionsMetrics;
+import org.chromium.chrome.browser.suggestions.SuggestionsOfflineModelObserver;
 import org.chromium.chrome.browser.suggestions.SuggestionsRecyclerView;
 import org.chromium.chrome.browser.suggestions.SuggestionsUiDelegate;
-import org.chromium.chrome.browser.widget.displaystyle.DisplayStyleObserver;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.displaystyle.DisplayStyleObserverAdapter;
-import org.chromium.chrome.browser.widget.displaystyle.HorizontalDisplayStyle;
 import org.chromium.chrome.browser.widget.displaystyle.UiConfig;
-import org.chromium.chrome.browser.widget.displaystyle.VerticalDisplayStyle;
 import org.chromium.ui.mojom.WindowOpenDisposition;
 
 /**
  * A class that represents the view for a single card snippet.
  */
 public class SnippetArticleViewHolder extends CardViewHolder implements ImpressionTracker.Listener {
-    /**
-     * A single instance of {@link RefreshOfflineBadgeVisibilityCallback} that can be reused as it
-     * has no state.
-     */
-    public static final RefreshOfflineBadgeVisibilityCallback
-            REFRESH_OFFLINE_BADGE_VISIBILITY_CALLBACK = new RefreshOfflineBadgeVisibilityCallback();
-
     private final SuggestionsUiDelegate mUiDelegate;
     private final SuggestionsBinder mSuggestionsBinder;
+    private final OfflinePageBridge mOfflinePageBridge;
 
     private SuggestionsCategoryInfo mCategoryInfo;
     private SnippetArticle mArticle;
@@ -52,21 +46,19 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
      * @param contextMenuManager The manager responsible for the context menu.
      * @param uiDelegate The delegate object used to open an article, fetch thumbnails, etc.
      * @param uiConfig The NTP UI configuration object used to adjust the article UI.
+     * @param offlinePageBridge used to determine if article is prefetched.
      */
     public SnippetArticleViewHolder(SuggestionsRecyclerView parent,
             ContextMenuManager contextMenuManager, SuggestionsUiDelegate uiDelegate,
-            UiConfig uiConfig) {
+            UiConfig uiConfig, OfflinePageBridge offlinePageBridge) {
         super(getLayout(), parent, uiConfig, contextMenuManager);
 
         mUiDelegate = uiDelegate;
         mSuggestionsBinder = new SuggestionsBinder(itemView, uiDelegate);
-        mDisplayStyleObserver =
-                new DisplayStyleObserverAdapter(itemView, uiConfig, new DisplayStyleObserver() {
-                    @Override
-                    public void onDisplayStyleChanged(UiConfig.DisplayStyle newDisplayStyle) {
-                        updateLayout();
-                    }
-                });
+        mDisplayStyleObserver = new DisplayStyleObserverAdapter(
+                itemView, uiConfig, newDisplayStyle -> updateLayout());
+
+        mOfflinePageBridge = offlinePageBridge;
 
         new ImpressionTracker(itemView, this);
     }
@@ -74,6 +66,24 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
     @Override
     public void onImpression() {
         if (mArticle != null && mArticle.trackImpression()) {
+            if (SectionList.shouldReportPrefetchedSuggestionsMetrics(mArticle.mCategory)
+                    && mOfflinePageBridge.isOfflinePageModelLoaded()) {
+                // Before reporting prefetched suggestion impression, we ask Offline Page model
+                // whether the page is actually prefetched to avoid race condition when suggestion
+                // surface is opened.
+
+                // TabId is relevant only for recent tab offline pages, which we do not handle here,
+                // so we do not care about tab id.
+                mOfflinePageBridge.selectPageForOnlineUrl(
+                        mArticle.getUrl(), /* tabId = */ 0, item -> {
+                            if (!SuggestionsOfflineModelObserver.isPrefetchedOfflinePage(item)) {
+                                return;
+                            }
+                            NewTabPageUma.recordPrefetchedArticleSuggestionImpressionPosition(
+                                    mArticle.getPerSectionRank());
+                        });
+            }
+
             mUiDelegate.getEventReporter().onSuggestionShown(mArticle);
             mRecyclerView.onSnippetImpression();
         }
@@ -141,41 +151,30 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
     }
 
     /**
+     * Triggers a refresh of the offline badge visibility. Intended to be used as
+     * {@link NewTabPageViewHolder.PartialBindCallback}
+     */
+    public static void refreshOfflineBadgeVisibility(NewTabPageViewHolder holder) {
+        ((SnippetArticleViewHolder) holder).refreshOfflineBadgeVisibility();
+    }
+
+    /**
      * Updates the layout taking into account screen dimensions and the type of snippet displayed.
      */
     private void updateLayout() {
-        final int horizontalStyle = mUiConfig.getCurrentDisplayStyle().horizontal;
-        final int verticalStyle = mUiConfig.getCurrentDisplayStyle().vertical;
         final int layout = mCategoryInfo.getCardLayout();
 
         boolean showHeadline = shouldShowHeadline();
-        boolean showDescription = shouldShowDescription(horizontalStyle, verticalStyle, layout);
         boolean showThumbnail = shouldShowThumbnail(layout);
-        boolean showThumbnailVideoOverlay = shouldShowThumbnailVideoOverlay(showThumbnail);
+        boolean showThumbnailVideoBadge = shouldShowThumbnailVideoBadge(showThumbnail);
 
-        mSuggestionsBinder.updateFieldsVisibility(showHeadline, showDescription, showThumbnail,
-                showThumbnailVideoOverlay,
-                getHeaderMaxLines(horizontalStyle, verticalStyle, layout));
+        mSuggestionsBinder.updateFieldsVisibility(
+                showHeadline, showThumbnail, showThumbnailVideoBadge);
     }
 
     /** If the title is empty (or contains only whitespace characters), we do not show it. */
     private boolean shouldShowHeadline() {
         return !mArticle.mTitle.trim().isEmpty();
-    }
-
-    private boolean shouldShowDescription(int horizontalStyle, int verticalStyle, int layout) {
-        // Minimal cards don't have a description.
-        if (layout == ContentSuggestionsCardLayout.MINIMAL_CARD) return false;
-
-        // When the screen is too small (narrow or flat) we don't show the description to have more
-        // space for the header.
-        if (horizontalStyle == HorizontalDisplayStyle.NARROW) return false;
-        if (verticalStyle == VerticalDisplayStyle.FLAT) return false;
-
-        // When article's description is empty, we do not want empty space.
-        if (mArticle != null && TextUtils.isEmpty(mArticle.mPreviewText)) return false;
-
-        return ChromeFeatureList.isEnabled(ChromeFeatureList.CONTENT_SUGGESTIONS_SHOW_SUMMARY);
     }
 
     private boolean shouldShowThumbnail(int layout) {
@@ -185,18 +184,10 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
         return true;
     }
 
-    private boolean shouldShowThumbnailVideoOverlay(boolean showThumbnail) {
+    private boolean shouldShowThumbnailVideoBadge(boolean showThumbnail) {
         if (!showThumbnail) return false;
         if (!mArticle.mIsVideoSuggestion) return false;
-        return ChromeFeatureList.isEnabled(ChromeFeatureList.CONTENT_SUGGESTIONS_VIDEO_OVERLAY);
-    }
-
-    /**
-     * If no summary (no description) is shown, allow more lines for the header (title).
-     * @return The maximum number of header text lines.
-     */
-    private int getHeaderMaxLines(int horizontalStyle, int verticalStyle, int layout) {
-        return shouldShowDescription(horizontalStyle, verticalStyle, layout) ? 2 : 3;
+        return FeatureUtilities.isChromeHomeEnabled();
     }
 
     /** Updates the visibility of the card's offline badge by checking the bound article's info. */
@@ -210,21 +201,12 @@ public class SnippetArticleViewHolder extends CardViewHolder implements Impressi
      */
     @LayoutRes
     private static int getLayout() {
-        if (SuggestionsConfig.useModern()) return R.layout.content_suggestions_card_modern;
+        if (FeatureUtilities.isChromeHomeEnabled()) {
+            return R.layout.content_suggestions_card_modern;
+        }
         if (ChromeFeatureList.isEnabled(ChromeFeatureList.CONTENT_SUGGESTIONS_LARGE_THUMBNAIL)) {
             return R.layout.new_tab_page_snippets_card_large_thumbnail;
         }
         return R.layout.new_tab_page_snippets_card;
-    }
-
-    /**
-     * Callback to refresh the offline badge visibility.
-     */
-    public static class RefreshOfflineBadgeVisibilityCallback extends PartialBindCallback {
-        @Override
-        public void onResult(NewTabPageViewHolder holder) {
-            assert holder instanceof SnippetArticleViewHolder;
-            ((SnippetArticleViewHolder) holder).refreshOfflineBadgeVisibility();
-        }
     }
 }

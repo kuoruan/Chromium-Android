@@ -35,9 +35,13 @@
                 android:title="@null" />
           </menu>
         </item>
-        <!-- Title is intentionally left blank in xml and will be set in java. -->
         <item android:id="@+id/find_in_page_id"
             android:title="@string/menu_find_in_page"
+            android:orderInCategory="2" />
+        <item android:id="@+id/reader_mode_prefs_id"
+            android:title="@string/menu_reader_mode_prefs"
+            android:icon="@drawable/reader_mode_prefs_icon"
+            android:visible="false"
             android:orderInCategory="2" />
         <item android:id="@+id/add_to_homescreen_id"
             android:title="@string/menu_add_to_homescreen"
@@ -56,6 +60,8 @@
                   android:checkable="true" />
           </menu>
         </item>
+
+        <!-- Title is intentionally left blank in xml and will be set in java. -->
         <item android:id="@+id/open_in_browser_id"
             android:title=""
             android:orderInCategory="2" />

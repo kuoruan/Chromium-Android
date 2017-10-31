@@ -14,6 +14,12 @@ import java.util.List;
  */
 public interface MediaRouteManager {
     /**
+     * Adds a {@link MediaRouteProvider} to be managed.
+     * @param provider The provider to manage.
+     */
+    void addMediaRouteProvider(MediaRouteProvider provider);
+
+    /**
      * Called when the sinks found by the media route provider for
      * the particular |sourceUrn| have changed.
      * @param sourceId The id of the source (presentation URL) that the sinks are received for.

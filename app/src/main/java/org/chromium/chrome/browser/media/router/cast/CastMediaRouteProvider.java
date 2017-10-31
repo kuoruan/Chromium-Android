@@ -53,16 +53,6 @@ public class CastMediaRouteProvider implements MediaRouteProvider, DiscoveryDele
     private CreateRouteRequest mPendingCreateRouteRequest;
     private Handler mHandler = new Handler();
 
-    /**
-     * Builder class for {@link CastMediaRouteProvider}.
-     */
-    public static class Builder implements MediaRouteProvider.Builder {
-        @Override
-        public MediaRouteProvider create(MediaRouteManager manager) {
-            return CastMediaRouteProvider.create(manager);
-        }
-    }
-
     private static class OnSinksReceivedRunnable implements Runnable {
 
         private final WeakReference<MediaRouteManager> mRouteManager;
@@ -86,9 +76,8 @@ public class CastMediaRouteProvider implements MediaRouteProvider, DiscoveryDele
     }
 
     /**
-     * @return Initialized {@link CastMediaRouteProvider} object or null if it's not supported.
+     * @return Initialized {@link CastMediaRouteProvider} object.
      */
-    @Nullable
     public static CastMediaRouteProvider create(MediaRouteManager manager) {
         MediaRouter androidMediaRouter = ChromeMediaRouter.getAndroidMediaRouter();
 
@@ -432,10 +421,10 @@ public class CastMediaRouteProvider implements MediaRouteProvider, DiscoveryDele
         // client's auto join policy.
         for (ClientRecord client : mClientRecords.values()) {
             if ((MediaSource.AUTOJOIN_TAB_AND_ORIGIN_SCOPED.equals(leavingClient.autoJoinPolicy)
-                            && client.origin.equals(leavingClient.origin)
-                            && client.tabId == leavingClient.tabId)
+                        && isSameOrigin(client.origin, leavingClient.origin)
+                        && client.tabId == leavingClient.tabId)
                     || (MediaSource.AUTOJOIN_ORIGIN_SCOPED.equals(leavingClient.autoJoinPolicy)
-                            && client.origin.equals(leavingClient.origin))) {
+                               && isSameOrigin(client.origin, leavingClient.origin))) {
                 onMessage(client.clientId,
                         buildInternalMessage("disconnect_session", -1, client.clientId, sessionId));
             }
@@ -474,15 +463,15 @@ public class CastMediaRouteProvider implements MediaRouteProvider, DiscoveryDele
             client = mClientRecords.values().iterator().next();
         } else if (mLastRemovedRouteRecord != null) {
             client = mLastRemovedRouteRecord;
-            return origin.equals(client.origin) && tabId == client.tabId;
+            return isSameOrigin(origin, client.origin) && tabId == client.tabId;
         }
-
         if (client == null) return false;
 
+        boolean sameOrigin = isSameOrigin(origin, client.origin);
         if (source.getAutoJoinPolicy().equals(MediaSource.AUTOJOIN_ORIGIN_SCOPED)) {
-            return origin.equals(client.origin);
+            return sameOrigin;
         } else if (source.getAutoJoinPolicy().equals(MediaSource.AUTOJOIN_TAB_AND_ORIGIN_SCOPED)) {
-            return origin.equals(client.origin) && tabId == client.tabId;
+            return sameOrigin && tabId == client.tabId;
         }
 
         return false;
@@ -494,7 +483,6 @@ public class CastMediaRouteProvider implements MediaRouteProvider, DiscoveryDele
             return canAutoJoin(source, origin, tabId);
         } else if (presentationId.startsWith(PRESENTATION_ID_SESSION_ID_PREFIX)) {
             String sessionId = presentationId.substring(PRESENTATION_ID_SESSION_ID_PREFIX.length());
-
             if (mSession.getSessionId().equals(sessionId)) return true;
         } else {
             for (MediaRoute route : mRoutes.values()) {
@@ -566,5 +554,19 @@ public class CastMediaRouteProvider implements MediaRouteProvider, DiscoveryDele
 
         mLastRemovedRouteRecord = client;
         mClientRecords.remove(client.clientId);
+    }
+
+    /**
+     * Compares two origins. Empty origin strings correspond to unique origins in
+     * url::Origin.
+     *
+     * @param originA A URL origin.
+     * @param originB A URL origin.
+     * @return True if originA and originB represent the same origin, false otherwise.
+     */
+    private static final boolean isSameOrigin(String originA, String originB) {
+        if (originA == null || originA.isEmpty() || originB == null || originB.isEmpty())
+            return false;
+        return originA.equals(originB);
     }
 }

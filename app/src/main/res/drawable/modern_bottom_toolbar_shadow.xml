@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2017 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <bitmap
+            android:src="@drawable/toolbar_shadow_focused"
+            android:gravity="top|fill_horizontal" />
+    </item>
+    <item>
+        <bitmap
+            android:src="@drawable/bottom_toolbar_top_line"
+            android:gravity="top|fill_horizontal" />
+    </item>
+</layer-list>

@@ -15,7 +15,8 @@
       android:text="@string/clear_browsing_data_history_dialog_data_text"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:textAppearance="?android:attr/textAppearanceMedium"
+      android:textAppearance="@style/BlackBody"
+      android:lineSpacingExtra="6sp"
       android:paddingTop="10dp"
       android:paddingBottom="20dp" />
 

@@ -4,8 +4,8 @@
 
 package org.chromium.chrome.browser.firstrun;
 
-import android.app.Activity;
-import android.content.Intent;
+import android.os.Bundle;
+import android.support.annotation.StringRes;
 import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,9 +13,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
-import org.chromium.base.CommandLine;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.customtabs.CustomTabActivity;
 import org.chromium.ui.base.LocalizationUtils;
 import org.chromium.ui.text.NoUnderlineClickableSpan;
@@ -25,43 +23,71 @@ import org.chromium.ui.text.SpanApplier.SpanInfo;
 /**
 * Lightweight FirstRunActivity. It shows ToS dialog only.
 */
-public class LightweightFirstRunActivity extends FirstRunActivity {
+public class LightweightFirstRunActivity extends FirstRunActivityBase {
+    private FirstRunFlowSequencer mFirstRunFlowSequencer;
     private Button mOkButton;
     private boolean mNativeInitialized;
     private boolean mTriggerAcceptAfterNativeInit;
 
     @Override
     public void setContentView() {
-        super.setContentView();
-        if (CommandLine.getInstance().hasSwitch(ChromeSwitches.DISABLE_FIRST_RUN_EXPERIENCE)) {
-            completeFirstRunExperience();
-        }
+        setFinishOnTouchOutside(true);
 
+        mFirstRunFlowSequencer = new FirstRunFlowSequencer(this) {
+            @Override
+            public void onFlowIsKnown(Bundle freProperties) {
+                if (freProperties == null) {
+                    completeFirstRunExperience();
+                    return;
+                }
+
+                onChildAccountKnown(
+                        freProperties.getBoolean(AccountFirstRunFragment.IS_CHILD_ACCOUNT));
+            }
+        };
+        mFirstRunFlowSequencer.start();
+    }
+
+    /** Called once it is known whether the device has a child account. */
+    public void onChildAccountKnown(boolean hasChildAccount) {
         setContentView(LayoutInflater.from(LightweightFirstRunActivity.this)
                                .inflate(R.layout.lightweight_fre_tos, null));
 
         NoUnderlineClickableSpan clickableTermsSpan = new NoUnderlineClickableSpan() {
             @Override
             public void onClick(View widget) {
-                CustomTabActivity.showInfoPage(LightweightFirstRunActivity.this,
-                        LocalizationUtils.substituteLocalePlaceholder(
-                                getString(R.string.chrome_terms_of_service_url)));
+                showInfoPage(R.string.chrome_terms_of_service_url);
             }
         };
         NoUnderlineClickableSpan clickablePrivacySpan = new NoUnderlineClickableSpan() {
             @Override
             public void onClick(View widget) {
-                CustomTabActivity.showInfoPage(LightweightFirstRunActivity.this,
-                        LocalizationUtils.substituteLocalePlaceholder(
-                                getString(R.string.chrome_privacy_notice_url)));
+                showInfoPage(R.string.chrome_privacy_notice_url);
             }
         };
-        ((TextView) findViewById(R.id.lightweight_fre_tos_and_privacy))
-                .setText(SpanApplier.applySpans(getString(R.string.lightweight_fre_tos_and_privacy),
-                        new SpanInfo("<LINK1>", "</LINK1>", clickableTermsSpan),
-                        new SpanInfo("<LINK2>", "</LINK2>", clickablePrivacySpan)));
-        ((TextView) findViewById(R.id.lightweight_fre_tos_and_privacy))
-                .setMovementMethod(LinkMovementMethod.getInstance());
+        NoUnderlineClickableSpan clickableFamilyLinkPrivacySpan = new NoUnderlineClickableSpan() {
+            @Override
+            public void onClick(View widget) {
+                showInfoPage(R.string.family_link_privacy_policy_url);
+            }
+        };
+        final CharSequence tosAndPrivacyText;
+        if (hasChildAccount) {
+            tosAndPrivacyText = SpanApplier.applySpans(
+                    getString(R.string.lightweight_fre_tos_and_privacy_child_account),
+                    new SpanInfo("<LINK1>", "</LINK1>", clickableTermsSpan),
+                    new SpanInfo("<LINK2>", "</LINK2>", clickablePrivacySpan),
+                    new SpanInfo("<LINK3>", "</LINK3>", clickableFamilyLinkPrivacySpan));
+        } else {
+            tosAndPrivacyText =
+                    SpanApplier.applySpans(getString(R.string.lightweight_fre_tos_and_privacy),
+                            new SpanInfo("<LINK1>", "</LINK1>", clickableTermsSpan),
+                            new SpanInfo("<LINK2>", "</LINK2>", clickablePrivacySpan));
+        }
+        TextView tosAndPrivacyTextView =
+                (TextView) findViewById(R.id.lightweight_fre_tos_and_privacy);
+        tosAndPrivacyTextView.setText(tosAndPrivacyText);
+        tosAndPrivacyTextView.setMovementMethod(LinkMovementMethod.getInstance());
 
         mOkButton = (Button) findViewById(R.id.lightweight_fre_terms_accept);
         mOkButton.setOnClickListener(new OnClickListener() {
@@ -90,11 +116,18 @@ public class LightweightFirstRunActivity extends FirstRunActivity {
     }
 
     @Override
+    public void onBackPressed() {
+        abortFirstRunExperience();
+    }
+
+    public void abortFirstRunExperience() {
+        finish();
+        sendPendingIntentIfNecessary(false);
+    }
+
     public void completeFirstRunExperience() {
         FirstRunStatus.setLightweightFirstRunFlowComplete(true);
-        Intent intent = new Intent();
-        intent.putExtras(mFreProperties);
-        finishAllTheActivities(getLocalClassName(), Activity.RESULT_OK, intent);
+        finish();
 
         sendPendingIntentIfNecessary(true);
     }
@@ -107,7 +140,16 @@ public class LightweightFirstRunActivity extends FirstRunActivity {
             mOkButton.setEnabled(false);
             return;
         }
-        sGlue.acceptTermsOfService(false);
+        FirstRunUtils.acceptTermsOfService(false);
         completeFirstRunExperience();
+    }
+
+    /**
+     * Show an informational web page. The page doesn't show navigation control.
+     * @param url Resource id for the URL of the web page.
+     */
+    public void showInfoPage(@StringRes int url) {
+        CustomTabActivity.showInfoPage(
+                this, LocalizationUtils.substituteLocalePlaceholder(getString(url)));
     }
 }

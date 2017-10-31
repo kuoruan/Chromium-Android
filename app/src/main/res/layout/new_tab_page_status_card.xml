@@ -18,8 +18,7 @@
         android:id="@+id/status_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:textColor="@color/snippets_headline_text_color"
+        android:textAppearance="@style/BlackTitle1"
         chrome:leading="24dp" />
 
     <org.chromium.ui.widget.TextViewWithLeading
@@ -31,18 +30,11 @@
         android:textColor="@color/snippets_text_color"
         chrome:leading="20dp" />
 
-    <!-- Negative marginEnd to balance the parent's padding. Buttons are
-         supposed to have 8dp margin while we have a 16dp margin at the parent
-         level. -->
     <Button
-      android:id="@+id/status_action_button"
-      style="@style/ButtonCompatBorderless"
-      android:layout_marginTop="16dp"
-      android:layout_marginEnd="-8dp"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:textAllCaps="true"
-      android:textColor="@color/light_active_color"
-      android:textSize="15sp" />
+        style="@style/SuggestionCardAction"
+        android:id="@+id/status_action_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" />
 
 </LinearLayout>

@@ -17,11 +17,13 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.download.DownloadUtils;
 import org.chromium.chrome.browser.download.ui.DownloadHistoryAdapter.SubsectionHeader;
 import org.chromium.chrome.browser.download.ui.DownloadItemSelectionDelegate.SubsectionHeaderSelectionObserver;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.DateDividedAdapter.TimedItem;
 import org.chromium.chrome.browser.widget.TintedImageView;
 import org.chromium.chrome.browser.widget.selection.SelectableItemView;
 
 import java.util.Date;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -30,22 +32,33 @@ import java.util.Set;
 public class OfflineGroupHeaderView
         extends SelectableItemView<TimedItem> implements SubsectionHeaderSelectionObserver {
     private final int mIconBackgroundColorSelected;
+    private final int mIconBackgroundColor;
+    private final int mIconBackgroundResId;
     private final ColorStateList mIconForegroundColorList;
+    private final ColorStateList mCheckedIconForegroundColorList;
 
     private SubsectionHeader mHeader;
     private DownloadHistoryAdapter mAdapter;
     private DownloadItemSelectionDelegate mSelectionDelegate;
 
-    private TextView mPageCountHeader;
-    private TextView mFileSizeView;
+    private TextView mDescriptionView;
     private ImageView mExpandImage;
     private TintedImageView mIconView;
 
     public OfflineGroupHeaderView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        mIconBackgroundColor = DownloadUtils.getIconBackgroundColor(context);
         mIconBackgroundColorSelected =
                 ApiCompatibilityUtils.getColor(getResources(), R.color.google_grey_600);
-        mIconForegroundColorList = DownloadUtils.getIconForegroundColorList(context);
+        mCheckedIconForegroundColorList = DownloadUtils.getIconForegroundColorList(context);
+        mIconBackgroundResId = R.drawable.list_item_icon_modern_bg;
+
+        if (FeatureUtilities.isChromeHomeEnabled()) {
+            mIconForegroundColorList = ApiCompatibilityUtils.getColorStateList(
+                    context.getResources(), R.color.dark_mode_tint);
+        } else {
+            mIconForegroundColorList = DownloadUtils.getIconForegroundColorList(context);
+        }
     }
 
     @Override
@@ -53,8 +66,7 @@ public class OfflineGroupHeaderView
         super.onFinishInflate();
 
         mIconView = (TintedImageView) findViewById(R.id.icon_view);
-        mPageCountHeader = (TextView) findViewById(R.id.page_count_text);
-        mFileSizeView = (TextView) findViewById(R.id.filesize_view);
+        mDescriptionView = (TextView) findViewById(R.id.description);
         mExpandImage = (ImageView) findViewById(R.id.expand_icon);
     }
 
@@ -87,12 +99,12 @@ public class OfflineGroupHeaderView
     public void displayHeader(SubsectionHeader header) {
         this.mHeader = header;
         // TODO(crbug.com/635567): Fix lint properly.
-        mPageCountHeader.setText(getResources().getString(
-                R.string.download_manager_offline_header_title, header.getItemCount()));
-        mFileSizeView.setText(Formatter.formatFileSize(getContext(), header.getTotalFileSize()));
+        String description = String.format(Locale.getDefault(), "%s - %s",
+                Formatter.formatFileSize(getContext(), header.getTotalFileSize()),
+                getContext().getString(R.string.download_manager_offline_header_description));
+        mDescriptionView.setText(description);
         updateExpandIcon(header.isExpanded());
         setChecked(mSelectionDelegate.isHeaderSelected(header));
-        setBackgroundResourceForGroupPosition(mHeader.isFirstInGroup(), mHeader.isLastInGroup());
     }
 
     private void updateExpandIcon(boolean expanded) {
@@ -104,13 +116,27 @@ public class OfflineGroupHeaderView
 
     private void updateCheckIcon(boolean checked) {
         if (checked) {
-            mIconView.setBackgroundColor(mIconBackgroundColorSelected);
+            if (FeatureUtilities.isChromeHomeEnabled()) {
+                mIconView.setBackgroundResource(mIconBackgroundResId);
+                mIconView.getBackground().setLevel(
+                        getResources().getInteger(R.integer.list_item_level_selected));
+            } else {
+                mIconView.setBackgroundColor(mIconBackgroundColorSelected);
+            }
+
             mIconView.setImageResource(R.drawable.ic_check_googblue_24dp);
-            mIconView.setTint(mIconForegroundColorList);
+            mIconView.setTint(mCheckedIconForegroundColorList);
         } else {
-            mIconView.setBackgroundResource(R.color.light_active_color);
+            if (FeatureUtilities.isChromeHomeEnabled()) {
+                mIconView.setBackgroundResource(mIconBackgroundResId);
+                mIconView.getBackground().setLevel(
+                        getResources().getInteger(R.integer.list_item_level_default));
+            } else {
+                mIconView.setBackgroundColor(mIconBackgroundColor);
+            }
+
             mIconView.setImageResource(R.drawable.ic_chrome);
-            mIconView.setTint(null);
+            mIconView.setTint(mIconForegroundColorList);
         }
     }
 

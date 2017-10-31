@@ -47,6 +47,8 @@ class AndroidOverlayClient_Internal {
 
     private static final int ON_DESTROYED_ORDINAL = 1;
 
+    private static final int ON_POWER_EFFICIENT_STATE_ORDINAL = 2;
+
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements AndroidOverlayClient.Proxy {
 
@@ -84,6 +86,23 @@ long surfaceKey) {
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
                             new org.chromium.mojo.bindings.MessageHeader(ON_DESTROYED_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void onPowerEfficientState(
+boolean isPowerEfficient) {
+
+            AndroidOverlayClientOnPowerEfficientStateParams _message = new AndroidOverlayClientOnPowerEfficientStateParams();
+
+            _message.isPowerEfficient = isPowerEfficient;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(ON_POWER_EFFICIENT_STATE_ORDINAL)));
 
         }
 
@@ -137,6 +156,19 @@ long surfaceKey) {
                     }
             
             
+            
+            
+            
+                    case ON_POWER_EFFICIENT_STATE_ORDINAL: {
+            
+                        AndroidOverlayClientOnPowerEfficientStateParams data =
+                                AndroidOverlayClientOnPowerEfficientStateParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().onPowerEfficientState(data.isPowerEfficient);
+                        return true;
+                    }
+            
+            
                     default:
                         return false;
                 }
@@ -160,6 +192,8 @@ long surfaceKey) {
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), AndroidOverlayClient_Internal.MANAGER, messageWithHeader, receiver);
+            
+            
             
             
             
@@ -235,7 +269,7 @@ long surfaceKey) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(surfaceKey, 8);
+            encoder0.encode(this.surfaceKey, 8);
         }
     
         /**
@@ -262,7 +296,7 @@ long surfaceKey) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(surfaceKey);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.surfaceKey);
             return result;
         }
     }
@@ -344,6 +378,98 @@ long surfaceKey) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
+            return result;
+        }
+    }
+
+
+
+    
+    static final class AndroidOverlayClientOnPowerEfficientStateParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public boolean isPowerEfficient;
+    
+        private AndroidOverlayClientOnPowerEfficientStateParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public AndroidOverlayClientOnPowerEfficientStateParams() {
+            this(0);
+        }
+    
+        public static AndroidOverlayClientOnPowerEfficientStateParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static AndroidOverlayClientOnPowerEfficientStateParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static AndroidOverlayClientOnPowerEfficientStateParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            AndroidOverlayClientOnPowerEfficientStateParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new AndroidOverlayClientOnPowerEfficientStateParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.isPowerEfficient = decoder0.readBoolean(8, 0);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.isPowerEfficient, 8, 0);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            AndroidOverlayClientOnPowerEfficientStateParams other = (AndroidOverlayClientOnPowerEfficientStateParams) object;
+            if (this.isPowerEfficient!= other.isPowerEfficient)
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isPowerEfficient);
             return result;
         }
     }

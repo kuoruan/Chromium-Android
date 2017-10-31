@@ -17,7 +17,6 @@ import android.widget.PopupWindow;
 import org.chromium.ui.DropdownAdapter;
 import org.chromium.ui.DropdownItem;
 import org.chromium.ui.DropdownPopupWindow;
-import org.chromium.ui.R;
 
 import java.util.ArrayList;
 import java.util.Arrays;

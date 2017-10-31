@@ -61,6 +61,10 @@
         android:key="media"
         android:title="@string/media_permission_title"
         android:icon="@drawable/settings_media" />
+    <!-- Sound -->
+    <org.chromium.chrome.browser.preferences.website.SiteSettingsPreference
+        android:fragment="org.chromium.chrome.browser.preferences.website.SingleCategoryPreferences"
+        android:key="sound" />
     <!-- Google Translate -->
     <Preference
         android:fragment="org.chromium.chrome.browser.preferences.website.TranslatePreferences"

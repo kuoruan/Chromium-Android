@@ -6,6 +6,7 @@ package org.chromium.content.browser.input;
 
 import android.annotation.SuppressLint;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,6 +17,7 @@ import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.style.BackgroundColorSpan;
 import android.text.style.CharacterStyle;
+import android.text.style.SuggestionSpan;
 import android.text.style.UnderlineSpan;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
@@ -35,13 +37,15 @@ import org.chromium.blink_public.web.WebFocusType;
 import org.chromium.blink_public.web.WebInputEventModifier;
 import org.chromium.blink_public.web.WebInputEventType;
 import org.chromium.blink_public.web.WebTextInputMode;
-import org.chromium.content.browser.ViewUtils;
 import org.chromium.content.browser.picker.InputDialogContainer;
 import org.chromium.content_public.browser.ImeEventObserver;
 import org.chromium.content_public.browser.WebContents;
+import org.chromium.ui.base.ViewUtils;
 import org.chromium.ui.base.ime.TextInputType;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,8 +75,13 @@ public class ImeAdapter {
     private static final String TAG = "cr_Ime";
     private static final boolean DEBUG_LOGS = false;
 
+    private static final float SUGGESTION_HIGHLIGHT_BACKGROUND_TRANSPARENCY = 0.4f;
+
     public static final int COMPOSITION_KEY_CODE = 229;
     private static final int IME_FLAG_NO_PERSONALIZED_LEARNING = 0x1000000;
+
+    // Color used by AOSP Android for a SuggestionSpan with FLAG_EASY_CORRECT set
+    private static final int DEFAULT_SUGGESTION_SPAN_COLOR = 0x88C8C8C8;
 
     private long mNativeImeAdapterAndroid;
     private InputMethodManagerWrapper mInputMethodManagerWrapper;
@@ -871,10 +880,20 @@ public class ImeAdapter {
                 insertionMarkerTop, insertionMarkerBottom, mContainerView);
     }
 
+    private int getUnderlineColorForSuggestionSpan(SuggestionSpan suggestionSpan) {
+        try {
+            Method getUnderlineColorMethod = SuggestionSpan.class.getMethod("getUnderlineColor");
+            return (int) getUnderlineColorMethod.invoke(suggestionSpan);
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            return DEFAULT_SUGGESTION_SPAN_COLOR;
+        }
+    }
+
     @CalledByNative
-    private void populateUnderlinesFromSpans(CharSequence text, long underlines) {
+    private void populateImeTextSpansFromJava(CharSequence text, long imeTextSpans) {
         if (DEBUG_LOGS) {
-            Log.i(TAG, "populateUnderlinesFromSpans: text [%s], underlines [%d]", text, underlines);
+            Log.i(TAG, "populateImeTextSpansFromJava: text [%s], ime_text_spans [%d]", text,
+                    imeTextSpans);
         }
         if (!(text instanceof SpannableString)) return;
 
@@ -883,12 +902,45 @@ public class ImeAdapter {
                 spannableString.getSpans(0, text.length(), CharacterStyle.class);
         for (CharacterStyle span : spans) {
             if (span instanceof BackgroundColorSpan) {
-                nativeAppendBackgroundColorSpan(underlines, spannableString.getSpanStart(span),
+                nativeAppendBackgroundColorSpan(imeTextSpans, spannableString.getSpanStart(span),
                         spannableString.getSpanEnd(span),
                         ((BackgroundColorSpan) span).getBackgroundColor());
             } else if (span instanceof UnderlineSpan) {
-                nativeAppendUnderlineSpan(underlines, spannableString.getSpanStart(span),
+                nativeAppendUnderlineSpan(imeTextSpans, spannableString.getSpanStart(span),
                         spannableString.getSpanEnd(span));
+            } else if (span instanceof SuggestionSpan) {
+                final SuggestionSpan suggestionSpan = (SuggestionSpan) span;
+
+                // We currently only support FLAG_EASY_CORRECT and FLAG_MISSPELLED SuggestionSpans.
+
+                // Other types:
+                // - FLAG_AUTO_CORRECTION is used e.g. by Samsung's IME to flash a blue background
+                //   on a word being replaced by an autocorrect suggestion. We don't currently
+                //   support this.
+                //
+                // - Some IMEs (e.g. the AOSP keyboard on Jelly Bean) add SuggestionSpans with no
+                //   flags set and no underline color to add suggestions to words marked as
+                //   misspelled (instead of having the spell checker return the suggestions when
+                //   called). We don't support these either.
+                final boolean isMisspellingSpan =
+                        (suggestionSpan.getFlags() & SuggestionSpan.FLAG_MISSPELLED) != 0;
+                if (suggestionSpan.getFlags() != SuggestionSpan.FLAG_EASY_CORRECT
+                        && !isMisspellingSpan) {
+                    continue;
+                }
+
+                // Copied from Android's Editor.java so we use the same colors
+                // as the native Android text widget.
+                final int underlineColor = getUnderlineColorForSuggestionSpan(suggestionSpan);
+                final int newAlpha = (int) (Color.alpha(underlineColor)
+                        * SUGGESTION_HIGHLIGHT_BACKGROUND_TRANSPARENCY);
+                final int suggestionHighlightColor =
+                        (underlineColor & 0x00FFFFFF) + (newAlpha << 24);
+
+                nativeAppendSuggestionSpan(imeTextSpans,
+                        spannableString.getSpanStart(suggestionSpan),
+                        spannableString.getSpanEnd(suggestionSpan), isMisspellingSpan,
+                        underlineColor, suggestionHighlightColor, suggestionSpan.getSuggestions());
             }
         }
     }
@@ -917,9 +969,12 @@ public class ImeAdapter {
     private native boolean nativeSendKeyEvent(long nativeImeAdapterAndroid, KeyEvent event,
             int type, int modifiers, long timestampMs, int keyCode, int scanCode,
             boolean isSystemKey, int unicodeChar);
-    private static native void nativeAppendUnderlineSpan(long underlinePtr, int start, int end);
-    private static native void nativeAppendBackgroundColorSpan(long underlinePtr, int start,
-            int end, int backgroundColor);
+    private static native void nativeAppendUnderlineSpan(long spanPtr, int start, int end);
+    private static native void nativeAppendBackgroundColorSpan(
+            long spanPtr, int start, int end, int backgroundColor);
+    private static native void nativeAppendSuggestionSpan(long spanPtr, int start, int end,
+            boolean isMisspelling, int underlineColor, int suggestionHighlightColor,
+            String[] suggestions);
     private native void nativeSetComposingText(long nativeImeAdapterAndroid, CharSequence text,
             String textStr, int newCursorPosition);
     private native void nativeCommitText(

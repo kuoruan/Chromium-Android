@@ -18,7 +18,6 @@ import java.lang.annotation.RetentionPolicy;
 @IntDef({
     ConnectionSecurityLevel.NONE, ConnectionSecurityLevel.HTTP_SHOW_WARNING,
     ConnectionSecurityLevel.EV_SECURE, ConnectionSecurityLevel.SECURE,
-    ConnectionSecurityLevel.SECURITY_WARNING,
     ConnectionSecurityLevel.SECURE_WITH_POLICY_INSTALLED_CERT, ConnectionSecurityLevel.DANGEROUS
 })
 @Retention(RetentionPolicy.SOURCE)
@@ -42,17 +41,13 @@ public @interface ConnectionSecurityLevel {
    */
   int SECURE = 3;
   /**
-   * HTTPS, but with an outdated protocol version.
-   */
-  int SECURITY_WARNING = 4;
-  /**
    * HTTPS, but the certificate verification chain is anchored on a certificate that was installed
-   * by the system administrator.
+   * by the system administrator. Currently used only on ChromeOS.
    */
-  int SECURE_WITH_POLICY_INSTALLED_CERT = 5;
+  int SECURE_WITH_POLICY_INSTALLED_CERT = 4;
   /**
    * Attempted HTTPS and failed, page not authenticated, HTTPS with insecure active content on the
    * page, malware, phishing, or any other serious security issue that could be dangerous.
    */
-  int DANGEROUS = 6;
+  int DANGEROUS = 5;
 }

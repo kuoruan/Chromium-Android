@@ -4,8 +4,12 @@
 
 package org.chromium.chrome.browser.notifications.channels;
 
+import android.annotation.TargetApi;
+import android.app.NotificationChannel;
+import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.os.Build;
 import android.support.annotation.Nullable;
 
 import org.chromium.base.ContextUtils;
@@ -22,6 +26,7 @@ import java.util.List;
 /**
  * Creates/deletes and queries our notification channels for websites.
  */
+@TargetApi(Build.VERSION_CODES.O)
 public class SiteChannelsManager {
     private static final String CHANNEL_ID_SEPARATOR = ";";
 
@@ -58,8 +63,11 @@ public class SiteChannelsManager {
             return preexistingChannel;
         }
         // Channel group must be created before the channel.
-        mNotificationManager.createNotificationChannelGroup(
-                ChannelDefinitions.getChannelGroup(ChannelDefinitions.CHANNEL_GROUP_ID_SITES));
+        NotificationChannelGroup channelGroup =
+                ChannelDefinitions.getChannelGroup(ChannelDefinitions.CHANNEL_GROUP_ID_SITES)
+                        .toNotificationChannelGroup(
+                                ContextUtils.getApplicationContext().getResources());
+        mNotificationManager.createNotificationChannelGroup(channelGroup);
         SiteChannel siteChannel = new SiteChannel(createChannelId(origin, creationTime), origin,
                 creationTime,
                 enabled ? NotificationChannelStatus.ENABLED : NotificationChannelStatus.BLOCKED);
@@ -78,6 +86,19 @@ public class SiteChannelsManager {
     }
 
     /**
+     * Deletes all site channels.
+     */
+    public void deleteAllSiteChannels() {
+        List<NotificationChannel> channels = mNotificationManager.getNotificationChannels();
+        for (NotificationChannel channel : channels) {
+            String channelId = channel.getId();
+            if (isValidSiteChannelId(channelId)) {
+                mNotificationManager.deleteNotificationChannel(channelId);
+            }
+        }
+    }
+
+    /**
      * Deletes the channel associated with this channel ID.
      */
     public void deleteSiteChannel(String channelId) {
@@ -89,7 +110,7 @@ public class SiteChannelsManager {
      * @return ALLOW, BLOCKED, or UNAVAILABLE (if the channel was never created or was deleted).
      */
     public @NotificationChannelStatus int getChannelStatus(String channelId) {
-        Channel channel = mNotificationManager.getNotificationChannel(channelId);
+        NotificationChannel channel = mNotificationManager.getNotificationChannel(channelId);
         if (channel == null) return NotificationChannelStatus.UNAVAILABLE;
         return toChannelStatus(channel.getImportance());
     }
@@ -99,9 +120,9 @@ public class SiteChannelsManager {
      * manager). This includes enabled and blocked channels.
      */
     public SiteChannel[] getSiteChannels() {
-        List<Channel> channels = mNotificationManager.getNotificationChannels();
+        List<NotificationChannel> channels = mNotificationManager.getNotificationChannels();
         List<SiteChannel> siteChannels = new ArrayList<>();
-        for (Channel channel : channels) {
+        for (NotificationChannel channel : channels) {
             if (isValidSiteChannelId(channel.getId())) {
                 siteChannels.add(toSiteChannel(channel));
             }
@@ -109,7 +130,7 @@ public class SiteChannelsManager {
         return siteChannels.toArray(new SiteChannel[siteChannels.size()]);
     }
 
-    private static SiteChannel toSiteChannel(Channel channel) {
+    private static SiteChannel toSiteChannel(NotificationChannel channel) {
         String originAndTimestamp =
                 channel.getId().substring(ChannelDefinitions.CHANNEL_ID_PREFIX_SITES.length());
         String[] parts = originAndTimestamp.split(CHANNEL_ID_SEPARATOR);
@@ -127,6 +148,7 @@ public class SiteChannelsManager {
     /**
      * Converts a site's origin and creation timestamp to a canonical channel id.
      */
+    @VisibleForTesting
     public static String createChannelId(String origin, long creationTime) {
         return ChannelDefinitions.CHANNEL_ID_PREFIX_SITES
                 + WebsiteAddress.create(origin).getOrigin() + CHANNEL_ID_SEPARATOR + creationTime;

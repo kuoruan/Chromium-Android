@@ -82,11 +82,11 @@ public final class Identity extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(name, 8, false);
+        encoder0.encode(this.name, 8, false);
         
-        encoder0.encode(userId, 16, false);
+        encoder0.encode(this.userId, 16, false);
         
-        encoder0.encode(instance, 24, false);
+        encoder0.encode(this.instance, 24, false);
     }
 
     /**
@@ -117,9 +117,9 @@ public final class Identity extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(name);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(userId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(instance);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.name);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.userId);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.instance);
         return result;
     }
 }

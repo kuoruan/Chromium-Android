@@ -15,5 +15,4 @@
     android:minHeight="@dimen/ntp_list_item_min_height"
     android:singleLine="true"
     android:textAlignment="viewStart"
-    android:textColor="@color/ntp_list_item_text"
-    android:textSize="@dimen/ntp_list_item_text_size" />
+    android:textAppearance="@style/BlackTitle1" />

@@ -39,10 +39,13 @@ import java.util.List;
 public class WebApkValidator {
     private static final String TAG = "WebApkValidator";
     private static final String KEY_FACTORY = "EC"; // aka "ECDSA"
+    private static final String MAPSLITE_PACKAGE_NAME = "com.google.android.apps.mapslite";
+    private static final String MAPSLITE_STARTURL_PREFIX = "https://www.google.com/maps";
 
     private static byte[] sExpectedSignature;
     private static byte[] sCommentSignedPublicKeyBytes;
     private static PublicKey sCommentSignedPublicKey;
+    private static boolean sOverrideValidationForTesting;
 
     /**
      * Queries the PackageManager to determine whether a WebAPK can handle the URL. Ignores whether
@@ -176,10 +179,17 @@ public class WebApkValidator {
         if (isNotWebApkQuick(packageInfo)) {
             return false;
         }
+        if (sOverrideValidationForTesting) {
+            Log.d(TAG, "Ok! Looks like a WebApk (has start url) and validation is disabled.");
+            return true;
+        }
         if (verifyV1WebApk(packageInfo, webappPackageName)) {
             return true;
         }
-
+        if (verifyMapsLite(packageInfo, webappPackageName)) {
+            Log.d(TAG, "Matches Maps Lite");
+            return true;
+        }
         return verifyCommentSignedWebApk(packageInfo, webappPackageName);
     }
 
@@ -204,6 +214,18 @@ public class WebApkValidator {
                 Log.d(TAG, "WebApk valid - signature match!");
                 return true;
             }
+        }
+        return false;
+    }
+
+    private static boolean verifyMapsLite(PackageInfo packageInfo, String webappPackageName) {
+        if (packageInfo.signatures == null || webappPackageName == null
+                || !webappPackageName.equals(MAPSLITE_PACKAGE_NAME)) {
+            return false;
+        }
+        String startUrl = packageInfo.applicationInfo.metaData.getString(START_URL);
+        if (startUrl != null && startUrl.startsWith(MAPSLITE_STARTURL_PREFIX)) {
+            return true;
         }
         return false;
     }
@@ -284,6 +306,14 @@ public class WebApkValidator {
         if (sCommentSignedPublicKeyBytes == null) {
             sCommentSignedPublicKeyBytes = v2PublicKeyBytes;
         }
+    }
+
+    /**
+     * Disables all verification performed by this class. This is meant only for development with
+     * unsigned WebApks and should never be enabled in a real build.
+     */
+    public static void disableValidationForTesting() {
+        sOverrideValidationForTesting = true;
     }
 
     /**

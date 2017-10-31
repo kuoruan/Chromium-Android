@@ -91,17 +91,17 @@ public final class DecryptConfig extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(keyId, 8, false);
+        encoder0.encode(this.keyId, 8, false);
         
-        encoder0.encode(iv, 16, false);
+        encoder0.encode(this.iv, 16, false);
         
-        if (subsamples == null) {
+        if (this.subsamples == null) {
             encoder0.encodeNullPointer(24, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(subsamples.length, 24, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < subsamples.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.subsamples.length, 24, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.subsamples.length; ++i0) {
                 
-                encoder1.encode(subsamples[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                encoder1.encode(this.subsamples[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
     }
@@ -134,9 +134,9 @@ public final class DecryptConfig extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(keyId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(iv);
-        result = prime * result + java.util.Arrays.deepHashCode(subsamples);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.keyId);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.iv);
+        result = prime * result + java.util.Arrays.deepHashCode(this.subsamples);
         return result;
     }
 }

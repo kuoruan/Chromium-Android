@@ -17,7 +17,7 @@ import java.lang.annotation.RetentionPolicy;
  *
  * @see Adapter#getItemViewType(int)
  */
-@IntDef({ItemViewType.ABOVE_THE_FOLD, ItemViewType.TILE_GRID, ItemViewType.HEADER,
+@IntDef({ItemViewType.ABOVE_THE_FOLD, ItemViewType.SITE_SECTION, ItemViewType.HEADER,
         ItemViewType.SNIPPET, ItemViewType.SPACING, ItemViewType.STATUS, ItemViewType.PROGRESS,
         ItemViewType.ACTION, ItemViewType.FOOTER, ItemViewType.PROMO, ItemViewType.ALL_DISMISSED,
         ItemViewType.CAROUSEL})
@@ -30,11 +30,11 @@ public @interface ItemViewType {
      */
     int ABOVE_THE_FOLD = 1;
     /**
-     * View type for a {@code TileGrid}.
+     * View type for a {@code SiteSection}.
      *
      * @see Adapter#getItemViewType(int)
      */
-    int TILE_GRID = 2;
+    int SITE_SECTION = 2;
     /**
      * View type for card group headers
      *

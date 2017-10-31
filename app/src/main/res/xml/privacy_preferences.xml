@@ -29,6 +29,7 @@
     <org.chromium.chrome.browser.preferences.ChromeBaseCheckBoxPreference
         android:key="network_predictions"
         android:title="@string/network_predictions_title"
+        android:summary="@string/network_predictions_summary"
         android:persistent="false" />
     <Preference
         android:key="usage_and_crash_reports"

@@ -297,6 +297,20 @@ public class MinidumpUploadService extends IntentService {
      */
     public static void tryUploadCrashDump(File minidumpFile) throws SecurityException {
         assert !shouldUseJobSchedulerForUploads();
+        tryUploadCrashDumpNow(minidumpFile);
+    }
+
+    /**
+     * Attempts to upload the specified {@param minidumpFile} directly even when JobScheduler is
+     * available. This function is same as |tryUploadCrashDump| without the JobScheduler check.
+     *
+     * Note that the prefered way to upload minidump is through JobScheduler when possible, use this
+     * function if want to upload ASAP.
+     *
+     * @throws SecurityException if the caller doesn't have permission to start the upload
+     *         service. This can only happen on KitKat and below, due to a framework bug.
+     */
+    static void tryUploadCrashDumpNow(File minidumpFile) throws SecurityException {
         CrashFileManager fileManager =
                 new CrashFileManager(ContextUtils.getApplicationContext().getCacheDir());
         Intent intent =

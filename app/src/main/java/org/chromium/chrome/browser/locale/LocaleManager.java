@@ -13,6 +13,7 @@ import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 
 import org.chromium.base.ActivityState;
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
@@ -261,7 +262,8 @@ public class LocaleManager {
                 if (onSearchEngineFinalized != null) onSearchEngineFinalized.onResult(result);
             }
         };
-        if (TemplateUrlService.getInstance().isDefaultSearchManaged()) {
+        if (TemplateUrlService.getInstance().isDefaultSearchManaged()
+                || ApiCompatibilityUtils.isDemoUser(activity)) {
             finalizeInternalCallback.onResult(true);
             return;
         }
@@ -383,6 +385,14 @@ public class LocaleManager {
     }
 
     /**
+     * @return The referral ID to be passed when searching with Mail.RU as the DSE.
+     */
+    @CalledByNative
+    protected String getMailRUReferralId() {
+        return "";
+    }
+
+    /**
      * @return The search engine type for the given url if applicable.
      *         See template_url_prepopulate_data.cc for all values.
      */
@@ -423,9 +433,8 @@ public class LocaleManager {
      * @return List of engines to show.
      */
     public List<TemplateUrl> getSearchEnginesForPromoDialog(@SearchEnginePromoType int promoType) {
-        TemplateUrlService instance = TemplateUrlService.getInstance();
-        assert instance.isLoaded();
-        return instance.getSearchEngines();
+        throw new IllegalStateException(
+                "Not applicable unless existing or new promos are required");
     }
 
     /** Set a LocaleManager to be used for testing. */
@@ -440,12 +449,6 @@ public class LocaleManager {
      * @param widgetPresent Whether there is at least one search widget on home screen.
      */
     public void recordLocaleBasedSearchWidgetMetrics(boolean widgetPresent) {}
-
-    // Deprecated.  Use hasCompletedSearchEnginePromo.
-    // TODO(tedchoc): Remove once downstream uses hasCompletedSearchEnginePromo.
-    public boolean hasShownSearchEnginePromo() {
-        return hasCompletedSearchEnginePromo();
-    }
 
     /**
      * @return Whether the search engine promo has been shown and the user selected a valid option

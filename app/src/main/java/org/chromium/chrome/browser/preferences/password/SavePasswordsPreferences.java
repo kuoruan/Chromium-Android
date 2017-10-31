@@ -292,7 +292,7 @@ public class SavePasswordsPreferences extends PreferenceFragment
         if (getPreferenceScreen().findPreference(PREF_MANAGE_ACCOUNT_LINK) == null) {
             if (mLinkPref == null) {
                 ForegroundColorSpan colorSpan = new ForegroundColorSpan(
-                        ApiCompatibilityUtils.getColor(getResources(), R.color.pref_accent_color));
+                        ApiCompatibilityUtils.getColor(getResources(), R.color.google_blue_700));
                 SpannableString title = SpanApplier.applySpans(
                         getString(R.string.manage_passwords_text),
                         new SpanApplier.SpanInfo("<link>", "</link>", colorSpan));

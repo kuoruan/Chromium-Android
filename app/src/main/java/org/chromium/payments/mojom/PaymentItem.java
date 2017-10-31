@@ -83,11 +83,11 @@ public final class PaymentItem extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(label, 8, false);
+        encoder0.encode(this.label, 8, false);
         
-        encoder0.encode(amount, 16, false);
+        encoder0.encode(this.amount, 16, false);
         
-        encoder0.encode(pending, 24, 0);
+        encoder0.encode(this.pending, 24, 0);
     }
 
     /**
@@ -118,9 +118,9 @@ public final class PaymentItem extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(label);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(amount);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(pending);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.label);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.amount);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pending);
         return result;
     }
 }

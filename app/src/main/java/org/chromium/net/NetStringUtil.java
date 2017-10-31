@@ -12,6 +12,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.text.Normalizer;
+import java.util.Locale;
 
 /**
  * Utility functions for converting strings between formats when not built with
@@ -81,6 +82,21 @@ public class NetStringUtil {
             decoder.onUnmappableCharacter(CodingErrorAction.REPLACE);
             decoder.replaceWith("\uFFFD");
             return decoder.decode(text).toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Convert a string to uppercase.
+     * @param str String to convert.
+     * @return: String converted to uppercase using default locale,
+     * null on failure.
+     */
+    @CalledByNative
+    private static String toUpperCase(String str) {
+        try {
+            return str.toUpperCase(Locale.getDefault());
         } catch (Exception e) {
             return null;
         }

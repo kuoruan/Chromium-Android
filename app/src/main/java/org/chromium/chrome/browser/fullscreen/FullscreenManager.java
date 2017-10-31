@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.fullscreen;
 
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.Window;
 
@@ -20,7 +21,7 @@ public abstract class FullscreenManager {
 
     private final FullscreenHtmlApiHandler mHtmlApiHandler;
     private boolean mOverlayVideoMode;
-    private Tab mTab;
+    @Nullable private Tab mTab;
 
     /**
      * Constructs the basic ChromeTab oriented FullscreenManager.
@@ -106,7 +107,7 @@ public abstract class FullscreenManager {
     /**
      * Sets the currently selected tab for fullscreen.
      */
-    public void setTab(Tab tab) {
+    public void setTab(@Nullable Tab tab) {
         if (mTab == tab) return;
 
         // Remove the fullscreen manager from the old tab before setting the new tab.
@@ -121,7 +122,7 @@ public abstract class FullscreenManager {
     /**
      * @return The currently selected tab for fullscreen.
      */
-    public Tab getTab() {
+    @Nullable public Tab getTab() {
         return mTab;
     }
 

@@ -33,7 +33,7 @@ class BackgroundTaskSchedulerJobService implements BackgroundTaskSchedulerDelega
 
     static BackgroundTask getBackgroundTaskFromJobParameters(JobParameters jobParameters) {
         String backgroundTaskClassName = getBackgroundTaskClassFromJobParameters(jobParameters);
-        return BackgroundTaskScheduler.getBackgroundTaskFromClassName(backgroundTaskClassName);
+        return BackgroundTaskReflection.getBackgroundTaskFromClassName(backgroundTaskClassName);
     }
 
     private static String getBackgroundTaskClassFromJobParameters(JobParameters jobParameters) {
@@ -130,7 +130,7 @@ class BackgroundTaskSchedulerJobService implements BackgroundTaskSchedulerDelega
     @Override
     public boolean schedule(Context context, TaskInfo taskInfo) {
         ThreadUtils.assertOnUiThread();
-        if (!BackgroundTaskScheduler.hasParameterlessPublicConstructor(
+        if (!BackgroundTaskReflection.hasParameterlessPublicConstructor(
                     taskInfo.getBackgroundTaskClass())) {
             Log.e(TAG, "BackgroundTask " + taskInfo.getBackgroundTaskClass()
                             + " has no parameterless public constructor.");

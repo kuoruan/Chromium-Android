@@ -83,8 +83,9 @@ public class WebApkVerifySignature {
     /** Maximum file comment length permitted. */
     private static final int MAX_FILE_COMMENT_LENGTH = 0;
 
-    /** Maximum extra field length permitted. */
-    private static final int MAX_EXTRA_LENGTH = 8;
+    /** Maximum extra field length permitted.
+     * Support .so alignment and a 64 bytes bytes for any extras. */
+    private static final int MAX_EXTRA_LENGTH = 4096 + 64;
 
     /** The memory buffer we are going to read the zip from. */
     private final ByteBuffer mBuffer;

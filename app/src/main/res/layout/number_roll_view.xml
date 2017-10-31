@@ -8,6 +8,8 @@
     android:id="@+id/selection_mode_number"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
     android:visibility="gone" >
 
     <TextView
@@ -16,8 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:singleLine="true"
-        android:textColor="@android:color/white"
-        android:textSize="20sp" />
+        android:textAppearance="@style/WhiteHeadline2" />
 
     <TextView
         android:id="@+id/down"
@@ -25,6 +26,5 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:singleLine="true"
-        android:textColor="@android:color/white"
-        android:textSize="20sp" />
+        android:textAppearance="@style/WhiteHeadline2" />
 </org.chromium.chrome.browser.widget.NumberRollView>

@@ -16,7 +16,7 @@ public class JourneyLogger {
      */
     private long mJourneyLoggerAndroid;
 
-    private boolean mWasShowCalled;
+    private boolean mWasPaymentRequestTriggered;
     private boolean mHasRecorded;
 
     public JourneyLogger(boolean isIncognito, String url) {
@@ -88,21 +88,16 @@ public class JourneyLogger {
     }
 
     /**
-     * Records the fact that the Payment Request was shown to the user.
-     */
-    public void setShowCalled() {
-        mWasShowCalled = true;
-        nativeSetShowCalled(mJourneyLoggerAndroid);
-    }
-
-    /**
      * Records that an event occurred.
      *
-     * @param event The event that occured.
+     * @param event The event that occurred.
      */
     public void setEventOccurred(int event) {
         assert event >= 0;
         assert event < Event.ENUM_MAX;
+
+        if (event == Event.SHOWN || event == Event.SKIPPED_SHOW) mWasPaymentRequestTriggered = true;
+
         nativeSetEventOccurred(mJourneyLoggerAndroid, event);
     }
 
@@ -120,15 +115,18 @@ public class JourneyLogger {
                 mJourneyLoggerAndroid, requestShipping, requestEmail, requestPhone, requestName);
     }
 
-    /**
-     * Records the payment method that was selected by the user.
+    /*
+     * Records what types of payment methods were requested by the merchant in the Payment Request.
      *
-     * @param paymentMethod The payment method that was selected.
+     * @param requestedBasicCard    Whether the merchant requested basic-card.
+     * @param requestedMethodGoogle Whether the merchant requested a Google payment method.
+     * @param requestedMethodOther  Whether the merchant requested a non basic-card, non-Google
+     *                              payment method.
      */
-    public void setSelectedPaymentMethod(int paymentMethod) {
-        assert paymentMethod >= 0;
-        assert paymentMethod < SelectedPaymentMethod.MAX;
-        nativeSetSelectedPaymentMethod(mJourneyLoggerAndroid, paymentMethod);
+    public void setRequestedPaymentMethodTypes(boolean requestedBasicCard,
+            boolean requestedMethodGoogle, boolean requestedMethodOther) {
+        nativeSetRequestedPaymentMethodTypes(mJourneyLoggerAndroid, requestedBasicCard,
+                requestedMethodGoogle, requestedMethodOther);
     }
 
     /**
@@ -137,9 +135,9 @@ public class JourneyLogger {
      */
     public void setCompleted() {
         assert !mHasRecorded;
-        assert mWasShowCalled;
+        assert mWasPaymentRequestTriggered;
 
-        if (!mHasRecorded && mWasShowCalled) {
+        if (!mHasRecorded && mWasPaymentRequestTriggered) {
             mHasRecorded = true;
             nativeSetCompleted(mJourneyLoggerAndroid);
         }
@@ -156,7 +154,7 @@ public class JourneyLogger {
 
         // The abort reasons on Android cascade into each other, so only the first one should be
         // recorded.
-        if (!mHasRecorded && mWasShowCalled) {
+        if (!mHasRecorded && mWasPaymentRequestTriggered) {
             mHasRecorded = true;
             nativeSetAborted(mJourneyLoggerAndroid, reason);
         }
@@ -169,7 +167,7 @@ public class JourneyLogger {
      */
     public void setNotShown(int reason) {
         assert reason < NotShownReason.MAX;
-        assert !mWasShowCalled;
+        assert !mWasPaymentRequestTriggered;
         assert !mHasRecorded;
 
         if (!mHasRecorded) {
@@ -188,13 +186,13 @@ public class JourneyLogger {
     private native void nativeIncrementSelectionAdds(long nativeJourneyLoggerAndroid, int section);
     private native void nativeSetCanMakePaymentValue(
             long nativeJourneyLoggerAndroid, boolean value);
-    private native void nativeSetShowCalled(long nativeJourneyLoggerAndroid);
     private native void nativeSetEventOccurred(long nativeJourneyLoggerAndroid, int event);
-    private native void nativeSetSelectedPaymentMethod(
-            long nativeJourneyLoggerAndroid, int paymentMethod);
     private native void nativeSetRequestedInformation(long nativeJourneyLoggerAndroid,
             boolean requestShipping, boolean requestEmail, boolean requestPhone,
             boolean requestName);
+    private native void nativeSetRequestedPaymentMethodTypes(long nativeJourneyLoggerAndroid,
+            boolean requestedBasicCard, boolean requestedMethodGoogle,
+            boolean requestedMethodOther);
     private native void nativeSetCompleted(long nativeJourneyLoggerAndroid);
     private native void nativeSetAborted(long nativeJourneyLoggerAndroid, int reason);
     private native void nativeSetNotShown(long nativeJourneyLoggerAndroid, int reason);

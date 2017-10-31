@@ -36,27 +36,27 @@ public final class RunOrClosePipeInput extends org.chromium.mojo.bindings.Union 
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setPeerAssociatedEndpointClosedEvent(PeerAssociatedEndpointClosedEvent peerAssociatedEndpointClosedEvent) {
-        mTag_ = Tag.PeerAssociatedEndpointClosedEvent;
-        mPeerAssociatedEndpointClosedEvent = peerAssociatedEndpointClosedEvent;
+        this.mTag_ = Tag.PeerAssociatedEndpointClosedEvent;
+        this.mPeerAssociatedEndpointClosedEvent = peerAssociatedEndpointClosedEvent;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public PeerAssociatedEndpointClosedEvent getPeerAssociatedEndpointClosedEvent() {
-        assert mTag_ == Tag.PeerAssociatedEndpointClosedEvent;
-        return mPeerAssociatedEndpointClosedEvent;
+        assert this.mTag_ == Tag.PeerAssociatedEndpointClosedEvent;
+        return this.mPeerAssociatedEndpointClosedEvent;
     }
 
 
     @Override
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder0, int offset) {
         encoder0.encode(org.chromium.mojo.bindings.BindingsHelper.UNION_SIZE, offset);
-        encoder0.encode(mTag_, offset + 4);
+        encoder0.encode(this.mTag_, offset + 4);
         switch (mTag_) {
             case Tag.PeerAssociatedEndpointClosedEvent: {
                 
-                encoder0.encode(mPeerAssociatedEndpointClosedEvent, offset + 8, false);
+                encoder0.encode(this.mPeerAssociatedEndpointClosedEvent, offset + 8, false);
                 break;
             }
             default: {
@@ -102,11 +102,11 @@ public final class RunOrClosePipeInput extends org.chromium.mojo.bindings.Union 
         if (getClass() != object.getClass())
             return false;
         RunOrClosePipeInput other = (RunOrClosePipeInput) object;
-        if (mTag_ != other.mTag_)
+        if (this.mTag_ != other.mTag_)
             return false;
-        switch (mTag_) {
+        switch (this.mTag_) {
             case Tag.PeerAssociatedEndpointClosedEvent:
-                return org.chromium.mojo.bindings.BindingsHelper.equals(mPeerAssociatedEndpointClosedEvent, other.mPeerAssociatedEndpointClosedEvent);
+                return org.chromium.mojo.bindings.BindingsHelper.equals(this.mPeerAssociatedEndpointClosedEvent, other.mPeerAssociatedEndpointClosedEvent);
             default:
                 break;
         }
@@ -121,9 +121,9 @@ public final class RunOrClosePipeInput extends org.chromium.mojo.bindings.Union 
         final int prime = 31;
         int result = prime + getClass().hashCode();
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mTag_);
-        switch (mTag_) {
+        switch (this.mTag_) {
             case Tag.PeerAssociatedEndpointClosedEvent: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mPeerAssociatedEndpointClosedEvent);
+                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mPeerAssociatedEndpointClosedEvent);
                 break;
             }
             default: {

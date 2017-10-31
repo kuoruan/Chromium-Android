@@ -31,6 +31,9 @@ import java.util.List;
 public class FaceDetectionImplGmsCore implements FaceDetection {
     private static final String TAG = "FaceDetectionImpl";
     private static final int MAX_FACES = 32;
+    // Maximum rotation around the z-axis allowed when computing a tighter bounding box for the
+    // detected face.
+    private static final int MAX_EULER_Z = 15;
     private final int mMaxFaces;
     private final boolean mFastMode;
     private final FaceDetector mFaceDetector;
@@ -122,16 +125,19 @@ public class FaceDetectionImplGmsCore implements FaceDetection {
 
             final PointF corner = face.getPosition();
             faceArray[i].boundingBox = new RectF();
-            if (leftEyeIndex != -1 && rightEyeIndex != -1) {
+            if (leftEyeIndex != -1 && rightEyeIndex != -1
+                    && Math.abs(face.getEulerZ()) < MAX_EULER_Z) {
+                // Tighter calculation of the bounding box because the GMScore
+                // and Android Face APIs give different results.
                 final PointF leftEyePoint = landmarks.get(leftEyeIndex).getPosition();
-                final float eyesDistance =
-                        leftEyePoint.x - landmarks.get(rightEyeIndex).getPosition().x;
+                final PointF rightEyePoint = landmarks.get(rightEyeIndex).getPosition();
+                final float eyesDistance = leftEyePoint.x - rightEyePoint.x;
                 final float eyeMouthDistance = bottomMouthIndex != -1
                         ? landmarks.get(bottomMouthIndex).getPosition().y - leftEyePoint.y
                         : -1;
                 final PointF midEyePoint =
                         new PointF(corner.x + face.getWidth() / 2, leftEyePoint.y);
-                faceArray[i].boundingBox.x = midEyePoint.x - eyesDistance;
+                faceArray[i].boundingBox.x = 2 * rightEyePoint.x - midEyePoint.x;
                 faceArray[i].boundingBox.y = midEyePoint.y - eyesDistance;
                 faceArray[i].boundingBox.width = 2 * eyesDistance;
                 faceArray[i].boundingBox.height = eyeMouthDistance > eyesDistance

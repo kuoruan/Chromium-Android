@@ -15,7 +15,6 @@ import android.widget.Button;
  * Simple class that draws a white border around a button, purely for a UI change.
  */
 public class ColorPickerMoreButton extends Button {
-
     // A cache for the paint used to draw the border, so it doesn't have to be created in
     // every onDraw() call.
     private Paint mBorderPaint;

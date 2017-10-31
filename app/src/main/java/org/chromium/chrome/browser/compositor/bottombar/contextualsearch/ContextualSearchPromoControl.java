@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser.compositor.bottombar.contextualsearch;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.os.Handler;
 import android.text.method.LinkMovementMethod;
@@ -13,10 +15,11 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.compositor.animation.CompositorAnimator;
+import org.chromium.chrome.browser.compositor.animation.CompositorAnimator.AnimatorUpdateListener;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanelAnimation;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanelInflater;
-import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
 import org.chromium.chrome.browser.preferences.privacy.ContextualSearchPreferenceFragment;
@@ -29,16 +32,7 @@ import org.chromium.ui.text.SpanApplier;
 /**
  * Controls the Search Promo.
  */
-public class ContextualSearchPromoControl extends OverlayPanelInflater
-        implements ChromeAnimation.Animatable<ContextualSearchPromoControl.AnimationType> {
-
-    /**
-     * Animation types.
-     */
-    protected enum AnimationType {
-        COLLAPSE
-    }
-
+public class ContextualSearchPromoControl extends OverlayPanelInflater {
     /**
      * The pixel density.
      */
@@ -287,28 +281,31 @@ public class ContextualSearchPromoControl extends OverlayPanelInflater
     // Promo Acceptance Animation
     // ============================================================================================
 
-    @Override
-    public void setProperty(AnimationType type, float value) {
-        if (type == AnimationType.COLLAPSE) {
-            updateAppearance(value);
-        }
-    }
-
-    @Override
-    public void onPropertyAnimationFinished(AnimationType type) {
-        if (type == AnimationType.COLLAPSE) {
-            hide();
-        }
-    }
-
     /**
      * Collapses the Promo in an animated fashion.
      */
     public void collapse() {
         hidePromoView();
 
-        mOverlayPanel.addToAnimation(this, AnimationType.COLLAPSE, 1.f, 0.f,
-                OverlayPanelAnimation.BASE_ANIMATION_DURATION_MS, 0);
+        CompositorAnimator collapse =
+                CompositorAnimator.ofFloat(mOverlayPanel.getAnimationHandler(), 1.f, 0.f,
+                        OverlayPanelAnimation.BASE_ANIMATION_DURATION_MS, null);
+
+        collapse.addUpdateListener(new AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(CompositorAnimator animator) {
+                updateAppearance(animator.getAnimatedValue());
+            }
+        });
+
+        collapse.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                hide();
+            }
+        });
+
+        collapse.start();
     }
 
     /**

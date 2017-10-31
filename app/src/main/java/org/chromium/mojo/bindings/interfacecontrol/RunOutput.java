@@ -36,27 +36,27 @@ public final class RunOutput extends org.chromium.mojo.bindings.Union {
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setQueryVersionResult(QueryVersionResult queryVersionResult) {
-        mTag_ = Tag.QueryVersionResult;
-        mQueryVersionResult = queryVersionResult;
+        this.mTag_ = Tag.QueryVersionResult;
+        this.mQueryVersionResult = queryVersionResult;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public QueryVersionResult getQueryVersionResult() {
-        assert mTag_ == Tag.QueryVersionResult;
-        return mQueryVersionResult;
+        assert this.mTag_ == Tag.QueryVersionResult;
+        return this.mQueryVersionResult;
     }
 
 
     @Override
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder0, int offset) {
         encoder0.encode(org.chromium.mojo.bindings.BindingsHelper.UNION_SIZE, offset);
-        encoder0.encode(mTag_, offset + 4);
+        encoder0.encode(this.mTag_, offset + 4);
         switch (mTag_) {
             case Tag.QueryVersionResult: {
                 
-                encoder0.encode(mQueryVersionResult, offset + 8, false);
+                encoder0.encode(this.mQueryVersionResult, offset + 8, false);
                 break;
             }
             default: {
@@ -102,11 +102,11 @@ public final class RunOutput extends org.chromium.mojo.bindings.Union {
         if (getClass() != object.getClass())
             return false;
         RunOutput other = (RunOutput) object;
-        if (mTag_ != other.mTag_)
+        if (this.mTag_ != other.mTag_)
             return false;
-        switch (mTag_) {
+        switch (this.mTag_) {
             case Tag.QueryVersionResult:
-                return org.chromium.mojo.bindings.BindingsHelper.equals(mQueryVersionResult, other.mQueryVersionResult);
+                return org.chromium.mojo.bindings.BindingsHelper.equals(this.mQueryVersionResult, other.mQueryVersionResult);
             default:
                 break;
         }
@@ -121,9 +121,9 @@ public final class RunOutput extends org.chromium.mojo.bindings.Union {
         final int prime = 31;
         int result = prime + getClass().hashCode();
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mTag_);
-        switch (mTag_) {
+        switch (this.mTag_) {
             case Tag.QueryVersionResult: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mQueryVersionResult);
+                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mQueryVersionResult);
                 break;
             }
             default: {

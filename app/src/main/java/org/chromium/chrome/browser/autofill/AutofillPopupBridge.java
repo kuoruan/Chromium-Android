@@ -43,12 +43,7 @@ public class AutofillPopupBridge implements AutofillDelegate, DialogInterface.On
             mContext = null;
             // Clean up the native counterpart.  This is posted to allow the native counterpart
             // to fully finish the construction of this glue object before we attempt to delete it.
-            new Handler().post(new Runnable() {
-                @Override
-                public void run() {
-                    dismissed();
-                }
-            });
+            new Handler().post(() -> dismissed());
         } else {
             mAutofillPopup = new AutofillPopup(activity, anchorView, this);
             mContext = activity;

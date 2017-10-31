@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Base64;
 
@@ -42,9 +43,13 @@ public class WebappLauncherActivity extends Activity {
 
     private static final String TAG = "webapps";
 
+    /** Timestamp of Activity creation for tracking how long it takes to complete. */
+    private long mCreateTime;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mCreateTime = SystemClock.elapsedRealtime();
         launchActivity();
         ApiCompatibilityUtils.finishAndRemoveTask(this);
     }
@@ -88,8 +93,16 @@ public class WebappLauncherActivity extends Activity {
             if (validWebApk && (webappSource == ShortcutSource.UNKNOWN)) {
                 source = getWebApkSource(webappInfo);
             }
-            LaunchMetrics.recordHomeScreenLaunchIntoStandaloneActivity(webappUrl, source);
+            LaunchMetrics.recordHomeScreenLaunchIntoStandaloneActivity(
+                    webappUrl, source, webappInfo.displayMode());
+
+            // Add all information needed to launch WebappActivity without {@link
+            // WebappActivity#sWebappInfoMap} to launch intent. When the Android OS has killed a
+            // WebappActivity and the user selects the WebappActivity from "Android Recents" the
+            // WebappActivity is launched without going through WebappLauncherActivity first.
+            WebappActivity.addWebappInfo(webappInfo.id(), webappInfo);
             Intent launchIntent = createWebappLaunchIntent(webappInfo, webappSource, validWebApk);
+            IntentHandler.addTimestampToIntent(launchIntent, mCreateTime);
             startActivity(launchIntent);
             return;
         }

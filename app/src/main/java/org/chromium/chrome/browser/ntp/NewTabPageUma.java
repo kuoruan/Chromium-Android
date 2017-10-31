@@ -83,6 +83,10 @@ public final class NewTabPageUma {
     /** The number of possible NTP impression types */
     private static final int NUM_NTP_IMPRESSION = 2;
 
+    /** The maximal number of suggestions per section. Keep in sync with kMaxSuggestionsPerCategory
+     * in content_suggestions_metrics.cc. */
+    private static final int MAX_SUGGESTIONS_PER_SECTION = 20;
+
     /**
      * Possible results when sizing the NewTabPageLayout.
      * Do not remove or change existing values other than NUM_NTP_LAYOUT_RESULTS.
@@ -303,6 +307,27 @@ public final class NewTabPageUma {
                     "NewTabPage.SearchAvailableLoadTime2.ColdStart", timeFromIntent,
                     TimeUnit.MILLISECONDS);
         }
+    }
+
+    /**
+     * Records number of prefetched article suggestions, which were available when content
+     * suggestions surface was opened and there was no network connection.
+     */
+    public static void recordPrefetchedArticleSuggestionsCount(int count) {
+        RecordHistogram.recordEnumeratedHistogram(
+                "NewTabPage.ContentSuggestions.CountOnNtpOpenedIfVisible."
+                        + "Articles.Prefetched.Offline2",
+                count, MAX_SUGGESTIONS_PER_SECTION);
+    }
+
+    /**
+     * Records position of a prefetched article suggestion, which was seen by the user on the
+     * suggestions surface when there was no network connection.
+     */
+    public static void recordPrefetchedArticleSuggestionImpressionPosition(int positionInSection) {
+        RecordHistogram.recordEnumeratedHistogram("NewTabPage.ContentSuggestions.Shown.Articles."
+                        + "Prefetched.Offline2",
+                positionInSection, MAX_SUGGESTIONS_PER_SECTION);
     }
 
     /**

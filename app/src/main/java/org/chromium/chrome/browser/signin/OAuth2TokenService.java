@@ -6,12 +6,12 @@ package org.chromium.chrome.browser.signin;
 
 import android.accounts.Account;
 import android.content.Context;
-import android.os.StrictMode;
 import android.support.annotation.MainThread;
 import android.util.Log;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.base.ObserverList;
+import org.chromium.base.StrictModeContext;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
@@ -21,6 +21,7 @@ import org.chromium.components.signin.ChromeSigninController;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -108,9 +109,12 @@ public final class OAuth2TokenService
     @VisibleForTesting
     @CalledByNative
     public static String[] getSystemAccountNames() {
-        AccountManagerFacade accountManagerFacade = AccountManagerFacade.get();
-        java.util.List<String> accountNames = accountManagerFacade.tryGetGoogleAccountNames();
-        return accountNames.toArray(new String[accountNames.size()]);
+        // TODO(https://crbug.com/768366): Remove this after adding cache to account manager facade.
+        // This function is called by native code on UI thread.
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
+            List<String> accountNames = AccountManagerFacade.get().tryGetGoogleAccountNames();
+            return accountNames.toArray(new String[accountNames.size()]);
+        }
     }
 
     /**
@@ -228,11 +232,8 @@ public final class OAuth2TokenService
         // Temporarily allowing disk read while fixing. TODO: http://crbug.com/618096.
         // This function is called in RefreshTokenIsAvailable of OAuth2TokenService which is
         // expected to be called in the UI thread synchronously.
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-        try {
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
             return AccountManagerFacade.get().hasAccountForName(accountName);
-        } finally {
-            StrictMode.setThreadPolicy(oldPolicy);
         }
     }
 

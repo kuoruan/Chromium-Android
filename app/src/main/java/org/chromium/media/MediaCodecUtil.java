@@ -12,6 +12,7 @@ import android.media.MediaCodecInfo.CodecCapabilities;
 import android.media.MediaCodecInfo.CodecProfileLevel;
 import android.media.MediaCodecInfo.VideoCapabilities;
 import android.media.MediaCodecList;
+import android.media.MediaCrypto;
 import android.media.MediaFormat;
 import android.os.Build;
 
@@ -249,6 +250,11 @@ class MediaCodecUtil {
         MediaCodecListHelper codecListHelper = new MediaCodecListHelper();
         for (MediaCodecInfo info : codecListHelper) {
             for (String mime : info.getSupportedTypes()) {
+                if (!isDecoderSupportedForDevice(mime)) {
+                    Log.w(TAG, "Decoder for type %s disabled on this device", mime);
+                    continue;
+                }
+
                 // On versions L and M, VP9 codecCapabilities do not advertise profile level
                 // support. In this case, estimate the level from MediaCodecInfo.VideoCapabilities
                 // instead. Assume VP9 is not supported before L. For more information, consult
@@ -274,8 +280,20 @@ class MediaCodecUtil {
      * @return CodecCreationInfo object
      */
     static CodecCreationInfo createDecoder(String mime, int codecType) {
+        return createDecoder(mime,codecType,null);
+    }
+
+    /**
+     * Creates MediaCodec decoder.
+     * @param mime MIME type of the media.
+     * @param codecType Type of codec to create.
+     * @param mediaCrypto Crypto of the media.
+     * @return CodecCreationInfo object
+     */
+    static CodecCreationInfo createDecoder(String mime, int codecType, MediaCrypto mediaCrypto) {
         // Always return a valid CodecCreationInfo, its |mediaCodec| field will be null
         // if we cannot create the codec.
+
         CodecCreationInfo result = new CodecCreationInfo();
 
         assert result.mediaCodec == null;
@@ -295,7 +313,10 @@ class MediaCodecUtil {
 
         try {
             // "SECURE" only applies to video decoders.
-            if (mime.startsWith("video") && codecType == CodecType.SECURE) {
+            // Use MediaCrypto.requiresSecureDecoderComponent() for audio: crbug.com/727918
+            if ((mime.startsWith("video") && codecType == CodecType.SECURE)
+                    || (mime.startsWith("audio") && mediaCrypto != null
+                               && mediaCrypto.requiresSecureDecoderComponent(mime))) {
                 // Creating secure codecs is not supported directly on older
                 // versions of Android. Therefore, always get the non-secure
                 // codec name and append ".secure" to get the secure codec name.
@@ -314,7 +335,9 @@ class MediaCodecUtil {
                             codecSupportsAdaptivePlayback(insecureCodec, mime);
                     insecureCodec.release();
                 }
+
                 result.mediaCodec = MediaCodec.createByCodecName(decoderName + ".secure");
+
             } else {
                 if (codecType == CodecType.SOFTWARE) {
                     String decoderName =
@@ -408,6 +431,11 @@ class MediaCodecUtil {
             // http://crbug.com/597836.
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP
                     && Build.HARDWARE.startsWith("mt")) {
+                return false;
+            }
+
+            // Nexus Player VP9 decoder performs poorly at >= 1080p resolution.
+            if (Build.MODEL.equals("Nexus Player")) {
                 return false;
             }
         } else if (mime.equals("audio/opus")

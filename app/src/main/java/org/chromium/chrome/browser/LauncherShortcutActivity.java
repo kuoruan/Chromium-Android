@@ -74,10 +74,13 @@ public class LauncherShortcutActivity extends Activity {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) return;
 
         SharedPreferences preferences = ContextUtils.getAppSharedPreferences();
-        if (!preferences.getBoolean(INCOGNITO_SHORTCUT_ADDED_PREF, false)
-                && PrefServiceBridge.getInstance().isIncognitoModeEnabled()) {
+        if (PrefServiceBridge.getInstance().isIncognitoModeEnabled()) {
             boolean success = LauncherShortcutActivity.addIncognitoLauncherShortcut(context);
-            preferences.edit().putBoolean(INCOGNITO_SHORTCUT_ADDED_PREF, success).apply();
+
+            // Save a shared preference indicating the incognito shortcut has been added.
+            if (success) {
+                preferences.edit().putBoolean(INCOGNITO_SHORTCUT_ADDED_PREF, true).apply();
+            }
         } else if (preferences.getBoolean(INCOGNITO_SHORTCUT_ADDED_PREF, false)
                 && !PrefServiceBridge.getInstance().isIncognitoModeEnabled()) {
             LauncherShortcutActivity.removeIncognitoLauncherShortcut(context);

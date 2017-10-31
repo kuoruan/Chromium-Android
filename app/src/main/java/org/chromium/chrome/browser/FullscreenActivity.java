@@ -4,16 +4,17 @@
 
 package org.chromium.chrome.browser;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.provider.Browser;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.chromium.base.ActivityState;
+import org.chromium.base.ApplicationStatus;
 import org.chromium.base.Log;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.compositor.layouts.LayoutManagerDocument;
+import org.chromium.chrome.browser.compositor.layouts.LayoutManager;
 import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.AsyncTabParamsManager;
@@ -48,7 +49,7 @@ public class FullscreenActivity extends SingleTabActivity {
             tab.attachAndFinishReparenting(this, createTabDelegateFactory(), params);
         } else {
             // TODO(peconn): Figure out how this arises - https://crbug.com/729094:37
-            tab = new Tab(Tab.INVALID_TAB_ID, Tab.INVALID_TAB_ID, false, this, getWindowAndroid(),
+            tab = new Tab(Tab.INVALID_TAB_ID, Tab.INVALID_TAB_ID, false, getWindowAndroid(),
                     TabLaunchType.FROM_CHROME_UI, null, null);
             tab.initialize(null, getTabContentManager(), createTabDelegateFactory(), false, false);
         }
@@ -71,7 +72,7 @@ public class FullscreenActivity extends SingleTabActivity {
     @Override
     public void finishNativeInitialization() {
         ControlContainer controlContainer = (ControlContainer) findViewById(R.id.control_container);
-        initializeCompositorContent(new LayoutManagerDocument(getCompositorViewHolder()),
+        initializeCompositorContent(new LayoutManager(getCompositorViewHolder()),
                 (View) controlContainer, (ViewGroup) findViewById(android.R.id.content),
                 controlContainer);
 
@@ -85,7 +86,7 @@ public class FullscreenActivity extends SingleTabActivity {
     @Override
     protected int getControlContainerLayoutId() {
         // TODO(peconn): Determine if there's something more suitable to use here.
-        return R.layout.webapp_control_container;
+        return R.layout.fullscreen_control_container;
     }
 
     @Override
@@ -110,17 +111,19 @@ public class FullscreenActivity extends SingleTabActivity {
             tab.getFullscreenManager().setTab(null);
         }
 
-        Runnable setFullscreen = new Runnable() {
-            @Override
-            public void run() {
-                // The Tab's FullscreenManager changes when it is moved.
-                tab.getFullscreenManager().setTab(tab);
-                tab.toggleFullscreenMode(enableFullscreen);
-            }
+        ChromeActivity activity = tab.getActivity();
+
+        if (!enableFullscreen) {
+            activity.exitFullscreenIfShowing();
+        }
+
+        Runnable setFullscreen = () -> {
+            // The Tab's FullscreenManager changes when it is moved.
+            tab.getFullscreenManager().setTab(tab);
+            tab.toggleFullscreenMode(enableFullscreen);
         };
 
         Intent intent = new Intent();
-        Activity activity = tab.getActivity();
 
         if (enableFullscreen) {
             // Send to the FullscreenActivity.
@@ -134,6 +137,11 @@ public class FullscreenActivity extends SingleTabActivity {
             // Send back to the Activity it came from.
             ComponentName parent = IntentUtils.safeGetParcelableExtra(
                     activity.getIntent(), IntentHandler.EXTRA_PARENT_COMPONENT);
+
+            // By default Intents from Chrome open in the current tab. We add this extra to prevent
+            // clobbering the top tab.
+            intent.putExtra(Browser.EXTRA_CREATE_NEW_TAB, true);
+
             if (parent != null) {
                 intent.setComponent(parent);
             } else {
@@ -156,5 +164,17 @@ public class FullscreenActivity extends SingleTabActivity {
         intent.putExtra(Browser.EXTRA_APPLICATION_ID, activity.getPackageName());
 
         tab.detachAndStartReparenting(intent, null, setFullscreen);
+    }
+
+    public static boolean shouldUseFullscreenActivity(Tab tab) {
+        if (!ChromeFeatureList.isEnabled(ChromeFeatureList.FULLSCREEN_ACTIVITY)) return false;
+
+        ChromeActivity activity = tab.getActivity();
+        if (!activity.supportsFullscreenActivity()) return false;
+
+        // FullscreenActivity transitions involve Intent-ing to a new Activity. If the current
+        // Activity is not in the foreground we don't want to do this (as it would re-launch
+        // Chrome).
+        return ApplicationStatus.getStateForActivity(activity) == ActivityState.RESUMED;
     }
 }

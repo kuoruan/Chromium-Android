@@ -109,13 +109,13 @@ public final class CdmPromiseResult extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(success, 8, 0);
+        encoder0.encode(this.success, 8, 0);
         
-        encoder0.encode(exception, 12);
+        encoder0.encode(this.exception, 12);
         
-        encoder0.encode(systemCode, 16);
+        encoder0.encode(this.systemCode, 16);
         
-        encoder0.encode(errorMessage, 24, false);
+        encoder0.encode(this.errorMessage, 24, false);
     }
 
     /**
@@ -148,10 +148,10 @@ public final class CdmPromiseResult extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(success);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(exception);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(systemCode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(errorMessage);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.success);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.exception);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.systemCode);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.errorMessage);
         return result;
     }
 }

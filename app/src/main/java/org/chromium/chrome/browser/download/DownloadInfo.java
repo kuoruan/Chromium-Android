@@ -225,6 +225,7 @@ public final class DownloadInfo {
                 .setIsTransient(item.isTransient)
                 .setLastAccessTime(item.lastAccessedTimeMs)
                 .setIsOpenable(item.isOpenable)
+                .setUrl(item.pageUrl)
                 .setOriginalUrl(item.originalUrl)
                 .setIsOffTheRecord(item.isOffTheRecord)
                 .setState(state)

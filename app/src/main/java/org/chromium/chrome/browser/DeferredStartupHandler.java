@@ -7,7 +7,6 @@ package org.chromium.chrome.browser;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Looper;
-import android.os.MessageQueue;
 import android.os.SystemClock;
 
 import org.chromium.base.ContextUtils;
@@ -65,26 +64,23 @@ public class DeferredStartupHandler {
     public void queueDeferredTasksOnIdleHandler() {
         mMaxTaskDuration = 0;
         mDeferredStartupDuration = 0;
-        Looper.myQueue().addIdleHandler(new MessageQueue.IdleHandler() {
-            @Override
-            public boolean queueIdle() {
-                Runnable currentTask = mDeferredTasks.poll();
-                if (currentTask == null) {
-                    if (!mDeferredStartupCompletedForApp) {
-                        mDeferredStartupCompletedForApp = true;
-                        recordDeferredStartupStats();
-                    }
-                    return false;
+        Looper.myQueue().addIdleHandler(() -> {
+            Runnable currentTask = mDeferredTasks.poll();
+            if (currentTask == null) {
+                if (!mDeferredStartupCompletedForApp) {
+                    mDeferredStartupCompletedForApp = true;
+                    recordDeferredStartupStats();
                 }
-
-                long startTime = SystemClock.uptimeMillis();
-                currentTask.run();
-                long timeTaken = SystemClock.uptimeMillis() - startTime;
-
-                mMaxTaskDuration = Math.max(mMaxTaskDuration, timeTaken);
-                mDeferredStartupDuration += timeTaken;
-                return true;
+                return false;
             }
+
+            long startTime = SystemClock.uptimeMillis();
+            currentTask.run();
+            long timeTaken = SystemClock.uptimeMillis() - startTime;
+
+            mMaxTaskDuration = Math.max(mMaxTaskDuration, timeTaken);
+            mDeferredStartupDuration += timeTaken;
+            return true;
         });
     }
 

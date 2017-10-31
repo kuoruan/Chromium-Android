@@ -26,6 +26,8 @@ import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
+import org.chromium.blink_public.web.WebReferrerPolicy;
+import org.chromium.chrome.browser.browserservices.BrowserSessionContentUtils;
 import org.chromium.chrome.browser.externalauth.ExternalAuthUtils;
 import org.chromium.chrome.browser.externalnav.ExternalNavigationDelegateImpl;
 import org.chromium.chrome.browser.externalnav.IntentWithGesturesHandler;
@@ -133,6 +135,13 @@ public class IntentHandler {
      * A referrer id used for Chrome to Chrome referrer passing.
      */
     public static final String EXTRA_REFERRER_ID = "org.chromium.chrome.browser.referrer_id";
+
+    /**
+     * An extra for identifying the referrer policy to be used.
+     * TODO(yusufo): Move this to support library.
+     */
+    public static final String EXTRA_REFERRER_POLICY =
+            "android.support.browser.extra.referrer_policy";
 
     /**
      * Key to associate a timestamp with an intent.
@@ -436,7 +445,9 @@ public class IntentHandler {
             return referrerUrl;
         } else if (isValidReferrerHeader(referrerExtra)) {
             return referrerExtra.toString();
-        } else if (IntentHandler.isIntentChromeOrFirstParty(intent)) {
+        } else if (IntentHandler.isIntentChromeOrFirstParty(intent)
+                || BrowserSessionContentUtils.canActiveContentHandlerUseReferrer(
+                           intent, referrerExtra)) {
             return referrerExtra.toString();
         }
         return null;
@@ -475,10 +486,19 @@ public class IntentHandler {
     public static void addReferrerAndHeaders(LoadUrlParams params, Intent intent) {
         String referrer = getReferrerUrlIncludingExtraHeaders(intent);
         if (referrer != null) {
-            params.setReferrer(new Referrer(referrer, Referrer.REFERRER_POLICY_DEFAULT));
+            params.setReferrer(new Referrer(referrer, getReferrerPolicyFromIntent(intent)));
         }
         String headers = getExtraHeadersFromIntent(intent);
         if (headers != null) params.setVerbatimHeaders(headers);
+    }
+
+    public static @WebReferrerPolicy int getReferrerPolicyFromIntent(Intent intent) {
+        int policy = IntentUtils.safeGetIntExtra(
+                intent, EXTRA_REFERRER_POLICY, WebReferrerPolicy.WEB_REFERRER_POLICY_DEFAULT);
+        if (policy < 0 || policy >= WebReferrerPolicy.WEB_REFERRER_POLICY_LAST) {
+            policy = WebReferrerPolicy.WEB_REFERRER_POLICY_DEFAULT;
+        }
+        return policy;
     }
 
     /**
@@ -499,8 +519,12 @@ public class IntentHandler {
      */
     public static Referrer constructValidReferrerForAuthority(String authority) {
         if (TextUtils.isEmpty(authority)) return null;
-        return new Referrer(new Uri.Builder().scheme(ANDROID_APP_REFERRER_SCHEME)
-                .authority(authority).build().toString(), Referrer.REFERRER_POLICY_DEFAULT);
+        return new Referrer(new Uri.Builder()
+                                    .scheme(ANDROID_APP_REFERRER_SCHEME)
+                                    .authority(authority)
+                                    .build()
+                                    .toString(),
+                WebReferrerPolicy.WEB_REFERRER_POLICY_DEFAULT);
     }
 
     /**
@@ -659,7 +683,17 @@ public class IntentHandler {
      * the entry point (in {@link Activity#onCreate()} for instance).
      */
     public static void addTimestampToIntent(Intent intent) {
-        intent.putExtra(EXTRA_TIMESTAMP_MS, SystemClock.elapsedRealtime());
+        addTimestampToIntent(intent, SystemClock.elapsedRealtime());
+    }
+
+    /**
+     * Adds provided timestamp to an intent.
+     *
+     * To track page load time, the value passed in should be as close as possible to
+     * the entry point (in {@link Activity#onCreate()} for instance).
+     */
+    public static void addTimestampToIntent(Intent intent, long timeStamp) {
+        intent.putExtra(EXTRA_TIMESTAMP_MS, timeStamp);
     }
 
     /**

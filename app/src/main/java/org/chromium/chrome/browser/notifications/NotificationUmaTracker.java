@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.notifications;
 
 import android.annotation.TargetApi;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.SharedPreferences;
 import android.support.annotation.IntDef;
@@ -12,15 +13,12 @@ import android.support.v4.app.NotificationManagerCompat;
 
 import org.chromium.base.BuildInfo;
 import org.chromium.base.ContextUtils;
-import org.chromium.base.Log;
 import org.chromium.base.library_loader.LibraryLoader;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 /**
  * Helper class to make tracking notification UMA stats easier for various features.  Having a
@@ -30,13 +28,13 @@ public class NotificationUmaTracker {
     private static final String TAG = "NotifsUMATracker";
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({DOWNLOAD_FILES, DOWNLOAD_PAGES, CLOSE_INCOGNITO, CONTENT_SUGGESTION, MEDIA_CAPTURE,
-            PHYSICAL_WEB, MEDIA, SITES, SYNC, WEBAPK, BROWSER_ACTIONS,
-            SYSTEM_NOTIFICATION_TYPE_BOUNDARY})
+            PHYSICAL_WEB, MEDIA, SITES, SYNC, WEBAPK, BROWSER_ACTIONS, WEBAPP_ACTIONS,
+            SYSTEM_NOTIFICATION_TYPE_BOUNDARY, OFFLINE_CONTENT_SUGGESTION})
     public @interface SystemNotificationType {}
 
     /*
      * A list of notification types.  To add a type to this list please update
-     * SystemNotificationType in histograms.xml and make sure to keep this list in sync.  Additions
+     * SystemNotificationType in enums.xml and make sure to keep this list in sync.  Additions
      * should be treated as APPEND ONLY to keep the UMA metric semantics the same over time.
      *
      * A SystemNotificationType value can also be saved in shared preferences.
@@ -55,8 +53,10 @@ public class NotificationUmaTracker {
     public static final int SYNC = 8;
     public static final int WEBAPK = 9;
     public static final int BROWSER_ACTIONS = 10;
+    public static final int WEBAPP_ACTIONS = 11;
+    public static final int OFFLINE_CONTENT_SUGGESTION = 12;
 
-    private static final int SYSTEM_NOTIFICATION_TYPE_BOUNDARY = 11;
+    private static final int SYSTEM_NOTIFICATION_TYPE_BOUNDARY = 13;
 
     private static final String LAST_SHOWN_NOTIFICATION_TYPE_KEY =
             "NotificationUmaTracker.LastShownNotificationType";
@@ -106,25 +106,8 @@ public class NotificationUmaTracker {
         // Use non-compat notification manager as compat does not have getNotificationChannel (yet).
         NotificationManager notificationManager =
                 ContextUtils.getApplicationContext().getSystemService(NotificationManager.class);
-        /*
-        The code in the try-block uses reflection in order to compile as it calls APIs newer than
-        our compileSdkVersion of Android. The equivalent code without reflection looks like this:
-
-            NotificationChannel channel = notificationManager.getNotificationChannel(channelId);
-            return (channel.getImportance() == NotificationManager.IMPORTANCE_NONE);
-         */
-        // TODO(crbug.com/707804) Remove the following reflection once compileSdk is bumped to O.
-        try {
-            Method getNotificationChannel = notificationManager.getClass().getMethod(
-                    "getNotificationChannel", String.class);
-            Object channel = getNotificationChannel.invoke(notificationManager, channelId);
-            Method getImportance = channel.getClass().getMethod("getImportance");
-            int importance = (int) getImportance.invoke(channel);
-            return (importance == NotificationManager.IMPORTANCE_NONE);
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            Log.e(TAG, "Error checking channel importance:", e);
-        }
-        return false;
+        NotificationChannel channel = notificationManager.getNotificationChannel(channelId);
+        return channel != null && channel.getImportance() == NotificationManager.IMPORTANCE_NONE;
     }
 
     private void saveLastShownNotification(@SystemNotificationType int type) {

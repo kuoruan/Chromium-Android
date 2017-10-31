@@ -92,17 +92,17 @@ public final class WebPage extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(url, 8, false);
+        encoder0.encode(this.url, 8, false);
         
-        encoder0.encode(title, 16, false);
+        encoder0.encode(this.title, 16, false);
         
-        if (entities == null) {
+        if (this.entities == null) {
             encoder0.encodeNullPointer(24, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(entities.length, 24, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < entities.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.entities.length, 24, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.entities.length; ++i0) {
                 
-                encoder1.encode(entities[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                encoder1.encode(this.entities[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
     }
@@ -135,9 +135,9 @@ public final class WebPage extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(url);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(title);
-        result = prime * result + java.util.Arrays.deepHashCode(entities);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.url);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.title);
+        result = prime * result + java.util.Arrays.deepHashCode(this.entities);
         return result;
     }
 }

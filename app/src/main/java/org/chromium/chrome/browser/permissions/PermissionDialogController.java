@@ -10,11 +10,7 @@ import android.content.DialogInterface;
 import android.support.annotation.IntDef;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.SwitchCompat;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
 import android.text.TextUtils;
-import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
@@ -104,15 +100,21 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
 
     @Override
     public void onAndroidPermissionAccepted() {
-        mDialogDelegate.onAccept(mSwitchView.isChecked());
-        destroyDelegate();
+        // If the tab navigated or was closed behind the prompt, the delegate will be null.
+        if (mDialogDelegate != null) {
+            mDialogDelegate.onAccept(mSwitchView.isChecked());
+            destroyDelegate();
+        }
         scheduleDisplay();
     }
 
     @Override
     public void onAndroidPermissionCanceled() {
-        mDialogDelegate.onDismiss();
-        destroyDelegate();
+        // If the tab navigated or was closed behind the prompt, the delegate will be null.
+        if (mDialogDelegate != null) {
+            mDialogDelegate.onDismiss();
+            destroyDelegate();
+        }
         scheduleDisplay();
     }
 
@@ -149,7 +151,6 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
         messageTextView.announceForAccessibility(mDialogDelegate.getMessageText());
         messageTextView.setCompoundDrawablesWithIntrinsicBounds(
                 mDialogDelegate.getDrawableId(), 0, 0, 0);
-        messageTextView.setMovementMethod(LinkMovementMethod.getInstance());
 
         mSwitchView = (SwitchCompat) view.findViewById(R.id.permission_dialog_persist_toggle);
         mSwitchView.setChecked(true);
@@ -164,8 +165,7 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
             toggleTextView.announceForAccessibility(toggleMessage);
 
         } else {
-            mSwitchView.setVisibility(View.GONE);
-            toggleTextView.setVisibility(View.GONE);
+            view.findViewById(R.id.permission_dialog_persist_layout).setVisibility(View.GONE);
         }
 
         mDialog.setView(view);
@@ -229,30 +229,17 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
     }
 
     private CharSequence prepareMainMessageString(final PermissionDialogDelegate delegate) {
-        SpannableStringBuilder fullString = new SpannableStringBuilder();
-
         String messageText = delegate.getMessageText();
-        String linkText = delegate.getLinkText();
-        if (!TextUtils.isEmpty(messageText)) fullString.append(messageText);
+        assert !TextUtils.isEmpty(messageText);
 
-        // If the linkText exists, then wrap it in a clickable span and concatenate it with the main
-        // dialog message.
-        if (!TextUtils.isEmpty(linkText)) {
-            if (fullString.length() > 0) fullString.append(" ");
-            int spanStart = fullString.length();
-
-            fullString.append(linkText);
-            fullString.setSpan(new ClickableSpan() {
-                @Override
-                public void onClick(View view) {
-                    mDecision = NOT_DECIDED;
-                    delegate.onLinkClicked();
-                    if (mDialog != null) mDialog.dismiss();
-                }
-            }, spanStart, fullString.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        // TODO(timloh): Currently the strings are shared with infobars, so we for now manually
+        // remove the full stop (this code catches most but not all languages). Update the strings
+        // after removing the infobar path.
+        if (messageText.endsWith(".") || messageText.endsWith("。")) {
+            messageText = messageText.substring(0, messageText.length() - 1);
         }
 
-        return fullString;
+        return messageText;
     }
 
     public void dismissFromNative(PermissionDialogDelegate delegate) {
@@ -260,7 +247,13 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
             mDialogDelegate = null;
             AlertDialog dialog = mDialog;
             mDialog = null;
-            dialog.dismiss();
+            if (dialog != null) {
+                dialog.dismiss();
+            } else {
+                // The prompt was accepted but the tab navigated or was closed while the Android
+                // permission prompt was active.
+                assert mDecision == ACCEPTED;
+            }
         } else {
             assert mRequestQueue.contains(delegate);
             mRequestQueue.remove(delegate);

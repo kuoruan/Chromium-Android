@@ -13,6 +13,7 @@ import android.util.Pair;
 import org.chromium.base.StreamUtil;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.util.ColorUtils;
 import org.chromium.components.sync.SyncConstants;
 import org.chromium.content.browser.crypto.CipherFactory;
 import org.chromium.content_public.browser.WebContents;
@@ -112,12 +113,7 @@ public class TabState {
         @Override
         protected void finalize() {
             assert mHandler != null;
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    nativeFreeWebContentsStateBuffer(buffer());
-                }
-            });
+            mHandler.post(() -> nativeFreeWebContentsStateBuffer(buffer()));
         }
     }
 
@@ -273,7 +269,7 @@ public class TabState {
             tabState.mIsIncognito = encrypted;
             try {
                 tabState.themeColor = stream.readInt();
-                tabState.mHasThemeColor = true;
+                tabState.mHasThemeColor = ColorUtils.isValidThemeColor(tabState.themeColor);
             } catch (EOFException eof) {
                 // Could happen if reading a version of TabState without a theme color.
                 tabState.themeColor = Color.WHITE;
@@ -322,8 +318,8 @@ public class TabState {
             if (encrypted) {
                 Cipher cipher = CipherFactory.getInstance().getCipher(Cipher.ENCRYPT_MODE);
                 if (cipher != null) {
-                    dataOutputStream = new DataOutputStream(new CipherOutputStream(
-                            fileOutputStream, cipher));
+                    dataOutputStream = new DataOutputStream(new BufferedOutputStream(
+                            new CipherOutputStream(fileOutputStream, cipher)));
                 } else {
                     // If cipher is null, getRandomBytes failed, which means encryption is
                     // meaningless. Therefore, do not save anything. This will cause users

@@ -44,7 +44,7 @@ import org.chromium.chrome.browser.compositor.layouts.OverviewModeBehavior;
 import org.chromium.chrome.browser.compositor.layouts.OverviewModeBehavior.OverviewModeObserver;
 import org.chromium.chrome.browser.compositor.layouts.SceneChangeObserver;
 import org.chromium.chrome.browser.download.DownloadUtils;
-import org.chromium.chrome.browser.feature_engagement_tracker.FeatureEngagementTrackerFactory;
+import org.chromium.chrome.browser.feature_engagement.TrackerFactory;
 import org.chromium.chrome.browser.fullscreen.BrowserStateBrowserControlsVisibilityDelegate;
 import org.chromium.chrome.browser.fullscreen.FullscreenManager;
 import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
@@ -73,12 +73,13 @@ import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.TabModelSelectorObserver;
 import org.chromium.chrome.browser.toolbar.ActionModeController.ActionBarDelegate;
 import org.chromium.chrome.browser.util.FeatureUtilities;
+import org.chromium.chrome.browser.widget.ViewHighlighter;
 import org.chromium.chrome.browser.widget.findinpage.FindToolbarManager;
 import org.chromium.chrome.browser.widget.findinpage.FindToolbarObserver;
 import org.chromium.chrome.browser.widget.textbubble.ViewAnchoredTextBubble;
-import org.chromium.components.feature_engagement_tracker.EventConstants;
-import org.chromium.components.feature_engagement_tracker.FeatureConstants;
-import org.chromium.components.feature_engagement_tracker.FeatureEngagementTracker;
+import org.chromium.components.feature_engagement.EventConstants;
+import org.chromium.components.feature_engagement.FeatureConstants;
+import org.chromium.components.feature_engagement.Tracker;
 import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.content_public.browser.NavigationController;
 import org.chromium.content_public.browser.NavigationEntry;
@@ -122,6 +123,8 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
      * it's obvious to the user that something is attempting to load.
      */
     public static final int MINIMUM_LOAD_PROGRESS = 5;
+
+    private static final String CHROME_MEMEX_URL = "https://chrome-memex.corp.google.com";
 
     private final ToolbarLayout mToolbar;
     private final ToolbarControlContainer mControlContainer;
@@ -496,41 +499,7 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
                     return;
                 }
 
-                // TODO(shaktisahu): Find out if the download menu button is enabled (crbug/712438).
-                if (!(activity instanceof ChromeTabbedActivity) || DeviceFormFactor.isTablet()
-                        || activity.isInOverviewMode()
-                        || !DownloadUtils.isAllowedToDownloadPage(tab)) {
-                    return;
-                }
-
-                final FeatureEngagementTracker tracker =
-                        FeatureEngagementTrackerFactory.getFeatureEngagementTrackerForProfile(
-                                tab.getProfile());
-
-                if (!tracker.shouldTriggerHelpUI(FeatureConstants.DOWNLOAD_PAGE_FEATURE)) return;
-
-                mTextBubble = new ViewAnchoredTextBubble(mToolbar.getContext(), getMenuButton(),
-                        R.string.iph_download_page_for_offline_usage_text,
-                        R.string.iph_download_page_for_offline_usage_accessibility_text);
-                mTextBubble.setDismissOnTouchInteraction(true);
-                mTextBubble.addOnDismissListener(new OnDismissListener() {
-                    @Override
-                    public void onDismiss() {
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                tracker.dismissed(FeatureConstants.DOWNLOAD_PAGE_FEATURE);
-                                activity.getAppMenuHandler().setMenuHighlight(null);
-                            }
-                        });
-                    }
-                });
-                activity.getAppMenuHandler().setMenuHighlight(R.id.offline_page_id);
-                int yInsetPx = mToolbar.getContext().getResources().getDimensionPixelOffset(
-                        R.dimen.text_bubble_menu_anchor_y_inset);
-                mTextBubble.setInsetPx(0, FeatureUtilities.isChromeHomeEnabled() ? yInsetPx : 0, 0,
-                        FeatureUtilities.isChromeHomeEnabled() ? 0 : yInsetPx);
-                mTextBubble.show();
+                showDownloadPageTextBubble(tab, FeatureConstants.DOWNLOAD_PAGE_FEATURE);
             }
 
             private void handleIPHForErrorPageShown(Tab tab) {
@@ -544,9 +513,7 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
                     return;
                 }
 
-                FeatureEngagementTracker tracker =
-                        FeatureEngagementTrackerFactory.getFeatureEngagementTrackerForProfile(
-                                tab.getProfile());
+                Tracker tracker = TrackerFactory.getTrackerForProfile(tab.getProfile());
                 tracker.notifyEvent(EventConstants.USER_HAS_SEEN_DINO);
             }
         };
@@ -616,6 +583,49 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
         };
 
         mLoadProgressSimulator = new LoadProgressSimulator(this);
+    }
+
+    /**
+     * Show the download page in-product-help bubble. Also used by download page screenshot IPH.
+     * @param tab The current tab.
+     * @param featureName The associated feature name.
+     */
+    public void showDownloadPageTextBubble(final Tab tab, String featureName) {
+        if (tab == null) return;
+
+        // TODO(shaktisahu): Find out if the download menu button is enabled (crbug/712438).
+        ChromeActivity activity = tab.getActivity();
+        if (!(activity instanceof ChromeTabbedActivity) || DeviceFormFactor.isTablet()
+                || activity.isInOverviewMode() || !DownloadUtils.isAllowedToDownloadPage(tab)) {
+            return;
+        }
+
+        final Tracker tracker = TrackerFactory.getTrackerForProfile(tab.getProfile());
+
+        if (!tracker.shouldTriggerHelpUI(featureName)) return;
+
+        mTextBubble = new ViewAnchoredTextBubble(mToolbar.getContext(), getMenuButton(),
+                R.string.iph_download_page_for_offline_usage_text,
+                R.string.iph_download_page_for_offline_usage_accessibility_text);
+        mTextBubble.setDismissOnTouchInteraction(true);
+        mTextBubble.addOnDismissListener(new OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        tracker.dismissed(featureName);
+                        activity.getAppMenuHandler().setMenuHighlight(null);
+                    }
+                }, ViewHighlighter.IPH_MIN_DELAY_BETWEEN_TWO_HIGHLIGHTS);
+            }
+        });
+        activity.getAppMenuHandler().setMenuHighlight(R.id.offline_page_id);
+        int yInsetPx = mToolbar.getContext().getResources().getDimensionPixelOffset(
+                R.dimen.text_bubble_menu_anchor_y_inset);
+        mTextBubble.setInsetPx(0, FeatureUtilities.isChromeHomeEnabled() ? yInsetPx : 0, 0,
+                FeatureUtilities.isChromeHomeEnabled() ? 0 : yInsetPx);
+        mTextBubble.show();
     }
 
     /**
@@ -894,9 +904,8 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
                 // Chrome home is not
                 if (DataReductionProxySettings.getInstance().isDataReductionProxyEnabled()
                         && !FeatureUtilities.isChromeHomeEnabled()) {
-                    FeatureEngagementTracker tracker =
-                            FeatureEngagementTrackerFactory.getFeatureEngagementTrackerForProfile(
-                                    Profile.getLastUsedProfile());
+                    Tracker tracker =
+                            TrackerFactory.getTrackerForProfile(Profile.getLastUsedProfile());
                     tracker.notifyEvent(EventConstants.OVERFLOW_OPENED_WITH_DATA_SAVER_SHOWN);
                 }
             }
@@ -962,6 +971,13 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
         currentTab.loadUrl(new LoadUrlParams(homePageUrl, PageTransition.HOME_PAGE));
     }
 
+    @Override
+    public void openMemexUI() {
+        Tab currentTab = mToolbarModel.getTab();
+        if (currentTab == null) return;
+        currentTab.loadUrl(new LoadUrlParams(CHROME_MEMEX_URL, PageTransition.AUTO_BOOKMARK));
+    }
+
     /**
      * Triggered when the URL input field has gained or lost focus.
      * @param hasFocus Whether the URL field has gained focus.
@@ -1024,7 +1040,8 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
     }
 
     /**
-     * Sets the drawable that the close button shows.
+     * Sets the drawable that the close button shows, or hides it if {@code drawable} is
+     * {@code null}.
      */
     public void setCloseButtonDrawable(Drawable drawable) {
         mToolbar.setCloseButtonImageResource(drawable);
@@ -1212,11 +1229,16 @@ public class ToolbarManager implements ToolbarTabController, UrlFocusChangeListe
         Profile profile = mTabModelSelector.getModel(isIncognito).getProfile();
 
         if (mCurrentProfile != profile) {
-            if (mBookmarkBridge != null) mBookmarkBridge.destroy();
-            mBookmarkBridge = new BookmarkBridge(profile);
-            mBookmarkBridge.addObserver(mBookmarksObserver);
-            mAppMenuPropertiesDelegate.setBookmarkBridge(mBookmarkBridge);
-            mLocationBar.setAutocompleteProfile(profile);
+            if (mBookmarkBridge != null) {
+                mBookmarkBridge.destroy();
+                mBookmarkBridge = null;
+            }
+            if (profile != null) {
+                mBookmarkBridge = new BookmarkBridge(profile);
+                mBookmarkBridge.addObserver(mBookmarksObserver);
+                mAppMenuPropertiesDelegate.setBookmarkBridge(mBookmarkBridge);
+                mLocationBar.setAutocompleteProfile(profile);
+            }
             mCurrentProfile = profile;
         }
 

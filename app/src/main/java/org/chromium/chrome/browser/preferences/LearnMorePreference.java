@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.help.HelpAndFeedback;
 import org.chromium.chrome.browser.profiles.Profile;
@@ -23,12 +24,14 @@ import org.chromium.chrome.browser.profiles.Profile;
 public class LearnMorePreference extends Preference {
 
     private final int mHelpContext;
+    private final int mColor;
 
     public LearnMorePreference(Context context, AttributeSet attrs) {
         super(context, attrs);
         TypedArray a = context.obtainStyledAttributes(attrs,
                 R.styleable.LearnMorePreference, 0, 0);
         mHelpContext = a.getResourceId(R.styleable.LearnMorePreference_helpContext, 0);
+        mColor = ApiCompatibilityUtils.getColor(context.getResources(), R.color.google_blue_700);
         a.recycle();
         setTitle(R.string.learn_more);
     }
@@ -49,7 +52,7 @@ public class LearnMorePreference extends Preference {
         setSelectable(false);
 
         titleView.setClickable(true);
-        titleView.setTextColor(titleView.getPaint().linkColor);
+        titleView.setTextColor(mColor);
         titleView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {

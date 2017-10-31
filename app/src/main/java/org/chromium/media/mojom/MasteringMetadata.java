@@ -101,17 +101,17 @@ public final class MasteringMetadata extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(primaryR, 8, false);
+        encoder0.encode(this.primaryR, 8, false);
         
-        encoder0.encode(primaryG, 16, false);
+        encoder0.encode(this.primaryG, 16, false);
         
-        encoder0.encode(primaryB, 24, false);
+        encoder0.encode(this.primaryB, 24, false);
         
-        encoder0.encode(whitePoint, 32, false);
+        encoder0.encode(this.whitePoint, 32, false);
         
-        encoder0.encode(luminanceMax, 40);
+        encoder0.encode(this.luminanceMax, 40);
         
-        encoder0.encode(luminanceMin, 44);
+        encoder0.encode(this.luminanceMin, 44);
     }
 
     /**
@@ -148,12 +148,12 @@ public final class MasteringMetadata extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(primaryR);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(primaryG);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(primaryB);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(whitePoint);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(luminanceMax);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(luminanceMin);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.primaryR);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.primaryG);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.primaryB);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.whitePoint);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.luminanceMax);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.luminanceMin);
         return result;
     }
 }

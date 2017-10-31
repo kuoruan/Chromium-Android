@@ -50,7 +50,6 @@ public class ImageViewTinter {
      * @param defStyle Style that is pulled in from an XML layout.
      */
     public ImageViewTinter(ImageViewTinterOwner view, @Nullable AttributeSet attrs, int defStyle) {
-        assert view instanceof ImageView;
         mImageView = (ImageView) view;
 
         // Parse out the attributes from the XML.

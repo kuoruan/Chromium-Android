@@ -74,6 +74,7 @@ public class OfflineItem {
     @OfflineItemFilter
     public int filter;
     public boolean isTransient;
+    public boolean isSuggested;
 
     // Content Metadata.
     public long totalSizeBytes;
@@ -81,6 +82,8 @@ public class OfflineItem {
     public long creationTimeMs;
     public long lastAccessedTimeMs;
     public boolean isOpenable;
+    public String filePath;
+    public String mimeType;
 
     // Request Metadata.
     public String pageUrl;

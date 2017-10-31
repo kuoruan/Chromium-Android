@@ -7,7 +7,6 @@ package org.chromium.chrome.browser;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.os.AsyncTask;
 import android.security.KeyChain;
@@ -149,20 +148,13 @@ public class SSLClientCertificateRequest {
         public void alias(final String alias) {
             // This is called by KeyChainActivity in a background thread. Post task to
             // handle the certificate selection on the UI thread.
-            ThreadUtils.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (alias == null) {
-                        // No certificate was selected.
-                        ThreadUtils.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                nativeOnSystemRequestCompletion(mNativePtr, null, null);
-                            }
-                        });
-                    } else {
-                        new CertAsyncTaskKeyChain(mContext, mNativePtr, alias).execute();
-                    }
+            ThreadUtils.runOnUiThread(() -> {
+                if (alias == null) {
+                    // No certificate was selected.
+                    ThreadUtils.runOnUiThread(
+                            () -> nativeOnSystemRequestCompletion(mNativePtr, null, null));
+                } else {
+                    new CertAsyncTaskKeyChain(mContext, mNativePtr, alias).execute();
                 }
             });
         }
@@ -224,11 +216,8 @@ public class SSLClientCertificateRequest {
             builder.setTitle(R.string.client_cert_unsupported_title)
                     .setMessage(R.string.client_cert_unsupported_message)
                     .setNegativeButton(R.string.close,
-                            new OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    // Do nothing
-                                }
+                            (OnClickListener) (dialog, which) -> {
+                                // Do nothing
                             });
             builder.show();
         }

@@ -17,6 +17,7 @@ import org.chromium.base.annotations.JNINamespace;
 import org.chromium.device.mojom.SensorType;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -141,6 +142,49 @@ class PlatformSensorProvider {
     @CalledByNative
     protected void setSensorManagerToNullForTesting() {
         mSensorManager = null;
+    }
+
+    /**
+     * Checks if |type| sensor is available.
+     *
+     * @param type type of a sensor.
+     * @return If |type| sensor is available, returns true; otherwise returns false.
+     */
+    @CalledByNative
+    protected boolean hasSensorType(int type) {
+        if (mSensorManager == null) return false;
+
+        // Type of the sensor to be constructed. @see android.hardware.Sensor.TYPE_*
+        int sensorType;
+
+        switch (type) {
+            case SensorType.AMBIENT_LIGHT:
+                sensorType = Sensor.TYPE_LIGHT;
+                break;
+            case SensorType.ACCELEROMETER:
+                sensorType = Sensor.TYPE_ACCELEROMETER;
+                break;
+            case SensorType.LINEAR_ACCELERATION:
+                sensorType = Sensor.TYPE_LINEAR_ACCELERATION;
+                break;
+            case SensorType.GYROSCOPE:
+                sensorType = Sensor.TYPE_GYROSCOPE;
+                break;
+            case SensorType.MAGNETOMETER:
+                sensorType = Sensor.TYPE_MAGNETIC_FIELD;
+                break;
+            case SensorType.ABSOLUTE_ORIENTATION_QUATERNION:
+                sensorType = Sensor.TYPE_ROTATION_VECTOR;
+                break;
+            case SensorType.RELATIVE_ORIENTATION_QUATERNION:
+                sensorType = Sensor.TYPE_GAME_ROTATION_VECTOR;
+                break;
+            default:
+                return false;
+        }
+
+        List<Sensor> sensors = mSensorManager.getSensorList(sensorType);
+        return !sensors.isEmpty();
     }
 
     /**

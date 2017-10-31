@@ -14,10 +14,12 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.SynchronousInitializationActivity;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkItem;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkModelObserver;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.EmptyAlertEditText;
 import org.chromium.chrome.browser.widget.TintedDrawable;
 import org.chromium.components.bookmarks.BookmarkId;
@@ -156,6 +158,13 @@ public class BookmarkAddEditFolderActivity extends SynchronousInitializationActi
         }
 
         mParentTextView.setText(mModel.getBookmarkTitle(mParentId));
+
+        if (!FeatureUtilities.isChromeHomeEnabled()) {
+            findViewById(R.id.shadow).setVisibility(View.VISIBLE);
+            toolbar.setTitleTextAppearance(toolbar.getContext(), R.style.BlackHeadline2);
+            toolbar.setBackgroundColor(
+                    ApiCompatibilityUtils.getColor(getResources(), R.color.modern_primary_color));
+        }
     }
 
     @Override

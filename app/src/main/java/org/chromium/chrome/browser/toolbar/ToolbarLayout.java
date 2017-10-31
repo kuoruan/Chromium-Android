@@ -164,8 +164,13 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
             }
 
             @Override
+            public boolean hasTab() {
+                return false;
+            }
+
+            @Override
             public String getCurrentUrl() {
-                return null;
+                return "";
             }
 
             @Override
@@ -185,6 +190,11 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
 
             @Override
             public boolean isUsingBrandColor() {
+                return false;
+            }
+
+            @Override
+            public boolean isOfflinePage() {
                 return false;
             }
         };
@@ -459,9 +469,10 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
     protected void onPrimaryColorChanged(boolean shouldAnimate) { }
 
     /**
-     * Sets the icon drawable that the close button in the toolbar (if any) should show.
+     * Sets the icon drawable that the close button in the toolbar (if any) should show, or hides
+     * it if {@code drawable} is {@code null}.
      */
-    public void setCloseButtonImageResource(Drawable drawable) { }
+    public void setCloseButtonImageResource(@Nullable Drawable drawable) { }
 
     /**
      * Sets/adds a custom action button to the {@link ToolbarLayout} if it is supported.
@@ -706,6 +717,14 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
     protected void openHomepage() {
         getLocationBar().hideSuggestions();
         if (mToolbarTabController != null) mToolbarTabController.openHomepage();
+    }
+
+    /**
+     * Opens the Memex UI in the current tab.
+     */
+    protected void openMemexUI() {
+        getLocationBar().hideSuggestions();
+        if (mToolbarTabController != null) mToolbarTabController.openMemexUI();
     }
 
     @Override

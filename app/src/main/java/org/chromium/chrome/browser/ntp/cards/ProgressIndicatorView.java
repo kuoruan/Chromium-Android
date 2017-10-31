@@ -35,12 +35,9 @@ public class ProgressIndicatorView extends ImageView {
     public ProgressIndicatorView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        mShowSpinnerRunnable = new Runnable() {
-            @Override
-            public void run() {
-                mPostedCallback = false;
-                show();
-            }
+        mShowSpinnerRunnable = () -> {
+            mPostedCallback = false;
+            show();
         };
 
         mProgressDrawable = new MaterialProgressDrawable(getContext(), this);
@@ -50,7 +47,7 @@ public class ProgressIndicatorView extends ImageView {
         mProgressDrawable.setAlpha(255);
         mProgressDrawable.setColorSchemeColors(
                 ApiCompatibilityUtils.getColor(resources, R.color.light_active_color));
-        mProgressDrawable.updateSizes(MaterialProgressDrawable.LARGE);
+        mProgressDrawable.updateSizes(MaterialProgressDrawable.DEFAULT);
         setImageDrawable(mProgressDrawable);
 
         hide();
@@ -76,10 +73,14 @@ public class ProgressIndicatorView extends ImageView {
     }
 
     public void hide() {
+        hide(false);
+    }
+
+    public void hide(boolean keepSpace) {
         mProgressDrawable.stop();
         removeCallbacks(mShowSpinnerRunnable);
         mPostedCallback = false;
-        setVisibility(View.GONE);
+        setVisibility(keepSpace ? View.INVISIBLE : View.GONE);
     }
 
     public void showDelayed() {

@@ -18,6 +18,7 @@ import android.widget.ImageButton;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.NavigationPopup;
 import org.chromium.chrome.browser.download.DownloadUtils;
 import org.chromium.chrome.browser.ntp.NewTabPage;
@@ -254,6 +255,12 @@ public class ToolbarTablet
         mSaveOfflineButton.setOnLongClickListener(this);
 
         mSecurityButton.setOnLongClickListener(this);
+
+        // If Memex is enabled, enable the accessibility tab switcher button.
+        if (ChromeFeatureList.isInitialized()
+                && ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_MEMEX)) {
+            onAccessibilityStatusChanged(true);
+        }
     }
 
     @Override
@@ -301,11 +308,9 @@ public class ToolbarTablet
         } else if (mBackButton == v) {
             if (!back()) return;
             RecordUserAction.record("MobileToolbarBack");
-            RecordUserAction.record("MobileTabClobbered");
         } else if (mForwardButton == v) {
             forward();
             RecordUserAction.record("MobileToolbarForward");
-            RecordUserAction.record("MobileTabClobbered");
         } else if (mReloadButton == v) {
             stopOrReloadCurrentTab();
         } else if (mBookmarkButton == v) {
@@ -314,6 +319,11 @@ public class ToolbarTablet
                 RecordUserAction.record("MobileToolbarToggleBookmark");
             }
         } else if (mAccessibilitySwitcherButton == v) {
+            if (ChromeFeatureList.isInitialized()
+                    && ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_MEMEX)) {
+                openMemexUI();
+                return;
+            }
             if (mTabSwitcherListener != null) {
                 cancelAppMenuUpdateBadgeAnimation();
                 mTabSwitcherListener.onClick(mAccessibilitySwitcherButton);
@@ -511,6 +521,11 @@ public class ToolbarTablet
 
     @Override
     public void onAccessibilityStatusChanged(boolean enabled) {
+        // If Memex is enabled, don't allow the accessibility tab switcher button to be disabled.
+        if (!enabled && ChromeFeatureList.isInitialized()
+                && ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_MEMEX)) {
+            return;
+        }
         mShowTabStack = enabled;
         updateSwitcherButtonVisibility(enabled);
     }

@@ -26,5 +26,8 @@ public @interface WebDisplayMode {
   int MINIMAL_UI = 2;
   int STANDALONE = 3;
   int FULLSCREEN = 4;
+  /**
+   * This enum is persisted to logs, and therefore is append-only and should not be reordered.
+   */
   int LAST = 4;
 }

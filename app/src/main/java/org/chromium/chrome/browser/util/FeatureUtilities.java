@@ -23,12 +23,16 @@ import org.chromium.base.FieldTrialList;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.library_loader.LibraryLoader;
+import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ChromeSwitches;
-import org.chromium.chrome.browser.firstrun.FirstRunGlueImpl;
+import org.chromium.chrome.browser.firstrun.FirstRunUtils;
+import org.chromium.chrome.browser.metrics.UmaSessionStats;
 import org.chromium.chrome.browser.omnibox.OmniboxPlaceholderFieldTrial;
 import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
+import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.tabmodel.DocumentModeAssassin;
 import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.ui.base.DeviceFormFactor;
@@ -44,16 +48,18 @@ public class FeatureUtilities {
     private static final String HERB_EXPERIMENT_NAME = "TabManagementExperiment";
     private static final String HERB_EXPERIMENT_FLAVOR_PARAM = "type";
 
+    private static final String SYNTHETIC_CHROME_HOME_EXPERIMENT_NAME = "SyntheticChromeHome";
+    private static final String ENABLED_EXPERIMENT_GROUP = "Enabled";
+    private static final String DISABLED_EXPERIMENT_GROUP = "Disabled";
+
     private static Boolean sHasGoogleAccountAuthenticator;
     private static Boolean sHasRecognitionIntentHandler;
     private static Boolean sChromeHomeEnabled;
+    private static Boolean sChromeHomePendingState;
     private static String sChromeHomeSwipeLogicType;
 
     private static String sCachedHerbFlavor;
     private static boolean sIsHerbFlavorCached;
-
-    /** Used to track if cached command line flags should be refreshed. */
-    private static CommandLine.ResetListener sResetListener;
 
     /**
      * Determines whether or not the {@link RecognizerIntent#ACTION_WEB_SEARCH} {@link Intent}
@@ -187,7 +193,7 @@ public class FeatureUtilities {
     public static void cacheNativeFlags() {
         cacheHerbFlavor();
         cacheChromeHomeEnabled();
-        FirstRunGlueImpl.cacheFirstRunPrefs();
+        FirstRunUtils.cacheFirstRunPrefs();
         OmniboxPlaceholderFieldTrial.cacheOmniboxPlaceholderGroup();
 
         // Propagate DONT_PREFETCH_LIBRARIES feature value to LibraryLoader. This can't
@@ -195,6 +201,16 @@ public class FeatureUtilities {
         // on ChromeFeatureList.
         LibraryLoader.setDontPrefetchLibrariesOnNextRuns(
                 ChromeFeatureList.isEnabled(ChromeFeatureList.DONT_PREFETCH_LIBRARIES));
+    }
+
+    /**
+     * Finalize any static settings that will change when the browser restarts.
+     */
+    public static void finalizePendingFeatures() {
+        if (sChromeHomePendingState != null) {
+            sChromeHomeEnabled = sChromeHomePendingState;
+            sChromeHomePendingState = null;
+        }
     }
 
     /**
@@ -243,7 +259,7 @@ public class FeatureUtilities {
     }
 
     /**
-     * Cache whether or not Chrome Home is enabled.
+     * Cache whether or not Chrome Home and related features are enabled.
      */
     public static void cacheChromeHomeEnabled() {
         // Chrome Home doesn't work with tablets.
@@ -252,24 +268,64 @@ public class FeatureUtilities {
         boolean isChromeHomeEnabled = ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME);
         ChromePreferenceManager manager = ChromePreferenceManager.getInstance();
         manager.setChromeHomeEnabled(isChromeHomeEnabled);
+
+        PrefServiceBridge.getInstance().setChromeHomePersonalizedOmniboxSuggestionsEnabled(
+                !isChromeHomeEnabled()
+                        ? false
+                        : ChromeFeatureList.isEnabled(
+                                  ChromeFeatureList.CHROME_HOME_PERSONALIZED_OMNIBOX_SUGGESTIONS));
+
+        if (!ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_PROMO)
+                && manager.isChromeHomeUserPreferenceSet()) {
+            manager.clearChromeHomeUserPreference();
+        }
+
+        if (manager.isChromeHomeUserPreferenceSet()) {
+            RecordHistogram.recordBooleanHistogram(
+                    "Android.ChromeHome.UserPreference.Enabled", manager.isChromeHomeUserEnabled());
+        }
+
+        UmaSessionStats.registerSyntheticFieldTrial(SYNTHETIC_CHROME_HOME_EXPERIMENT_NAME,
+                isChromeHomeEnabled() ? ENABLED_EXPERIMENT_GROUP : DISABLED_EXPERIMENT_GROUP);
+    }
+
+    /**
+     * Update the user's setting for Chrome Home. This is a user-facing setting different from the
+     * one in chrome://flags. This setting will take prescience over the one in flags.
+     * @param enabled Whether or not the feature should be enabled.
+     */
+    public static void switchChromeHomeUserSetting(boolean enabled) {
+        ChromePreferenceManager.getInstance().setChromeHomeUserEnabled(enabled);
+        sChromeHomePendingState = enabled;
     }
 
     /**
      * @return Whether or not chrome should attach the toolbar to the bottom of the screen.
      */
+    @CalledByNative
     public static boolean isChromeHomeEnabled() {
+        if (DeviceFormFactor.isTablet()) return false;
+
         if (sChromeHomeEnabled == null) {
+            boolean isUserPreferenceSet = false;
+            ChromePreferenceManager prefManager = ChromePreferenceManager.getInstance();
+
             // Allow disk access for preferences while Chrome Home is in experimentation.
             StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
             try {
-                sChromeHomeEnabled = ChromePreferenceManager.getInstance().isChromeHomeEnabled();
+                if (ChromePreferenceManager.getInstance().isChromeHomeUserPreferenceSet()) {
+                    isUserPreferenceSet = true;
+                    sChromeHomeEnabled = prefManager.isChromeHomeUserEnabled();
+                } else {
+                    sChromeHomeEnabled = prefManager.isChromeHomeEnabled();
+                }
             } finally {
                 StrictMode.setThreadPolicy(oldPolicy);
             }
 
             // If the browser has been initialized by this point, check the experiment as well to
             // avoid the restart logic in cacheChromeHomeEnabled.
-            if (ChromeFeatureList.isInitialized()) {
+            if (ChromeFeatureList.isInitialized() && !isUserPreferenceSet) {
                 boolean chromeHomeExperimentEnabled =
                         ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME);
 
@@ -279,8 +335,8 @@ public class FeatureUtilities {
                             chromeHomeExperimentEnabled);
                 }
             }
+            ChromePreferenceManager.setChromeHomeEnabledDate(sChromeHomeEnabled);
         }
-
         return sChromeHomeEnabled;
     }
 
@@ -290,14 +346,6 @@ public class FeatureUtilities {
      */
     public static void resetChromeHomeEnabledForTests() {
         sChromeHomeEnabled = null;
-    }
-
-    /**
-     * @return Whether or not the expand button for Chrome Home is enabled.
-     */
-    public static boolean isChromeHomeExpandButtonEnabled() {
-        if (!ChromeFeatureList.isInitialized()) return false;
-        return ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_EXPAND_BUTTON);
     }
 
     /**
@@ -312,6 +360,29 @@ public class FeatureUtilities {
         }
 
         return sChromeHomeSwipeLogicType;
+    }
+
+    /**
+     * @return Whether the Chrome Home promo should be shown for cold-start.
+     */
+    public static boolean shouldShowChromeHomePromoForStartup() {
+        if (isChromeHomeEnabled()
+                || !ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_PROMO)) {
+            return false;
+        }
+
+        ChromePreferenceManager prefManager = ChromePreferenceManager.getInstance();
+
+        // Don't show the promo is the user has Chrome Home enabled.
+        return !prefManager.isChromeHomeUserPreferenceSet();
+    }
+
+    /**
+     * @return Whether or not showing the Doodle in the Chrome Home NTP is enabled.
+     */
+    public static boolean isChromeHomeDoodleEnabled() {
+        return isChromeHomeEnabled()
+                && ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_DOODLE);
     }
 
     private static native void nativeSetCustomTabVisible(boolean visible);

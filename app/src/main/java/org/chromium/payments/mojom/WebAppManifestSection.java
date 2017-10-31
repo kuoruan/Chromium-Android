@@ -90,17 +90,17 @@ public final class WebAppManifestSection extends org.chromium.mojo.bindings.Stru
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(id, 8, false);
+        encoder0.encode(this.id, 8, false);
         
-        encoder0.encode(minVersion, 16);
+        encoder0.encode(this.minVersion, 16);
         
-        if (fingerprints == null) {
+        if (this.fingerprints == null) {
             encoder0.encodeNullPointer(24, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(fingerprints.length, 24, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < fingerprints.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.fingerprints.length, 24, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.fingerprints.length; ++i0) {
                 
-                encoder1.encode(fingerprints[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, 32);
+                encoder1.encode(this.fingerprints[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, 32);
             }
         }
     }
@@ -133,9 +133,9 @@ public final class WebAppManifestSection extends org.chromium.mojo.bindings.Stru
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(id);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(minVersion);
-        result = prime * result + java.util.Arrays.deepHashCode(fingerprints);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.id);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.minVersion);
+        result = prime * result + java.util.Arrays.deepHashCode(this.fingerprints);
         return result;
     }
 }

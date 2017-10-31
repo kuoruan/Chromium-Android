@@ -387,13 +387,13 @@ Identity identity) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            if (runningServices == null) {
+            if (this.runningServices == null) {
                 encoder0.encodeNullPointer(8, false);
             } else {
-                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(runningServices.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                for (int i0 = 0; i0 < runningServices.length; ++i0) {
+                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.runningServices.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                for (int i0 = 0; i0 < this.runningServices.length; ++i0) {
                     
-                    encoder1.encode(runningServices[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                    encoder1.encode(this.runningServices[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
                 }
             }
         }
@@ -422,7 +422,7 @@ Identity identity) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + java.util.Arrays.deepHashCode(runningServices);
+            result = prime * result + java.util.Arrays.deepHashCode(this.runningServices);
             return result;
         }
     }
@@ -488,7 +488,7 @@ Identity identity) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(service, 8, false);
+            encoder0.encode(this.service, 8, false);
         }
     
         /**
@@ -515,7 +515,7 @@ Identity identity) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(service);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.service);
             return result;
         }
     }
@@ -586,9 +586,9 @@ Identity identity) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(identity, 8, false);
+            encoder0.encode(this.identity, 8, false);
             
-            encoder0.encode(pid, 16);
+            encoder0.encode(this.pid, 16);
         }
     
         /**
@@ -617,8 +617,8 @@ Identity identity) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(identity);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(pid);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.identity);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pid);
             return result;
         }
     }
@@ -689,9 +689,9 @@ Identity identity) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(identity, 8, false);
+            encoder0.encode(this.identity, 8, false);
             
-            encoder0.encode(pid, 16);
+            encoder0.encode(this.pid, 16);
         }
     
         /**
@@ -720,8 +720,8 @@ Identity identity) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(identity);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(pid);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.identity);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pid);
             return result;
         }
     }
@@ -787,7 +787,7 @@ Identity identity) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(identity, 8, false);
+            encoder0.encode(this.identity, 8, false);
         }
     
         /**
@@ -814,7 +814,7 @@ Identity identity) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(identity);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.identity);
             return result;
         }
     }
@@ -880,7 +880,7 @@ Identity identity) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(identity, 8, false);
+            encoder0.encode(this.identity, 8, false);
         }
     
         /**
@@ -907,7 +907,7 @@ Identity identity) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(identity);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.identity);
             return result;
         }
     }

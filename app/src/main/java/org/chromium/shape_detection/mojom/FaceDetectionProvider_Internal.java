@@ -212,9 +212,9 @@ org.chromium.mojo.bindings.InterfaceRequest<FaceDetection> request, FaceDetector
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(request, 8, false);
+            encoder0.encode(this.request, 8, false);
             
-            encoder0.encode(options, 16, false);
+            encoder0.encode(this.options, 16, false);
         }
     
         /**
@@ -243,8 +243,8 @@ org.chromium.mojo.bindings.InterfaceRequest<FaceDetection> request, FaceDetector
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(request);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(options);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.request);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.options);
             return result;
         }
     }

@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.omnibox;
 
 import android.text.Editable;
 import android.view.KeyEvent;
+import android.view.accessibility.AccessibilityEvent;
 import android.view.inputmethod.InputConnection;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -38,6 +39,10 @@ public interface AutocompleteEditTextModelBase {
         int getHighlightColor();
         /** @see TextView#setCursorVisible(boolean) */
         void setCursorVisible(boolean visible);
+        /** @see TextView#isFocused() */
+        boolean isFocused();
+        /** @see TextView#sendAccessibilityEventUnchecked(AccessibilityEvent) */
+        void sendAccessibilityEventUnchecked(AccessibilityEvent event);
 
         /**
          * Call super.dispatchKeyEvent(KeyEvent).
@@ -52,11 +57,8 @@ public interface AutocompleteEditTextModelBase {
          */
         void replaceAllTextFromAutocomplete(String text);
 
-        /**
-         * This is called when there is a typing accessibility event that actually causes no change.
-         * @param selectionStart The selection start.
-         */
-        void onNoChangeTypingAccessibilityEvent(int selectionStart);
+        /** @return Whether accessibility is enabled. */
+        boolean isAccessibilityEnabled();
 
         /**
          * This is called when autocomplete text state changes.
@@ -72,6 +74,9 @@ public interface AutocompleteEditTextModelBase {
          * @param selEnd Selection end.
          */
         void onUpdateSelectionForTesting(int selStart, int selEnd);
+
+        /** @return The package name of the current keyboard app. */
+        String getKeyboardPackageName();
     }
 
     /**
@@ -164,4 +169,9 @@ public interface AutocompleteEditTextModelBase {
     /** @return The current {@link InputConnection} object. */
     @VisibleForTesting
     InputConnection getInputConnection();
+
+    /**
+     * @return Whether accessibility event should be ignored.
+     */
+    boolean shouldIgnoreAccessibilityEvent();
 }

@@ -12,6 +12,7 @@ import android.os.Build;
 import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.FileUtils;
+import org.chromium.base.StrictModeContext;
 import org.chromium.base.ThreadUtils;
 import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.webapk.lib.client.DexOptimizer;
@@ -71,8 +72,15 @@ public class WebApkVersionManager {
         String dexName =
                 WebApkVersionUtils.getRuntimeDexName(WebApkVersion.CURRENT_RUNTIME_DEX_VERSION);
         File dexFile = new File(dexDir, dexName);
-        if (!FileUtils.extractAsset(context, dexName, dexFile) || !DexOptimizer.optimize(dexFile)) {
+        if (!FileUtils.extractAsset(context, dexName, dexFile)) {
             return;
+        }
+
+        // Disable VM detectLeakedClosableObjects due to Android SDK bug: https://crbug.com/750196
+        try (StrictModeContext unused = StrictModeContext.allowAllVmPolicies()) {
+            if (!DexOptimizer.optimize(dexFile)) {
+                return;
+            }
         }
 
         // Make dex file world-readable so that WebAPK can use it.

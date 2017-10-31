@@ -9,6 +9,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.os.Build;
 
+import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.device.mojom.ReportingMode;
@@ -24,6 +25,7 @@ public class PlatformSensor implements SensorEventListener {
     private static final double MICROSECONDS_IN_SECOND = 1000000;
     private static final double SECONDS_IN_MICROSECOND = 0.000001d;
     private static final double SECONDS_IN_NANOSECOND = 0.000000001d;
+    private static final String TAG = "PlatformSensor";
 
     /**
      * The SENSOR_FREQUENCY_NORMAL is defined as 5Hz which corresponds to a polling delay
@@ -188,6 +190,16 @@ public class PlatformSensor implements SensorEventListener {
     }
 
     /**
+     * Called from device::PlatformSensorAndroid destructor, so that this instance would be
+     * notified not to deliver any updates about new sensor readings or errors.
+     */
+    @CalledByNative
+    protected void sensorDestroyed() {
+        stopSensor();
+        mNativePlatformSensorAndroid = 0;
+    }
+
+    /**
      * Converts frequency to sampling period in microseconds.
      */
     private int getSamplingPeriod(double frequency) {
@@ -215,6 +227,11 @@ public class PlatformSensor implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        if (mNativePlatformSensorAndroid == 0) {
+            Log.w(TAG, "Should not get sensor events after PlatformSensorAndroid is destroyed.");
+            return;
+        }
+
         if (event.values.length < mReadingCount) {
             sensorError();
             stopSensor();

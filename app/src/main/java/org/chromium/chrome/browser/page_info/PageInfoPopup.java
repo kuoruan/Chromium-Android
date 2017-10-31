@@ -31,6 +31,7 @@ import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
+import android.text.style.TextAppearanceSpan;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -67,7 +68,9 @@ import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.ssl.SecurityStateModel;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.util.UrlUtilities;
+import org.chromium.chrome.browser.widget.TintedDrawable;
 import org.chromium.components.location.LocationUtils;
+import org.chromium.components.security_state.ConnectionSecurityLevel;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.content_public.browser.WebContentsObserver;
 import org.chromium.ui.base.DeviceFormFactor;
@@ -409,6 +412,16 @@ public class PageInfoPopup implements OnClickListener {
         SpannableStringBuilder urlBuilder = new SpannableStringBuilder(mFullUrl);
         OmniboxUrlEmphasizer.emphasizeUrl(urlBuilder, mContext.getResources(), mTab.getProfile(),
                 mSecurityLevel, mIsInternalPage, true, true);
+        if (mSecurityLevel == ConnectionSecurityLevel.SECURE) {
+            OmniboxUrlEmphasizer.EmphasizeComponentsResponse emphasizeResponse =
+                    OmniboxUrlEmphasizer.parseForEmphasizeComponents(
+                            mTab.getProfile(), urlBuilder.toString());
+            if (emphasizeResponse.schemeLength > 0) {
+                urlBuilder.setSpan(
+                        new TextAppearanceSpan(mUrlTitle.getContext(), R.style.RobotoMediumStyle),
+                        0, emphasizeResponse.schemeLength, Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+            }
+        }
         mUrlTitle.setText(urlBuilder);
 
         if (mParsedUrl == null || mParsedUrl.getScheme() == null
@@ -593,7 +606,8 @@ public class PageInfoPopup implements OnClickListener {
 
         ImageView permissionIcon = (ImageView) permissionRow.findViewById(
                 R.id.page_info_permission_icon);
-        permissionIcon.setImageResource(getImageResourceForPermission(permission.type));
+        permissionIcon.setImageDrawable(TintedDrawable.constructTintedDrawable(
+                permissionIcon.getResources(), getImageResourceForPermission(permission.type)));
 
         if (permission.setting == ContentSetting.ALLOW) {
             int warningTextResource = 0;
@@ -620,7 +634,7 @@ public class PageInfoPopup implements OnClickListener {
 
                 permissionIcon.setImageResource(R.drawable.exclamation_triangle);
                 permissionIcon.setColorFilter(ApiCompatibilityUtils.getColor(
-                        mContext.getResources(), R.color.page_info_popup_text_link));
+                        mContext.getResources(), R.color.google_blue_700));
 
                 permissionRow.setOnClickListener(this);
             }
@@ -702,9 +716,9 @@ public class PageInfoPopup implements OnClickListener {
             messageBuilder.append(" ");
             SpannableString detailsText =
                     new SpannableString(mContext.getString(R.string.details_link));
-            final ForegroundColorSpan blueSpan = new ForegroundColorSpan(
-                    ApiCompatibilityUtils.getColor(mContext.getResources(),
-                            R.color.page_info_popup_text_link));
+            final ForegroundColorSpan blueSpan =
+                    new ForegroundColorSpan(ApiCompatibilityUtils.getColor(
+                            mContext.getResources(), R.color.google_blue_700));
             detailsText.setSpan(
                     blueSpan, 0, detailsText.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
             messageBuilder.append(detailsText);

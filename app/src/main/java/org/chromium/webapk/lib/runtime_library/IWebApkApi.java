@@ -53,6 +53,14 @@ reply.writeNoException();
 reply.writeInt(_result);
 return true;
 }
+case TRANSACTION_notificationPermissionEnabled:
+{
+data.enforceInterface(DESCRIPTOR);
+boolean _result = this.notificationPermissionEnabled();
+reply.writeNoException();
+reply.writeInt(((_result)?(1):(0)));
+return true;
+}
 case TRANSACTION_notifyNotification:
 {
 data.enforceInterface(DESCRIPTOR);
@@ -117,6 +125,25 @@ _data.recycle();
 }
 return _result;
 }
+// Get if notification permission is enabled.
+
+@Override public boolean notificationPermissionEnabled() throws android.os.RemoteException
+{
+android.os.Parcel _data = android.os.Parcel.obtain();
+android.os.Parcel _reply = android.os.Parcel.obtain();
+boolean _result;
+try {
+_data.writeInterfaceToken(DESCRIPTOR);
+mRemote.transact(Stub.TRANSACTION_notificationPermissionEnabled, _data, _reply, 0);
+_reply.readException();
+_result = (0!=_reply.readInt());
+}
+finally {
+_reply.recycle();
+_data.recycle();
+}
+return _result;
+}
 // Display a notification.
 
 @Override public void notifyNotification(java.lang.String platformTag, int platformID, android.app.Notification notification) throws android.os.RemoteException
@@ -162,10 +189,14 @@ _data.recycle();
 }
 }
 static final int TRANSACTION_getSmallIconId = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
-static final int TRANSACTION_notifyNotification = (android.os.IBinder.FIRST_CALL_TRANSACTION + 1);
-static final int TRANSACTION_cancelNotification = (android.os.IBinder.FIRST_CALL_TRANSACTION + 2);
+static final int TRANSACTION_notificationPermissionEnabled = (android.os.IBinder.FIRST_CALL_TRANSACTION + 1);
+static final int TRANSACTION_notifyNotification = (android.os.IBinder.FIRST_CALL_TRANSACTION + 2);
+static final int TRANSACTION_cancelNotification = (android.os.IBinder.FIRST_CALL_TRANSACTION + 3);
 }
 public int getSmallIconId() throws android.os.RemoteException;
+// Get if notification permission is enabled.
+
+public boolean notificationPermissionEnabled() throws android.os.RemoteException;
 // Display a notification.
 
 public void notifyNotification(java.lang.String platformTag, int platformID, android.app.Notification notification) throws android.os.RemoteException;

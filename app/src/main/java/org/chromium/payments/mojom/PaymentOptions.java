@@ -93,15 +93,15 @@ public final class PaymentOptions extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(requestPayerName, 8, 0);
+        encoder0.encode(this.requestPayerName, 8, 0);
         
-        encoder0.encode(requestPayerEmail, 8, 1);
+        encoder0.encode(this.requestPayerEmail, 8, 1);
         
-        encoder0.encode(requestPayerPhone, 8, 2);
+        encoder0.encode(this.requestPayerPhone, 8, 2);
         
-        encoder0.encode(requestShipping, 8, 3);
+        encoder0.encode(this.requestShipping, 8, 3);
         
-        encoder0.encode(shippingType, 12);
+        encoder0.encode(this.shippingType, 12);
     }
 
     /**
@@ -136,11 +136,11 @@ public final class PaymentOptions extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(requestPayerName);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(requestPayerEmail);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(requestPayerPhone);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(requestShipping);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(shippingType);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.requestPayerName);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.requestPayerEmail);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.requestPayerPhone);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.requestShipping);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.shippingType);
         return result;
     }
 }

@@ -372,7 +372,7 @@ public class OverlayPanel extends OverlayPanelAnimation implements ActivityState
     @Override
     public OverlayPanelContent createNewOverlayPanelContent() {
         return new OverlayPanelContent(new OverlayContentDelegate(),
-                new OverlayContentProgressObserver(), mActivity);
+                new OverlayContentProgressObserver(), mActivity, getBarHeight());
     }
 
     /**
@@ -467,8 +467,8 @@ public class OverlayPanel extends OverlayPanelAnimation implements ActivityState
     // ============================================================================================
 
     @Override
-    protected void onAnimationFinished() {
-        super.onAnimationFinished();
+    protected void onHeightAnimationFinished() {
+        super.onHeightAnimationFinished();
 
         if (getPanelState() == PanelState.PEEKED || getPanelState() == PanelState.CLOSED) {
             setBasePageTextControlsVisibility(true);
@@ -503,9 +503,7 @@ public class OverlayPanel extends OverlayPanelAnimation implements ActivityState
      * Handles the beginning of the swipe gesture.
      */
     public void handleSwipeStart() {
-        if (animationIsRunning()) {
-            cancelHeightAnimation();
-        }
+        cancelHeightAnimation();
 
         mHasDetectedTouchGesture = false;
         mInitialPanelHeight = getHeight();
@@ -568,27 +566,25 @@ public class OverlayPanel extends OverlayPanelAnimation implements ActivityState
     /**
      * Handles the click gesture.
      *
-     * @param time The timestamp of the gesture.
      * @param x The x coordinate of the gesture.
      * @param y The y coordinate of the gesture.
      */
-    public void handleClick(long time, float x, float y) {
+    public void handleClick(float x, float y) {
         mHasDetectedTouchGesture = true;
         if (isCoordinateInsideBasePage(x, y)) {
             closePanel(StateChangeReason.BASE_PAGE_TAP, true);
         } else if (isCoordinateInsideBar(x, y) && !onInterceptBarClick()) {
-            handleBarClick(time, x, y);
+            handleBarClick(x, y);
         }
     }
 
     /**
      * Handles the click gesture specifically on the bar.
      *
-     * @param time The timestamp of the gesture.
      * @param x The x coordinate of the gesture.
      * @param y The y coordinate of the gesture.
      */
-    protected void handleBarClick(long time, float x, float y) {
+    protected void handleBarClick(float x, float y) {
         if (isPeeking()) {
             expandPanel(StateChangeReason.SEARCH_BAR_TAP);
         }
@@ -700,8 +696,7 @@ public class OverlayPanel extends OverlayPanelAnimation implements ActivityState
 
     @Override
     public void click(float x, float y, boolean fromMouse, int buttons) {
-        // TODO(mdjones): The time param for handleClick is not used anywhere, remove it.
-        handleClick(0, x, y);
+        handleClick(x, y);
     }
 
     @Override
@@ -802,12 +797,9 @@ public class OverlayPanel extends OverlayPanelAnimation implements ActivityState
      */
     protected void resizePanelContentViewCore(float width, float height) {
         if (!isShowing()) return;
-        if (getContentViewCore() != null) {
-            getOverlayPanelContent().onSizeChanged(
-                    (int) (width / mPxToDp), (int) (height / mPxToDp));
-            getOverlayPanelContent().onPhysicalBackingSizeChanged(
-                    (int) (width / mPxToDp), (int) (height / mPxToDp));
-        }
+        getOverlayPanelContent().onSizeChanged((int) (width / mPxToDp), (int) (height / mPxToDp));
+        getOverlayPanelContent().onPhysicalBackingSizeChanged(
+                (int) (width / mPxToDp), (int) (height / mPxToDp));
     }
 
     @Override
@@ -836,7 +828,7 @@ public class OverlayPanel extends OverlayPanelAnimation implements ActivityState
     @Override
     public boolean updateOverlay(long time, long dt) {
         if (isPanelOpened()) setBasePageTextControlsVisibility(false);
-        return super.onUpdateAnimation(time, false);
+        return true;
     }
 
     @Override

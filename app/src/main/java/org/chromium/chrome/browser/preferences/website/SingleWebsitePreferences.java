@@ -16,6 +16,7 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
+import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
 import android.text.format.Formatter;
 import android.widget.ListAdapter;
@@ -27,9 +28,8 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ContentSettingsType;
 import org.chromium.chrome.browser.notifications.channels.SiteChannelsManager;
-import org.chromium.chrome.browser.omnibox.geo.GeolocationHeader;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
-import org.chromium.chrome.browser.search_engines.TemplateUrlService;
+import org.chromium.chrome.browser.preferences.PreferenceUtils;
 import org.chromium.components.url_formatter.UrlFormatter;
 import org.chromium.content_public.browser.WebContents;
 
@@ -87,6 +87,7 @@ public class SingleWebsitePreferences extends PreferenceFragment
     public static final String PREF_PROTECTED_MEDIA_IDENTIFIER_PERMISSION =
             "protected_media_identifier_permission_list";
     public static final String PREF_ADS_PERMISSION = "ads_permission_list";
+    public static final String PREF_SOUND_PERMISSION = "sound_permission_list";
 
     // All permissions from the permissions preference category must be listed here.
     // TODO(mvanouwerkerk): Use this array in more places to reduce verbosity.
@@ -103,7 +104,10 @@ public class SingleWebsitePreferences extends PreferenceFragment
             PREF_POPUP_PERMISSION,
             PREF_PROTECTED_MEDIA_IDENTIFIER_PERMISSION,
             PREF_ADS_PERMISSION,
+            PREF_SOUND_PERMISSION,
     };
+
+    private static final int REQUEST_CODE_NOTIFICATION_CHANNEL_SETTINGS = 1;
 
     // The website this page is displaying details about.
     private Website mSite;
@@ -249,12 +253,14 @@ public class SingleWebsitePreferences extends PreferenceFragment
                 }
             }
 
+            // TODO(crbug.com/763982): Deal with this TODO colony.
             // TODO(mvanouwerkerk): Make the various info types share a common interface that
             // supports reading the origin or host.
             // TODO(mvanouwerkerk): Merge in PopupExceptionInfo? It uses a pattern, and is never
             // set on Android.
             // TODO(mvanouwerkerk): Merge in JavaScriptExceptionInfo? It uses a pattern.
             // TODO(lshang): Merge in CookieException? It will use patterns.
+            // TODO(steimel): Merge in SoundExceptionInfo? It uses a pattern.
         }
         return merged;
     }
@@ -270,7 +276,7 @@ public class SingleWebsitePreferences extends PreferenceFragment
      * Must only be called once mSite is set.
      */
     private void displaySitePermissions() {
-        addPreferencesFromResource(R.xml.single_website_preferences);
+        PreferenceUtils.addPreferencesFromResource(this, R.xml.single_website_preferences);
 
         Set<String> permissionPreferenceKeys =
                 new HashSet<>(Arrays.asList(PERMISSION_PREFERENCE_KEYS));
@@ -334,6 +340,8 @@ public class SingleWebsitePreferences extends PreferenceFragment
             setUpListPreference(preference, mSite.getPopupPermission());
         } else if (PREF_PROTECTED_MEDIA_IDENTIFIER_PERMISSION.equals(key)) {
             setUpListPreference(preference, mSite.getProtectedMediaIdentifierPermission());
+        } else if (PREF_SOUND_PERMISSION.equals(key)) {
+            setUpListPreference(preference, mSite.getSoundPermission());
         }
     }
 
@@ -356,7 +364,7 @@ public class SingleWebsitePreferences extends PreferenceFragment
         }
     }
 
-    private void setUpNotificationsPreference(Preference listPreference) {
+    private void setUpNotificationsPreference(Preference preference) {
         if (BuildInfo.isAtLeastO()
                 && ChromeFeatureList.isEnabled(ChromeFeatureList.SITE_NOTIFICATION_CHANNELS)) {
             final ContentSetting value = mSite.getNotificationPermission();
@@ -364,23 +372,23 @@ public class SingleWebsitePreferences extends PreferenceFragment
                 // TODO(crbug.com/735110): Figure out if this is the correct thing to do, for values
                 // that are non-null, but not ALLOW or BLOCK either. (In setupListPreference we
                 // treat non-ALLOW settings as BLOCK, but here we are simply removing them.)
-                getPreferenceScreen().removePreference(listPreference);
+                getPreferenceScreen().removePreference(preference);
                 return;
             }
-            // On Android O this preference is read-only, so we replace the ListPreference with a
+            // On Android O this preference is read-only, so we replace the existing pref with a
             // regular Preference that takes users to OS settings on click.
-            Preference preference = new Preference(listPreference.getContext());
-            preference.setKey(listPreference.getKey());
-            setUpPreferenceCommon(preference);
+            Preference newPreference = new Preference(preference.getContext());
+            newPreference.setKey(preference.getKey());
+            setUpPreferenceCommon(newPreference);
 
-            preference.setSummary(
+            newPreference.setSummary(
                     getResources().getString(ContentSettingsResources.getSiteSummary(value)));
-            preference.setDefaultValue(value);
+            newPreference.setDefaultValue(value);
 
             // This preference is read-only so should not attempt to persist to shared prefs.
-            preference.setPersistent(false);
+            newPreference.setPersistent(false);
 
-            preference.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+            newPreference.setOnPreferenceClickListener(new OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
                     // There is no guarantee that a channel has been initialized yet for sites
@@ -395,23 +403,43 @@ public class SingleWebsitePreferences extends PreferenceFragment
                     return true;
                 }
             });
-            preference.setOrder(listPreference.getOrder());
-            getPreferenceScreen().removePreference(listPreference);
-            getPreferenceScreen().addPreference(preference);
+            newPreference.setOrder(preference.getOrder());
+            getPreferenceScreen().removePreference(preference);
+            getPreferenceScreen().addPreference(newPreference);
         } else {
-            setUpListPreference(listPreference, mSite.getNotificationPermission());
+            setUpListPreference(preference, mSite.getNotificationPermission());
         }
     }
 
-    private static void launchOsChannelSettings(Context context, String channelId) {
-        // TODO(crbug.com/707804): Refer to these ACTION & EXTRA constants by name not value, i.e.
-        // Intent intent = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS);
-        // intent.putExtra(Settings.EXTRA_CHANNEL_ID, channelId);
-        // intent.putExtra(Settings.EXTRA_APP_PACKAGE, context.getPackageName());
-        Intent intent = new Intent("android.settings.CHANNEL_NOTIFICATION_SETTINGS");
-        intent.putExtra("android.provider.extra.CHANNEL_ID", channelId);
-        intent.putExtra("android.provider.extra.APP_PACKAGE", context.getPackageName());
-        context.startActivity(intent);
+    private void launchOsChannelSettings(Context context, String channelId) {
+        Intent intent = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS);
+        intent.putExtra(Settings.EXTRA_CHANNEL_ID, channelId);
+        intent.putExtra(Settings.EXTRA_APP_PACKAGE, context.getPackageName());
+        startActivityForResult(intent, REQUEST_CODE_NOTIFICATION_CHANNEL_SETTINGS);
+    }
+
+    /**
+     * If we are returning to Site Settings from another activity, the preferences displayed may be
+     * out of date. Here we refresh any we suspect may have changed.
+     */
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        // The preference screen and mSite may be null if this activity was killed in the
+        // background, and the tasks scheduled from onActivityCreated haven't completed yet. Those
+        // tasks will take care of reinitializing everything afresh so there is no work to do here.
+        if (getPreferenceScreen() == null || mSite == null) {
+            return;
+        }
+        if (requestCode == REQUEST_CODE_NOTIFICATION_CHANNEL_SETTINGS) {
+            // User has navigated back from system channel settings on O+. Ensure notification
+            // preference is up to date, since they might have toggled it from channel settings.
+            Preference notificationsPreference =
+                    getPreferenceScreen().findPreference(PREF_NOTIFICATIONS_PERMISSION);
+            if (notificationsPreference != null) {
+                setUpNotificationsPreference(notificationsPreference);
+            }
+        }
     }
 
     private void setUpUsbPreferences(int maxPermissionOrder) {
@@ -575,7 +603,8 @@ public class SingleWebsitePreferences extends PreferenceFragment
                 preference.setIcon(category.getDisabledInAndroidIcon(getActivity()));
                 preference.setEnabled(false);
             } else {
-                preference.setIcon(ContentSettingsResources.getIcon(contentType));
+                preference.setIcon(
+                        ContentSettingsResources.getTintedIcon(contentType, getResources()));
             }
         } else {
             preference.setIcon(
@@ -585,18 +614,12 @@ public class SingleWebsitePreferences extends PreferenceFragment
 
     private void setUpLocationPreference(Preference preference) {
         ContentSetting permission = mSite.getGeolocationPermission();
-        Context context = preference.getContext();
         Object locationAllowed = getArguments().getSerializable(EXTRA_LOCATION);
         if (shouldUseDSEGeolocationSetting()) {
             String origin = mSite.getAddress().getOrigin();
             mSite.setGeolocationInfo(new GeolocationInfo(origin, origin, false));
             setUpListPreference(preference, ContentSetting.ALLOW);
             updateLocationPreferenceForDSESetting(preference);
-        } else if (permission == null && hasXGeoLocationPermission(context)) {
-            String origin = mSite.getAddress().getOrigin();
-            mSite.setGeolocationInfo(new GeolocationInfo(origin, origin, false));
-            setUpListPreference(preference, ContentSetting.ALLOW);
-            updateLocationPreferenceForXGeo(preference);
         } else if (permission == null && locationAllowed != null) {
             String origin = mSite.getAddress().getOrigin();
             mSite.setGeolocationInfo(new GeolocationInfo(origin, origin, false));
@@ -654,21 +677,6 @@ public class SingleWebsitePreferences extends PreferenceFragment
     }
 
     /**
-     * Returns true if the current host matches the default search engine host and location for the
-     * default search engine is being granted via x-geo.
-     * @param context The current context.
-     */
-    private boolean hasXGeoLocationPermission(Context context) {
-        if (ChromeFeatureList.isEnabled(ChromeFeatureList.CONSISTENT_OMNIBOX_GEOLOCATION)) {
-            return false;
-        }
-
-        String searchUrl = TemplateUrlService.getInstance().getUrlForSearchQuery("foo");
-        return mSite.getAddress().matches(searchUrl)
-                && GeolocationHeader.isGeoHeaderEnabledForUrl(searchUrl, false);
-    }
-
-    /**
      * Returns true if the DSE (default search engine) geolocation setting should be used for the
      * current host. This will be the case when the host is the CCTLD (Country Code Top Level
      * Domain) of the DSE, and the DSE supports the X-Geo header.
@@ -676,25 +684,6 @@ public class SingleWebsitePreferences extends PreferenceFragment
     private boolean shouldUseDSEGeolocationSetting() {
         return WebsitePreferenceBridge.shouldUseDSEGeolocationSetting(
                 mSite.getAddress().getOrigin(), false);
-    }
-
-    /**
-     * Updates the location preference to indicate that the site has access to location (via X-Geo)
-     * for searches that happen from the omnibox.
-     * @param preference The Location preference to modify.
-     */
-    private void updateLocationPreferenceForXGeo(Preference preference) {
-        ListPreference listPreference = (ListPreference) preference;
-        Resources res = getResources();
-        listPreference.setEntries(new String[] {
-                res.getString(R.string.website_settings_permissions_allow_dse_address_bar),
-                res.getString(ContentSettingsResources.getSiteSummary(ContentSetting.BLOCK)),
-        });
-        listPreference.setEntryValues(new String[] {
-                ContentSetting.DEFAULT.toString(),
-                ContentSetting.BLOCK.toString(),
-        });
-        listPreference.setValueIndex(0);
     }
 
     /**
@@ -739,6 +728,8 @@ public class SingleWebsitePreferences extends PreferenceFragment
                 return ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS;
             case PREF_PROTECTED_MEDIA_IDENTIFIER_PERMISSION:
                 return ContentSettingsType.CONTENT_SETTINGS_TYPE_PROTECTED_MEDIA_IDENTIFIER;
+            case PREF_SOUND_PERMISSION:
+                return ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND;
             default:
                 return 0;
         }
@@ -796,6 +787,8 @@ public class SingleWebsitePreferences extends PreferenceFragment
             mSite.setPopupPermission(permission);
         } else if (PREF_PROTECTED_MEDIA_IDENTIFIER_PERMISSION.equals(preference.getKey())) {
             mSite.setProtectedMediaIdentifierPermission(permission);
+        } else if (PREF_SOUND_PERMISSION.equals(preference.getKey())) {
+            mSite.setSoundPermission(permission);
         }
 
         return true;
@@ -868,6 +861,7 @@ public class SingleWebsitePreferences extends PreferenceFragment
         mSite.setNotificationPermission(ContentSetting.DEFAULT);
         mSite.setPopupPermission(ContentSetting.DEFAULT);
         mSite.setProtectedMediaIdentifierPermission(ContentSetting.DEFAULT);
+        mSite.setSoundPermission(ContentSetting.DEFAULT);
 
         for (UsbInfo info : mSite.getUsbInfo()) info.revoke();
 

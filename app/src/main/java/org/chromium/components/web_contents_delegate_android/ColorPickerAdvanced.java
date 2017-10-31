@@ -63,12 +63,11 @@ public class ColorPickerAdvanced extends LinearLayout implements OnSeekBarChange
     private void init() {
         setOrientation(LinearLayout.VERTICAL);
 
-        mHueDetails = createAndAddNewGradient(R.string.color_picker_hue,
-                HUE_SEEK_BAR_MAX, this);
-        mSaturationDetails = createAndAddNewGradient(R.string.color_picker_saturation,
-                SATURATION_SEEK_BAR_MAX, this);
-        mValueDetails = createAndAddNewGradient(R.string.color_picker_value,
-                VALUE_SEEK_BAR_MAX, this);
+        mHueDetails = createAndAddNewGradient(R.string.color_picker_hue, HUE_SEEK_BAR_MAX, this);
+        mSaturationDetails = createAndAddNewGradient(
+                R.string.color_picker_saturation, SATURATION_SEEK_BAR_MAX, this);
+        mValueDetails =
+                createAndAddNewGradient(R.string.color_picker_value, VALUE_SEEK_BAR_MAX, this);
         refreshGradientComponents();
     }
 
@@ -82,18 +81,15 @@ public class ColorPickerAdvanced extends LinearLayout implements OnSeekBarChange
      *
      * @return A new GradientDetails object initialized with the given parameters.
      */
-    public ColorPickerAdvancedComponent createAndAddNewGradient(int textResourceId,
-            int seekBarMax,
-            OnSeekBarChangeListener seekBarListener) {
-        LayoutInflater inflater = (LayoutInflater) getContext()
-                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    public ColorPickerAdvancedComponent createAndAddNewGradient(
+            int textResourceId, int seekBarMax, OnSeekBarChangeListener seekBarListener) {
+        LayoutInflater inflater =
+                (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View newComponent = inflater.inflate(R.layout.color_picker_advanced_component, null);
         addView(newComponent);
 
-        return new ColorPickerAdvancedComponent(newComponent,
-                textResourceId,
-                seekBarMax,
-                seekBarListener);
+        return new ColorPickerAdvancedComponent(
+                newComponent, textResourceId, seekBarMax, seekBarListener);
     }
 
     /**

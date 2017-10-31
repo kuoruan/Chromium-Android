@@ -93,15 +93,15 @@ public final class SyncToken extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(verifiedFlush, 8, 0);
+        encoder0.encode(this.verifiedFlush, 8, 0);
         
-        encoder0.encode(namespaceId, 12);
+        encoder0.encode(this.namespaceId, 12);
         
-        encoder0.encode(extraDataField, 16);
+        encoder0.encode(this.extraDataField, 16);
         
-        encoder0.encode(commandBufferId, 24);
+        encoder0.encode(this.commandBufferId, 24);
         
-        encoder0.encode(releaseCount, 32);
+        encoder0.encode(this.releaseCount, 32);
     }
 
     /**
@@ -136,11 +136,11 @@ public final class SyncToken extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(verifiedFlush);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(namespaceId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(extraDataField);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(commandBufferId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(releaseCount);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.verifiedFlush);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.namespaceId);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.extraDataField);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.commandBufferId);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.releaseCount);
         return result;
     }
 }

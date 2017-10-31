@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.bookmarks;
 
 import android.content.Context;
+import android.support.annotation.IntDef;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.text.TextUtils;
@@ -13,37 +14,46 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkItem;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkModelObserver;
-import org.chromium.chrome.browser.bookmarks.BookmarkPromoHeader.PromoHeaderShowingChangeListener;
-import org.chromium.chrome.browser.widget.displaystyle.MarginResizer;
-import org.chromium.chrome.browser.widget.selection.SelectableListLayout;
+import org.chromium.chrome.browser.signin.PersonalizedSigninPromoView;
 import org.chromium.components.bookmarks.BookmarkId;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * BaseAdapter for {@link RecyclerView}. It manages bookmarks to list there.
  */
-class BookmarkItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements
-        BookmarkUIObserver, PromoHeaderShowingChangeListener {
-    private static final int PROMO_HEADER_VIEW = 0;
-    private static final int FOLDER_VIEW = 1;
-    private static final int BOOKMARK_VIEW = 2;
+class BookmarkItemsAdapter
+        extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements BookmarkUIObserver {
+    /**
+     * Specifies the view types that the bookmark manager screen can contain.
+     */
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({ViewType.PERSONALIZED_SIGNIN_PROMO, ViewType.GENERIC_SIGNIN_PROMO, ViewType.SYNC_PROMO,
+            ViewType.FOLDER, ViewType.BOOKMARK})
+    private @interface ViewType {
+        int PERSONALIZED_SIGNIN_PROMO = 0;
+        int GENERIC_SIGNIN_PROMO = 1;
+        int SYNC_PROMO = 2;
+        int FOLDER = 3;
+        int BOOKMARK = 4;
+    }
 
     private static final int MAXIMUM_NUMBER_OF_SEARCH_RESULTS = 500;
     private static final String EMPTY_QUERY = null;
 
     private final List<List<? extends Object>> mSections;
-    private final List<Object> mPromoHeaderSection = new ArrayList<>();
+
+    // The promo header section will always contain 0 or 1 elements.
+    @ViewType
+    private final List<Integer> mPromoHeaderSection = new ArrayList<>();
     private final List<BookmarkId> mFolderSection = new ArrayList<>();
     private final List<BookmarkId> mBookmarkSection = new ArrayList<>();
-
-    private final List<BookmarkRow> mBookmarkRows = new ArrayList<>();
-    private final List<BookmarkRow> mFolderRows = new ArrayList<>();
 
     private final List<BookmarkId> mTopLevelFolders = new ArrayList<>();
 
@@ -96,7 +106,13 @@ class BookmarkItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     }
 
     BookmarkId getItem(int position) {
-        return (BookmarkId) getSection(position).get(toSectionPosition(position));
+        List<?> section = getSection(position);
+
+        // The promo header section does contain bookmark ids.
+        if (section == mPromoHeaderSection) {
+            return null;
+        }
+        return (BookmarkId) section.get(toSectionPosition(position));
     }
 
     private int toSectionPosition(int globalPosition) {
@@ -154,18 +170,6 @@ class BookmarkItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         assert section == mFolderSection || section == mBookmarkSection;
         section.remove(toSectionPosition(position));
         notifyItemRemoved(position);
-
-        if (section == mBookmarkSection && !mBookmarkSection.isEmpty()) {
-            for (BookmarkRow row : mBookmarkRows) {
-                BookmarkId id = row.getItem();
-                setBackgroundResourceForBookmarkRow(row, id);
-            }
-        } else if (!mFolderSection.isEmpty()) {
-            for (BookmarkRow row : mFolderRows) {
-                BookmarkId id = row.getItem();
-                setBackgroundResourceForFolderRow(row, id);
-            }
-        }
     }
 
     // RecyclerView.Adapter implementation.
@@ -180,15 +184,16 @@ class BookmarkItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     }
 
     @Override
-    public int getItemViewType(int position) {
+    public @ViewType int getItemViewType(int position) {
         List<?> section = getSection(position);
 
         if (section == mPromoHeaderSection) {
-            return PROMO_HEADER_VIEW;
+            assert section.size() == 1 : "Only one element is supported in promo header section!";
+            return mPromoHeaderSection.get(0);
         } else if (section == mFolderSection) {
-            return FOLDER_VIEW;
+            return ViewType.FOLDER;
         } else if (section == mBookmarkSection) {
-            return BOOKMARK_VIEW;
+            return ViewType.BOOKMARK;
         }
 
         assert false : "Invalid position requested";
@@ -196,32 +201,25 @@ class BookmarkItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     }
 
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(ViewGroup parent, @ViewType int viewType) {
         assert mDelegate != null;
 
         switch (viewType) {
-            case PROMO_HEADER_VIEW:
-                ViewHolder promoView = mPromoHeaderManager.createHolder(parent);
-                MarginResizer.createAndAttach(promoView.itemView,
-                        mDelegate.getSelectableListLayout().getUiConfig(),
-                        parent.getResources().getDimensionPixelSize(
-                                R.dimen.signin_and_sync_view_padding),
-                        SelectableListLayout.getDefaultListItemLateralShadowSizePx(
-                                parent.getResources()));
-                return promoView;
-            case FOLDER_VIEW:
+            case ViewType.PERSONALIZED_SIGNIN_PROMO:
+                return mPromoHeaderManager.createPersonalizedSigninPromoHolder(parent);
+            case ViewType.GENERIC_SIGNIN_PROMO:
+                return mPromoHeaderManager.createGenericSigninPromoHolder(parent);
+            case ViewType.SYNC_PROMO:
+                return mPromoHeaderManager.createSyncPromoHolder(parent);
+            case ViewType.FOLDER:
                 BookmarkFolderRow folder = (BookmarkFolderRow) LayoutInflater.from(
                         parent.getContext()).inflate(R.layout.bookmark_folder_row, parent, false);
                 folder.onBookmarkDelegateInitialized(mDelegate);
-                folder.configureWideDisplayStyle(mDelegate.getSelectableListLayout().getUiConfig());
-                mFolderRows.add(folder);
                 return new ItemViewHolder(folder);
-            case BOOKMARK_VIEW:
+            case ViewType.BOOKMARK:
                 BookmarkItemRow item = (BookmarkItemRow) LayoutInflater.from(
                         parent.getContext()).inflate(R.layout.bookmark_item_row, parent, false);
                 item.onBookmarkDelegateInitialized(mDelegate);
-                item.configureWideDisplayStyle(mDelegate.getSelectableListLayout().getUiConfig());
-                mBookmarkRows.add(item);
                 return new ItemViewHolder(item);
             default:
                 assert false;
@@ -229,37 +227,25 @@ class BookmarkItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         }
     }
 
-    @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        BookmarkId id = getItem(position);
-
-        switch (getItemViewType(position)) {
-            case PROMO_HEADER_VIEW:
+        switch (holder.getItemViewType()) {
+            case ViewType.PERSONALIZED_SIGNIN_PROMO:
+                PersonalizedSigninPromoView view = (PersonalizedSigninPromoView) holder.itemView;
+                mPromoHeaderManager.setupPersonalizedSigninPromo(view);
                 break;
-            case FOLDER_VIEW:
-                ((BookmarkRow) holder.itemView).setBookmarkId(id);
-                setBackgroundResourceForFolderRow(((BookmarkRow) holder.itemView), id);
+            case ViewType.GENERIC_SIGNIN_PROMO:
+            case ViewType.SYNC_PROMO:
                 break;
-            case BOOKMARK_VIEW:
-                ((BookmarkRow) holder.itemView).setBookmarkId(id);
-                setBackgroundResourceForBookmarkRow((BookmarkRow) holder.itemView, id);
+            case ViewType.FOLDER:
+                ((BookmarkRow) holder.itemView).setBookmarkId(getItem(position));
+                break;
+            case ViewType.BOOKMARK:
+                ((BookmarkRow) holder.itemView).setBookmarkId(getItem(position));
                 break;
             default:
                 assert false : "View type not supported!";
         }
-    }
-
-    // PromoHeaderShowingChangeListener implementation.
-
-    @Override
-    public void onPromoHeaderShowingChanged(boolean isShowing) {
-        assert mDelegate != null;
-        if (mDelegate.getCurrentState() != BookmarkUIState.STATE_FOLDER) {
-            return;
-        }
-
-        updateHeaderAndNotify();
     }
 
     // BookmarkUIObserver implementations.
@@ -269,7 +255,27 @@ class BookmarkItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         mDelegate = delegate;
         mDelegate.addUIObserver(this);
         mDelegate.getModel().addObserver(mBookmarkModelObserver);
-        mPromoHeaderManager = new BookmarkPromoHeader(mContext, this);
+
+        Runnable promoHeaderChangeAction = () -> {
+            assert mDelegate != null;
+            if (mDelegate.getCurrentState() != BookmarkUIState.STATE_FOLDER) {
+                return;
+            }
+
+            boolean wasShowingPromo = !mPromoHeaderSection.isEmpty();
+            updateHeader();
+            boolean willShowPromo = !mPromoHeaderSection.isEmpty();
+
+            if (!wasShowingPromo && willShowPromo) {
+                notifyItemInserted(0);
+            } else if (wasShowingPromo && willShowPromo) {
+                notifyItemChanged(0);
+            } else if (wasShowingPromo && !willShowPromo) {
+                notifyItemRemoved(0);
+            }
+        };
+
+        mPromoHeaderManager = new BookmarkPromoHeader(mContext, promoHeaderChangeAction);
         populateTopLevelFoldersList();
     }
 
@@ -278,7 +284,6 @@ class BookmarkItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         mDelegate.removeUIObserver(this);
         mDelegate.getModel().removeObserver(mBookmarkModelObserver);
         mDelegate = null;
-
         mPromoHeaderManager.destroy();
     }
 
@@ -337,8 +342,21 @@ class BookmarkItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         if (currentUIState == BookmarkUIState.STATE_SEARCHING) return;
 
         assert currentUIState == BookmarkUIState.STATE_FOLDER : "Unexpected UI state";
-        if (mPromoHeaderManager.shouldShow()) {
-            mPromoHeaderSection.add(null);
+
+        switch (mPromoHeaderManager.getPromoState()) {
+            case BookmarkPromoHeader.PromoState.PROMO_NONE:
+                return;
+            case BookmarkPromoHeader.PromoState.PROMO_SIGNIN_PERSONALIZED:
+                mPromoHeaderSection.add(ViewType.PERSONALIZED_SIGNIN_PROMO);
+                return;
+            case BookmarkPromoHeader.PromoState.PROMO_SIGNIN_GENERIC:
+                mPromoHeaderSection.add(ViewType.GENERIC_SIGNIN_PROMO);
+                return;
+            case BookmarkPromoHeader.PromoState.PROMO_SYNC:
+                mPromoHeaderSection.add(ViewType.SYNC_PROMO);
+                return;
+            default:
+                assert false : "Unexpected value for promo state!";
         }
     }
 
@@ -371,19 +389,5 @@ class BookmarkItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     @VisibleForTesting
     public BookmarkDelegate getDelegateForTesting() {
         return mDelegate;
-    }
-
-    private void setBackgroundResourceForBookmarkRow(BookmarkRow row, BookmarkId id) {
-        if (id == null) return;
-
-        row.setBackgroundResourceForGroupPosition(id.equals(mBookmarkSection.get(0)),
-                id.equals(mBookmarkSection.get(mBookmarkSection.size() - 1)));
-    }
-
-    private void setBackgroundResourceForFolderRow(BookmarkRow row, BookmarkId id) {
-        if (id == null) return;
-
-        row.setBackgroundResourceForGroupPosition(id.equals(mFolderSection.get(0)),
-                id.equals(mFolderSection.get(mFolderSection.size() - 1)));
     }
 }

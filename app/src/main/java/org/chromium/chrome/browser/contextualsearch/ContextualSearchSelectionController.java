@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.contextualsearch;
 
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import org.chromium.base.VisibleForTesting;
@@ -396,6 +397,7 @@ public class ContextualSearchSelectionController {
      * @return The Base Page's {@link ContentViewCore}, or {@code null} if there is no current tab.
      */
     @Deprecated
+    @Nullable
     ContentViewCore getBaseContentView() {
         Tab currentTab = mActivity.getActivityTab();
         return currentTab != null ? currentTab.getContentViewCore() : null;
@@ -405,6 +407,7 @@ public class ContextualSearchSelectionController {
      * @return The Base Page's {@link WebContents}, or {@code null} if there is no current tab or
      *         the current tab has no {@link ContentViewCore}.
      */
+    @Nullable
     WebContents getBaseWebContents() {
         Tab currentTab = mActivity.getActivityTab();
         if (currentTab == null) return null;
@@ -425,7 +428,7 @@ public class ContextualSearchSelectionController {
         if (basePageWebContents != null) {
             mDidExpandSelection = true;
             basePageWebContents.adjustSelectionByCharacterOffset(
-                    selectionStartAdjust, selectionEndAdjust);
+                    selectionStartAdjust, selectionEndAdjust, /* show_selection_menu = */ false);
         }
     }
 

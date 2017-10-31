@@ -86,17 +86,17 @@ public final class VideoDecodeAcceleratorCapabilities extends org.chromium.mojo.
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        if (supportedProfiles == null) {
+        if (this.supportedProfiles == null) {
             encoder0.encodeNullPointer(8, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(supportedProfiles.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            for (int i0 = 0; i0 < supportedProfiles.length; ++i0) {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.supportedProfiles.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.supportedProfiles.length; ++i0) {
                 
-                encoder1.encode(supportedProfiles[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                encoder1.encode(this.supportedProfiles[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
         
-        encoder0.encode(flags, 16);
+        encoder0.encode(this.flags, 16);
     }
 
     /**
@@ -125,8 +125,8 @@ public final class VideoDecodeAcceleratorCapabilities extends org.chromium.mojo.
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + java.util.Arrays.deepHashCode(supportedProfiles);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(flags);
+        result = prime * result + java.util.Arrays.deepHashCode(this.supportedProfiles);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.flags);
         return result;
     }
 }

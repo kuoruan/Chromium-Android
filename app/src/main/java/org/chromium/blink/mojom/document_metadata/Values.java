@@ -42,104 +42,104 @@ public final class Values extends org.chromium.mojo.bindings.Union {
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setBoolValues(boolean[] boolValues) {
-        mTag_ = Tag.BoolValues;
-        mBoolValues = boolValues;
+        this.mTag_ = Tag.BoolValues;
+        this.mBoolValues = boolValues;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public boolean[] getBoolValues() {
-        assert mTag_ == Tag.BoolValues;
-        return mBoolValues;
+        assert this.mTag_ == Tag.BoolValues;
+        return this.mBoolValues;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setLongValues(long[] longValues) {
-        mTag_ = Tag.LongValues;
-        mLongValues = longValues;
+        this.mTag_ = Tag.LongValues;
+        this.mLongValues = longValues;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public long[] getLongValues() {
-        assert mTag_ == Tag.LongValues;
-        return mLongValues;
+        assert this.mTag_ == Tag.LongValues;
+        return this.mLongValues;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setStringValues(String[] stringValues) {
-        mTag_ = Tag.StringValues;
-        mStringValues = stringValues;
+        this.mTag_ = Tag.StringValues;
+        this.mStringValues = stringValues;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public String[] getStringValues() {
-        assert mTag_ == Tag.StringValues;
-        return mStringValues;
+        assert this.mTag_ == Tag.StringValues;
+        return this.mStringValues;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setEntityValues(Entity[] entityValues) {
-        mTag_ = Tag.EntityValues;
-        mEntityValues = entityValues;
+        this.mTag_ = Tag.EntityValues;
+        this.mEntityValues = entityValues;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public Entity[] getEntityValues() {
-        assert mTag_ == Tag.EntityValues;
-        return mEntityValues;
+        assert this.mTag_ == Tag.EntityValues;
+        return this.mEntityValues;
     }
 
 
     @Override
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder0, int offset) {
         encoder0.encode(org.chromium.mojo.bindings.BindingsHelper.UNION_SIZE, offset);
-        encoder0.encode(mTag_, offset + 4);
+        encoder0.encode(this.mTag_, offset + 4);
         switch (mTag_) {
             case Tag.BoolValues: {
                 
-                encoder0.encode(mBoolValues, offset + 8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                encoder0.encode(this.mBoolValues, offset + 8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
                 break;
             }
             case Tag.LongValues: {
                 
-                encoder0.encode(mLongValues, offset + 8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                encoder0.encode(this.mLongValues, offset + 8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
                 break;
             }
             case Tag.StringValues: {
                 
-                if (mStringValues == null) {
+                if (this.mStringValues == null) {
                     encoder0.encodeNullPointer(offset + 8, false);
                 } else {
-                    org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(mStringValues.length, offset + 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                    for (int i0 = 0; i0 < mStringValues.length; ++i0) {
+                    org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.mStringValues.length, offset + 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                    for (int i0 = 0; i0 < this.mStringValues.length; ++i0) {
                         
-                        encoder1.encode(mStringValues[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                        encoder1.encode(this.mStringValues[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
                     }
                 }
                 break;
             }
             case Tag.EntityValues: {
                 
-                if (mEntityValues == null) {
+                if (this.mEntityValues == null) {
                     encoder0.encodeNullPointer(offset + 8, false);
                 } else {
-                    org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(mEntityValues.length, offset + 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                    for (int i0 = 0; i0 < mEntityValues.length; ++i0) {
+                    org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.mEntityValues.length, offset + 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                    for (int i0 = 0; i0 < this.mEntityValues.length; ++i0) {
                         
-                        encoder1.encode(mEntityValues[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                        encoder1.encode(this.mEntityValues[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
                     }
                 }
                 break;
@@ -221,17 +221,17 @@ public final class Values extends org.chromium.mojo.bindings.Union {
         if (getClass() != object.getClass())
             return false;
         Values other = (Values) object;
-        if (mTag_ != other.mTag_)
+        if (this.mTag_ != other.mTag_)
             return false;
-        switch (mTag_) {
+        switch (this.mTag_) {
             case Tag.BoolValues:
-                return java.util.Arrays.equals(mBoolValues, other.mBoolValues);
+                return java.util.Arrays.equals(this.mBoolValues, other.mBoolValues);
             case Tag.LongValues:
-                return java.util.Arrays.equals(mLongValues, other.mLongValues);
+                return java.util.Arrays.equals(this.mLongValues, other.mLongValues);
             case Tag.StringValues:
-                return java.util.Arrays.deepEquals(mStringValues, other.mStringValues);
+                return java.util.Arrays.deepEquals(this.mStringValues, other.mStringValues);
             case Tag.EntityValues:
-                return java.util.Arrays.deepEquals(mEntityValues, other.mEntityValues);
+                return java.util.Arrays.deepEquals(this.mEntityValues, other.mEntityValues);
             default:
                 break;
         }
@@ -246,21 +246,21 @@ public final class Values extends org.chromium.mojo.bindings.Union {
         final int prime = 31;
         int result = prime + getClass().hashCode();
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mTag_);
-        switch (mTag_) {
+        switch (this.mTag_) {
             case Tag.BoolValues: {
-                result = prime * result + java.util.Arrays.hashCode(mBoolValues);
+                result = prime * result + java.util.Arrays.hashCode(this.mBoolValues);
                 break;
             }
             case Tag.LongValues: {
-                result = prime * result + java.util.Arrays.hashCode(mLongValues);
+                result = prime * result + java.util.Arrays.hashCode(this.mLongValues);
                 break;
             }
             case Tag.StringValues: {
-                result = prime * result + java.util.Arrays.deepHashCode(mStringValues);
+                result = prime * result + java.util.Arrays.deepHashCode(this.mStringValues);
                 break;
             }
             case Tag.EntityValues: {
-                result = prime * result + java.util.Arrays.deepHashCode(mEntityValues);
+                result = prime * result + java.util.Arrays.deepHashCode(this.mEntityValues);
                 break;
             }
             default: {

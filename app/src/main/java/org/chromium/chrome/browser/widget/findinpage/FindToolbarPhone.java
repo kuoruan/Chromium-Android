@@ -57,7 +57,7 @@ public class FindToolbarPhone extends FindToolbar {
             mFindNextButton.setTint(dark);
             mFindPrevButton.setTint(dark);
             mCloseFindButton.setTint(dark);
-            queryTextColorId = R.color.find_in_page_query_color;
+            queryTextColorId = R.color.black_alpha_87;
         }
         mFindQuery.setTextColor(
                 ApiCompatibilityUtils.getColor(getContext().getResources(), queryTextColorId));
@@ -66,8 +66,8 @@ public class FindToolbarPhone extends FindToolbar {
     @Override
     protected int getStatusColor(boolean failed, boolean incognito) {
         if (!failed && incognito) {
-            return ApiCompatibilityUtils.getColor(getContext().getResources(),
-                    R.color.find_in_page_results_status_white_color);
+            return ApiCompatibilityUtils.getColor(
+                    getContext().getResources(), R.color.white_alpha_50);
         }
 
         return super.getStatusColor(failed, incognito);

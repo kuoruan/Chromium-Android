@@ -5,8 +5,11 @@
 package org.chromium.chrome.browser.customtabs;
 
 import static org.chromium.chrome.browser.customtabs.CustomTabIntentDataProvider.CUSTOM_TABS_UI_TYPE_MEDIA_VIEWER;
+import static org.chromium.chrome.browser.customtabs.CustomTabIntentDataProvider.CUSTOM_TABS_UI_TYPE_MINIMAL_UI_WEBAPP;
 import static org.chromium.chrome.browser.customtabs.CustomTabIntentDataProvider.CUSTOM_TABS_UI_TYPE_PAYMENT_REQUEST;
+import static org.chromium.chrome.browser.customtabs.CustomTabIntentDataProvider.CUSTOM_TABS_UI_TYPE_READER_MODE;
 
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -91,9 +94,24 @@ public class CustomTabAppMenuPropertiesDelegate extends AppMenuPropertiesDelegat
                 requestDesktopSiteVisible = false;
                 addToHomeScreenVisible = false;
             } else if (mUiType == CUSTOM_TABS_UI_TYPE_PAYMENT_REQUEST) {
-                // Only the icon row and 'find in page' are shown for openning payment request UI
+                // Only the icon row and 'find in page' are shown for opening payment request UI
                 // from Chrome.
                 openInChromeItemVisible = false;
+                requestDesktopSiteVisible = false;
+                addToHomeScreenVisible = false;
+                downloadItemVisible = false;
+                bookmarkItemVisible = false;
+            } else if (mUiType == CUSTOM_TABS_UI_TYPE_READER_MODE) {
+                // Only 'find in page' and the reader mode preference are shown for Reader Mode UI.
+                menu.findItem(R.id.icon_row_menu_id).setVisible(false);
+                bookmarkItemVisible = false; // Set to skip initialization.
+                downloadItemVisible = false; // Set to skip initialization.
+                openInChromeItemVisible = false;
+                requestDesktopSiteVisible = false;
+                addToHomeScreenVisible = false;
+
+                menu.findItem(R.id.reader_mode_prefs_id).setVisible(true);
+            } else if (mUiType == CUSTOM_TABS_UI_TYPE_MINIMAL_UI_WEBAPP) {
                 requestDesktopSiteVisible = false;
                 addToHomeScreenVisible = false;
                 downloadItemVisible = false;
@@ -110,7 +128,7 @@ public class CustomTabAppMenuPropertiesDelegate extends AppMenuPropertiesDelegat
             String url = currentTab.getUrl();
             boolean isChromeScheme = url.startsWith(UrlConstants.CHROME_URL_PREFIX)
                     || url.startsWith(UrlConstants.CHROME_NATIVE_URL_PREFIX);
-            if (isChromeScheme) {
+            if (isChromeScheme || TextUtils.isEmpty(url)) {
                 addToHomeScreenVisible = false;
             }
 
@@ -136,12 +154,6 @@ public class CustomTabAppMenuPropertiesDelegate extends AppMenuPropertiesDelegat
                 openInChromeItem.setVisible(false);
             }
 
-            if (requestDesktopSiteVisible) {
-                updateRequestDesktopSiteMenuItem(menu, currentTab);
-            } else {
-                menu.findItem(R.id.request_desktop_site_row_menu_id).setVisible(false);
-            }
-
             // Add custom menu items. Make sure they are only added once.
             if (!mIsCustomEntryAdded) {
                 mIsCustomEntryAdded = true;
@@ -151,6 +163,7 @@ public class CustomTabAppMenuPropertiesDelegate extends AppMenuPropertiesDelegat
                 }
             }
 
+            updateRequestDesktopSiteMenuItem(menu, currentTab, requestDesktopSiteVisible);
             prepareAddToHomescreenMenuItem(menu, currentTab, addToHomeScreenVisible);
         }
     }

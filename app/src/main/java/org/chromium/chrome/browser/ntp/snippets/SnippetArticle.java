@@ -3,7 +3,8 @@
 // found in the LICENSE file.
 package org.chromium.chrome.browser.ntp.snippets;
 
-import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.support.annotation.ColorInt;
 import android.support.annotation.Nullable;
 
 import org.chromium.base.DiscardableReferencePool.DiscardableReference;
@@ -26,9 +27,6 @@ public class SnippetArticle implements OfflinableSuggestion {
 
     /** The canonical publisher name (e.g., New York Times). */
     public final String mPublisher;
-
-    /** The snippet preview text. */
-    public final String mPreviewText;
 
     /** The URL of this article. This may be an AMP url. */
     public final String mUrl;
@@ -54,8 +52,11 @@ public class SnippetArticle implements OfflinableSuggestion {
     /** The global rank of this article in the complete list. */
     private int mGlobalRank = -1;
 
-    /** Bitmap of the thumbnail, fetched lazily, when the RecyclerView wants to show the snippet. */
-    private DiscardableReference<Bitmap> mThumbnailBitmap;
+    /** The thumbnail, fetched lazily when the RecyclerView wants to show the snippet. */
+    private DiscardableReference<Drawable> mThumbnail;
+
+    /** The thumbnail dominant color. */
+    private @ColorInt Integer mThumbnailDominantColor;
 
     /** Stores whether impression of this article has been tracked already. */
     private boolean mImpressionTracked;
@@ -78,22 +79,25 @@ public class SnippetArticle implements OfflinableSuggestion {
     /** The offline id of the corresponding offline page, if any. */
     private Long mOfflinePageOfflineId;
 
+    /** Whether the corresponding offline page has been automatically prefetched. */
+    private boolean mIsPrefetched;
+
     /**
      * Creates a SnippetArticleListItem object that will hold the data.
      */
     public SnippetArticle(int category, String idWithinCategory, String title, String publisher,
-            String previewText, String url, long publishTimestamp, float score, long fetchTimestamp,
-            boolean isVideoSuggestion) {
+            String url, long publishTimestamp, float score, long fetchTimestamp,
+            boolean isVideoSuggestion, @ColorInt Integer thumbnailDominantColor) {
         mCategory = category;
         mIdWithinCategory = idWithinCategory;
         mTitle = title;
         mPublisher = publisher;
-        mPreviewText = previewText;
         mUrl = url;
         mPublishTimestampMilliseconds = publishTimestamp;
         mScore = score;
         mFetchTimestampMilliseconds = fetchTimestamp;
         mIsVideoSuggestion = isVideoSuggestion;
+        mThumbnailDominantColor = thumbnailDominantColor;
     }
 
     @Override
@@ -109,16 +113,24 @@ public class SnippetArticle implements OfflinableSuggestion {
     }
 
     /**
-     * Returns this article's thumbnail as a {@link Bitmap}. Can return {@code null} as it is
-     * initially unset.
+     * Returns this article's thumbnail. Can return {@code null} as it is initially unset.
      */
-    public Bitmap getThumbnailBitmap() {
-        return mThumbnailBitmap == null ? null : mThumbnailBitmap.get();
+    public Drawable getThumbnail() {
+        return mThumbnail == null ? null : mThumbnail.get();
     }
 
     /** Sets the thumbnail bitmap for this article. */
-    public void setThumbnailBitmap(DiscardableReference<Bitmap> bitmap) {
-        mThumbnailBitmap = bitmap;
+    public void setThumbnail(DiscardableReference<Drawable> thumbnail) {
+        mThumbnail = thumbnail;
+    }
+
+    /**
+     * Returns this article's thumbnail dominant color. Can return {@code null} if there is none.
+     */
+    @Nullable
+    @ColorInt
+    public Integer getThumbnailDominantColor() {
+        return mThumbnailDominantColor;
     }
 
     /** Returns whether to track an impression for this article. */
@@ -132,6 +144,11 @@ public class SnippetArticle implements OfflinableSuggestion {
     /** @return whether a snippet is a remote suggestion. */
     public boolean isArticle() {
         return mCategory == KnownCategories.ARTICLES;
+    }
+
+    /** @return whether a snippet is a contextual suggestion. */
+    public boolean isContextual() {
+        return mCategory == KnownCategories.CONTEXTUAL;
     }
 
     /** @return whether a snippet is either offline page or asset download. */
@@ -238,6 +255,14 @@ public class SnippetArticle implements OfflinableSuggestion {
     @Nullable
     public Long getOfflinePageOfflineId() {
         return mOfflinePageOfflineId;
+    }
+
+    public void setIsPrefetched(boolean isPrefetched) {
+        mIsPrefetched = isPrefetched;
+    }
+
+    public boolean isPrefetched() {
+        return mIsPrefetched;
     }
 
     @Override

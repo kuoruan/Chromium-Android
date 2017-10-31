@@ -8,23 +8,24 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="@dimen/signin_and_sync_view_padding" >
+    android:padding="@dimen/signin_and_sync_view_padding"
+    android:layout_marginStart="@dimen/list_item_default_margin"
+    android:layout_marginEnd="@dimen/list_item_default_margin"
+    android:background="@drawable/content_card_modern_background">
 
     <TextView
         android:id="@+id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:textColor="@color/default_text_color"
-        android:textSize="16sp"
-        android:textStyle="bold" />
+        android:textAppearance="@style/BlackTitle1" />
 
     <TextView
         android:id="@+id/description"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/default_text_color"
-        android:textSize="14sp" />
+        android:textAppearance="@style/BlackBody"
+        android:lineSpacingExtra="6sp" />
 
     <LinearLayout
         android:layout_width="wrap_content"

@@ -22,7 +22,7 @@
         android:scaleType="centerInside"
         android:contentDescription="@null" />
     <TextView
-        android:id="@+id/context_text"
+        android:id="@+id/context_menu_text"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"

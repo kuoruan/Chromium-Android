@@ -4,14 +4,15 @@
 
 package org.chromium.chrome.browser.download;
 
-import android.app.Activity;
 import android.view.View;
 
 import org.chromium.base.ActivityState;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.ApplicationStatus.ActivityStateListener;
+import org.chromium.base.CollectionUtil;
 import org.chromium.base.ThreadUtils;
 import org.chromium.chrome.browser.ChromeActivity;
+import org.chromium.chrome.browser.download.ui.DownloadHistoryItemWrapper;
 import org.chromium.chrome.browser.download.ui.DownloadManagerUi;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;
 import org.chromium.chrome.browser.toolbar.BottomToolbarPhone;
@@ -20,12 +21,14 @@ import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.BottomSheetCon
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheetContentController;
 import org.chromium.chrome.browser.widget.selection.SelectableListToolbar;
 
+import java.util.List;
+
 /**
  * A {@link BottomSheetContent} holding a {@link DownloadManagerUi} for display in the BottomSheet.
  */
 public class DownloadSheetContent implements BottomSheetContent {
     private final View mContentView;
-    private final SelectableListToolbar mToolbarView;
+    private final SelectableListToolbar<DownloadHistoryItemWrapper> mToolbarView;
     private final ActivityStateListener mActivityStateListener;
     private DownloadManagerUi mDownloadManager;
 
@@ -61,13 +64,10 @@ public class DownloadSheetContent implements BottomSheetContent {
         // own ActivityStateListener. If multiple tabs are showing the downloads page, multiple
         // requests to check for externally removed downloads will be issued when the activity is
         // resumed.
-        mActivityStateListener = new ActivityStateListener() {
-            @Override
-            public void onActivityStateChange(Activity activity, int newState) {
-                if (newState == ActivityState.RESUMED) {
-                    DownloadUtils.checkForExternallyRemovedDownloads(
-                            mDownloadManager.getBackendProvider(), isIncognito);
-                }
+        mActivityStateListener = (activity1, newState) -> {
+            if (newState == ActivityState.RESUMED) {
+                DownloadUtils.checkForExternallyRemovedDownloads(
+                        mDownloadManager.getBackendProvider(), isIncognito);
             }
         };
         ApplicationStatus.registerStateListenerForActivity(mActivityStateListener, activity);
@@ -78,6 +78,12 @@ public class DownloadSheetContent implements BottomSheetContent {
     @Override
     public View getContentView() {
         return mContentView;
+    }
+
+    @Override
+    public List<View> getViewsForPadding() {
+        return CollectionUtil.newArrayList(
+                mDownloadManager.getRecyclerView(), mDownloadManager.getEmptyView());
     }
 
     @Override
@@ -110,5 +116,15 @@ public class DownloadSheetContent implements BottomSheetContent {
     @Override
     public int getType() {
         return BottomSheetContentController.TYPE_DOWNLOADS;
+    }
+
+    @Override
+    public boolean applyDefaultTopPadding() {
+        return false;
+    }
+
+    @Override
+    public void scrollToTop() {
+        mDownloadManager.scrollToTop();
     }
 }

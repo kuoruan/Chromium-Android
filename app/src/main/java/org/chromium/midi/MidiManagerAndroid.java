@@ -6,6 +6,7 @@ package org.chromium.midi;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.media.midi.MidiDevice;
 import android.media.midi.MidiDeviceInfo;
 import android.media.midi.MidiManager;
@@ -52,6 +53,15 @@ class MidiManagerAndroid {
      * The associated midi::MidiDeviceAndroid instance.
      */
     private final long mNativeManagerPointer;
+
+    /**
+     * Checks if Android MIDI is supported on the device.
+     */
+    @CalledByNative
+    static boolean hasSystemFeatureMidi() {
+        return ContextUtils.getApplicationContext().getPackageManager().hasSystemFeature(
+                PackageManager.FEATURE_MIDI);
+    }
 
     /**
      * A creation function called by C++.

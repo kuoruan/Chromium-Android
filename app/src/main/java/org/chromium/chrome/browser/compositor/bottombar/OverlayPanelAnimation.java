@@ -4,32 +4,23 @@
 
 package org.chromium.chrome.browser.compositor.bottombar;
 
-import static org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.AnimatableAnimation.createAnimation;
-
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
-import android.view.animation.Interpolator;
 
+import org.chromium.base.VisibleForTesting;
+import org.chromium.chrome.browser.compositor.animation.CompositorAnimationHandler;
+import org.chromium.chrome.browser.compositor.animation.CompositorAnimator;
+import org.chromium.chrome.browser.compositor.animation.CompositorAnimator.AnimatorUpdateListener;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.PanelState;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.StateChangeReason;
-import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation;
-import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animatable;
-import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animation;
 import org.chromium.chrome.browser.compositor.layouts.LayoutUpdateHost;
 import org.chromium.chrome.browser.util.MathUtils;
 
 /**
  * Base abstract class for animating the Overlay Panel.
  */
-public abstract class OverlayPanelAnimation extends OverlayPanelBase
-        implements Animatable<OverlayPanelAnimation.Property> {
-
-    /**
-     * Animation properties.
-     */
-    protected enum Property {
-        PANEL_HEIGHT
-    }
-
+public abstract class OverlayPanelAnimation extends OverlayPanelBase {
     /**
      * The base duration of animations in milliseconds. This value is based on
      * the Kennedy specification for slow animations.
@@ -51,8 +42,8 @@ public abstract class OverlayPanelAnimation extends OverlayPanelBase
     /** The StateChangeReason for which the Panel is being animated. */
     private StateChangeReason mAnimatingStateReason;
 
-    /** The animation set. */
-    private ChromeAnimation<Animatable<?>> mLayoutAnimations;
+    /** The animator responsible for moving the sheet up and down. */
+    private CompositorAnimator mHeightAnimator;
 
     /** The {@link LayoutUpdateHost} used to request a new frame to be updated and rendered. */
     private final LayoutUpdateHost mUpdateHost;
@@ -73,6 +64,13 @@ public abstract class OverlayPanelAnimation extends OverlayPanelBase
     // ============================================================================================
     // Animation API
     // ============================================================================================
+
+    /**
+     * @return The handler responsible for running compositor animations.
+     */
+    public CompositorAnimationHandler getAnimationHandler() {
+        return mUpdateHost.getAnimationHandler();
+    }
 
     /**
      * Animates the Overlay Panel to its maximized state.
@@ -306,7 +304,15 @@ public abstract class OverlayPanelAnimation extends OverlayPanelBase
      * Cancels any height animation in progress.
      */
     protected void cancelHeightAnimation() {
-        cancelAnimation(this, Property.PANEL_HEIGHT);
+        if (mHeightAnimator != null) mHeightAnimator.cancel();
+    }
+
+    /**
+     * Ends any height animation in progress. This differs from {@link #cancelHeightAnimation()} in
+     * that it will snap to it's target state rather than simply stopping the animation.
+     */
+    protected void endHeightAnimation() {
+        if (mHeightAnimator != null) mHeightAnimator.end();
     }
 
     // ============================================================================================
@@ -334,88 +340,41 @@ public abstract class OverlayPanelAnimation extends OverlayPanelBase
      * @param height The height to animate to.
      * @param duration The animation duration in milliseconds.
      */
-    private void animatePanelTo(float height, long duration) {
-        animateProperty(Property.PANEL_HEIGHT, getHeight(), height, duration);
-    }
+    protected void animatePanelTo(float height, long duration) {
+        if (duration <= 0) return;
 
-    /**
-     * Animates the Overlay Panel.
-     *
-     * @param property The property which will be animated.
-     * @param start The initial value.
-     * @param end The final value.
-     * @param duration The animation duration in milliseconds.
-     */
-    protected void animateProperty(Property property, float start, float end, long duration) {
-        if (duration > 0) {
-            if (animationIsRunning()) {
-                cancelAnimation(this, property);
+        if (mHeightAnimator != null) mHeightAnimator.cancel();
+
+        mHeightAnimator = CompositorAnimator.ofFloat(
+                getAnimationHandler(), getHeight(), height, duration, null);
+        mHeightAnimator.addUpdateListener(new AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(CompositorAnimator animator) {
+                setPanelHeight(animator.getAnimatedValue());
             }
-            addToAnimation(this, property, start, end, duration, 0);
-        }
-    }
-
-    /**
-     * Sets a property for an animation.
-     *
-     * @param prop The property to update.
-     * @param value New value of the property.
-     */
-    @Override
-    public void setProperty(Property prop, float value) {
-        if (prop == Property.PANEL_HEIGHT) {
-            setPanelHeight(value);
-        }
-    }
-
-    @Override
-    public void onPropertyAnimationFinished(Property prop) {}
-
-    /**
-     * Steps the animation forward and updates all the animated values.
-     * @param time      The current time of the app in ms.
-     * @param jumpToEnd Whether to finish the animation.
-     * @return          Whether the animation was finished.
-     */
-    public boolean onUpdateAnimation(long time, boolean jumpToEnd) {
-        boolean finished = true;
-        if (mLayoutAnimations != null) {
-            if (jumpToEnd) {
-                finished = mLayoutAnimations.finished();
-                mLayoutAnimations.updateAndFinish();
-            } else {
-                finished = mLayoutAnimations.update(time);
+        });
+        mHeightAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                onHeightAnimationFinished();
             }
-
-            if (finished || jumpToEnd) {
-                mLayoutAnimations = null;
-                onAnimationFinished();
-            }
-            requestUpdate();
-        }
-        return finished;
+        });
+        mHeightAnimator.start();
     }
 
     /**
      * Called when layout-specific actions are needed after the animation finishes.
      */
-    protected void onAnimationStarted() {
-    }
-
-    /**
-     * Called when layout-specific actions are needed after the animation finishes.
-     */
-    protected void onAnimationFinished() {
+    protected void onHeightAnimationFinished() {
         // If animating to a particular PanelState, and after completing
         // resizing the Panel to its desired state, then the Panel's state
         // should be updated. This method also is called when an animation
         // is cancelled (which can happen by a subsequent gesture while
         // an animation is happening). That's why the actual height should
         // be checked.
-        // TODO(mdjones): Move animations not directly related to the panel's state into their
-        // own animation handler (i.e. peek promo, G sprite, etc.). See https://crbug.com/617307.
         if (mAnimatingState != null && mAnimatingState != PanelState.UNDEFINED
-                && getHeight() == getPanelHeightFromState(mAnimatingState)) {
+                && MathUtils.areFloatsEqual(
+                           getHeight(), getPanelHeightFromState(mAnimatingState))) {
             setPanelState(mAnimatingState, mAnimatingStateReason);
         }
 
@@ -423,78 +382,8 @@ public abstract class OverlayPanelAnimation extends OverlayPanelBase
         mAnimatingStateReason = StateChangeReason.UNKNOWN;
     }
 
-    /**
-     * Creates an {@link org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animatable}
-     * and adds it to the animation.
-     * Automatically sets the start value at the beginning of the animation.
-     */
-    public <T extends Enum<?>> void addToAnimation(Animatable<T> object, T prop, float start,
-            float end, long duration, long startTime) {
-        addToAnimation(object, prop, start, end, duration, startTime, false);
-    }
-
-    /**
-     * Creates an {@link org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animatable}
-     * and adds it to the animation. Uses a deceleration interpolator by default.
-     */
-    public <T extends Enum<?>> void addToAnimation(Animatable<T> object, T prop, float start,
-            float end, long duration, long startTime, boolean setStartValueAfterDelay) {
-        addToAnimation(object, prop, start, end, duration, startTime, setStartValueAfterDelay,
-                ChromeAnimation.getDecelerateInterpolator());
-    }
-
-    /**
-     * Creates an {@link org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animatable}
-     * and adds it to the animation.
-     *
-     * @param <T>                     The Enum type of the Property being used
-     * @param object                  The object being animated
-     * @param prop                    The property being animated
-     * @param start                   The starting value of the animation
-     * @param end                     The ending value of the animation
-     * @param duration                The duration of the animation in ms
-     * @param startTime               The start time in ms
-     * @param setStartValueAfterDelay See {@link Animation#setStartValueAfterStartDelay(boolean)}
-     * @param interpolator            The interpolator to use for the animation
-     */
-    public <T extends Enum<?>> void addToAnimation(Animatable<T> object, T prop, float start,
-            float end, long duration, long startTime, boolean setStartValueAfterDelay,
-            Interpolator interpolator) {
-        ChromeAnimation.Animation<Animatable<?>> component = createAnimation(object, prop, start,
-                end, duration, startTime, setStartValueAfterDelay, interpolator);
-        addToAnimation(component);
-    }
-
-    /**
-     * Appends an Animation to the current animation set and starts it immediately.  If the set is
-     * already finished or doesn't exist, the animation set is also started.
-     */
-    protected void addToAnimation(ChromeAnimation.Animation<Animatable<?>> component) {
-        if (mLayoutAnimations == null || mLayoutAnimations.finished()) {
-            onAnimationStarted();
-            mLayoutAnimations = new ChromeAnimation<Animatable<?>>();
-            mLayoutAnimations.start();
-        }
-        component.start();
-        mLayoutAnimations.add(component);
-        requestUpdate();
-    }
-
-    /**
-     * @return whether or not the animation is currently being run.
-     */
-    public boolean animationIsRunning() {
-        return mLayoutAnimations != null && !mLayoutAnimations.finished();
-    }
-
-    /**
-     * Cancels any animation for the given object and property.
-     * @param object The object being animated.
-     * @param prop   The property to search for.
-     */
-    public <T extends Enum<?>> void cancelAnimation(Animatable<T> object, T prop) {
-        if (mLayoutAnimations != null) {
-            mLayoutAnimations.cancel(object, prop);
-        }
+    @VisibleForTesting
+    public boolean isHeightAnimationRunning() {
+        return mHeightAnimator != null && mHeightAnimator.isRunning();
     }
 }

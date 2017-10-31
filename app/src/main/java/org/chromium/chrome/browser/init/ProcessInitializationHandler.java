@@ -4,10 +4,12 @@
 
 package org.chromium.chrome.browser.init;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.SystemClock;
 import android.support.annotation.WorkerThread;
 import android.view.View;
@@ -27,6 +29,7 @@ import org.chromium.base.ThreadUtils;
 import org.chromium.base.TraceEvent;
 import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.build.BuildHooksAndroid;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.AfterStartupTaskUtils;
 import org.chromium.chrome.browser.AppHooks;
@@ -55,16 +58,15 @@ import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
 import org.chromium.chrome.browser.notifications.channels.ChannelsUpdater;
 import org.chromium.chrome.browser.ntp.NewTabPage;
 import org.chromium.chrome.browser.offlinepages.OfflinePageUtils;
-import org.chromium.chrome.browser.partnerbookmarks.PartnerBookmarksShim;
 import org.chromium.chrome.browser.partnercustomizations.HomepageManager;
 import org.chromium.chrome.browser.partnercustomizations.PartnerBrowserCustomizations;
 import org.chromium.chrome.browser.photo_picker.PhotoPickerDialog;
 import org.chromium.chrome.browser.physicalweb.PhysicalWeb;
 import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
+import org.chromium.chrome.browser.profiles.ProfileManagerUtils;
 import org.chromium.chrome.browser.rlz.RevenueStats;
 import org.chromium.chrome.browser.searchwidget.SearchWidgetProvider;
-import org.chromium.chrome.browser.services.AccountsChangedReceiver;
 import org.chromium.chrome.browser.services.GoogleServicesManager;
 import org.chromium.chrome.browser.share.ShareHelper;
 import org.chromium.chrome.browser.sync.SyncController;
@@ -73,6 +75,7 @@ import org.chromium.chrome.browser.webapps.WebappRegistry;
 import org.chromium.components.background_task_scheduler.BackgroundTaskSchedulerFactory;
 import org.chromium.components.minidump_uploader.CrashFileManager;
 import org.chromium.components.signin.AccountManagerFacade;
+import org.chromium.components.signin.AccountsChangeObserver;
 import org.chromium.content.browser.ChildProcessLauncherHelper;
 import org.chromium.content.common.ContentSwitches;
 import org.chromium.device.geolocation.LocationProviderFactory;
@@ -143,7 +146,7 @@ public class ProcessInitializationHandler {
      * Performs the shared class initialization.
      */
     protected void handlePreNativeInitialization() {
-        ChromeApplication application = (ChromeApplication) ContextUtils.getApplicationContext();
+        Context application = ContextUtils.getApplicationContext();
 
         UiUtils.setKeyboardShowingDelegate(new UiUtils.KeyboardShowingDelegate() {
             @Override
@@ -206,7 +209,7 @@ public class ProcessInitializationHandler {
 
         DataReductionProxySettings.handlePostNativeInitialization();
         ChromeActivitySessionTracker.getInstance().initializeWithNative();
-        ChromeApplication.removeSessionCookies();
+        ProfileManagerUtils.removeSessionCookiesForAllProfiles();
         AppBannerManager.setAppDetailsDelegate(AppHooks.get().createAppDetailsDelegate());
         ChromeLifetimeController.initialize();
 
@@ -226,8 +229,7 @@ public class ProcessInitializationHandler {
                 }
 
                 @Override
-                public void dismissPhotoPicker() {
-                    mDialog.dismiss();
+                public void onPhotoPickerDismissed() {
                     mDialog = null;
                 }
             });
@@ -280,8 +282,6 @@ public class ProcessInitializationHandler {
                                 NewTabPage.isNTPUrl(homepageUrl), homepageUrl);
                     }
                 });
-
-                PartnerBookmarksShim.kickOffReading(application);
 
                 PowerMonitor.create();
 
@@ -344,8 +344,8 @@ public class ProcessInitializationHandler {
             @Override
             public void run() {
                 ForcedSigninProcessor.start(application, null);
-                AccountsChangedReceiver.addObserver(
-                        new AccountsChangedReceiver.AccountsChangedObserver() {
+                AccountManagerFacade.get().addObserver(
+                        new AccountsChangeObserver() {
                             @Override
                             public void onAccountsChanged() {
                                 ThreadUtils.runOnUiThread(new Runnable() {
@@ -401,6 +401,16 @@ public class ProcessInitializationHandler {
                 BackgroundTaskSchedulerFactory.getScheduler().checkForOSUpgrade(application);
             }
         });
+
+        deferredStartupHandler.addDeferredTask(new Runnable() {
+            @Override
+            public void run() {
+                logEGLShaderCacheSizeHistogram();
+            }
+        });
+
+        deferredStartupHandler.addDeferredTask(
+                () -> { BuildHooksAndroid.maybeRecordResourceMetrics(); });
     }
 
     private void initChannelsAsync() {
@@ -641,5 +651,55 @@ public class ProcessInitializationHandler {
             boolean match = systemLocale.getLanguage().equalsIgnoreCase(keyboardLanguage);
             RecordHistogram.recordBooleanHistogram("InputMethod.MatchesSystemLanguage", match);
         }
+    }
+
+    /**
+     * Logs a histogram with the size of the Android EGL shader cache.
+     */
+    @TargetApi(Build.VERSION_CODES.N)
+    private static void logEGLShaderCacheSizeHistogram() {
+        // To simplify logic, only log this value on Android N+.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            return;
+        }
+        final Context cacheContext =
+                ContextUtils.getApplicationContext().createDeviceProtectedStorageContext();
+
+        // Must log async, as we're doing a file access.
+        new AsyncTask<Void, Void, Void>() {
+            // Record file sizes between 1-2560KB. Expected range is 1-2048KB, so this gives
+            // us a bit of buffer. These values cannot be changed, as doing so will alter
+            // histogram bucketing and confuse the dashboard.
+            private static final int MIN_CACHE_FILE_SIZE_KB = 1;
+            private static final int MAX_CACHE_FILE_SIZE_KB = 2560;
+
+            @Override
+            protected Void doInBackground(Void... unused) {
+                File codeCacheDir = cacheContext.getCodeCacheDir();
+                if (codeCacheDir == null) {
+                    return null;
+                }
+                // This filename is defined in core/java/android/view/HardwareRenderer.java,
+                // and has been located in the codeCacheDir since Android M.
+                File cacheFile = new File(codeCacheDir, "com.android.opengl.shaders_cache");
+                if (!cacheFile.exists()) {
+                    return null;
+                }
+                long cacheFileSizeKb = cacheFile.length() / 1024;
+                // Clamp size to [minFileSizeKb, maxFileSizeKb). This also guarantees that the
+                // int-cast below is safe.
+                if (cacheFileSizeKb < MIN_CACHE_FILE_SIZE_KB) {
+                    cacheFileSizeKb = MIN_CACHE_FILE_SIZE_KB;
+                }
+                if (cacheFileSizeKb >= MAX_CACHE_FILE_SIZE_KB) {
+                    cacheFileSizeKb = MAX_CACHE_FILE_SIZE_KB - 1;
+                }
+                String histogramName = "Memory.Experimental.Browser.EGLShaderCacheSize.Android";
+                RecordHistogram.recordCustomCountHistogram(histogramName, (int) cacheFileSizeKb,
+                        MIN_CACHE_FILE_SIZE_KB, MAX_CACHE_FILE_SIZE_KB, 50);
+                return null;
+            }
+        }
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 }

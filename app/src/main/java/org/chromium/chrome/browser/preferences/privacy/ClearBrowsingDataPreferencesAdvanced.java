@@ -25,7 +25,7 @@ public class ClearBrowsingDataPreferencesAdvanced extends ClearBrowsingDataPrefe
         return new DialogOption[] {DialogOption.CLEAR_HISTORY,
                 DialogOption.CLEAR_COOKIES_AND_SITE_DATA, DialogOption.CLEAR_CACHE,
                 DialogOption.CLEAR_PASSWORDS, DialogOption.CLEAR_FORM_DATA,
-                DialogOption.CLEAR_SITE_SETTINGS};
+                DialogOption.CLEAR_SITE_SETTINGS, DialogOption.CLEAR_MEDIA_LICENSES};
     }
 
     @Override

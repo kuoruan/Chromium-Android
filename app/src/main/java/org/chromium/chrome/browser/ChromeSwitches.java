@@ -10,7 +10,7 @@ package org.chromium.chrome.browser;
  */
 public abstract class ChromeSwitches {
     // Switches used from Java.  Please continue switch style used Chrome where
-    // options-have-hypens and are_not_split_with_underscores.
+    // options-have-hyphens and are_not_split_with_underscores.
 
     /** Mimic a low end device */
     public static final String ENABLE_ACCESSIBILITY_TAB_SWITCHER =
@@ -81,6 +81,13 @@ public abstract class ChromeSwitches {
      */
     public static final String DISABLE_TAB_MERGING_FOR_TESTING = "disable-tab-merging";
 
+    /**
+     * Force-enable partner customization for testing.
+     * Partner customization includes configurations from PartnerBookmarksProvider and
+     * PartnerBrowserCustomizations.
+     */
+    public static final String ALLOW_PARTNER_CUSTOMIZATION = "allow-partner-customization";
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // Native Switches
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -111,14 +118,6 @@ public abstract class ChromeSwitches {
      * Native switch - switches::kProgressBarAnimation
      */
     public static final String PROGRESS_BAR_ANIMATION = "progress-bar-animation";
-
-    /**
-     * Specifies Android NTP behaviour on clicking a Most{Visited/Likely} tile.
-     * Specifically whether to refocus an existing tab with the same url or host or to load the url
-     * in the current tab.
-     * Native switch - switches::kNtpSwitchToExistingTab
-     */
-    public static final String NTP_SWITCH_TO_EXISTING_TAB = "ntp-switch-to-existing-tab";
 
     /**
      * Enables overscroll of the on screen keyboard. With this flag on, the OSK will only resize the
@@ -171,6 +170,9 @@ public abstract class ChromeSwitches {
      */
     public static final String ALWAYS_EXTRACT_WEBAPK_RUNTIME_DEX_ON_STARTUP =
             "always-extract-webapk-dex-on-startup";
+
+    /** Treats all WebAPKs as valid - useful only for local testing. */
+    public static final String SKIP_WEBAPK_VERIFICATION = "skip-webapk-verification";
 
     /**
      * Forces a check for whether the WebAPK's Web Manifest has changed each time that a WebAPK is

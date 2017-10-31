@@ -8,30 +8,22 @@ import android.content.Context;
 import android.view.ViewGroup;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.compositor.animation.CompositorAnimator;
+import org.chromium.chrome.browser.compositor.animation.CompositorAnimator.AnimatorUpdateListener;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanelAnimation;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanelInflater;
-import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation;
 import org.chromium.chrome.browser.util.MathUtils;
 import org.chromium.ui.resources.dynamics.DynamicResourceLoader;
 
 /**
  * Controls the Search Peek Promo.
  */
-public class ContextualSearchPeekPromoControl extends OverlayPanelInflater
-        implements ChromeAnimation.Animatable<ContextualSearchPeekPromoControl.AnimationType> {
-
+public class ContextualSearchPeekPromoControl extends OverlayPanelInflater {
     /**
      * The initial width of the ripple for the appearance animation, in dps.
      */
     private static final float RIPPLE_MINIMUM_WIDTH_DP = 56.f;
-
-    /**
-     * Animation properties.
-     */
-    protected enum AnimationType {
-        APPEARANCE
-    }
 
     /**
      * Whether the Peek Promo is visible.
@@ -226,35 +218,25 @@ public class ContextualSearchPeekPromoControl extends OverlayPanelInflater
      * Animates the Peek Promo appearance.
      */
     public void animateAppearance() {
-        // TODO(pedrosimonetti): Find a generic way to tell when a specific animation finishes.
-        mOverlayPanel.addToAnimation(this, AnimationType.APPEARANCE, 0.f, 1.f,
-                OverlayPanelAnimation.BASE_ANIMATION_DURATION_MS, 0);
-    }
+        AnimatorUpdateListener listener = new AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(CompositorAnimator animator) {
+                float percentage = animator.getAnimatedFraction();
+                mRippleWidthPx = Math.round(MathUtils.interpolate(
+                        mRippleMinimumWidthPx, mRippleMaximumWidthPx, percentage));
 
-    @Override
-    public void setProperty(AnimationType type, float value) {
-        if (type == AnimationType.APPEARANCE) {
-            updateForAppearanceAnimation(value);
-        }
-    }
+                mRippleOpacity = MathUtils.interpolate(0.f, 1.f, percentage);
 
-    @Override
-    public void onPropertyAnimationFinished(AnimationType prop) {}
+                float textOpacityDelay = 0.5f;
+                float textOpacityPercentage =
+                        Math.max(0.f, percentage - textOpacityDelay) / (1.f - textOpacityDelay);
+                mTextOpacity = MathUtils.interpolate(0.f, 1.f, textOpacityPercentage);
+            }
+        };
 
-    /**
-     * Updates the UI for the appearance animation.
-     *
-     * @param percentage The completion percentage.
-     */
-    private void updateForAppearanceAnimation(float percentage) {
-        mRippleWidthPx = Math.round(MathUtils.interpolate(
-                mRippleMinimumWidthPx, mRippleMaximumWidthPx, percentage));
-
-        mRippleOpacity = MathUtils.interpolate(0.f, 1.f, percentage);
-
-        float textOpacityDelay = 0.5f;
-        float textOpacityPercentage =
-                Math.max(0, percentage - textOpacityDelay) / (1.f - textOpacityDelay);
-        mTextOpacity = MathUtils.interpolate(0.f, 1.f, textOpacityPercentage);
+        CompositorAnimator appearance =
+                CompositorAnimator.ofFloat(mOverlayPanel.getAnimationHandler(), 0.f, 1.f,
+                        OverlayPanelAnimation.BASE_ANIMATION_DURATION_MS, listener);
+        appearance.start();
     }
 }

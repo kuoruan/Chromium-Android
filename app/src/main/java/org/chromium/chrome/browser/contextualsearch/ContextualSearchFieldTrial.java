@@ -77,6 +77,9 @@ public class ContextualSearchFieldTrial {
     private static final String DISABLE_AMP_AS_SEPARATE_TAB = "disable_amp_as_separate_tab";
     // Disable logging for Machine Learning
     private static final String DISABLE_RANKER_LOGGING = "disable_ranker_logging";
+    private static final String DISABLE_SMART_SELECTION = "disable_smart_selection";
+    private static final String DISABLE_SUPPRESS_FOR_SMART_SELECTION =
+            "disable_suppress_for_smart_selection";
 
     // ----------------------
     // Privacy-related flags.
@@ -110,6 +113,8 @@ public class ContextualSearchFieldTrial {
     private static Boolean sIsPageContentNotificationDisabled;
     private static Boolean sContextualSearchUrlActionsEnabled;
     private static Boolean sIsRankerLoggingDisabled;
+    private static Boolean sIsSmartSelectionDisabled;
+    private static Boolean sIsSuppressForSmartSelectionDisabled;
     private static Integer sWaitAfterTapDelayMs;
     private static Integer sTapDurationThresholdMs;
     private static Integer sRecentScrollDurationMs;
@@ -372,8 +377,35 @@ public class ContextualSearchFieldTrial {
         if (sIsRankerLoggingDisabled == null) {
             sIsRankerLoggingDisabled = getBooleanParam(DISABLE_RANKER_LOGGING);
         }
-
         return sIsRankerLoggingDisabled;
+    }
+
+    /**
+     * Determines whether Smart Selection is disabled for Chrome.
+     * This is a safety disable-switch to allow shutoff if some future version of Android has a
+     * behavior change that existing versions of Chrome cannot tolerate.
+     * @return Whether Chrome should not allow the Android O Smart Selection feature.
+     */
+    static boolean isSmartSelectionDisabled() {
+        if (sIsSmartSelectionDisabled == null) {
+            sIsSmartSelectionDisabled = getBooleanParam(DISABLE_SMART_SELECTION);
+        }
+        return sIsSmartSelectionDisabled;
+    }
+
+    /**
+     * Determines whether the Contextual Search UI is suppressed when Smart Select is active.
+     * This applies to long-press activation of a UI for Smart Select and/or Contextual Search. If
+     * this returns true, the Contextual Search Bar will be allowed to show in response to a
+     * long-press gesture on Android O even when the Smart Select UI may be active.
+     * @return Whether suppression our UI when Smart Select is active has been disabled.
+     */
+    static boolean isSuppressForSmartSelectionDisabled() {
+        if (sIsSuppressForSmartSelectionDisabled == null) {
+            sIsSuppressForSmartSelectionDisabled =
+                    getBooleanParam(DISABLE_SUPPRESS_FOR_SMART_SELECTION);
+        }
+        return sIsSuppressForSmartSelectionDisabled;
     }
 
     /**

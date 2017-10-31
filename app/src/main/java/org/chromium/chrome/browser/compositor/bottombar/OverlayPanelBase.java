@@ -97,13 +97,13 @@ abstract class OverlayPanelBase {
     private float mToolbarHeight;
 
     /** The height of the Bar when the Panel is peeking, in dps. */
-    private float mBarHeightPeeking;
+    private final float mBarHeightPeeking;
 
     /** The height of the Bar when the Panel is expanded, in dps. */
-    private float mBarHeightExpanded;
+    private final float mBarHeightExpanded;
 
     /** The height of the Bar when the Panel is maximized, in dps. */
-    private float mBarHeightMaximized;
+    private final float mBarHeightMaximized;
 
     /**
      * The Y coordinate to apply to the Base Page in order to keep the selection
@@ -157,6 +157,13 @@ abstract class OverlayPanelBase {
     // ============================================================================================
     // General API
     // ============================================================================================
+
+    /**
+     * @return An Android {@link Context}.
+     */
+    public Context getContext() {
+        return mContext;
+    }
 
     /**
      * Animates the Overlay Panel to its closed state.
@@ -403,7 +410,7 @@ abstract class OverlayPanelBase {
     }
 
     /**
-     * @return The height of the Bar.
+     * @return The height of the Bar in dp.
      */
     public float getBarHeight() {
         return mBarHeight;
@@ -774,7 +781,8 @@ abstract class OverlayPanelBase {
      * @return Whether the Panel height matches the one from the given state.
      */
     protected boolean doesPanelHeightMatchState(PanelState state) {
-        return state == getPanelState() && getHeight() == getPanelHeightFromState(state);
+        return state == getPanelState()
+                && MathUtils.areFloatsEqual(getHeight(), getPanelHeightFromState(state));
     }
 
     // ============================================================================================
@@ -1136,53 +1144,6 @@ abstract class OverlayPanelBase {
      */
     public void setContainerView(ViewGroup container) {
         mContainerView = container;
-    }
-
-    // ============================================================================================
-    // Bar Handle
-    // ============================================================================================
-    protected int mBarHandleResourceId;
-    protected float mBarHandleOffsetY;
-    protected float mBarPaddingBottom;
-
-    /**
-     * Adds a handle to the bar.
-     * @param barHeightPx The new bar height in px needed to accommodate the handle.
-     */
-    public void addBarHandle(int barHeightPx) {
-        mBarHandleResourceId = R.drawable.toolbar_handle_dark;
-        mBarHeightPeeking = barHeightPx * mPxToDp;
-        mBarHeightMaximized = mBarHeightPeeking;
-        mBarHeightExpanded = mBarHeightPeeking;
-    }
-
-    /**
-     * @return The resource id for the bar handle.
-     */
-    public int getBarHandleResourceId() {
-        return mBarHandleResourceId;
-    }
-
-    /** @return The y-offset for the bar handle in px. */
-    public float getBarHandleOffsetY() {
-        if (mBarHandleOffsetY == 0.f && mBarHandleResourceId != 0) {
-            mBarHandleOffsetY =
-                    mContext.getResources().getDimension(R.dimen.overlay_panel_bar_handle_offset_y);
-        }
-        return mBarHandleOffsetY;
-    }
-
-    /** @return The bottom padding for the bar in px. */
-    public float getBarPaddingBottom() {
-        // When there is no bar handle, the bar contents are vertically centered. When there is a
-        // bar handle, the contents are displayed below the handle. Bottom padding is needed so that
-        // the contents don't appear too low in the bar when centered in the space beneath the
-        // handle.
-        if (mBarPaddingBottom == 0.f && mBarHandleResourceId != 0) {
-            mBarPaddingBottom =
-                    mContext.getResources().getDimension(R.dimen.overlay_panel_bar_padding_bottom);
-        }
-        return mBarPaddingBottom;
     }
 
     // ============================================================================================

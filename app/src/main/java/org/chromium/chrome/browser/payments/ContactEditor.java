@@ -188,41 +188,33 @@ public class ContactEditor extends EditorBase<AutofillContact> {
 
         // If the user clicks [Cancel], send |toEdit| contact back to the caller, which was the
         // original state (could be null, a complete contact, a partial contact).
-        editor.setCancelCallback(new Runnable() {
-            @Override
-            public void run() {
-                callback.onResult(toEdit);
+        editor.setCancelCallback(() -> callback.onResult(toEdit));
+
+        editor.setDoneCallback(() -> {
+            String name = null;
+            String phone = null;
+            String email = null;
+            AutofillProfile profile = contact.getProfile();
+
+            if (nameField != null) {
+                name = nameField.getValue().toString();
+                profile.setFullName(name);
             }
-        });
 
-        editor.setDoneCallback(new Runnable() {
-            @Override
-            public void run() {
-                String name = null;
-                String phone = null;
-                String email = null;
-                AutofillProfile profile = contact.getProfile();
-
-                if (nameField != null) {
-                    name = nameField.getValue().toString();
-                    profile.setFullName(name);
-                }
-
-                if (phoneField != null) {
-                    phone = phoneField.getValue().toString();
-                    profile.setPhoneNumber(phone);
-                }
-
-                if (emailField != null) {
-                    email = emailField.getValue().toString();
-                    profile.setEmailAddress(email);
-                }
-
-                profile.setGUID(PersonalDataManager.getInstance().setProfileToLocal(profile));
-                profile.setIsLocal(true);
-                contact.completeContact(profile.getGUID(), name, phone, email);
-                callback.onResult(contact);
+            if (phoneField != null) {
+                phone = phoneField.getValue().toString();
+                profile.setPhoneNumber(phone);
             }
+
+            if (emailField != null) {
+                email = emailField.getValue().toString();
+                profile.setEmailAddress(email);
+            }
+
+            profile.setGUID(PersonalDataManager.getInstance().setProfileToLocal(profile));
+            profile.setIsLocal(true);
+            contact.completeContact(profile.getGUID(), name, phone, email);
+            callback.onResult(contact);
         });
 
         mEditorDialog.show(editor);

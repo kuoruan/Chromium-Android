@@ -97,22 +97,8 @@ public class AutocompleteController {
      * @param profile The profile to use for starting the AutocompleteController
      * @param url The URL of the current tab, used to suggest query refinements.
      * @param text The text to query autocomplete suggestions for.
-     * @param preventInlineAutocomplete Whether autocomplete suggestions should be prevented.
-     * @param focusedFromFakebox Whether the user entered the omnibox by tapping the fakebox on the
-     *                           native NTP. This should be false on all other pages.
-     */
-    public void start(Profile profile, String url, String text, boolean preventInlineAutocomplete,
-            boolean focusedFromFakebox) {
-        start(profile, url, text, -1, preventInlineAutocomplete, focusedFromFakebox);
-    }
-
-    /**
-     * Starts querying for omnibox suggestions for a given text.
-     *
-     * @param profile The profile to use for starting the AutocompleteController
-     * @param url The URL of the current tab, used to suggest query refinements.
-     * @param text The text to query autocomplete suggestions for.
-     * @param cursorPosition The position of the cursor within the text.
+     * @param cursorPosition The position of the cursor within the text.  Set to -1 if the cursor is
+     *                     not focussed on the text.
      * @param preventInlineAutocomplete Whether autocomplete suggestions should be prevented.
      * @param focusedFromFakebox Whether the user entered the omnibox by tapping the fakebox on the
      *                           native NTP. This should be false on all other pages.

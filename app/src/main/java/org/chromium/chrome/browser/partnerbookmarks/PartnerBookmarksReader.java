@@ -5,8 +5,12 @@
 package org.chromium.chrome.browser.partnerbookmarks;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.util.Log;
+
+import org.chromium.base.ContextUtils;
+import org.chromium.base.Log;
+import org.chromium.base.metrics.RecordHistogram;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -17,7 +21,9 @@ import java.util.LinkedHashMap;
  * Reads bookmarks from the partner content provider (if any).
 */
 public class PartnerBookmarksReader {
-    private static final String TAG = "PartnerBookmarksReader";
+    private static final String TAG = "PartnerBMReader";
+
+    static final String LAST_EMPTY_READ_PREFS_NAME = "PartnerBookmarksReader.last_empty_read";
 
     private static boolean sInitialized;
     private static boolean sForceDisableEditing;
@@ -122,10 +128,25 @@ public class PartnerBookmarksReader {
     private class ReadBookmarksTask extends AsyncTask<Void, Void, Void> {
         private final Object mRootSync = new Object();
 
+        private void handleZeroBookmark() {
+            SharedPreferences.Editor editor = ContextUtils.getAppSharedPreferences().edit();
+            editor.putLong(LAST_EMPTY_READ_PREFS_NAME, System.currentTimeMillis());
+            editor.apply();
+
+            Log.w(TAG,
+                    "Obtained zero partner bookmarks. "
+                            + "Will skip reading partner bookmarks for a while.");
+        }
+
         @Override
         protected Void doInBackground(Void... params) {
             BookmarkIterator bookmarkIterator = getAvailableBookmarks();
-            if (bookmarkIterator == null) return null;
+            RecordHistogram.recordBooleanHistogram(
+                    "PartnerBookmark.Null", bookmarkIterator == null);
+            if (bookmarkIterator == null) {
+                handleZeroBookmark();
+                return null;
+            }
 
             // Get a snapshot of the bookmarks.
             LinkedHashMap<Long, Bookmark> idMap = new LinkedHashMap<Long, Bookmark>();
@@ -157,6 +178,17 @@ public class PartnerBookmarksReader {
                 urlSet.add(bookmark.mUrl);
             }
             bookmarkIterator.close();
+            int count = urlSet.size();
+            RecordHistogram.recordCount100Histogram("PartnerBookmark.Count", count);
+
+            if (count == 0) {
+                handleZeroBookmark();
+            } else {
+                SharedPreferences pref = ContextUtils.getAppSharedPreferences();
+                if (pref.contains(LAST_EMPTY_READ_PREFS_NAME)) {
+                    pref.edit().remove(LAST_EMPTY_READ_PREFS_NAME).apply();
+                }
+            }
 
             // Recreate the folder hierarchy and read it.
             recreateFolderHierarchy(idMap);

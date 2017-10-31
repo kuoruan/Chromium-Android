@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.webapps;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.text.TextUtils;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.tab.Tab;
@@ -18,8 +19,11 @@ public class AddToHomescreenManager {
 
     /** Interface for tracking fetch of add-to-homescreen data. */
     public interface Observer {
-        /** Called when the title of the page is available. */
-        void onUserTitleAvailable(String title);
+        /**
+         * Called when the homescreen icon title (and possibly information from the web manifest) is
+         * available.
+         */
+        void onUserTitleAvailable(String title, String url, boolean isTitleEditable);
 
         /**
          * Called once native has finished fetching the homescreen shortcut's data (like the Web
@@ -42,6 +46,9 @@ public class AddToHomescreenManager {
 
     /** Starts add-to-homescreen process. */
     public void start() {
+        // Don't start if we've already started or if there is no visible URL to add.
+        if (mNativeAddToHomescreenManager != 0 || TextUtils.isEmpty(mTab.getUrl())) return;
+
         mNativeAddToHomescreenManager = nativeInitializeAndStart(mTab.getWebContents());
     }
 
@@ -54,23 +61,21 @@ public class AddToHomescreenManager {
      * Puts the object in a state where it is safe to be destroyed.
      */
     public void destroy() {
-        nativeDestroy(mNativeAddToHomescreenManager);
-
         mObserver = null;
+        if (mNativeAddToHomescreenManager == 0) return;
+
+        nativeDestroy(mNativeAddToHomescreenManager);
         mNativeAddToHomescreenManager = 0;
     }
 
     /**
-     * Adds a shortcut for the current Tab.
+     * Adds a shortcut for the current Tab. Must not be called unless start() has been called.
      * @param userRequestedTitle Title of the shortcut displayed on the homescreen.
      */
     public void addShortcut(String userRequestedTitle) {
-        nativeAddShortcut(mNativeAddToHomescreenManager, userRequestedTitle);
-    }
+        assert mNativeAddToHomescreenManager != 0;
 
-    @CalledByNative
-    public void onFinished() {
-        destroy();
+        nativeAddShortcut(mNativeAddToHomescreenManager, userRequestedTitle);
     }
 
     /**
@@ -84,8 +89,8 @@ public class AddToHomescreenManager {
     }
 
     @CalledByNative
-    private void onUserTitleAvailable(String title) {
-        mObserver.onUserTitleAvailable(title);
+    private void onUserTitleAvailable(String title, String url, boolean isTitleEditable) {
+        mObserver.onUserTitleAvailable(title, url, isTitleEditable);
     }
 
     @CalledByNative

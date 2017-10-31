@@ -13,15 +13,16 @@ import org.chromium.chrome.browser.ntp.snippets.SnippetArticle;
 import org.chromium.chrome.browser.ntp.snippets.SnippetsBridge;
 import org.chromium.chrome.browser.ntp.snippets.SuggestionsSource;
 import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
-import org.chromium.chrome.browser.suggestions.DestructionObserver;
 import org.chromium.chrome.browser.suggestions.SuggestionsRanker;
 import org.chromium.chrome.browser.suggestions.SuggestionsUiDelegate;
 import org.chromium.chrome.browser.util.FeatureUtilities;
+import org.chromium.net.NetworkChangeNotifier;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,12 +47,15 @@ public class SectionList
         mUiDelegate.getSuggestionsSource().addObserver(this);
         mOfflinePageBridge = offlinePageBridge;
 
-        mUiDelegate.addDestructionObserver(new DestructionObserver() {
-            @Override
-            public void onDestroy() {
-                removeAllSections();
-            }
-        });
+        mUiDelegate.addDestructionObserver(this::removeAllSections);
+    }
+
+    /**
+     * Returns whether prefetched suggestions metrics should be reported for a given category.
+     * @param category given category to check.
+     */
+    static public boolean shouldReportPrefetchedSuggestionsMetrics(@CategoryInt int category) {
+        return category == KnownCategories.ARTICLES && !NetworkChangeNotifier.isOnline();
     }
 
     /**
@@ -67,7 +71,8 @@ public class SectionList
         for (int category : categories) {
             int categoryStatus = suggestionsSource.getCategoryStatus(category);
             if (SnippetsBridge.isCategoryEnabled(categoryStatus)) {
-                resetSection(category, categoryStatus, alwaysAllowEmptySections);
+                resetSection(category, categoryStatus, alwaysAllowEmptySections,
+                        shouldReportPrefetchedSuggestionsMetrics(category));
             }
         }
 
@@ -83,10 +88,11 @@ public class SectionList
      * @param categoryStatus The category status.
      * @param alwaysAllowEmptySections Whether sections are always allowed to be displayed when
      *     they are empty, even when they are normally not.
-     * @return The number of suggestions for the section.
+     * @param reportPrefetchedSuggestionsCount Whether to report number of prefetched article
+     *     suggestions.
      */
-    private int resetSection(@CategoryInt int category, @CategoryStatus int categoryStatus,
-            boolean alwaysAllowEmptySections) {
+    private void resetSection(@CategoryInt int category, @CategoryStatus int categoryStatus,
+            boolean alwaysAllowEmptySections, boolean reportPrefetchedSuggestionsCount) {
         SuggestionsSource suggestionsSource = mUiDelegate.getSuggestionsSource();
         List<SnippetArticle> suggestions = suggestionsSource.getSuggestionsForCategory(category);
         SuggestionsCategoryInfo info = suggestionsSource.getCategoryInfo(category);
@@ -97,7 +103,7 @@ public class SectionList
         if (suggestions.isEmpty() && !info.showIfEmpty() && !alwaysAllowEmptySections) {
             mBlacklistedCategories.add(category);
             if (section != null) removeSection(section);
-            return 0;
+            return;
         } else {
             mBlacklistedCategories.remove(category);
         }
@@ -116,8 +122,10 @@ public class SectionList
 
         // Set the new suggestions.
         section.setStatus(categoryStatus);
-        section.appendSuggestions(suggestions, /*keepSectionSize=*/true);
-        return suggestions.size();
+        if (!section.isLoading()) {
+            section.appendSuggestions(
+                    suggestions, /* keepSectionSize = */ true, reportPrefetchedSuggestionsCount);
+        }
     }
 
     @Override
@@ -212,6 +220,62 @@ public class SectionList
         return mSections.isEmpty();
     }
 
+    /** Returns whether content has recently been inserted in any of the sections. */
+    public boolean hasRecentlyInsertedContent() {
+        boolean value = false;
+        for (SuggestionsSection section : mSections.values()) {
+            // We explicitly go through all the sections to make sure we reset the flag everywhere.
+            boolean sectionHasRecentInsertion = section.hasRecentlyInsertedContent();
+            value = value || sectionHasRecentInsertion;
+        }
+        return value;
+    }
+
+    /**
+     * Fetches more suggestions. The SectionList should contain exactly 1 SuggestionsSection that
+     * supports fetching more.
+     */
+    public void fetchMore() {
+        List<SuggestionsSection> supportingSections = new LinkedList<>();
+
+        for (SuggestionsSection section : mSections.values()) {
+            if (section.getCategoryInfo().isFetchMoreSupported()) {
+                supportingSections.add(section);
+            }
+        }
+
+        if (supportingSections.size() > 1) {
+            assert false : "SectionList.fetchMore - Multiple supporting sections: "
+                           + getCategoriesForDebugging();
+        } else if (supportingSections.size() == 0) {
+            Log.d(TAG, "SectionList.fetchMore - No supporting sections: %s",
+                    getCategoriesForDebugging());
+        } else if (getChildren().get(getChildren().size() - 1) != supportingSections.get(0)) {
+            Log.d(TAG, "SectionList.fetchMore - Supporting section not at end: %s",
+                    getCategoriesForDebugging());
+        } else if (supportingSections.get(0).isLoading()) {
+            Log.d(TAG, "SectionList.fetchMore - Supporting section is already loading.");
+        } else {
+            // Fetch more is called when the user does not explicitly trigger a fetch (eg, the user
+            // scrolls down). In this case we don't inform the user of a failure, hence the null
+            // parameter.
+            supportingSections.get(0).fetchSuggestions(null);
+        }
+    }
+
+    /** Returns a string showing the categories of all the contained sections. */
+    private String getCategoriesForDebugging() {
+        StringBuilder sb = new StringBuilder();
+        String sep = "";
+        for (SuggestionsSection section : mSections.values()) {
+            sb.append(sep);
+            sb.append(section.getCategory());
+            sep = ", ";
+        }
+
+        return sb.toString();
+    }
+
     /**
      * Synchronises the data of the sections with that of the suggestions source, resetting the ones
      * that are stale. (see {@link SuggestionsSection#isDataStale()})
@@ -234,7 +298,8 @@ public class SectionList
             int category = sectionsEntry.getKey();
             Log.d(TAG, "The section for category %d is stale - Resetting.", category);
             resetSection(category, mUiDelegate.getSuggestionsSource().getCategoryStatus(category),
-                    /* alwaysAllowEmptySections = */ false);
+                    /* alwaysAllowEmptySections = */ false,
+                    shouldReportPrefetchedSuggestionsMetrics(category));
         }
 
         // We may have updated (or not) the visible suggestions, so we still record the new state,
@@ -307,7 +372,7 @@ public class SectionList
 
     /**
      * Records the currently visible suggestion state: which categories are visible and how many
-     * suggestions per category.
+     * (prefetched) suggestions per category.
      * @see org.chromium.chrome.browser.suggestions.SuggestionsEventReporter#onPageShown
      */
     private void recordDisplayedSuggestions(int[] categories) {
@@ -324,7 +389,13 @@ public class SectionList
                 categories, suggestionsPerCategory, isCategoryVisible);
     }
 
-    SuggestionsSection getSectionForTesting(@CategoryInt int categoryId) {
+    /**
+     * Returns the {@link SuggestionsSection} for a given {@code categoryId}, or null if the
+     * category doesn't exist.
+     * @param categoryId The category ID of the section that should be returned.
+     * @return The Section with the given category ID.
+     */
+    public SuggestionsSection getSection(@CategoryInt int categoryId) {
         return mSections.get(categoryId);
     }
 }

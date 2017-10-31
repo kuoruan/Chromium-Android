@@ -6,16 +6,17 @@ package org.chromium.chrome.browser.browseractions;
 
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.customtabs.browseractions.BrowserActionItem;
 import android.support.customtabs.browseractions.BrowserActionsIntent;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.View;
 
 import org.chromium.base.Log;
+import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.UrlConstants;
@@ -31,12 +32,13 @@ import java.util.List;
  * A transparent {@link AsyncInitializationActivity} that displays the Browser Actions context menu.
  */
 public class BrowserActionActivity extends AsyncInitializationActivity {
-    private static final String TAG = "BrowserActions";
+    private static final String TAG = "cr_BrowserActions";
 
     private int mType;
     private Uri mUri;
     private String mCreatorPackageName;
     private List<BrowserActionItem> mActions = new ArrayList<>();
+    private PendingIntent mOnBrowserActionSelectedCallback;
     private BrowserActionsContextMenuHelper mHelper;
 
     @Override
@@ -57,10 +59,12 @@ public class BrowserActionActivity extends AsyncInitializationActivity {
         mType = IntentUtils.safeGetIntExtra(
                 intent, BrowserActionsIntent.EXTRA_TYPE, BrowserActionsIntent.URL_TYPE_NONE);
         mCreatorPackageName = BrowserActionsIntent.getCreatorPackageName(intent);
+        mOnBrowserActionSelectedCallback = IntentUtils.safeGetParcelableExtra(
+                intent, BrowserActionsIntent.EXTRA_SELECTED_ACTION_PENDING_INTENT);
         ArrayList<Bundle> bundles = IntentUtils.getParcelableArrayListExtra(
                 intent, BrowserActionsIntent.EXTRA_MENU_ITEMS);
         if (bundles != null) {
-            parseBrowserActionItems(bundles);
+            mActions = BrowserActionsIntent.parseBrowserActionItems(bundles);
         }
         if (mUri == null) {
             Log.e(TAG, "Missing url");
@@ -72,7 +76,8 @@ public class BrowserActionActivity extends AsyncInitializationActivity {
         } else if (mCreatorPackageName == null) {
             Log.e(TAG, "Missing creator's pacakge name");
             return false;
-        } else if ((intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK) != 0) {
+        } else if (!TextUtils.equals(mCreatorPackageName, getPackageName())
+                && (intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK) != 0) {
             Log.e(TAG, "Intent should not be started with FLAG_ACTIVITY_NEW_TASK");
             return false;
         } else if ((intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_DOCUMENT) != 0) {
@@ -89,9 +94,24 @@ public class BrowserActionActivity extends AsyncInitializationActivity {
     @Override
     public void openContextMenu(View view) {
         ContextMenuParams params = createContextMenuParams();
-        mHelper = new BrowserActionsContextMenuHelper(this, params, mActions, mCreatorPackageName);
+        Runnable listener = new Runnable() {
+            @Override
+            public void run() {
+                startDelayedNativeInitialization();
+            }
+        };
+        mHelper = new BrowserActionsContextMenuHelper(this, params, mActions, mCreatorPackageName,
+                mOnBrowserActionSelectedCallback, listener);
         mHelper.displayBrowserActionsMenu(view);
         return;
+    }
+
+    /**
+     * @return The {@link BrowserActionsContextMenuHelper} for testing.
+     */
+    @VisibleForTesting
+    BrowserActionsContextMenuHelper getHelperForTesting() {
+        return mHelper;
     }
 
     /**
@@ -122,40 +142,6 @@ public class BrowserActionActivity extends AsyncInitializationActivity {
         return true;
     }
 
-    /**
-     * Gets custom item list for browser action menu.
-     * @param bundles Data for custom items from {@link BrowserActionsIntent}.
-     */
-    private void parseBrowserActionItems(ArrayList<Bundle> bundles) {
-        for (int i = 0; i < bundles.size(); i++) {
-            Bundle bundle = bundles.get(i);
-            String title = IntentUtils.safeGetString(bundle, BrowserActionsIntent.KEY_TITLE);
-            PendingIntent action =
-                    IntentUtils.safeGetParcelable(bundle, BrowserActionsIntent.KEY_ACTION);
-            Bitmap icon = IntentUtils.safeGetParcelable(bundle, BrowserActionsIntent.KEY_ICON);
-            if (title != null && action != null) {
-                BrowserActionItem item = new BrowserActionItem(title, action);
-                if (icon != null) {
-                    item.setIcon(icon);
-                }
-                mActions.add(item);
-            } else if (title != null) {
-                Log.e(TAG, "Missing action for item: " + i);
-            } else if (action != null) {
-                Log.e(TAG, "Missing title for item: " + i);
-            } else {
-                Log.e(TAG, "Missing title and action for item: " + i);
-            }
-        }
-    }
-
-    /**
-     * Callback when Browser Actions menu dialog is shown.
-     */
-    public void onMenuShown() {
-        startDelayedNativeInitialization();
-    }
-
     @Override
     public void onContextMenuClosed(Menu menu) {
         super.onContextMenuClosed(menu);
@@ -164,10 +150,9 @@ public class BrowserActionActivity extends AsyncInitializationActivity {
         }
     }
 
-    /**
-     * @return the package name of the requesting app.
-     */
-    public String getCreatorPackageName() {
-        return mCreatorPackageName;
+    @Override
+    public void finishNativeInitialization() {
+        super.finishNativeInitialization();
+        mHelper.onNativeInitialized();
     }
 }

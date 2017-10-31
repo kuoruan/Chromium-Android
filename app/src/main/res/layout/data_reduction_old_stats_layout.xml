@@ -100,18 +100,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/BlackTitle2" />
 
             <TextView
                 android:id="@+id/data_reduction_compressed_size"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/BlackTitle2" />
         </LinearLayout>
 
     </LinearLayout>

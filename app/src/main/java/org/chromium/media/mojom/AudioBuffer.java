@@ -110,21 +110,21 @@ public final class AudioBuffer extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(sampleFormat, 8);
+        encoder0.encode(this.sampleFormat, 8);
         
-        encoder0.encode(channelLayout, 12);
+        encoder0.encode(this.channelLayout, 12);
         
-        encoder0.encode(channelCount, 16);
+        encoder0.encode(this.channelCount, 16);
         
-        encoder0.encode(sampleRate, 20);
+        encoder0.encode(this.sampleRate, 20);
         
-        encoder0.encode(frameCount, 24);
+        encoder0.encode(this.frameCount, 24);
         
-        encoder0.encode(endOfStream, 28, 0);
+        encoder0.encode(this.endOfStream, 28, 0);
         
-        encoder0.encode(timestamp, 32, false);
+        encoder0.encode(this.timestamp, 32, false);
         
-        encoder0.encode(data, 40, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+        encoder0.encode(this.data, 40, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
     }
 
     /**
@@ -165,14 +165,14 @@ public final class AudioBuffer extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sampleFormat);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(channelLayout);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(channelCount);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sampleRate);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(frameCount);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(endOfStream);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(timestamp);
-        result = prime * result + java.util.Arrays.hashCode(data);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sampleFormat);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.channelLayout);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.channelCount);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sampleRate);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.frameCount);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.endOfStream);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.timestamp);
+        result = prime * result + java.util.Arrays.hashCode(this.data);
         return result;
     }
 }

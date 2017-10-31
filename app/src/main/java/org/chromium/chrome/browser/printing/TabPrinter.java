@@ -34,11 +34,9 @@ public class TabPrinter implements Printable {
 
     @Override
     public boolean print(int renderProcessId, int renderFrameId) {
+        if (!canPrint()) return false;
         Tab tab = mTab.get();
-        if (tab == null || !tab.isInitialized()) {
-            Log.d(TAG, "Tab not ready, unable to start printing.");
-            return false;
-        }
+        assert tab != null && tab.isInitialized();
         return tab.print(renderProcessId, renderFrameId);
     }
 
@@ -54,5 +52,16 @@ public class TabPrinter implements Printable {
         if (!TextUtils.isEmpty(url)) return url;
 
         return mDefaultTitle;
+    }
+
+    @Override
+    public boolean canPrint() {
+        Tab tab = mTab.get();
+        if (tab == null || !tab.isInitialized()) {
+            // tab.isInitialized() will be false if tab is in destroy process.
+            Log.d(TAG, "Tab is not avaliable for printing.");
+            return false;
+        }
+        return true;
     }
 }

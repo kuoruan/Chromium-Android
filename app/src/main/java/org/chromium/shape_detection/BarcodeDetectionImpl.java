@@ -38,13 +38,6 @@ public class BarcodeDetectionImpl implements BarcodeDetection {
 
     @Override
     public void detect(org.chromium.skia.mojom.Bitmap bitmapData, DetectResponse callback) {
-        if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(
-                    ContextUtils.getApplicationContext())
-                != ConnectionResult.SUCCESS) {
-            Log.e(TAG, "Google Play Services not available");
-            callback.call(new BarcodeDetectionResult[0]);
-            return;
-        }
         // The vision library will be downloaded the first time the API is used
         // on the device; this happens "fast", but it might have not completed,
         // bail in this case. Also, the API was disabled between and v.9.0 and
@@ -104,6 +97,12 @@ public class BarcodeDetectionImpl implements BarcodeDetection {
 
         @Override
         public BarcodeDetection createImpl() {
+            if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(
+                        ContextUtils.getApplicationContext())
+                    != ConnectionResult.SUCCESS) {
+                Log.e(TAG, "Google Play Services not available");
+                return null;
+            }
             return new BarcodeDetectionImpl();
         }
     }

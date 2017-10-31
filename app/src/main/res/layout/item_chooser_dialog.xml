@@ -9,7 +9,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical"
-    android:paddingBottom="8dp"
+    android:paddingBottom="12dp"
     android:paddingTop="20dp" >
 
     <!-- The title at the top. -->

@@ -11,9 +11,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.ListPopupWindow;
-import android.widget.TextView;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkItem;
@@ -28,8 +26,6 @@ import java.util.List;
  */
 abstract class BookmarkRow extends SelectableItemView<BookmarkId> implements BookmarkUIObserver {
 
-    protected ImageView mIconImageView;
-    protected TextView mTitleView;
     protected TintedImageButton mMoreIcon;
 
     protected BookmarkDelegate mDelegate;
@@ -163,10 +159,6 @@ abstract class BookmarkRow extends SelectableItemView<BookmarkId> implements Boo
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-
-        mIconImageView = (ImageView) findViewById(R.id.bookmark_image);
-        mTitleView = (TextView) findViewById(R.id.title);
-
         mMoreIcon = (TintedImageButton) findViewById(R.id.more);
         mMoreIcon.setVisibility(VISIBLE);
         mMoreIcon.setOnClickListener(new OnClickListener() {
@@ -194,11 +186,6 @@ abstract class BookmarkRow extends SelectableItemView<BookmarkId> implements Boo
     }
 
     // SelectableItem overrides.
-
-    @Override
-    public void toggle() {
-        setChecked(!isChecked());
-    }
 
     @Override
     public void onSelectionStateChange(List<BookmarkId> selectedBookmarks) {

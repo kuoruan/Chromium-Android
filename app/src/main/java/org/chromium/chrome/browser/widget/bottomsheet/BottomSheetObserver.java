@@ -4,8 +4,11 @@
 
 package org.chromium.chrome.browser.widget.bottomsheet;
 
+import android.support.annotation.Nullable;
+
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.BottomSheetContent;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.SheetState;
+import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.StateChangeReason;
 
 /**
  * An interface for notifications about the state of the bottom sheet.
@@ -14,13 +17,15 @@ public interface BottomSheetObserver {
     /**
      * A notification that the sheet has been opened, meaning the sheet is any height greater
      * than its peeking state.
+     * @param reason The {@link StateChangeReason} that the sheet was opened.
      */
-    void onSheetOpened();
+    void onSheetOpened(@StateChangeReason int reason);
 
     /**
      * A notification that the sheet has closed, meaning the sheet has reached its peeking state.
+     * @param reason The {@link StateChangeReason} that the sheet was closed.
      */
-    void onSheetClosed();
+    void onSheetClosed(@StateChangeReason int reason);
 
     /**
      * A notification that the bottom sheet is no longer being dragged by the user and is instead
@@ -73,7 +78,7 @@ public interface BottomSheetObserver {
 
     /**
      * An event for when the sheet content changes.
-     * @param newContent The new {@link BottomSheetContent}.
+     * @param newContent The new {@link BottomSheetContent}, or null if the sheet has no content.
      */
-    void onSheetContentChanged(BottomSheetContent newContent);
+    void onSheetContentChanged(@Nullable BottomSheetContent newContent);
 }

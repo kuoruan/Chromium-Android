@@ -77,9 +77,9 @@ public final class Size extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(width, 8);
+        encoder0.encode(this.width, 8);
         
-        encoder0.encode(height, 12);
+        encoder0.encode(this.height, 12);
     }
 
     /**
@@ -108,8 +108,8 @@ public final class Size extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(width);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(height);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.width);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.height);
         return result;
     }
 }

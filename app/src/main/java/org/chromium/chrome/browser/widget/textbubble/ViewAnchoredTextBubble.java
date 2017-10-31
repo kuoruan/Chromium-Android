@@ -23,7 +23,7 @@ import org.chromium.content.browser.ViewPositionObserver;
 public class ViewAnchoredTextBubble extends TextBubble
         implements PositionObserver.Listener, ViewTreeObserver.OnGlobalLayoutListener,
                    View.OnAttachStateChangeListener, OnPreDrawListener, OnDismissListener {
-    private final int[] mCachedScreenCoordinates = new int[2];
+    private final int[] mCachedWindowCoordinates = new int[2];
     private final Rect mAnchorRect = new Rect();
     private final Rect mInsetRect = new Rect();
     private final View mAnchorView;
@@ -111,9 +111,11 @@ public class ViewAnchoredTextBubble extends TextBubble
     }
 
     private void refreshAnchorBounds() {
-        mAnchorView.getLocationOnScreen(mCachedScreenCoordinates);
-        mAnchorRect.left = mCachedScreenCoordinates[0];
-        mAnchorRect.top = mCachedScreenCoordinates[1];
+        mAnchorView.getLocationInWindow(mCachedWindowCoordinates);
+        if (mCachedWindowCoordinates[0] < 0 || mCachedWindowCoordinates[1] < 0) return;
+
+        mAnchorRect.left = mCachedWindowCoordinates[0];
+        mAnchorRect.top = mCachedWindowCoordinates[1];
         mAnchorRect.right = mAnchorRect.left + mAnchorView.getWidth();
         mAnchorRect.bottom = mAnchorRect.top + mAnchorView.getHeight();
 

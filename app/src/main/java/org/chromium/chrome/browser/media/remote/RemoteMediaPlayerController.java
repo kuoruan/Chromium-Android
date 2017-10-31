@@ -145,7 +145,6 @@ public class RemoteMediaPlayerController implements MediaRouteController.UiListe
                     Log.d(TAG, "Adding remote media route controller %s", className.trim());
                     Class<?> mediaRouteControllerClass = Class.forName(className.trim());
                     Object mediaRouteController = mediaRouteControllerClass.newInstance();
-                    assert mediaRouteController instanceof MediaRouteController;
                     mMediaRouteControllers.add((MediaRouteController) mediaRouteController);
                 }
             }

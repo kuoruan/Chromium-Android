@@ -131,11 +131,12 @@ public class PhysicalWeb {
      */
     private static boolean shouldAutoEnablePhysicalWeb() {
         LocationUtils locationUtils = LocationUtils.getInstance();
-        return locationUtils.isSystemLocationSettingEnabled()
+        // LowEndDevice check must come first in order to short circuit more intensive routines
+        // potentially run by LocationUtils.
+        return !SysUtils.isLowEndDevice() && locationUtils.isSystemLocationSettingEnabled()
                 && locationUtils.hasAndroidLocationPermission()
                 && TemplateUrlService.getInstance().isDefaultSearchEngineGoogle()
-                && !Profile.getLastUsedProfile().isOffTheRecord()
-                && !SysUtils.isLowEndDevice();
+                && !Profile.getLastUsedProfile().isOffTheRecord();
     }
 
     /**

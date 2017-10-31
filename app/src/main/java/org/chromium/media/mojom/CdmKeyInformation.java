@@ -20,27 +20,6 @@ public final class CdmKeyInformation extends org.chromium.mojo.bindings.Struct {
     private static final int STRUCT_SIZE = 24;
     private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-
-    public static final class KeyStatus {
-    
-    
-    
-        private static final boolean IS_EXTENSIBLE = false;
-    
-        public static boolean isKnownValue(int value) {
-            return false;
-        }
-    
-        public static void validate(int value) {
-            if (IS_EXTENSIBLE || isKnownValue(value))
-                return;
-    
-            throw new DeserializationException("Invalid enum value.");
-        }
-    
-        private KeyStatus() {}
-    
-    }
     public byte[] keyId;
     public int status;
     public int systemCode;
@@ -87,7 +66,7 @@ public final class CdmKeyInformation extends org.chromium.mojo.bindings.Struct {
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
                 result.status = decoder0.readInt(16);
-                    CdmKeyInformation.KeyStatus.validate(result.status);
+                    CdmKeyStatus.validate(result.status);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
@@ -104,11 +83,11 @@ public final class CdmKeyInformation extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(keyId, 8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+        encoder0.encode(this.keyId, 8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
         
-        encoder0.encode(status, 16);
+        encoder0.encode(this.status, 16);
         
-        encoder0.encode(systemCode, 20);
+        encoder0.encode(this.systemCode, 20);
     }
 
     /**
@@ -139,9 +118,9 @@ public final class CdmKeyInformation extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + java.util.Arrays.hashCode(keyId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(status);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(systemCode);
+        result = prime * result + java.util.Arrays.hashCode(this.keyId);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.status);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.systemCode);
         return result;
     }
 }

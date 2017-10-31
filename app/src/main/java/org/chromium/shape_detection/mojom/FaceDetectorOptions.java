@@ -77,9 +77,9 @@ public final class FaceDetectorOptions extends org.chromium.mojo.bindings.Struct
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(maxDetectedFaces, 8);
+        encoder0.encode(this.maxDetectedFaces, 8);
         
-        encoder0.encode(fastMode, 12, 0);
+        encoder0.encode(this.fastMode, 12, 0);
     }
 
     /**
@@ -108,8 +108,8 @@ public final class FaceDetectorOptions extends org.chromium.mojo.bindings.Struct
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(maxDetectedFaces);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(fastMode);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.maxDetectedFaces);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.fastMode);
         return result;
     }
 }

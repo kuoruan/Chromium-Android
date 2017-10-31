@@ -210,11 +210,6 @@ public class StaticLayout extends Layout {
     }
 
     @Override
-    public boolean isTabInteractive() {
-        return mLayoutTabs != null && mLayoutTabs.length > 0;
-    }
-
-    @Override
     protected EventFilter getEventFilter() {
         return null;
     }

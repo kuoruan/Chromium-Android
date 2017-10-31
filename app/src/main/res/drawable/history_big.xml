@@ -6,11 +6,11 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:targetApi="21"
-    android:height="64dp"
     android:width="64dp"
-    android:viewportHeight="24.0"
-    android:viewportWidth="24.0" >
+    android:height="64dp"
+    android:viewportWidth="24.0"
+    android:viewportHeight="24.0">
     <path
         android:fillColor="@color/google_grey_500"
-        android:pathData="M13,3c-4.97,0 -9,4.03 -9,9L1,12l3.89,3.89 0.07,0.14L9,12L6,12c0,-3.87 3.13,-7 7,-7s7,3.13 7,7 -3.13,7 -7,7c-1.93,0 -3.68,-0.79 -4.94,-2.06l-1.42,1.42C8.27,19.99 10.51,21 13,21c4.97,0 9,-4.03 9,-9s-4.03,-9 -9,-9zM12,8v5l4.28,2.54 0.72,-1.21 -3.5,-2.08L13.5,8L12,8z" />
+        android:pathData="M11.991,3C16.968,3 21,7.032 21,12C21,16.968 16.968,21 11.991,21C7.023,21 3,16.968 3,12C3,7.032 7.023,3 11.991,3ZM12.45,7.5L11.1,7.5L11.1,12.9L15.825,15.735L16.5,14.628L12.45,12.225L12.45,7.5Z" />
 </vector>

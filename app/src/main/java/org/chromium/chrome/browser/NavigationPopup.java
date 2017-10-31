@@ -121,24 +121,18 @@ public class NavigationPopup extends ListPopupWindow implements AdapterView.OnIt
             if (entry.getFavicon() != null) continue;
             final String pageUrl = entry.getUrl();
             if (!requestedUrls.contains(pageUrl)) {
-                FaviconImageCallback imageCallback = new FaviconImageCallback() {
-                    @Override
-                    public void onFaviconAvailable(Bitmap bitmap, String iconUrl) {
-                        NavigationPopup.this.onFaviconAvailable(pageUrl, bitmap);
-                    }
-                };
+                FaviconImageCallback imageCallback =
+                        (bitmap, iconUrl) -> NavigationPopup.this.onFaviconAvailable(pageUrl,
+                                bitmap);
                 mFaviconHelper.getLocalFaviconImageForURL(
                         mProfile, pageUrl, mFaviconSize, imageCallback);
                 requestedUrls.add(pageUrl);
             }
         }
 
-        FaviconImageCallback historyImageCallback = new FaviconImageCallback() {
-            @Override
-            public void onFaviconAvailable(Bitmap bitmap, String iconUrl) {
-                NavigationPopup.this.onFaviconAvailable(UrlConstants.HISTORY_URL, bitmap);
-            }
-        };
+        FaviconImageCallback historyImageCallback =
+                (bitmap, iconUrl) -> NavigationPopup.this.onFaviconAvailable(
+                        UrlConstants.HISTORY_URL, bitmap);
         mFaviconHelper.getLocalFaviconImageForURL(
                 mProfile, UrlConstants.HISTORY_URL, mFaviconSize, historyImageCallback);
     }

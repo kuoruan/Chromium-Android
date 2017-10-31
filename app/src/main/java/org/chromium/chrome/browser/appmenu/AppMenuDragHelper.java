@@ -68,24 +68,21 @@ class AppMenuDragHelper {
         // If user is dragging and the popup ListView is too big to display at once,
         // mDragScrolling animator scrolls mPopup.getListView() automatically depending on
         // the user's touch position.
-        mDragScrolling.setTimeListener(new TimeAnimator.TimeListener() {
-            @Override
-            public void onTimeUpdate(TimeAnimator animation, long totalTime, long deltaTime) {
-                if (mAppMenu.getListView() == null) return;
+        mDragScrolling.setTimeListener((animation, totalTime, deltaTime) -> {
+            if (mAppMenu.getListView() == null) return;
 
-                // We keep both mDragScrollOffset and mDragScrollOffsetRounded because
-                // the actual scrolling is by the rounded value but at the same time we also
-                // want to keep the precise scroll value in float.
-                mDragScrollOffset += (deltaTime * 0.001f) * mDragScrollingVelocity;
-                int diff = Math.round(mDragScrollOffset - mDragScrollOffsetRounded);
-                mDragScrollOffsetRounded += diff;
-                mAppMenu.getListView().smoothScrollBy(diff, 0);
+            // We keep both mDragScrollOffset and mDragScrollOffsetRounded because
+            // the actual scrolling is by the rounded value but at the same time we also
+            // want to keep the precise scroll value in float.
+            mDragScrollOffset += (deltaTime * 0.001f) * mDragScrollingVelocity;
+            int diff = Math.round(mDragScrollOffset - mDragScrollOffsetRounded);
+            mDragScrollOffsetRounded += diff;
+            mAppMenu.getListView().smoothScrollBy(diff, 0);
 
-                // Force touch move event to highlight items correctly for the scrolled position.
-                if (!Float.isNaN(mLastTouchX) && !Float.isNaN(mLastTouchY)) {
-                    menuItemAction(Math.round(mLastTouchX), Math.round(mLastTouchY),
-                            ITEM_ACTION_HIGHLIGHT);
-                }
+            // Force touch move event to highlight items correctly for the scrolled position.
+            if (!Float.isNaN(mLastTouchX) && !Float.isNaN(mLastTouchY)) {
+                menuItemAction(Math.round(mLastTouchX), Math.round(mLastTouchY),
+                        ITEM_ACTION_HIGHLIGHT);
             }
         });
 

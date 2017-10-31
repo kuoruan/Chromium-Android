@@ -22,6 +22,7 @@ import org.chromium.chrome.R;
 public class InfoBarCompactLayout extends LinearLayout implements View.OnClickListener {
     private final InfoBarView mInfoBarView;
     private final int mCompactInfoBarSize;
+    private final int mIconWidth;
     private final View mCloseButton;
 
     InfoBarCompactLayout(
@@ -30,6 +31,7 @@ public class InfoBarCompactLayout extends LinearLayout implements View.OnClickLi
         mInfoBarView = infoBarView;
         mCompactInfoBarSize =
                 context.getResources().getDimensionPixelOffset(R.dimen.infobar_compact_size);
+        mIconWidth = context.getResources().getDimensionPixelOffset(R.dimen.infobar_big_icon_size);
 
         setOrientation(LinearLayout.HORIZONTAL);
         setGravity(Gravity.CENTER_VERTICAL);
@@ -73,7 +75,7 @@ public class InfoBarCompactLayout extends LinearLayout implements View.OnClickLi
         ImageView iconView = InfoBarLayout.createIconView(getContext(), iconResourceId, iconBitmap);
         if (iconView != null) {
             LinearLayout.LayoutParams iconParams =
-                    new LinearLayout.LayoutParams(mCompactInfoBarSize, mCompactInfoBarSize);
+                    new LinearLayout.LayoutParams(mIconWidth, mCompactInfoBarSize);
             addView(iconView, iconParams);
         }
     }

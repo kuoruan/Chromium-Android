@@ -28,4 +28,26 @@
         android:paddingTop="0dp"
         android:layout_marginTop="10dp"
         android:layout_marginStart="48dp" />
+    <LinearLayout
+        android:id="@+id/read_only_text"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:paddingTop="0dp"
+        android:visibility="gone" >
+        <TextView
+            android:id="@+id/name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/BlackTitle1" />
+        <TextView
+            android:id="@+id/origin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="2dp"
+            android:textAppearance="@style/BlackBody" />
+    </LinearLayout>
 </FrameLayout>

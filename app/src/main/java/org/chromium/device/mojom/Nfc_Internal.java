@@ -470,7 +470,7 @@ CancelAllWatchesResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(client, 8, false, NfcClient.MANAGER);
+            encoder0.encode(this.client, 8, false, NfcClient.MANAGER);
         }
     
         /**
@@ -497,7 +497,7 @@ CancelAllWatchesResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(client);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.client);
             return result;
         }
     }
@@ -569,9 +569,9 @@ CancelAllWatchesResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(message, 8, false);
+            encoder0.encode(this.message, 8, false);
             
-            encoder0.encode(options, 16, true);
+            encoder0.encode(this.options, 16, true);
         }
     
         /**
@@ -600,8 +600,8 @@ CancelAllWatchesResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(message);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(options);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.message);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.options);
             return result;
         }
     }
@@ -667,7 +667,7 @@ CancelAllWatchesResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(error, 8, true);
+            encoder0.encode(this.error, 8, true);
         }
     
         /**
@@ -694,7 +694,7 @@ CancelAllWatchesResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(error);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.error);
             return result;
         }
     }
@@ -821,7 +821,7 @@ CancelAllWatchesResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(target, 8);
+            encoder0.encode(this.target, 8);
         }
     
         /**
@@ -848,7 +848,7 @@ CancelAllWatchesResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(target);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.target);
             return result;
         }
     }
@@ -914,7 +914,7 @@ CancelAllWatchesResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(error, 8, true);
+            encoder0.encode(this.error, 8, true);
         }
     
         /**
@@ -941,7 +941,7 @@ CancelAllWatchesResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(error);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.error);
             return result;
         }
     }
@@ -1068,7 +1068,7 @@ CancelAllWatchesResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(options, 8, false);
+            encoder0.encode(this.options, 8, false);
         }
     
         /**
@@ -1095,7 +1095,7 @@ CancelAllWatchesResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(options);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.options);
             return result;
         }
     }
@@ -1166,9 +1166,9 @@ CancelAllWatchesResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(id, 8);
+            encoder0.encode(this.id, 8);
             
-            encoder0.encode(error, 16, true);
+            encoder0.encode(this.error, 16, true);
         }
     
         /**
@@ -1197,8 +1197,8 @@ CancelAllWatchesResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(id);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(error);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.id);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.error);
             return result;
         }
     }
@@ -1326,7 +1326,7 @@ CancelAllWatchesResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(id, 8);
+            encoder0.encode(this.id, 8);
         }
     
         /**
@@ -1353,7 +1353,7 @@ CancelAllWatchesResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(id);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.id);
             return result;
         }
     }
@@ -1419,7 +1419,7 @@ CancelAllWatchesResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(error, 8, true);
+            encoder0.encode(this.error, 8, true);
         }
     
         /**
@@ -1446,7 +1446,7 @@ CancelAllWatchesResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(error);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.error);
             return result;
         }
     }
@@ -1654,7 +1654,7 @@ CancelAllWatchesResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(error, 8, true);
+            encoder0.encode(this.error, 8, true);
         }
     
         /**
@@ -1681,7 +1681,7 @@ CancelAllWatchesResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(error);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.error);
             return result;
         }
     }

@@ -9,6 +9,7 @@ import android.text.Selection;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.KeyEvent;
+import android.view.accessibility.AccessibilityEvent;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputConnectionWrapper;
@@ -349,8 +350,18 @@ public class AutocompleteEditTextModel implements AutocompleteEditTextModelBase 
                     && text.length() == 1) {
                 currentText.getChars(selectionStart, selectionStart + 1, mTempSelectionChar, 0);
                 if (mTempSelectionChar[0] == text.charAt(0)) {
-                    mDelegate.onNoChangeTypingAccessibilityEvent(selectionStart);
-
+                    if (mDelegate.isAccessibilityEnabled()) {
+                        // Since the text isn't changing, TalkBack won't read out the typed
+                        // characters. To work around this, explicitly send an accessibility event.
+                        // crbug.com/416595
+                        AccessibilityEvent event = AccessibilityEvent.obtain(
+                                AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED);
+                        event.setBeforeText(currentText.toString().substring(0, selectionStart));
+                        event.setFromIndex(selectionStart);
+                        event.setRemovedCount(0);
+                        event.setAddedCount(1);
+                        mDelegate.sendAccessibilityEventUnchecked(event);
+                    }
                     setAutocompleteText(currentText.subSequence(0, selectionStart + 1),
                             currentText.subSequence(selectionStart + 1, selectionEnd));
                     if (mBatchEditNestCount == 0) {
@@ -495,5 +506,10 @@ public class AutocompleteEditTextModel implements AutocompleteEditTextModelBase 
         mLastUpdateSelStart = selStart;
         mLastUpdateSelEnd = selEnd;
         mDelegate.onUpdateSelectionForTesting(selStart, selEnd);
+    }
+
+    @Override
+    public boolean shouldIgnoreAccessibilityEvent() {
+        return false;
     }
 }

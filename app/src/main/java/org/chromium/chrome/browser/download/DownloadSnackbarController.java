@@ -14,7 +14,6 @@ import org.chromium.base.BuildInfo;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.customtabs.CustomTabActivity;
 import org.chromium.chrome.browser.download.items.OfflineContentAggregatorNotificationBridgeUiFactory;
-import org.chromium.chrome.browser.offlinepages.downloads.OfflinePageDownloadBridge;
 import org.chromium.chrome.browser.snackbar.Snackbar;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;
 import org.chromium.components.offline_items_collection.LegacyHelpers;
@@ -55,9 +54,7 @@ public class DownloadSnackbarController implements SnackbarManager.SnackbarContr
 
         DownloadManagerService manager = DownloadManagerService.getDownloadManagerService();
         final ActionDataInfo download = (ActionDataInfo) actionData;
-        if (LegacyHelpers.isLegacyOfflinePage(download.downloadInfo.getContentId())) {
-            OfflinePageDownloadBridge.openDownloadedPage(download.downloadInfo.getContentId());
-        } else if (LegacyHelpers.isLegacyDownload(download.downloadInfo.getContentId())) {
+        if (LegacyHelpers.isLegacyDownload(download.downloadInfo.getContentId())) {
             if (download.usesAndroidDownloadManager) {
                 mContext.startActivity(new Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)
                                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));

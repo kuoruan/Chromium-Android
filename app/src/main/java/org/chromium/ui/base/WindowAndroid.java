@@ -31,6 +31,7 @@ import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.ObserverList;
+import org.chromium.base.StrictModeContext;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -211,9 +212,12 @@ public class WindowAndroid {
         mContextRef = new WeakReference<>(context);
         mOutstandingIntents = new SparseArray<>();
         mIntentErrors = new HashMap<>();
-        mVSyncMonitor = new VSyncMonitor(context, mVSyncListener);
-        mAccessibilityManager = (AccessibilityManager) mApplicationContext.getSystemService(
-                Context.ACCESSIBILITY_SERVICE);
+        // Temporary solution for flaky tests, see https://crbug.com/767624 for context
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
+            mVSyncMonitor = new VSyncMonitor(context, mVSyncListener);
+            mAccessibilityManager = (AccessibilityManager) mApplicationContext.getSystemService(
+                    Context.ACCESSIBILITY_SERVICE);
+        }
         mDisplayAndroid = display;
         // Configuration.isDisplayServerWideColorGamut must be queried from the window's context.
         // Because of crbug.com/756180, many devices report true for isScreenWideColorGamut in

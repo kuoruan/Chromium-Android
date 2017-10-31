@@ -90,5 +90,6 @@ public class MarginResizer implements DisplayStyleObserver {
             layoutParams.setMargins(mDefaultMarginSizePixels, layoutParams.topMargin,
                     mDefaultMarginSizePixels, layoutParams.bottomMargin);
         }
+        mView.setLayoutParams(layoutParams);
     }
 }

@@ -25,13 +25,18 @@ import android.os.SystemClock;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.Interpolator;
 import android.view.animation.OvershootInterpolator;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Log;
+import org.chromium.base.VisibleForTesting;
+import org.chromium.base.annotations.CalledByNative;
+import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.content.R;
+import org.chromium.content_public.browser.WebContents;
 
 /**
  * PopupZoomer is used to show the tap disambiguation popup.  When a tap lands ambiguously
@@ -39,6 +44,7 @@ import org.chromium.content.R;
  * a magnified view of the content is shown, the screen is grayed out and the user
  * must re-tap the magnified content in order to clarify their intent.
  */
+@JNINamespace("content")
 class PopupZoomer extends View {
     private static final String TAG = "cr.PopupZoomer";
 
@@ -60,6 +66,8 @@ class PopupZoomer extends View {
     private static final int UMA_TAPDISAMBIGUATION_TAPPEDINSIDE_SAMENODE = 4;
     private static final int UMA_TAPDISAMBIGUATION_TAPPEDINSIDE_DIFFERENTNODE = 5;
     private static final int UMA_TAPDISAMBIGUATION_COUNT = 6;
+
+    private long mNativePopupZoomer;
 
     private void recordHistogram(int value) {
         RecordHistogram.recordEnumeratedHistogram(
@@ -140,7 +148,7 @@ class PopupZoomer extends View {
     private float mMinScrollX, mMaxScrollX;
     private float mMinScrollY, mMaxScrollY;
 
-    private GestureDetector mGestureDetector;
+    private final GestureDetector mGestureDetector;
 
     // These bounds are computed and valid for one execution of onDraw.
     // Extracted to a member variable to save unnecessary allocations on each invocation.
@@ -189,9 +197,10 @@ class PopupZoomer extends View {
     /**
      * Creates Popupzoomer.
      * @param context Context to be used.
-     * @param overlayRadiusDimensoinResId Resource to be used to get overlay corner radius.
+     * @param webContents WebContents instance with which this PopupZoomer is associated.
+     * @param containerView view that popup zoomer gets added to.
      */
-    public PopupZoomer(Context context) {
+    public PopupZoomer(Context context, WebContents webContents, ViewGroup containerView) {
         super(context);
 
         setVisibility(INVISIBLE);
@@ -240,20 +249,48 @@ class PopupZoomer extends View {
                     }
                 };
         mGestureDetector = new GestureDetector(context, listener);
+        initOptionalListeners(containerView);
+        mNativePopupZoomer = nativeInit(webContents);
     }
 
-    /**
-     * Sets the OnTapListener.
-     */
-    public void setOnTapListener(OnTapListener listener) {
-        mOnTapListener = listener;
-    }
+    protected void initOptionalListeners(final ViewGroup containerView) {
+        // OnVisibilityChangedListener, OnTapListener can only be used to add and remove views
+        // from the container view at creation.
+        mOnVisibilityChangedListener = new OnVisibilityChangedListener() {
+            @Override
+            public void onPopupZoomerShown(final PopupZoomer zoomer) {
+                containerView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (containerView.indexOfChild(zoomer) == -1) {
+                            containerView.addView(zoomer);
+                        }
+                    }
+                });
+            }
 
-    /**
-     * Sets the OnVisibilityChangedListener.
-     */
-    public void setOnVisibilityChangedListener(OnVisibilityChangedListener listener) {
-        mOnVisibilityChangedListener = listener;
+            @Override
+            public void onPopupZoomerHidden(final PopupZoomer zoomer) {
+                containerView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (containerView.indexOfChild(zoomer) != -1) {
+                            containerView.removeView(zoomer);
+                            containerView.invalidate();
+                        }
+                    }
+                });
+            }
+        };
+        mOnTapListener = new OnTapListener() {
+            @Override
+            public void onResolveTapDisambiguation(
+                    long timeMs, float x, float y, boolean isLongPress) {
+                if (mNativePopupZoomer == 0) return;
+                containerView.requestFocus();
+                nativeResolveTapDisambiguation(mNativePopupZoomer, timeMs, x, y, isLongPress);
+            }
+        };
     }
 
     /**
@@ -513,7 +550,8 @@ class PopupZoomer extends View {
     /**
      * Show the PopupZoomer view with given target bounds.
      */
-    public void show(Rect rect) {
+    @VisibleForTesting
+    void show(Rect rect) {
         if (mShowing || mZoomedBitmap == null) return;
 
         setTargetBounds(rect);
@@ -535,6 +573,7 @@ class PopupZoomer extends View {
             hideImmediately();
         }
     }
+
     private void tappedInside() {
         if (!mShowing) return;
         // Tapped-inside histogram value is recorded on the renderer side,
@@ -596,4 +635,29 @@ class PopupZoomer extends View {
             return mInterpolator.getInterpolation(input);
         }
     }
+
+    @CalledByNative
+    private void destroy() {
+        mNativePopupZoomer = 0;
+    }
+
+    @CalledByNative
+    private void showPopup(Rect targetRect, Bitmap zoomedBitmap) {
+        setBitmap(zoomedBitmap);
+        show(targetRect);
+    }
+
+    @CalledByNative
+    private void hidePopup() {
+        hide(false);
+    }
+
+    @CalledByNative
+    private static Rect createRect(int x, int y, int right, int bottom) {
+        return new Rect(x, y, right, bottom);
+    }
+
+    private native long nativeInit(WebContents webContents);
+    private native void nativeResolveTapDisambiguation(
+            long nativePopupZoomer, long timeMs, float x, float y, boolean isLongPress);
 }

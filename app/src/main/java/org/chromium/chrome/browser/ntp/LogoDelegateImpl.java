@@ -7,9 +7,11 @@ package org.chromium.chrome.browser.ntp;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.ntp.LogoBridge.Logo;
 import org.chromium.chrome.browser.ntp.LogoBridge.LogoObserver;
-import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.profiles.Profile;
+import org.chromium.chrome.browser.suggestions.SuggestionsNavigationDelegate;
 import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.ui.base.PageTransition;
+import org.chromium.ui.mojom.WindowOpenDisposition;
 
 import java.util.concurrent.TimeUnit;
 
@@ -21,17 +23,20 @@ import jp.tomorrowkey.android.gifplayer.BaseGifImage;
 public class LogoDelegateImpl implements LogoView.Delegate {
     // UMA enum constants. CTA means the "click-to-action" icon.
     private static final String LOGO_SHOWN_UMA_NAME = "NewTabPage.LogoShown";
+    private static final String LOGO_SHOWN_FROM_CACHE_UMA_NAME = "NewTabPage.LogoShown.FromCache";
+    private static final String LOGO_SHOWN_FRESH_UMA_NAME = "NewTabPage.LogoShown.Fresh";
     private static final int STATIC_LOGO_SHOWN = 0;
     private static final int CTA_IMAGE_SHOWN = 1;
+    private static final int LOGO_SHOWN_COUNT = 2;
 
-    private static final String LOGO_SHOWN_TIME_UMA_NAME = "NewTabPage.LogoShownTime";
+    private static final String LOGO_SHOWN_TIME_UMA_NAME = "NewTabPage.LogoShownTime2";
 
     private static final String LOGO_CLICK_UMA_NAME = "NewTabPage.LogoClick";
     private static final int STATIC_LOGO_CLICKED = 0;
     private static final int CTA_IMAGE_CLICKED = 1;
     private static final int ANIMATED_LOGO_CLICKED = 2;
 
-    private final Tab mTab;
+    private final SuggestionsNavigationDelegate mNavigationDelegate;
     private LogoView mLogoView;
 
     private LogoBridge mLogoBridge;
@@ -44,13 +49,15 @@ public class LogoDelegateImpl implements LogoView.Delegate {
 
     /**
      * Construct a new {@link LogoDelegateImpl}.
-     * @param tab The tab showing the logo view.
+     * @param navigationDelegate The delegate for loading the URL when the logo is clicked.
      * @param logoView The view that shows the search provider logo.
+     * @param profile The profile to show the logo for.
      */
-    public LogoDelegateImpl(Tab tab, LogoView logoView) {
-        mTab = tab;
+    public LogoDelegateImpl(
+            SuggestionsNavigationDelegate navigationDelegate, LogoView logoView, Profile profile) {
+        mNavigationDelegate = navigationDelegate;
         mLogoView = logoView;
-        mLogoBridge = new LogoBridge(tab.getProfile());
+        mLogoBridge = new LogoBridge(profile);
     }
 
     public void destroy() {
@@ -74,7 +81,8 @@ public class LogoDelegateImpl implements LogoView.Delegate {
         } else if (mOnLogoClickUrl != null) {
             RecordHistogram.recordSparseSlowlyHistogram(LOGO_CLICK_UMA_NAME,
                     isAnimatedLogoShowing ? ANIMATED_LOGO_CLICKED : STATIC_LOGO_CLICKED);
-            mTab.loadUrl(new LoadUrlParams(mOnLogoClickUrl, PageTransition.LINK));
+            mNavigationDelegate.openUrl(WindowOpenDisposition.CURRENT_TAB,
+                    new LoadUrlParams(mOnLogoClickUrl, PageTransition.LINK));
         }
     }
 
@@ -87,20 +95,36 @@ public class LogoDelegateImpl implements LogoView.Delegate {
             @Override
             public void onLogoAvailable(Logo logo, boolean fromCache) {
                 if (mIsDestroyed) return;
-                mOnLogoClickUrl = logo != null ? logo.onClickUrl : null;
-                mAnimatedLogoUrl = logo != null ? logo.animatedLogoUrl : null;
+
                 if (logo != null) {
-                    RecordHistogram.recordSparseSlowlyHistogram(LOGO_SHOWN_UMA_NAME,
-                            logo.animatedLogoUrl == null ? STATIC_LOGO_SHOWN : CTA_IMAGE_SHOWN);
+                    int logoType =
+                            logo.animatedLogoUrl == null ? STATIC_LOGO_SHOWN : CTA_IMAGE_SHOWN;
+                    RecordHistogram.recordEnumeratedHistogram(
+                            LOGO_SHOWN_UMA_NAME, logoType, LOGO_SHOWN_COUNT);
+                    if (fromCache) {
+                        RecordHistogram.recordEnumeratedHistogram(
+                                LOGO_SHOWN_FROM_CACHE_UMA_NAME, logoType, LOGO_SHOWN_COUNT);
+                    } else {
+                        RecordHistogram.recordEnumeratedHistogram(
+                                LOGO_SHOWN_FRESH_UMA_NAME, logoType, LOGO_SHOWN_COUNT);
+                    }
                     if (mShouldRecordLoadTime) {
                         long loadTime = System.currentTimeMillis() - loadTimeStart;
                         RecordHistogram.recordMediumTimesHistogram(
                                 LOGO_SHOWN_TIME_UMA_NAME, loadTime, TimeUnit.MILLISECONDS);
+                        // Only record the load time once per NTP, for the first logo we got,
+                        // whether that came from cache or not.
+                        mShouldRecordLoadTime = false;
                     }
+                } else if (!fromCache) {
+                    // If we got a fresh (i.e. not from cache) null logo, don't record any load
+                    // time even if we get another update later.
+                    mShouldRecordLoadTime = false;
                 }
-                // If there currently is no Doodle, don't record the time if a refresh happens
-                // later.
-                mShouldRecordLoadTime = false;
+
+                mOnLogoClickUrl = logo != null ? logo.onClickUrl : null;
+                mAnimatedLogoUrl = logo != null ? logo.animatedLogoUrl : null;
+
                 logoObserver.onLogoAvailable(logo, fromCache);
             }
         };

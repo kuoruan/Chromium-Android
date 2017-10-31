@@ -67,11 +67,8 @@ public class ChromeActionModeCallback implements ActionMode.Callback {
 
         if (item.getItemId() == R.id.select_action_menu_web_search) {
             final String selectedText = mHelper.getSelectedText();
-            Callback<Boolean> callback = new Callback<Boolean>() {
-                @Override
-                public void onResult(Boolean result) {
-                    if (result != null && result) search(selectedText);
-                }
+            Callback<Boolean> callback = result -> {
+                if (result != null && result) search(selectedText);
             };
             LocaleManager.getInstance().showSearchEnginePromoIfNeeded(mTab.getActivity(), callback);
             mHelper.finishActionMode();

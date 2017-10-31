@@ -33,6 +33,14 @@ BindInterfaceResponse callback);
 
 
 
+    void queryService(
+Identity target, 
+QueryServiceResponse callback);
+
+    interface QueryServiceResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<Integer, String> { }
+
+
+
     void startService(
 Identity target, 
 StartServiceResponse callback);

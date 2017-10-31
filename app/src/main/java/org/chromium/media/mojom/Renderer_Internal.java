@@ -453,13 +453,13 @@ InitiateScopedSurfaceRequestResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(client, 8, false);
+            encoder0.encode(this.client, 8, false);
             
-            encoder0.encode(streams, 16, org.chromium.mojo.bindings.BindingsHelper.ARRAY_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH, DemuxerStream.MANAGER);
+            encoder0.encode(this.streams, 16, org.chromium.mojo.bindings.BindingsHelper.ARRAY_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH, DemuxerStream.MANAGER);
             
-            encoder0.encode(mediaUrl, 24, true);
+            encoder0.encode(this.mediaUrl, 24, true);
             
-            encoder0.encode(firstPartyForCookies, 32, true);
+            encoder0.encode(this.firstPartyForCookies, 32, true);
         }
     
         /**
@@ -492,10 +492,10 @@ InitiateScopedSurfaceRequestResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(client);
-            result = prime * result + java.util.Arrays.deepHashCode(streams);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mediaUrl);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(firstPartyForCookies);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.client);
+            result = prime * result + java.util.Arrays.deepHashCode(this.streams);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mediaUrl);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.firstPartyForCookies);
             return result;
         }
     }
@@ -560,7 +560,7 @@ InitiateScopedSurfaceRequestResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(success, 8, 0);
+            encoder0.encode(this.success, 8, 0);
         }
     
         /**
@@ -587,7 +587,7 @@ InitiateScopedSurfaceRequestResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(success);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.success);
             return result;
         }
     }
@@ -933,7 +933,7 @@ InitiateScopedSurfaceRequestResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(time, 8, false);
+            encoder0.encode(this.time, 8, false);
         }
     
         /**
@@ -960,7 +960,7 @@ InitiateScopedSurfaceRequestResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(time);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.time);
             return result;
         }
     }
@@ -1025,7 +1025,7 @@ InitiateScopedSurfaceRequestResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(playbackRate, 8);
+            encoder0.encode(this.playbackRate, 8);
         }
     
         /**
@@ -1052,7 +1052,7 @@ InitiateScopedSurfaceRequestResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(playbackRate);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.playbackRate);
             return result;
         }
     }
@@ -1117,7 +1117,7 @@ InitiateScopedSurfaceRequestResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(volume, 8);
+            encoder0.encode(this.volume, 8);
         }
     
         /**
@@ -1144,7 +1144,7 @@ InitiateScopedSurfaceRequestResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(volume);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.volume);
             return result;
         }
     }
@@ -1209,7 +1209,7 @@ InitiateScopedSurfaceRequestResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(cdmId, 8);
+            encoder0.encode(this.cdmId, 8);
         }
     
         /**
@@ -1236,7 +1236,7 @@ InitiateScopedSurfaceRequestResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(cdmId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cdmId);
             return result;
         }
     }
@@ -1301,7 +1301,7 @@ InitiateScopedSurfaceRequestResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(success, 8, 0);
+            encoder0.encode(this.success, 8, 0);
         }
     
         /**
@@ -1328,7 +1328,7 @@ InitiateScopedSurfaceRequestResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(success);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.success);
             return result;
         }
     }
@@ -1536,7 +1536,7 @@ InitiateScopedSurfaceRequestResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(requestToken, 8, false);
+            encoder0.encode(this.requestToken, 8, false);
         }
     
         /**
@@ -1563,7 +1563,7 @@ InitiateScopedSurfaceRequestResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(requestToken);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.requestToken);
             return result;
         }
     }

@@ -48,11 +48,7 @@ public class BitmapUtils {
             return null;
         }
 
-        try {
-            // This constructor implies a pixel format conversion to YUV.
-            return new Frame.Builder().setBitmap(bitmap).build();
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            return null;
-        }
+        // This constructor implies a pixel format conversion to YUV.
+        return new Frame.Builder().setBitmap(bitmap).build();
     }
 }

@@ -22,7 +22,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-/** Abstraction of Android's package manager to enable unit testing. */
+/** Abstraction of Android's package manager to enable testing. */
 public class PackageManagerDelegate {
     /**
      * Retrieves package information of an installed application.
@@ -121,13 +121,15 @@ public class PackageManagerDelegate {
     }
 
     /**
-     * Gets the resources of the given application.
+     * Gets the string array resource of the given application.
      *
-     * @param applicationInfo The given application info.
-     * @return The resources.
+     * @param applicationInfo The application info.
+     * @param resourceId      The identifier of the string array resource.
+     * @return The string array resource, or null if not found.
      */
     @Nullable
-    public Resources getResourcesForApplication(ApplicationInfo applicationInfo) {
+    public String[] getStringArrayResourceForApplication(
+            ApplicationInfo applicationInfo, int resourceId) {
         Resources resources;
         try {
             resources = ContextUtils.getApplicationContext()
@@ -136,6 +138,6 @@ public class PackageManagerDelegate {
         } catch (NameNotFoundException e) {
             return null;
         }
-        return resources;
+        return resources == null ? null : resources.getStringArray(resourceId);
     }
 }

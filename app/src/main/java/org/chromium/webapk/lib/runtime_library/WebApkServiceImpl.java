@@ -11,6 +11,7 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.RemoteException;
+import android.support.v4.app.NotificationManagerCompat;
 
 /**
  * Implements services offered by the WebAPK to Chrome.
@@ -70,6 +71,10 @@ public class WebApkServiceImpl extends IWebApkApi.Stub {
     @Override
     public void cancelNotification(String platformTag, int platformID) {
         getNotificationManager().cancel(platformTag, platformID);
+    }
+
+    public boolean notificationPermissionEnabled() {
+        return NotificationManagerCompat.from(mContext).areNotificationsEnabled();
     }
 
     private NotificationManager getNotificationManager() {

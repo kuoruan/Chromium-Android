@@ -219,9 +219,9 @@ GetSensorResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(type, 8);
+            encoder0.encode(this.type, 8);
             
-            encoder0.encode(sensorRequest, 12, false);
+            encoder0.encode(this.sensorRequest, 12, false);
         }
     
         /**
@@ -250,8 +250,8 @@ GetSensorResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(type);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(sensorRequest);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.type);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sensorRequest);
             return result;
         }
     }
@@ -322,9 +322,9 @@ GetSensorResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(initParams, 8, true);
+            encoder0.encode(this.initParams, 8, true);
             
-            encoder0.encode(clientRequest, 16, true);
+            encoder0.encode(this.clientRequest, 16, true);
         }
     
         /**
@@ -353,8 +353,8 @@ GetSensorResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(initParams);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(clientRequest);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.initParams);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.clientRequest);
             return result;
         }
     }

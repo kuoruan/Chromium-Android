@@ -46,17 +46,4 @@ public interface MinidumpUploaderDelegate {
      * @param minidump The minidump filename, prior to the upload attempt.
      */
     void recordUploadFailure(File minidump);
-
-    /**
-     * Prior to M60, the ".tryN" suffix was optional for files ready to be uploaded; it is now
-     * required. Clients may implement this method to migrate previously saved minidumps to the new
-     * naming scheme, if necessary.
-     * Note: Because renaming files is a file operation, this method should never be called on the
-     * UI thread; only on a background thread.
-     * @param crashfileManager The file manager responsible for the set of minidumps that might need
-     *     migration.
-     * TODO(isherman): This is temporary migration logic, and can be removed in M61:
-     * http://crbug.com/719120.
-     */
-    void migrateMinidumpFilenamesIfNeeded(CrashFileManager crashFileManager);
 }

@@ -8,26 +8,15 @@ import android.text.TextUtils;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.blink_public.web.WebContextMenuMediaType;
 import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.content_public.common.Referrer;
-
 /**
  * A list of parameters that explain what kind of context menu to show the user.  This data is
  * generated from content/public/common/context_menu_params.h.
  */
 @JNINamespace("ContextMenuParamsAndroid")
 public class ContextMenuParams {
-    /** Must correspond to the MediaType enum in WebKit/chromium/public/WebContextMenuData.h */
-    @SuppressWarnings("unused")
-    static interface MediaType {
-        public static final int MEDIA_TYPE_NONE = 0;
-        public static final int MEDIA_TYPE_IMAGE = 1;
-        public static final int MEDIA_TYPE_VIDEO = 2;
-        public static final int MEDIA_TYPE_AUDIO = 3;
-        public static final int MEDIA_TYPE_FILE = 4;
-        public static final int MEDIA_TYPE_PLUGIN = 5;
-    }
-
     private final String mPageUrl;
     private final String mLinkUrl;
     private final String mLinkText;
@@ -163,10 +152,10 @@ public class ContextMenuParams {
         }
     }
 
-    public ContextMenuParams(int mediaType, String pageUrl, String linkUrl, String linkText,
-            String unfilteredLinkUrl, String srcUrl, String titleText, boolean imageWasFetchedLoFi,
-            Referrer referrer, boolean canSaveMedia, int triggeringTouchXDp,
-            int triggeringTouchYDp) {
+    public ContextMenuParams(@WebContextMenuMediaType int mediaType, String pageUrl, String linkUrl,
+            String linkText, String unfilteredLinkUrl, String srcUrl, String titleText,
+            boolean imageWasFetchedLoFi, Referrer referrer, boolean canSaveMedia,
+            int triggeringTouchXDp, int triggeringTouchYDp) {
         mPageUrl = pageUrl;
         mLinkUrl = linkUrl;
         mLinkText = linkText;
@@ -177,18 +166,19 @@ public class ContextMenuParams {
         mReferrer = referrer;
 
         mIsAnchor = !TextUtils.isEmpty(linkUrl);
-        mIsImage = mediaType == MediaType.MEDIA_TYPE_IMAGE;
-        mIsVideo = mediaType == MediaType.MEDIA_TYPE_VIDEO;
+        mIsImage = mediaType == WebContextMenuMediaType.MEDIA_TYPE_IMAGE;
+        mIsVideo = mediaType == WebContextMenuMediaType.MEDIA_TYPE_VIDEO;
         mCanSaveMedia = canSaveMedia;
         mTriggeringTouchXDp = triggeringTouchXDp;
         mTriggeringTouchYDp = triggeringTouchYDp;
     }
 
     @CalledByNative
-    private static ContextMenuParams create(int mediaType, String pageUrl, String linkUrl,
-            String linkText, String unfilteredLinkUrl, String srcUrl, String titleText,
-            boolean imageWasFetchedLoFi, String sanitizedReferrer, int referrerPolicy,
-            boolean canSaveMedia, int triggeringTouchXDp, int triggeringTouchYDp) {
+    private static ContextMenuParams create(@WebContextMenuMediaType int mediaType, String pageUrl,
+            String linkUrl, String linkText, String unfilteredLinkUrl, String srcUrl,
+            String titleText, boolean imageWasFetchedLoFi, String sanitizedReferrer,
+            int referrerPolicy, boolean canSaveMedia, int triggeringTouchXDp,
+            int triggeringTouchYDp) {
         Referrer referrer = TextUtils.isEmpty(sanitizedReferrer)
                 ? null : new Referrer(sanitizedReferrer, referrerPolicy);
         return new ContextMenuParams(mediaType, pageUrl, linkUrl, linkText, unfilteredLinkUrl,

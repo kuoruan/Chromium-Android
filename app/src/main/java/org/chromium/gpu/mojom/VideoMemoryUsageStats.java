@@ -103,15 +103,15 @@ public final class VideoMemoryUsageStats extends org.chromium.mojo.bindings.Stru
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        if (processMap == null) {
+        if (this.processMap == null) {
             encoder0.encodeNullPointer(8, false);
         } else {
             org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encoderForMap(8);
-            int size0 = processMap.size();
+            int size0 = this.processMap.size();
             int[] keys0 = new int[size0];
             VideoMemoryProcessStats[] values0 = new VideoMemoryProcessStats[size0];
             int index0 = 0;
-            for (java.util.Map.Entry<Integer, VideoMemoryProcessStats> entry0 : processMap.entrySet()) {
+            for (java.util.Map.Entry<Integer, VideoMemoryProcessStats> entry0 : this.processMap.entrySet()) {
                 keys0[index0] = entry0.getKey();
                 values0[index0] = entry0.getValue();
                 ++index0;
@@ -128,7 +128,7 @@ public final class VideoMemoryUsageStats extends org.chromium.mojo.bindings.Stru
             }
         }
         
-        encoder0.encode(bytesAllocated, 16);
+        encoder0.encode(this.bytesAllocated, 16);
     }
 
     /**
@@ -157,8 +157,8 @@ public final class VideoMemoryUsageStats extends org.chromium.mojo.bindings.Stru
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(processMap);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(bytesAllocated);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.processMap);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.bytesAllocated);
         return result;
     }
 }

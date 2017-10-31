@@ -7,7 +7,8 @@
 -->
 
 <!--suppress AlwaysShowAction -->
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Remove the ordering when Android can reorder the assist menu item
          itself. -->
     <group
@@ -55,7 +56,8 @@
             android:alphabeticShortcut="a"
             android:orderInCategory="6"
             />
-        <!-- TODO(ctzsm): Change title to paste_as_plain_text after O SDK roll. -->
+        <!-- android:string/paste_as_plain_text is available since O,
+             we set title string after inflation if running on O+ devices. -->
         <item
             android:id="@+id/select_action_menu_paste_as_plain_text"
             android:title=""

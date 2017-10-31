@@ -36,6 +36,7 @@ import android.view.ViewGroup.MarginLayoutParams;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodSubtype;
+import android.view.textclassifier.TextClassifier;
 import android.widget.TextView;
 
 import java.io.File;
@@ -689,5 +690,16 @@ public class ApiCompatibilityUtils {
      */
     public static boolean objectEquals(Object a, Object b) {
         return (a == null) ? (b == null) : a.equals(b);
+    }
+
+    /**
+     * Disables the Smart Select {@link TextClassifier} for the given {@link TextView} instance.
+     * @param textView The {@link TextView} that should have its classifier disabled.
+     */
+    @TargetApi(Build.VERSION_CODES.O)
+    public static void disableSmartSelectionTextClassifier(TextView textView) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+
+        textView.setTextClassifier(TextClassifier.NO_OP);
     }
 }

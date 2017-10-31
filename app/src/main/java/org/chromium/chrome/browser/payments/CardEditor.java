@@ -33,7 +33,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -202,17 +201,14 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
         }
 
         // Sort profiles for billing address according to completeness.
-        Collections.sort(mProfilesForBillingAddress, new Comparator<AutofillProfile>() {
-            @Override
-            public int compare(AutofillProfile a, AutofillProfile b) {
-                boolean isAComplete = AutofillAddress.checkAddressCompletionStatus(
-                                              a, AutofillAddress.NORMAL_COMPLETENESS_CHECK)
-                        == AutofillAddress.COMPLETE;
-                boolean isBComplete = AutofillAddress.checkAddressCompletionStatus(
-                                              b, AutofillAddress.NORMAL_COMPLETENESS_CHECK)
-                        == AutofillAddress.COMPLETE;
-                return ApiCompatibilityUtils.compareBoolean(isBComplete, isAComplete);
-            }
+        Collections.sort(mProfilesForBillingAddress, (a, b) -> {
+            boolean isAComplete = AutofillAddress.checkAddressCompletionStatus(
+                    a, AutofillAddress.NORMAL_COMPLETENESS_CHECK)
+                    == AutofillAddress.COMPLETE;
+            boolean isBComplete = AutofillAddress.checkAddressCompletionStatus(
+                    b, AutofillAddress.NORMAL_COMPLETENESS_CHECK)
+                    == AutofillAddress.COMPLETE;
+            return ApiCompatibilityUtils.compareBoolean(isBComplete, isAComplete);
         });
 
         mCardIssuerNetworks = new HashMap<>();
@@ -254,16 +250,13 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
             }
         };
 
-        mCardIconGenerator = new EditorValueIconGenerator() {
-            @Override
-            public int getIconResourceId(@Nullable CharSequence value) {
-                if (value == null) return 0;
-                CardIssuerNetwork cardTypeInfo = mCardIssuerNetworks.get(
-                        PersonalDataManager.getInstance().getBasicCardIssuerNetwork(
-                                value.toString(), false));
-                if (cardTypeInfo == null) return 0;
-                return cardTypeInfo.icon;
-            }
+        mCardIconGenerator = value -> {
+            if (value == null) return 0;
+            CardIssuerNetwork cardTypeInfo = mCardIssuerNetworks.get(
+                    PersonalDataManager.getInstance().getBasicCardIssuerNetwork(
+                            value.toString(), false));
+            if (cardTypeInfo == null) return 0;
+            return cardTypeInfo.icon;
         };
 
         mCalendar = new AsyncTask<Void, Void, Calendar>() {
@@ -378,12 +371,7 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
             try {
                 calendar = mCalendar.get();
             } catch (InterruptedException | ExecutionException e) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        callback.onResult(null);
-                    }
-                });
+                mHandler.post(() -> callback.onResult(null));
                 return;
             }
             assert calendar != null;
@@ -406,33 +394,25 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
 
         // If the user clicks [Cancel], send |toEdit| card back to the caller (will return original
         // state, which could be null, a full card, or a partial card).
-        editor.setCancelCallback(new Runnable() {
-            @Override
-            public void run() {
-                callback.onResult(toEdit);
-            }
-        });
+        editor.setCancelCallback(() -> callback.onResult(toEdit));
 
         // If the user clicks [Done], save changes on disk, mark the card "complete," and send it
         // back to the caller.
-        editor.setDoneCallback(new Runnable() {
-            @Override
-            public void run() {
-                commitChanges(card, isNewCard);
+        editor.setDoneCallback(() -> {
+            commitChanges(card, isNewCard);
 
-                String methodName = card.getBasicCardIssuerNetwork();
-                if (mAcceptedBasicCardIssuerNetworks.contains(methodName)) {
-                    methodName = AutofillPaymentApp.BASIC_CARD_METHOD_NAME;
-                }
-                assert methodName != null;
-
-                AutofillProfile billingAddress =
-                        findTargetProfile(mProfilesForBillingAddress, card.getBillingAddressId());
-                assert billingAddress != null;
-
-                instrument.completeInstrument(card, methodName, billingAddress);
-                callback.onResult(instrument);
+            String methodName = card.getBasicCardIssuerNetwork();
+            if (mAcceptedBasicCardIssuerNetworks.contains(methodName)) {
+                methodName = AutofillPaymentApp.BASIC_CARD_METHOD_NAME;
             }
+            assert methodName != null;
+
+            AutofillProfile billingAddress =
+                    findTargetProfile(mProfilesForBillingAddress, card.getBillingAddressId());
+            assert billingAddress != null;
+
+            instrument.completeInstrument(card, methodName, billingAddress);
+            callback.onResult(instrument);
         });
 
         mEditorDialog.show(editor);
@@ -502,13 +482,10 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
                     null /* value */);
             if (mCanScan) {
                 mNumberField.addActionIcon(R.drawable.ic_photo_camera,
-                        R.string.autofill_scan_credit_card, new Runnable() {
-                            @Override
-                            public void run() {
-                                if (mIsScanning) return;
-                                mIsScanning = true;
-                                mCardScanner.scan();
-                            }
+                        R.string.autofill_scan_credit_card, (Runnable) () -> {
+                            if (mIsScanning) return;
+                            mIsScanning = true;
+                            mCardScanner.scan();
                         });
             }
         }
@@ -850,7 +827,10 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
         if (expirationYear >= 2000) mYearField.setValue(Integer.toString(expirationYear));
 
         if (expirationMonth >= 1 && expirationMonth <= 12) {
-            mMonthField.setValue(Integer.toString(expirationMonth));
+            String monthKey = Integer.toString(expirationMonth);
+            // The month key format is 'MM' in the dropdown.
+            if (monthKey.length() == 1) monthKey = '0' + monthKey;
+            mMonthField.setValue(monthKey);
         }
 
         mEditorDialog.update();

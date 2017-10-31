@@ -16,4 +16,9 @@
         android:summary="@string/force_enable_zoom_summary"
         android:title="@string/force_enable_zoom_title" />
 
+    <org.chromium.chrome.browser.preferences.ChromeBaseCheckBoxPreference
+        android:key="reader_for_accessibility"
+        android:summary="@string/reader_for_accessibility_summary"
+        android:title="@string/reader_for_accessibility_title" />
+
 </PreferenceScreen>

@@ -16,10 +16,9 @@
         android:paddingEnd="16dp"
         android:paddingBottom="8dp"
         android:gravity="start|center_vertical"
-        android:textSize="12sp"
-        android:textColor="#616161"
         android:text="@string/powered_by_chrome_message"
-        android:maxLines="1" />
+        android:maxLines="1"
+        style="@style/BlackCaption" />
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"

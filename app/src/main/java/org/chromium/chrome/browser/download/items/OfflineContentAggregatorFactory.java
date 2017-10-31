@@ -11,7 +11,7 @@ import org.chromium.components.offline_items_collection.OfflineContentProvider;
  * Basic factory that creates and returns an {@link OfflineContentProvider} that is attached
  * natively to {@link Profile}.
  */
-class OfflineContentAggregatorFactory {
+public class OfflineContentAggregatorFactory {
     private OfflineContentAggregatorFactory() {}
 
     /**

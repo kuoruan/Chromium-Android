@@ -16,30 +16,16 @@ import org.chromium.components.web_contents_delegate_android.ColorSuggestionList
  * those colors.
  */
 public class ColorPickerSimple extends ListView implements OnColorSuggestionClickListener {
-
     private OnColorChangedListener mOnColorChangedListener;
 
-    private static final int[] DEFAULT_COLORS = {
-        Color.RED,
-        Color.CYAN,
-        Color.BLUE,
-        Color.GREEN,
-        Color.MAGENTA,
-        Color.YELLOW,
-        Color.BLACK,
-        Color.WHITE
-    };
+    private static final int[] DEFAULT_COLORS = {Color.RED, Color.CYAN, Color.BLUE, Color.GREEN,
+            Color.MAGENTA, Color.YELLOW, Color.BLACK, Color.WHITE};
 
-    private static final int[] DEFAULT_COLOR_LABEL_IDS = {
-        R.string.color_picker_button_red,
-        R.string.color_picker_button_cyan,
-        R.string.color_picker_button_blue,
-        R.string.color_picker_button_green,
-        R.string.color_picker_button_magenta,
-        R.string.color_picker_button_yellow,
-        R.string.color_picker_button_black,
-        R.string.color_picker_button_white
-    };
+    private static final int[] DEFAULT_COLOR_LABEL_IDS = {R.string.color_picker_button_red,
+            R.string.color_picker_button_cyan, R.string.color_picker_button_blue,
+            R.string.color_picker_button_green, R.string.color_picker_button_magenta,
+            R.string.color_picker_button_yellow, R.string.color_picker_button_black,
+            R.string.color_picker_button_white};
 
     public ColorPickerSimple(Context context) {
         super(context);
@@ -61,20 +47,19 @@ public class ColorPickerSimple extends ListView implements OnColorSuggestionClic
      * @param onColorChangedListener The listener that gets notified when the user touches
      *                               a color.
      */
-    public void init(ColorSuggestion[] suggestions,
-                     OnColorChangedListener onColorChangedListener) {
+    public void init(ColorSuggestion[] suggestions, OnColorChangedListener onColorChangedListener) {
         mOnColorChangedListener = onColorChangedListener;
 
         if (suggestions == null) {
             suggestions = new ColorSuggestion[DEFAULT_COLORS.length];
             for (int i = 0; i < suggestions.length; ++i) {
-                suggestions[i] = new ColorSuggestion(DEFAULT_COLORS[i],
-                        getContext().getString(DEFAULT_COLOR_LABEL_IDS[i]));
+                suggestions[i] = new ColorSuggestion(
+                        DEFAULT_COLORS[i], getContext().getString(DEFAULT_COLOR_LABEL_IDS[i]));
             }
         }
 
-        ColorSuggestionListAdapter adapter = new ColorSuggestionListAdapter(
-                getContext(), suggestions);
+        ColorSuggestionListAdapter adapter =
+                new ColorSuggestionListAdapter(getContext(), suggestions);
         adapter.setOnColorSuggestionClickListener(this);
         setAdapter(adapter);
     }

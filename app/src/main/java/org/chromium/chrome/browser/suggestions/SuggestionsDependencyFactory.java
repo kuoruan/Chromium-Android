@@ -4,15 +4,16 @@
 
 package org.chromium.chrome.browser.suggestions;
 
+import org.chromium.base.DiscardableReferencePool;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.chrome.browser.download.ui.ThumbnailProvider;
-import org.chromium.chrome.browser.download.ui.ThumbnailProviderImpl;
 import org.chromium.chrome.browser.favicon.FaviconHelper;
 import org.chromium.chrome.browser.favicon.LargeIconBridge;
 import org.chromium.chrome.browser.ntp.snippets.SnippetsBridge;
 import org.chromium.chrome.browser.ntp.snippets.SuggestionsSource;
 import org.chromium.chrome.browser.profiles.Profile;
+import org.chromium.chrome.browser.widget.ThumbnailProvider;
+import org.chromium.chrome.browser.widget.ThumbnailProviderImpl;
 
 /**
  * Provides an injection mechanisms for dependencies of the suggestions package.
@@ -53,8 +54,8 @@ public class SuggestionsDependencyFactory {
         return new LargeIconBridge(profile);
     }
 
-    public ThumbnailProvider createThumbnailProvider() {
-        return new ThumbnailProviderImpl();
+    public ThumbnailProvider createThumbnailProvider(DiscardableReferencePool referencePool) {
+        return new ThumbnailProviderImpl(referencePool);
     }
 
     public FaviconHelper createFaviconHelper() {

@@ -40,69 +40,69 @@ public final class VideoFrameData extends org.chromium.mojo.bindings.Union {
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setEosData(EosVideoFrameData eosData) {
-        mTag_ = Tag.EosData;
-        mEosData = eosData;
+        this.mTag_ = Tag.EosData;
+        this.mEosData = eosData;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public EosVideoFrameData getEosData() {
-        assert mTag_ == Tag.EosData;
-        return mEosData;
+        assert this.mTag_ == Tag.EosData;
+        return this.mEosData;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setSharedBufferData(SharedBufferVideoFrameData sharedBufferData) {
-        mTag_ = Tag.SharedBufferData;
-        mSharedBufferData = sharedBufferData;
+        this.mTag_ = Tag.SharedBufferData;
+        this.mSharedBufferData = sharedBufferData;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public SharedBufferVideoFrameData getSharedBufferData() {
-        assert mTag_ == Tag.SharedBufferData;
-        return mSharedBufferData;
+        assert this.mTag_ == Tag.SharedBufferData;
+        return this.mSharedBufferData;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setMailboxData(MailboxVideoFrameData mailboxData) {
-        mTag_ = Tag.MailboxData;
-        mMailboxData = mailboxData;
+        this.mTag_ = Tag.MailboxData;
+        this.mMailboxData = mailboxData;
     }
 
     // TODO(rockot): Fix the findbugs error and remove this suppression.
     // See http://crbug.com/570386.
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public MailboxVideoFrameData getMailboxData() {
-        assert mTag_ == Tag.MailboxData;
-        return mMailboxData;
+        assert this.mTag_ == Tag.MailboxData;
+        return this.mMailboxData;
     }
 
 
     @Override
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder0, int offset) {
         encoder0.encode(org.chromium.mojo.bindings.BindingsHelper.UNION_SIZE, offset);
-        encoder0.encode(mTag_, offset + 4);
+        encoder0.encode(this.mTag_, offset + 4);
         switch (mTag_) {
             case Tag.EosData: {
                 
-                encoder0.encode(mEosData, offset + 8, false);
+                encoder0.encode(this.mEosData, offset + 8, false);
                 break;
             }
             case Tag.SharedBufferData: {
                 
-                encoder0.encode(mSharedBufferData, offset + 8, false);
+                encoder0.encode(this.mSharedBufferData, offset + 8, false);
                 break;
             }
             case Tag.MailboxData: {
                 
-                encoder0.encode(mMailboxData, offset + 8, false);
+                encoder0.encode(this.mMailboxData, offset + 8, false);
                 break;
             }
             default: {
@@ -162,15 +162,15 @@ public final class VideoFrameData extends org.chromium.mojo.bindings.Union {
         if (getClass() != object.getClass())
             return false;
         VideoFrameData other = (VideoFrameData) object;
-        if (mTag_ != other.mTag_)
+        if (this.mTag_ != other.mTag_)
             return false;
-        switch (mTag_) {
+        switch (this.mTag_) {
             case Tag.EosData:
-                return org.chromium.mojo.bindings.BindingsHelper.equals(mEosData, other.mEosData);
+                return org.chromium.mojo.bindings.BindingsHelper.equals(this.mEosData, other.mEosData);
             case Tag.SharedBufferData:
-                return org.chromium.mojo.bindings.BindingsHelper.equals(mSharedBufferData, other.mSharedBufferData);
+                return org.chromium.mojo.bindings.BindingsHelper.equals(this.mSharedBufferData, other.mSharedBufferData);
             case Tag.MailboxData:
-                return org.chromium.mojo.bindings.BindingsHelper.equals(mMailboxData, other.mMailboxData);
+                return org.chromium.mojo.bindings.BindingsHelper.equals(this.mMailboxData, other.mMailboxData);
             default:
                 break;
         }
@@ -185,17 +185,17 @@ public final class VideoFrameData extends org.chromium.mojo.bindings.Union {
         final int prime = 31;
         int result = prime + getClass().hashCode();
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mTag_);
-        switch (mTag_) {
+        switch (this.mTag_) {
             case Tag.EosData: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mEosData);
+                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mEosData);
                 break;
             }
             case Tag.SharedBufferData: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mSharedBufferData);
+                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mSharedBufferData);
                 break;
             }
             case Tag.MailboxData: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mMailboxData);
+                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mMailboxData);
                 break;
             }
             default: {

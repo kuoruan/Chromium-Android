@@ -59,6 +59,12 @@ If you leave this policy not set Chromium will try to detect if a server is on t
 If you disable this setting, AutoFill will be inaccessible to users.
 
 If you enable this setting or do not set a value, AutoFill will remain under the control of the user. This will allow them to configure AutoFill profiles and to switch AutoFill on or off at their own discretion.</string>
+  <string name="AutofillCreditCardEnabledTitle">Enable AutoFill for credit cards</string>
+  <string name="AutofillCreditCardEnabledDesc">Enables Chromium\'s AutoFill feature and allows users to auto complete credit card and address information in web forms using previously stored information.
+
+If you disable this setting, Autofill will never suggest, or fill credit card information, nor will it save additional credit card information that the user might submit while browsing the web.
+
+If you enable this setting or do not set a value, then user will be able to control the overall autofill feature (incuding credit cards) in the UI.</string>
   <string name="CertificateTransparencyEnforcementDisabledForUrlsTitle">Disable Certificate Transparency enforcement for a list of URLs</string>
   <string name="CertificateTransparencyEnforcementDisabledForUrlsDesc">Disables enforcing Certificate Transparency requirements to the listed URLs.
 
@@ -148,18 +154,6 @@ If this policy is left not set, \'AllowJavaScript\' will be used and the user wi
     <item>Do not allow any site to run JavaScript</item>
   </string-array>
   <string-array name="DefaultJavaScriptSettingValues">
-    <item>1</item>
-    <item>2</item>
-  </string-array>
-  <string name="DefaultKeygenSettingTitle">Default key generation setting</string>
-  <string name="DefaultKeygenSettingDesc">Allows you to set whether websites are allowed to use key generation. Using key generation can be either allowed for all websites or denied for all websites.
-
-If this policy is left not set, \'BlockKeygen\' will be used and the user will be able to change it.</string>
-  <string-array name="DefaultKeygenSettingEntries">
-    <item>Allow all sites to use key generation</item>
-    <item>Do not allow any site to use key generation</item>
-  </string-array>
-  <string-array name="DefaultKeygenSettingValues">
     <item>1</item>
     <item>2</item>
   </string-array>
@@ -401,14 +395,6 @@ If this policy is left not set the global default value will be used for all sit
   <string name="JavaScriptBlockedForUrlsDesc">Allows you to set a list of url patterns that specify sites which are not allowed to run JavaScript.
 
 If this policy is left not set the global default value will be used for all sites either from the \'DefaultJavaScriptSetting\' policy if it is set, or the user\'s personal configuration otherwise.</string>
-  <string name="KeygenAllowedForUrlsTitle">Allow key generation on these sites</string>
-  <string name="KeygenAllowedForUrlsDesc">Allows you to set a list of url patterns that specify sites which are allowed to use key generation. If a url pattern is in \'KeygenBlockedForUrls\', that overrides these exceptions.
-
-If this policy is left not set the global default value will be used for all sites either from the \'DefaultKeygenSetting\' policy if it is set, or the user\'s personal configuration otherwise.</string>
-  <string name="KeygenBlockedForUrlsTitle">Block key generation on these sites</string>
-  <string name="KeygenBlockedForUrlsDesc">Allows you to set a list of url patterns that specify sites which are not allowed to use key generation. If a url pattern is in \'KeygenAllowedForUrls\', this policy overrides these exceptions.
-
-If this policy is left not set the global default value will be used for all sites either from the \'DefaultKeygenSetting\' policy if it is set, or the user\'s personal configuration otherwise.</string>
   <string name="ManagedBookmarksTitle">Managed Bookmarks</string>
   <string name="ManagedBookmarksDesc">Configures a list of managed bookmarks.
 

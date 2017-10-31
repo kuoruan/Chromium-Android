@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2017 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+
+<vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:targetApi="21"
+    android:height="24dp"
+    android:viewportHeight="134.0"
+    android:viewportWidth="92.0"
+    android:width="24dp">
+
+    <path android:fillColor="#C0E09E"
+        android:pathData="M2.4,-0L89.6,-0C90.93,-0 92,1.07 92,2.4L92,134L0,134L-0,2.4C-0,1.07 1.07,0 2.4,-0Z"
+        android:strokeColor="#00000000" android:strokeWidth="1"/>
+    <path android:fillColor="#55A326"
+        android:pathData="M35.69,45.36C54.53,28.55 73.22,20.39 92,20.88L92,90.71C91.64,90.71 72.87,75.6 35.69,45.36Z"
+        android:strokeColor="#00000000" android:strokeWidth="1"/>
+    <path android:fillColor="#007C6A"
+        android:pathData="M92,88.21L92,134L0,134L0,38C62.95,38.16 92,86.88 92,88.21Z"
+        android:strokeColor="#00000000" android:strokeWidth="1"/>
+    <path android:fillColor="#F6F5ED"
+        android:pathData="M18,92.58C18,89.54 19.44,89.24 22.32,91.68C25.03,93.69 28.26,97.01 32.02,101.66L61.42,101.66C65.2,96.98 68.35,93.66 70.87,91.68C73.62,89.17 75,89.47 75,92.58L75,134.03L18,134.03L18,92.58Z"
+        android:strokeColor="#00000000" android:strokeWidth="1"/>
+    <path android:fillColor="#DA7D92"
+        android:pathData="M43,128l7,0l-3.5,3z"
+        android:strokeColor="#00000000" android:strokeWidth="1"/>
+    <path android:fillColor="#2E2C29"
+        android:pathData="M31,121.1a2.53,3.1 0,1 0,5.05 0a2.53,3.1 0,1 0,-5.05 0z"
+        android:strokeColor="#00000000" android:strokeWidth="1"/>
+    <path android:fillColor="#2E2C29"
+        android:pathData="M56.82,121.1a2.53,3.1 0,1 0,5.05 0a2.53,3.1 0,1 0,-5.05 0z"
+        android:strokeColor="#00000000" android:strokeWidth="1"/>
+    <path android:fillColor="#D6D4CC"
+        android:pathData="M20.35,134C20.76,133.53 21,132.8 21,131.85C21,128.07 17.42,125 13,125C8.58,125 5,128.07 5,131.85C5,132.83 5.23,133.53 5.66,134L20.35,134Z"
+        android:strokeColor="#00000000" android:strokeWidth="1"/>
+    <path android:fillColor="#D6D4CC"
+        android:pathData="M86.35,134C86.76,133.53 87,132.8 87,131.85C87,128.07 83.42,125 79,125C74.58,125 71,128.07 71,131.85C71,132.83 71.23,133.53 71.66,134L86.35,134Z"
+        android:strokeColor="#00000000" android:strokeWidth="1"/>
+</vector>

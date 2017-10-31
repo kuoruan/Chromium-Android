@@ -29,12 +29,7 @@ public class DelayedScreenLockIntentHandler extends BroadcastReceiver {
 
     public DelayedScreenLockIntentHandler() {
         mTaskHandler = new Handler();
-        mUnregisterTask = new Runnable() {
-            @Override
-            public void run() {
-                updateDeferredIntent(null);
-            }
-        };
+        mUnregisterTask = () -> updateDeferredIntent(null);
     }
 
     @Override

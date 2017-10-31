@@ -95,6 +95,9 @@ public class OverlayPanelContent {
     private int mContentViewWidth;
     private int mContentViewHeight;
 
+    /** The height of the bar at the top of the OverlayPanel in pixels. */
+    private int mBarHeightPx;
+
     // ============================================================================================
     // InterceptNavigationDelegateImpl
     // ============================================================================================
@@ -132,13 +135,16 @@ public class OverlayPanelContent {
      *                        for this parameter, the default one will be used.
      * @param progressObserver An observer for progress related events.
      * @param activity The ChromeActivity that contains this object.
+     * @param barHeight The height of the bar at the top of the OverlayPanel in dp.
      */
     public OverlayPanelContent(OverlayContentDelegate contentDelegate,
-            OverlayContentProgressObserver progressObserver, ChromeActivity activity) {
+            OverlayContentProgressObserver progressObserver, ChromeActivity activity,
+            float barHeight) {
         mNativeOverlayPanelContentPtr = nativeInit();
         mContentDelegate = contentDelegate;
         mProgressObserver = progressObserver;
         mActivity = activity;
+        mBarHeightPx = (int) (barHeight * mActivity.getResources().getDisplayMetrics().density);
 
         mWebContentsDelegate = new WebContentsDelegateAndroid() {
             private boolean mIsFullscreen;
@@ -340,6 +346,12 @@ public class OverlayPanelContent {
                 mNativeOverlayPanelContentPtr, mInterceptNavigationDelegate, panelWebContents);
 
         mContentDelegate.onContentViewCreated(mContentViewCore);
+        if (mContentViewWidth != 0 && mContentViewHeight != 0) {
+            onPhysicalBackingSizeChanged(mContentViewWidth, mContentViewHeight);
+        }
+
+        mContentViewCore.setTopControlsHeight(mBarHeightPx, false);
+        mContentViewCore.setBottomControlsHeight(0);
     }
 
     /**
@@ -479,15 +491,21 @@ public class OverlayPanelContent {
         return mContentViewCore;
     }
 
+    private WebContents getWebContents() {
+        return mContentViewCore != null ? mContentViewCore.getWebContents() : null;
+    }
+
     void onSizeChanged(int width, int height) {
+        if (mContentViewCore == null) return;
         mContentViewCore.onSizeChanged(width, height, mContentViewCore.getViewportWidthPix(),
                 mContentViewCore.getViewportHeightPix());
     }
 
     void onPhysicalBackingSizeChanged(int width, int height) {
-        if (mContentViewCore != null && mContentViewCore.getWebContents() != null) {
-            nativeOnPhysicalBackingSizeChanged(mNativeOverlayPanelContentPtr,
-                    mContentViewCore.getWebContents(), width, height);
+        WebContents webContents = getWebContents();
+        if (webContents != null) {
+            nativeOnPhysicalBackingSizeChanged(
+                    mNativeOverlayPanelContentPtr, webContents, width, height);
         }
     }
 

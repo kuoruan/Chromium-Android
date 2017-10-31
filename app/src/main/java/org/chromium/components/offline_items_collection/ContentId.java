@@ -42,4 +42,9 @@ public class ContentId {
 
         return result;
     }
+
+    @Override
+    public String toString() {
+        return namespace + "_" + id;
+    }
 }

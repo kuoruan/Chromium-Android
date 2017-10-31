@@ -24,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 @JNINamespace("download::android")
 public class DownloadTaskScheduler {
     public static final String EXTRA_TASK_TYPE = "extra_task_type";
+    static final long TWELVE_HOURS_IN_SECONDS = TimeUnit.HOURS.toSeconds(12);
+    static final long FIVE_MINUTES_IN_SECONDS = TimeUnit.MINUTES.toSeconds(5);
 
     @CalledByNative
     private static void scheduleTask(@DownloadTaskType int taskType, boolean requiresCharging,
@@ -50,6 +52,17 @@ public class DownloadTaskScheduler {
     private static void cancelTask(@DownloadTaskType int taskType) {
         BackgroundTaskScheduler scheduler = BackgroundTaskSchedulerFactory.getScheduler();
         scheduler.cancel(ContextUtils.getApplicationContext(), getTaskId(taskType));
+    }
+
+    /**
+     * Invoked when the system sends a reschedule() call, which might happen in case of OS or play
+     * services upgrade etc. This will schedule the tasks in future with least restrictive criteria.
+     */
+    public static void rescheduleAllTasks() {
+        scheduleTask(DownloadTaskType.DOWNLOAD_TASK, false, false, FIVE_MINUTES_IN_SECONDS,
+                2 * FIVE_MINUTES_IN_SECONDS);
+        scheduleTask(DownloadTaskType.CLEANUP_TASK, false, false, TWELVE_HOURS_IN_SECONDS,
+                2 * TWELVE_HOURS_IN_SECONDS);
     }
 
     private static int getTaskId(@DownloadTaskType int taskType) {

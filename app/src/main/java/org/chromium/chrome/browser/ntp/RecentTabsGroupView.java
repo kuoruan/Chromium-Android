@@ -48,10 +48,8 @@ public class RecentTabsGroupView extends RelativeLayout {
         super(context, attrs);
         Resources res = getResources();
         mDeviceLabelExpandedColor = ApiCompatibilityUtils.getColor(res, R.color.light_active_color);
-        mDeviceLabelCollapsedColor =
-                ApiCompatibilityUtils.getColor(res, R.color.ntp_list_header_text);
-        mTimeLabelExpandedColor =
-                ApiCompatibilityUtils.getColor(res, R.color.ntp_list_header_subtext_active);
+        mDeviceLabelCollapsedColor = ApiCompatibilityUtils.getColor(res, R.color.black_alpha_87);
+        mTimeLabelExpandedColor = ApiCompatibilityUtils.getColor(res, R.color.google_blue_700);
         mTimeLabelCollapsedColor =
                 ApiCompatibilityUtils.getColor(res, R.color.ntp_list_header_subtext);
     }
@@ -115,11 +113,11 @@ public class RecentTabsGroupView extends RelativeLayout {
     }
 
     /**
-     * Configures the view for the sync promo.
+     * Configures the view for the promo.
      *
      * @param isExpanded Whether the view is expanded or collapsed.
      */
-    public void configureForSyncPromo(boolean isExpanded) {
+    public void configureForPromo(boolean isExpanded) {
         mDeviceIcon.setVisibility(View.VISIBLE);
         mDeviceIcon.setImageResource(R.drawable.recent_laptop);
         mDeviceLabel.setText(R.string.ntp_recent_tabs_sync_promo_title);

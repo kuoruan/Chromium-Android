@@ -28,6 +28,9 @@ public class AndroidOverlayProviderImpl implements AndroidOverlayProvider {
     private static final String TAG = "AndroidOverlayProvider";
 
     // Maximum number of concurrent overlays that we allow.
+    // Note: DialogOverlayImpl::CompleteInit() calls WebContentsDelegate::SetOverlayMode() directly,
+    // because there can only be one overlay alive at a time. If we were to support multiple
+    // concurrent overlays, we need to revisit this logic.
     private static final int MAX_OVERLAYS = 1;
 
     // We maintain a thread with a Looper for the AndroidOverlays to use, since Dialog requires one.
@@ -56,6 +59,9 @@ public class AndroidOverlayProviderImpl implements AndroidOverlayProvider {
     public void createOverlay(InterfaceRequest<AndroidOverlay> request, AndroidOverlayClient client,
             AndroidOverlayConfig config) {
         ThreadUtils.assertOnUiThread();
+
+        // If this is no longer true, we need to update DialogOverlayImpl::CompleteInit().
+        assert MAX_OVERLAYS == 1;
 
         // Limit the number of concurrent surfaces.
         if (mNumOverlays >= MAX_OVERLAYS) {

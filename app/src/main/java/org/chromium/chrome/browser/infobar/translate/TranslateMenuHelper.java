@@ -82,8 +82,10 @@ public class TranslateMenuHelper implements AdapterView.OnItemClickListener {
 
     /**
      * Show the overflow menu.
+     * @param menuType The type of overflow menu to show.
+     * @param maxwidth Maximum width of menu.  Set to 0 when not specified.
      */
-    public void show(int menuType) {
+    public void show(int menuType, int maxWidth) {
         if (mPopup == null) {
             mPopup = new ListPopupWindow(mContextWrapper, null, android.R.attr.popupMenuStyle);
             mPopup.setModal(true);
@@ -120,7 +122,8 @@ public class TranslateMenuHelper implements AdapterView.OnItemClickListener {
             // Use measured width when it is a overflow menu.
             Rect bgPadding = new Rect();
             mPopup.getBackground().getPadding(bgPadding);
-            mPopup.setWidth(measureMenuWidth(mAdapter) + bgPadding.left + bgPadding.right);
+            int measuredWidth = measureMenuWidth(mAdapter) + bgPadding.left + bgPadding.right;
+            mPopup.setWidth((maxWidth > 0 && measuredWidth > maxWidth) ? maxWidth : measuredWidth);
         } else {
             // Use fixed width otherwise.
             int popupWidth = mContextWrapper.getResources().getDimensionPixelSize(

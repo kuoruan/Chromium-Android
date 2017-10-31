@@ -52,7 +52,6 @@ import org.chromium.chrome.browser.notifications.NotificationBuilderFactory;
 import org.chromium.chrome.browser.notifications.NotificationConstants;
 import org.chromium.chrome.browser.notifications.NotificationUmaTracker;
 import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
-import org.chromium.chrome.browser.offlinepages.downloads.OfflinePageDownloadBridge;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.components.offline_items_collection.ContentId;
@@ -434,14 +433,14 @@ public class DownloadNotificationService extends Service {
     @Override
     public void onCreate() {
         mContext = ContextUtils.getApplicationContext();
-        mNotificationManager = (NotificationManager) mContext.getSystemService(
-                Context.NOTIFICATION_SERVICE);
+        mNotificationManager =
+                (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
         mSharedPrefs = ContextUtils.getAppSharedPreferences();
-        mNumAutoResumptionAttemptLeft = mSharedPrefs.getInt(KEY_AUTO_RESUMPTION_ATTEMPT_LEFT,
-                MAX_RESUMPTION_ATTEMPT_LEFT);
+        mNumAutoResumptionAttemptLeft =
+                mSharedPrefs.getInt(KEY_AUTO_RESUMPTION_ATTEMPT_LEFT, MAX_RESUMPTION_ATTEMPT_LEFT);
         mDownloadSharedPreferenceHelper = DownloadSharedPreferenceHelper.getInstance();
-        mNextNotificationId = mSharedPrefs.getInt(
-                KEY_NEXT_DOWNLOAD_NOTIFICATION_ID, STARTING_NOTIFICATION_ID);
+        mNextNotificationId =
+                mSharedPrefs.getInt(KEY_NEXT_DOWNLOAD_NOTIFICATION_ID, STARTING_NOTIFICATION_ID);
     }
 
     @Override
@@ -815,7 +814,7 @@ public class DownloadNotificationService extends Service {
                     mContext, progress, timeRemainingInMillis);
         }
         int resId = isDownloadPending ? R.drawable.ic_download_pending
-                : android.R.drawable.stat_sys_download;
+                                      : android.R.drawable.stat_sys_download;
         ChromeNotificationBuilder builder = buildNotification(resId, fileName, contentText);
         builder.setOngoing(true);
         builder.setPriority(Notification.PRIORITY_HIGH);
@@ -920,14 +919,14 @@ public class DownloadNotificationService extends Service {
         boolean canDownloadWhileMetered = entry == null ? false : entry.canDownloadWhileMetered;
         // If download is interrupted due to network disconnection, show download pending state.
         if (isAutoResumable) {
-            notifyDownloadPending(id, fileName, isOffTheRecord, canDownloadWhileMetered,
-                    isTransient, icon);
+            notifyDownloadPending(
+                    id, fileName, isOffTheRecord, canDownloadWhileMetered, isTransient, icon);
             stopTrackingInProgressDownload(id, true);
             return;
         }
 
-        String contentText = mContext.getResources().getString(
-                R.string.download_notification_paused);
+        String contentText =
+                mContext.getResources().getString(R.string.download_notification_paused);
         ChromeNotificationBuilder builder =
                 buildNotification(R.drawable.ic_download_pause, fileName, contentText);
         int notificationId = entry == null ? getNotificationId(id) : entry.notificationId;
@@ -952,9 +951,8 @@ public class DownloadNotificationService extends Service {
         builder.addAction(R.drawable.btn_close_white,
                 mContext.getResources().getString(R.string.download_notification_cancel_button),
                 buildPendingIntent(cancelIntent, notificationId));
-        PendingIntent deleteIntent = isTransient
-                ? buildPendingIntent(cancelIntent, notificationId)
-                : buildSummaryIconIntent(notificationId);
+        PendingIntent deleteIntent = isTransient ? buildPendingIntent(cancelIntent, notificationId)
+                                                 : buildSummaryIconIntent(notificationId);
         builder.setDeleteIntent(deleteIntent);
 
         updateNotification(notificationId, builder.build(), id,
@@ -1009,8 +1007,8 @@ public class DownloadNotificationService extends Service {
                     mContext, notificationId, intent, PendingIntent.FLAG_UPDATE_CURRENT));
         }
         if (icon == null && mDownloadSuccessLargeIcon == null) {
-            Bitmap bitmap = BitmapFactory.decodeResource(
-                    mContext.getResources(), R.drawable.offline_pin);
+            Bitmap bitmap =
+                    BitmapFactory.decodeResource(mContext.getResources(), R.drawable.offline_pin);
             mDownloadSuccessLargeIcon = getLargeNotificationIcon(bitmap);
         }
         builder.setDeleteIntent(buildSummaryIconIntent(notificationId));
@@ -1176,8 +1174,7 @@ public class DownloadNotificationService extends Service {
             if (!DownloadManagerService.hasDownloadManagerService()) {
                 // TODO(dtrainor): Should we spin up native to make sure we have the icon?  Or maybe
                 // build a Java cache for easy access.
-                notifyDownloadPaused(
-                        entry.id, entry.fileName, !entry.isOffTheRecord, false,
+                notifyDownloadPaused(entry.id, entry.fileName, !entry.isOffTheRecord, false,
                         entry.isOffTheRecord, entry.isTransient, null);
                 hideSummaryNotificationIfNecessary(-1);
                 return;
@@ -1194,7 +1191,7 @@ public class DownloadNotificationService extends Service {
                             entry.isTransient));
         } else if (ACTION_DOWNLOAD_RESUME_ALL.equals(intent.getAction())
                 && (mDownloadSharedPreferenceHelper.getEntries().isEmpty()
-                        || DownloadManagerService.hasDownloadManagerService())) {
+                           || DownloadManagerService.hasDownloadManagerService())) {
             hideSummaryNotificationIfNecessary(-1);
             return;
         } else if (ACTION_DOWNLOAD_OPEN.equals(intent.getAction())) {
@@ -1216,14 +1213,14 @@ public class DownloadNotificationService extends Service {
                         ACTION_DOWNLOAD_OPEN.equals(intent.getAction()) ? null
                                                                         : getServiceDelegate(id);
                 if (ACTION_DOWNLOAD_CANCEL.equals(intent.getAction())) {
-                        // TODO(qinmin): Alternatively, we can delete the downloaded content on
-                        // SD card, and remove the download ID from the SharedPreferences so we
-                        // don't need to restart the browser process. http://crbug.com/579643.
-                        cancelNotification(entry.notificationId, entry.id);
-                        downloadServiceDelegate.cancelDownload(entry.id, entry.isOffTheRecord);
-                        for (Observer observer : mObservers) {
-                            observer.onDownloadCanceled(entry.id);
-                        }
+                    // TODO(qinmin): Alternatively, we can delete the downloaded content on
+                    // SD card, and remove the download ID from the SharedPreferences so we
+                    // don't need to restart the browser process. http://crbug.com/579643.
+                    cancelNotification(entry.notificationId, entry.id);
+                    downloadServiceDelegate.cancelDownload(entry.id, entry.isOffTheRecord);
+                    for (Observer observer : mObservers) {
+                        observer.onDownloadCanceled(entry.id);
+                    }
                 } else if (ACTION_DOWNLOAD_PAUSE.equals(intent.getAction())) {
                     // TODO(dtrainor): Consider hitting the delegate and rely on that to update the
                     // state.
@@ -1238,17 +1235,15 @@ public class DownloadNotificationService extends Service {
                     downloadServiceDelegate.resumeDownload(
                             entry.id, entry.buildDownloadItem(), true);
                 } else if (ACTION_DOWNLOAD_RESUME_ALL.equals(intent.getAction())) {
-                        assert entry == null;
-                        resumeAllPendingDownloads();
+                    assert entry == null;
+                    resumeAllPendingDownloads();
                 } else if (ACTION_DOWNLOAD_OPEN.equals(intent.getAction())) {
                     ContentId id = getContentIdFromIntent(intent);
-                    if (LegacyHelpers.isLegacyOfflinePage(id)) {
-                        OfflinePageDownloadBridge.openDownloadedPage(id);
-                    } else if (id != null) {
+                    if (id != null) {
                         OfflineContentAggregatorNotificationBridgeUiFactory.instance().openItem(id);
                     }
                 } else {
-                        Log.e(TAG, "Unrecognized intent action.", intent);
+                    Log.e(TAG, "Unrecognized intent action.", intent);
                 }
                 if (!ACTION_DOWNLOAD_OPEN.equals(intent.getAction())) {
                     downloadServiceDelegate.destroyServiceDelegate();
@@ -1307,9 +1302,6 @@ public class DownloadNotificationService extends Service {
      * @return delegate for interactions with the entry
      */
     DownloadServiceDelegate getServiceDelegate(ContentId id) {
-        if (LegacyHelpers.isLegacyOfflinePage(id)) {
-            return OfflinePageDownloadBridge.getDownloadServiceDelegate();
-        }
         if (LegacyHelpers.isLegacyDownload(id)) {
             return DownloadManagerService.getDownloadManagerService();
         }
