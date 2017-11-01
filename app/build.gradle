@@ -27,6 +27,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    dexOptions {
+        javaMaxHeapSize "4g"
+    }
     aaptOptions {
         noCompress "dat", "bin", "pak"
     }
@@ -44,6 +47,7 @@ android {
     lintOptions {
         abortOnError false
         checkReleaseBuilds false
+        ignoreWarnings true
         disable 'MissingTranslation'
     }
 }
