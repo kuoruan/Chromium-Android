@@ -4,7 +4,6 @@ apply plugin: 'idea'
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
-    publishNonDefault true
     defaultConfig {
         applicationId "org.chromium.chrome"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -57,31 +56,30 @@ idea {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile "com.android.support:appcompat-v7:$rootProject.ext.supportLibraryVersion"
-    compile "com.android.support:design:$rootProject.ext.supportLibraryVersion"
-    compile "com.android.support:gridlayout-v7:$rootProject.ext.supportLibraryVersion"
-    compile "com.android.support:mediarouter-v7:$rootProject.ext.supportLibraryVersion"
-    compile "com.android.support:support-v13:$rootProject.ext.supportLibraryVersion"
-    compile "com.google.android.gms:play-services-auth:$rootProject.ext.playServicesVersion"
-    compile "com.google.android.gms:play-services-cast:$rootProject.ext.playServicesVersion"
-    compile "com.google.android.gms:play-services-gcm:$rootProject.ext.playServicesVersion"
-    compile "com.google.android.gms:play-services-identity:$rootProject.ext.playServicesVersion"
-    compile "com.google.android.gms:play-services-nearby:$rootProject.ext.playServicesVersion"
-    compile "com.google.android.gms:play-services-vision:$rootProject.ext.playServicesVersion"
-    compile "com.google.android.gms:play-services-location:$rootProject.ext.playServicesVersion"
-    compile 'com.android.support:multidex:1.0.2'
-    compile 'com.google.code.findbugs:jsr305:2.0.1'
-    compile 'com.google.vr:sdk-base:1.80.0'
-    compile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.2'
-    compile project(':components:autofill')
-    compile project(':components:web_contents_delegate')
-    compile project(':content')
-    compile project(':data_chart')
-    compile project(':media')
-    compile project(':ui')
-    androidTestCompile("com.android.support.test.espresso:espresso-core:$rootProject.ext.espressoVersion", {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    testCompile "junit:junit:$rootProject.ext.junitVersion"
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "com.android.support:appcompat-v7:$rootProject.ext.supportLibraryVersion"
+    implementation "com.android.support:design:$rootProject.ext.supportLibraryVersion"
+    implementation "com.android.support:gridlayout-v7:$rootProject.ext.supportLibraryVersion"
+    implementation "com.android.support:mediarouter-v7:$rootProject.ext.supportLibraryVersion"
+    implementation "com.android.support:support-v13:$rootProject.ext.supportLibraryVersion"
+    implementation "com.google.android.gms:play-services-auth:$rootProject.ext.playServicesVersion"
+    implementation "com.google.android.gms:play-services-cast:$rootProject.ext.playServicesVersion"
+    implementation "com.google.android.gms:play-services-gcm:$rootProject.ext.playServicesVersion"
+    implementation "com.google.android.gms:play-services-identity:$rootProject.ext.playServicesVersion"
+    implementation "com.google.android.gms:play-services-nearby:$rootProject.ext.playServicesVersion"
+    implementation "com.google.android.gms:play-services-vision:$rootProject.ext.playServicesVersion"
+    implementation "com.google.android.gms:play-services-location:$rootProject.ext.playServicesVersion"
+    implementation 'com.android.support:multidex:1.0.2'
+    implementation 'com.google.code.findbugs:jsr305:2.0.1'
+    implementation 'com.google.vr:sdk-base:1.80.0'
+    implementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.2'
+    implementation project(':components:autofill')
+    implementation project(':components:web_contents_delegate')
+    implementation project(':content')
+    implementation project(':data_chart')
+    implementation project(':media')
+    implementation project(':ui')
+    androidTestImplementation "com.android.support.test:runner:$rootProject.ext.runnerVersion"
+    androidTestImplementation "com.android.support.test.espresso:espresso-core:$rootProject.ext.espressoVersion"
+    testImplementation "junit:junit:$rootProject.ext.junitVersion"
 }

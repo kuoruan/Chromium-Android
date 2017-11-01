@@ -36,5 +36,6 @@ ext {
     supportLibraryVersion = "26.0.0-beta1"
     playServicesVersion = "10.2.6"
     espressoVersion = "2.2.2"
+    runnerVersion = "1.0.1"
     junitVersion = "4.12"
 }
