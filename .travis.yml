@@ -38,7 +38,7 @@ before_install:
   - ./gradlew dependencies
 
 script:
-  - ./gradlew clean build -PdisablePreDex --stacktrace
+  - travis_wait ./gradlew clean build -PdisablePreDex --stacktrace
 
 before_deploy:
   - cp $TRAVIS_BUILD_DIR/chrome.jks $HOME
