@@ -1,4 +1,4 @@
-package org.chromium.chrome.browser;
+package org.chromium.chrome;
 
 import org.junit.Test;
 
