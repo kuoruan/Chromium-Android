@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.preferences.website;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -79,18 +80,18 @@ class WebsitePreference extends Preference implements FaviconImageCallback {
     public void onFaviconAvailable(Bitmap image, String iconUrl) {
         mFaviconHelper.destroy();
         mFaviconHelper = null;
+        Resources resources = getContext().getResources();
         if (image == null) {
             // Invalid favicon, produce a generic one.
-            float density = getContext().getResources().getDisplayMetrics().density;
+            float density = resources.getDisplayMetrics().density;
             int faviconSizeDp = Math.round(mFaviconSizePx / density);
-            RoundedIconGenerator faviconGenerator = new RoundedIconGenerator(
-                    getContext(), faviconSizeDp, faviconSizeDp,
-                    FAVICON_CORNER_RADIUS_DP, FAVICON_BACKGROUND_COLOR,
-                    FAVICON_TEXT_SIZE_DP);
+            RoundedIconGenerator faviconGenerator = new RoundedIconGenerator(resources,
+                    faviconSizeDp, faviconSizeDp, FAVICON_CORNER_RADIUS_DP,
+                    FAVICON_BACKGROUND_COLOR, FAVICON_TEXT_SIZE_DP);
             image = faviconGenerator.generateIconForUrl(faviconUrl());
         }
 
-        setIcon(new BitmapDrawable(getContext().getResources(), image));
+        setIcon(new BitmapDrawable(resources, image));
     }
 
     /**

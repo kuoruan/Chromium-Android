@@ -64,8 +64,8 @@ public class ActivityTaskDescriptionIconGenerator {
         }
 
         if (mGenerator == null) {
-            mGenerator = new RoundedIconGenerator(mContext, APP_ICON_SIZE_DP, APP_ICON_SIZE_DP,
-                    APP_ICON_CORNER_RADIUS_DP, APP_ICON_DEFAULT_BACKGROUND_COLOR,
+            mGenerator = new RoundedIconGenerator(mContext.getResources(), APP_ICON_SIZE_DP,
+                    APP_ICON_SIZE_DP, APP_ICON_CORNER_RADIUS_DP, APP_ICON_DEFAULT_BACKGROUND_COLOR,
                     APP_ICON_TEXT_SIZE_DP);
         }
 

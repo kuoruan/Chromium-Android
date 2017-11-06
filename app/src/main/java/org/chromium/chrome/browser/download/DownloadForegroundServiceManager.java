@@ -19,8 +19,10 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -49,6 +51,8 @@ public class DownloadForegroundServiceManager {
 
     @VisibleForTesting
     final Map<Integer, DownloadUpdate> mDownloadUpdateQueue = new HashMap<>();
+    // Used to track existing notifications for UMA stats.
+    private final List<Integer> mExistingNotifications = new ArrayList<>();
 
     private int mPinnedNotificationId = INVALID_NOTIFICATION_ID;
 
@@ -64,6 +68,15 @@ public class DownloadForegroundServiceManager {
         mDownloadUpdateQueue.put(notificationId,
                 new DownloadUpdate(notificationId, notification, downloadStatus, context));
         processDownloadUpdateQueue(false /* not isProcessingPending */);
+
+        // Record instance where notification is being launched for the first time.
+        if (!mExistingNotifications.contains(notificationId)) {
+            mExistingNotifications.add(notificationId);
+            if (Build.VERSION.SDK_INT < 24) {
+                DownloadNotificationUmaHelper.recordNotificationFlickerCountHistogram(
+                        DownloadNotificationUmaHelper.LaunchType.LAUNCH);
+            }
+        }
     }
 
     /**
@@ -215,6 +228,10 @@ public class DownloadForegroundServiceManager {
                             Context.NOTIFICATION_SERVICE);
             notificationManager.notify(mPinnedNotificationId,
                     mDownloadUpdateQueue.get(mPinnedNotificationId).mNotification);
+
+            // Record the need to relaunch the notification.
+            DownloadNotificationUmaHelper.recordNotificationFlickerCountHistogram(
+                    DownloadNotificationUmaHelper.LaunchType.RELAUNCH);
         }
     }
 

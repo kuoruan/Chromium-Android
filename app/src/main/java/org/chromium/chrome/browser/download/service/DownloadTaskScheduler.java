@@ -28,8 +28,8 @@ public class DownloadTaskScheduler {
     static final long FIVE_MINUTES_IN_SECONDS = TimeUnit.MINUTES.toSeconds(5);
 
     @CalledByNative
-    private static void scheduleTask(@DownloadTaskType int taskType, boolean requiresCharging,
-            boolean requiresUnmeteredNetwork, long windowStartTimeSeconds,
+    private static void scheduleTask(@DownloadTaskType int taskType,
+            boolean requiresUnmeteredNetwork, boolean requiresCharging, long windowStartTimeSeconds,
             long windowEndTimeSeconds) {
         Bundle bundle = new Bundle();
         bundle.putInt(EXTRA_TASK_TYPE, taskType);

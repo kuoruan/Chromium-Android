@@ -26,7 +26,7 @@ public class ResourceExtractor {
     private static final String TAG = "base";
     private static final String ICU_DATA_FILENAME = "icudtl.dat";
     private static final String V8_NATIVES_DATA_FILENAME = "natives_blob.bin";
-    private static final String V8_SNAPSHOT_DATA_FILENAME = "snapshot_blob.bin";
+    private static final String V8_SNAPSHOT_DATA_FILENAME = "snapshot_blob_32.bin";
     private static final String FALLBACK_LOCALE = "en-US";
 
     private class ExtractTask extends AsyncTask<Void, Void, Void> {

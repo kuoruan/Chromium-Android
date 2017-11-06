@@ -366,7 +366,7 @@ public class FeatureUtilities {
      * @return Whether the Chrome Home promo should be shown for cold-start.
      */
     public static boolean shouldShowChromeHomePromoForStartup() {
-        if (isChromeHomeEnabled()
+        if (DeviceFormFactor.isTablet() || isChromeHomeEnabled()
                 || !ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_PROMO)) {
             return false;
         }

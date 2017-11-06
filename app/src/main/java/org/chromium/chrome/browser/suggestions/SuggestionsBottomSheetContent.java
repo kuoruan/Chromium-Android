@@ -97,8 +97,8 @@ public class SuggestionsBottomSheetContent implements BottomSheet.BottomSheetCon
         mRecyclerView.setBackgroundColor(backgroundColor);
 
         TouchEnabledDelegate touchEnabledDelegate = activity.getBottomSheet()::setTouchEnabled;
-        mContextMenuManager =
-                new ContextMenuManager(activity, navigationDelegate, touchEnabledDelegate);
+        mContextMenuManager = new ContextMenuManager(
+                navigationDelegate, touchEnabledDelegate, activity::closeContextMenu);
         activity.getWindowAndroid().addContextMenuCloseListener(mContextMenuManager);
         mSuggestionsUiDelegate.addDestructionObserver(() -> {
             activity.getWindowAndroid().removeContextMenuCloseListener(mContextMenuManager);

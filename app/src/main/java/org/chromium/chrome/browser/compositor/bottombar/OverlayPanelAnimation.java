@@ -5,7 +5,6 @@
 package org.chromium.chrome.browser.compositor.bottombar;
 
 import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 
 import org.chromium.base.VisibleForTesting;
@@ -16,6 +15,7 @@ import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.PanelState;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.StateChangeReason;
 import org.chromium.chrome.browser.compositor.layouts.LayoutUpdateHost;
 import org.chromium.chrome.browser.util.MathUtils;
+import org.chromium.chrome.browser.widget.animation.CancelAwareAnimatorListener;
 
 /**
  * Base abstract class for animating the Overlay Panel.
@@ -353,9 +353,9 @@ public abstract class OverlayPanelAnimation extends OverlayPanelBase {
                 setPanelHeight(animator.getAnimatedValue());
             }
         });
-        mHeightAnimator.addListener(new AnimatorListenerAdapter() {
+        mHeightAnimator.addListener(new CancelAwareAnimatorListener() {
             @Override
-            public void onAnimationEnd(Animator animation) {
+            public void onEnd(Animator animation) {
                 onHeightAnimationFinished();
             }
         });

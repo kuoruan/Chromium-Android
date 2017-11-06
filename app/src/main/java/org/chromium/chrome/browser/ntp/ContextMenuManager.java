@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.ntp;
 
-import android.app.Activity;
 import android.support.annotation.IntDef;
 import android.support.annotation.StringRes;
 import android.view.ContextMenu;
@@ -44,9 +43,9 @@ public class ContextMenuManager implements OnCloseContextMenuListener {
     public static final int ID_REMOVE = 4;
     public static final int ID_LEARN_MORE = 5;
 
-    private final Activity mActivity;
     private final SuggestionsNavigationDelegate mNavigationDelegate;
     private final TouchEnabledDelegate mTouchEnabledDelegate;
+    private final Runnable mCloseContextMenuCallback;
     private boolean mContextMenuOpen;
 
     /** Defines callback to configure the context menu and respond to user interaction. */
@@ -76,11 +75,11 @@ public class ContextMenuManager implements OnCloseContextMenuListener {
      */
     public interface TouchEnabledDelegate { void setTouchEnabled(boolean enabled); }
 
-    public ContextMenuManager(Activity activity, SuggestionsNavigationDelegate navigationDelegate,
-            TouchEnabledDelegate touchEnabledDelegate) {
-        mActivity = activity;
+    public ContextMenuManager(SuggestionsNavigationDelegate navigationDelegate,
+            TouchEnabledDelegate touchEnabledDelegate, Runnable closeContextMenuCallback) {
         mNavigationDelegate = navigationDelegate;
         mTouchEnabledDelegate = touchEnabledDelegate;
+        mCloseContextMenuCallback = closeContextMenuCallback;
     }
 
     /**
@@ -139,7 +138,7 @@ public class ContextMenuManager implements OnCloseContextMenuListener {
 
     /** Closes the context menu, if open. */
     public void closeContextMenu() {
-        mActivity.closeContextMenu();
+        mCloseContextMenuCallback.run();
     }
 
     private boolean shouldShowItem(@ContextMenuItemId int itemId, Delegate delegate) {

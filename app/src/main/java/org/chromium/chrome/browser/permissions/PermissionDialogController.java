@@ -8,6 +8,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.support.annotation.IntDef;
+import android.support.v4.widget.TextViewCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.SwitchCompat;
 import android.text.TextUtils;
@@ -149,8 +150,8 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
         messageTextView.setText(prepareMainMessageString(mDialogDelegate));
         messageTextView.setVisibility(View.VISIBLE);
         messageTextView.announceForAccessibility(mDialogDelegate.getMessageText());
-        messageTextView.setCompoundDrawablesWithIntrinsicBounds(
-                mDialogDelegate.getDrawableId(), 0, 0, 0);
+        TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                messageTextView, mDialogDelegate.getDrawableId(), 0, 0, 0);
 
         mSwitchView = (SwitchCompat) view.findViewById(R.id.permission_dialog_persist_toggle);
         mSwitchView.setChecked(true);

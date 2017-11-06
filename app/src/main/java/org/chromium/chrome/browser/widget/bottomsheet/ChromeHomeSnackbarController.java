@@ -25,7 +25,7 @@ import org.chromium.content_public.browser.LoadUrlParams;
  * opting out of Chrome Home.
  */
 public class ChromeHomeSnackbarController implements SnackbarController {
-    private static final String FIELD_TRIAL_NAME = "ChromeHome";
+    private static final String FIELD_TRIAL_NAME = "ChromeHomeOptOutSnackbar";
     private static final String SURVEY_URL_PARAM = "survey_url";
     private static final String DEFAULT_SURVEY_URL =
             "https://support.google.com/chrome/?p=home_optout";

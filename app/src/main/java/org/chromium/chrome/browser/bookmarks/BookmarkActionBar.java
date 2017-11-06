@@ -52,6 +52,10 @@ public class BookmarkActionBar extends SelectableListToolbar<BookmarkId>
                 .setTitle(R.string.bookmark_action_bar_move);
         getMenu().findItem(R.id.selection_mode_delete_menu_id)
                 .setTitle(R.string.bookmark_action_bar_delete);
+
+        // Wait to enable the selection mode group until the BookmarkDelegate is set. The
+        // SelectionDelegate is retrieved from the BookmarkDelegate.
+        getMenu().setGroupEnabled(R.id.selection_mode_menu_group, false);
     }
 
     @Override
@@ -68,7 +72,6 @@ public class BookmarkActionBar extends SelectableListToolbar<BookmarkId>
     public boolean onMenuItemClick(MenuItem menuItem) {
         hideOverflowMenu();
 
-        SelectionDelegate<BookmarkId> selectionDelegate = mDelegate.getSelectionDelegate();
         if (menuItem.getItemId() == R.id.edit_menu_id) {
             BookmarkAddEditFolderActivity.startEditFolderActivity(getContext(),
                     mCurrentFolder.getId());
@@ -79,7 +82,10 @@ public class BookmarkActionBar extends SelectableListToolbar<BookmarkId>
         } else if (menuItem.getItemId() == R.id.search_menu_id) {
             mDelegate.openSearchUI();
             return true;
-        } else if (menuItem.getItemId() == R.id.selection_mode_edit_menu_id) {
+        }
+
+        SelectionDelegate<BookmarkId> selectionDelegate = mDelegate.getSelectionDelegate();
+        if (menuItem.getItemId() == R.id.selection_mode_edit_menu_id) {
             List<BookmarkId> list = selectionDelegate.getSelectedItems();
             assert list.size() == 1;
             BookmarkItem item = mDelegate.getModel().getBookmarkById(list.get(0));
@@ -131,10 +137,14 @@ public class BookmarkActionBar extends SelectableListToolbar<BookmarkId>
         mDelegate.addUIObserver(this);
         if (!delegate.isDialogUi()) getMenu().removeItem(R.id.close_menu_id);
         delegate.getModel().addObserver(mBookmarkModelObserver);
+
+        getMenu().setGroupEnabled(R.id.selection_mode_menu_group, true);
     }
 
     @Override
     public void onDestroy() {
+        if (mDelegate == null) return;
+
         mDelegate.removeUIObserver(this);
         mDelegate.getModel().removeObserver(mBookmarkModelObserver);
     }

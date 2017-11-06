@@ -215,7 +215,8 @@ public class DownloadUtils {
         // Bring the ChromeTabbedActivity to the front.
         Intent intent = new Intent(appContext, tabbedActivity.getClass());
         intent.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
-        activity.startActivity(intent);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        appContext.startActivity(intent);
         return true;
     }
 
@@ -335,6 +336,7 @@ public class DownloadUtils {
             fileIntent.setDataAndType(fileUri, normalizedMimeType);
         }
         fileIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        fileIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         fileIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         setOriginalUrlAndReferralExtraToIntent(fileIntent, originalUrl, referrer);
         return fileIntent;

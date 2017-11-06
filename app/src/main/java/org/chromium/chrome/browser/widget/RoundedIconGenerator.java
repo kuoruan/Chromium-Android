@@ -4,7 +4,7 @@
 
 package org.chromium.chrome.browser.widget;
 
-import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -46,20 +46,19 @@ public class RoundedIconGenerator {
     /**
      * Constructs the generator and initializes the common members based on the display density.
      *
-     * @param context The context used for initialization.
+     * @param res The resources used to convert sizes to px.
      * @param iconWidthDp The width of the generated icon in dp.
      * @param iconHeightDp The height of the generated icon in dp.
      * @param cornerRadiusDp The radius of the corners in the icon in dp.
      * @param backgroundColor Color with which the rounded rectangle should be drawn.
      * @param textSizeDp Size at which the text should be drawn in dp.
      */
-    public RoundedIconGenerator(Context context, int iconWidthDp, int iconHeightDp,
+    public RoundedIconGenerator(Resources res, int iconWidthDp, int iconHeightDp,
             int cornerRadiusDp, int backgroundColor, int textSizeDp) {
-        this((int) (context.getResources().getDisplayMetrics().density * iconWidthDp),
-                (int) (context.getResources().getDisplayMetrics().density * iconHeightDp),
-                (int) (context.getResources().getDisplayMetrics().density * cornerRadiusDp),
-                backgroundColor,
-                (int) (context.getResources().getDisplayMetrics().density * textSizeDp));
+        this((int) (res.getDisplayMetrics().density * iconWidthDp),
+                (int) (res.getDisplayMetrics().density * iconHeightDp),
+                (int) (res.getDisplayMetrics().density * cornerRadiusDp), backgroundColor,
+                res.getDisplayMetrics().density * textSizeDp);
     }
 
     /**

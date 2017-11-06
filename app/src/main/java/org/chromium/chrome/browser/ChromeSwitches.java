@@ -81,13 +81,6 @@ public abstract class ChromeSwitches {
      */
     public static final String DISABLE_TAB_MERGING_FOR_TESTING = "disable-tab-merging";
 
-    /**
-     * Force-enable partner customization for testing.
-     * Partner customization includes configurations from PartnerBookmarksProvider and
-     * PartnerBrowserCustomizations.
-     */
-    public static final String ALLOW_PARTNER_CUSTOMIZATION = "allow-partner-customization";
-
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // Native Switches
     ///////////////////////////////////////////////////////////////////////////////////////////////

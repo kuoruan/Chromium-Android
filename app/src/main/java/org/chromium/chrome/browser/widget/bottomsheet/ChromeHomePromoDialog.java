@@ -25,6 +25,7 @@ import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.util.AccessibilityUtil;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.PromoDialog;
+import org.chromium.ui.base.DeviceFormFactor;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -79,6 +80,14 @@ public class ChromeHomePromoDialog extends PromoDialog {
 
         RecordHistogram.recordEnumeratedHistogram("Android.ChromeHome.Promo.ShowReason", showReason,
                 ChromeHomePromoDialog.ShowReason.BOUNDARY);
+    }
+
+    @Override
+    public void show() {
+        if (DeviceFormFactor.isTablet()) {
+            throw new RuntimeException("Promo should not be shown for tablet devices!");
+        }
+        super.show();
     }
 
     @Override

@@ -291,7 +291,7 @@ public class ContextualSearchQuickActionControl extends ViewResourceInflater {
 
                 Resources res = mContext.getResources();
                 if (mToolbarBackgroundColor != 0
-                        && ColorUtils.isUsingDefaultToolbarColor(res,
+                        && !ColorUtils.isUsingDefaultToolbarColor(res,
                                    FeatureUtilities.isChromeHomeEnabled(), false,
                                    mToolbarBackgroundColor)
                         && ColorUtils.shouldUseLightForegroundOnBackground(

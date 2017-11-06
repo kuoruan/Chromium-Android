@@ -5,8 +5,10 @@
 package org.chromium.chrome.browser.bookmarks;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.util.AttributeSet;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkItem;
 import org.chromium.components.bookmarks.BookmarkId;
@@ -46,5 +48,11 @@ public class BookmarkFolderRow extends BookmarkRow {
                                   R.plurals.bookmarks_count, childCount, childCount)
                         : getResources().getString(R.string.no_bookmarks));
         return item;
+    }
+
+    @Override
+    protected ColorStateList getDefaultIconTint() {
+        return ApiCompatibilityUtils.getColorStateList(
+                getResources(), BookmarkUtils.getFolderIconTint());
     }
 }

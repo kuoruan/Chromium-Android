@@ -477,6 +477,10 @@ public class DownloadNotificationService2 {
                 LegacyHelpers.isLegacyOfflinePage(id) ? NotificationUmaTracker.DOWNLOAD_PAGES
                                                       : NotificationUmaTracker.DOWNLOAD_FILES,
                 ChannelDefinitions.CHANNEL_ID_DOWNLOADS);
+
+        // Record the number of other notifications when there's a new notification.
+        DownloadNotificationUmaHelper.recordExistingNotificationsCountHistogram(
+                mDownloadSharedPreferenceHelper.getEntries().size(), true /* withForeground */);
     }
 
     private static boolean canResumeDownload(Context context, DownloadSharedPreferenceEntry entry) {

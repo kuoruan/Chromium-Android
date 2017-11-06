@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.widget.selection;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -104,7 +105,7 @@ public abstract class SelectableItemView<E> extends FrameLayout implements Check
 
         if (mIconView != null) {
             mIconView.setBackgroundResource(R.drawable.list_item_icon_modern_bg);
-            mIconView.setTint(null);
+            mIconView.setTint(getDefaultIconTint());
             if (!FeatureUtilities.isChromeHomeEnabled()) {
                 mIconView.getBackground().setAlpha(0);
             }
@@ -212,12 +213,20 @@ public abstract class SelectableItemView<E> extends FrameLayout implements Check
         } else {
             mIconView.getBackground().setLevel(mDefaultLevel);
             mIconView.setImageDrawable(mIconDrawable);
-            mIconView.setTint(null);
+            mIconView.setTint(getDefaultIconTint());
         }
 
         if (!FeatureUtilities.isChromeHomeEnabled()) {
             mIconView.getBackground().setAlpha(isChecked() ? 255 : 0);
         }
+    }
+
+    /**
+     * @return The {@link ColorStateList} used to tint the icon drawable set via
+     *         {@link #setIconDrawable(Drawable)} when the item is not selected.
+     */
+    protected @Nullable ColorStateList getDefaultIconTint() {
+        return null;
     }
 
     /**
