@@ -51,6 +51,12 @@
         <item name="android:windowBackground">@android:color/white</item>
     </style>
 
+    <style name="FirstRunTheme" parent="DialogWhenLarge">
+    </style>
+
+    <style name="TabbedModeFirstRunTheme" parent="TabbedModeTheme">
+    </style>
+
     <!-- The theme to use when starting Chrome in VR mode.-->
     <style name="VrSupportTheme" parent="MainTheme">
        <!-- Android shows a preview window to give the user immediate feedback that the

@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -18,6 +19,7 @@ import org.chromium.base.ApplicationStatus;
 import org.chromium.base.CommandLine;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
@@ -366,6 +368,14 @@ public abstract class FirstRunFlowSequencer  {
                 freCallerIntent = new Intent(intent);
                 VrIntentUtils.updateFreCallerIntent(caller, intent);
             }
+
+            if (maybeSwitchToTabbedMode(caller, freIntent)) {
+                // We switched to TabbedModeFRE. We need to disable animation on the original
+                // intent, to make transition seamless.
+                intent = new Intent(intent);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            }
+
             // Add a PendingIntent so that the intent used to launch Chrome will be resent when
             // First Run is completed or canceled.
             addPendingIntent(caller, freIntent, intent, requiresBroadcast);
@@ -383,5 +393,40 @@ public abstract class FirstRunFlowSequencer  {
             IntentUtils.safeStartActivity(caller, newIntent);
         }
         return true;
+    }
+
+    /**
+     * On tablets, where FRE activity is a dialog, transitions from fillscreen activities
+     * (the ones that use TabbedModeTheme, e.g. ChromeTabbedActivity) look ugly, because
+     * when FRE is started from CTA.onCreate(), currently running animation for CTA window
+     * is aborted. This is perceived as a flash of white and doesn't look good.
+     *
+     * To solve this, we added TabbedMode FRE activity, which has the same window background
+     * as TabbedModeTheme activities, but shows content in a FRE-like dialog.
+     *
+     * This function attempts to switch FRE to TabbedModeFRE if certain conditions are met.
+     */
+    private static boolean maybeSwitchToTabbedMode(Context caller, Intent freIntent) {
+        // Caller must be an activity.
+        if (!(caller instanceof Activity)) return false;
+
+        // We must be on a tablet (where FRE is a dialog).
+        boolean isTablet = caller.getResources().getBoolean(R.bool.is_tablet);
+        if (!isTablet) return false;
+
+        // Caller must use a theme with @drawable/window_background (the same background
+        // used by TabbedModeFRE).
+        TypedArray a = caller.obtainStyledAttributes(new int[] {android.R.attr.windowBackground});
+        int backgroundResourceId = a.getResourceId(0 /* index */, 0);
+        a.recycle();
+        if (backgroundResourceId != R.drawable.window_background) return false;
+
+        // Switch FRE -> TabbedModeFRE.
+        if (FirstRunActivity.class.getName().equals(freIntent.getComponent().getClassName())) {
+            freIntent.setClass(caller, TabbedModeFirstRunActivity.class);
+            return true;
+        }
+
+        return false;
     }
 }

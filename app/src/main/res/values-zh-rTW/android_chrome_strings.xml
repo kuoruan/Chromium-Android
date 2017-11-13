@@ -742,7 +742,7 @@
 <string name="remove_all">"全部移除"</string>
 <string name="accessibility_ntp_offline_badge">"可離線使用"</string>
 <string name="accessibility_suggestion_with_video_badge">"含有影片"</string>
-<string name="ntp_chrome_home_promo">"嘗試&lt;link&gt;更輕鬆的瀏覽方式&lt;/link&gt;"</string>
+<string name="ntp_chrome_home_promo">"體驗&lt;link&gt;更輕鬆的瀏覽方式&lt;/link&gt;"</string>
 <string name="ntp_learn_more_about_suggested_content">"&lt;link&gt;進一步瞭解&lt;/link&gt;建議的內容"</string>
 <string name="ntp_all_dismissed_body_text_morning">"系統即將顯示更多文章供你閱覽，陪你度過美好的早晨！"</string>
 <string name="ntp_all_dismissed_body_text_afternoon">"系統即將顯示更多文章供你閱覽，陪你度過美好的午後時光！"</string>
@@ -1009,11 +1009,11 @@
 <string name="bottom_sheet_home_tab">"已選取 [首頁] 標籤"</string>
 <string name="bottom_sheet_app_menu_iph">"下載內容、書籤和歷史紀錄在哪裡？"</string>
 <string name="chrome_home_promo_dialog_title">"新版 Chrome 隆重登場"</string>
-<string name="chrome_home_promo_dialog_message">"向上滑動即可輕鬆存取熱門網站和文章、下載項目等內容"</string>
+<string name="chrome_home_promo_dialog_message">"向上滑動即可輕鬆瀏覽熱門網站和文章、下載項目等內容"</string>
 <string name="chrome_home_promo_dialog_message_accessibility">"從畫面底部向上滑動或輕觸展開按鈕，即可輕鬆瀏覽熱門網站和文章，並查看各項下載內容等等"</string>
 <string name="chrome_home_promo_dialog_change_later">"使用新版 Chrome"</string>
 <string name="chrome_home_opt_out_menu_item">"你目前使用的是新版 Chrome"</string>
-<string name="chrome_home_opt_out_snackbar_text">"請將你關閉新版 Chrome 的原因告訴我們"</string>
+<string name="chrome_home_opt_out_snackbar_text">"請告訴我們您為何不想使用新版 Chrome"</string>
 <string name="chrome_home_opt_out_snackbar_action">"填寫問卷"</string>
 <string name="photo_picker_select_images">"選取圖片"</string>
 <string name="photo_picker_camera">"攝影機"</string>

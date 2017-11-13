@@ -7,8 +7,10 @@ package org.chromium.chrome.browser.firstrun;
 import android.app.Activity;
 import android.app.Fragment;
 import android.os.Bundle;
+import android.support.annotation.CallSuper;
 import android.support.annotation.StringRes;
 import android.text.TextUtils;
+import android.view.View;
 
 import org.chromium.base.ActivityState;
 import org.chromium.base.ApplicationStatus;
@@ -179,16 +181,26 @@ public class FirstRunActivity extends FirstRunActivityBase implements FirstRunPa
         return null;
     }
 
+    /**
+     * Creates the content view for this activity.
+     * The only thing subclasses can do is wrapping the view returned by super implementation
+     * in some extra layout.
+     */
+    @CallSuper
+    protected View createContentView() {
+        mPager = new FirstRunViewPager(this);
+        mPager.setId(R.id.fre_pager);
+        mPager.setOffscreenPageLimit(3);
+        return mPager;
+    }
+
     @Override
     public void setContentView() {
         initializeStateFromLaunchData();
 
         setFinishOnTouchOutside(true);
 
-        mPager = new FirstRunViewPager(this);
-        mPager.setId(R.id.fre_pager);
-        mPager.setOffscreenPageLimit(3);
-        setContentView(mPager);
+        setContentView(createContentView());
 
         mFirstRunFlowSequencer = new FirstRunFlowSequencer(this) {
             @Override

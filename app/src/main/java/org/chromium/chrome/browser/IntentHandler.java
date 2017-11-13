@@ -28,6 +28,7 @@ import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.blink_public.web.WebReferrerPolicy;
 import org.chromium.chrome.browser.browserservices.BrowserSessionContentUtils;
+import org.chromium.chrome.browser.document.ChromeLauncherActivity;
 import org.chromium.chrome.browser.externalauth.ExternalAuthUtils;
 import org.chromium.chrome.browser.externalnav.ExternalNavigationDelegateImpl;
 import org.chromium.chrome.browser.externalnav.IntentWithGesturesHandler;
@@ -235,15 +236,6 @@ public class IntentHandler {
     public static final String GOOGLECHROME_SCHEME = "googlechrome";
     public static final String GOOGLECHROME_NAVIGATE_PREFIX =
             GOOGLECHROME_SCHEME + "://navigate?url=";
-
-    /**
-     * The class name to be specified in the ComponentName for Intents that are creating a new
-     * tab (regardless of whether the user is in document or tabbed mode).
-     */
-    // TODO(tedchoc): Remove this and directly reference the Launcher activity when that becomes
-    //                publicly available.
-    private static final String TAB_ACTIVITY_COMPONENT_CLASS_NAME =
-            "com.google.android.apps.chrome.Main";
 
     private static boolean sTestIntentsEnabled;
 
@@ -610,7 +602,7 @@ public class IntentHandler {
     public static void startChromeLauncherActivityForTrustedIntent(Intent intent) {
         // Specify the exact component that will handle creating a new tab.  This allows specifying
         // URLs that are not exposed in the intent filters (i.e. chrome://).
-        startActivityForTrustedIntentInternal(intent, TAB_ACTIVITY_COMPONENT_CLASS_NAME);
+        startActivityForTrustedIntentInternal(intent, ChromeLauncherActivity.class.getName());
     }
 
     private static void startActivityForTrustedIntentInternal(

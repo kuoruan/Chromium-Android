@@ -60,7 +60,7 @@ idea {
 }
 
 dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
+     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "com.android.support:appcompat-v7:$rootProject.ext.supportLibraryVersion"
     implementation "com.android.support:design:$rootProject.ext.supportLibraryVersion"
     implementation "com.android.support:gridlayout-v7:$rootProject.ext.supportLibraryVersion"

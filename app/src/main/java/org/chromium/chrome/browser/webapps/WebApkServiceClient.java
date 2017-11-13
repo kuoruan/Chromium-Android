@@ -31,6 +31,8 @@ public class WebApkServiceClient {
 
         @Override
         public void onConnected(IBinder api) {
+            if (api == null) return;
+
             try {
                 useApi(IWebApkApi.Stub.asInterface(api));
             } catch (RemoteException e) {

@@ -532,4 +532,10 @@
     <!-- Reader Mode dimensions -->
     <!-- Padding surrounding the message. -->
     <dimen name="reader_mode_infobar_text_padding">8dp</dimen>
+
+    <!-- Defaults for TabbedModeFirstRunActivity values. -->
+    <item type="dimen" name="dialog_fixed_width_major">100%</item>
+    <item type="dimen" name="dialog_fixed_width_minor">100%</item>
+    <item type="dimen" name="dialog_fixed_height_major">100%</item>
+    <item type="dimen" name="dialog_fixed_height_minor">100%</item>
 </resources>

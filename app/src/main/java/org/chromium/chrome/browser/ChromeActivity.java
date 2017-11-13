@@ -237,7 +237,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     private boolean mDeferredStartupPosted;
 
     private boolean mTabModelsInitialized;
-    private boolean mNativeInitialized;
+    protected boolean mNativeInitialized;
     private boolean mRemoveWindowBackgroundDone;
 
     // The class cannot implement TouchExplorationStateChangeListener,

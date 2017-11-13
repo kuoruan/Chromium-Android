@@ -203,6 +203,10 @@ public class FeatureUtilities {
                 ChromeFeatureList.isEnabled(ChromeFeatureList.DONT_PREFETCH_LIBRARIES));
     }
 
+    public static void notifyChromeHomeStatusChanged(boolean isChromeHomeEnabled) {
+        nativeNotifyChromeHomeStatusChanged(isChromeHomeEnabled);
+    }
+
     /**
      * Finalize any static settings that will change when the browser restarts.
      */
@@ -210,6 +214,7 @@ public class FeatureUtilities {
         if (sChromeHomePendingState != null) {
             sChromeHomeEnabled = sChromeHomePendingState;
             sChromeHomePendingState = null;
+            notifyChromeHomeStatusChanged(sChromeHomeEnabled);
         }
     }
 
@@ -387,4 +392,5 @@ public class FeatureUtilities {
 
     private static native void nativeSetCustomTabVisible(boolean visible);
     private static native void nativeSetIsInMultiWindowMode(boolean isInMultiWindowMode);
+    private static native void nativeNotifyChromeHomeStatusChanged(boolean isChromeHomeEnabled);
 }
