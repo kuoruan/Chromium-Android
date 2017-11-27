@@ -283,7 +283,7 @@
 <string name="webstorage_clear_data_dialog_ok_button">"全部清除"</string>
 <string name="website_settings_embedded_in">"嵌入位置：%1$s"</string>
 <string name="no_saved_website_settings">"您没有已保存的网站设置。"</string>
-<string name="website_settings_device_location">"Location"</string>
+<string name="website_settings_device_location">"位置"</string>
 <string name="geolocation_permission_title">"位置信息使用权"</string>
 <string name="android_location_off">"在 &lt;link&gt;Android 设置&lt;/link&gt;部分开启位置信息服务。"</string>
 <string name="android_permission_off_plural">"在 &lt;link&gt;Android 设置&lt;/link&gt;中为 Chrome 启用这些权限。"</string>
@@ -999,7 +999,7 @@
 <string name="bottom_sheet_expand_button_help_bubble_message">"点按即可查看书签及更多内容"</string>
 <string name="bottom_sheet_accessibility_expand_button_help_bubble_message">"点按即可查看“下载内容”、“书签”和“历史记录”"</string>
 <string name="bottom_sheet_expand_button_accessibility">"访问“下载内容”、“书签”和“历史记录”。"</string>
-<string name="bottom_sheet_accessibility_description">"导航面板。向下滑动即可关闭。"</string>
+<string name="bottom_sheet_accessibility_description">"导航面板。向下滑动手指即可关闭。"</string>
 <string name="bottom_sheet_opened_half">"已半屏打开导航面板"</string>
 <string name="bottom_sheet_opened_full">"已全屏打开导航面板"</string>
 <string name="bottom_sheet_closed">"已关闭导航面板"</string>

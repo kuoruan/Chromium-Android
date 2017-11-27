@@ -4,9 +4,11 @@
 
 package org.chromium.chrome.browser.contextualsearch;
 
+import android.os.Build;
 import android.support.annotation.Nullable;
 import android.view.textclassifier.TextClassifier;
 
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.content.browser.ContentViewCore;
 import org.chromium.content_public.browser.SelectionClient;
 import org.chromium.content_public.browser.WebContents;
@@ -39,7 +41,8 @@ public class SelectionClientManager {
      * @param contentViewCore The {@link ContentViewCore} that will show pupups for this client.
      */
     SelectionClientManager(ContentViewCore contentViewCore) {
-        if (!ContextualSearchFieldTrial.isSmartSelectionDisabled()) {
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_SMART_SELECTION)
+                && Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
             assert contentViewCore != null;
             WebContents webContents = contentViewCore.getWebContents();
             assert webContents != null;
@@ -68,6 +71,7 @@ public class SelectionClientManager {
      * notified of method calls.
      * @param contextualSearchSelectionClient An additional {@link SelectionClient} that should be
      *        notified of requests going forward, used by Contextual Search.
+     * @return The resulting {@link SelectionClient} that should be active after the addition.
      */
     SelectionClient addContextualSearchSelectionClient(
             SelectionClient contextualSearchSelectionClient) {
@@ -86,6 +90,7 @@ public class SelectionClientManager {
     /**
      * Removes the current {@link SelectionClient} from the current instances that will be notified
      * of method calls.
+     * @return A remaining {@link SelectionClient} used for Smart Selection or {@code null}.
      */
     @Nullable
     SelectionClient removeContextualSearchSelectionClient() {

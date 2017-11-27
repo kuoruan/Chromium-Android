@@ -29,6 +29,7 @@
     <dimen name="tab_strip_and_toolbar_height">96dp</dimen>
 
     <dimen name="location_bar_icon_width">40dp</dimen>
+    <dimen name="toolbar_menu_button_width">43dp</dimen>
 
     <!-- NTP dimensions -->
     <dimen name="ntp_logo_height">180dp</dimen>

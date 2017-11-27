@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser.util;
 
+import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import org.chromium.base.CollectionUtil;
@@ -100,6 +102,23 @@ public class UrlUtilities {
      */
     public static boolean isInternalScheme(URI uri) {
         return INTERNAL_SCHEMES.contains(uri.getScheme());
+    }
+
+    /**
+     * @param url a URL.
+     *
+     * @return whether the URL's scheme is HTTP or HTTPS.
+     */
+    public static boolean isHttpOrHttps(@NonNull String url) {
+        // URI#getScheme would throw URISyntaxException if the other parts contain invalid
+        // characters. For example, "http://foo.bar/has[square].html" has [] in the path, which
+        // is not valid in URI. Both Uri.parse().getScheme() and URL().getProtocol() work in
+        // this case.
+        //
+        // URL().getProtocol() throws MalformedURLException if the scheme is "invalid",
+        // including common ones like "about:", "javascript:", "data:", etc.
+        String scheme = Uri.parse(url).getScheme();
+        return UrlConstants.HTTP_SCHEME.equals(scheme) || UrlConstants.HTTPS_SCHEME.equals(scheme);
     }
 
     /**

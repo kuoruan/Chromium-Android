@@ -55,7 +55,7 @@ public class FeatureUtilities {
     private static Boolean sHasGoogleAccountAuthenticator;
     private static Boolean sHasRecognitionIntentHandler;
     private static Boolean sChromeHomeEnabled;
-    private static Boolean sChromeHomePendingState;
+    private static boolean sChromeHomeNeedsUpdate;
     private static String sChromeHomeSwipeLogicType;
 
     private static String sCachedHerbFlavor;
@@ -211,10 +211,13 @@ public class FeatureUtilities {
      * Finalize any static settings that will change when the browser restarts.
      */
     public static void finalizePendingFeatures() {
-        if (sChromeHomePendingState != null) {
-            sChromeHomeEnabled = sChromeHomePendingState;
-            sChromeHomePendingState = null;
-            notifyChromeHomeStatusChanged(sChromeHomeEnabled);
+        if (sChromeHomeNeedsUpdate) {
+            // Clear the Chrome Home flag so that it can be re-cached below.
+            sChromeHomeEnabled = null;
+            // Re-cache the Chrome Home state.
+            cacheChromeHomeEnabled();
+            notifyChromeHomeStatusChanged(isChromeHomeEnabled());
+            sChromeHomeNeedsUpdate = false;
         }
     }
 
@@ -264,7 +267,8 @@ public class FeatureUtilities {
     }
 
     /**
-     * Cache whether or not Chrome Home and related features are enabled.
+     * Cache whether or not Chrome Home and related features are enabled. If this method is called
+     * multiple times, the existing cached state is cleared and re-computed.
      */
     public static void cacheChromeHomeEnabled() {
         // Chrome Home doesn't work with tablets.
@@ -301,7 +305,7 @@ public class FeatureUtilities {
      */
     public static void switchChromeHomeUserSetting(boolean enabled) {
         ChromePreferenceManager.getInstance().setChromeHomeUserEnabled(enabled);
-        sChromeHomePendingState = enabled;
+        sChromeHomeNeedsUpdate = sChromeHomeEnabled != null && enabled != sChromeHomeEnabled;
     }
 
     /**
@@ -372,7 +376,8 @@ public class FeatureUtilities {
      */
     public static boolean shouldShowChromeHomePromoForStartup() {
         if (DeviceFormFactor.isTablet() || isChromeHomeEnabled()
-                || !ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_PROMO)) {
+                || !ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_PROMO)
+                || !ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_PROMO_ON_STARTUP)) {
             return false;
         }
 

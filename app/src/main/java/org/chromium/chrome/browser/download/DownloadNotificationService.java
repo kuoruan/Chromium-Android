@@ -874,7 +874,11 @@ public class DownloadNotificationService extends Service {
     public void notifyDownloadCanceled(ContentId id) {
         DownloadSharedPreferenceEntry entry =
                 mDownloadSharedPreferenceHelper.getDownloadSharedPreferenceEntry(id);
-        if (entry == null) return;
+        if (entry == null) {
+            // In case notifyDownloadCanceled was called after the entry has already been removed.
+            stopTrackingInProgressDownload(id, hasDownloadNotificationsInternal(-1));
+            return;
+        }
         cancelNotification(entry.notificationId, id);
     }
 
@@ -896,8 +900,12 @@ public class DownloadNotificationService extends Service {
             notifyDownloadFailed(id, fileName, icon);
             return;
         }
-        // If download is already paused, do nothing.
-        if (entry != null && !entry.isAutoResumable) return;
+        // Download is already paused.
+        if (entry != null && !entry.isAutoResumable) {
+            // Shutdown the service in case it was restarted unnecessarily.
+            stopTrackingInProgressDownload(id, true);
+            return;
+        }
         boolean canDownloadWhileMetered = entry == null ? false : entry.canDownloadWhileMetered;
         // If download is interrupted due to network disconnection, show download pending state.
         if (isAutoResumable) {

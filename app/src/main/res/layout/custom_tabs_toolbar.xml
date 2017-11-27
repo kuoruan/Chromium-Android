@@ -12,6 +12,8 @@
     <ImageButton
         android:id="@+id/close_button"
         style="@style/ToolbarButton"
+        android:layout_height="@dimen/toolbar_height_no_shadow"
+        android:layout_width="@dimen/toolbar_button_width"
         android:layout_gravity="start|center_vertical"
         android:contentDescription="@string/close_tab" />
     <FrameLayout
@@ -63,6 +65,7 @@
     <ImageButton
         android:id="@+id/action_button"
         style="@style/ToolbarButton"
+        android:layout_height="@dimen/toolbar_height_no_shadow"
         android:layout_width="wrap_content"
         android:maxWidth="@dimen/custom_tabs_toolbar_maxWidth"
         android:paddingTop="@dimen/custom_tabs_toolbar_vertical_padding"
@@ -77,7 +80,8 @@
         android:id="@+id/menu_button"
         style="@style/ToolbarButton"
         android:layout_gravity="center_vertical|end"
-        android:layout_width="42dp"
+        android:layout_height="@dimen/toolbar_height_no_shadow"
+        android:layout_width="@dimen/toolbar_menu_button_width"
         android:paddingEnd="4dp"
         android:src="@drawable/btn_menu"
         android:contentDescription="@string/accessibility_toolbar_btn_menu"

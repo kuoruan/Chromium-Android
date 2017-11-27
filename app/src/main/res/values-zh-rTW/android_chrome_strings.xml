@@ -283,7 +283,7 @@
 <string name="webstorage_clear_data_dialog_ok_button">"全部清除"</string>
 <string name="website_settings_embedded_in">"內嵌位置：%1$s"</string>
 <string name="no_saved_website_settings">"您沒有已儲存的網站設定。"</string>
-<string name="website_settings_device_location">"Location"</string>
+<string name="website_settings_device_location">"位置"</string>
 <string name="geolocation_permission_title">"位置資訊存取權"</string>
 <string name="android_location_off">"前往 &lt;link&gt;Android 設定&lt;/link&gt;開啟位置資訊設定。"</string>
 <string name="android_permission_off_plural">"請在 &lt;link&gt;Android 設定&lt;/link&gt;中為 Chrome 啟用這些權限。"</string>

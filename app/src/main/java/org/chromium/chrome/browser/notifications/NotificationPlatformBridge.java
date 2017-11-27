@@ -338,6 +338,13 @@ public class NotificationPlatformBridge {
                 NotificationConstants.EXTRA_NOTIFICATION_INFO_WEBAPK_PACKAGE, webApkPackage);
         intent.putExtra(NotificationConstants.EXTRA_NOTIFICATION_INFO_ACTION_INDEX, actionIndex);
 
+        // This flag ensures the broadcast is delivered with foreground priority. It also means the
+        // receiver gets a shorter timeout interval before it may be killed, but this is ok because
+        // we schedule a job to handle the intent in NotificationService.Receiver on N+.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
+        }
+
         return PendingIntent.getBroadcast(
                 context, PENDING_INTENT_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }

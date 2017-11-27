@@ -22,27 +22,27 @@ import org.chromium.content.browser.ContentViewCore;
 import org.chromium.content_public.browser.GestureStateListener;
 import org.chromium.net.NetworkChangeNotifier;
 
-/**
- * Manages the activation and gesture listeners for ContextualSearch on a given tab.
- */
+/** Manages the activation and gesture listeners for ContextualSearch on a given tab. */
 public class ContextualSearchTabHelper
         extends EmptyTabObserver implements NetworkChangeNotifier.ConnectionTypeObserver {
     /** The Tab that this helper tracks. */
     private final Tab mTab;
 
-    /**
-     * Notification handler for Contextual Search events.
-     */
+    /** Notification handler for Contextual Search events. */
     private TemplateUrlServiceObserver mTemplateUrlObserver;
 
     /**
-     * The current ContentViewCore for the Tab which this helper is monitoring.
+     * The ContentViewCore associated with the Tab which this helper is monitoring, unless detached.
      */
-    private ContentViewCore mBaseContentViewCore;
+    private ContentViewCore mContentViewCore;
 
     /**
-     * The GestureListener used for handling events from the current ContentViewCore.
+     * The {@link ContextualSearchManager} that's managing this tab. This may point to
+     * the manager from another activity during reparenting, or be {@code null} during startup.
      */
+    private ContextualSearchManager mContextualSearchManager;
+
+    /** The GestureListener used for handling events from the current ContentViewCore. */
     private GestureStateListener mGestureStateListener;
 
     /**
@@ -80,7 +80,7 @@ public class ContextualSearchTabHelper
     @Override
     public void onPageLoadStarted(Tab tab, String url) {
         updateHooksForNewContentViewCore(tab);
-        ContextualSearchManager manager = getContextualSearchManager();
+        ContextualSearchManager manager = getContextualSearchManager(tab);
         if (manager != null) manager.onBasePageLoadStarted();
     }
 
@@ -92,13 +92,12 @@ public class ContextualSearchTabHelper
             mNativeHelper = nativeInit(tab.getProfile());
         }
         if (mTemplateUrlObserver == null) {
-            mTemplateUrlObserver =
-                    new TemplateUrlServiceObserver() {
-                        @Override
-                        public void onTemplateURLServiceChanged() {
-                            updateContextualSearchHooks(mBaseContentViewCore);
-                        }
-                    };
+            mTemplateUrlObserver = new TemplateUrlServiceObserver() {
+                @Override
+                public void onTemplateURLServiceChanged() {
+                    updateContextualSearchHooks(mContentViewCore);
+                }
+            };
             TemplateUrlService.getInstance().addObserver(mTemplateUrlObserver);
         }
         updateHooksForNewContentViewCore(tab);
@@ -121,28 +120,34 @@ public class ContextualSearchTabHelper
         if (NetworkChangeNotifier.isInitialized()) {
             NetworkChangeNotifier.removeConnectionTypeObserver(this);
         }
-        removeContextualSearchHooks(mBaseContentViewCore);
-        mBaseContentViewCore = null;
+        removeContextualSearchHooks(mContentViewCore);
+        mContentViewCore = null;
+        mContextualSearchManager = null;
         mSelectionClientManager = null;
         mGestureStateListener = null;
     }
 
     @Override
     public void onToggleFullscreenMode(Tab tab, boolean enable) {
-        ContextualSearchManager manager = getContextualSearchManager();
+        ContextualSearchManager manager = getContextualSearchManager(tab);
         if (manager != null) {
             manager.hideContextualSearch(StateChangeReason.UNKNOWN);
         }
     }
 
     @Override
-    public void onReparentingFinished(Tab tab) {
-        updateHooksForNewContentViewCore(tab);
+    public void onActivityAttachmentChanged(Tab tab, boolean isAttached) {
+        if (isAttached) {
+            updateHooksForNewContentViewCore(tab);
+        } else {
+            removeContextualSearchHooks(mContentViewCore);
+            mContextualSearchManager = null;
+        }
     }
 
     @Override
     public void onContextMenuShown(Tab tab, ContextMenu menu) {
-        ContextualSearchManager manager = getContextualSearchManager();
+        ContextualSearchManager manager = getContextualSearchManager(tab);
         if (manager != null) {
             manager.onContextMenuShown();
         }
@@ -154,7 +159,7 @@ public class ContextualSearchTabHelper
 
     @Override
     public void onConnectionTypeChanged(int connectionType) {
-        updateContextualSearchHooks(mBaseContentViewCore);
+        updateContextualSearchHooks(mContentViewCore);
     }
 
     // ============================================================================================
@@ -168,22 +173,22 @@ public class ContextualSearchTabHelper
      */
     private void updateHooksForNewContentViewCore(Tab tab) {
         ContentViewCore currentContentViewCore = tab.getActiveContentViewCore();
-        if (currentContentViewCore != mBaseContentViewCore) {
-            removeContextualSearchHooks(mBaseContentViewCore);
-            mBaseContentViewCore = currentContentViewCore;
-            if (mBaseContentViewCore != null) {
-                mSelectionClientManager = new SelectionClientManager(mBaseContentViewCore);
-            } else {
-                mSelectionClientManager = null;
+        if (currentContentViewCore != mContentViewCore
+                || mContextualSearchManager != getContextualSearchManager(tab)) {
+            mContentViewCore = currentContentViewCore;
+            mContextualSearchManager = getContextualSearchManager(tab);
+            if (mContentViewCore != null && mSelectionClientManager == null) {
+                mSelectionClientManager = new SelectionClientManager(mContentViewCore);
             }
-            updateContextualSearchHooks(mBaseContentViewCore);
+            updateContextualSearchHooks(mContentViewCore);
         }
     }
 
     /**
      * Updates the Contextual Search hooks, adding or removing them depending on whether it is
-     * currently active.  If the current tab's {@link ContentViewCore} may have changed, call
-     * {@link #updateHooksForNewContentViewCore(Tab)} instead.
+     * currently active. If the current tab's {@link ContentViewCore} may have changed, call {@link
+     * #updateHooksForNewContentViewCore(Tab)} instead.
+     *
      * @param cvc The content view core to attach the gesture state listener to.
      */
     private void updateContextualSearchHooks(ContentViewCore cvc) {
@@ -201,7 +206,8 @@ public class ContextualSearchTabHelper
      * @param cvc The content view core to attach the gesture state listener to.
      */
     private void addContextualSearchHooks(ContentViewCore cvc) {
-        ContextualSearchManager contextualSearchManager = getContextualSearchManager();
+        assert mTab.getContentViewCore() == null || mTab.getContentViewCore() == cvc;
+        ContextualSearchManager contextualSearchManager = getContextualSearchManager(mTab);
         if (mGestureStateListener == null && contextualSearchManager != null) {
             mGestureStateListener = contextualSearchManager.getGestureStateListener();
             cvc.addGestureStateListener(mGestureStateListener);
@@ -230,15 +236,13 @@ public class ContextualSearchTabHelper
         }
     }
 
-    /**
-     * @return whether Contextual Search is enabled and active in this tab.
-     */
+    /** @return whether Contextual Search is enabled and active in this tab. */
     private boolean isContextualSearchActive(ContentViewCore cvc) {
-        ContextualSearchManager manager = getContextualSearchManager();
+        assert mTab.getContentViewCore() == null || mTab.getContentViewCore() == cvc;
+        ContextualSearchManager manager = getContextualSearchManager(mTab);
         if (manager == null) return false;
 
-        return !cvc.getWebContents().isIncognito()
-                && FirstRunStatus.getFirstRunFlowComplete()
+        return !cvc.getWebContents().isIncognito() && FirstRunStatus.getFirstRunFlowComplete()
                 && !PrefServiceBridge.getInstance().isContextualSearchDisabled()
                 && TemplateUrlService.getInstance().isDefaultSearchEngineGoogle()
                 && !LocaleManager.getInstance().needToCheckForSearchEnginePromo()
@@ -250,9 +254,7 @@ public class ContextualSearchTabHelper
                 && isDeviceOnline(manager);
     }
 
-    /**
-     * @return Whether the device is online, or we have disabled online-detection.
-     */
+    /** @return Whether the device is online, or we have disabled online-detection. */
     private boolean isDeviceOnline(ContextualSearchManager manager) {
         if (ContextualSearchFieldTrial.isOnlineDetectionDisabled()) return true;
 
@@ -260,10 +262,12 @@ public class ContextualSearchTabHelper
     }
 
     /**
-     * @return the Contextual Search manager.
+     * Gets the {@link ContextualSearchManager} associated with the given tab's activity.
+     * @param tab The {@link Tab} that we're getting the manager for.
+     * @return The Contextual Search manager controlling that Tab.
      */
-    private ContextualSearchManager getContextualSearchManager() {
-        Activity activity = mTab.getWindowAndroid().getActivity().get();
+    private ContextualSearchManager getContextualSearchManager(Tab tab) {
+        Activity activity = tab.getWindowAndroid().getActivity().get();
         if (activity instanceof ChromeActivity) {
             return ((ChromeActivity) activity).getContextualSearchManager();
         }
@@ -275,10 +279,10 @@ public class ContextualSearchTabHelper
     // ============================================================================================
 
     @CalledByNative
-    private void onContextualSearchPrefChanged() {
-        updateContextualSearchHooks(mBaseContentViewCore);
+    void onContextualSearchPrefChanged() {
+        updateContextualSearchHooks(mContentViewCore);
 
-        ContextualSearchManager manager = getContextualSearchManager();
+        ContextualSearchManager manager = getContextualSearchManager(mTab);
         if (manager != null) {
             boolean isEnabled = !PrefServiceBridge.getInstance().isContextualSearchDisabled()
                     && !PrefServiceBridge.getInstance().isContextualSearchUninitialized();

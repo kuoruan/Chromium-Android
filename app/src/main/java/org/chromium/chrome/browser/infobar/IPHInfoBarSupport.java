@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.infobar;
 
 import android.content.Context;
 import android.support.annotation.StringRes;
+import android.support.v4.view.ViewCompat;
 import android.view.View;
 import android.widget.PopupWindow.OnDismissListener;
 
@@ -95,7 +96,7 @@ class IPHInfoBarSupport implements OnDismissListener, InfoBarContainer.InfoBarAn
             }
         }
 
-        if (frontInfoBar == null) return;
+        if (frontInfoBar == null || view == null || !ViewCompat.isAttachedToWindow(view)) return;
 
         // Check if we need to log any IPH events based on the infobar.
         logEvent(frontInfoBar);

@@ -116,11 +116,13 @@ public interface SelectionClient {
     void cancelAllRequests();
 
     // The clang-format tool is confused by the java 8 usage of default in an interface.
-    // TODO(donnd): remove this once it's supported.
+    // TODO(donnd): remove this once it's supported.  See b/67428051.
     // clang-format off
     /**
      * Sets the TextClassifier for the Smart Text Selection feature. Pass {@code null} to use the
      * system classifier.
+     * @param textClassifier The custom {@link TextClassifier} to start using or {@code null} to
+     *        switch back to the system's classifier.
      */
     default void setTextClassifier(TextClassifier textClassifier) {}
 

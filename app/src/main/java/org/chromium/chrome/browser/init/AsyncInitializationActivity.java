@@ -13,6 +13,7 @@ import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Process;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
@@ -308,6 +309,18 @@ public abstract class AsyncInitializationActivity extends AppCompatActivity impl
         super.onCreate(null);
         ApiCompatibilityUtils.finishAndRemoveTask(this);
         overridePendingTransition(0, R.anim.no_anim);
+
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP
+                || Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP_MR1) {
+            // On L ApiCompatibilityUtils.finishAndRemoveTask() sometimes fails, which causes
+            // NPE in onStart() later, see crbug.com/781396. We can't let this activity to
+            // start, and we don't want to crash either. So try finishing one more time and
+            // suicide if that fails.
+            if (!isFinishing()) {
+                finish();
+                if (!isFinishing()) Process.killProcess(Process.myPid());
+            }
+        }
     }
 
     /**

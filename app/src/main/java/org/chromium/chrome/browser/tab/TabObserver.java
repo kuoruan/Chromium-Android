@@ -286,8 +286,17 @@ public interface TabObserver {
             String targetUrl, WebContents newWebContents);
 
     /**
+     * Called when the Tab is attached or detached from an {@code Activity}.
+     * @param tab The notifying {@link Tab}.
+     * @param isAttached Whether the Tab is being attached or detached.
+     */
+    public void onActivityAttachmentChanged(Tab tab, boolean isAttached);
+
+    /**
      * Called when the tab reparenting process has finished.
+     * Deprecated, use {@link #onActivityAttachmentChanged(Tab, boolean)} instead.
      * @param tab The notifying {@link Tab}.
      */
+    @Deprecated
     public void onReparentingFinished(Tab tab);
 }

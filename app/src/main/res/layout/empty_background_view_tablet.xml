@@ -21,6 +21,7 @@
         <view class="org.chromium.chrome.browser.widget.newtab.NewTabButton"
             android:id="@+id/empty_new_tab_button"
             style="@style/ToolbarButton"
+            android:layout_height="@dimen/toolbar_height_no_shadow"
             android:layout_width="wrap_content"
             android:layout_gravity="start|top"
             android:paddingStart="16dp"

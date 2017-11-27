@@ -208,7 +208,8 @@ class CustomTabBottomBarDelegate implements FullscreenListener {
 
     private void showRemoteViews(RemoteViews remoteViews) {
         try {
-            final View inflatedView = remoteViews.apply(mActivity, getBottomBarView());
+            final View inflatedView =
+                    remoteViews.apply(mActivity.getApplicationContext(), getBottomBarView());
             if (mClickableIDs != null && mClickPendingIntent != null) {
                 for (int id: mClickableIDs) {
                     if (id < 0) return;

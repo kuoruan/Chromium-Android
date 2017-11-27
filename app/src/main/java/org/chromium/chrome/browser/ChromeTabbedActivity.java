@@ -966,7 +966,11 @@ public class ChromeTabbedActivity
             BottomSheet bottomSheet = getBottomSheet();
             assert bottomSheet != null;
 
-            if (bottomSheet.isSheetOpen()) return false;
+            if (bottomSheet.isSheetOpen()
+                    || (getTimeSinceLastBackgroundedMs()
+                               < TIME_SINCE_BACKGROUNDED_TO_SHOW_BOTTOM_SHEET_HALF_MS)) {
+                return false;
+            }
 
             if (mLayoutManager != null && mLayoutManager.overviewVisible()) {
                 if (reuseOrCreateNewNtp()) {

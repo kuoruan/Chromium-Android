@@ -53,6 +53,7 @@ public class IncognitoNewTabPageViewMD extends IncognitoNewTabPageView {
     private static final int BULLETPOINTS_HORIZONTAL_SPACING_DP = 40;
     private static final int CONTENT_WIDTH_DP = 600;
     private static final int WIDE_LAYOUT_THRESHOLD_DP = 720;
+    private static final int CHROME_HOME_LEARN_MORE_BOTTOM_PADDING_DP = 8;
 
     private static class IncognitoBulletSpan extends BulletSpan {
         public IncognitoBulletSpan() {
@@ -208,8 +209,8 @@ public class IncognitoNewTabPageViewMD extends IncognitoNewTabPageView {
             // Set the padding to a default for Chrome Home, since we want less padding in this
             // case.
             if (usingChromeHome) {
-                paddingVerticalDp = 0;
                 paddingHorizontalDp = 16;
+                paddingVerticalDp = 0;
             } else {
                 paddingHorizontalDp = mWidthDp <= 240 ? 24 : 32;
                 paddingVerticalDp = (mHeightDp <= 600) ? 32 : 72;
@@ -268,9 +269,18 @@ public class IncognitoNewTabPageViewMD extends IncognitoNewTabPageView {
         }
 
         // Set up paddings and margins.
-        mContainer.setPadding(dpToPx(mContext, paddingHorizontalDp),
-                dpToPx(mContext, paddingVerticalDp), dpToPx(mContext, paddingHorizontalDp),
-                dpToPx(mContext, paddingVerticalDp));
+        int paddingTop;
+        int paddingBottom;
+        if (usingChromeHome) {
+            // Preserve the intentional padding given to the new tab view in Chrome Home to
+            // accomodate the bottom navigation menu.
+            paddingTop = mContainer.getPaddingTop();
+            paddingBottom = mContainer.getPaddingBottom();
+        } else {
+            paddingTop = paddingBottom = dpToPx(mContext, paddingVerticalDp);
+        }
+        mContainer.setPadding(dpToPx(mContext, paddingHorizontalDp), paddingTop,
+                dpToPx(mContext, paddingHorizontalDp), paddingBottom);
 
         int spacingPx =
                 (int) Math.ceil(mParagraphs[0].getTextSize() * (mHeightDp <= 600 ? 1 : 1.5));
@@ -316,6 +326,14 @@ public class IncognitoNewTabPageViewMD extends IncognitoNewTabPageView {
 
         mSubtitle.setClickable(learnMoreInSubtitle);
         mLearnMore.setVisibility(learnMoreInSubtitle ? View.GONE : View.VISIBLE);
+
+        if (FeatureUtilities.isChromeHomeEnabled()) {
+            // Additional padding below "Learn More" helps keep distance from the bottom navigation
+            // menu making it easier to tap.
+            mLearnMore.setPadding(mLearnMore.getPaddingLeft(), mLearnMore.getPaddingTop(),
+                    mLearnMore.getPaddingBottom(),
+                    dpToPx(mContext, CHROME_HOME_LEARN_MORE_BOTTOM_PADDING_DP));
+        }
 
         if (!learnMoreInSubtitle) {
             // Revert to the original text.

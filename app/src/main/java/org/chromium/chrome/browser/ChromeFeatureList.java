@@ -165,7 +165,9 @@ public abstract class ChromeFeatureList {
     public static final String CHROME_HOME_PERSONALIZED_OMNIBOX_SUGGESTIONS =
             "ChromeHomePersonalizedOmniboxSuggestions";
     public static final String CHROME_HOME_PROMO = "ChromeHomePromo";
+    public static final String CHROME_HOME_PROMO_ON_STARTUP = "ChromeHomePromoOnStartup";
     public static final String CHROME_MEMEX = "ChromeMemex";
+    public static final String CHROME_SMART_SELECTION = "ChromeSmartSelection";
     public static final String CONTENT_SUGGESTIONS_FAVICONS_FROM_NEW_SERVER =
             "ContentSuggestionsFaviconsFromNewServer";
     public static final String CONTENT_SUGGESTIONS_NOTIFICATIONS =

@@ -660,6 +660,7 @@ public class BottomToolbarPhone extends ToolbarPhone {
         mLocationBarBackground =
                 ApiCompatibilityUtils.getDrawable(res, R.drawable.modern_toolbar_background);
         mLocationBarBackground.getPadding(mLocationBarBackgroundPadding);
+        mLocationBarBackground.mutate();
         mLocationBar.setPadding(mLocationBarBackgroundPadding.left,
                 mLocationBarBackgroundPadding.top, mLocationBarBackgroundPadding.right,
                 mLocationBarBackgroundPadding.bottom);

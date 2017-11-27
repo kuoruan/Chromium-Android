@@ -1708,19 +1708,20 @@ public class BottomSheet
      */
     public void showHelpBubbleIfNecessary() {
         // If FRE is not complete, the FRE screen is likely covering ChromeTabbedActivity so the
-        // help bubble should not be shown. Also skip showing if the bottom sheet is already open,
-        // the UI has not been initialized (indicated by mLayoutManager == null), or the tab
-        // switcher is showing.
-        if (isSheetOpen() || mLayoutManager == null || mLayoutManager.overviewVisible()
-                || !FirstRunStatus.getFirstRunFlowComplete()) {
-            return;
-        }
+        // help bubble should not be shown.
+        if (!FirstRunStatus.getFirstRunFlowComplete()) return;
 
         final Tracker tracker = TrackerFactory.getTrackerForProfile(Profile.getLastUsedProfile());
         tracker.addOnInitializedCallback(new Callback<Boolean>() {
             @Override
             public void onResult(Boolean success) {
-                if (!success) return;
+                // Skip showing if the tracker failed to initialize, the bottom sheet is already
+                // open, the UI has not been initialized (indicated by mLayoutManager == null),
+                // or the tab switcher is showing.
+                if (!success || isSheetOpen() || mLayoutManager == null
+                        || mLayoutManager.overviewVisible()) {
+                    return;
+                }
 
                 showHelpBubble(false);
             }

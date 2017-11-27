@@ -249,6 +249,13 @@ public class SpannableAutocompleteEditTextModel implements AutocompleteEditTextM
     @Override
     public void onSetText(CharSequence text) {
         if (DEBUG) Log.i(TAG, "onSetText: " + text);
+        // setText() does not necessarily trigger onTextChanged(). We need to accept the new text
+        // and reset the states.
+        mCurrentState.set(text.toString(), "", text.length(), text.length());
+        mSpanCursorController.reset();
+        mPreviouslyNotifiedState.copyFrom(mCurrentState);
+        mPreviouslySetState.copyFrom(mCurrentState);
+        if (mBatchEditNestCount == 0) updateSelectionForTesting();
     }
 
     @Override
@@ -344,7 +351,8 @@ public class SpannableAutocompleteEditTextModel implements AutocompleteEditTextM
 
     private boolean isKeyboardBlacklisted() {
         String pkgName = mDelegate.getKeyboardPackageName();
-        return pkgName.contains(".iqqi"); // crbug.com/767016
+        return pkgName.contains(".iqqi") // crbug.com/767016
+                || pkgName.contains("omronsoft") || pkgName.contains(".iwnn"); // crbug.com/758443
     }
 
     private boolean shouldFinishCompositionOnDeletion() {
@@ -434,6 +442,16 @@ public class SpannableAutocompleteEditTextModel implements AutocompleteEditTextM
         private int getSpanIndex(Editable editable) {
             if (editable == null || mSpan == null) return -1;
             return editable.getSpanStart(mSpan); // returns -1 if mSpan is not attached
+        }
+
+        public void reset() {
+            setCursorVisible(true);
+            Editable editable = mDelegate.getEditableText();
+            int idx = getSpanIndex(editable);
+            if (idx != -1) {
+                editable.removeSpan(mSpan);
+            }
+            mSpan = null;
         }
 
         public boolean removeSpan() {
