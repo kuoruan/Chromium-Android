@@ -28,9 +28,10 @@ public class VrExternalNavigationDelegate extends ExternalNavigationDelegateImpl
     }
 
     @Override
-    public void startIncognitoIntent(Intent intent, String referrerUrl, String fallbackUrl, Tab tab,
-            boolean needsToCloseTab, boolean proxy) {
+    public boolean startIncognitoIntent(Intent intent, String referrerUrl, String fallbackUrl,
+            Tab tab, boolean needsToCloseTab, boolean proxy) {
         VrShellDelegate.showDoffAndExitVr(false);
+        return true;
     }
 
     @Override

@@ -1008,10 +1008,12 @@
 <string name="bottom_sheet_history_tab">"已選取 [歷史紀錄] 標籤"</string>
 <string name="bottom_sheet_home_tab">"已選取 [首頁] 標籤"</string>
 <string name="bottom_sheet_app_menu_iph">"下載內容、書籤和歷史紀錄在哪裡？"</string>
-<string name="chrome_home_promo_dialog_title">"新版 Chrome 隆重登場"</string>
 <string name="chrome_home_promo_dialog_message">"向上滑動即可輕鬆瀏覽熱門網站和文章、下載項目等內容"</string>
 <string name="chrome_home_promo_dialog_message_accessibility">"從畫面底部向上滑動或輕觸展開按鈕，即可輕鬆瀏覽熱門網站和文章，並查看各項下載內容等等"</string>
-<string name="chrome_home_promo_dialog_change_later">"使用新版 Chrome"</string>
+<string name="chrome_home_promo_dialog_not_now">"現在不要"</string>
+<string name="chrome_home_promo_dialog_title">"新版 Chrome 隆重登場"</string>
+<string name="chrome_home_promo_dialog_try_it">"試用"</string>
+<string name="chrome_home_promo_dialog_turn_off">"關閉"</string>
 <string name="chrome_home_opt_out_menu_item">"你目前使用的是新版 Chrome"</string>
 <string name="chrome_home_opt_out_snackbar_text">"請告訴我們您為何不想使用新版 Chrome"</string>
 <string name="chrome_home_opt_out_snackbar_action">"填寫問卷"</string>

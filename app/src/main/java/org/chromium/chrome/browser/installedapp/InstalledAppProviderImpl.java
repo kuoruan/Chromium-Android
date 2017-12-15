@@ -249,6 +249,10 @@ public class InstalledAppProviderImpl implements InstalledAppProvider {
         // Get the <meta-data> from this app's manifest.
         // Throws NameNotFoundException if the application is not installed.
         ApplicationInfo appInfo = pm.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
+        if (appInfo == null || appInfo.metaData == null) {
+            return new JSONArray();
+        }
+
         int identifier = appInfo.metaData.getInt(ASSET_STATEMENTS_KEY);
         if (identifier == 0) {
             return new JSONArray();

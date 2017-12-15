@@ -489,10 +489,13 @@ public class ExternalNavigationHandler {
             if (params.isIncognito() && !mDelegate.willChromeHandleIntent(intent)) {
                 // This intent may leave Chrome.  Warn the user that incognito does not carry over
                 // to apps out side of Chrome.
-                mDelegate.startIncognitoIntent(intent, params.getReferrerUrl(),
-                        hasBrowserFallbackUrl ? browserFallbackUrl : null, params.getTab(),
-                        params.shouldCloseContentsOnOverrideUrlLoadingAndLaunchIntent(),
-                        shouldProxyForInstantApps);
+                if (!mDelegate.startIncognitoIntent(intent, params.getReferrerUrl(),
+                            hasBrowserFallbackUrl ? browserFallbackUrl : null, params.getTab(),
+                            params.shouldCloseContentsOnOverrideUrlLoadingAndLaunchIntent(),
+                            shouldProxyForInstantApps)) {
+                    if (DEBUG) Log.i(TAG, "NO_OVERRIDE: Failed to show incognito alert dialog.");
+                    return OverrideUrlLoadingResult.NO_OVERRIDE;
+                }
                 if (DEBUG) Log.i(TAG, "OVERRIDE_WITH_ASYNC_ACTION: Incognito navigation out");
                 return OverrideUrlLoadingResult.OVERRIDE_WITH_ASYNC_ACTION;
             }
@@ -572,9 +575,13 @@ public class ExternalNavigationHandler {
                 intent.putExtra(Intent.EXTRA_REFERRER, Uri.parse(params.getReferrerUrl()));
             }
             if (params.isIncognito()) {
-                mDelegate.startIncognitoIntent(intent, params.getReferrerUrl(), null,
-                        params.getTab(),
-                        params.shouldCloseContentsOnOverrideUrlLoadingAndLaunchIntent(), false);
+                if (!mDelegate.startIncognitoIntent(intent, params.getReferrerUrl(), null,
+                            params.getTab(),
+                            params.shouldCloseContentsOnOverrideUrlLoadingAndLaunchIntent(),
+                            false)) {
+                    if (DEBUG) Log.i(TAG, "NO_OVERRIDE: Failed to show incognito alert dialog.");
+                    return OverrideUrlLoadingResult.NO_OVERRIDE;
+                }
                 if (DEBUG) Log.i(TAG, "OVERRIDE_WITH_ASYNC_ACTION: Incognito intent to Play Store");
                 return OverrideUrlLoadingResult.OVERRIDE_WITH_ASYNC_ACTION;
             } else {

@@ -21,6 +21,7 @@ import android.provider.Browser;
 import android.provider.Telephony;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
+import android.view.WindowManager.BadTokenException;
 import android.webkit.MimeTypeMap;
 
 import org.chromium.base.ApplicationState;
@@ -379,7 +380,19 @@ public class ExternalNavigationDelegateImpl implements ExternalNavigationDelegat
     }
 
     @Override
-    public void startIncognitoIntent(final Intent intent, final String referrerUrl,
+    public boolean startIncognitoIntent(final Intent intent, final String referrerUrl,
+            final String fallbackUrl, final Tab tab, final boolean needsToCloseTab,
+            final boolean proxy) {
+        try {
+            startIncognitoIntentInternal(
+                    intent, referrerUrl, fallbackUrl, tab, needsToCloseTab, proxy);
+        } catch (BadTokenException e) {
+            return false;
+        }
+        return true;
+    }
+
+    private void startIncognitoIntentInternal(final Intent intent, final String referrerUrl,
             final String fallbackUrl, final Tab tab, final boolean needsToCloseTab,
             final boolean proxy) {
         Context context = tab.getWindowAndroid().getContext().get();

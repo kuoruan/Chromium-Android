@@ -13,12 +13,12 @@ interface IWebApkApi {
     // Gets the id of the icon to represent WebAPK notifications in status bar.
     int getSmallIconId();
 
-    // Get if notification permission is enabled.
-    boolean notificationPermissionEnabled();
-
     // Display a notification.
     void notifyNotification(String platformTag, int platformID, in Notification notification);
 
     // Cancel a notification.
     void cancelNotification(String platformTag, int platformID);
+
+    // Get if notification permission is enabled.
+    boolean notificationPermissionEnabled();
 }

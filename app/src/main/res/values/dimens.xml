@@ -239,7 +239,6 @@
     <dimen name="toolbar_shadow_height">8dp</dimen>
     <dimen name="toolbar_progress_bar_height">2dp</dimen>
     <dimen name="toolbar_button_width">48dp</dimen>
-    <dimen name="toolbar_menu_button_width">42dp</dimen>
     <dimen name="toolbar_handle_height">3dp</dimen>
     <dimen name="toolbar_handle_width">20dp</dimen>
     <dimen name="toolbar_handle_corner_radius">1.5dp</dimen>

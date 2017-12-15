@@ -75,7 +75,8 @@ interface ExternalNavigationDelegate {
     /**
      * Display a dialog warning the user that they may be leaving Chrome by starting this
      * intent. Give the user the opportunity to cancel the action. And if it is canceled, a
-     * navigation will happen in Chrome.
+     * navigation will happen in Chrome. Catches BadTokenExceptions caused by showing the dialog
+     * on certain devices. (crbug.com/782602)
      * @param intent The intent for external application that will be sent.
      * @param referrerUrl The referrer for the current navigation.
      * @param fallbackUrl The URL to load if the user doesn't proceed with external intent.
@@ -83,8 +84,9 @@ interface ExternalNavigationDelegate {
      * @param needsToCloseTab Whether the current tab has to be closed after the intent is sent.
      * @param proxy Whether we need to proxy the intent through AuthenticatedProxyActivity (this is
      *              used by Instant Apps intents.
+     * @return True if the function returned error free, false if it threw an exception.
      */
-    void startIncognitoIntent(Intent intent, String referrerUrl, String fallbackUrl, Tab tab,
+    boolean startIncognitoIntent(Intent intent, String referrerUrl, String fallbackUrl, Tab tab,
             boolean needsToCloseTab, boolean proxy);
 
     /**

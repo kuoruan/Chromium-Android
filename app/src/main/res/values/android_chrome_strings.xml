@@ -1008,10 +1008,12 @@ You must have Bluetooth and Location turned on in order to use the Physical Web.
 <string name="bottom_sheet_history_tab">"History tab selected"</string>
 <string name="bottom_sheet_home_tab">"Home tab selected"</string>
 <string name="bottom_sheet_app_menu_iph">"Where are downloads, bookmarks, and history?"</string>
-<string name="chrome_home_promo_dialog_title">"Introducing the new Chrome"</string>
 <string name="chrome_home_promo_dialog_message">"Swipe up for easy access to popular sites and articles, downloads, and more"</string>
 <string name="chrome_home_promo_dialog_message_accessibility">"Swipe up from the bottom of the screen or tap the expand button for easy access to popular sites and articles, downloads, and more"</string>
-<string name="chrome_home_promo_dialog_change_later">"Use the new Chrome"</string>
+<string name="chrome_home_promo_dialog_not_now">"Not now"</string>
+<string name="chrome_home_promo_dialog_title">"Introducing the new Chrome"</string>
+<string name="chrome_home_promo_dialog_try_it">"Try it"</string>
+<string name="chrome_home_promo_dialog_turn_off">"Turn off"</string>
 <string name="chrome_home_opt_out_menu_item">"You’re using the new Chrome"</string>
 <string name="chrome_home_opt_out_snackbar_text">"Tell us why you turned off the new Chrome"</string>
 <string name="chrome_home_opt_out_snackbar_action">"Take survey"</string>
