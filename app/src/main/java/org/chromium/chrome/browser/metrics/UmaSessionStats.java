@@ -9,7 +9,9 @@ import android.content.Context;
 import android.content.res.Configuration;
 
 import org.chromium.base.ContextUtils;
+import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.browser.DefaultBrowserInfo;
+import org.chromium.chrome.browser.instantapps.InstantAppsHandler;
 import org.chromium.chrome.browser.preferences.privacy.PrivacyPreferencesManager;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModel;
@@ -53,6 +55,10 @@ public class UmaSessionStats {
         nativeRecordPageLoaded(isDesktopUserAgent);
         if (mKeyboardConnected) {
             nativeRecordPageLoadedWithKeyboard();
+        }
+
+        if (InstantAppsHandler.getInstance().getInstantAppIntentForUrl(tab.getUrl()) != null) {
+            RecordUserAction.record("Android.InstantApps.InstantAppsEligiblePageLoaded");
         }
 
         // If the session has ended (i.e. chrome is in the background), escape early. Ideally we

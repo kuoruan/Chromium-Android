@@ -14,7 +14,6 @@ import android.widget.TextView;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ntp.TitleUtil;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -90,9 +89,9 @@ public class TileView extends FrameLayout {
      */
     public void renderIcon(Tile tile) {
         mIconView.setImageDrawable(tile.getIcon());
-        if (!FeatureUtilities.isChromeHomeEnabled()) return;
+        if (!SuggestionsConfig.useModernLayout()) return;
 
-        // Slightly enlarge the monogram.
+        // Slightly enlarge the monogram in the modern layout.
         MarginLayoutParams params = (MarginLayoutParams) mIconView.getLayoutParams();
         Resources resources = getResources();
         if (tile.getType() == TileVisualType.ICON_COLOR

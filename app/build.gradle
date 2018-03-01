@@ -73,10 +73,10 @@ dependencies {
     implementation "com.google.android.gms:play-services-nearby:$rootProject.ext.playServicesVersion"
     implementation "com.google.android.gms:play-services-vision:$rootProject.ext.playServicesVersion"
     implementation "com.google.android.gms:play-services-location:$rootProject.ext.playServicesVersion"
-    implementation 'com.android.support:multidex:1.0.2'
-    implementation 'com.google.code.findbugs:jsr305:2.0.1'
-    implementation 'com.google.vr:sdk-base:1.80.0'
-    implementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.2'
+    implementation 'com.android.support:multidex:1.0.3'
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+    implementation 'com.google.vr:sdk-base:1.130.0'
+    implementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.4'
     implementation project(':components:autofill')
     implementation project(':components:web_contents_delegate')
     implementation project(':content')

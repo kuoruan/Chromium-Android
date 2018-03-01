@@ -104,6 +104,22 @@ public final class PrefServiceBridge {
     }
 
     /**
+     * @param preference The name of the preference.
+     * @return Whether the specified preference is enabled.
+     */
+    public boolean getBoolean(@Pref int preference) {
+        return nativeGetBoolean(preference);
+    }
+
+    /**
+     * @param preference The name of the preference.
+     * @param value The value the specified preference will be set to.
+     */
+    public void setBoolean(@Pref int preference, boolean value) {
+        nativeSetBoolean(preference, value);
+    }
+
+    /**
      * Migrates (synchronously) the preferences to the most recent version.
      */
     public void migratePreferences(Context context) {
@@ -168,6 +184,11 @@ public final class PrefServiceBridge {
         ContentSettingException exception = new ContentSettingException(
                 contentSettingsType, pattern, ContentSetting.fromInt(contentSetting), source);
         list.add(exception);
+    }
+
+    @CalledByNative
+    private static void copyLanguageList(List<String> list, String[] source) {
+        list.addAll(Arrays.asList(source));
     }
 
     /**
@@ -335,6 +356,13 @@ public final class PrefServiceBridge {
      */
     public boolean isBackgroundSyncAllowed() {
         return nativeGetBackgroundSyncEnabled();
+    }
+
+    /**
+     * @return true if websites are allowed to play sound.
+     */
+    public boolean isSoundEnabled() {
+        return nativeGetSoundEnabled();
     }
 
     /**
@@ -654,21 +682,6 @@ public final class PrefServiceBridge {
         nativeSetLastClearBrowsingDataTab(tabIndex);
     }
 
-    /**
-     * Migrate browsing data preferences when the new "clear browsing data" dialog with tabs is
-     * visited.
-     */
-    public void migrateBrowsingDataPreferences() {
-        nativeMigrateBrowsingDataPreferences();
-    }
-
-    /**
-     * @return Whether browser history can be deleted by the user.
-     */
-    public boolean canDeleteBrowsingHistory() {
-        return nativeCanDeleteBrowsingHistory();
-    }
-
     public void setAllowCookiesEnabled(boolean allow) {
         nativeSetAllowCookiesEnabled(allow);
     }
@@ -707,6 +720,10 @@ public final class PrefServiceBridge {
 
     public void setPasswordEchoEnabled(boolean enabled) {
         nativeSetPasswordEchoEnabled(enabled);
+    }
+
+    public void setSoundEnabled(boolean allow) {
+        nativeSetSoundEnabled(allow);
     }
 
     /**
@@ -893,6 +910,15 @@ public final class PrefServiceBridge {
         nativeSetChromeHomePersonalizedOmniboxSuggestionsEnabled(enabled);
     }
 
+    /**
+     * Return the list of preferred languages strings.
+     */
+    public List<String> getChromeLanguageList() {
+        List<String> list = new ArrayList<>();
+        nativeGetChromeLanguageList(list);
+        return list;
+    }
+
     private native boolean nativeIsContentSettingEnabled(int contentSettingType);
     private native boolean nativeIsContentSettingManaged(int contentSettingType);
     private native void nativeSetContentSettingEnabled(int contentSettingType, boolean allow);
@@ -957,6 +983,8 @@ public final class PrefServiceBridge {
         nativeSetSupervisedUserId(supervisedUserId);
     }
 
+    private native boolean nativeGetBoolean(int preference);
+    private native void nativeSetBoolean(int preference, boolean value);
     private native boolean nativeGetAcceptCookiesEnabled();
     private native boolean nativeGetAcceptCookiesUserModifiable();
     private native boolean nativeGetAcceptCookiesManagedByCustodian();
@@ -991,6 +1019,7 @@ public final class PrefServiceBridge {
     private native boolean nativeGetIncognitoModeManaged();
     private native boolean nativeGetPrintingEnabled();
     private native boolean nativeGetPrintingManaged();
+    private native boolean nativeGetSoundEnabled();
     private native boolean nativeGetSupervisedUserSafeSitesEnabled();
     private native void nativeSetTranslateEnabled(boolean enabled);
     private native void nativeResetTranslateDefaults();
@@ -1004,8 +1033,6 @@ public final class PrefServiceBridge {
             int clearBrowsingDataTab, int timePeriod);
     private native int nativeGetLastClearBrowsingDataTab();
     private native void nativeSetLastClearBrowsingDataTab(int lastTab);
-    private native void nativeMigrateBrowsingDataPreferences();
-    private native boolean nativeCanDeleteBrowsingHistory();
     private native void nativeSetAutoplayEnabled(boolean allow);
     private native void nativeSetAllowCookiesEnabled(boolean allow);
     private native void nativeSetBackgroundSyncEnabled(boolean allow);
@@ -1021,6 +1048,7 @@ public final class PrefServiceBridge {
     private native void nativeSetNotificationsEnabled(boolean allow);
     private native void nativeSetNotificationsVibrateEnabled(boolean enabled);
     private native void nativeSetPasswordEchoEnabled(boolean enabled);
+    private native void nativeSetSoundEnabled(boolean allow);
     private native boolean nativeCanPrefetchAndPrerender();
     private native AboutVersionStrings nativeGetAboutVersionStrings();
     private native void nativeSetContextualSearchPreference(String preference);
@@ -1061,4 +1089,5 @@ public final class PrefServiceBridge {
     private native String nativeGetLatestVersionWhenClickedUpdateMenuItem();
     private native void nativeSetSupervisedUserId(String supervisedUserId);
     private native void nativeSetChromeHomePersonalizedOmniboxSuggestionsEnabled(boolean enabled);
+    private native void nativeGetChromeLanguageList(List<String> list);
 }

@@ -20,7 +20,6 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import org.chromium.base.ApiCompatibilityUtils;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.findinpage.FindInPageBridge;
 import org.chromium.chrome.browser.tab.Tab;
@@ -391,7 +390,6 @@ class FindResultBar extends View {
             rect.offset(LocalizationUtils.isLayoutRtl() ? -0.5f : 0.5f, 0);
             return rect;
         }
-        @SuppressFBWarnings("EQ_COMPARETO_USE_OBJECT_EQUAL")
         @Override
         public int compareTo(Tickmark other) {
             return Float.compare(centerY(), other.centerY());

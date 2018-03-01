@@ -6,7 +6,6 @@ package org.chromium.chrome.browser.bookmarks;
 
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.browser.init.AsyncInitializationActivity;
-import org.chromium.chrome.browser.partnerbookmarks.PartnerBookmarksShim;
 import org.chromium.components.bookmarks.BookmarkId;
 
 /**
@@ -37,13 +36,10 @@ public class BookmarkAddActivity extends AsyncInitializationActivity {
         final String title = getIntent().getStringExtra(EXTRA_TITLE);
         final String url = getIntent().getStringExtra(EXTRA_URL);
 
-        // Partner bookmarks need to be loaded explicitly.
-        PartnerBookmarksShim.kickOffReading(this);
-
         // Store mModel as a member variable so it can't be garbage collected. Otherwise the
         // Runnable might never be run.
         mModel = new BookmarkModel();
-        mModel.runAfterBookmarkModelLoaded(new Runnable() {
+        mModel.finishLoadingBookmarkModel(new Runnable() {
             @Override
             public void run() {
                 BookmarkId bookmarkId = BookmarkUtils.addBookmarkSilently(

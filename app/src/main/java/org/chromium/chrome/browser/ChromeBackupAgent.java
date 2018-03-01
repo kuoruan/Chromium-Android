@@ -18,7 +18,6 @@ import org.chromium.base.Log;
 import org.chromium.base.PathUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.library_loader.ProcessInitException;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.firstrun.FirstRunSignInProcessor;
@@ -102,13 +101,10 @@ public class ChromeBackupAgent extends BackupAgent {
      * backup data is small, and stored as private data by the backup service, this can simply store
      * and compare a copy of the data.
      */
-    @SuppressFBWarnings(value = {"HE_EQUALS_USE_HASHCODE"},
-            justification = "Only local use, hashcode never used")
     private static final class BackupState {
         private ArrayList<String> mNames;
         private ArrayList<byte[]> mValues;
 
-        @SuppressFBWarnings(value = {"OS_OPEN_STREAM"}, justification = "Closed by backup system")
         @SuppressWarnings("unchecked")
         public BackupState(ParcelFileDescriptor parceledState) throws IOException {
             if (parceledState == null) return;
@@ -135,7 +131,6 @@ public class ChromeBackupAgent extends BackupAgent {
                     && Arrays.deepEquals(mValues.toArray(), otherBackupState.mValues.toArray());
         }
 
-        @SuppressFBWarnings(value = {"OS_OPEN_STREAM"}, justification = "Closed by backup system")
         public void save(ParcelFileDescriptor parceledState) throws IOException {
             FileOutputStream outstream = new FileOutputStream(parceledState.getFileDescriptor());
             ObjectOutputStream out = new ObjectOutputStream(outstream);

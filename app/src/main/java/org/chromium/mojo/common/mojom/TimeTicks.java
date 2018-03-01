@@ -11,15 +11,15 @@
 
 package org.chromium.mojo.common.mojom;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
 public final class TimeTicks extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 8;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
+    private static final int STRUCT_SIZE = 16;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+    public long internalValue;
 
     private TimeTicks(int version) {
         super(STRUCT_SIZE, version);
@@ -56,6 +56,10 @@ public final class TimeTicks extends org.chromium.mojo.bindings.Struct {
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
             result = new TimeTicks(mainDataHeader.elementsOrVersion);
+            if (mainDataHeader.elementsOrVersion >= 0) {
+                
+                result.internalValue = decoder0.readLong(8);
+            }
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -65,7 +69,9 @@ public final class TimeTicks extends org.chromium.mojo.bindings.Struct {
     @SuppressWarnings("unchecked")
     @Override
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
-        encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+        org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+        
+        encoder0.encode(this.internalValue, 8);
     }
 
     /**
@@ -79,6 +85,9 @@ public final class TimeTicks extends org.chromium.mojo.bindings.Struct {
             return false;
         if (getClass() != object.getClass())
             return false;
+        TimeTicks other = (TimeTicks) object;
+        if (this.internalValue!= other.internalValue)
+            return false;
         return true;
     }
 
@@ -89,6 +98,7 @@ public final class TimeTicks extends org.chromium.mojo.bindings.Struct {
     public int hashCode() {
         final int prime = 31;
         int result = prime + getClass().hashCode();
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.internalValue);
         return result;
     }
 }

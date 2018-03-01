@@ -13,7 +13,6 @@ import android.text.TextUtils;
 import android.util.SparseArray;
 
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.SuppressFBWarnings;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -126,7 +125,6 @@ class RequestThrottler {
     }
 
     /** @return the {@link Throttler} for a given UID. */
-    @SuppressFBWarnings("LI_LAZY_INIT_STATIC")
     public static RequestThrottler getForUid(Context context, int uid) {
         if (sUidToThrottler == null) {
             sUidToThrottler = new SparseArray<>();

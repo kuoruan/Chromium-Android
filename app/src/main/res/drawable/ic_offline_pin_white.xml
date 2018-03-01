@@ -13,7 +13,7 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
     <path
-        android:fillColor="@color/suggestions_offline_badge_tint"
+        android:fillColor="@color/black_alpha_54"
         android:pathData="M4 6H20v12H4z" />
     <path
         android:fillColor="@android:color/white"

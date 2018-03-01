@@ -10,8 +10,8 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.library_loader.LibraryProcessType;
@@ -123,7 +123,7 @@ public class PrefetchedPagesNotifier {
                         .setGroup(NOTIFICATION_TAG)
                         .setPriority(Notification.PRIORITY_LOW)
                         .setSmallIcon(R.drawable.ic_chrome);
-        if (!BuildInfo.isAtLeastO()) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             PendingIntent settingsIntent = getPendingBroadcastFor(context, SettingsReceiver.class);
             builder.addAction(R.drawable.settings_cog, context.getString(R.string.preferences),
                     settingsIntent);

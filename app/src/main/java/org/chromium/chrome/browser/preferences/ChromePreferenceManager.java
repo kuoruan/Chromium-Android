@@ -8,14 +8,12 @@ import android.content.SharedPreferences;
 import android.os.StrictMode;
 
 import org.chromium.base.ContextUtils;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.browser.ChromeSwitches;
-import org.chromium.chrome.browser.ChromeVersionInfo;
 import org.chromium.chrome.browser.crash.MinidumpUploadService.ProcessType;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 
 import java.util.Locale;
-
+import java.util.Set;
 
 /**
  * ChromePreferenceManager stores and retrieves various values in Android shared preferences.
@@ -24,8 +22,10 @@ public class ChromePreferenceManager {
     private static final String TAG = "preferences";
 
     private static final String PROMOS_SKIPPED_ON_FIRST_START = "promos_skipped_on_first_start";
-    private static final String SIGNIN_PROMO_LAST_SHOWN = "signin_promo_last_shown_chrome_version";
-    private static final String SHOW_SIGNIN_PROMO = "show_signin_promo";
+    private static final String SIGNIN_PROMO_LAST_SHOWN_MAJOR_VERSION =
+            "signin_promo_last_shown_chrome_version";
+    private static final String SIGNIN_PROMO_LAST_SHOWN_ACCOUNT_NAMES =
+            "signin_promo_last_shown_account_names";
     private static final String ALLOW_LOW_END_DEVICE_UI = "allow_low_end_device_ui";
     private static final String PREF_WEBSITE_SETTINGS_FILTER = "website_settings_filter";
     private static final String CARDS_IMPRESSION_AFTER_ANIMATION =
@@ -35,8 +35,6 @@ public class ChromePreferenceManager {
     private static final String CONTEXTUAL_SEARCH_TAP_TRIGGERED_PROMO_COUNT =
             "contextual_search_tap_triggered_promo_count";
     private static final String CONTEXTUAL_SEARCH_TAP_COUNT = "contextual_search_tap_count";
-    private static final String CONTEXTUAL_SEARCH_PEEK_PROMO_SHOW_COUNT =
-            "contextual_search_peek_promo_show_count";
     private static final String CONTEXTUAL_SEARCH_LAST_ANIMATION_TIME =
             "contextual_search_last_animation_time";
     private static final String CONTEXTUAL_SEARCH_TAP_QUICK_ANSWER_COUNT =
@@ -70,7 +68,9 @@ public class ChromePreferenceManager {
 
     public static final String CHROME_HOME_SHARED_PREFERENCES_KEY = "chrome_home_enabled_date";
 
-    private static ChromePreferenceManager sPrefs;
+    private static class LazyHolder {
+        static final ChromePreferenceManager INSTANCE = new ChromePreferenceManager();
+    }
 
     private final SharedPreferences mSharedPreferences;
 
@@ -82,12 +82,8 @@ public class ChromePreferenceManager {
      * Get the static instance of ChromePreferenceManager if exists else create it.
      * @return the ChromePreferenceManager singleton
      */
-    @SuppressFBWarnings("CHROMIUM_SYNCHRONIZED_METHOD")
-    public static synchronized ChromePreferenceManager getInstance() {
-        if (sPrefs == null) {
-            sPrefs = new ChromePreferenceManager();
-        }
-        return sPrefs;
+    public static ChromePreferenceManager getInstance() {
+        return LazyHolder.INSTANCE;
     }
 
     /**
@@ -185,45 +181,35 @@ public class ChromePreferenceManager {
     }
 
     /**
-     * Signin promo could be shown at most once every at least 2 Chrome major versions. This method
-     * checks wheter the signin promo has already been shown in the current range.
-     * @return Whether the signin promo has been shown in the current range.
+     * Returns Chrome major version number when signin promo was last shown, or 0 if version number
+     * isn't known.
      */
-    public boolean getSigninPromoShown() {
-        int lastMajorVersion = mSharedPreferences.getInt(SIGNIN_PROMO_LAST_SHOWN, 0);
-        if (lastMajorVersion == 0) {
-            setSigninPromoShown();
-            return true;
-        }
-
-        return ChromeVersionInfo.getProductMajorVersion() < lastMajorVersion + 2;
+    public int getSigninPromoLastShownVersion() {
+        return mSharedPreferences.getInt(SIGNIN_PROMO_LAST_SHOWN_MAJOR_VERSION, 0);
     }
 
     /**
-     * Sets the preference for tracking Chrome major version number when the signin promo was last
-     * shown.
+     * Sets Chrome major version number when signin promo was last shown.
      */
-    public void setSigninPromoShown() {
-        SharedPreferences.Editor sharedPreferencesEditor = mSharedPreferences.edit();
-        sharedPreferencesEditor.putInt(
-                SIGNIN_PROMO_LAST_SHOWN, ChromeVersionInfo.getProductMajorVersion());
-        sharedPreferencesEditor.apply();
+    public void setSigninPromoLastShownVersion(int majorVersion) {
+        SharedPreferences.Editor editor = mSharedPreferences.edit();
+        editor.putInt(SIGNIN_PROMO_LAST_SHOWN_MAJOR_VERSION, majorVersion).apply();
     }
 
     /**
-     * @return Whether the signin promo has been marked to be shown on next startup.
+     * Returns a set of account names on the device when signin promo was last shown,
+     * or null if promo hasn't been shown yet.
      */
-    public boolean getShowSigninPromo() {
-        return mSharedPreferences.getBoolean(SHOW_SIGNIN_PROMO, false);
+    public Set<String> getSigninPromoLastAccountNames() {
+        return mSharedPreferences.getStringSet(SIGNIN_PROMO_LAST_SHOWN_ACCOUNT_NAMES, null);
     }
 
     /**
-     * Sets the preference to indicate that the signin promo should be shown on next startup.
-     * @param shouldShow Whether the signin promo should be shown.
+     * Stores a set of account names on the device when signin promo is shown.
      */
-    public void setShowSigninPromo(boolean shouldShow) {
-        SharedPreferences.Editor sharedPreferencesEditor = mSharedPreferences.edit();
-        sharedPreferencesEditor.putBoolean(SHOW_SIGNIN_PROMO, shouldShow).apply();
+    public void setSigninPromoLastAccountNames(Set<String> accountNames) {
+        SharedPreferences.Editor editor = mSharedPreferences.edit();
+        editor.putStringSet(SIGNIN_PROMO_LAST_SHOWN_ACCOUNT_NAMES, accountNames).apply();
     }
 
     /**
@@ -239,21 +225,6 @@ public class ChromePreferenceManager {
      */
     public void setContextualSearchPromoOpenCount(int count) {
         writeInt(CONTEXTUAL_SEARCH_PROMO_OPEN_COUNT, count);
-    }
-
-    /**
-     * @return Number of times the Peek Promo was shown.
-     */
-    public int getContextualSearchPeekPromoShowCount() {
-        return mSharedPreferences.getInt(CONTEXTUAL_SEARCH_PEEK_PROMO_SHOW_COUNT, 0);
-    }
-
-    /**
-     * Sets the number of times the Peek Promo was shown.
-     * @param count Number of times the Peek Promo was shown.
-     */
-    public void setContextualSearchPeekPromoShowCount(int count) {
-        writeInt(CONTEXTUAL_SEARCH_PEEK_PROMO_SHOW_COUNT, count);
     }
 
     /**

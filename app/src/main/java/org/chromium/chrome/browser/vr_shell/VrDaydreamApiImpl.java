@@ -14,10 +14,10 @@ import android.os.StrictMode;
 import com.google.vr.ndk.base.DaydreamApi;
 import com.google.vr.ndk.base.GvrApi;
 
-import junit.framework.Assert;
-
+import org.chromium.base.Log;
 import org.chromium.ui.base.WindowAndroid;
 
+import java.lang.reflect.Method;
 
 /**
  * A wrapper for DaydreamApi. Note that we have to recreate the DaydreamApi instance each time we
@@ -25,6 +25,10 @@ import org.chromium.ui.base.WindowAndroid;
  */
 public class VrDaydreamApiImpl implements VrDaydreamApi {
     private final Context mContext;
+
+    private Boolean mBootsToVr = null;
+
+    public static final String VR_BOOT_SYSTEM_PROPERTY = "ro.boot.vr";
 
     public VrDaydreamApiImpl(Context context) {
         mContext = context;
@@ -79,7 +83,9 @@ public class VrDaydreamApiImpl implements VrDaydreamApi {
     @Override
     public boolean exitFromVr(int requestCode, final Intent intent) {
         Activity activity = WindowAndroid.activityFromContext(mContext);
-        Assert.assertNotNull(activity);
+        if (activity == null) {
+            throw new IllegalStateException("Activity is null");
+        }
         DaydreamApi daydreamApi = DaydreamApi.create(activity);
         if (daydreamApi == null) return false;
         daydreamApi.exitFromVr(activity, requestCode, intent);
@@ -105,10 +111,35 @@ public class VrDaydreamApiImpl implements VrDaydreamApi {
     }
 
     @Override
-    public void launchVrHomescreen() {
+    public boolean launchVrHomescreen() {
         DaydreamApi daydreamApi = DaydreamApi.create(mContext);
-        if (daydreamApi == null) return;
+        if (daydreamApi == null) return false;
         daydreamApi.launchVrHomescreen();
         daydreamApi.close();
+        return true;
+    }
+
+    @Override
+    public boolean bootsToVr() {
+        if (mBootsToVr == null) {
+            // TODO(mthiesse): Replace this with a Daydream API call when supported.
+            // Note that System.GetProperty is unable to read system ro properties, so we have to
+            // resort to reflection as seen below. This method of reading system properties has been
+            // available since API level 1.
+            mBootsToVr = getIntSystemProperty(VR_BOOT_SYSTEM_PROPERTY, 0) == 1;
+        }
+        return mBootsToVr;
+    }
+
+    private int getIntSystemProperty(String key, int defaultValue) {
+        try {
+            final Class<?> systemProperties = Class.forName("android.os.SystemProperties");
+            final Method getInt = systemProperties.getMethod("getInt", String.class, int.class);
+            return (Integer) getInt.invoke(null, key, defaultValue);
+        } catch (Exception e) {
+            Log.e("Exception while getting system property %s. Using default %s.", key,
+                    defaultValue, e);
+            return defaultValue;
+        }
     }
 }

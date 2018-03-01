@@ -6,14 +6,13 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/SuggestionCardModern"
     android:id="@+id/status_card_view"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="end"
     android:orientation="vertical"
-    style="@style/SuggestionCardModern"
-
-    android:padding="@dimen/snippets_padding">
+    android:padding="@dimen/snippets_padding" >
 
     <org.chromium.ui.widget.TextViewWithLeading
         style="@style/SuggestionCardTitleModern"
@@ -34,7 +33,10 @@
         android:id="@+id/status_action_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="-6dp"
+        android:layout_marginEnd="-8dp"
+        android:layout_marginStart="-8dp"
         tools:text="Action" />
 
 </LinearLayout>

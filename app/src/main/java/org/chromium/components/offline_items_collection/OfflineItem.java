@@ -4,8 +4,6 @@
 
 package org.chromium.components.offline_items_collection;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
-
 /**
  * This class is the Java counterpart to the C++ OfflineItem
  * (components/offline_items_collection/core/offline_item.h) class.
@@ -13,7 +11,6 @@ import org.chromium.base.annotations.SuppressFBWarnings;
  * For all member variable descriptions see the C++ class.
  * TODO(dtrainor): Investigate making all class members for this and the C++ counterpart const.
  */
-@SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
 public class OfflineItem {
     /**
      * This class is the Java counterpart to the C++ OfflineItemProgress

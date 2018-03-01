@@ -64,9 +64,15 @@ public abstract class ContentSwitches {
     // Native switch kGPUProcess
     public static final String SWITCH_GPU_PROCESS = "gpu-process";
 
+    // Native switch kEnableUseZoomForDSF
+    public static final String ENABLE_USE_ZOOM_FOR_DSF = "enable-use-zoom-for-dsf";
+
     // Use fake device for Media Stream to replace actual camera and microphone.
     public static final String USE_FAKE_DEVICE_FOR_MEDIA_STREAM =
             "use-fake-device-for-media-stream";
+
+    // Native switch kHostResolverRules
+    public static final String HOST_RESOLVER_RULES = "host-resolver-rules";
 
     // Prevent instantiation.
     private ContentSwitches() {}

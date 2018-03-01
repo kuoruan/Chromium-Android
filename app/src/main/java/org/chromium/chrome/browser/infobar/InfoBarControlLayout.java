@@ -275,6 +275,21 @@ public final class InfoBarControlLayout extends ViewGroup {
         }
     }
 
+    @Override
+    protected LayoutParams generateDefaultLayoutParams() {
+        return new ControlLayoutParams();
+    }
+
+    @Override
+    public LayoutParams generateLayoutParams(AttributeSet attrs) {
+        return generateDefaultLayoutParams();
+    }
+
+    @Override
+    protected LayoutParams generateLayoutParams(LayoutParams p) {
+        return generateDefaultLayoutParams();
+    }
+
     /**
      * Adds an icon with a descriptive message to the layout.
      *

@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.partnercustomizations;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 
@@ -37,18 +36,17 @@ public class HomepageManager {
     private final SharedPreferences mSharedPreferences;
     private final ObserverList<HomepageStateListener> mHomepageStateListeners;
 
-    private HomepageManager(Context context) {
+    private HomepageManager() {
         mSharedPreferences = ContextUtils.getAppSharedPreferences();
-        mHomepageStateListeners = new ObserverList<HomepageManager.HomepageStateListener>();
+        mHomepageStateListeners = new ObserverList<>();
     }
 
     /**
      * Returns the singleton instance of HomepageManager, creating it if needed.
-     * @param context Any old Context.
      */
-    public static HomepageManager getInstance(Context context) {
+    public static HomepageManager getInstance() {
         if (sInstance == null) {
-            sInstance = new HomepageManager(context);
+            sInstance = new HomepageManager();
         }
         return sInstance;
     }
@@ -80,9 +78,9 @@ public class HomepageManager {
     /**
      * @return Whether or not homepage is enabled.
      */
-    public static boolean isHomepageEnabled(Context context) {
+    public static boolean isHomepageEnabled() {
         return PartnerBrowserCustomizations.isHomepageProviderAvailableAndEnabled()
-                && getInstance(context).getPrefHomepageEnabled();
+                && getInstance().getPrefHomepageEnabled();
     }
 
     /**
@@ -95,10 +93,10 @@ public class HomepageManager {
     /**
      * @return Homepage URI string, if it's enabled. Null otherwise or uninitialized.
      */
-    public static String getHomepageUri(Context context) {
-        if (!isHomepageEnabled(context)) return null;
+    public static String getHomepageUri() {
+        if (!isHomepageEnabled()) return null;
 
-        HomepageManager manager = getInstance(context);
+        HomepageManager manager = getInstance();
         String homepageUri = manager.getPrefHomepageUseDefaultUri()
                 ? PartnerBrowserCustomizations.getHomePageUrl()
                 : manager.getPrefHomepageCustomUri();

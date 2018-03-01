@@ -18,7 +18,6 @@ import org.chromium.base.Log;
 import org.chromium.base.ObserverList;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.metrics.CachedMetrics;
 import org.chromium.net.NetworkChangeNotifier;
 
@@ -106,7 +105,6 @@ public class AccountManagerFacade {
      * @param delegate the AccountManagerDelegate to use
      */
     @MainThread
-    @SuppressFBWarnings("LI_LAZY_INIT_UPDATE_STATIC")
     public static void initializeAccountManagerFacade(AccountManagerDelegate delegate) {
         ThreadUtils.assertOnUiThread();
         if (sInstance != null) {

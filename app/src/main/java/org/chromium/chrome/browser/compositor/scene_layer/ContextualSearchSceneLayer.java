@@ -7,10 +7,10 @@ package org.chromium.chrome.browser.compositor.scene_layer;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.compositor.bottombar.contextualsearch.ContextualSearchBarBannerControl;
 import org.chromium.chrome.browser.compositor.bottombar.contextualsearch.ContextualSearchBarControl;
 import org.chromium.chrome.browser.compositor.bottombar.contextualsearch.ContextualSearchImageControl;
 import org.chromium.chrome.browser.compositor.bottombar.contextualsearch.ContextualSearchPanel;
-import org.chromium.chrome.browser.compositor.bottombar.contextualsearch.ContextualSearchPeekPromoControl;
 import org.chromium.chrome.browser.compositor.bottombar.contextualsearch.ContextualSearchPromoControl;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.content_public.browser.WebContents;
@@ -41,15 +41,13 @@ public class ContextualSearchSceneLayer extends SceneOverlayLayer {
      * @param resourceManager Manager to get view and image resources.
      * @param panel The OverlayPanel to render.
      * @param searchBarControl The Search Bar control.
-     * @param peekPromoControl The peeking promotion for Contextual Search.
+     * @param barBannerControl The promotion for Contextual Search.
      * @param imageControl The object controlling the image displayed in the Bar.
      */
-    public void update(ResourceManager resourceManager,
-            ContextualSearchPanel panel,
+    public void update(ResourceManager resourceManager, ContextualSearchPanel panel,
             ContextualSearchBarControl searchBarControl,
-            ContextualSearchPeekPromoControl peekPromoControl,
-            ContextualSearchPromoControl promoControl,
-            ContextualSearchImageControl imageControl) {
+            ContextualSearchBarBannerControl barBannerControl,
+            ContextualSearchPromoControl promoControl, ContextualSearchImageControl imageControl) {
         // Don't try to update the layer if not initialized or showing.
         if (resourceManager == null || !panel.isShowing()) return;
 
@@ -68,13 +66,13 @@ public class ContextualSearchSceneLayer extends SceneOverlayLayer {
         float searchPromoHeightPx = promoControl.getHeightPx();
         float searchPromoOpacity = promoControl.getOpacity();
 
-        int searchPeekPromoTextViewId = peekPromoControl.getViewId();
-        boolean searchPeekPromoVisible = peekPromoControl.isVisible();
-        float searchPeekPromoHeightPx = peekPromoControl.getHeightPx();
-        float searchPeekPromoPaddingPx =  peekPromoControl.getPaddingPx();
-        float searchPeekPromoRippleWidthPx = peekPromoControl.getRippleWidthPx();
-        float searchPeekPromoRippleOpacity = peekPromoControl.getRippleOpacity();
-        float searchPeekPromoTextOpacity = peekPromoControl.getTextOpacity();
+        int searchBarBannerTextViewId = barBannerControl.getViewId();
+        boolean searchBarBannerVisible = barBannerControl.isVisible();
+        float searchBarBannerHeightPx = barBannerControl.getHeightPx();
+        float searchBarBannerPaddingPx = barBannerControl.getPaddingPx();
+        float searchBarBannerRippleWidthPx = barBannerControl.getRippleWidthPx();
+        float searchBarBannerRippleOpacity = barBannerControl.getRippleOpacity();
+        float searchBarBannerTextOpacity = barBannerControl.getTextOpacity();
 
         float customImageVisibilityPercentage = imageControl.getCustomImageVisibilityPercentage();
         int barImageSize = imageControl.getBarImageSize();
@@ -136,11 +134,11 @@ public class ContextualSearchSceneLayer extends SceneOverlayLayer {
                 R.drawable.breadcrumb_arrow, ContextualSearchPanel.CLOSE_ICON_DRAWABLE_ID,
                 R.drawable.progress_bar_background, R.drawable.progress_bar_foreground,
                 searchPromoViewId, R.drawable.contextual_search_promo_ripple,
-                searchPeekPromoTextViewId, mDpToPx, panel.getBasePageBrightness(),
+                searchBarBannerTextViewId, mDpToPx, panel.getBasePageBrightness(),
                 panel.getBasePageY() * mDpToPx, panelWebContents, searchPromoVisible,
-                searchPromoHeightPx, searchPromoOpacity, searchPeekPromoVisible,
-                searchPeekPromoHeightPx, searchPeekPromoPaddingPx, searchPeekPromoRippleWidthPx,
-                searchPeekPromoRippleOpacity, searchPeekPromoTextOpacity, searchPanelX * mDpToPx,
+                searchPromoHeightPx, searchPromoOpacity, searchBarBannerVisible,
+                searchBarBannerHeightPx, searchBarBannerPaddingPx, searchBarBannerRippleWidthPx,
+                searchBarBannerRippleOpacity, searchBarBannerTextOpacity, searchPanelX * mDpToPx,
                 searchPanelY * mDpToPx, searchPanelWidth * mDpToPx, searchPanelHeight * mDpToPx,
                 searchBarMarginSide * mDpToPx, searchBarHeight * mDpToPx, searchContextOpacity,
                 searchBarControl.getTextLayerMinHeight(), searchTermOpacity,
@@ -205,12 +203,12 @@ public class ContextualSearchSceneLayer extends SceneOverlayLayer {
             int searchTermResourceId, int searchCaptionResourceId, int searchBarShadowResourceId,
             int searchProviderIconResourceId, int quickActionIconResourceId, int arrowUpResourceId,
             int closeIconResourceId, int progressBarBackgroundResourceId, int progressBarResourceId,
-            int searchPromoResourceId, int peekPromoRippleResourceId, int peekPromoTextResourceId,
+            int searchPromoResourceId, int barBannerRippleResourceId, int barBannerTextResourceId,
             float dpToPx, float basePageBrightness, float basePageYOffset, WebContents webContents,
             boolean searchPromoVisible, float searchPromoHeight, float searchPromoOpacity,
-            boolean searchPeekPromoVisible, float searchPeekPromoHeight,
-            float searchPeekPromoPaddingPx, float searchPeekPromoRippleWidth,
-            float searchPeekPromoRippleOpacity, float searchPeekPromoTextOpacity,
+            boolean searchBarBannerVisible, float searchBarBannerHeight,
+            float searchBarBannerPaddingPx, float searchBarBannerRippleWidth,
+            float searchBarBannerRippleOpacity, float searchBarBannerTextOpacity,
             float searchPanelX, float searchPanelY, float searchPanelWidth, float searchPanelHeight,
             float searchBarMarginSide, float searchBarHeight, float searchContextOpacity,
             float searchTextLayerMinHeight, float searchTermOpacity, float searchTermCaptionSpacing,

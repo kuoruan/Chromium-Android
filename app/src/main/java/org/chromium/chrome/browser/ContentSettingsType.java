@@ -47,13 +47,14 @@ import java.lang.annotation.RetentionPolicy;
     ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS_DATA,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_MIDI,
-    ContentSettingsType.CONTENT_SETTINGS_TYPE_PUSH_MESSAGING,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_PASSWORD_PROTECTION,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIA_ENGAGEMENT,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_CLIENT_HINTS,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_SENSORS,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_ACCESSIBILITY_EVENTS,
+    ContentSettingsType.CONTENT_SETTINGS_TYPE_CLIPBOARD_READ,
+    ContentSettingsType.CONTENT_SETTINGS_TYPE_CLIPBOARD_WRITE,
     ContentSettingsType.CONTENT_SETTINGS_NUM_TYPES
 })
 @Retention(RetentionPolicy.SOURCE)
@@ -105,24 +106,18 @@ public @interface ContentSettingsType {
    */
   int CONTENT_SETTINGS_TYPE_MIDI = 29;
   /**
-   * This is only here temporarily and will be removed when we further unify it with notifications,
-   * see crbug.com/563297. No prefs data is stored for this content type, we instead share values
-   * with NOTIFICATIONS.
-   */
-  int CONTENT_SETTINGS_TYPE_PUSH_MESSAGING = 30;
-  /**
    * This content setting type is for caching password protection service's verdicts of each origin.
    */
-  int CONTENT_SETTINGS_TYPE_PASSWORD_PROTECTION = 31;
+  int CONTENT_SETTINGS_TYPE_PASSWORD_PROTECTION = 30;
   /**
    * Website setting which stores engagement data for media related to a specific origin.
    */
-  int CONTENT_SETTINGS_TYPE_MEDIA_ENGAGEMENT = 32;
+  int CONTENT_SETTINGS_TYPE_MEDIA_ENGAGEMENT = 31;
   /**
    * Content setting which stores whether or not the site can play audible sound. This will not
    * block playback but instead the user will not hear it.
    */
-  int CONTENT_SETTINGS_TYPE_SOUND = 33;
+  int CONTENT_SETTINGS_TYPE_SOUND = 32;
   /**
    * Website setting which stores the list of client hints (and the preference expiration time for
    * each of the client hints) that the origin requested the browser to remember. Spec:
@@ -131,20 +126,30 @@ public @interface ContentSettingsType {
    * expiration times (seconds since epoch). The browser is expected to send all the unexpired
    * client hints in the HTTP request headers for every resource requested from that origin.
    */
-  int CONTENT_SETTINGS_TYPE_CLIENT_HINTS = 34;
+  int CONTENT_SETTINGS_TYPE_CLIENT_HINTS = 33;
   /**
    * Generic Sensor API covering ambient-light-sensor, accelerometer, gyroscope and magnetometer are
    * all mapped to a single content_settings_type. Setting for the Generic Sensor API covering
    * ambient-light-sensor, accelerometer, gyroscope and magnetometer. These are all mapped to a
    * single ContentSettingsType.
    */
-  int CONTENT_SETTINGS_TYPE_SENSORS = 35;
+  int CONTENT_SETTINGS_TYPE_SENSORS = 34;
   /**
    * Content setting which stores whether or not the user has granted the site permission to respond
    * to accessibility events, which can be used to provide a custom accessibility experience.
    * Requires explicit user consent because some users may not want sites to know they're using
    * assistive technology.
    */
-  int CONTENT_SETTINGS_TYPE_ACCESSIBILITY_EVENTS = 36;
-  int CONTENT_SETTINGS_NUM_TYPES = 37;
+  int CONTENT_SETTINGS_TYPE_ACCESSIBILITY_EVENTS = 35;
+  /**
+   * Content setting which stores whether or not the user has granted the site full (read/write
+   * without a gesture) permission to access the system clipboard.
+   */
+  int CONTENT_SETTINGS_TYPE_CLIPBOARD_READ = 36;
+  /**
+   * This is special-cased in the permissions layer to always allow, and as such doesn't have
+   * associated prefs data.
+   */
+  int CONTENT_SETTINGS_TYPE_CLIPBOARD_WRITE = 37;
+  int CONTENT_SETTINGS_NUM_TYPES = 38;
 }

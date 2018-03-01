@@ -43,7 +43,6 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.StreamUtil;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.metrics.CachedMetrics;
 import org.chromium.chrome.R;
 import org.chromium.ui.UiUtils;
@@ -115,7 +114,6 @@ public class ShareHelper {
         }
     }
 
-    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     private static void deleteShareImageFiles(File file) {
         if (!file.exists()) return;
         if (file.isDirectory()) {
@@ -316,9 +314,9 @@ public class ShareHelper {
             return;
         }
 
-        new AsyncTask<Void, Void, File>() {
+        new AsyncTask<Void, Void, Uri>() {
             @Override
-            protected File doInBackground(Void... params) {
+            protected Uri doInBackground(Void... params) {
                 FileOutputStream fOut = null;
                 try {
                     File path = new File(UiUtils.getDirectoryForImageCapture(activity),
@@ -329,32 +327,26 @@ public class ShareHelper {
                         fOut = new FileOutputStream(saveFile);
                         fOut.write(jpegImageData);
                         fOut.flush();
-                        fOut.close();
 
-                        return saveFile;
+                        return ApiCompatibilityUtils.getUriForImageCaptureFile(saveFile);
                     } else {
                         Log.w(TAG, "Share failed -- Unable to create share image directory.");
                     }
                 } catch (IOException ie) {
-                    if (fOut != null) {
-                        try {
-                            fOut.close();
-                        } catch (IOException e) {
-                            // Ignore exception.
-                        }
-                    }
+                    // Ignore exception.
+                } finally {
+                    StreamUtil.closeQuietly(fOut);
                 }
 
                 return null;
             }
 
             @Override
-            protected void onPostExecute(File saveFile) {
-                if (saveFile == null) return;
+            protected void onPostExecute(Uri imageUri) {
+                if (imageUri == null) return;
 
                 if (ApplicationStatus.getStateForApplication()
                         != ApplicationState.HAS_DESTROYED_ACTIVITIES) {
-                    Uri imageUri = ApiCompatibilityUtils.getUriForImageCaptureFile(saveFile);
                     Intent shareIntent = getShareImageIntent(imageUri);
                     if (name == null) {
                         if (TargetChosenReceiver.isSupported()) {
@@ -390,9 +382,9 @@ public class ShareHelper {
             return;
         }
 
-        new AsyncTask<Void, Void, File>() {
+        new AsyncTask<Void, Void, Uri>() {
             @Override
-            protected File doInBackground(Void... params) {
+            protected Uri doInBackground(Void... params) {
                 FileOutputStream fOut = null;
                 try {
                     File path = new File(UiUtils.getDirectoryForImageCapture(context) + "/"
@@ -402,7 +394,7 @@ public class ShareHelper {
                         File saveFile = File.createTempFile(fileName, JPEG_EXTENSION, path);
                         fOut = new FileOutputStream(saveFile);
                         screenshot.compress(Bitmap.CompressFormat.JPEG, 85, fOut);
-                        return saveFile;
+                        return ApiCompatibilityUtils.getUriForImageCaptureFile(saveFile);
                     }
                 } catch (IOException ie) {
                     Log.w(TAG, "Ignoring IOException when saving screenshot.", ie);
@@ -414,13 +406,11 @@ public class ShareHelper {
             }
 
             @Override
-            protected void onPostExecute(File savedFile) {
-                Uri fileUri = null;
-                if (ApplicationStatus.getStateForApplication()
-                        != ApplicationState.HAS_DESTROYED_ACTIVITIES
-                        && savedFile != null) {
-                    fileUri = ApiCompatibilityUtils.getUriForImageCaptureFile(savedFile);
-                }
+            protected void onPostExecute(Uri fileUri) {
+                fileUri = ApplicationStatus.getStateForApplication()
+                                != ApplicationState.HAS_DESTROYED_ACTIVITIES
+                        ? fileUri
+                        : null;
                 callback.onResult(fileUri);
             }
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -612,11 +602,9 @@ public class ShareHelper {
 
     @VisibleForTesting
     public static Intent getShareLinkIntent(ShareParams params) {
-        String text = params.getText();
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.addFlags(ApiCompatibilityUtils.getActivityNewDocumentFlag());
         intent.putExtra(Intent.EXTRA_SUBJECT, params.getTitle());
-        intent.putExtra(Intent.EXTRA_TEXT, text);
         intent.putExtra(EXTRA_TASK_ID, params.getActivity().getTaskId());
 
         Uri screenshotUri = params.getScreenshotUri();
@@ -628,12 +616,18 @@ public class ShareHelper {
             intent.setClipData(ClipData.newRawUri("", screenshotUri));
             intent.putExtra(EXTRA_SHARE_SCREENSHOT_AS_STREAM, screenshotUri);
         }
-        if (params.getOfflineUri() == null) {
-            intent.setType("text/plain");
-        } else {
-            intent.setType("multipart/related");
+
+        if (params.getOfflineUri() != null) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intent.putExtra(Intent.EXTRA_STREAM, params.getOfflineUri());
+            intent.addCategory(Intent.CATEGORY_DEFAULT);
+            intent.setType("multipart/related");
+        } else {
+            intent.putExtra(Intent.EXTRA_TEXT, params.getText());
+            intent.setType("text/plain");
         }
+
         return intent;
     }
 

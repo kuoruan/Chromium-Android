@@ -12,10 +12,11 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.metrics.ImpressionTracker.Listener;
 import org.chromium.chrome.browser.ntp.ContextMenuManager;
+import org.chromium.chrome.browser.suggestions.SuggestionsConfig;
 import org.chromium.chrome.browser.suggestions.SuggestionsMetrics;
 import org.chromium.chrome.browser.suggestions.SuggestionsRecyclerView;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.displaystyle.UiConfig;
 
 /**
@@ -25,7 +26,6 @@ public class StatusCardViewHolder extends CardViewHolder {
     private final TextView mTitleView;
     private final TextView mBodyView;
     private final Button mActionView;
-
     public StatusCardViewHolder(SuggestionsRecyclerView parent,
             ContextMenuManager contextMenuManager, UiConfig config) {
         super(getLayout(), parent, config, contextMenuManager);
@@ -63,7 +63,7 @@ public class StatusCardViewHolder extends CardViewHolder {
         void performAction(Context context);
     }
 
-    public void onBindViewHolder(final DataSource item) {
+    public void onBindViewHolder(final DataSource item, Listener listener) {
         super.onBindViewHolder();
 
         mTitleView.setText(item.getHeader());
@@ -81,12 +81,13 @@ public class StatusCardViewHolder extends CardViewHolder {
         } else {
             mActionView.setVisibility(View.GONE);
         }
+
+        setImpressionListener(listener);
     }
 
     @LayoutRes
     private static int getLayout() {
-        return FeatureUtilities.isChromeHomeEnabled()
-                ? R.layout.content_suggestions_status_card_modern
-                : R.layout.new_tab_page_status_card;
+        return SuggestionsConfig.useModernLayout() ? R.layout.content_suggestions_status_card_modern
+                                                   : R.layout.new_tab_page_status_card;
     }
 }

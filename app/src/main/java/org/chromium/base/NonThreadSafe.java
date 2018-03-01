@@ -4,8 +4,6 @@
 
 package org.chromium.base;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
-
 /**
  * NonThreadSafe is a helper class used to help verify that methods of a
  * class are called from the same thread.
@@ -22,7 +20,6 @@ public class NonThreadSafe {
      * be useful when an object may be created on one thread and then used
      * exclusively on another thread.
      */
-    @SuppressFBWarnings("CHROMIUM_SYNCHRONIZED_METHOD")
     @VisibleForTesting
     public synchronized void detachFromThread() {
         mThreadId = null;
@@ -32,7 +29,7 @@ public class NonThreadSafe {
      * Checks if the method is called on the valid thread.
      * Assigns the current thread if no thread was assigned.
      */
-    @SuppressFBWarnings("CHROMIUM_SYNCHRONIZED_METHOD")
+    @SuppressWarnings("NoSynchronizedMethodCheck")
     public synchronized boolean calledOnValidThread() {
         ensureThreadIdAssigned();
         return mThreadId.equals(Thread.currentThread().getId());

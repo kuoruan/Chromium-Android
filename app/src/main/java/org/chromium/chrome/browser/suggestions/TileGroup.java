@@ -17,6 +17,7 @@ import android.view.View.OnCreateContextMenuListener;
 import org.chromium.base.Callback;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.ChromeFeatureList;
+import org.chromium.chrome.browser.favicon.IconType;
 import org.chromium.chrome.browser.favicon.LargeIconBridge;
 import org.chromium.chrome.browser.ntp.ContextMenuManager;
 import org.chromium.chrome.browser.ntp.ContextMenuManager.ContextMenuItemId;
@@ -473,10 +474,11 @@ public class TileGroup implements MostVisitedSites.Observer {
         }
 
         @Override
-        public void onLargeIconAvailable(
-                @Nullable Bitmap icon, int fallbackColor, boolean isFallbackColorDefault) {
+        public void onLargeIconAvailable(@Nullable Bitmap icon, int fallbackColor,
+                boolean isFallbackColorDefault, @IconType int iconType) {
             Tile tile = findTile(mSiteData);
             if (tile != null) { // Do nothing if the tile was removed.
+                tile.setIconType(iconType);
                 if (icon == null) {
                     mTileRenderer.setTileIconFromColor(tile, fallbackColor, isFallbackColorDefault);
                 } else {

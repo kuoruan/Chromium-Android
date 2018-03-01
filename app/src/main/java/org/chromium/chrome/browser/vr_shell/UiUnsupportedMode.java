@@ -16,18 +16,22 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
-    UiUnsupportedMode.UNHANDLED_CODE_POINT, UiUnsupportedMode.COULD_NOT_ELIDE_URL,
-    UiUnsupportedMode.UNHANDLED_PAGE_INFO, UiUnsupportedMode.URL_WITH_STRONG_RTL_CHARS,
-    UiUnsupportedMode.COUNT
+    UiUnsupportedMode.UNHANDLED_CODE_POINT, UiUnsupportedMode.UNHANDLED_PAGE_INFO,
+    UiUnsupportedMode.VOICE_SEARCH_NEEDS_RECORD_AUDIO_OS_PERMISSION, UiUnsupportedMode.COUNT
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface UiUnsupportedMode {
   int UNHANDLED_CODE_POINT = 0;
-  int COULD_NOT_ELIDE_URL = 1;
+  /**
+   * kCouldNotElideURL = 1,  // Obsolete.
+   */
   int UNHANDLED_PAGE_INFO = 2;
-  int URL_WITH_STRONG_RTL_CHARS = 3;
+  /**
+   * kURLWithStrongRTLChars = 3,  // Obsolete.
+   */
+  int VOICE_SEARCH_NEEDS_RECORD_AUDIO_OS_PERMISSION = 4;
   /**
    * This must be last.
    */
-  int COUNT = 4;
+  int COUNT = 5;
 }

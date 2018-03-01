@@ -9,7 +9,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
 import org.chromium.chrome.browser.notifications.channels.SiteChannelsManager;
@@ -23,7 +22,7 @@ public class NotificationSettingsBridge {
     // enum includes Android O.
     @CalledByNative
     static boolean shouldUseChannelSettings() {
-        return BuildInfo.isAtLeastO();
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
     }
 
     /**

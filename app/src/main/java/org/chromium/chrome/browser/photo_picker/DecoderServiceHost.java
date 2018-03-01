@@ -44,6 +44,7 @@ public class DecoderServiceHost extends IDecoderServiceCallback.Stub {
 
     IDecoderService mIRemoteService;
     private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
         public void onServiceConnected(ComponentName className, IBinder service) {
             mIRemoteService = IDecoderService.Stub.asInterface(service);
             mBound = true;
@@ -52,6 +53,7 @@ public class DecoderServiceHost extends IDecoderServiceCallback.Stub {
             }
         }
 
+        @Override
         public void onServiceDisconnected(ComponentName className) {
             Log.e(TAG, "Service has unexpectedly disconnected");
             mIRemoteService = null;

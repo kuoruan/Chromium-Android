@@ -10,7 +10,6 @@ import org.chromium.base.Callback;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.browser.AppHooks;
 import org.chromium.components.location.LocationSettingsDialogContext;
 import org.chromium.components.location.LocationSettingsDialogOutcome;
@@ -38,7 +37,6 @@ public class LocationSettings {
     /**
      * Returns the singleton instance of LocationSettings, creating it if needed.
      */
-    @SuppressFBWarnings("LI_LAZY_INIT_STATIC")
     public static LocationSettings getInstance() {
         ThreadUtils.assertOnUiThread();
         if (sInstance == null) {

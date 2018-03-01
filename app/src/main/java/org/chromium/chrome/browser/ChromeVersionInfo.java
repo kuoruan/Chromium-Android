@@ -12,7 +12,6 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.externalauth.ExternalAuthUtils;
-import org.chromium.chrome.browser.externalauth.UserRecoverableErrorHandler;
 
 import java.util.Locale;
 
@@ -93,10 +92,9 @@ public class ChromeVersionInfo {
         final long installedGmsVersion = getPlayServicesApkVersionNumber(context);
 
         final String accessType;
-        UserRecoverableErrorHandler handler = new UserRecoverableErrorHandler.Silent();
-        if (ExternalAuthUtils.getInstance().canUseFirstPartyGooglePlayServices(context, handler)) {
+        if (ExternalAuthUtils.canUseFirstPartyGooglePlayServices()) {
             accessType = "1p";
-        } else if (ExternalAuthUtils.getInstance().canUseGooglePlayServices(context, handler)) {
+        } else if (ExternalAuthUtils.canUseGooglePlayServices()) {
             accessType = "3p";
         } else {
             accessType = "none";

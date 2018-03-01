@@ -25,7 +25,6 @@ import android.widget.TextView.OnEditorActionListener;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.payments.ui.PaymentRequestUI.PaymentRequestObserverForTest;
 import org.chromium.chrome.browser.widget.CompatibilityTextInputLayout;
 import org.chromium.chrome.browser.widget.TintedDrawable;
 
@@ -43,11 +42,12 @@ public class EditorTextField extends FrameLayout implements EditorFieldView, Vie
     private ImageView mValueIcon;
     private int mValueIconId;
     private boolean mHasFocusedAtLeastOnce;
-    @Nullable private PaymentRequestObserverForTest mObserverForTest;
+    @Nullable
+    private EditorObserverForTest mObserverForTest;
 
     public EditorTextField(Context context, final EditorFieldModel fieldModel,
             OnEditorActionListener actionListener, @Nullable InputFilter filter,
-            @Nullable TextWatcher formatter, @Nullable PaymentRequestObserverForTest observer) {
+            @Nullable TextWatcher formatter, @Nullable EditorObserverForTest observer) {
         super(context);
         assert fieldModel.getInputTypeHint() != EditorFieldModel.INPUT_TYPE_HINT_DROPDOWN;
         mEditorFieldModel = fieldModel;
@@ -116,7 +116,7 @@ public class EditorTextField extends FrameLayout implements EditorFieldView, Vie
                 updateDisplayedError(false);
                 updateFieldValueIcon(false);
                 if (mObserverForTest != null) {
-                    mObserverForTest.onPaymentRequestEditorTextUpdate();
+                    mObserverForTest.onEditorTextUpdate();
                 }
                 if (!mEditorFieldModel.isLengthMaximum()) return;
                 updateDisplayedError(true);

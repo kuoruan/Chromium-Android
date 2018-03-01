@@ -105,9 +105,9 @@ public class UrlUtilities {
     }
 
     /**
-     * @param url a URL.
+     * @param url A URL.
      *
-     * @return whether the URL's scheme is HTTP or HTTPS.
+     * @return Whether the URL's scheme is HTTP or HTTPS.
      */
     public static boolean isHttpOrHttps(@NonNull String url) {
         // URI#getScheme would throw URISyntaxException if the other parts contain invalid

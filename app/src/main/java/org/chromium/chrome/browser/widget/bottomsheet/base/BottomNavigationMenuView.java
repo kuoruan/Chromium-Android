@@ -18,27 +18,20 @@ package org.chromium.chrome.browser.widget.bottomsheet.base;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
-import android.content.res.Resources;
 import android.support.annotation.Nullable;
-import android.support.design.R;
 import android.support.v4.util.Pools;
-import android.support.v4.view.ViewCompat;
 import android.support.v7.view.menu.MenuBuilder;
 import android.support.v7.view.menu.MenuItemImpl;
 import android.support.v7.view.menu.MenuView;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 /**
  * Forked from android.support.design.internal.BottomNavigationMenuView.
  */
+@SuppressWarnings("RestrictTo")
 public class BottomNavigationMenuView extends LinearLayout implements MenuView {
-    private final int mInactiveItemMaxWidth;
-    private final int mInactiveItemMinWidth;
-    private final int mActiveItemMaxWidth;
-    private final int mItemHeight;
     private final OnClickListener mOnClickListener;
     private static final Pools.Pool<BottomNavigationItemView> sItemPool =
             new Pools.SynchronizedPool<>(5);
@@ -59,14 +52,6 @@ public class BottomNavigationMenuView extends LinearLayout implements MenuView {
 
     public BottomNavigationMenuView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        final Resources res = getResources();
-        mInactiveItemMaxWidth =
-                res.getDimensionPixelSize(R.dimen.design_bottom_navigation_item_max_width);
-        mInactiveItemMinWidth =
-                res.getDimensionPixelSize(R.dimen.design_bottom_navigation_item_min_width);
-        mActiveItemMaxWidth =
-                res.getDimensionPixelSize(R.dimen.design_bottom_navigation_active_item_max_width);
-        mItemHeight = res.getDimensionPixelSize(R.dimen.design_bottom_navigation_height);
 
         mOnClickListener = new OnClickListener() {
             @Override
@@ -104,7 +89,7 @@ public class BottomNavigationMenuView extends LinearLayout implements MenuView {
         mItemIconTint = tint;
         if (mButtons == null) return;
         for (BottomNavigationItemView item : mButtons) {
-            item.setIconTintList(tint);
+            item.setIconTint(tint);
         }
     }
 
@@ -127,7 +112,7 @@ public class BottomNavigationMenuView extends LinearLayout implements MenuView {
         mItemTextColor = color;
         if (mButtons == null) return;
         for (BottomNavigationItemView item : mButtons) {
-            item.setTextColor(color);
+            item.setTextColors(color);
         }
     }
 
@@ -183,8 +168,8 @@ public class BottomNavigationMenuView extends LinearLayout implements MenuView {
             mPresenter.setUpdateSuspended(false);
             BottomNavigationItemView child = getNewItem();
             mButtons[i] = child;
-            child.setIconTintList(mItemIconTint);
-            child.setTextColor(mItemTextColor);
+            child.setIconTint(mItemIconTint);
+            child.setTextColors(mItemTextColor);
             child.setItemBackground(mItemBackgroundRes);
             child.initialize((MenuItemImpl) mMenu.getItem(i), 0);
             child.setItemPosition(i);
@@ -220,10 +205,14 @@ public class BottomNavigationMenuView extends LinearLayout implements MenuView {
         mActiveButton = newButton;
     }
 
+    protected BottomNavigationItemView getNewItemViewInstance() {
+        return new BottomNavigationItemView(getContext());
+    }
+
     private BottomNavigationItemView getNewItem() {
         BottomNavigationItemView item = sItemPool.acquire();
         if (item == null) {
-            item = new BottomNavigationItemView(getContext());
+            item = getNewItemViewInstance();
         }
         return item;
     }
@@ -236,7 +225,7 @@ public class BottomNavigationMenuView extends LinearLayout implements MenuView {
      * @param layoutHeight Height of the navigation menu's container.
      */
     public void updateMenuItemSpacingForMinWidth(int layoutWidth, int layoutHeight) {
-        if (mButtons.length == 0) return;
+        if (mButtons == null || mButtons.length == 0) return;
 
         int menuWidth = Math.min(layoutWidth, layoutHeight);
         if (menuWidth != mMenuWidth) {

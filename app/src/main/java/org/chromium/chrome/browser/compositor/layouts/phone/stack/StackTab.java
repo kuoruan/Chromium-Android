@@ -7,7 +7,6 @@ package org.chromium.chrome.browser.compositor.layouts.phone.stack;
 import android.content.Context;
 import android.content.res.Resources;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation;
 import org.chromium.chrome.browser.compositor.layouts.Layout.Orientation;
@@ -18,7 +17,6 @@ import org.chromium.chrome.browser.compositor.layouts.components.LayoutTab;
  * draw itself onto the GL canvas at the desired Y Offset.
  * @VisibleForTesting
  */
-@SuppressFBWarnings("MS_PKGPROTECT")
 public class StackTab implements ChromeAnimation.Animatable<StackTab.Property> {
     /**
      * Properties that can be animated by using a

@@ -11,7 +11,6 @@
 
 package org.chromium.mojo.common.mojom;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
@@ -46,129 +45,81 @@ public final class Value extends org.chromium.mojo.bindings.Union {
       return mTag_ == -1;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setNullValue(NullValue nullValue) {
         this.mTag_ = Tag.NullValue;
         this.mNullValue = nullValue;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public NullValue getNullValue() {
         assert this.mTag_ == Tag.NullValue;
         return this.mNullValue;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setBoolValue(boolean boolValue) {
         this.mTag_ = Tag.BoolValue;
         this.mBoolValue = boolValue;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public boolean getBoolValue() {
         assert this.mTag_ == Tag.BoolValue;
         return this.mBoolValue;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setIntValue(int intValue) {
         this.mTag_ = Tag.IntValue;
         this.mIntValue = intValue;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public int getIntValue() {
         assert this.mTag_ == Tag.IntValue;
         return this.mIntValue;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setDoubleValue(double doubleValue) {
         this.mTag_ = Tag.DoubleValue;
         this.mDoubleValue = doubleValue;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public double getDoubleValue() {
         assert this.mTag_ == Tag.DoubleValue;
         return this.mDoubleValue;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setStringValue(String stringValue) {
         this.mTag_ = Tag.StringValue;
         this.mStringValue = stringValue;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public String getStringValue() {
         assert this.mTag_ == Tag.StringValue;
         return this.mStringValue;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setBinaryValue(byte[] binaryValue) {
         this.mTag_ = Tag.BinaryValue;
         this.mBinaryValue = binaryValue;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public byte[] getBinaryValue() {
         assert this.mTag_ == Tag.BinaryValue;
         return this.mBinaryValue;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setDictionaryValue(DictionaryValue dictionaryValue) {
         this.mTag_ = Tag.DictionaryValue;
         this.mDictionaryValue = dictionaryValue;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public DictionaryValue getDictionaryValue() {
         assert this.mTag_ == Tag.DictionaryValue;
         return this.mDictionaryValue;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setListValue(ListValue listValue) {
         this.mTag_ = Tag.ListValue;
         this.mListValue = listValue;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public ListValue getListValue() {
         assert this.mTag_ == Tag.ListValue;
         return this.mListValue;

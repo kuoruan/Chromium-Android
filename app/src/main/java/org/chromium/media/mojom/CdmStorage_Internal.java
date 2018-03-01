@@ -11,7 +11,6 @@
 
 package org.chromium.media.mojom;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
@@ -252,8 +251,8 @@ OpenResponse callback) {
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int status;
-        public org.chromium.mojo.common.mojom.File file;
-        public org.chromium.mojo.bindings.AssociatedInterfaceNotSupported releaser;
+        public org.chromium.mojo.common.mojom.File fileForReading;
+        public org.chromium.mojo.bindings.AssociatedInterfaceNotSupported cdmFile;
     
         private CdmStorageOpenResponseParams(int version) {
             super(STRUCT_SIZE, version);
@@ -298,11 +297,11 @@ OpenResponse callback) {
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, true);
-                    result.file = org.chromium.mojo.common.mojom.File.decode(decoder1);
+                    result.fileForReading = org.chromium.mojo.common.mojom.File.decode(decoder1);
                 }
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
-                    result.releaser = decoder0.readAssociatedServiceInterfaceNotSupported(24, true);
+                    result.cdmFile = decoder0.readAssociatedServiceInterfaceNotSupported(24, true);
                 }
             } finally {
                 decoder0.decreaseStackDepth();
@@ -317,9 +316,9 @@ OpenResponse callback) {
             
             encoder0.encode(this.status, 8);
             
-            encoder0.encode(this.file, 16, true);
+            encoder0.encode(this.fileForReading, 16, true);
             
-            encoder0.encode(this.releaser, 24, true);
+            encoder0.encode(this.cdmFile, 24, true);
         }
     
         /**
@@ -336,9 +335,9 @@ OpenResponse callback) {
             CdmStorageOpenResponseParams other = (CdmStorageOpenResponseParams) object;
             if (this.status!= other.status)
                 return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.file, other.file))
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.fileForReading, other.fileForReading))
                 return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.releaser, other.releaser))
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.cdmFile, other.cdmFile))
                 return false;
             return true;
         }
@@ -351,8 +350,8 @@ OpenResponse callback) {
             final int prime = 31;
             int result = prime + getClass().hashCode();
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.status);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.file);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.releaser);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.fileForReading);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cdmFile);
             return result;
         }
     }
@@ -378,7 +377,7 @@ OpenResponse callback) {
 
                 CdmStorageOpenResponseParams response = CdmStorageOpenResponseParams.deserialize(messageWithHeader.getPayload());
 
-                mCallback.call(response.status, response.file, response.releaser);
+                mCallback.call(response.status, response.fileForReading, response.cdmFile);
                 return true;
             } catch (org.chromium.mojo.bindings.DeserializationException e) {
                 return false;
@@ -402,14 +401,14 @@ OpenResponse callback) {
         }
 
         @Override
-        public void call(Integer status, org.chromium.mojo.common.mojom.File file, org.chromium.mojo.bindings.AssociatedInterfaceNotSupported releaser) {
+        public void call(Integer status, org.chromium.mojo.common.mojom.File fileForReading, org.chromium.mojo.bindings.AssociatedInterfaceNotSupported cdmFile) {
             CdmStorageOpenResponseParams _response = new CdmStorageOpenResponseParams();
 
             _response.status = status;
 
-            _response.file = file;
+            _response.fileForReading = fileForReading;
 
-            _response.releaser = releaser;
+            _response.cdmFile = cdmFile;
 
             org.chromium.mojo.bindings.ServiceMessage _message =
                     _response.serializeWithHeader(

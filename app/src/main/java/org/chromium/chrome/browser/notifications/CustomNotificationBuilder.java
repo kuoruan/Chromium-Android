@@ -150,6 +150,7 @@ public class CustomNotificationBuilder extends NotificationBuilderBase {
         builder.setDefaults(mDefaults);
         if (mVibratePattern != null) builder.setVibrate(mVibratePattern);
         builder.setWhen(mTimestamp);
+        builder.setShowWhen(true);
         builder.setOnlyAlertOnce(!mRenotify);
         builder.setContent(compactView);
 

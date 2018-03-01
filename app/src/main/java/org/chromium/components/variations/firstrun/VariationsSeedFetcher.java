@@ -79,8 +79,17 @@ public class VariationsSeedFetcher {
     }
 
     @VisibleForTesting
-    protected HttpURLConnection getServerConnection(VariationsPlatform platform,
-            String restrictMode) throws MalformedURLException, IOException {
+    protected HttpURLConnection getServerConnection(
+            VariationsPlatform platform, String restrictMode, String milestone, String channel)
+            throws MalformedURLException, IOException {
+        String urlString = getConnectionString(platform, restrictMode, milestone, channel);
+        URL url = new URL(urlString);
+        return (HttpURLConnection) url.openConnection();
+    }
+
+    @VisibleForTesting
+    protected String getConnectionString(
+            VariationsPlatform platform, String restrictMode, String milestone, String channel) {
         String urlString = VARIATIONS_SERVER_URL;
         switch (platform) {
             case ANDROID:
@@ -95,8 +104,14 @@ public class VariationsSeedFetcher {
         if (restrictMode != null && !restrictMode.isEmpty()) {
             urlString += "&restrict=" + restrictMode;
         }
-        URL url = new URL(urlString);
-        return (HttpURLConnection) url.openConnection();
+        if (milestone != null && !milestone.isEmpty()) {
+            urlString += "&milestone=" + milestone;
+        }
+        if (channel != null && !channel.isEmpty()) {
+            urlString += "&channel=" + channel;
+        }
+
+        return urlString;
     }
 
     /**
@@ -113,8 +128,10 @@ public class VariationsSeedFetcher {
     /**
      * Fetch the first run variations seed.
      * @param restrictMode The restrict mode parameter to pass to the server via a URL param.
+     * @param milestone The milestone parameter to pass to the server via a URL param.
+     * @param channel The channel parameter to pass to the server via a URL param.
      */
-    public void fetchSeed(String restrictMode) {
+    public void fetchSeed(String restrictMode, String milestone, String channel) {
         assert !ThreadUtils.runningOnUiThread();
         // Prevent multiple simultaneous fetches
         synchronized (sLock) {
@@ -130,10 +147,12 @@ public class VariationsSeedFetcher {
             }
 
             try {
-                SeedInfo info = downloadContent(VariationsPlatform.ANDROID, restrictMode);
+                SeedInfo info = downloadContent(
+                        VariationsPlatform.ANDROID, restrictMode, milestone, channel);
                 VariationsSeedBridge.setVariationsFirstRunSeed(info.seedData, info.signature,
                         info.country, info.date, info.isGzipCompressed);
             } catch (IOException e) {
+                Log.e(TAG, "IOException when fetching variations seed.", e);
                 // Exceptions are handled and logged in the downloadContent method, so we don't
                 // need any exception handling here. The only reason we need a catch-statement here
                 // is because those exceptions are re-thrown from downloadContent to skip the
@@ -168,18 +187,21 @@ public class VariationsSeedFetcher {
      * @param platform the platform parameter to let server only return experiments which can be
      * run on that platform.
      * @param restrictMode the restrict mode parameter to pass to the server via a URL param.
+     * @param milestone the milestone parameter to pass to the server via a URL param.
+     * @param channel the channel parameter to pass to the server via a URL param.
      * @return the object holds the seed data and its related header fields.
      * @throws SocketTimeoutException when fetching seed connection times out.
      * @throws UnknownHostException when fetching seed connection has an unknown host.
      * @throws IOException when response code is not HTTP_OK or transmission fails on the open
      * connection.
      */
-    public SeedInfo downloadContent(VariationsPlatform platform, String restrictMode)
+    public SeedInfo downloadContent(
+            VariationsPlatform platform, String restrictMode, String milestone, String channel)
             throws SocketTimeoutException, UnknownHostException, IOException {
         HttpURLConnection connection = null;
         try {
             long startTimeMillis = SystemClock.elapsedRealtime();
-            connection = getServerConnection(platform, restrictMode);
+            connection = getServerConnection(platform, restrictMode, milestone, channel);
             connection.setReadTimeout(READ_TIMEOUT);
             connection.setConnectTimeout(REQUEST_TIMEOUT);
             connection.setDoInput(true);

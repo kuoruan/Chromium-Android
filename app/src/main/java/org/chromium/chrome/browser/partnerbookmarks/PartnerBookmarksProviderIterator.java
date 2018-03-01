@@ -4,11 +4,11 @@
 
 package org.chromium.chrome.browser.partnerbookmarks;
 
-import android.content.ContentResolver;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.chrome.browser.UrlConstants;
 
@@ -17,7 +17,7 @@ import java.util.NoSuchElementException;
 /**
  * Imports bookmarks from partner content provider using the private provider API.
  */
-public class PartnerBookmarksProviderIterator implements PartnerBookmarksReader.BookmarkIterator {
+public class PartnerBookmarksProviderIterator implements PartnerBookmark.BookmarkIterator {
     private static final String TAG = "cr_PartnerBookmarks";
     private static final String PROVIDER_AUTHORITY = "com.android.partnerbookmarks";
     private static final Uri CONTENT_URI = new Uri.Builder()
@@ -59,13 +59,11 @@ public class PartnerBookmarksProviderIterator implements PartnerBookmarksReader.
 
     /**
      * Creates the bookmarks iterator if possible.
-     * @param contentResolver The content resolver to use.
      * @return                Iterator over bookmarks or null.
      */
-    public static PartnerBookmarksProviderIterator createIfAvailable(
-            ContentResolver contentResolver) {
+    public static PartnerBookmarksProviderIterator createIfAvailable() {
         try {
-            Cursor cursor = contentResolver.query(
+            Cursor cursor = ContextUtils.getApplicationContext().getContentResolver().query(
                     BOOKMARKS_CONTENT_URI, BOOKMARKS_PROJECTION, null, null, BOOKMARKS_SORT_ORDER);
             if (cursor == null) return null;
             return new PartnerBookmarksProviderIterator(cursor);
@@ -77,11 +75,6 @@ public class PartnerBookmarksProviderIterator implements PartnerBookmarksReader.
 
     private PartnerBookmarksProviderIterator(Cursor cursor) {
         mCursor = cursor;
-    }
-
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -101,11 +94,11 @@ public class PartnerBookmarksProviderIterator implements PartnerBookmarksReader.
     }
 
     @Override
-    public PartnerBookmarksReader.Bookmark next() {
+    public PartnerBookmark next() {
         if (mCursor == null) throw new IllegalStateException();
         if (!mCursor.moveToNext()) throw new NoSuchElementException();
 
-        PartnerBookmarksReader.Bookmark bookmark = new PartnerBookmarksReader.Bookmark();
+        PartnerBookmark bookmark = new PartnerBookmark();
         try {
             bookmark.mId = mCursor.getLong(mCursor.getColumnIndexOrThrow(BOOKMARKS_COLUMN_ID));
             // The container folder should not be among the results.

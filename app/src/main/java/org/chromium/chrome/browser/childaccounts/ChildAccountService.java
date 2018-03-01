@@ -6,7 +6,6 @@ package org.chromium.chrome.browser.childaccounts;
 
 import android.accounts.Account;
 import android.app.Activity;
-import android.content.Context;
 
 import org.chromium.base.Callback;
 import org.chromium.base.ThreadUtils;
@@ -39,17 +38,14 @@ public class ChildAccountService {
      *
      * @param callback A callback which will be called with the result.
      */
-    public static void checkHasChildAccount(Context context, final Callback<Boolean> callback) {
+    public static void checkHasChildAccount(final Callback<Boolean> callback) {
         ThreadUtils.assertOnUiThread();
-        final AccountManagerFacade helper = AccountManagerFacade.get();
-        helper.tryGetGoogleAccounts(new Callback<Account[]>() {
-            @Override
-            public void onResult(Account[] accounts) {
-                if (accounts.length != 1) {
-                    callback.onResult(false);
-                } else {
-                    helper.checkChildAccount(accounts[0], callback);
-                }
+        final AccountManagerFacade accountManager = AccountManagerFacade.get();
+        accountManager.tryGetGoogleAccounts(accounts -> {
+            if (accounts.length != 1) {
+                callback.onResult(false);
+            } else {
+                accountManager.checkChildAccount(accounts[0], callback);
             }
         });
     }
@@ -69,22 +65,13 @@ public class ChildAccountService {
 
         Activity activity = windowAndroid.getActivity().get();
         if (activity == null) {
-            ThreadUtils.postOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    nativeOnReauthenticationResult(nativeCallback, false);
-                }
-            });
+            ThreadUtils.postOnUiThread(() -> nativeOnReauthenticationResult(nativeCallback, false));
             return;
         }
 
         Account account = AccountManagerFacade.createAccountFromName(accountName);
-        AccountManagerFacade.get().updateCredentials(account, activity, new Callback<Boolean>() {
-            @Override
-            public void onResult(Boolean result) {
-                nativeOnReauthenticationResult(nativeCallback, result);
-            }
-        });
+        AccountManagerFacade.get().updateCredentials(account, activity,
+                result -> nativeOnReauthenticationResult(nativeCallback, result));
     }
 
     private static native void nativeListenForChildStatusReceived(Callback<Boolean> callback);

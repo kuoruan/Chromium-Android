@@ -36,7 +36,8 @@ import java.lang.annotation.RetentionPolicy;
     VideoCodecProfile.DOLBYVISION_PROFILE5, VideoCodecProfile.DOLBYVISION_PROFILE7,
     VideoCodecProfile.DOLBYVISION_MAX, VideoCodecProfile.THEORAPROFILE_MIN,
     VideoCodecProfile.THEORAPROFILE_ANY, VideoCodecProfile.THEORAPROFILE_MAX,
-    VideoCodecProfile.VIDEO_CODEC_PROFILE_MAX
+    VideoCodecProfile.AV1PROFILE_MIN, VideoCodecProfile.AV1PROFILE_PROFILE0,
+    VideoCodecProfile.AV1PROFILE_MAX, VideoCodecProfile.VIDEO_CODEC_PROFILE_MAX
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface VideoCodecProfile {
@@ -82,5 +83,12 @@ public @interface VideoCodecProfile {
   int THEORAPROFILE_MIN = 23;
   int THEORAPROFILE_ANY = THEORAPROFILE_MIN;
   int THEORAPROFILE_MAX = THEORAPROFILE_ANY;
-  int VIDEO_CODEC_PROFILE_MAX = THEORAPROFILE_ANY;
+  /**
+   * TODO(dalecurtis): AV1 profiles are not finalized, this needs updating before enabling for
+   * release. http://crbug.com/784993
+   */
+  int AV1PROFILE_MIN = 24;
+  int AV1PROFILE_PROFILE0 = AV1PROFILE_MIN;
+  int AV1PROFILE_MAX = AV1PROFILE_PROFILE0;
+  int VIDEO_CODEC_PROFILE_MAX = AV1PROFILE_PROFILE0;
 }

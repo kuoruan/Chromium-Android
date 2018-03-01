@@ -14,17 +14,7 @@
 
         <include layout="@layout/modern_list_item_view" />
 
-        <org.chromium.chrome.browser.widget.TintedImageButton
-            android:id="@+id/more"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:visibility="gone"
-            android:background="@null"
-            android:contentDescription="@string/accessibility_bookmark_more_info"
-            android:paddingStart="@dimen/selectable_list_layout_row_padding"
-            android:paddingEnd="@dimen/selectable_list_layout_row_padding"
-            android:src="@drawable/ic_more_vert_black_24dp"
-            chrome:chrometint="@color/dark_mode_tint" />
+        <include layout="@layout/list_menu_button" />
     </LinearLayout>
 
 </merge>

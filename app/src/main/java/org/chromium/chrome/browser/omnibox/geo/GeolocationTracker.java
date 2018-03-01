@@ -17,7 +17,6 @@ import android.os.Process;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.SuppressFBWarnings;
 
 /**
  * Keeps track of the device's location, allowing synchronous location requests.
@@ -87,14 +86,10 @@ class GeolocationTracker {
 
     /**
      * Returns the last known location or null if none is available.
-     *
-     * @param includeGpsFallback Whether the gps provider should also be used as a fallback.
-     *        Otherwise only the network provider will be used.
      */
-    static Location getLastKnownLocation(Context context, boolean includeGpsFallback) {
+    static Location getLastKnownLocation(Context context) {
         if (sUseLocationForTesting) {
-            return chooseLocation(
-                    sNetworkLocationForTesting, sGpsLocationForTesting, includeGpsFallback);
+            return chooseLocation(sNetworkLocationForTesting, sGpsLocationForTesting);
         }
 
         if (!hasPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)) {
@@ -106,17 +101,12 @@ class GeolocationTracker {
                 (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         Location networkLocation =
                 locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        // If no GPS location has been request, just return the network location. For efficiency,
-        // don't even get the GPS location.
-        if (!includeGpsFallback) {
-            return networkLocation;
-        }
         Location gpsLocation = null;
         if (hasPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)) {
             // Only try to get GPS location when ACCESS_FINE_LOCATION is granted.
             gpsLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         }
-        return chooseLocation(networkLocation, gpsLocation, includeGpsFallback);
+        return chooseLocation(networkLocation, gpsLocation);
     }
 
     /**
@@ -124,7 +114,6 @@ class GeolocationTracker {
      *
      * Note: this must be called only on the UI thread.
      */
-    @SuppressFBWarnings("LI_LAZY_INIT_UPDATE_STATIC")
     static void refreshLastKnownLocation(Context context, long maxAge) {
         ThreadUtils.assertOnUiThread();
 
@@ -171,9 +160,8 @@ class GeolocationTracker {
                 == PackageManager.PERMISSION_GRANTED;
     }
 
-    private static Location chooseLocation(
-            Location networkLocation, Location gpsLocation, boolean includeGpsFallback) {
-        if (!includeGpsFallback || gpsLocation == null) {
+    private static Location chooseLocation(Location networkLocation, Location gpsLocation) {
+        if (gpsLocation == null) {
             return networkLocation;
         }
 

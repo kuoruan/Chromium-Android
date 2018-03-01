@@ -57,10 +57,8 @@ public class SyncAccountSwitcher
 
         if (TextUtils.equals(mNewAccountName, currentAccount)) return false;
 
-        ConfirmSyncDataStateMachine.run(currentAccount, mNewAccountName,
-                ImportSyncType.SWITCHING_SYNC_ACCOUNTS, mActivity.getFragmentManager(),
-                mActivity, this);
-
+        new ConfirmSyncDataStateMachine(mActivity, mActivity.getFragmentManager(),
+                ImportSyncType.SWITCHING_SYNC_ACCOUNTS, currentAccount, mNewAccountName, this);
 
         // Don't update the selected account in the preference. It will be updated by
         // the call to mSyncAccountListPreference.update() if everything succeeds.

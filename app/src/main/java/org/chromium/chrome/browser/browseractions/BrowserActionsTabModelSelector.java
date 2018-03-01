@@ -6,9 +6,12 @@ package org.chromium.chrome.browser.browseractions;
 
 import android.os.AsyncTask;
 
+import org.chromium.base.Callback;
 import org.chromium.base.ThreadUtils;
+import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.browseractions.BrowserActionsTabCreatorManager.BrowserActionsTabCreator;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.tabmodel.ChromeTabCreator;
 import org.chromium.chrome.browser.tabmodel.EmptyTabModel;
 import org.chromium.chrome.browser.tabmodel.EmptyTabModelObserver;
 import org.chromium.chrome.browser.tabmodel.TabCreatorManager;
@@ -20,6 +23,7 @@ import org.chromium.chrome.browser.tabmodel.TabModelImpl;
 import org.chromium.chrome.browser.tabmodel.TabModelObserver;
 import org.chromium.chrome.browser.tabmodel.TabModelOrderController;
 import org.chromium.chrome.browser.tabmodel.TabModelSelectorBase;
+import org.chromium.chrome.browser.tabmodel.TabModelUtils;
 import org.chromium.chrome.browser.tabmodel.TabPersistentStore;
 import org.chromium.chrome.browser.tabmodel.TabPersistentStore.TabPersistentStoreObserver;
 import org.chromium.content_public.browser.LoadUrlParams;
@@ -112,12 +116,6 @@ public class BrowserActionsTabModelSelector
                     mTabSaver.addTabToSaveQueue(tab);
                 }
             }
-
-            @Override
-            public void tabRemoved(Tab tab) {
-                // TODO(ltian): save the tab list when all the tabs are removed.
-                mTabSaver.saveTabListAsynchronously();
-            }
         };
         getModel(false).addObserver(tabModelObserver);
         if (mTabCreationRunnable != null) {
@@ -129,11 +127,12 @@ public class BrowserActionsTabModelSelector
     /**
      * Creates a new Tab with given url in Browser Actions tab model.
      * @param loadUrlParams The url params to be opened.
+     * @param tabCreatedCallback The {@link Callback} to run when tab is created.
      */
-    public void openNewTab(LoadUrlParams loadUrlParams) {
+    public void openNewTab(LoadUrlParams loadUrlParams, Callback<Integer> tabCreatedCallback) {
         // If tab model is restored, directly create a new tab.
         if (isTabStateInitialized()) {
-            createNewTab(loadUrlParams);
+            createNewTab(loadUrlParams, tabCreatedCallback);
             return;
         }
         if (mTabCreationRunnable == null) {
@@ -141,7 +140,7 @@ public class BrowserActionsTabModelSelector
                 @Override
                 public void run() {
                     for (int i = 0; i < mPendingUrls.size(); i++) {
-                        createNewTab(mPendingUrls.get(i));
+                        createNewTab(mPendingUrls.get(i), tabCreatedCallback);
                     }
                     mPendingUrls.clear();
                 }
@@ -159,8 +158,9 @@ public class BrowserActionsTabModelSelector
         mPendingUrls.add(loadUrlParams);
     }
 
-    private void createNewTab(LoadUrlParams params) {
-        openNewTab(params, TabLaunchType.FROM_BROWSER_ACTIONS, null, false);
+    private void createNewTab(LoadUrlParams params, Callback<Integer> tabCreatedCallback) {
+        Tab tab = openNewTab(params, TabLaunchType.FROM_BROWSER_ACTIONS, null, false);
+        tabCreatedCallback.onResult(tab.getId());
     }
 
     @Override
@@ -205,5 +205,52 @@ public class BrowserActionsTabModelSelector
         }
         return mTabCreatorManager.getTabCreator(incognito).createNewTab(
                 loadUrlParams, type, parent);
+    }
+
+    /**
+     * Merge tabs from {@link BrowserActionsTabModelSelector} to the selector in a {@link
+     * ChromeActivity}.
+     * @param activity The ChromeActivity all tabs will be merged to.
+     * @param shouldSelectTab Whether the last tab should be set as the active tab.
+     */
+    public void mergeBrowserActionsTabModel(ChromeActivity activity, boolean shouldSelectTab) {
+        assert isInitialized() : "Browser Actions tab model should be initialized at this point";
+        TabModel chromeNormalTabModel = activity.getTabModelSelector().getModel(false);
+        TabModel browserActionsNormlTabModel = getModel(false);
+        while (browserActionsNormlTabModel.getCount() > 0) {
+            Tab tab = browserActionsNormlTabModel.getTabAt(0);
+            browserActionsNormlTabModel.removeTab(tab);
+            tab.attach(activity,
+                    ((ChromeTabCreator) activity.getTabCreator(false))
+                            .createDefaultTabDelegateFactory());
+            chromeNormalTabModel.addTab(tab, -1, TabLaunchType.FROM_BROWSER_ACTIONS);
+        }
+        saveState();
+        if (shouldSelectTab) {
+            TabModelUtils.setIndex(chromeNormalTabModel, chromeNormalTabModel.getCount() - 1);
+        }
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        mTabSaver.destroy();
+        sInstance = null;
+    }
+
+    /**
+     * Add a {@link TabPersistentStoreObserver} to {@link TabPersistentStore}.
+     * @param observer The observer to add.
+     */
+    public void addTabPersistentStoreObserver(TabPersistentStoreObserver observer) {
+        mTabSaver.addObserver(observer);
+    }
+
+    /**
+     * Remove a {@link TabPersistentStoreObserver} from {@link TabPersistentStore}.
+     * @param observer The observer to remove.
+     */
+    public void removeTabPersistentStoreObserver(TabPersistentStoreObserver observer) {
+        mTabSaver.removeObserver(observer);
     }
 }

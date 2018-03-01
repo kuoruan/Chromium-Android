@@ -16,14 +16,17 @@ import android.view.Menu;
 import android.view.View;
 
 import org.chromium.base.Log;
+import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.contextmenu.ContextMenuParams;
+import org.chromium.chrome.browser.gsa.GSAState;
 import org.chromium.chrome.browser.init.AsyncInitializationActivity;
+import org.chromium.chrome.browser.rappor.RapporServiceBridge;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.content_public.common.Referrer;
+import org.chromium.ui.base.MenuSourceType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +39,10 @@ public class BrowserActionActivity extends AsyncInitializationActivity {
 
     private int mType;
     private Uri mUri;
-    private String mCreatorPackageName;
-    private List<BrowserActionItem> mActions = new ArrayList<>();
+    @VisibleForTesting
+    String mCreatorPackageName;
+    @VisibleForTesting
+    List<BrowserActionItem> mActions = new ArrayList<>();
     private PendingIntent mOnBrowserActionSelectedCallback;
     private BrowserActionsContextMenuHelper mHelper;
 
@@ -49,7 +54,6 @@ public class BrowserActionActivity extends AsyncInitializationActivity {
     }
 
     @Override
-    @SuppressFBWarnings("URF_UNREAD_FIELD")
     protected boolean isStartedUpCorrectly(Intent intent) {
         if (intent == null
                 || !BrowserActionsIntent.ACTION_BROWSER_ACTIONS_OPEN.equals(intent.getAction())) {
@@ -129,7 +133,8 @@ public class BrowserActionActivity extends AsyncInitializationActivity {
 
         return new ContextMenuParams(mType, mUri.toString(), mUri.toString(), mUri.toString(),
                 mUri.toString(), mUri.toString(), mUri.toString(), false /* imageWasFetchedLoFi */,
-                referrer, false /* canSaveMedia */, touchX, touchY);
+                referrer, false /* canSaveMedia */, touchX, touchY,
+                MenuSourceType.MENU_SOURCE_TOUCH);
     }
 
     @Override
@@ -153,6 +158,21 @@ public class BrowserActionActivity extends AsyncInitializationActivity {
     @Override
     public void finishNativeInitialization() {
         super.finishNativeInitialization();
+        recordClientPackageName();
         mHelper.onNativeInitialized();
+    }
+
+    private void recordClientPackageName() {
+        if (TextUtils.isEmpty(mCreatorPackageName)) return;
+        ThreadUtils.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                RapporServiceBridge.sampleString(
+                        "BrowserActions.ServiceClient.PackageName", mCreatorPackageName);
+                if (GSAState.isGsaPackageName(mCreatorPackageName)) return;
+                RapporServiceBridge.sampleString(
+                        "BrowserActions.ServiceClient.PackageNameThirdParty", mCreatorPackageName);
+            }
+        });
     }
 }

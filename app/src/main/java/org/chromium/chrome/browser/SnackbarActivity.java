@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.WindowManager;
 
@@ -25,7 +26,10 @@ public abstract class SnackbarActivity extends SynchronousInitializationActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O) {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        }
         mSnackbarManager = new SnackbarManager(this, null);
     }
 

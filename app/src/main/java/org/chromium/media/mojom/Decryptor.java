@@ -11,7 +11,6 @@
 
 package org.chromium.media.mojom;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
@@ -70,7 +69,7 @@ public interface Decryptor extends org.chromium.mojo.bindings.Interface {
 
 
     void initialize(
-org.chromium.mojo.system.DataPipe.ConsumerHandle receivePipe, org.chromium.mojo.system.DataPipe.ProducerHandle transmitPipe);
+org.chromium.mojo.system.DataPipe.ConsumerHandle audioPipe, org.chromium.mojo.system.DataPipe.ConsumerHandle videoPipe, org.chromium.mojo.system.DataPipe.ConsumerHandle decryptPipe, org.chromium.mojo.system.DataPipe.ProducerHandle decryptedPipe);
 
 
 

@@ -11,7 +11,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import org.chromium.base.ApiCompatibilityUtils;
@@ -21,6 +20,7 @@ import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeSwitches;
+import org.chromium.chrome.browser.LaunchIntentDispatcher;
 import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
@@ -30,6 +30,7 @@ import org.chromium.chrome.browser.signin.SigninManager;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.chrome.browser.vr_shell.VrIntentUtils;
+import org.chromium.chrome.browser.webapps.WebApkActivity;
 import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.components.signin.ChromeSigninController;
 
@@ -87,7 +88,7 @@ public abstract class FirstRunFlowSequencer  {
                 initializeSharedState(isAndroidEduDevice(), hasChildAccount());
                 processFreEnvironmentPreNative();
             }
-        }.start(mActivity.getApplicationContext());
+        }.start();
     }
 
     @VisibleForTesting
@@ -239,17 +240,14 @@ public abstract class FirstRunFlowSequencer  {
      * @param context The context.
      * @param fromIntent The intent that was used to launch Chrome.
      * @param preferLightweightFre Whether to prefer the Lightweight First Run Experience.
-     * @return The intent to launch the First Run Experience if it needs to be launched, or null.
-     *         The intent is for the preferred (Lightweight or non-Lightweight) First Run
-     *         Experience.
+     * @return Whether the First Run Experience needs to be launched.
      */
-    @Nullable
-    public static Intent checkIfFirstRunIsNecessary(
+    public static boolean checkIfFirstRunIsNecessary(
             Context context, Intent fromIntent, boolean preferLightweightFre) {
         // If FRE is disabled (e.g. in tests), proceed directly to the intent handling.
         if (CommandLine.getInstance().hasSwitch(ChromeSwitches.DISABLE_FIRST_RUN_EXPERIENCE)
                 || ApiCompatibilityUtils.isDemoUser(context)) {
-            return null;
+            return false;
         }
 
         // If Chrome isn't opened via the Chrome icon, and the user accepted the ToS
@@ -257,22 +255,15 @@ public abstract class FirstRunFlowSequencer  {
         // to the intent handling.
         final boolean fromChromeIcon =
                 fromIntent != null && TextUtils.equals(fromIntent.getAction(), Intent.ACTION_MAIN);
-        if (!fromChromeIcon && ToSAckedReceiver.checkAnyUserHasSeenToS()) return null;
+        if (!fromChromeIcon && ToSAckedReceiver.checkAnyUserHasSeenToS()) return false;
 
-        final boolean baseFreComplete = FirstRunStatus.getFirstRunFlowComplete();
-        if (!baseFreComplete) {
-            if (preferLightweightFre) {
-                if (!FirstRunStatus.shouldSkipWelcomePage()
-                        && !FirstRunStatus.getLightweightFirstRunFlowComplete()) {
-                    return createLightweightFirstRunIntent(context);
-                }
-            } else {
-                return createGenericFirstRunIntent(context, fromChromeIcon);
-            }
+        if (FirstRunStatus.getFirstRunFlowComplete()) {
+            // Promo pages are removed, so there is nothing else to show in FRE.
+            return false;
         }
-
-        // Promo pages are removed, so there is nothing else to show in FRE.
-        return null;
+        return !preferLightweightFre
+                || (!FirstRunStatus.shouldSkipWelcomePage()
+                           && !FirstRunStatus.getLightweightFirstRunFlowComplete());
     }
 
     /**
@@ -287,10 +278,16 @@ public abstract class FirstRunFlowSequencer  {
         return intent;
     }
 
-    /** Returns an intent to show lightweight first run activity. */
-    public static Intent createLightweightFirstRunIntent(Context context) {
+    /**
+     * Returns an intent to show the lightweight first run activity.
+     * @param context        The context.
+     * @param fromIntent     The intent that was used to launch Chrome.
+     */
+    private static Intent createLightweightFirstRunIntent(Context context, Intent fromIntent) {
         Intent intent = new Intent();
         intent.setClassName(context, LightweightFirstRunActivity.class.getName());
+        String appName = WebApkActivity.slowExtractNameFromIntentIfTargetIsWebApk(fromIntent);
+        intent.putExtra(LightweightFirstRunActivity.EXTRA_ASSOCIATED_APP_NAME, appName);
         return intent;
     }
 
@@ -315,6 +312,8 @@ public abstract class FirstRunFlowSequencer  {
                     caller, FIRST_RUN_EXPERIENCE_REQUEST_CODE, fromIntent, pendingIntentFlags);
         }
         firstRunIntent.putExtra(FirstRunActivity.EXTRA_CHROME_LAUNCH_INTENT, pendingIntent);
+        firstRunIntent.putExtra(FirstRunActivity.EXTRA_CHROME_LAUNCH_INTENT_IS_CCT,
+                LaunchIntentDispatcher.isCustomTabIntent(fromIntent));
     }
 
     /**
@@ -340,11 +339,18 @@ public abstract class FirstRunFlowSequencer  {
         }
 
         // Check if the user needs to go through First Run at all.
-        Intent freIntent = checkIfFirstRunIsNecessary(caller, intent, preferLightweightFre);
-        if (freIntent == null) return false;
+        if (!checkIfFirstRunIsNecessary(caller, intent, preferLightweightFre)) return false;
 
         Log.d(TAG, "Redirecting user through FRE.");
         if ((intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK) != 0) {
+            boolean isVrIntent = VrIntentUtils.isVrIntent(intent);
+            Intent freCallerIntent = null;
+            if (isVrIntent) {
+                // Modify the caller intent to handle FRE completion correctly for VR.
+                freCallerIntent = new Intent(intent);
+                VrIntentUtils.updateFreCallerIntent(caller, intent);
+            }
+
             boolean isGenericFreActive = false;
             List<WeakReference<Activity>> activities = ApplicationStatus.getRunningActivities();
             for (WeakReference<Activity> weakActivity : activities) {
@@ -355,25 +361,20 @@ public abstract class FirstRunFlowSequencer  {
                 }
             }
 
-            if (isGenericFreActive) {
-                // Launch the Generic First Run Experience if it was previously active.
+            // Launch the Generic First Run Experience if it was previously active.
+            Intent freIntent = null;
+            if (preferLightweightFre && !isGenericFreActive) {
+                freIntent = createLightweightFirstRunIntent(caller, intent);
+            } else {
                 freIntent = createGenericFirstRunIntent(
                         caller, TextUtils.equals(intent.getAction(), Intent.ACTION_MAIN));
-            }
 
-            boolean isVrIntent = VrIntentUtils.isVrIntent(intent);
-            Intent freCallerIntent = null;
-            if (isVrIntent) {
-                // Modify the caller intent to handle FRE completion correctly for VR.
-                freCallerIntent = new Intent(intent);
-                VrIntentUtils.updateFreCallerIntent(caller, intent);
-            }
-
-            if (maybeSwitchToTabbedMode(caller, freIntent)) {
-                // We switched to TabbedModeFRE. We need to disable animation on the original
-                // intent, to make transition seamless.
-                intent = new Intent(intent);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                if (maybeSwitchToTabbedMode(caller, freIntent)) {
+                    // We switched to TabbedModeFRE. We need to disable animation on the original
+                    // intent, to make transition seamless.
+                    intent = new Intent(intent);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                }
             }
 
             // Add a PendingIntent so that the intent used to launch Chrome will be resent when
@@ -422,11 +423,7 @@ public abstract class FirstRunFlowSequencer  {
         if (backgroundResourceId != R.drawable.window_background) return false;
 
         // Switch FRE -> TabbedModeFRE.
-        if (FirstRunActivity.class.getName().equals(freIntent.getComponent().getClassName())) {
-            freIntent.setClass(caller, TabbedModeFirstRunActivity.class);
-            return true;
-        }
-
-        return false;
+        freIntent.setClass(caller, TabbedModeFirstRunActivity.class);
+        return true;
     }
 }

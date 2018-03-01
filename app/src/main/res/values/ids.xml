@@ -103,7 +103,7 @@
     <item type="id" name="contextmenu_save_video" />
 
     <!-- Menu item IDs for FullscreenActivities -->
-    <item type="id" name="menu_id_open_in_chrome" />
+    <item type="id" name="contextmenu_open_in_chrome" />
 
     <!-- App menu item custom tags -->
     <item type="id" name="menu_item_enter_anim_id" />

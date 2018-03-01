@@ -502,7 +502,7 @@ public class ExternalNavigationDelegateImpl implements ExternalNavigationDelegat
         LoadUrlParams loadUrlParams = new LoadUrlParams(url, PageTransition.AUTO_TOPLEVEL);
         if (!TextUtils.isEmpty(referrerUrl)) {
             Referrer referrer =
-                    new Referrer(referrerUrl, WebReferrerPolicy.WEB_REFERRER_POLICY_ALWAYS);
+                    new Referrer(referrerUrl, WebReferrerPolicy.ALWAYS);
             loadUrlParams.setReferrer(referrer);
         }
         tab.loadUrl(loadUrlParams);
@@ -515,7 +515,7 @@ public class ExternalNavigationDelegateImpl implements ExternalNavigationDelegat
         final LoadUrlParams loadUrlParams = new LoadUrlParams(url, transitionType);
         if (!TextUtils.isEmpty(referrerUrl)) {
             Referrer referrer =
-                    new Referrer(referrerUrl, WebReferrerPolicy.WEB_REFERRER_POLICY_ALWAYS);
+                    new Referrer(referrerUrl, WebReferrerPolicy.ALWAYS);
             loadUrlParams.setReferrer(referrer);
         }
         if (tab != null) {

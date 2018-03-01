@@ -12,9 +12,7 @@ import android.view.ViewGroup;
 
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.signin.AccountSigninView;
-import org.chromium.chrome.browser.signin.ProfileDataCache;
 import org.chromium.chrome.browser.signin.SigninAccessPoint;
 import org.chromium.chrome.browser.signin.SigninManager;
 
@@ -41,9 +39,6 @@ public class AccountFirstRunFragment extends FirstRunPage implements AccountSign
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        int imageSize = getResources().getDimensionPixelSize(R.dimen.signin_account_image_size);
-        ProfileDataCache profileDataCache =
-                new ProfileDataCache(getActivity(), Profile.getLastUsedProfile(), imageSize);
         boolean isChildAccount = getProperties().getBoolean(IS_CHILD_ACCOUNT);
         String forceAccountTo = getProperties().getString(FORCE_SIGNIN_ACCOUNT_TO);
         AccountSigninView.Listener listener = new AccountSigninView.Listener() {
@@ -77,9 +72,9 @@ public class AccountFirstRunFragment extends FirstRunPage implements AccountSign
         };
 
         if (forceAccountTo == null) {
-            mView.initFromSelectionPage(profileDataCache, isChildAccount, this, listener);
+            mView.initFromSelectionPage(isChildAccount, this, listener);
         } else {
-            mView.initFromConfirmationPage(profileDataCache, isChildAccount, forceAccountTo, false,
+            mView.initFromConfirmationPage(isChildAccount, forceAccountTo, false,
                     AccountSigninView.UNDO_INVISIBLE, this, listener);
         }
 

@@ -24,6 +24,7 @@ public class BottomSheetPaddingUtils {
      * Applies padding to the bottom sheet content, to be used after its creation. This should
      * only be called once for every new {@link BottomSheetContent} creation.
      * @param content The {@link BottomSheetContent} in need of additional padding.
+     * @param bottomSheet The {@link BottomSheet} containing the views that need padding.
      * TODO (thildebr): Make this call less explicit, try to make the application of padding more
      * automatic when creating a {@link BottomSheetContent}. (crbug.com/771384)
      */

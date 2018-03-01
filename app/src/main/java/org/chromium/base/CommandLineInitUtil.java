@@ -9,8 +9,6 @@ import android.content.Context;
 import android.os.Build;
 import android.provider.Settings;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
-
 import java.io.File;
 
 /**
@@ -46,7 +44,6 @@ public final class CommandLineInitUtil {
      *                 be used.
      * @param fileName The name of the command line file to pull arguments from.
      */
-    @SuppressFBWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
     public static void initCommandLine(Context context, String fileName) {
         if (!CommandLine.isInitialized()) {
             File commandLineFile = getAlternativeCommandLinePath(context, fileName);
@@ -67,7 +64,6 @@ public final class CommandLineInitUtil {
      * - The current build is "eng" or "userdebug", OR
      * - adb is enabled and this is the debug app.
      */
-    @SuppressFBWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
     private static File getAlternativeCommandLinePath(Context context, String fileName) {
         File alternativeCommandLineFile =
                 new File(COMMAND_LINE_FILE_PATH_DEBUG_APP, fileName);

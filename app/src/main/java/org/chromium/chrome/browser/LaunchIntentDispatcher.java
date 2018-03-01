@@ -15,7 +15,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.annotation.IntDef;
+import android.support.annotation.Nullable;
 import android.support.customtabs.CustomTabsIntent;
+import android.support.customtabs.CustomTabsSessionToken;
+import android.support.customtabs.TrustedWebUtils;
 import android.text.TextUtils;
 
 import org.chromium.base.ContextUtils;
@@ -26,6 +29,7 @@ import org.chromium.chrome.browser.IntentHandler.ExternalAppId;
 import org.chromium.chrome.browser.browserservices.BrowserSessionContentUtils;
 import org.chromium.chrome.browser.customtabs.CustomTabActivity;
 import org.chromium.chrome.browser.customtabs.CustomTabIntentDataProvider;
+import org.chromium.chrome.browser.customtabs.CustomTabsConnection;
 import org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity;
 import org.chromium.chrome.browser.dom_distiller.ReaderModeManager;
 import org.chromium.chrome.browser.firstrun.FirstRunFlowSequencer;
@@ -40,9 +44,11 @@ import org.chromium.chrome.browser.upgrade.UpgradeActivity;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.chrome.browser.util.UrlUtilities;
-import org.chromium.chrome.browser.vr.VrMainActivity;
+import org.chromium.chrome.browser.vr.CustomTabVrActivity;
 import org.chromium.chrome.browser.vr_shell.VrIntentUtils;
 import org.chromium.chrome.browser.webapps.ActivityAssigner;
+import org.chromium.chrome.browser.webapps.WebappActivity;
+import org.chromium.chrome.browser.webapps.WebappInfo;
 import org.chromium.chrome.browser.webapps.WebappLauncherActivity;
 import org.chromium.ui.widget.Toast;
 
@@ -83,6 +89,7 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
     private final Intent mIntent;
     private final boolean mIsCustomTabIntent;
     private final boolean mIsHerbIntent;
+    private final boolean mIsVrIntent;
 
     @IntDef({Action.CONTINUE, Action.FINISH_ACTIVITY, Action.FINISH_ACTIVITY_REMOVE_TASK})
     @Retention(RetentionPolicy.SOURCE)
@@ -144,16 +151,31 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
 
         recordIntentMetrics();
 
-        boolean isCustomTabIntent = isCustomTabIntent(mIntent);
+        mIsVrIntent = VrIntentUtils.isVrIntent(mIntent);
+        boolean isCustomTabIntent = (!mIsVrIntent && isCustomTabIntent(mIntent))
+                || (mIsVrIntent && VrIntentUtils.isCustomTabVrIntent(mIntent));
         boolean isHerbIntent = false;
         // If the intent was created by Reader Mode, ignore herb and custom tab information.
         if (!isCustomTabIntent && !ReaderModeManager.isReaderModeCreatedIntent(mIntent)
-                && !VrIntentUtils.isVrIntent(mIntent)) {
+                && !mIsVrIntent) {
             isHerbIntent = isHerbIntent(mIntent);
             isCustomTabIntent = isHerbIntent;
         }
         mIsCustomTabIntent = isCustomTabIntent;
         mIsHerbIntent = isHerbIntent;
+    }
+
+    /**
+     * Returns the options that should be used to start an activity.
+     */
+    @Nullable
+    private Bundle getStartActivityIntentOptions() {
+        Bundle options = null;
+        if (mIsVrIntent) {
+            // These options hide the 2D screenshot while we prepare for VR rendering.
+            options = VrIntentUtils.getVrIntentOptions(mActivity);
+        }
+        return options;
     }
 
     /**
@@ -203,6 +225,11 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
             return Action.FINISH_ACTIVITY;
         }
 
+        // Ignore this VR intent if we can't handle it in Chrome.
+        if (mIsVrIntent && !VrIntentUtils.canHandleVrIntent(mActivity)) {
+            return Action.FINISH_ACTIVITY;
+        }
+
         // Check if we should push the user through First Run.
         if (FirstRunFlowSequencer.launch(mActivity, mIntent, false /* requiresBroadcast */,
                     false /* preferLightweightFre */)) {
@@ -216,7 +243,12 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
 
         // Check if we should launch a Custom Tab.
         if (mIsCustomTabIntent) {
-            launchCustomTabActivity();
+            if (!mIntent.getBooleanExtra(
+                        TrustedWebUtils.EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY, false)
+                    || !launchTrustedWebActivity()) {
+                launchCustomTabActivity();
+            }
+
             return Action.FINISH_ACTIVITY;
         }
 
@@ -332,9 +364,8 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
      */
     public static boolean isCustomTabIntent(Intent intent) {
         if (intent == null) return false;
-        if ((CustomTabsIntent.shouldAlwaysUseBrowserUI(intent)
-                    || !intent.hasExtra(CustomTabsIntent.EXTRA_SESSION))
-                && !VrIntentUtils.isCustomTabVrIntent(intent)) {
+        if (CustomTabsIntent.shouldAlwaysUseBrowserUI(intent)
+                || !intent.hasExtra(CustomTabsIntent.EXTRA_SESSION)) {
             return false;
         }
         return IntentHandler.getUrlFromIntent(intent) != null;
@@ -350,8 +381,8 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
 
         Intent newIntent = new Intent(intent);
         newIntent.setAction(Intent.ACTION_VIEW);
-        newIntent.setClassName(context, CustomTabActivity.class.getName());
         newIntent.setData(uri);
+        newIntent.setClassName(context, CustomTabActivity.class.getName());
 
         // If a CCT intent triggers First Run, then NEW_TASK will be automatically applied.  As
         // part of that, it will inherit the EXCLUDE_FROM_RECENTS bit from ChromeLauncherActivity,
@@ -365,7 +396,7 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
                 // Force a new document L+ to ensure the proper task/stack creation.
                 newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
                 if (VrIntentUtils.isVrIntent(intent)) {
-                    newIntent.setClassName(context, VrMainActivity.class.getName());
+                    newIntent.setClassName(context, CustomTabVrActivity.class.getName());
                 } else {
                     newIntent.setClassName(context, SeparateTaskCustomTabActivity.class.getName());
                 }
@@ -413,20 +444,33 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
         maybePrefetchDnsInBackground();
 
         // Create and fire a launch intent.
-        Bundle options = null;
-        if (VrIntentUtils.isVrIntent(mIntent)) {
-            // VR intents will open a VR-specific CCT {@link VrMainActivity} which
-            // starts with a theme that disables the system preview window. As a side effect, you
-            // see a flash of the previous app exiting before Chrome is started. These options
-            // prevent that flash as it can look jarring while the user is in their headset.
-            options = VrIntentUtils.getVrIntentOptions(mActivity);
-        }
         mActivity.startActivity(createCustomTabActivityIntent(mActivity, mIntent,
                                         !isCustomTabIntent(mIntent) && mIsHerbIntent),
-                options);
+                getStartActivityIntentOptions());
         if (mIsHerbIntent) {
             mActivity.overridePendingTransition(R.anim.activity_open_enter, R.anim.no_anim);
         }
+    }
+
+    private boolean launchTrustedWebActivity() {
+        CustomTabsSessionToken session = CustomTabsSessionToken.getSessionTokenFromIntent(mIntent);
+        if (!CustomTabsConnection.getInstance().canSessionLaunchInTrustedWebActivity(
+                    session, Uri.parse(mIntent.getDataString()))) {
+            return false;
+        }
+
+        // TODO(yusufo): WebappInfo houses a lot of logic around preparing/easing out the initial
+        // launch via extras for icons, splashscreens, screen orientation etc. We need a way to
+        // plumb that information to Trusted Web Activities.
+        WebappInfo info = WebappInfo.create(mIntent, session);
+        if (info == null) return false;
+
+        WebappActivity.addWebappInfo(info.id(), info);
+        Intent launchIntent = WebappLauncherActivity.createWebappLaunchIntent(info, false);
+        launchIntent.putExtras(mIntent.getExtras());
+
+        mActivity.startActivity(launchIntent);
+        return true;
     }
 
     /**
@@ -463,7 +507,7 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
         // This system call is often modified by OEMs and not actionable. http://crbug.com/619646.
         StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
         try {
-            mActivity.startActivity(newIntent);
+            mActivity.startActivity(newIntent, getStartActivityIntentOptions());
         } catch (SecurityException ex) {
             if (isContentScheme) {
                 Toast.makeText(mActivity,

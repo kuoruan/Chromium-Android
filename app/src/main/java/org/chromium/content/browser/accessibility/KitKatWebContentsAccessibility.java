@@ -13,7 +13,6 @@ import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.content.browser.RenderCoordinates;
 import org.chromium.content_public.browser.WebContents;
 
 /**
@@ -25,9 +24,8 @@ public class KitKatWebContentsAccessibility extends WebContentsAccessibility {
     private String mSupportedHtmlElementTypes;
 
     KitKatWebContentsAccessibility(Context context, ViewGroup containerView,
-            WebContents webContents, RenderCoordinates renderCoordinates,
-            boolean shouldFocusOnPageLoad) {
-        super(context, containerView, webContents, renderCoordinates, shouldFocusOnPageLoad);
+            WebContents webContents, boolean shouldFocusOnPageLoad) {
+        super(context, containerView, webContents, shouldFocusOnPageLoad);
         mSupportedHtmlElementTypes = nativeGetSupportedHtmlElementTypes(mNativeObj);
     }
 

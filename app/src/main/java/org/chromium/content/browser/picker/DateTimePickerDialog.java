@@ -230,9 +230,11 @@ public class DateTimePickerDialog extends AlertDialog implements OnClickListener
             return mWrappedResources;
         }
 
-        private class WrappedResources extends Resources {
+        private static class WrappedResources extends Resources {
+            @SuppressWarnings("deprecation")
             WrappedResources(AssetManager assets, DisplayMetrics displayMetrics,
                     Configuration configuration) {
+                // The Resources constructor is safe to use on L & L_MR1
                 super(assets, displayMetrics, configuration);
             }
 

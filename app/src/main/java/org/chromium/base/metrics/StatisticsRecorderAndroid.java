@@ -15,11 +15,13 @@ public final class StatisticsRecorderAndroid {
     private StatisticsRecorderAndroid() {}
 
     /**
-      * @return All the registered histograms as JSON text.
-      */
-    public static String toJson() {
-        return nativeToJson();
+     * @param verbosityLevel controls the information that should be included when dumping each of
+     * the histogram.
+     * @return All the registered histograms as JSON text.
+     */
+    public static String toJson(@JSONVerbosityLevel int verbosityLevel) {
+        return nativeToJson(verbosityLevel);
     }
 
-    private static native String nativeToJson();
+    private static native String nativeToJson(@JSONVerbosityLevel int verbosityLevel);
 }

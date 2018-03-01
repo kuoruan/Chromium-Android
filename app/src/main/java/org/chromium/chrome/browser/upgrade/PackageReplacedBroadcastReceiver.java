@@ -8,8 +8,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Build;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.chrome.browser.notifications.channels.ChannelsUpdater;
 
 /**
@@ -31,7 +31,7 @@ public final class PackageReplacedBroadcastReceiver extends BroadcastReceiver {
     public void onReceive(final Context context, Intent intent) {
         if (!Intent.ACTION_MY_PACKAGE_REPLACED.equals(intent.getAction())) return;
         updateChannelsIfNecessary();
-        if (BuildInfo.isAtLeastO()) return;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) return;
         UpgradeIntentService.startMigrationIfNecessary(context);
     }
 

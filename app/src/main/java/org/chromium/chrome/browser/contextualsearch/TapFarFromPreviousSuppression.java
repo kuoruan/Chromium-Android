@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser.contextualsearch;
 
+import android.support.annotation.Nullable;
+
 /**
  * Implements the policy that a Tap relatively far away from an existing Contextual Search
  * selection should just dismiss our UX.  When a Tap is close by, we assume the user must have
@@ -20,14 +22,17 @@ class TapFarFromPreviousSuppression extends ContextualSearchHeuristic {
      * Constructs a heuristic to determine if the current Tap should be suppressed because it is
      * far from the previous tap.
      * @param controller The {@link ContextualSearchSelectionController}.
+     * @param previousTapState The state of the previous tap gesture, or {@code null}.
      * @param x The x coordinate of the tap gesture.
      * @param y The y coordinate of the tap gesture.
+     * @param wasSelectionEmptyBeforeTap Whether the selection was empty just before this tap.
      */
     TapFarFromPreviousSuppression(ContextualSearchSelectionController controller,
-            ContextualSearchTapState previousTapState, int x, int y) {
+            @Nullable ContextualSearchTapState previousTapState, int x, int y,
+            boolean wasSelectionEmptyBeforeTap) {
         mPxToDp = controller.getPxToDp();
         mPreviousTapState = previousTapState;
-        mShouldHandleTap = shouldHandleTap(x, y);
+        mShouldHandleTap = shouldHandleTap(x, y, wasSelectionEmptyBeforeTap);
     }
 
     @Override
@@ -36,17 +41,21 @@ class TapFarFromPreviousSuppression extends ContextualSearchHeuristic {
     }
 
     /**
+     * Determines whether the tap should be handled based on whether it's near a previous tap and
+     * whether the selection was visible just before that tap.  Uses the previous tap state.
+     * @param x The x coordinate of the current tap.
+     * @param y The y coordinate of the current tap.
+     * @param wasSelectionEmptyBeforeTap Whether the selection was empty before the current tap.
      * @return whether a tap at the given coordinates should be handled or not.
      */
-    private boolean shouldHandleTap(int x, int y) {
-        if (mPreviousTapState == null) return true;
+    private boolean shouldHandleTap(int x, int y, boolean wasSelectionEmptyBeforeTap) {
+        if (mPreviousTapState == null || wasSelectionEmptyBeforeTap) return true;
 
-        return mPreviousTapState.wasSuppressed() || wasTapCloseToPreviousTap(x, y);
+        return wasTapCloseToPreviousTap(x, y);
     }
 
     /**
-     * Determines whether a tap at the given coordinates is considered "close" to the previous
-     * tap.
+     * @return Whether a tap at the given coordinates is considered "close" to the previous tap.
      */
     private boolean wasTapCloseToPreviousTap(int x, int y) {
         float deltaXDp = (mPreviousTapState.getX() - x) * mPxToDp;

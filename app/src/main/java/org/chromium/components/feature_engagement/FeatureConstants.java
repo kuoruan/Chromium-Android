@@ -14,6 +14,7 @@ public final class FeatureConstants {
     public static final String DOWNLOAD_HOME_FEATURE = "IPH_DownloadHome";
     public static final String CHROME_HOME_EXPAND_FEATURE = "IPH_ChromeHomeExpand";
     public static final String CHROME_HOME_MENU_HEADER_FEATURE = "IPH_ChromeHomeMenuHeader";
+    public static final String CHROME_HOME_PULL_TO_REFRESH_FEATURE = "IPH_ChromeHomePullToRefresh";
     public static final String DATA_SAVER_PREVIEW_FEATURE = "IPH_DataSaverPreview";
     public static final String DATA_SAVER_DETAIL_FEATURE = "IPH_DataSaverDetail";
 
@@ -23,17 +24,20 @@ public final class FeatureConstants {
      * An IPH feature that encourages users who search a query from a web page in a new tab, to use
      * Contextual Search instead.
      */
-    public static final String CONTEXTUAL_SEARCH_FEATURE = "IPH_ContextualSearch";
+    public static final String CONTEXTUAL_SEARCH_WEB_SEARCH_FEATURE =
+            "IPH_ContextualSearchWebSearch";
 
     /**
      * An IPH feature for promoting tap over longpress for activating Contextual Search.
      */
-    public static final String CONTEXTUAL_SEARCH_TAP_FEATURE = "IPH_ContextualSearchTap";
+    public static final String CONTEXTUAL_SEARCH_PROMOTE_TAP_FEATURE =
+            "IPH_ContextualSearchPromoteTap";
 
     /**
      * An IPH feature for encouraging users to open the Contextual Search Panel.
      */
-    public static final String CONTEXTUAL_SEARCH_PANEL_FEATURE = "IPH_ContextualSearchPanel";
+    public static final String CONTEXTUAL_SEARCH_PROMOTE_PANEL_OPEN_FEATURE =
+            "IPH_ContextualSearchPromotePanelOpen";
 
     /**
      * An IPH feature for encouraging users to opt-in for Contextual Search.

@@ -8,11 +8,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.StrictMode;
 import android.os.SystemClock;
 import android.provider.Browser;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
@@ -25,6 +25,7 @@ import org.chromium.chrome.browser.externalnav.ExternalNavigationDelegateImpl;
 import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.util.IntentUtils;
+import org.chromium.content_public.browser.WebContents;
 
 import java.util.concurrent.TimeUnit;
 
@@ -213,7 +214,7 @@ public class InstantAppsHandler {
     private boolean handleIncomingIntentInternal(
             Context context, Intent intent, boolean isCustomTabsIntent, long startTime,
             boolean isRedirect) {
-        if (!isRedirect && !isCustomTabsIntent && BuildInfo.isAtLeastO()) {
+        if (!isRedirect && !isCustomTabsIntent && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Log.i(TAG, "Package manager handles intents on O+, not handling in Chrome");
             return false;
         }
@@ -225,7 +226,8 @@ public class InstantAppsHandler {
         }
 
         if (IntentUtils.safeGetBooleanExtra(intent, DO_NOT_LAUNCH_EXTRA, false)
-                || (BuildInfo.isAtLeastO() && (intent.getFlags() & FLAG_DO_NOT_LAUNCH) != 0)) {
+                || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                           && (intent.getFlags() & FLAG_DO_NOT_LAUNCH) != 0)) {
             maybeRecordFallbackStats(intent);
             Log.i(TAG, "Not handling with Instant Apps (DO_NOT_LAUNCH_EXTRA)");
             return false;
@@ -281,17 +283,49 @@ public class InstantAppsHandler {
      * @return Whether an Instant App intent was started.
      */
     public boolean handleNavigation(Context context, String url, Uri referrer, Tab tab) {
-        if (InstantAppsSettings.isInstantAppDefault(tab.getWebContents(), url)) {
+        boolean urlIsInstantAppDefault =
+                InstantAppsSettings.isInstantAppDefault(tab.getWebContents(), url);
+        if (shouldLaunchInstantApp(tab.getWebContents(), url, referrer, urlIsInstantAppDefault)) {
             return launchInstantAppForNavigation(context, url, referrer);
         }
-        maybeShowInstantAppBanner(context, url, referrer, tab);
+        maybeShowInstantAppBanner(context, url, referrer, tab, urlIsInstantAppDefault);
         return false;
     }
 
     /**
-     * Shows an Instant App banner if necessary for the page we're loading.
+     * Returns whether or not we should launch an instant app immediately for the given URL.
+     *
+     * @param webContents A {@link WebContents}.
+     * @param url The URL we might launch an instant app for.
+     * @param referrer The referring URL.
+     * @return Whether we should launch the instant app.
      */
-    protected void maybeShowInstantAppBanner(Context context, String url, Uri referrer, Tab tab) {}
+    private boolean shouldLaunchInstantApp(
+            WebContents webContents, String url, Uri referrer, boolean urlIsInstantAppDefault) {
+        // Launch the instant app automatically on these conditions:
+        // a) The host of the current URL and referrer are different, and the user has chosen to
+        //    launch this instant app in the past.
+        // b) The host of the current URL and referrer are the same, but the referrer URL isn't
+        //    handled by an instant app and the current one is.
+        if (!urlIsInstantAppDefault) return false;
+
+        String urlHost = Uri.parse(url).getHost();
+        boolean sameHosts =
+                referrer != null && urlHost != null && urlHost.equals(referrer.getHost());
+        return (sameHosts && getInstantAppIntentForUrl(referrer.toString()) == null) || !sameHosts;
+    }
+
+    /**
+     * Shows an Instant App banner if necessary for the page we're loading.
+     *
+     * @param context An Android {@link Context}.
+     * @param url The URL we're navigating to.
+     * @param referrer The referrer {@link Uri}.
+     * @param tab A Chrome {@link Tab}.
+     * @param isInstantAppDefault Whether this instant app is being opened by default.
+     */
+    protected void maybeShowInstantAppBanner(
+            Context context, String url, Uri referrer, Tab tab, boolean isInstantAppDefault) {}
 
     /**
      * Launches an Instant App immediately, if possible.
@@ -360,11 +394,14 @@ public class InstantAppsHandler {
      *
      * @param url The URL where the instant app is located.
      * @param checkHoldback Check if the app would be available if the user weren't in the holdback
-     * group.
+     *        group.
+     * @param includeUserPrefersBrowser Function should return true if there's an instant app intent
+     *        even if the user has opted out of instant apps.
      * @return Whether or not the instant app specified by the entry in the page's manifest is
-     * either available, or would be available if the user wasn't in the holdback group.
+     *         either available, or would be available if the user wasn't in the holdback group.
      */
-    public boolean isInstantAppAvailable(String url, boolean checkHoldback) {
+    public boolean isInstantAppAvailable(
+            String url, boolean checkHoldback, boolean includeUserPrefersBrowser) {
         return false;
     }
 

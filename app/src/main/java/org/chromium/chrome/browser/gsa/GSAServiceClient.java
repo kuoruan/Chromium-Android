@@ -19,7 +19,6 @@ import android.os.StrictMode;
 import android.util.Log;
 
 import org.chromium.base.Callback;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.AppHooks;
 
@@ -63,7 +62,6 @@ public class GSAServiceClient {
     /**
      * Handler of incoming messages from service.
      */
-    @SuppressFBWarnings("BC_IMPOSSIBLE_CAST")
     @SuppressLint("HandlerLeak")
     private class IncomingHandler extends Handler {
         @Override

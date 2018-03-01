@@ -13,8 +13,6 @@ import org.chromium.components.bookmarks.BookmarkId;
  * update themselves correctly on each event.
  */
 interface BookmarkUIObserver extends SelectionObserver<BookmarkId> {
-    void onBookmarkDelegateInitialized(BookmarkDelegate delegate);
-
     /**
      * Called when the entire UI is being destroyed and will be no longer in use.
      */

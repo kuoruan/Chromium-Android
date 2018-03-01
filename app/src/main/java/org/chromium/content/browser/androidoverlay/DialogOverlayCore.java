@@ -14,6 +14,7 @@ import android.view.SurfaceHolder;
 import android.view.Window;
 import android.view.WindowManager;
 
+import org.chromium.base.Log;
 import org.chromium.gfx.mojom.Rect;
 import org.chromium.media.mojom.AndroidOverlayConfig;
 
@@ -35,13 +36,13 @@ class DialogOverlayCore {
         // Notify the host that we have failed to get a surface or the surface was destroyed.
         void onOverlayDestroyed();
 
-        // Wait until the host has been told to clean up.  We are allowed to let surfaceDestroyed
+        // Wait until the host has been told to close.  We are allowed to let surfaceDestroyed
         // proceed once this happens.
-        void waitForCleanup();
+        void waitForClose();
 
-        // Notify the host that waitForCleanup() is done waiting, so that it can enforce that
-        // cleanup happens.
-        void enforceCleanup();
+        // Notify the host that waitForClose() is done waiting, so that it can enforce that cleanup
+        // always happens.
+        void enforceClose();
     }
 
     private Host mHost;
@@ -88,15 +89,11 @@ class DialogOverlayCore {
 
     /**
      * Release the underlying surface, and generally clean up, in response to
-     * the client releasing the AndroidOverlay.
+     * the client releasing the AndroidOverlay.  This may be called more than once.
      */
     public void release() {
         // If we've not released the dialog yet, then do so.
-        if (mDialog != null) {
-            if (mDialog.isShowing()) mDialog.dismiss();
-            mDialog = null;
-            mDialogCallbacks = null;
-        }
+        dismissDialogQuietly();
 
         mLayoutParams.token = null;
 
@@ -146,8 +143,8 @@ class DialogOverlayCore {
 
             // Notify the host that we've been destroyed, and wait for it to clean up or time out.
             mHost.onOverlayDestroyed();
-            mHost.waitForCleanup();
-            mHost.enforceCleanup();
+            mHost.waitForClose();
+            mHost.enforceClose();
             mHost = null;
         }
 
@@ -163,7 +160,7 @@ class DialogOverlayCore {
             // Notify the client.
             mHost.onOverlayDestroyed();
             mHost = null;
-            if (mDialog.isShowing()) mDialog.dismiss();
+            dismissDialogQuietly();
             return;
         }
 
@@ -241,5 +238,22 @@ class DialogOverlayCore {
      */
     Dialog getDialog() {
         return mDialog;
+    }
+
+    // Dismiss |mDialog| if needed, and clear it and the callbacks.  This hides any exception, since
+    // there's a race during app shutdown between this running on the overlay-ui thread, and losing
+    // the window token on the browser UI thread.
+    // See crbug.com/784224 .
+    private void dismissDialogQuietly() {
+        if (mDialog != null && mDialog.isShowing()) {
+            try {
+                mDialog.dismiss();
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to dismiss overlay dialog.  \"WindowLeaked\" is ignorable.");
+            }
+        }
+
+        mDialog = null;
+        mDialogCallbacks = null;
     }
 }

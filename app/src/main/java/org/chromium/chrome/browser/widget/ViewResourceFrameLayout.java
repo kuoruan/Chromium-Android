@@ -7,12 +7,12 @@ package org.chromium.chrome.browser.widget;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewParent;
 import android.widget.FrameLayout;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.ui.resources.dynamics.ViewResourceAdapter;
 
 /**
@@ -66,7 +66,7 @@ public class ViewResourceFrameLayout extends FrameLayout {
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
         // TODO(tedchoc): Switch to a better API when available. crbug.com/681877
-        if (BuildInfo.isAtLeastO() && isReadyForCapture()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isReadyForCapture()) {
             mResourceAdapter.invalidate(null);
         }
     }

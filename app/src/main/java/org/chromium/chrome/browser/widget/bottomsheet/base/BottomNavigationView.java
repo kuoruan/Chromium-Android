@@ -18,13 +18,11 @@ package org.chromium.chrome.browser.widget.bottomsheet.base;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
-import android.os.Build;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.R;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.view.ViewCompat;
 import android.support.v7.content.res.AppCompatResources;
 import android.support.v7.view.SupportMenuInflater;
 import android.support.v7.view.menu.MenuBuilder;
@@ -83,6 +81,7 @@ import android.widget.FrameLayout;
  * &lt;/menu&gt;
  * </pre>
  */
+@SuppressWarnings("RestrictTo")
 public class BottomNavigationView extends FrameLayout {
     private static final int[] CHECKED_STATE_SET = {android.R.attr.state_checked};
     private static final int[] DISABLED_STATE_SET = {-android.R.attr.state_enabled};
@@ -102,6 +101,10 @@ public class BottomNavigationView extends FrameLayout {
         this(context, attrs, 0);
     }
 
+    protected BottomNavigationMenuView getBottomNavigationMenuViewInstance(Context context) {
+        return new BottomNavigationMenuView(context);
+    }
+
     public BottomNavigationView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
@@ -110,10 +113,10 @@ public class BottomNavigationView extends FrameLayout {
         // Create the menu
         mMenu = new BottomNavigationMenu(context);
 
-        mMenuView = new BottomNavigationMenuView(context);
+        mMenuView = getBottomNavigationMenuViewInstance(context);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        params.gravity = Gravity.CENTER;
+        params.gravity = Gravity.BOTTOM;
         mMenuView.setLayoutParams(params);
 
         mPresenter.setBottomNavigationMenuView(mMenuView);

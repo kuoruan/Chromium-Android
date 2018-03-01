@@ -11,7 +11,6 @@
 
 package org.chromium.media.mojom;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
@@ -89,7 +88,7 @@ org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client, org.chromium.
 
         @Override
         public void initialize(
-VideoDecoderConfig config, boolean lowDelay, 
+VideoDecoderConfig config, boolean lowDelay, int cdmId, 
 InitializeResponse callback) {
 
             VideoDecoderInitializeParams _message = new VideoDecoderInitializeParams();
@@ -97,6 +96,8 @@ InitializeResponse callback) {
             _message.config = config;
 
             _message.lowDelay = lowDelay;
+
+            _message.cdmId = cdmId;
 
 
             getProxyHandler().getMessageReceiver().acceptWithResponder(
@@ -295,7 +296,7 @@ OverlayInfo overlayInfo) {
                         VideoDecoderInitializeParams data =
                                 VideoDecoderInitializeParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().initialize(data.config, data.lowDelay, new VideoDecoderInitializeResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        getImpl().initialize(data.config, data.lowDelay, data.cdmId, new VideoDecoderInitializeResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
             
@@ -476,6 +477,7 @@ OverlayInfo overlayInfo) {
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public VideoDecoderConfig config;
         public boolean lowDelay;
+        public int cdmId;
     
         private VideoDecoderInitializeParams(int version) {
             super(STRUCT_SIZE, version);
@@ -521,6 +523,10 @@ OverlayInfo overlayInfo) {
                     
                     result.lowDelay = decoder0.readBoolean(16, 0);
                 }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.cdmId = decoder0.readInt(20);
+                }
             } finally {
                 decoder0.decreaseStackDepth();
             }
@@ -535,6 +541,8 @@ OverlayInfo overlayInfo) {
             encoder0.encode(this.config, 8, false);
             
             encoder0.encode(this.lowDelay, 16, 0);
+            
+            encoder0.encode(this.cdmId, 20);
         }
     
         /**
@@ -553,6 +561,8 @@ OverlayInfo overlayInfo) {
                 return false;
             if (this.lowDelay!= other.lowDelay)
                 return false;
+            if (this.cdmId!= other.cdmId)
+                return false;
             return true;
         }
     
@@ -565,6 +575,7 @@ OverlayInfo overlayInfo) {
             int result = prime + getClass().hashCode();
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.config);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.lowDelay);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cdmId);
             return result;
         }
     }

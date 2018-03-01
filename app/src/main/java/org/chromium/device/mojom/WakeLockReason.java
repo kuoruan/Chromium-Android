@@ -11,17 +11,16 @@
 
 package org.chromium.device.mojom;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 public final class WakeLockReason {
 
 
-    public static final int REASON_AUDIO_PLAYBACK = (int) (0L);
+    public static final int AUDIO_PLAYBACK = (int) (0L);
 
-    public static final int REASON_VIDEO_PLAYBACK = (int) (1L);
+    public static final int VIDEO_PLAYBACK = (int) (1L);
 
-    public static final int REASON_OTHER = (int) (2L);
+    public static final int OTHER = (int) (2L);
 
 
     private static final boolean IS_EXTENSIBLE = false;

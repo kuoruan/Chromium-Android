@@ -16,7 +16,6 @@ import android.text.format.Formatter;
 import android.view.View;
 import android.widget.TextView;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.favicon.FaviconHelper;
 import org.chromium.chrome.browser.favicon.FaviconHelper.FaviconImageCallback;
@@ -27,7 +26,6 @@ import org.chromium.chrome.browser.widget.RoundedIconGenerator;
  * A preference that displays a website's favicon and URL and, optionally, the amount of local
  * storage used by the site.
  */
-@SuppressFBWarnings("EQ_COMPARETO_USE_OBJECT_EQUALS")
 class WebsitePreference extends Preference implements FaviconImageCallback {
     private final Website mSite;
     private final SiteSettingsCategory mCategory;
@@ -67,6 +65,10 @@ class WebsitePreference extends Preference implements FaviconImageCallback {
 
     public void putSiteIntoExtras(String key) {
         getExtras().putSerializable(key, mSite);
+    }
+
+    public void putSiteAddressIntoExtras(String key) {
+        getExtras().putSerializable(key, mSite.getAddress());
     }
 
     /**

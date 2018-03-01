@@ -11,7 +11,6 @@
 
 package org.chromium.mojo.bindings.pipecontrol;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
@@ -32,17 +31,11 @@ public final class RunOrClosePipeInput extends org.chromium.mojo.bindings.Union 
       return mTag_ == -1;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setPeerAssociatedEndpointClosedEvent(PeerAssociatedEndpointClosedEvent peerAssociatedEndpointClosedEvent) {
         this.mTag_ = Tag.PeerAssociatedEndpointClosedEvent;
         this.mPeerAssociatedEndpointClosedEvent = peerAssociatedEndpointClosedEvent;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public PeerAssociatedEndpointClosedEvent getPeerAssociatedEndpointClosedEvent() {
         assert this.mTag_ == Tag.PeerAssociatedEndpointClosedEvent;
         return this.mPeerAssociatedEndpointClosedEvent;

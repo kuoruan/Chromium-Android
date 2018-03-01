@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * DialogOverlayCore::Host implementation that transfers messages to the thread on which it was
- * constructed.  Due to threading concerns, waitForCleanup is not forwarded.
+ * constructed.  Due to threading concerns, waitForClose is not forwarded.
  */
 class ThreadHoppingHost implements DialogOverlayCore.Host {
     private static final String TAG = "ThreadHoppingHost";
@@ -62,7 +62,7 @@ class ThreadHoppingHost implements DialogOverlayCore.Host {
     // thread would block.  Instead, we wait here and somebody must call onCleanup() to let us know
     // that cleanup has started, and that we may return.
     @Override
-    public void waitForCleanup() {
+    public void waitForClose() {
         while (true) {
             try {
                 // TODO(liberato): in case of InterruptedException, we really should adjust the
@@ -76,17 +76,17 @@ class ThreadHoppingHost implements DialogOverlayCore.Host {
     }
 
     @Override
-    public void enforceCleanup() {
+    public void enforceClose() {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                mHost.enforceCleanup();
+                mHost.enforceClose();
             }
         });
     }
 
     // Notify us that cleanup has started.  This is called on |mHandler|'s thread.
-    public void onCleanup() {
+    public void onClose() {
         mSemaphore.release(1);
     }
 }

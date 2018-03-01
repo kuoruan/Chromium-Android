@@ -10,7 +10,6 @@ import android.graphics.Bitmap;
 import org.chromium.base.ObserverList;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.CalledByNative;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.browser.signin.AccountTrackerService;
 
 import java.util.ArrayList;
@@ -73,7 +72,6 @@ public class ProfileDownloader {
             mImageSidePixels = new ArrayList<>();
         }
 
-        @SuppressFBWarnings("LI_LAZY_INIT_UPDATE_STATIC")
         public static PendingProfileDownloads get(Context context) {
             ThreadUtils.assertOnUiThread();
             if (sPendingProfileDownloads == null) {

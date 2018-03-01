@@ -55,9 +55,7 @@ import java.util.UUID;
  * object.
  */
 @JNINamespace("content")
-// TODO(tedchoc): Remove the package restriction once this class moves to a non-public content
-//               package whose visibility will be enforced via DEPS.
-/* package */ class WebContentsImpl implements WebContents, RenderFrameHostDelegate {
+public class WebContentsImpl implements WebContents, RenderFrameHostDelegate {
     private static final String PARCEL_VERSION_KEY = "version";
     private static final String PARCEL_WEBCONTENTS_KEY = "webcontents";
     private static final String PARCEL_PROCESS_GUARD_KEY = "processguard";
@@ -162,6 +160,9 @@ import java.util.UUID;
         }
     }
 
+    // Cached copy of all positions and scales as reported by the renderer.
+    private RenderCoordinates mRenderCoordinates;
+
     private InternalsHolder mInternalsHolder;
 
     private static class WebContentsInternalsImpl implements WebContentsInternals {
@@ -180,6 +181,10 @@ import java.util.UUID;
         WebContentsInternalsImpl internals = new WebContentsInternalsImpl();
         internals.retainedObjects = new HashSet<Object>();
         internals.injectedObjects = new HashMap<String, Pair<Object, Class>>();
+
+        mRenderCoordinates = new RenderCoordinates();
+        mRenderCoordinates.reset();
+
         nativeCreateJavaBridgeDispatcherHost(mNativeWebContentsAndroid, internals.retainedObjects);
         mInternalsHolder = new DefaultInternalsHolder();
         mInternalsHolder.set(internals);
@@ -502,12 +507,12 @@ import java.util.UUID;
     }
 
     @Override
-    public void requestSmartClipExtract(
-            int x, int y, int width, int height, RenderCoordinates coordinateSpace) {
+    public void requestSmartClipExtract(int x, int y, int width, int height) {
         if (mSmartClipCallback == null) return;
         mSmartClipCallback.storeRequestRect(new Rect(x, y, x + width, y + height));
+        RenderCoordinates coordinateSpace = getRenderCoordinates();
         float dpi = coordinateSpace.getDeviceScaleFactor();
-        y -= coordinateSpace.getContentOffsetYPix();
+        y = (int) (y - coordinateSpace.getContentOffsetYPix());
         nativeRequestSmartClipExtract(mNativeWebContentsAndroid, mSmartClipCallback,
                 (int) (x / dpi), (int) (y / dpi), (int) (width / dpi), (int) (height / dpi));
     }
@@ -724,6 +729,13 @@ import java.util.UUID;
         if (mNativeWebContentsAndroid != 0) {
             nativeRemoveJavascriptInterface(mNativeWebContentsAndroid, name);
         }
+    }
+
+    /**
+     * Returns {@link RenderCoordinates}. This method is intended for use in content layer only.
+     */
+    public RenderCoordinates getRenderCoordinates() {
+        return mRenderCoordinates;
     }
 
     // This is static to avoid exposing a public destroy method on the native side of this class.

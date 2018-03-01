@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.preferences.website;
 
+import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.browser.ContentSettingsType;
 import org.chromium.chrome.browser.util.MathUtils;
 
@@ -143,10 +144,24 @@ public class Website implements Serializable {
     }
 
     /**
+     * Returns the Autoplay exception info for this Website.
+     */
+    public ContentSettingException getAutoplayException() {
+        return mAutoplayExceptionInfo;
+    }
+
+    /**
      * Sets the Autoplay exception info for this Website.
      */
     public void setAutoplayException(ContentSettingException exception) {
         mAutoplayExceptionInfo = exception;
+    }
+
+    /**
+     * Returns the background sync exception info for this Website.
+     */
+    public ContentSettingException getBackgroundSyncException() {
+        return mBackgroundSyncExceptionInfo;
     }
 
     /**
@@ -282,6 +297,13 @@ public class Website implements Serializable {
     }
 
     /**
+     * Returns the JavaScript exception info for this Website.
+     */
+    public ContentSettingException getJavaScriptException() {
+        return mJavaScriptException;
+    }
+
+    /**
      * Returns what permission governs Sound access.
      */
     public ContentSetting getSoundPermission() {
@@ -292,8 +314,14 @@ public class Website implements Serializable {
      * Configure Sound permission access setting for this site.
      */
     public void setSoundPermission(ContentSetting value) {
-        if (mSoundException != null) {
-            mSoundException.setContentSetting(value);
+        if (mSoundException == null) {
+            return;
+        }
+        mSoundException.setContentSetting(value);
+        if (value == ContentSetting.BLOCK) {
+            RecordUserAction.record("SoundContentSetting.MuteBy.SiteSettings");
+        } else {
+            RecordUserAction.record("SoundContentSetting.UnmuteBy.SiteSettings");
         }
     }
 
@@ -302,6 +330,13 @@ public class Website implements Serializable {
      */
     public void setSoundException(ContentSettingException exception) {
         mSoundException = exception;
+    }
+
+    /**
+     * Returns the Sound exception info for this Website.
+     */
+    public ContentSettingException getSoundException() {
+        return mSoundException;
     }
 
     /**

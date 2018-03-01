@@ -83,11 +83,13 @@ public class MotionEventSynthesizer {
                 event.recycle();
 
                 if (pointerCount > 1) {
-                    event = MotionEvent.obtain(
-                            mDownTimeInMs, timeInMs,
-                            MotionEvent.ACTION_POINTER_DOWN, pointerCount,
-                            mPointerProperties, mPointerCoords,
-                            0, 0, 1, 1, 0, 0, 0, 0);
+                    // This code currently only works for a max of 2 touch points.
+                    assert pointerCount == 2;
+
+                    int pointerIndex = 1 << MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+                    event = MotionEvent.obtain(mDownTimeInMs, timeInMs,
+                            MotionEvent.ACTION_POINTER_DOWN | pointerIndex, pointerCount,
+                            mPointerProperties, mPointerCoords, 0, 0, 1, 1, 0, 0, 0, 0);
                     mTarget.dispatchTouchEvent(event);
                     event.recycle();
                 }
@@ -113,10 +115,13 @@ public class MotionEventSynthesizer {
             }
             case MotionEventAction.END: {
                 if (pointerCount > 1) {
-                    MotionEvent event = MotionEvent.obtain(
-                            mDownTimeInMs, timeInMs, MotionEvent.ACTION_POINTER_UP,
-                            pointerCount, mPointerProperties, mPointerCoords,
-                            0, 0, 1, 1, 0, 0, 0, 0);
+                    // This code currently only works for a max of 2 touch points.
+                    assert pointerCount == 2;
+
+                    int pointerIndex = 1 << MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+                    MotionEvent event = MotionEvent.obtain(mDownTimeInMs, timeInMs,
+                            MotionEvent.ACTION_POINTER_UP | pointerIndex, pointerCount,
+                            mPointerProperties, mPointerCoords, 0, 0, 1, 1, 0, 0, 0, 0);
                     mTarget.dispatchTouchEvent(event);
                     event.recycle();
                 }

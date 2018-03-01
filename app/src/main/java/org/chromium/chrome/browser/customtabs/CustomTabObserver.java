@@ -155,17 +155,6 @@ class CustomTabObserver extends EmptyTabObserver {
                 RecordHistogram.recordCustomTimesHistogram(
                         histogramPrefix + ".IntentToFirstNavigationStartTime.ZoomedIn",
                         timeToPageLoadStartedMs, 200, 1000, TimeUnit.MILLISECONDS, 100);
-
-                // Record the histograms under deprecated names to overlap in time with
-                // the new names during one Chrome release.
-                // TODO(pasko): remove after M62 reaches Stable.
-                RecordHistogram.recordCustomTimesHistogram(
-                        histogramPrefix + ".IntentToFirstCommitNavigationTime2.ZoomedOut",
-                        timeToPageLoadStartedMs, 50, TimeUnit.MINUTES.toMillis(10),
-                        TimeUnit.MILLISECONDS, 50);
-                RecordHistogram.recordCustomTimesHistogram(
-                        histogramPrefix + ".IntentToFirstCommitNavigationTime2.ZoomedIn",
-                        timeToPageLoadStartedMs, 200, 1000, TimeUnit.MILLISECONDS, 100);
             }
             // Same bounds and bucket count as PLT histograms.
             RecordHistogram.recordCustomTimesHistogram(histogramPrefix + ".IntentToPageLoadedTime",

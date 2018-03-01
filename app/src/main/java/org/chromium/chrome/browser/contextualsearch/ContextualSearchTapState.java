@@ -5,27 +5,27 @@
 package org.chromium.chrome.browser.contextualsearch;
 
 /**
- * Encapsulates the state of a recent Tap gesture; x, y position and if suppressed.
+ * Encapsulates the state of a recent Tap gesture; x, y position and if ML-suppressed.
  * Instances of this class are immutable.
  */
 class ContextualSearchTapState {
     private final float mX;
     private final float mY;
     private final long mTapTimeNanoseconds;
-    private final boolean mWasSuppressed;
+    private final boolean mWasMlSuppressed;
 
     /**
      * Constructs a Tap at the given x,y position and indicates if the tap was suppressed or not.
      * @param x The x coordinate of the current tap.
      * @param y The y coordinate of the current tap.
      * @param tapTimeNanoseconds The timestamp when the Tap occurred.
-     * @param wasSuppressed Whether this tap was suppressed for any reason.
+     * @param wasMlSuppressed Whether this tap was suppressed by the ML model.
      */
-    ContextualSearchTapState(float x, float y, long tapTimeNanoseconds, boolean wasSuppressed) {
+    ContextualSearchTapState(float x, float y, long tapTimeNanoseconds, boolean wasMlSuppressed) {
         mX = x;
         mY = y;
         mTapTimeNanoseconds = tapTimeNanoseconds;
-        mWasSuppressed = wasSuppressed;
+        mWasMlSuppressed = wasMlSuppressed;
     }
 
     /**
@@ -50,9 +50,9 @@ class ContextualSearchTapState {
     }
 
     /**
-     * @return Whether this Tap was suppressed.
+     * @return Whether this Tap was suppressed by an ML model.
      */
-    boolean wasSuppressed() {
-        return mWasSuppressed;
+    boolean wasMlSuppressed() {
+        return mWasMlSuppressed;
     }
 }

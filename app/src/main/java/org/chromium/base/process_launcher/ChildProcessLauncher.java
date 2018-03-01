@@ -12,7 +12,6 @@ import android.os.Looper;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.TraceEvent;
-import org.chromium.base.annotations.SuppressFBWarnings;
 
 import java.io.IOException;
 import java.util.List;
@@ -105,7 +104,6 @@ public class ChildProcessLauncher {
      * @param clientInterfaces the interfaces that should be passed to the started process so it can
      * communicate with the parent process.
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public ChildProcessLauncher(Handler launcherHandler, Delegate delegate, String[] commandLine,
             FileDescriptorInfo[] filesToBeMapped, ChildConnectionAllocator connectionAllocator,
             List<IBinder> clientInterfaces) {

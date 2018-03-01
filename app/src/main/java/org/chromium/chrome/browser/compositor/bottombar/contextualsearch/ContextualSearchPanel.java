@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.compositor.bottombar.contextualsearch;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Handler;
 
@@ -24,13 +25,8 @@ import org.chromium.chrome.browser.compositor.layouts.LayoutUpdateHost;
 import org.chromium.chrome.browser.compositor.scene_layer.ContextualSearchSceneLayer;
 import org.chromium.chrome.browser.compositor.scene_layer.SceneOverlayLayer;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchManagementDelegate;
-import org.chromium.chrome.browser.contextualsearch.ContextualSearchUma;
-import org.chromium.chrome.browser.feature_engagement.TrackerFactory;
+import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.util.MathUtils;
-import org.chromium.components.feature_engagement.EventConstants;
-import org.chromium.components.feature_engagement.FeatureConstants;
-import org.chromium.components.feature_engagement.Tracker;
-import org.chromium.components.feature_engagement.TriggerState;
 import org.chromium.ui.base.LocalizationUtils;
 import org.chromium.ui.resources.ResourceManager;
 
@@ -157,11 +153,8 @@ public class ContextualSearchPanel extends OverlayPanel {
             LayerTitleCache layerTitleCache, ResourceManager resourceManager, float yOffset) {
         super.getUpdatedSceneOverlayTree(
                 viewport, visibleViewport, layerTitleCache, resourceManager, yOffset);
-        mSceneLayer.update(resourceManager, this,
-                getSearchBarControl(),
-                getPeekPromoControl(),
-                getPromoControl(),
-                getImageControl());
+        mSceneLayer.update(resourceManager, this, getSearchBarControl(), getBarBannerControl(),
+                getPromoControl(), getImageControl());
 
         return mSceneLayer;
     }
@@ -201,36 +194,20 @@ public class ContextualSearchPanel extends OverlayPanel {
     public void setPanelState(PanelState toState, StateChangeReason reason) {
         PanelState fromState = getPanelState();
 
-        mPanelMetrics.onPanelStateChanged(fromState, toState, reason);
+        mPanelMetrics.onPanelStateChanged(
+                fromState, toState, reason, Profile.getLastUsedProfile().getOriginalProfile());
 
         if (toState == PanelState.PEEKED
                 && (fromState == PanelState.CLOSED || fromState == PanelState.UNDEFINED)) {
-            // If the Peek Promo is visible, it should animate when the SearchBar peeks.
-            if (getPeekPromoControl().isVisible()) {
-                getPeekPromoControl().animateAppearance();
+            // If the Bar Banner is visible, it should animate when the SearchBar peeks.
+            if (getBarBannerControl().isVisible()) {
+                getBarBannerControl().animateAppearance();
             }
         }
 
-        if (fromState == PanelState.PEEKED
-                && (toState == PanelState.EXPANDED || toState == PanelState.MAXIMIZED)) {
-            // After opening the Panel to either expanded or maximized state,
-            // the promo should disappear.
-            getPeekPromoControl().hide();
-
-            // Notify Feature Engagement that the Panel has opened.
-            Tracker tracker =
-                    TrackerFactory.getTrackerForProfile(mActivity.getActivityTab().getProfile());
-            tracker.notifyEvent(EventConstants.CONTEXTUAL_SEARCH_PANEL_OPENED);
-
-            // Log whether IPH for opening the panel has been shown before.
-            ContextualSearchUma.logPanelOpenedIPH(
-                    tracker.getTriggerState(FeatureConstants.CONTEXTUAL_SEARCH_PANEL_FEATURE)
-                    == TriggerState.HAS_BEEN_DISPLAYED);
-
-            // Log whether IPH for Contextual Search has been shown before.
-            ContextualSearchUma.logContextualSearchIPH(
-                    tracker.getTriggerState(FeatureConstants.CONTEXTUAL_SEARCH_FEATURE)
-                    == TriggerState.HAS_BEEN_DISPLAYED);
+        if ((fromState == PanelState.UNDEFINED || fromState == PanelState.CLOSED)
+                && toState == PanelState.PEEKED) {
+            mManagementDelegate.onPanelFinishedShowing();
         }
 
         super.setPanelState(toState, reason);
@@ -364,7 +341,7 @@ public class ContextualSearchPanel extends OverlayPanel {
     protected void destroyComponents() {
         super.destroyComponents();
         destroyPromoControl();
-        destroyPeekPromoControl();
+        destroyBarBannerControl();
         destroySearchBarControl();
     }
 
@@ -402,12 +379,12 @@ public class ContextualSearchPanel extends OverlayPanel {
 
     @Override
     public float getBarContainerHeight() {
-        return getBarHeight() + getPeekPromoControl().getHeightPx();
+        return getBarHeight() + getBarBannerControl().getHeightPx();
     }
 
     @Override
     protected float getPeekedHeight() {
-        return getBarHeightPeeking() + getPeekPromoControl().getHeightPeekingPx() * mPxToDp;
+        return getBarHeightPeeking() + getBarBannerControl().getHeightPeekingPx() * mPxToDp;
     }
 
     @Override
@@ -479,18 +456,25 @@ public class ContextualSearchPanel extends OverlayPanel {
     }
 
     /**
-     * Shows the peek promo.
+     * Shows the Bar Banner.
      */
-    public void showPeekPromo() {
-        getPeekPromoControl().show();
+    public void showBarBanner() {
+        getBarBannerControl().show();
     }
 
     /**
-     * @return Whether the Peek Promo is visible.
+     * Hides the Bar Banner.
+     */
+    public void hideBarBanner() {
+        getBarBannerControl().hide();
+    }
+
+    /**
+     * @return Whether the Bar Banner is visible.
      */
     @VisibleForTesting
-    public boolean isPeekPromoVisible() {
-        return getPeekPromoControl().isVisible();
+    public boolean isBarBannerVisible() {
+        return getBarBannerControl().isVisible();
     }
 
     /**
@@ -621,6 +605,27 @@ public class ContextualSearchPanel extends OverlayPanel {
         getImageControl().setThumbnailUrl(thumbnailUrl);
     }
 
+    /**
+     * Calculates the position of the Contextual Search panel in the screen.
+     * @return A {@link Rect} object that represents the Contextual Search panel's position in
+     *         the screen, in pixels.
+     */
+    public Rect getPanelRect() {
+        int[] contentLocationInWindow = new int[2];
+        mActivity.findViewById(android.R.id.content).getLocationInWindow(contentLocationInWindow);
+        int leftPadding = contentLocationInWindow[0];
+        int topPadding = contentLocationInWindow[1];
+
+        // getOffsetX() and getOffsetY() return the position of the panel relative to the activity,
+        // therefore leftPadding and topPadding are added to get the position in the screen.
+        int left = (int) (getOffsetX() / mPxToDp) + leftPadding;
+        int top = (int) (getOffsetY() / mPxToDp) + topPadding;
+        int bottom = top + (int) (getBarHeight() / mPxToDp);
+        int right = left + (int) (getWidth() / mPxToDp);
+
+        return new Rect(left, top, right, bottom);
+    }
+
     // ============================================================================================
     // Panel Metrics
     // ============================================================================================
@@ -652,7 +657,7 @@ public class ContextualSearchPanel extends OverlayPanel {
         super.updatePanelForCloseOrPeek(percentage);
 
         getPromoControl().onUpdateFromCloseToPeek(percentage);
-        getPeekPromoControl().onUpdateFromCloseToPeek(percentage);
+        getBarBannerControl().onUpdateFromCloseToPeek(percentage);
         getSearchBarControl().onUpdateFromCloseToPeek(percentage);
     }
 
@@ -661,7 +666,7 @@ public class ContextualSearchPanel extends OverlayPanel {
         super.updatePanelForExpansion(percentage);
 
         getPromoControl().onUpdateFromPeekToExpand(percentage);
-        getPeekPromoControl().onUpdateFromPeekToExpand(percentage);
+        getBarBannerControl().onUpdateFromPeekToExpand(percentage);
         getSearchBarControl().onUpdateFromPeekToExpand(percentage);
     }
 
@@ -670,13 +675,16 @@ public class ContextualSearchPanel extends OverlayPanel {
         super.updatePanelForMaximization(percentage);
 
         getPromoControl().onUpdateFromExpandToMaximize(percentage);
-        getPeekPromoControl().onUpdateFromExpandToMaximize(percentage);
+        getBarBannerControl().onUpdateFromExpandToMaximize(percentage);
     }
 
     @Override
     protected void updatePanelForSizeChange() {
         if (getPromoControl().isVisible()) {
             getPromoControl().invalidate(true);
+        }
+        if (getBarBannerControl().isVisible()) {
+            getBarBannerControl().onResized(this);
         }
 
         // NOTE(pedrosimonetti): We cannot tell where the selection will be after the
@@ -687,6 +695,8 @@ public class ContextualSearchPanel extends OverlayPanel {
         updateBasePageTargetY();
 
         super.updatePanelForSizeChange();
+
+        mManagementDelegate.onPanelResized();
     }
 
     // ============================================================================================
@@ -757,30 +767,29 @@ public class ContextualSearchPanel extends OverlayPanel {
     }
 
     // ============================================================================================
-    // Peek Promo
+    // Bar Banner
     // ============================================================================================
 
-    private ContextualSearchPeekPromoControl mPeekPromoControl;
+    private ContextualSearchBarBannerControl mBarBannerControl;
 
     /**
-     * Creates the ContextualSearchPeekPromoControl, if needed.
+     * Creates the ContextualSearchBarBannerControl, if needed.
      */
-    private ContextualSearchPeekPromoControl getPeekPromoControl() {
-        if (mPeekPromoControl == null) {
-            mPeekPromoControl =
-                    new ContextualSearchPeekPromoControl(this, mContext, mContainerView,
-                            mResourceLoader);
+    private ContextualSearchBarBannerControl getBarBannerControl() {
+        if (mBarBannerControl == null) {
+            mBarBannerControl = new ContextualSearchBarBannerControl(
+                    this, mContext, mContainerView, mResourceLoader);
         }
-        return mPeekPromoControl;
+        return mBarBannerControl;
     }
 
     /**
-     * Destroys the ContextualSearchPeekPromoControl.
+     * Destroys the ContextualSearchBarBannerControl.
      */
-    private void destroyPeekPromoControl() {
-        if (mPeekPromoControl != null) {
-            mPeekPromoControl.destroy();
-            mPeekPromoControl = null;
+    private void destroyBarBannerControl() {
+        if (mBarBannerControl != null) {
+            mBarBannerControl.destroy();
+            mBarBannerControl = null;
         }
     }
 

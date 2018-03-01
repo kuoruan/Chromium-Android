@@ -16,14 +16,11 @@
 
 package org.chromium.chrome.browser.widget.bottomsheet.base;
 
-import static android.support.annotation.RestrictTo.Scope.GROUP_ID;
-
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
 import android.support.design.R;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
@@ -33,32 +30,30 @@ import android.support.v7.view.menu.MenuView;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 /**
  * Forked from android.support.design.internal.BottomNavigationItemView.
- *
- * @hide
  */
-@RestrictTo(GROUP_ID)
-public class BottomNavigationItemView extends FrameLayout implements MenuView.ItemView {
+@SuppressWarnings("RestrictTo")
+public class BottomNavigationItemView extends LinearLayout implements MenuView.ItemView {
     public static final int INVALID_ITEM_POSITION = -1;
 
     private static final int[] CHECKED_STATE_SET = {android.R.attr.state_checked};
 
-    private final int mDefaultMargin;
-    private final float mScaleUpFactor;
-    private final float mScaleDownFactor;
+    private int mDefaultMargin;
+    private float mScaleUpFactor;
+    private float mScaleDownFactor;
 
-    private ImageView mIcon;
-    private final TextView mSmallLabel;
-    private final TextView mLargeLabel;
+    protected ImageView mIcon;
+    private TextView mSmallLabel;
+    private TextView mLargeLabel;
     private int mItemPosition = INVALID_ITEM_POSITION;
     private boolean mLabelHidden;
 
-    private MenuItemImpl mItemData;
+    protected MenuItemImpl mItemData;
 
     private ColorStateList mIconTint;
 
@@ -72,6 +67,15 @@ public class BottomNavigationItemView extends FrameLayout implements MenuView.It
 
     public BottomNavigationItemView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        initVisuals(context);
+    }
+
+    /**
+     * Initializes the menu item's visual style.
+     *
+     * @param context An Android {@link Context}.
+     */
+    protected void initVisuals(Context context) {
         final Resources res = getResources();
         int inactiveLabelSize =
                 res.getDimensionPixelSize(R.dimen.design_bottom_navigation_text_size);
@@ -82,10 +86,17 @@ public class BottomNavigationItemView extends FrameLayout implements MenuView.It
         mScaleDownFactor = 1f * inactiveLabelSize / activeLabelSize;
 
         LayoutInflater.from(context).inflate(R.layout.design_bottom_navigation_item, this, true);
+        setOrientation(LinearLayout.VERTICAL);
+        setGravity(Gravity.CENTER);
         setBackgroundResource(R.drawable.design_bottom_navigation_item_background);
-        mIcon = (ImageView) findViewById(R.id.icon);
         mSmallLabel = (TextView) findViewById(R.id.smallLabel);
         mLargeLabel = (TextView) findViewById(R.id.largeLabel);
+
+        mIcon = (ImageView) findViewById(R.id.icon);
+        LayoutParams iconParams = (LayoutParams) mIcon.getLayoutParams();
+        iconParams.gravity = Gravity.CENTER_HORIZONTAL | Gravity.CENTER;
+        iconParams.topMargin = mDefaultMargin;
+        mIcon.setLayoutParams(iconParams);
     }
 
     @Override
@@ -125,11 +136,6 @@ public class BottomNavigationItemView extends FrameLayout implements MenuView.It
 
     @Override
     public void setChecked(boolean checked) {
-        LayoutParams iconParams = (LayoutParams) mIcon.getLayoutParams();
-        iconParams.gravity = Gravity.CENTER_HORIZONTAL | Gravity.CENTER;
-        iconParams.topMargin = mDefaultMargin;
-        mIcon.setLayoutParams(iconParams);
-
         if (!mLabelHidden) {
             ViewCompat.setPivotX(mLargeLabel, mLargeLabel.getWidth() / 2f);
             ViewCompat.setPivotY(mLargeLabel, mLargeLabel.getBaseline());
@@ -161,6 +167,15 @@ public class BottomNavigationItemView extends FrameLayout implements MenuView.It
     @Override
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
+        setEnabledInternal(enabled);
+    }
+
+    /**
+     * Enables/disables the child elements of this navigation item view.
+     *
+     * @param enabled Whether or not the item is enabled.
+     */
+    protected void setEnabledInternal(boolean enabled) {
         mSmallLabel.setEnabled(enabled);
         mLargeLabel.setEnabled(enabled);
         mIcon.setEnabled(enabled);
@@ -209,7 +224,13 @@ public class BottomNavigationItemView extends FrameLayout implements MenuView.It
         setContentDescription(mItemData.getTitle());
     }
 
-    public void setIconTintList(ColorStateList tint) {
+    /**
+     * Assigns the tint of the icon in its various states.
+     *
+     * @param tint The {@link ColorStateList} representing the tint of the icon in different
+     * states.
+     */
+    public void setIconTint(ColorStateList tint) {
         mIconTint = tint;
         if (mItemData != null) {
             // Update the icon so that the tint takes effect
@@ -217,9 +238,15 @@ public class BottomNavigationItemView extends FrameLayout implements MenuView.It
         }
     }
 
-    public void setTextColor(ColorStateList color) {
-        mSmallLabel.setTextColor(color);
-        mLargeLabel.setTextColor(color);
+    /**
+     * Assigns the colors of the label in its various states.
+     *
+     * @param colors The {@link ColorStateList} representing the color of the label in different
+     * states.
+     */
+    public void setTextColors(ColorStateList colors) {
+        mSmallLabel.setTextColor(colors);
+        mLargeLabel.setTextColor(colors);
     }
 
     public void setItemBackground(int background) {

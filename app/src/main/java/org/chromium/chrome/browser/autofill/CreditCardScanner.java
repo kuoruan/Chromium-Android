@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.autofill;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.content_public.browser.WebContents;
 
 /**
@@ -23,7 +22,6 @@ public class CreditCardScanner {
     protected final Delegate mDelegate;
 
     /** The web contents that's requesting a scan. Used in subclass. */
-    @SuppressFBWarnings({"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"})
     protected final WebContents mWebContents;
 
     /** Builds instances of credit card scanners. */

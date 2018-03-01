@@ -232,6 +232,7 @@ public class SignInPreference
         }
         PersonalizedSigninPromoView signinPromoView =
                 view.findViewById(R.id.signin_promo_view_container);
+        mSigninPromoController.detach();
         mSigninPromoController.setupPromoView(getContext(), signinPromoView, profileData, () -> {
             ChromePreferenceManager.getInstance().setSettingsPersonalizedSigninPromoDismissed(true);
             update();

@@ -11,7 +11,6 @@
 
 package org.chromium.blink.mojom.document_metadata;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
@@ -38,65 +37,41 @@ public final class Values extends org.chromium.mojo.bindings.Union {
       return mTag_ == -1;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setBoolValues(boolean[] boolValues) {
         this.mTag_ = Tag.BoolValues;
         this.mBoolValues = boolValues;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public boolean[] getBoolValues() {
         assert this.mTag_ == Tag.BoolValues;
         return this.mBoolValues;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setLongValues(long[] longValues) {
         this.mTag_ = Tag.LongValues;
         this.mLongValues = longValues;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public long[] getLongValues() {
         assert this.mTag_ == Tag.LongValues;
         return this.mLongValues;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setStringValues(String[] stringValues) {
         this.mTag_ = Tag.StringValues;
         this.mStringValues = stringValues;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public String[] getStringValues() {
         assert this.mTag_ == Tag.StringValues;
         return this.mStringValues;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setEntityValues(Entity[] entityValues) {
         this.mTag_ = Tag.EntityValues;
         this.mEntityValues = entityValues;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public Entity[] getEntityValues() {
         assert this.mTag_ == Tag.EntityValues;
         return this.mEntityValues;

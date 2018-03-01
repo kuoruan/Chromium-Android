@@ -8,28 +8,23 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 
-import com.google.android.gms.gcm.GcmNetworkManager;
-import com.google.android.gms.gcm.OneoffTask;
-import com.google.android.gms.gcm.Task;
-
-import org.chromium.base.Log;
-import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.SuppressFBWarnings;
-import org.chromium.chrome.browser.ChromeBackgroundService;
 import org.chromium.chrome.browser.ChromeFeatureList;
+import org.chromium.components.background_task_scheduler.BackgroundTaskSchedulerFactory;
+import org.chromium.components.background_task_scheduler.TaskIds;
+import org.chromium.components.background_task_scheduler.TaskInfo;
+import org.chromium.components.background_task_scheduler.TaskInfo.NetworkType;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Class for scheduing download resumption tasks.
  */
 public class DownloadResumptionScheduler {
-    public static final String TASK_TAG = "DownloadResumption";
-    private static final String TAG = "DownloadScheduler";
-    private static final int ONE_DAY_IN_SECONDS = 24 * 60 * 60;
     private final Context mContext;
     @SuppressLint("StaticFieldLeak")
     private static DownloadResumptionScheduler sDownloadResumptionScheduler;
 
-    @SuppressFBWarnings("LI_LAZY_INIT")
     public static DownloadResumptionScheduler getDownloadResumptionScheduler(Context context) {
         assert context == context.getApplicationContext();
         if (sDownloadResumptionScheduler == null) {
@@ -43,58 +38,69 @@ public class DownloadResumptionScheduler {
     }
 
     /**
-     * For tests only: sets the DownloadResumptionScheduler.
-     * @param scheduler An instance of DownloadResumptionScheduler.
+     * Checks the persistence layer and schedules a task to restart the app and resume any downloads
+     * if there are resumable downloads available.
      */
-    @VisibleForTesting
-    public static void setDownloadResumptionScheduler(DownloadResumptionScheduler scheduler) {
-        sDownloadResumptionScheduler = scheduler;
-    }
+    public void scheduleIfNecessary() {
+        List<DownloadSharedPreferenceEntry> entries =
+                DownloadSharedPreferenceHelper.getInstance().getEntries();
 
-    /**
-     * Schedules a future task to start download resumption.
-     * @param allowMeteredConnection Whether download resumption can start if connection is metered.
-     */
-    public void schedule(boolean allowMeteredConnection) {
-        GcmNetworkManager gcmNetworkManager = GcmNetworkManager.getInstance(mContext);
-        int networkType = allowMeteredConnection
-                ? Task.NETWORK_STATE_CONNECTED : Task.NETWORK_STATE_UNMETERED;
-        OneoffTask task = new OneoffTask.Builder()
-                                  .setService(ChromeBackgroundService.class)
-                                  .setExecutionWindow(0, ONE_DAY_IN_SECONDS)
-                                  .setTag(TASK_TAG)
-                                  .setUpdateCurrent(true)
-                                  .setRequiredNetwork(networkType)
-                                  .setRequiresCharging(false)
-                                  .build();
-        try {
-            gcmNetworkManager.schedule(task);
-        } catch (IllegalArgumentException e) {
-            Log.e(TAG, "unable to schedule resumption task.", e);
+        boolean scheduleAutoResumption = false;
+        boolean allowMeteredConnection = false;
+        for (int i = 0; i < entries.size(); ++i) {
+            DownloadSharedPreferenceEntry entry = entries.get(i);
+            if (entry.isAutoResumable) {
+                scheduleAutoResumption = true;
+                if (entry.canDownloadWhileMetered) {
+                    allowMeteredConnection = true;
+                    break;
+                }
+            }
+        }
+
+        if (scheduleAutoResumption) {
+            @NetworkType
+            int networkType = allowMeteredConnection ? TaskInfo.NETWORK_TYPE_ANY
+                                                     : TaskInfo.NETWORK_TYPE_UNMETERED;
+
+            TaskInfo task = TaskInfo.createOneOffTask(TaskIds.DOWNLOAD_RESUMPTION_JOB_ID,
+                                            DownloadResumptionBackgroundTask.class,
+                                            TimeUnit.DAYS.toMillis(1))
+                                    .setUpdateCurrent(true)
+                                    .setRequiredNetworkType(networkType)
+                                    .setRequiresCharging(false)
+                                    .setIsPersisted(true)
+                                    .build();
+
+            BackgroundTaskSchedulerFactory.getScheduler().schedule(mContext, task);
+        } else {
+            cancel();
         }
     }
 
     /**
-     * Cancels a download resumption task if it is scheduled.
+     * Cancels any outstanding task that could restart the app and resume downloads.
      */
-    public void cancelTask() {
-        GcmNetworkManager gcmNetworkManager = GcmNetworkManager.getInstance(mContext);
-        gcmNetworkManager.cancelTask(TASK_TAG, ChromeBackgroundService.class);
+    public void cancel() {
+        BackgroundTaskSchedulerFactory.getScheduler().cancel(
+                mContext, TaskIds.DOWNLOAD_RESUMPTION_JOB_ID);
     }
 
     /**
-     * Start browser process and resumes all interrupted downloads.
+     * Kicks off the download resumption process through either {@link DownloadNotificationService}
+     * or {@link DownloadNotificationService2}, which handles actually resuming the individual
+     * downloads.
+     *
+     * It is assumed that native is loaded at the time of this call.
      */
-    public void handleDownloadResumption() {
+    public void resume() {
         if (ChromeFeatureList.isEnabled(ChromeFeatureList.DOWNLOADS_FOREGROUND)) {
-            DownloadNotificationService2 downloadNotificationService2 =
-                    DownloadNotificationService2.getInstance();
-            downloadNotificationService2.resumeAllPendingDownloads();
+            DownloadNotificationService2.getInstance().resumeAllPendingDownloads();
         } else {
-            // Fire an intent to the DownloadNotificationService so that it will handle download
-            // resumption.
-            Intent intent = new Intent(DownloadNotificationService.ACTION_DOWNLOAD_RESUME_ALL);
-            DownloadNotificationService.startDownloadNotificationService(mContext, intent);
+            // Start the DownloadNotificationService and allow that to manage the download life
+            // cycle. Shut down the task right away after starting the service
+            DownloadNotificationService.startDownloadNotificationService(
+                    mContext, new Intent(DownloadNotificationService.ACTION_DOWNLOAD_RESUME_ALL));
         }
     }
 }

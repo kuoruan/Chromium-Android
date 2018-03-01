@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  * @CalledByNative is used by the JNI generator to create the necessary JNI
  * bindings and expose this method to native code.
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.CONSTRUCTOR, ElementType.METHOD})
 @Retention(RetentionPolicy.CLASS)
 public @interface CalledByNative {
     /*

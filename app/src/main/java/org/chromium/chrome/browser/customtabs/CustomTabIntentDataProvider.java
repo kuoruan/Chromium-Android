@@ -90,6 +90,14 @@ public class CustomTabIntentDataProvider extends BrowserSessionDataProvider {
     public static final String EXTRA_DISABLE_DOWNLOAD_BUTTON =
             "org.chromium.chrome.browser.customtabs.EXTRA_DISABLE_DOWNLOAD_BUTTON";
 
+    /**
+     * Indicates the source where the Custom Tab is launched. This is only used for
+     * WebApp/WebAPK/TrustedWebActivity. The value is defined as {@link
+     * ActivityType#WebappActivity}.
+     */
+    public static final String EXTRA_BROWSER_LAUNCH_SOURCE =
+            "org.chromium.chrome.browser.customtabs.EXTRA_BROWSER_LAUNCH_SOURCE";
+
     // TODO(yusufo): Move this to CustomTabsIntent.
     /** Signals custom tabs to favor sending initial urls to external handler apps if possible. */
     public static final String EXTRA_SEND_TO_EXTERNAL_DEFAULT_HANDLER =

@@ -32,6 +32,7 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.favicon.IconType;
 import org.chromium.chrome.browser.favicon.LargeIconBridge;
 import org.chromium.chrome.browser.favicon.LargeIconBridge.LargeIconCallback;
 import org.chromium.chrome.browser.profiles.Profile;
@@ -120,8 +121,8 @@ public class ConfirmImportantSitesDialogFragment extends DialogFragment {
         private void loadFavicon(final ViewAndFaviconHolder viewHolder, final String url) {
             viewHolder.imageCallback = new LargeIconCallback() {
                 @Override
-                public void onLargeIconAvailable(
-                        Bitmap icon, int fallbackColor, boolean isFallbackColorDefault) {
+                public void onLargeIconAvailable(Bitmap icon, int fallbackColor,
+                        boolean isFallbackColorDefault, @IconType int iconType) {
                     if (this != viewHolder.imageCallback) return;
                     Drawable image = getFaviconDrawable(icon, fallbackColor, url);
                     viewHolder.imageView.setImageDrawable(image);

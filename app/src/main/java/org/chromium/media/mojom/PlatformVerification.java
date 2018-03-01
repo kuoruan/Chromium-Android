@@ -11,7 +11,6 @@
 
 package org.chromium.media.mojom;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
@@ -30,6 +29,14 @@ String serviceId, String challenge,
 ChallengePlatformResponse callback);
 
     interface ChallengePlatformResponse extends org.chromium.mojo.bindings.Callbacks.Callback4<Boolean, String, String, String> { }
+
+
+
+    void getStorageId(
+int version, 
+GetStorageIdResponse callback);
+
+    interface GetStorageIdResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<Integer, byte[]> { }
 
 
 }

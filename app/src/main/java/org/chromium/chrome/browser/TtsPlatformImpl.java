@@ -279,6 +279,7 @@ class TtsPlatformImpl {
         mVoices = new ArrayList<TtsVoice>();
         for (int i = 0; i < locales.length; ++i) {
             if (!locales[i].getVariant().isEmpty()) continue;
+
             try {
                 if (mTextToSpeech.isLanguageAvailable(locales[i]) > 0) {
                     String name = locales[i].getDisplayLanguage();
@@ -288,8 +289,13 @@ class TtsPlatformImpl {
                     TtsVoice voice = new TtsVoice(name, locales[i].toString());
                     mVoices.add(voice);
                 }
-            } catch (java.util.MissingResourceException e) {
+            } catch (Exception e) {
                 // Just skip the locale if it's invalid.
+                //
+                // We used to catch only java.util.MissingResourceException,
+                // but we need to catch more exceptions to work around a bug
+                // in Google TTS when we query "bn".
+                // http://crbug.com/792856
             }
         }
 

@@ -8,8 +8,6 @@ import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Bundle;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
-
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -134,7 +132,6 @@ public class GCMMessage {
      * Callers are expected to not modify values in the returned byte array.
      */
     @Nullable
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public byte[] getRawData() {
         return mRawData;
     }
@@ -142,7 +139,6 @@ public class GCMMessage {
     /**
      * Callers are expected to not modify values in the returned byte array.
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public String[] getDataKeysAndValuesArray() {
         return mDataKeysAndValuesArray;
     }

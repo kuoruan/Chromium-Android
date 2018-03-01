@@ -16,28 +16,26 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
-    WebReferrerPolicy.WEB_REFERRER_POLICY_ALWAYS, WebReferrerPolicy.WEB_REFERRER_POLICY_DEFAULT,
-    WebReferrerPolicy.WEB_REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE,
-    WebReferrerPolicy.WEB_REFERRER_POLICY_NEVER, WebReferrerPolicy.WEB_REFERRER_POLICY_ORIGIN,
-    WebReferrerPolicy.WEB_REFERRER_POLICY_ORIGIN_WHEN_CROSS_ORIGIN,
-    WebReferrerPolicy.WEB_REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE_ORIGIN_WHEN_CROSS_ORIGIN,
-    WebReferrerPolicy.WEB_REFERRER_POLICY_SAME_ORIGIN,
-    WebReferrerPolicy.WEB_REFERRER_POLICY_STRICT_ORIGIN, WebReferrerPolicy.WEB_REFERRER_POLICY_LAST
+    WebReferrerPolicy.ALWAYS, WebReferrerPolicy.DEFAULT,
+    WebReferrerPolicy.NO_REFERRER_WHEN_DOWNGRADE, WebReferrerPolicy.NEVER, WebReferrerPolicy.ORIGIN,
+    WebReferrerPolicy.ORIGIN_WHEN_CROSS_ORIGIN,
+    WebReferrerPolicy.NO_REFERRER_WHEN_DOWNGRADE_ORIGIN_WHEN_CROSS_ORIGIN,
+    WebReferrerPolicy.SAME_ORIGIN, WebReferrerPolicy.STRICT_ORIGIN, WebReferrerPolicy.LAST
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface WebReferrerPolicy {
-  int WEB_REFERRER_POLICY_ALWAYS = 0;
-  int WEB_REFERRER_POLICY_DEFAULT = 1;
-  int WEB_REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE = 2;
-  int WEB_REFERRER_POLICY_NEVER = 3;
-  int WEB_REFERRER_POLICY_ORIGIN = 4;
-  int WEB_REFERRER_POLICY_ORIGIN_WHEN_CROSS_ORIGIN = 5;
+  int ALWAYS = 0;
+  int DEFAULT = 1;
+  int NO_REFERRER_WHEN_DOWNGRADE = 2;
+  int NEVER = 3;
+  int ORIGIN = 4;
+  int ORIGIN_WHEN_CROSS_ORIGIN = 5;
   /**
    * This policy corresponds to strict-origin-when-cross-origin. TODO(estark): rename to match the
    * spec.
    */
-  int WEB_REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE_ORIGIN_WHEN_CROSS_ORIGIN = 6;
-  int WEB_REFERRER_POLICY_SAME_ORIGIN = 7;
-  int WEB_REFERRER_POLICY_STRICT_ORIGIN = 8;
-  int WEB_REFERRER_POLICY_LAST = 8;
+  int NO_REFERRER_WHEN_DOWNGRADE_ORIGIN_WHEN_CROSS_ORIGIN = 6;
+  int SAME_ORIGIN = 7;
+  int STRICT_ORIGIN = 8;
+  int LAST = 8;
 }

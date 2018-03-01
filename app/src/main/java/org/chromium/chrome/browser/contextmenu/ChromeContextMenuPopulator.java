@@ -469,13 +469,7 @@ public class ChromeContextMenuPopulator implements ContextMenuPopulator {
             disabledOptions.add(ChromeContextMenuItem.COPY_LINK_TEXT);
         }
 
-        if (params.isAnchor() && !isAcceptedScheme(params.getLinkUrl())) {
-            disabledOptions.add(ChromeContextMenuItem.OPEN_IN_OTHER_WINDOW);
-            disabledOptions.add(ChromeContextMenuItem.OPEN_IN_NEW_TAB);
-            disabledOptions.add(ChromeContextMenuItem.OPEN_IN_INCOGNITO_TAB);
-        }
-
-        if (isEmptyUrl(params.getLinkUrl())) {
+        if (isEmptyUrl(params.getUrl()) || !isAcceptedScheme(params.getUrl())) {
             disabledOptions.add(ChromeContextMenuItem.OPEN_IN_OTHER_WINDOW);
             disabledOptions.add(ChromeContextMenuItem.OPEN_IN_NEW_TAB);
             disabledOptions.add(ChromeContextMenuItem.OPEN_IN_INCOGNITO_TAB);
@@ -581,13 +575,13 @@ public class ChromeContextMenuPopulator implements ContextMenuPopulator {
     public boolean onItemSelected(ContextMenuHelper helper, ContextMenuParams params, int itemId) {
         if (itemId == R.id.contextmenu_open_in_other_window) {
             ContextMenuUma.record(params, ContextMenuUma.ACTION_OPEN_IN_OTHER_WINDOW);
-            mDelegate.onOpenInOtherWindow(params.getLinkUrl(), params.getReferrer());
+            mDelegate.onOpenInOtherWindow(params.getUrl(), params.getReferrer());
         } else if (itemId == R.id.contextmenu_open_in_new_tab) {
             ContextMenuUma.record(params, ContextMenuUma.ACTION_OPEN_IN_NEW_TAB);
-            mDelegate.onOpenInNewTab(params.getLinkUrl(), params.getReferrer());
+            mDelegate.onOpenInNewTab(params.getUrl(), params.getReferrer());
         } else if (itemId == R.id.contextmenu_open_in_incognito_tab) {
             ContextMenuUma.record(params, ContextMenuUma.ACTION_OPEN_IN_INCOGNITO_TAB);
-            mDelegate.onOpenInNewIncognitoTab(params.getLinkUrl());
+            mDelegate.onOpenInNewIncognitoTab(params.getUrl());
         } else if (itemId == R.id.contextmenu_open_image) {
             ContextMenuUma.record(params, ContextMenuUma.ACTION_OPEN_IMAGE);
             mDelegate.onOpenImageUrl(params.getSrcUrl(), params.getReferrer());
@@ -667,9 +661,9 @@ public class ChromeContextMenuPopulator implements ContextMenuPopulator {
         } else if (itemId == R.id.contextmenu_share_image) {
             ContextMenuUma.record(params, ContextMenuUma.ACTION_SHARE_IMAGE);
             helper.shareImage();
-        } else if (itemId == R.id.menu_id_open_in_chrome) {
+        } else if (itemId == R.id.contextmenu_open_in_chrome) {
             ContextMenuUma.record(params, ContextMenuUma.ACTION_OPEN_IN_CHROME);
-            mDelegate.onOpenInChrome(params.getLinkUrl(), params.getPageUrl());
+            mDelegate.onOpenInChrome(params.getUrl(), params.getPageUrl());
         } else if (itemId == R.id.contextmenu_open_in_new_chrome_tab) {
             ContextMenuUma.record(params, ContextMenuUma.ACTION_OPEN_IN_NEW_CHROME_TAB);
             mDelegate.onOpenInNewChromeTabFromCCT(params.getUrl(), false);

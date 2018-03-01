@@ -13,7 +13,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 
 import org.chromium.base.Log;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.library_loader.ProcessInitException;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
@@ -21,7 +20,6 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
 import org.chromium.chrome.browser.preferences.ManagedPreferencesUtils;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
-import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.signin.SigninManager.SignInCallback;
 
 import java.lang.annotation.Retention;
@@ -133,7 +131,6 @@ public class AccountSigninActivity extends AppCompatActivity
     }
 
     @Override
-    @SuppressFBWarnings("DM_EXIT")
     protected void onCreate(Bundle savedInstanceState) {
         // The browser process must be started here because this activity may be started from the
         // recent apps list and it relies on other activities and the native library to be loaded.
@@ -164,14 +161,10 @@ public class AccountSigninActivity extends AppCompatActivity
         AccountSigninView view = (AccountSigninView) LayoutInflater.from(this).inflate(
                 R.layout.account_signin_view, null);
 
-        int imageSize = getResources().getDimensionPixelSize(R.dimen.signin_account_image_size);
-        ProfileDataCache profileDataCache =
-                new ProfileDataCache(this, Profile.getLastUsedProfile(), imageSize);
-
         mSigninFlowType = getIntent().getIntExtra(INTENT_SIGNIN_FLOW_TYPE, -1);
         switch (mSigninFlowType) {
             case SIGNIN_FLOW_DEFAULT:
-                view.initFromSelectionPage(profileDataCache, false, this, this);
+                view.initFromSelectionPage(false, this, this);
                 break;
             case SIGNIN_FLOW_CONFIRMATION_ONLY: {
                 String accountName = getIntent().getStringExtra(INTENT_ACCOUNT_NAME);
@@ -180,12 +173,12 @@ public class AccountSigninActivity extends AppCompatActivity
                 }
                 boolean isDefaultAccount =
                         getIntent().getBooleanExtra(INTENT_IS_DEFAULT_ACCOUNT, false);
-                view.initFromConfirmationPage(profileDataCache, false, accountName,
-                        isDefaultAccount, AccountSigninView.UNDO_ABORT, this, this);
+                view.initFromConfirmationPage(false, accountName, isDefaultAccount,
+                        AccountSigninView.UNDO_ABORT, this, this);
                 break;
             }
             case SIGNIN_FLOW_ADD_NEW_ACCOUNT:
-                view.initFromAddAccountPage(profileDataCache, this, this);
+                view.initFromAddAccountPage(this, this);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown signin flow type: " + mSigninFlowType);

@@ -4,6 +4,8 @@
 
 package org.chromium.content_public.browser;
 
+import android.view.KeyEvent;
+
 /**
  * Interface for the classes that need to be notified of IME changes.
  */
@@ -19,4 +21,10 @@ public interface ImeEventObserver {
      * @param password indicates the node is of type password if {@code true}.
      */
     void onNodeAttributeUpdated(boolean editable, boolean password);
+
+    /**
+     * Called to notify the delegate that an IME called InputConnection#sendKeyEvent().
+     * @param event The event passed to InputConnection#sendKeyEvent().
+     */
+    void onBeforeSendKeyEvent(KeyEvent event);
 }

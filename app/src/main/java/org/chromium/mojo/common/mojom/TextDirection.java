@@ -11,7 +11,6 @@
 
 package org.chromium.mojo.common.mojom;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 public final class TextDirection {

@@ -142,6 +142,12 @@
         android:restrictionType="string"/>
 
     <restriction
+        android:key="NtlmV2Enabled"
+        android:title="@string/NtlmV2EnabledTitle"
+        android:description="@string/NtlmV2EnabledDesc"
+        android:restrictionType="bool"/>
+
+    <restriction
         android:key="DefaultSearchProviderEnabled"
         android:title="@string/DefaultSearchProviderEnabledTitle"
         android:description="@string/DefaultSearchProviderEnabledDesc"
@@ -172,12 +178,6 @@
         android:restrictionType="string"/>
 
     <restriction
-        android:key="DefaultSearchProviderInstantURL"
-        android:title="@string/DefaultSearchProviderInstantURLTitle"
-        android:description="@string/DefaultSearchProviderInstantURLDesc"
-        android:restrictionType="string"/>
-
-    <restriction
         android:key="DefaultSearchProviderIconURL"
         android:title="@string/DefaultSearchProviderIconURLTitle"
         android:description="@string/DefaultSearchProviderIconURLDesc"
@@ -193,12 +193,6 @@
         android:key="DefaultSearchProviderAlternateURLs"
         android:title="@string/DefaultSearchProviderAlternateURLsTitle"
         android:description="@string/DefaultSearchProviderAlternateURLsDesc"
-        android:restrictionType="string"/>
-
-    <restriction
-        android:key="DefaultSearchProviderSearchTermsReplacementKey"
-        android:title="@string/DefaultSearchProviderSearchTermsReplacementKeyTitle"
-        android:description="@string/DefaultSearchProviderSearchTermsReplacementKeyDesc"
         android:restrictionType="string"/>
 
     <restriction
@@ -223,12 +217,6 @@
         android:key="DefaultSearchProviderSuggestURLPostParams"
         android:title="@string/DefaultSearchProviderSuggestURLPostParamsTitle"
         android:description="@string/DefaultSearchProviderSuggestURLPostParamsDesc"
-        android:restrictionType="string"/>
-
-    <restriction
-        android:key="DefaultSearchProviderInstantURLPostParams"
-        android:title="@string/DefaultSearchProviderInstantURLPostParamsTitle"
-        android:description="@string/DefaultSearchProviderInstantURLPostParamsDesc"
         android:restrictionType="string"/>
 
     <restriction

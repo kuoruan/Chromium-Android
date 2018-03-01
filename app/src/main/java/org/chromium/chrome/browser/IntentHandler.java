@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser;
 
+import static org.chromium.webapk.lib.common.WebApkConstants.WEBAPK_PACKAGE_PREFIX;
+
 import android.app.Activity;
 import android.app.KeyguardManager;
 import android.app.PendingIntent;
@@ -216,6 +218,7 @@ public class IntentHandler {
         LINE,
         WHATSAPP,
         GSA,
+        WEBAPK,
         INDEX_BOUNDARY
     }
 
@@ -330,6 +333,8 @@ public class IntentHandler {
                 externalId = ExternalAppId.GSA;
             } else if (appId.equals(packageName)) {
                 externalId = ExternalAppId.CHROME;
+            } else if (appId.startsWith(WEBAPK_PACKAGE_PREFIX)) {
+                externalId = ExternalAppId.WEBAPK;
             }
         }
         return externalId;
@@ -487,9 +492,9 @@ public class IntentHandler {
 
     public static @WebReferrerPolicy int getReferrerPolicyFromIntent(Intent intent) {
         int policy = IntentUtils.safeGetIntExtra(
-                intent, EXTRA_REFERRER_POLICY, WebReferrerPolicy.WEB_REFERRER_POLICY_DEFAULT);
-        if (policy < 0 || policy >= WebReferrerPolicy.WEB_REFERRER_POLICY_LAST) {
-            policy = WebReferrerPolicy.WEB_REFERRER_POLICY_DEFAULT;
+                intent, EXTRA_REFERRER_POLICY, WebReferrerPolicy.DEFAULT);
+        if (policy < 0 || policy >= WebReferrerPolicy.LAST) {
+            policy = WebReferrerPolicy.DEFAULT;
         }
         return policy;
     }
@@ -517,7 +522,7 @@ public class IntentHandler {
                                     .authority(authority)
                                     .build()
                                     .toString(),
-                WebReferrerPolicy.WEB_REFERRER_POLICY_DEFAULT);
+                WebReferrerPolicy.DEFAULT);
     }
 
     /**

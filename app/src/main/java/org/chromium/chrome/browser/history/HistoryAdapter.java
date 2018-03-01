@@ -19,8 +19,9 @@ import android.widget.TextView;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.ChromeFeatureList;
+import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.history.HistoryProvider.BrowsingHistoryObserver;
+import org.chromium.chrome.browser.preferences.Pref;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.widget.DateDividedAdapter;
 import org.chromium.chrome.browser.widget.selection.SelectableItemViewHolder;
@@ -37,8 +38,6 @@ import java.util.List;
  */
 public class HistoryAdapter extends DateDividedAdapter implements BrowsingHistoryObserver {
     private static final String EMPTY_QUERY = "";
-    private static final String GOOGLE_HISTORY_LINK = "history.google.com";
-    private static final String MY_ACTIVITY_LINK = "myactivity.google.com";
 
     private final SelectionDelegate<HistoryItem> mSelectionDelegate;
     private final HistoryProvider mHistoryProvider;
@@ -53,7 +52,7 @@ public class HistoryAdapter extends DateDividedAdapter implements BrowsingHistor
 
     private boolean mHasOtherFormsOfBrowsingData;
     private boolean mIsDestroyed;
-    private boolean mIsInitialized;
+    private boolean mAreHeadersInitialized;
     private boolean mIsLoadingItems;
     private boolean mIsSearching;
     private boolean mHasMorePotentialItems;
@@ -85,7 +84,7 @@ public class HistoryAdapter extends DateDividedAdapter implements BrowsingHistor
      * Initializes the HistoryAdapter and loads the first set of browsing history items.
      */
     public void initialize() {
-        mIsInitialized = false;
+        mAreHeadersInitialized = false;
         mIsLoadingItems = true;
         mClearOnNextQueryComplete = true;
         mHistoryProvider.queryHistory(mQueryText);
@@ -225,9 +224,9 @@ public class HistoryAdapter extends DateDividedAdapter implements BrowsingHistor
             mClearOnNextQueryComplete = false;
         }
 
-        if (!mIsInitialized) {
-            if (items.size() > 0 && !mIsSearching) setHeaders();
-            mIsInitialized = true;
+        if (!mAreHeadersInitialized && items.size() > 0 && !mIsSearching) {
+            setHeaders();
+            mAreHeadersInitialized = true;
         }
 
         removeFooter();
@@ -309,19 +308,16 @@ public class HistoryAdapter extends DateDividedAdapter implements BrowsingHistor
      * @return The {@SpannableString} with the privacy disclaimer string resource and url.
      */
     private SpannableString getPrivacyDisclaimerText() {
-        boolean flagEnabled = ChromeFeatureList.isEnabled(ChromeFeatureList.TABS_IN_CBD);
-        int stringId = flagEnabled ? R.string.android_history_other_forms_of_history_new
-                                   : R.string.android_history_other_forms_of_history;
-        final String url = flagEnabled ? MY_ACTIVITY_LINK : GOOGLE_HISTORY_LINK;
         final Resources resources = ContextUtils.getApplicationContext().getResources();
         NoUnderlineClickableSpan link = new NoUnderlineClickableSpan() {
             @Override
             public void onClick(View view) {
-                mHistoryManager.openUrl(url, null, true);
+                mHistoryManager.openUrl(UrlConstants.MY_ACTIVITY_URL_IN_HISTORY, null, true);
             }
         };
         return SpanApplier.applySpans(
-                resources.getString(stringId), new SpanApplier.SpanInfo("<link>", "</link>", link));
+                resources.getString(R.string.android_history_other_forms_of_history),
+                new SpanApplier.SpanInfo("<link>", "</link>", link));
     }
 
     /**
@@ -341,18 +337,19 @@ public class HistoryAdapter extends DateDividedAdapter implements BrowsingHistor
         // Prevent from refreshing the recycler view if header visibility is not changed.
         if (mPrivacyDisclaimersVisible == shouldShowPrivacyDisclaimers) return;
         mPrivacyDisclaimersVisible = shouldShowPrivacyDisclaimers;
-        if (mIsInitialized) setHeaders();
+        if (mAreHeadersInitialized) setHeaders();
     }
 
     private void updateClearBrowsingDataButtonVisibility() {
         // If the history header is not showing (e.g. when there is no browsing history),
         // mClearBrowsingDataButton will be null.
         if (mClearBrowsingDataButton == null) return;
-        boolean shouldShowButton = PrefServiceBridge.getInstance().canDeleteBrowsingHistory();
+        boolean shouldShowButton =
+                PrefServiceBridge.getInstance().getBoolean(Pref.ALLOW_DELETING_BROWSER_HISTORY);
         if (mClearBrowsingDataButtonVisible == shouldShowButton) return;
         mClearBrowsingDataButtonVisible = shouldShowButton;
         mPrivacyDisclaimerBottomSpace.setVisibility(shouldShowButton ? View.GONE : View.VISIBLE);
-        if (mIsInitialized) setHeaders();
+        if (mAreHeadersInitialized) setHeaders();
     }
 
     @VisibleForTesting

@@ -23,16 +23,22 @@ import java.util.concurrent.TimeUnit;
  */
 @JNINamespace("download::android")
 public class DownloadTaskScheduler {
+    public static final String EXTRA_BATTERY_REQUIRES_CHARGING = "extra_battery_requires_charging";
+    public static final String EXTRA_OPTIMAL_BATTERY_PERCENTAGE =
+            "extra_optimal_battery_percentage";
     public static final String EXTRA_TASK_TYPE = "extra_task_type";
     static final long TWELVE_HOURS_IN_SECONDS = TimeUnit.HOURS.toSeconds(12);
     static final long FIVE_MINUTES_IN_SECONDS = TimeUnit.MINUTES.toSeconds(5);
 
     @CalledByNative
     private static void scheduleTask(@DownloadTaskType int taskType,
-            boolean requiresUnmeteredNetwork, boolean requiresCharging, long windowStartTimeSeconds,
-            long windowEndTimeSeconds) {
+            boolean requiresUnmeteredNetwork, boolean requiresCharging,
+            int optimalBatteryPercentage, long windowStartTimeSeconds, long windowEndTimeSeconds) {
         Bundle bundle = new Bundle();
         bundle.putInt(EXTRA_TASK_TYPE, taskType);
+        bundle.putInt(EXTRA_OPTIMAL_BATTERY_PERCENTAGE, optimalBatteryPercentage);
+        bundle.putBoolean(EXTRA_BATTERY_REQUIRES_CHARGING, requiresCharging);
+
         BackgroundTaskScheduler scheduler = BackgroundTaskSchedulerFactory.getScheduler();
         TaskInfo taskInfo =
                 TaskInfo.createOneOffTask(getTaskId(taskType), DownloadBackgroundTask.class,
@@ -59,9 +65,9 @@ public class DownloadTaskScheduler {
      * services upgrade etc. This will schedule the tasks in future with least restrictive criteria.
      */
     public static void rescheduleAllTasks() {
-        scheduleTask(DownloadTaskType.DOWNLOAD_TASK, false, false, FIVE_MINUTES_IN_SECONDS,
+        scheduleTask(DownloadTaskType.DOWNLOAD_TASK, false, false, 0, FIVE_MINUTES_IN_SECONDS,
                 2 * FIVE_MINUTES_IN_SECONDS);
-        scheduleTask(DownloadTaskType.CLEANUP_TASK, false, false, TWELVE_HOURS_IN_SECONDS,
+        scheduleTask(DownloadTaskType.CLEANUP_TASK, false, false, 0, TWELVE_HOURS_IN_SECONDS,
                 2 * TWELVE_HOURS_IN_SECONDS);
     }
 

@@ -7,10 +7,11 @@ package org.chromium.chrome.browser.contextualsearch;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.ChromeActivity;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel;
-import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.content.browser.ContentViewCore;
@@ -35,6 +36,7 @@ public class ContextualSearchSelectionController {
         LONG_PRESS
     }
 
+    private static final String TAG = "ContextualSearch";
     private static final String CONTAINS_WORD_PATTERN = "(\\w|\\p{L}|\\p{N})+";
     // A URL is:
     //   1:    scheme://
@@ -75,10 +77,13 @@ public class ContextualSearchSelectionController {
     // When the last tap gesture happened.
     private long mTapTimeNanoseconds;
 
+    // Whether the selection was empty before the most recent tap gesture.
+    private boolean mWasSelectionEmptyBeforeTap;
+
     // The duration of the last tap gesture in milliseconds, or 0 if not set.
     private int mTapDurationMs = INVALID_DURATION;
 
-    private class ContextualSearchGestureStateListener extends GestureStateListener {
+    private class ContextualSearchGestureStateListener implements GestureStateListener {
         @Override
         public void onScrollStarted(int scrollOffsetY, int scrollExtentY) {
             mHandler.handleScroll();
@@ -99,6 +104,7 @@ public class ContextualSearchSelectionController {
         @Override
         public void onTouchDown() {
             mTapTimeNanoseconds = System.nanoTime();
+            mWasSelectionEmptyBeforeTap = TextUtils.isEmpty(mSelectedText);
         }
     }
 
@@ -114,6 +120,9 @@ public class ContextualSearchSelectionController {
         mHandler = handler;
         mPxToDp = 1.f / mActivity.getResources().getDisplayMetrics().density;
         mContainsWordPattern = Pattern.compile(CONTAINS_WORD_PATTERN);
+        // TODO(donnd): remove when behind-the-flag bug fixed (crbug.com/786589).
+        Log.i(TAG, "Tap suppression enabled: %s",
+                ContextualSearchFieldTrial.isContextualSearchMlTapSuppressionEnabled());
     }
 
     /**
@@ -355,39 +364,52 @@ public class ContextualSearchSelectionController {
         int x = (int) mX;
         int y = (int) mY;
 
-        // TODO(donnd): add a policy method to get adjusted tap count.
-        ChromePreferenceManager prefs = ChromePreferenceManager.getInstance();
-        int adjustedTapsSinceOpen = prefs.getContextualSearchTapCount()
-                - prefs.getContextualSearchTapQuickAnswerCount();
+        // TODO(donnd): Remove tap counters.
         assert mTapDurationMs != INVALID_DURATION : "mTapDurationMs not set!";
         TapSuppressionHeuristics tapHeuristics = new TapSuppressionHeuristics(this, mLastTapState,
-                x, y, adjustedTapsSinceOpen, contextualSearchContext, mTapDurationMs);
+                x, y, contextualSearchContext, mTapDurationMs, mWasSelectionEmptyBeforeTap);
         // TODO(donnd): Move to be called when the panel closes to work with states that change.
         tapHeuristics.logConditionState();
 
-        tapHeuristics.logRankerTapSuppression(rankerLogger);
         // Tell the manager what it needs in order to log metrics on whether the tap would have
         // been suppressed if each of the heuristics were satisfied.
         mHandler.handleMetricsForWouldSuppressTap(tapHeuristics);
 
         boolean shouldSuppressTapBasedOnHeuristics = tapHeuristics.shouldSuppressTap();
-        if (mTapTimeNanoseconds != 0) {
-            // Remember the tap state for subsequent tap evaluation.
-            mLastTapState = new ContextualSearchTapState(
-                    x, y, mTapTimeNanoseconds, shouldSuppressTapBasedOnHeuristics);
-        } else {
-            mLastTapState = null;
+        boolean shouldOverrideMlTapSuppression = tapHeuristics.shouldOverrideMlTapSuppression();
+
+        // Make sure Tap Suppression features are consistent.
+        assert !ContextualSearchFieldTrial.isContextualSearchMlTapSuppressionEnabled()
+                || ChromeFeatureList.isEnabled(ChromeFeatureList.CONTEXTUAL_SEARCH_RANKER_QUERY)
+            : "Tap Suppression requires the Ranker Query feature to be enabled!";
+
+        // If we're suppressing based on heuristics then Ranker doesn't need to know about it.
+        @AssistRankerPrediction
+        int tapPrediction = AssistRankerPrediction.UNDETERMINED;
+        if (!shouldSuppressTapBasedOnHeuristics) {
+            tapHeuristics.logRankerTapSuppression(rankerLogger);
+            logNonHeuristicFeatures(rankerLogger);
+            tapPrediction = rankerLogger.runPredictionForTapSuppression();
         }
 
-        // Log features that don't require heuristics.
-        logNonHeuristicFeatures(rankerLogger);
-
         // Make the suppression decision and act upon it.
-        boolean shouldSuppressTapBasedOnRanker = rankerLogger.inferUiSuppression();
+        boolean shouldSuppressTapBasedOnRanker = (tapPrediction == AssistRankerPrediction.SUPPRESS)
+                && ContextualSearchFieldTrial.isContextualSearchMlTapSuppressionEnabled()
+                && !shouldOverrideMlTapSuppression;
         if (shouldSuppressTapBasedOnHeuristics || shouldSuppressTapBasedOnRanker) {
+            Log.i(TAG, "Tap suppressed due to Ranker: %s, heuristics: %s",
+                    shouldSuppressTapBasedOnRanker, shouldSuppressTapBasedOnHeuristics);
             mHandler.handleSuppressedTap();
         } else {
             mHandler.handleNonSuppressedTap(mTapTimeNanoseconds);
+        }
+
+        if (mTapTimeNanoseconds != 0) {
+            // Remember the tap state for subsequent tap evaluation.
+            mLastTapState = new ContextualSearchTapState(
+                    x, y, mTapTimeNanoseconds, shouldSuppressTapBasedOnRanker);
+        } else {
+            mLastTapState = null;
         }
     }
 

@@ -14,7 +14,6 @@ import com.google.ipc.invalidation.ticl.android2.channel.AndroidGcmController;
 
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.library_loader.ProcessInitException;
 import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
 import org.chromium.chrome.browser.init.ProcessInitializationHandler;
@@ -116,7 +115,6 @@ public class ChromeGcmListenerService extends GcmListenerService {
      * of the browser process, and forward the message to the GCM Driver. Must be called on the UI
      * thread.
      */
-    @SuppressFBWarnings("DM_EXIT")
     static void dispatchMessageToDriver(Context applicationContext, GCMMessage message) {
         ThreadUtils.assertOnUiThread();
 

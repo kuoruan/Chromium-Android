@@ -10,7 +10,21 @@
     android:layout_width="match_parent"
     android:layout_height="@dimen/bottom_nav_height"
     android:layout_gravity="start|bottom"
+    android:gravity="center"
     app:menu="@menu/bottom_sheet_nav_menu"
     app:itemIconTint="@color/bottom_nav_tint"
     app:itemTextColor="@color/bottom_nav_tint"
-    android:visibility="gone" />
+    android:visibility="gone" >
+
+    <ImageView
+        android:id="@+id/bottom_nav_shadow"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/bottom_nav_shadow_height"
+        android:layout_gravity="top"
+        android:visibility="gone"
+        android:src="@drawable/modern_toolbar_shadow"
+        android:scaleType="fitXY"
+        android:scaleY="-1"
+        android:contentDescription="@null" />
+
+</org.chromium.chrome.browser.widget.bottomsheet.BottomSheetContentController>

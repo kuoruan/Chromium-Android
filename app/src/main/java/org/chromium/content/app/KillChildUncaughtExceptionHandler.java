@@ -8,7 +8,6 @@ import android.os.Process;
 
 import org.chromium.base.BuildInfo;
 import org.chromium.base.annotations.MainDex;
-import org.chromium.base.annotations.SuppressFBWarnings;
 
 /**
  * Handler that immediately kills the current process on an uncaught exception.
@@ -36,7 +35,6 @@ class KillChildUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
     }
 
     @Override
-    @SuppressFBWarnings("DM_EXIT")
     public void uncaughtException(Thread t, Throwable e) {
         // Never re-enter.
         if (mCrashing) return;

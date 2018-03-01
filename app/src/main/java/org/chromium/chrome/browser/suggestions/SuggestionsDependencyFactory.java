@@ -11,6 +11,7 @@ import org.chromium.chrome.browser.favicon.FaviconHelper;
 import org.chromium.chrome.browser.favicon.LargeIconBridge;
 import org.chromium.chrome.browser.ntp.snippets.SnippetsBridge;
 import org.chromium.chrome.browser.ntp.snippets.SuggestionsSource;
+import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.widget.ThumbnailProvider;
 import org.chromium.chrome.browser.widget.ThumbnailProviderImpl;
@@ -60,5 +61,9 @@ public class SuggestionsDependencyFactory {
 
     public FaviconHelper createFaviconHelper() {
         return new FaviconHelper();
+    }
+
+    public OfflinePageBridge getOfflinePageBridge(Profile profile) {
+        return OfflinePageBridge.getForProfile(profile);
     }
 }

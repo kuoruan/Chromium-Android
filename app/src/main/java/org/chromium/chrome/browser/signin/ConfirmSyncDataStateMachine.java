@@ -5,14 +5,13 @@
 package org.chromium.chrome.browser.signin;
 
 import android.app.DialogFragment;
-import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Context;
 import android.os.Handler;
 import android.support.annotation.IntDef;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
-import org.chromium.base.Callback;
 import org.chromium.base.ThreadUtils;
 import org.chromium.chrome.browser.signin.ConfirmImportSyncDataDialog.ImportSyncType;
 
@@ -63,7 +62,7 @@ public class ConfirmSyncDataStateMachine
     private static final int ACCOUNT_CHECK_TIMEOUT_MS = 30000;
 
     private final ConfirmImportSyncDataDialog.Listener mCallback;
-    private final String mOldAccountName;
+    private final @Nullable String mOldAccountName;
     private final String mNewAccountName;
     private final boolean mCurrentlyManaged;
     private final FragmentManager mFragmentManager;
@@ -77,47 +76,21 @@ public class ConfirmSyncDataStateMachine
     private Runnable mCheckTimeoutRunnable;
 
     /**
-     * Run this state machine, displaying the appropriate dialogs.
-     * @param callback One of the two functions of the {@link ConfirmImportSyncDataDialog.Listener}
-     *         are guaranteed to be called.
+     * Create and run state machine, displaying the appropriate dialogs.
+     * @param importSyncType SWITCHING_SYNC_ACCOUNTS if there's already a signed in account,
+     *         PREVIOUS_DATA_FOUND otherwise
+     * @param oldAccountName if importSyncType is SWITCHING_SYNC_ACCOUNTS: the name of the signed in
+     *         account; if importSyncType is PREVIOUS_DATA_FOUND: the name of the last signed in
+     *         account or null
+     * @param newAccountName the name of the account user is signing in with
+     * @param callback the listener to receive the result of this state machine
      */
-    public static void run(String oldAccountName, String newAccountName,
-            ImportSyncType importSyncType, FragmentManager fragmentManager, Context context,
-            ConfirmImportSyncDataDialog.Listener callback) {
-        // Includes implicit not-null assertion.
-        assert !newAccountName.equals("") : "New account name must be provided.";
-
-        ConfirmSyncDataStateMachine stateMachine = new ConfirmSyncDataStateMachine(oldAccountName,
-                newAccountName, importSyncType, fragmentManager, context, callback);
-        stateMachine.progress();
-    }
-
-    /**
-     * If any of the dialogs used by this state machine are shown, cancel them. If this state
-     * machine is running and a dialog is being shown, the given
-     * {@link ConfirmImportSyncDataDialog.Listener#onCancel())} is called.
-     */
-    public static void cancelAllDialogs(FragmentManager fragmentManager) {
-        cancelDialog(fragmentManager,
-                ConfirmImportSyncDataDialog.CONFIRM_IMPORT_SYNC_DATA_DIALOG_TAG);
-        cancelDialog(fragmentManager,
-                ConfirmManagedSyncDataDialog.CONFIRM_IMPORT_SYNC_DATA_DIALOG_TAG);
-    }
-
-    private static void cancelDialog(FragmentManager fragmentManager, String tag) {
-        Fragment fragment = fragmentManager.findFragmentByTag(tag);
-
-        if (fragment == null) return;
-        DialogFragment dialogFragment = (DialogFragment) fragment;
-
-        if (dialogFragment.getDialog() == null) return;
-        dialogFragment.getDialog().cancel();
-    }
-
-    private ConfirmSyncDataStateMachine(String oldAccountName, String newAccountName,
-            ImportSyncType importSyncType, FragmentManager fragmentManager, Context context,
+    public ConfirmSyncDataStateMachine(Context context, FragmentManager fragmentManager,
+            ImportSyncType importSyncType, @Nullable String oldAccountName, String newAccountName,
             ConfirmImportSyncDataDialog.Listener callback) {
         ThreadUtils.assertOnUiThread();
+        // Includes implicit not-null assertion.
+        assert !newAccountName.equals("") : "New account name must be provided.";
 
         mOldAccountName = oldAccountName;
         mNewAccountName = newAccountName;
@@ -128,11 +101,37 @@ public class ConfirmSyncDataStateMachine
 
         mCurrentlyManaged = SigninManager.get(context).getManagementDomain() != null;
 
-        mDelegate = new ConfirmSyncDataStateMachineDelegate(mContext);
+        mDelegate = new ConfirmSyncDataStateMachineDelegate(mFragmentManager);
 
         // New account management status isn't needed right now, but fetching it
         // can take a few seconds, so we kick it off early.
         requestNewAccountManagementStatus();
+
+        progress();
+    }
+
+    /**
+     * Cancels this state machine, dismissing any dialogs being shown.
+     * @param dismissDialogs whether all shown dialogs should dismissed. Should be false if
+     *         enclosing activity is being destroyed (all dialogs will be dismissed anyway).
+     */
+    public void cancel(boolean dismissDialogs) {
+        ThreadUtils.assertOnUiThread();
+
+        cancelTimeout();
+        mState = DONE;
+        mCallback.onCancel();
+
+        if (!dismissDialogs) return;
+        mDelegate.dismissAllDialogs();
+        dismissDialog(ConfirmImportSyncDataDialog.CONFIRM_IMPORT_SYNC_DATA_DIALOG_TAG);
+        dismissDialog(ConfirmManagedSyncDataDialog.CONFIRM_IMPORT_SYNC_DATA_DIALOG_TAG);
+    }
+
+    private void dismissDialog(String tag) {
+        DialogFragment fragment = (DialogFragment) mFragmentManager.findFragmentByTag(tag);
+        if (fragment == null) return;
+        fragment.dismissAllowingStateLoss();
     }
 
     /**
@@ -189,12 +188,7 @@ public class ConfirmSyncDataStateMachine
     }
 
     private void requestNewAccountManagementStatus() {
-        SigninManager.isUserManaged(mNewAccountName, new Callback<Boolean>() {
-            @Override
-            public void onResult(Boolean result) {
-                setIsNewAccountManaged(result);
-            }
-        });
+        SigninManager.isUserManaged(mNewAccountName, this::setIsNewAccountManaged);
     }
 
     private void setIsNewAccountManaged(Boolean isManaged) {
@@ -224,23 +218,12 @@ public class ConfirmSyncDataStateMachine
     }
 
     private void showProgressDialog() {
-        mDelegate.showFetchManagementPolicyProgressDialog(
-                new ConfirmSyncDataStateMachineDelegate.ProgressDialogListener() {
-                    @Override
-                    public void onCancel() {
-                        ConfirmSyncDataStateMachine.this.onCancel();
-                    }
-                });
+        mDelegate.showFetchManagementPolicyProgressDialog(this::onCancel);
     }
 
     private void scheduleTimeout() {
         if (mCheckTimeoutRunnable == null) {
-            mCheckTimeoutRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    checkTimeout();
-                }
-            };
+            mCheckTimeoutRunnable = this::checkTimeout;
         }
         mHandler.postDelayed(mCheckTimeoutRunnable, ACCOUNT_CHECK_TIMEOUT_MS);
     }
@@ -289,11 +272,7 @@ public class ConfirmSyncDataStateMachine
     // ConfirmImportSyncDataDialog.Listener & ConfirmManagedSyncDataDialog.Listener implementation.
     @Override
     public void onCancel() {
-        cancelTimeout();
-        mDelegate.dismissAllDialogs();
-
-        mState = DONE;
-        mCallback.onCancel();
+        cancel(true);
     }
 }
 

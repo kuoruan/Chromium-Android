@@ -22,7 +22,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.UserManager;
 import android.preference.Preference;
-import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
@@ -228,61 +227,52 @@ public class AccountManagementFragment extends PreferenceFragment
             getPreferenceScreen().removePreference(findPreference(PREF_SIGN_OUT_DIVIDER));
         } else {
             signOutSwitch.setEnabled(getSignOutAllowedPreferenceValue());
-            signOutSwitch.setOnPreferenceClickListener(new OnPreferenceClickListener() {
-                @Override
-                public boolean onPreferenceClick(Preference preference) {
-                    if (!isVisible() || !isResumed()) return false;
+            signOutSwitch.setOnPreferenceClickListener(preference -> {
+                if (!isVisible() || !isResumed()) return false;
 
-                    if (mSignedInAccountName != null && getSignOutAllowedPreferenceValue()) {
-                        AccountManagementScreenHelper.logEvent(
-                                ProfileAccountManagementMetrics.TOGGLE_SIGNOUT,
-                                mGaiaServiceType);
+                if (mSignedInAccountName != null && getSignOutAllowedPreferenceValue()) {
+                    AccountManagementScreenHelper.logEvent(
+                            ProfileAccountManagementMetrics.TOGGLE_SIGNOUT, mGaiaServiceType);
 
-                        String managementDomain =
-                                SigninManager.get(getActivity()).getManagementDomain();
-                        if (managementDomain != null) {
-                            // Show the 'You are signing out of a managed account' dialog.
-                            ConfirmManagedSyncDataDialog.showSignOutFromManagedAccountDialog(
-                                    AccountManagementFragment.this, getFragmentManager(),
-                                    getResources(), managementDomain);
-                        } else {
-                            // Show the 'You are signing out' dialog.
-                            SignOutDialogFragment signOutFragment = new SignOutDialogFragment();
-                            Bundle args = new Bundle();
-                            args.putInt(SHOW_GAIA_SERVICE_TYPE_EXTRA, mGaiaServiceType);
-                            signOutFragment.setArguments(args);
+                    String managementDomain =
+                            SigninManager.get(getActivity()).getManagementDomain();
+                    if (managementDomain != null) {
+                        // Show the 'You are signing out of a managed account' dialog.
+                        ConfirmManagedSyncDataDialog.showSignOutFromManagedAccountDialog(
+                                AccountManagementFragment.this, getFragmentManager(),
+                                getResources(), managementDomain);
+                    } else {
+                        // Show the 'You are signing out' dialog.
+                        SignOutDialogFragment signOutFragment = new SignOutDialogFragment();
+                        Bundle args = new Bundle();
+                        args.putInt(SHOW_GAIA_SERVICE_TYPE_EXTRA, mGaiaServiceType);
+                        signOutFragment.setArguments(args);
 
-                            signOutFragment.setTargetFragment(AccountManagementFragment.this, 0);
-                            signOutFragment.show(getFragmentManager(), SIGN_OUT_DIALOG_TAG);
-                        }
-
-                        return true;
+                        signOutFragment.setTargetFragment(AccountManagementFragment.this, 0);
+                        signOutFragment.show(getFragmentManager(), SIGN_OUT_DIALOG_TAG);
                     }
 
-                    return false;
+                    return true;
                 }
+
+                return false;
             });
         }
     }
 
     private void configureSyncSettings() {
         final Preferences preferences = (Preferences) getActivity();
-        findPreference(PREF_SYNC_SETTINGS)
-                .setOnPreferenceClickListener(new OnPreferenceClickListener() {
-                    @Override
-                    public boolean onPreferenceClick(Preference preference) {
-                        if (!isVisible() || !isResumed()) return false;
+        findPreference(PREF_SYNC_SETTINGS).setOnPreferenceClickListener(preference -> {
+            if (!isVisible() || !isResumed()) return false;
 
-                        if (ProfileSyncService.get() == null) return true;
+            if (ProfileSyncService.get() == null) return true;
 
-                        Bundle args = new Bundle();
-                        args.putString(
-                                SyncCustomizationFragment.ARGUMENT_ACCOUNT, mSignedInAccountName);
-                        preferences.startFragment(SyncCustomizationFragment.class.getName(), args);
+            Bundle args = new Bundle();
+            args.putString(SyncCustomizationFragment.ARGUMENT_ACCOUNT, mSignedInAccountName);
+            preferences.startFragment(SyncCustomizationFragment.class.getName(), args);
 
-                        return true;
-                    }
-                });
+            return true;
+        });
     }
 
     private void configureGoogleActivityControls() {
@@ -290,15 +280,12 @@ public class AccountManagementFragment extends PreferenceFragment
         if (mProfile.isChild()) {
             pref.setSummary(R.string.sign_in_google_activity_controls_message_child_account);
         }
-        pref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                Activity activity = getActivity();
-                AppHooks.get().createGoogleActivityController().openWebAndAppActivitySettings(
-                        activity, mSignedInAccountName);
-                RecordUserAction.record("Signin_AccountSettings_GoogleActivityControlsClicked");
-                return true;
-            }
+        pref.setOnPreferenceClickListener(preference -> {
+            Activity activity = getActivity();
+            AppHooks.get().createGoogleActivityController().openWebAndAppActivitySettings(
+                    activity, mSignedInAccountName);
+            RecordUserAction.record("Signin_AccountSettings_GoogleActivityControlsClicked");
+            return true;
         });
     }
 
@@ -366,13 +353,10 @@ public class AccountManagementFragment extends PreferenceFragment
             pref.setTitle(account.name);
             pref.setIcon(mProfileDataCache.getProfileDataOrDefault(account.name).getImage());
 
-            pref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
-                @Override
-                public boolean onPreferenceClick(Preference preference) {
-                    Intent intent = new Intent(ACCOUNT_SETTINGS_ACTION);
-                    intent.putExtra(ACCOUNT_SETTINGS_ACCOUNT_KEY, account);
-                    return IntentUtils.safeStartActivity(getActivity(), intent);
-                }
+            pref.setOnPreferenceClickListener(preference -> {
+                Intent intent = new Intent(ACCOUNT_SETTINGS_ACTION);
+                intent.putExtra(ACCOUNT_SETTINGS_ACCOUNT_KEY, account);
+                return IntentUtils.safeStartActivity(getActivity(), intent);
             });
 
             accountsCategory.addPreference(pref);
@@ -388,24 +372,20 @@ public class AccountManagementFragment extends PreferenceFragment
         addAccountPreference.setLayoutResource(R.layout.account_management_account_row);
         addAccountPreference.setIcon(R.drawable.add_circle_blue);
         addAccountPreference.setTitle(R.string.account_management_add_account_title);
-        addAccountPreference.setOnPreferenceClickListener(new OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                if (!isVisible() || !isResumed()) return false;
+        addAccountPreference.setOnPreferenceClickListener(preference -> {
+            if (!isVisible() || !isResumed()) return false;
 
-                AccountManagementScreenHelper.logEvent(
-                        ProfileAccountManagementMetrics.ADD_ACCOUNT, mGaiaServiceType);
+            AccountManagementScreenHelper.logEvent(
+                    ProfileAccountManagementMetrics.ADD_ACCOUNT, mGaiaServiceType);
 
-                AccountAdder.getInstance().addAccount(
-                        getActivity(), AccountAdder.ADD_ACCOUNT_RESULT);
+            AccountAdder.getInstance().addAccount(getActivity(), AccountAdder.ADD_ACCOUNT_RESULT);
 
-                // Return to the last opened tab if triggered from the content area.
-                if (mGaiaServiceType != AccountManagementScreenHelper.GAIA_SERVICE_TYPE_NONE) {
-                    if (isAdded()) getActivity().finish();
-                }
-
-                return true;
+            // Return to the last opened tab if triggered from the content area.
+            if (mGaiaServiceType != AccountManagementScreenHelper.GAIA_SERVICE_TYPE_NONE) {
+                if (isAdded()) getActivity().finish();
             }
+
+            return true;
         });
         addAccountPreference.setManagedPreferenceDelegate(new ManagedPreferenceDelegate() {
             @Override

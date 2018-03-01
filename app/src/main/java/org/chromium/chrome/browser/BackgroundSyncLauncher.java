@@ -17,10 +17,8 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.externalauth.ExternalAuthUtils;
-import org.chromium.chrome.browser.externalauth.UserRecoverableErrorHandler;
 
 /**
  * The {@link BackgroundSyncLauncher} singleton is created and owned by the C++ browser. It
@@ -71,7 +69,6 @@ public class BackgroundSyncLauncher {
     /**
      * Called when the C++ counterpart is deleted.
      */
-    @SuppressFBWarnings("ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD")
     @VisibleForTesting
     @CalledByNative
     protected void destroy() {
@@ -165,11 +162,6 @@ public class BackgroundSyncLauncher {
         launchBrowserIfStopped(false, 0);
     }
 
-    private static boolean canUseGooglePlayServices() {
-        return ExternalAuthUtils.getInstance().canUseGooglePlayServices(
-                ContextUtils.getApplicationContext(), new UserRecoverableErrorHandler.Silent());
-    }
-
     /**
      * Returns true if the Background Sync Manager should be automatically disabled on startup.
      * This is currently only the case if Play Services is not up to date, since any sync attempts
@@ -184,7 +176,7 @@ public class BackgroundSyncLauncher {
         // disabled in tests.
         if (sGCMEnabled) {
             boolean isAvailable = true;
-            if (!canUseGooglePlayServices()) {
+            if (!ExternalAuthUtils.canUseGooglePlayServices()) {
                 setGCMEnabled(false);
                 Log.i(TAG, "Disabling Background Sync because Play Services is not up to date.");
                 isAvailable = false;

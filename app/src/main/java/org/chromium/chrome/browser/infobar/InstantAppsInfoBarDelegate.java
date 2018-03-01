@@ -18,7 +18,7 @@ public class InstantAppsInfoBarDelegate {
     private InstantAppsBannerData mData;
 
     public static void launch(InstantAppsBannerData data) {
-        nativeLaunch(data.getWebContents(), data, data.getUrl());
+        nativeLaunch(data.getWebContents(), data, data.getUrl(), data.isInstantAppDefault());
     }
 
     @CalledByNative
@@ -34,5 +34,5 @@ public class InstantAppsInfoBarDelegate {
     }
 
     private static native void nativeLaunch(WebContents webContents, InstantAppsBannerData data,
-            String url);
+            String url, boolean instantAppIsDefault);
 }

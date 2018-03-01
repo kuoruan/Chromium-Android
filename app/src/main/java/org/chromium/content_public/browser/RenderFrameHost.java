@@ -4,11 +4,11 @@
 
 package org.chromium.content_public.browser;
 
+import org.chromium.base.Callback;
 import org.chromium.services.service_manager.InterfaceProvider;
 
 /**
  * The RenderFrameHost Java wrapper to allow communicating with the native RenderFrameHost object.
- *
  */
 public interface RenderFrameHost {
     /**
@@ -17,6 +17,13 @@ public interface RenderFrameHost {
      * @return The last committed URL of the frame.
      */
     String getLastCommittedURL();
+
+    /**
+     * Fetch the canonical URL associated with the fame.
+     *
+     * @param callback The callback to be notified once the canonical URL has been fetched.
+     */
+    void getCanonicalUrlForSharing(Callback<String> callback);
 
     /**
      * Returns an InterfaceProvider that provides access to interface implementations provided by

@@ -71,8 +71,10 @@ class PlatformSensorProvider {
      * a set of active sensors, creates and starts new thread if needed.
      */
     public void sensorStarted(PlatformSensor sensor) {
-        if (mActiveSensors.isEmpty()) startSensorThread();
-        mActiveSensors.add(sensor);
+        synchronized (mActiveSensors) {
+            if (mActiveSensors.isEmpty()) startSensorThread();
+            mActiveSensors.add(sensor);
+        }
     }
 
     /**
@@ -80,8 +82,10 @@ class PlatformSensorProvider {
      * #mActiveSensors becomes empty thread is stopped.
      */
     public void sensorStopped(PlatformSensor sensor) {
-        mActiveSensors.remove(sensor);
-        if (mActiveSensors.isEmpty()) stopSensorThread();
+        synchronized (mActiveSensors) {
+            mActiveSensors.remove(sensor);
+            if (mActiveSensors.isEmpty()) stopSensorThread();
+        }
     }
 
     /**

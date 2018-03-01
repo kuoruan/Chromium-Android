@@ -11,7 +11,6 @@
 
 package org.chromium.mojo.bindings.interfacecontrol;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
@@ -32,17 +31,11 @@ public final class RunOutput extends org.chromium.mojo.bindings.Union {
       return mTag_ == -1;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setQueryVersionResult(QueryVersionResult queryVersionResult) {
         this.mTag_ = Tag.QueryVersionResult;
         this.mQueryVersionResult = queryVersionResult;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public QueryVersionResult getQueryVersionResult() {
         assert this.mTag_ == Tag.QueryVersionResult;
         return this.mQueryVersionResult;

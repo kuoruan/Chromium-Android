@@ -11,7 +11,6 @@
 
 package org.chromium.media.mojom;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
@@ -25,13 +24,18 @@ public interface VideoDecodeStatsRecorder extends org.chromium.mojo.bindings.Int
     Manager<VideoDecodeStatsRecorder, VideoDecodeStatsRecorder.Proxy> MANAGER = VideoDecodeStatsRecorder_Internal.MANAGER;
 
 
+    void setPageInfo(
+org.chromium.url.mojom.Origin untrustedTopFrameOrigin, boolean isTopFrame);
+
+
+
     void startNewRecord(
 int profile, org.chromium.gfx.mojom.Size videoSize, int framesPerSec);
 
 
 
     void updateRecord(
-int framesDecoded, int framesDropped);
+int framesDecoded, int framesDropped, int framesDecodedPowerEfficient);
 
 
 }

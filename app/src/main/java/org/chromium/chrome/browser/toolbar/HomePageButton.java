@@ -40,7 +40,7 @@ public class HomePageButton extends TintedImageButton
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         assert item.getItemId() == ID_REMOVE;
-        HomepageManager.getInstance(getContext()).setPrefHomepageEnabled(false);
+        HomepageManager.getInstance().setPrefHomepageEnabled(false);
         return true;
     }
 }

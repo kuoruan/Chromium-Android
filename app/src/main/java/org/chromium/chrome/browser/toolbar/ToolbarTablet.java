@@ -247,7 +247,7 @@ public class ToolbarTablet
                 return getMenuButtonHelper().onEnterKeyPress(mMenuButton);
             }
         });
-        if (HomepageManager.isHomepageEnabled(getContext())) {
+        if (HomepageManager.isHomepageEnabled()) {
             mHomeButton.setVisibility(VISIBLE);
         }
 
@@ -552,14 +552,14 @@ public class ToolbarTablet
 
     @Override
     public boolean useLightDrawables() {
-        return mUseLightColorAssets;
+        return mUseLightColorAssets != null && mUseLightColorAssets;
     }
 
     @Override
     public void showAppMenuUpdateBadge() {
         super.showAppMenuUpdateBadge();
         if (!mIsInTabSwitcherMode) {
-            if (mUseLightColorAssets) {
+            if (mUseLightColorAssets != null && mUseLightColorAssets) {
                 setAppMenuUpdateBadgeDrawable(mUseLightColorAssets);
             }
             setAppMenuUpdateBadgeToVisible(true);

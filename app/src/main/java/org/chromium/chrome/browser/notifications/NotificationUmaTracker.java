@@ -8,10 +8,10 @@ import android.annotation.TargetApi;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.support.annotation.IntDef;
 import android.support.v4.app.NotificationManagerCompat;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.library_loader.LibraryLoader;
 import org.chromium.base.metrics.RecordHistogram;
@@ -93,7 +93,8 @@ public class NotificationUmaTracker {
             recordHistogram("Mobile.SystemNotification.Blocked", type);
             return;
         }
-        if (BuildInfo.isAtLeastO() && channelId != null && isChannelBlocked(channelId)) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && channelId != null
+                && isChannelBlocked(channelId)) {
             recordHistogram("Mobile.SystemNotification.ChannelBlocked", type);
             return;
         }

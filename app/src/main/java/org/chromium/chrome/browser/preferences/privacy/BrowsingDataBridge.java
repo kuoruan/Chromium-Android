@@ -57,13 +57,6 @@ public final class BrowsingDataBridge {
          */
         @CalledByNative("OtherFormsOfBrowsingHistoryListener")
         void enableDialogAboutOtherFormsOfBrowsingHistory();
-
-        /**
-         * Called by the web history service when the conditions for showing the dialog about
-         * other forms of browsing history are met.
-         */
-        @CalledByNative("OtherFormsOfBrowsingHistoryListener")
-        void showNoticeAboutOtherFormsOfBrowsingHistory();
     }
 
     private BrowsingDataBridge() {}

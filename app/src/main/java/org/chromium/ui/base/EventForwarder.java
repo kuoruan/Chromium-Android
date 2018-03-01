@@ -317,6 +317,19 @@ public class EventForwarder {
         return true;
     }
 
+    /**
+     * Forwards a gesture event.
+     *
+     * @param type Type of the gesture event.
+     * @param timeMs Time the event occurred in milliseconds.
+     * @param delta Scale factor for pinch gesture relative to the current state,
+     *        1.0 being 100%. If negative, has the effect of reverting
+     *        pinch scale to default.
+     */
+    public boolean onGestureEvent(@GestureEventType int type, long timeMs, float delta) {
+        return nativeOnGestureEvent(mNativeEventForwarder, type, timeMs, delta);
+    }
+
     // All touch events (including flings, scrolls etc) accept coordinates in physical pixels.
     private native boolean nativeOnTouchEvent(long nativeEventForwarder, MotionEvent event,
             long timeMs, int action, int pointerCount, int historySize, int actionIndex, float x0,
@@ -332,4 +345,6 @@ public class EventForwarder {
             float y, float ticksX, float ticksY, float pixelsPerTick);
     private native void nativeOnDragEvent(long nativeEventForwarder, int action, int x, int y,
             int screenX, int screenY, String[] mimeTypes, String content);
+    private native boolean nativeOnGestureEvent(
+            long nativeEventForwarder, int type, long timeMs, float delta);
 }

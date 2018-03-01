@@ -13,10 +13,8 @@
         android:id="@+id/context_header_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="20dp"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
-        android:paddingBottom="10dp"
         android:layout_gravity="center"
         android:orientation="vertical"
         tools:ignore="UseCompoundDrawables">
@@ -24,6 +22,7 @@
              background to the image. -->
         <ImageView
             android:id="@+id/context_header_image"
+            android:layout_marginTop="30dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -31,12 +30,13 @@
             android:foreground="@drawable/tabular_context_menu_image_border"
             android:minWidth="@dimen/context_menu_header_image_min_size"
             android:minHeight="@dimen/context_menu_header_image_min_size"
-            android:maxWidth="@dimen/context_menu_header_image_max_size"
-            android:maxHeight="@dimen/context_menu_header_image_max_size"
+            android:maxHeight="@dimen/context_menu_header_image_max_height"
             android:adjustViewBounds="true"
             android:visibility="gone"/>
         <TextView
             android:id="@+id/context_header_text"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
@@ -56,6 +56,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:minHeight="@dimen/context_menu_selectable_items_min_size"
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
         android:dividerHeight="0dp"

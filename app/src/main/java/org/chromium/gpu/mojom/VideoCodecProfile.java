@@ -11,7 +11,6 @@
 
 package org.chromium.gpu.mojom;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 public final class VideoCodecProfile {
@@ -19,53 +18,55 @@ public final class VideoCodecProfile {
 
     public static final int VIDEO_CODEC_PROFILE_UNKNOWN = (int) (-1L);
 
-    public static final int H264_PROFILE_BASELINE = (int) (0L);
+    public static final int H264PROFILE_BASELINE = (int) (0L);
 
-    public static final int H264_PROFILE_MAIN = H264_PROFILE_BASELINE + 1;
+    public static final int H264PROFILE_MAIN = H264PROFILE_BASELINE + 1;
 
-    public static final int H264_PROFILE_EXTENDED = H264_PROFILE_MAIN + 1;
+    public static final int H264PROFILE_EXTENDED = H264PROFILE_MAIN + 1;
 
-    public static final int H264_PROFILE_HIGH = H264_PROFILE_EXTENDED + 1;
+    public static final int H264PROFILE_HIGH = H264PROFILE_EXTENDED + 1;
 
-    public static final int H264_PROFILE_HIG_H10_PROFILE = H264_PROFILE_HIGH + 1;
+    public static final int H264PROFILE_HIGH10PROFILE = H264PROFILE_HIGH + 1;
 
-    public static final int H264_PROFILE_HIG_H422_PROFILE = H264_PROFILE_HIG_H10_PROFILE + 1;
+    public static final int H264PROFILE_HIGH422PROFILE = H264PROFILE_HIGH10PROFILE + 1;
 
-    public static final int H264_PROFILE_HIG_H444_PREDICTIVEPROFILE = H264_PROFILE_HIG_H422_PROFILE + 1;
+    public static final int H264PROFILE_HIGH444PREDICTIVEPROFILE = H264PROFILE_HIGH422PROFILE + 1;
 
-    public static final int H264_PROFILE_SCALABLEBASELINE = H264_PROFILE_HIG_H444_PREDICTIVEPROFILE + 1;
+    public static final int H264PROFILE_SCALABLEBASELINE = H264PROFILE_HIGH444PREDICTIVEPROFILE + 1;
 
-    public static final int H264_PROFILE_SCALABLEHIGH = H264_PROFILE_SCALABLEBASELINE + 1;
+    public static final int H264PROFILE_SCALABLEHIGH = H264PROFILE_SCALABLEBASELINE + 1;
 
-    public static final int H264_PROFILE_STEREOHIGH = H264_PROFILE_SCALABLEHIGH + 1;
+    public static final int H264PROFILE_STEREOHIGH = H264PROFILE_SCALABLEHIGH + 1;
 
-    public static final int H264_PROFILE_MULTIVIEWHIGH = H264_PROFILE_STEREOHIGH + 1;
+    public static final int H264PROFILE_MULTIVIEWHIGH = H264PROFILE_STEREOHIGH + 1;
 
-    public static final int V_P8_PROFILE_ANY = H264_PROFILE_MULTIVIEWHIGH + 1;
+    public static final int VP8PROFILE_ANY = H264PROFILE_MULTIVIEWHIGH + 1;
 
-    public static final int V_P9_PROFILE_PROFIL_E0 = V_P8_PROFILE_ANY + 1;
+    public static final int VP9PROFILE_PROFILE0 = VP8PROFILE_ANY + 1;
 
-    public static final int V_P9_PROFILE_PROFIL_E1 = V_P9_PROFILE_PROFIL_E0 + 1;
+    public static final int VP9PROFILE_PROFILE1 = VP9PROFILE_PROFILE0 + 1;
 
-    public static final int V_P9_PROFILE_PROFIL_E2 = V_P9_PROFILE_PROFIL_E1 + 1;
+    public static final int VP9PROFILE_PROFILE2 = VP9PROFILE_PROFILE1 + 1;
 
-    public static final int V_P9_PROFILE_PROFIL_E3 = V_P9_PROFILE_PROFIL_E2 + 1;
+    public static final int VP9PROFILE_PROFILE3 = VP9PROFILE_PROFILE2 + 1;
 
-    public static final int HEVCPROFILE_MAIN = V_P9_PROFILE_PROFIL_E3 + 1;
+    public static final int HEVCPROFILE_MAIN = VP9PROFILE_PROFILE3 + 1;
 
-    public static final int HEVCPROFILE_MAI_N10 = HEVCPROFILE_MAIN + 1;
+    public static final int HEVCPROFILE_MAIN10 = HEVCPROFILE_MAIN + 1;
 
-    public static final int HEVCPROFILE_MAIN_STILL_PICTURE = HEVCPROFILE_MAI_N10 + 1;
+    public static final int HEVCPROFILE_MAIN_STILL_PICTURE = HEVCPROFILE_MAIN10 + 1;
 
-    public static final int DOLBYVISION_PROFIL_E0 = HEVCPROFILE_MAIN_STILL_PICTURE + 1;
+    public static final int DOLBYVISION_PROFILE0 = HEVCPROFILE_MAIN_STILL_PICTURE + 1;
 
-    public static final int DOLBYVISION_PROFIL_E4 = DOLBYVISION_PROFIL_E0 + 1;
+    public static final int DOLBYVISION_PROFILE4 = DOLBYVISION_PROFILE0 + 1;
 
-    public static final int DOLBYVISION_PROFIL_E5 = DOLBYVISION_PROFIL_E4 + 1;
+    public static final int DOLBYVISION_PROFILE5 = DOLBYVISION_PROFILE4 + 1;
 
-    public static final int DOLBYVISION_PROFIL_E7 = DOLBYVISION_PROFIL_E5 + 1;
+    public static final int DOLBYVISION_PROFILE7 = DOLBYVISION_PROFILE5 + 1;
 
-    public static final int THEORAPROFILE_ANY = DOLBYVISION_PROFIL_E7 + 1;
+    public static final int THEORAPROFILE_ANY = DOLBYVISION_PROFILE7 + 1;
+
+    public static final int AV1PROFILE_PROFILE0 = THEORAPROFILE_ANY + 1;
 
 
     private static final boolean IS_EXTENSIBLE = false;
@@ -97,6 +98,7 @@ public final class VideoCodecProfile {
             case 21:
             case 22:
             case 23:
+            case 24:
                 return true;
         }
         return false;

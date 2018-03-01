@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.tabmodel;
 
 import android.content.ComponentName;
 import android.content.Intent;
+import android.support.annotation.Nullable;
 
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.content_public.browser.LoadUrlParams;
@@ -60,10 +61,10 @@ public class TabReparentingParams implements AsyncTabParams {
     }
 
     /**
-     * Carry out any remaining finalization to be done after the tab is reparented.
+     * Returns the callback to be used once Tab reparenting has finished, if any.
      */
-    public void finalizeTabReparenting() {
-        if (mFinalizeCallback != null) mFinalizeCallback.run();
+    public @Nullable Runnable getFinalizeCallback() {
+        return mFinalizeCallback;
     }
 
     @Override

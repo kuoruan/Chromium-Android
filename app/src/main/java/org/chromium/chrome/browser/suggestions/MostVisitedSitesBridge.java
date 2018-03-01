@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.suggestions;
 
-import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNIAdditionalImport;
 import org.chromium.chrome.browser.ntp.NewTabPage;
@@ -45,7 +44,7 @@ public class MostVisitedSitesBridge
             nativeSetHomePageClient(mNativeMostVisitedSitesBridge, new HomePageClient() {
                 @Override
                 public boolean isHomePageEnabled() {
-                    return HomepageManager.isHomepageEnabled(ContextUtils.getApplicationContext());
+                    return HomepageManager.isHomepageEnabled();
                 }
 
                 @Override
@@ -55,10 +54,10 @@ public class MostVisitedSitesBridge
 
                 @Override
                 public String getHomePageUrl() {
-                    return HomepageManager.getHomepageUri(ContextUtils.getApplicationContext());
+                    return HomepageManager.getHomepageUri();
                 }
             });
-            HomepageManager.getInstance(ContextUtils.getApplicationContext()).addListener(this);
+            HomepageManager.getInstance().addListener(this);
         }
     }
 
@@ -68,7 +67,7 @@ public class MostVisitedSitesBridge
     @Override
     public void destroy() {
         // Stop listening even if it was not started in the first place. (Handled without errors.)
-        HomepageManager.getInstance(ContextUtils.getApplicationContext()).removeListener(this);
+        HomepageManager.getInstance().removeListener(this);
         assert mNativeMostVisitedSitesBridge != 0;
         nativeDestroy(mNativeMostVisitedSitesBridge);
         mNativeMostVisitedSitesBridge = 0;
@@ -100,7 +99,7 @@ public class MostVisitedSitesBridge
     @Override
     public void recordTileImpression(Tile tile) {
         nativeRecordTileImpression(mNativeMostVisitedSitesBridge, tile.getIndex(), tile.getType(),
-                tile.getTitleSource(), tile.getSource(),
+                tile.getIconType(), tile.getTitleSource(), tile.getSource(),
                 tile.getData().dataGenerationTime.getTime(), tile.getUrl());
     }
 
@@ -115,9 +114,8 @@ public class MostVisitedSitesBridge
     public void onHomepageStateUpdated() {
         assert mNativeMostVisitedSitesBridge != 0;
         // Ensure even a blacklisted home page can be set as tile when (re-)enabling it.
-        if (HomepageManager.isHomepageEnabled(ContextUtils.getApplicationContext())) {
-            removeBlacklistedUrl(
-                    HomepageManager.getHomepageUri(ContextUtils.getApplicationContext()));
+        if (HomepageManager.isHomepageEnabled()) {
+            removeBlacklistedUrl(HomepageManager.getHomepageUri());
         }
         nativeOnHomePageStateChanged(mNativeMostVisitedSitesBridge);
     }
@@ -197,7 +195,8 @@ public class MostVisitedSitesBridge
     private native void nativeRecordPageImpression(
             long nativeMostVisitedSitesBridge, int tilesCount);
     private native void nativeRecordTileImpression(long nativeMostVisitedSitesBridge, int index,
-            int type, int titleSource, int source, long dataGenerationTimeMs, String url);
+            int type, int iconType, int titleSource, int source, long dataGenerationTimeMs,
+            String url);
     private native void nativeRecordOpenedMostVisitedItem(long nativeMostVisitedSitesBridge,
             int index, int tileType, int titleSource, int source, long dataGenerationTimeMs);
 }

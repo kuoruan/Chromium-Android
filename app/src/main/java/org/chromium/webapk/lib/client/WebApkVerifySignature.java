@@ -65,8 +65,8 @@ public class WebApkVerifySignature {
     /** The signature algorithm used (must also match with HASH). */
     private static final String SIGNING_ALGORITHM = "SHA256withECDSA";
 
-    /** Maximum expected V2 signing block size */
-    private static final int MAX_V2_SIGNING_BLOCK_SIZE = 8192;
+    /** Maximum expected V2 signing block size with 3 signatures */
+    private static final int MAX_V2_SIGNING_BLOCK_SIZE = 8192 * 3;
 
     /** The magic string for v2 signing. */
     private static final String V2_SIGNING_MAGIC = "APK Sig Block 42";

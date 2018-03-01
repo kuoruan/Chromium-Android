@@ -4,8 +4,13 @@
 
 package org.chromium.base;
 
+import android.app.Application;
 import android.content.Context;
+import android.content.ContextWrapper;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.AssetManager;
+import android.os.Build;
 import android.preference.PreferenceManager;
 
 import org.chromium.base.annotations.JNINamespace;
@@ -90,8 +95,35 @@ public class ContextUtils {
      */
     @VisibleForTesting
     public static void initApplicationContextForTests(Context appContext) {
+        // ApplicationStatus.initialize should be called to setup activity tracking for tests
+        // that use Robolectric and set the application context manually. Instead of changing all
+        // tests that do so, the call was put here instead.
+        // TODO(mheikal): Require param to be of type Application
+        if (appContext instanceof Application) {
+            ApplicationStatus.initialize((Application) appContext);
+        }
         initJavaSideApplicationContext(appContext);
         Holder.sSharedPreferences = fetchAppSharedPreferences();
+    }
+
+    /**
+     * Starts a service with {@code Intent}.  This will be started with the foreground expectation
+     * on Android O and higher.
+     * TODO(crbug.com/769683): Temporary measure until we roll the support library to 26.1.0.
+     *
+     * @param context Context to start Service from.
+     * @param intent The description of the Service to start.
+     *
+     * @see {@link android.support.v4.content.ContextCompat#startForegroundService(Context,Intent)}
+     * @see Context#startForegroundService(Intent)
+     * @see Context#startService(Intent)
+     */
+    public static void startForegroundService(Context context, Intent intent) {
+        if (Build.VERSION.SDK_INT >= 26) {
+            context.startForegroundService(intent);
+        } else {
+            context.startService(intent);
+        }
     }
 
     private static void initJavaSideApplicationContext(Context appContext) {
@@ -99,5 +131,22 @@ public class ContextUtils {
             throw new RuntimeException("Global application context cannot be set to null.");
         }
         sApplicationContext = appContext;
+    }
+
+    /**
+     * In most cases, {@link Context#getAssets()} can be used directly. Modified resources are
+     * used downstream and are set up on application startup, and this method provides access to
+     * regular assets before that initialization is complete.
+     *
+     * This method should ONLY be used for accessing files within the assets folder.
+     *
+     * @return Application assets.
+     */
+    public static AssetManager getApplicationAssets() {
+        Context context = getApplicationContext();
+        while (context instanceof ContextWrapper) {
+            context = ((ContextWrapper) context).getBaseContext();
+        }
+        return context.getAssets();
     }
 }

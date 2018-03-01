@@ -11,7 +11,6 @@ import android.support.annotation.Nullable;
 import android.util.Pair;
 
 import org.chromium.base.VisibleForTesting;
-import org.chromium.content.browser.RenderCoordinates;
 import org.chromium.ui.OverscrollRefreshHandler;
 import org.chromium.ui.base.EventForwarder;
 import org.chromium.ui.base.WindowAndroid;
@@ -379,8 +378,7 @@ public interface WebContents extends Parcelable {
      * Initiate extraction of text, HTML, and other information for clipping puposes (smart clip)
      * from the rectangle area defined by starting positions (x and y), and width and height.
      */
-    void requestSmartClipExtract(
-            int x, int y, int width, int height, RenderCoordinates coordinateSpace);
+    void requestSmartClipExtract(int x, int y, int width, int height);
 
     /**
      * Register a handler to handle smart clip data once extraction is done.

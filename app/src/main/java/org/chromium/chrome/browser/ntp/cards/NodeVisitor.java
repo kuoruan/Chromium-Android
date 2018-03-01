@@ -76,7 +76,7 @@ public class NodeVisitor {
     public void visitCarouselItem(SuggestionsCarouselAdapter adapter) {}
 
     /**
-     * Visits a card placeholder item.
+     * Visits a logo.
      */
-    public void visitPlaceholderItem() {}
+    public void visitLogo() {}
 }

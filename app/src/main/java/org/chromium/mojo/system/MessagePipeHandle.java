@@ -4,8 +4,6 @@
 
 package org.chromium.mojo.system;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
-
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -123,17 +121,14 @@ public interface MessagePipeHandle extends Handle {
         /**
          * If a message was read, this contains the bytes of its data.
          */
-        @SuppressFBWarnings("UUF_UNUSED")
         public byte[] mData;
         /**
          * If a message was read, this contains the raw handle values.
          */
-        @SuppressFBWarnings("UUF_UNUSED")
         public int[] mRawHandles;
         /**
          * If a message was read, the handles contained in the message, undefined otherwise.
          */
-        @SuppressFBWarnings("UUF_UNUSED")
         public List<UntypedHandle> mHandles;
     }
 

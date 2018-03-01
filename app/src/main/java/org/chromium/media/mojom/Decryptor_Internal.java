@@ -11,7 +11,6 @@
 
 package org.chromium.media.mojom;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
@@ -72,13 +71,17 @@ class Decryptor_Internal {
 
         @Override
         public void initialize(
-org.chromium.mojo.system.DataPipe.ConsumerHandle receivePipe, org.chromium.mojo.system.DataPipe.ProducerHandle transmitPipe) {
+org.chromium.mojo.system.DataPipe.ConsumerHandle audioPipe, org.chromium.mojo.system.DataPipe.ConsumerHandle videoPipe, org.chromium.mojo.system.DataPipe.ConsumerHandle decryptPipe, org.chromium.mojo.system.DataPipe.ProducerHandle decryptedPipe) {
 
             DecryptorInitializeParams _message = new DecryptorInitializeParams();
 
-            _message.receivePipe = receivePipe;
+            _message.audioPipe = audioPipe;
 
-            _message.transmitPipe = transmitPipe;
+            _message.videoPipe = videoPipe;
+
+            _message.decryptPipe = decryptPipe;
+
+            _message.decryptedPipe = decryptedPipe;
 
 
             getProxyHandler().getMessageReceiver().accept(
@@ -284,7 +287,7 @@ int streamType) {
                         DecryptorInitializeParams data =
                                 DecryptorInitializeParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().initialize(data.receivePipe, data.transmitPipe);
+                        getImpl().initialize(data.audioPipe, data.videoPipe, data.decryptPipe, data.decryptedPipe);
                         return true;
                     }
             
@@ -460,16 +463,20 @@ int streamType) {
     
     static final class DecryptorInitializeParams extends org.chromium.mojo.bindings.Struct {
     
-        private static final int STRUCT_SIZE = 16;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public org.chromium.mojo.system.DataPipe.ConsumerHandle receivePipe;
-        public org.chromium.mojo.system.DataPipe.ProducerHandle transmitPipe;
+        public org.chromium.mojo.system.DataPipe.ConsumerHandle audioPipe;
+        public org.chromium.mojo.system.DataPipe.ConsumerHandle videoPipe;
+        public org.chromium.mojo.system.DataPipe.ConsumerHandle decryptPipe;
+        public org.chromium.mojo.system.DataPipe.ProducerHandle decryptedPipe;
     
         private DecryptorInitializeParams(int version) {
             super(STRUCT_SIZE, version);
-            this.receivePipe = org.chromium.mojo.system.InvalidHandle.INSTANCE;
-            this.transmitPipe = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+            this.audioPipe = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+            this.videoPipe = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+            this.decryptPipe = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+            this.decryptedPipe = org.chromium.mojo.system.InvalidHandle.INSTANCE;
         }
     
         public DecryptorInitializeParams() {
@@ -505,11 +512,19 @@ int streamType) {
                 result = new DecryptorInitializeParams(mainDataHeader.elementsOrVersion);
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
-                    result.receivePipe = decoder0.readConsumerHandle(8, false);
+                    result.audioPipe = decoder0.readConsumerHandle(8, false);
                 }
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
-                    result.transmitPipe = decoder0.readProducerHandle(12, false);
+                    result.videoPipe = decoder0.readConsumerHandle(12, false);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.decryptPipe = decoder0.readConsumerHandle(16, false);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.decryptedPipe = decoder0.readProducerHandle(20, false);
                 }
             } finally {
                 decoder0.decreaseStackDepth();
@@ -522,9 +537,13 @@ int streamType) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(this.receivePipe, 8, false);
+            encoder0.encode(this.audioPipe, 8, false);
             
-            encoder0.encode(this.transmitPipe, 12, false);
+            encoder0.encode(this.videoPipe, 12, false);
+            
+            encoder0.encode(this.decryptPipe, 16, false);
+            
+            encoder0.encode(this.decryptedPipe, 20, false);
         }
     
         /**
@@ -539,9 +558,13 @@ int streamType) {
             if (getClass() != object.getClass())
                 return false;
             DecryptorInitializeParams other = (DecryptorInitializeParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.receivePipe, other.receivePipe))
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.audioPipe, other.audioPipe))
                 return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.transmitPipe, other.transmitPipe))
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.videoPipe, other.videoPipe))
+                return false;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.decryptPipe, other.decryptPipe))
+                return false;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.decryptedPipe, other.decryptedPipe))
                 return false;
             return true;
         }
@@ -553,8 +576,10 @@ int streamType) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.receivePipe);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.transmitPipe);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.audioPipe);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoPipe);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.decryptPipe);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.decryptedPipe);
             return result;
         }
     }

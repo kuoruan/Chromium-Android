@@ -5,7 +5,11 @@
 package org.chromium.content.browser.accessibility;
 
 import android.annotation.TargetApi;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ReceiverCallNotAllowedException;
 import android.os.Build;
 import android.text.SpannableString;
 import android.text.style.LocaleSpan;
@@ -16,7 +20,6 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction;
 
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.content.browser.RenderCoordinates;
 import org.chromium.content_public.browser.WebContents;
 
 import java.util.Locale;
@@ -30,12 +33,19 @@ public class LollipopWebContentsAccessibility extends KitKatWebContentsAccessibi
     private static SparseArray<AccessibilityAction> sAccessibilityActionMap =
             new SparseArray<AccessibilityAction>();
     private String mSystemLanguageTag;
+    private BroadcastReceiver mBroadcastReceiver;
+    private Context mContext;
 
     LollipopWebContentsAccessibility(Context context, ViewGroup containerView,
-            WebContents webContents, RenderCoordinates renderCoordinates,
-            boolean shouldFocusOnPageLoad) {
-        super(context, containerView, webContents, renderCoordinates, shouldFocusOnPageLoad);
-        mSystemLanguageTag = Locale.getDefault().toLanguageTag();
+            WebContents webContents, boolean shouldFocusOnPageLoad) {
+        super(context, containerView, webContents, shouldFocusOnPageLoad);
+        mContext = context;
+        mBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                mSystemLanguageTag = Locale.getDefault().toLanguageTag();
+            }
+        };
     }
 
     @Override
@@ -139,5 +149,22 @@ public class LollipopWebContentsAccessibility extends KitKatWebContentsAccessibi
             return spannable;
         }
         return charSequence;
+    }
+
+    @Override
+    public void onDetachedFromWindow() {
+        mContext.unregisterReceiver(mBroadcastReceiver);
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        try {
+            IntentFilter filter = new IntentFilter(Intent.ACTION_LOCALE_CHANGED);
+            mContext.registerReceiver(mBroadcastReceiver, filter);
+        } catch (ReceiverCallNotAllowedException e) {
+            // WebView may be running inside a BroadcastReceiver, in which case registerReceiver is
+            // not allowed.
+        }
+        mSystemLanguageTag = Locale.getDefault().toLanguageTag();
     }
 }

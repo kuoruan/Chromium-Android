@@ -68,6 +68,7 @@ public class DecoderService extends Service {
     }
 
     private final IDecoderService.Stub mBinder = new IDecoderService.Stub() {
+        @Override
         public void decodeImage(Bundle payload, IDecoderServiceCallback callback) {
             Bundle bundle = null;
             String filePath = "";

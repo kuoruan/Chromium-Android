@@ -5,12 +5,10 @@
 package org.chromium.chrome.browser.permissions;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.DialogInterface;
 import android.support.annotation.IntDef;
 import android.support.v4.widget.TextViewCompat;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.SwitchCompat;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +17,9 @@ import android.widget.TextView;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeActivity;
+import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
+import org.chromium.chrome.browser.widget.bottomsheet.EmptyBottomSheetObserver;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -27,29 +28,39 @@ import java.util.List;
 
 /**
  * Singleton instance which controls the display of modal permission dialogs. This class is lazily
- * initiated when getInstance() is first called. Implemented like this as modal permission dialogs
- * are disabled by default.
+ * initiated when getInstance() is first called.
  *
  * Unlike permission infobars, which stack on top of each other, only one permission dialog may be
  * visible on the screen at once. Any additional request for a modal permissions dialog is queued,
  * and will be displayed once the user responds to the current dialog.
  */
 public class PermissionDialogController implements AndroidPermissionRequester.RequestDelegate {
-    private static final int NOT_DECIDED = 0;
-    private static final int ACCEPTED = 1;
-    private static final int CANCELED = 2;
+    private static final int NOT_SHOWING = 0;
+    // We don't show prompts while Chrome Home is showing.
+    private static final int PROMPT_PENDING = 1;
+    private static final int PROMPT_OPEN = 2;
+    private static final int PROMPT_ACCEPTED = 3;
+    private static final int PROMPT_DENIED = 4;
+    private static final int REQUEST_ANDROID_PERMISSIONS = 5;
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({NOT_DECIDED, ACCEPTED, CANCELED})
-    private @interface Decision {}
+    @IntDef({NOT_SHOWING, PROMPT_PENDING, PROMPT_OPEN, PROMPT_ACCEPTED, PROMPT_DENIED,
+            REQUEST_ANDROID_PERMISSIONS})
+    private @interface State {}
 
     private AlertDialog mDialog;
-    private SwitchCompat mSwitchView;
     private PermissionDialogDelegate mDialogDelegate;
+
+    // As the PermissionRequestManager handles queueing for a tab and only shows prompts for active
+    // tabs, we typically only have one request. This class only handles multiple requests at once
+    // when either:
+    // 1) Multiple open windows request permissions due to Android split-screen
+    // 2) A tab navigates or is closed while the Android permission request is open, and the
+    // subsequent page requests a permission
     private List<PermissionDialogDelegate> mRequestQueue;
 
-    /** Whether a decision has been made for the current dialog. */
-    @Decision private int mDecision;
+    /** The current state, whether we have a prompt showing and so on. */
+    private @State int mState;
 
     // Static holder to ensure safe initialization of the singleton instance.
     private static class Holder {
@@ -64,7 +75,7 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
 
     private PermissionDialogController() {
         mRequestQueue = new LinkedList<>();
-        mDecision = NOT_DECIDED;
+        mState = NOT_SHOWING;
     }
 
     /**
@@ -91,7 +102,7 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
     }
 
     private void scheduleDisplay() {
-        if (mDialog == null && !mRequestQueue.isEmpty()) showDialog();
+        if (mState == NOT_SHOWING && !mRequestQueue.isEmpty()) dequeueDialog();
     }
 
     @VisibleForTesting
@@ -101,9 +112,13 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
 
     @Override
     public void onAndroidPermissionAccepted() {
-        // If the tab navigated or was closed behind the prompt, the delegate will be null.
-        if (mDialogDelegate != null) {
-            mDialogDelegate.onAccept(mSwitchView.isChecked());
+        assert mState == REQUEST_ANDROID_PERMISSIONS;
+
+        // The tab may have navigated or been closed behind the Android permission prompt.
+        if (mDialogDelegate == null) {
+            mState = NOT_SHOWING;
+        } else {
+            mDialogDelegate.onAccept();
             destroyDelegate();
         }
         scheduleDisplay();
@@ -111,8 +126,12 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
 
     @Override
     public void onAndroidPermissionCanceled() {
-        // If the tab navigated or was closed behind the prompt, the delegate will be null.
-        if (mDialogDelegate != null) {
+        assert mState == REQUEST_ANDROID_PERMISSIONS;
+
+        // The tab may have navigated or been closed behind the Android permission prompt.
+        if (mDialogDelegate == null) {
+            mState = NOT_SHOWING;
+        } else {
             mDialogDelegate.onDismiss();
             destroyDelegate();
         }
@@ -122,22 +141,62 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
     /**
      * Shows the dialog asking the user for a web API permission.
      */
-    public void showDialog() {
-        if (mRequestQueue.isEmpty()) return;
+    public void dequeueDialog() {
+        assert mState == NOT_SHOWING;
 
-        mDecision = NOT_DECIDED;
         mDialogDelegate = mRequestQueue.remove(0);
-        Activity activity = mDialogDelegate.getTab().getWindowAndroid().getActivity().get();
+        mState = PROMPT_PENDING;
+        ChromeActivity activity = mDialogDelegate.getTab().getActivity();
 
         // It's possible for the activity to be null if we reach here just after the user
         // backgrounds the browser and cleanup has happened. In that case, we can't show a prompt,
         // so act as though the user dismissed it.
         if (activity == null) {
+            // TODO(timloh): This probably doesn't work, as this happens synchronously when creating
+            // the PermissionPromptAndroid, so the PermissionRequestManager won't be ready yet.
             mDialogDelegate.onDismiss();
             destroyDelegate();
             return;
         }
 
+        // Suppress modals while Chrome Home is open. Eventually we will want to handle other cases
+        // whereby the tab is obscured so modals don't pop up on top of (e.g.) the tab switcher or
+        // the three-dot menu.
+        final BottomSheet bottomSheet = activity.getBottomSheet();
+        if (bottomSheet == null || !bottomSheet.isVisible()) {
+            showDialog();
+        } else {
+            bottomSheet.addObserver(new EmptyBottomSheetObserver() {
+                @Override
+                public void onSheetClosed(int reason) {
+                    bottomSheet.removeObserver(this);
+                    if (reason == BottomSheet.StateChangeReason.NAVIGATION
+                            || reason == BottomSheet.StateChangeReason.NEW_TAB) {
+                        // Dismiss the prompt as it would otherwise be dismissed momentarily once
+                        // the navigation completes.
+                        // TODO(timloh): This logs a dismiss (and we also already logged a show),
+                        // even though the user didn't see anything.
+                        mDialogDelegate.onDismiss();
+                        destroyDelegate();
+                    } else {
+                        showDialog();
+                    }
+                }
+            });
+        }
+    }
+
+    private void showDialog() {
+        assert mState == PROMPT_PENDING;
+
+        // The tab may have navigated or been closed while we were waiting for Chrome Home to close.
+        if (mDialogDelegate == null) {
+            mState = NOT_SHOWING;
+            scheduleDisplay();
+            return;
+        }
+
+        ChromeActivity activity = mDialogDelegate.getTab().getActivity();
         LayoutInflater inflater = LayoutInflater.from(activity);
         View view = inflater.inflate(R.layout.permission_dialog, null);
         AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.AlertDialogTheme);
@@ -153,22 +212,6 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
         TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(
                 messageTextView, mDialogDelegate.getDrawableId(), 0, 0, 0);
 
-        mSwitchView = (SwitchCompat) view.findViewById(R.id.permission_dialog_persist_toggle);
-        mSwitchView.setChecked(true);
-        TextView toggleTextView =
-                (TextView) view.findViewById(R.id.permission_dialog_persist_message);
-        if (mDialogDelegate.shouldShowPersistenceToggle()) {
-            mSwitchView.setVisibility(View.VISIBLE);
-            String toggleMessage =
-                    mDialog.getContext().getString(R.string.permission_prompt_persist_text);
-            toggleTextView.setText(toggleMessage);
-            toggleTextView.setVisibility(View.VISIBLE);
-            toggleTextView.announceForAccessibility(toggleMessage);
-
-        } else {
-            view.findViewById(R.id.permission_dialog_persist_layout).setVisibility(View.GONE);
-        }
-
         mDialog.setView(view);
 
         // Set the buttons to call the appropriate delegate methods. When the dialog is dismissed,
@@ -178,7 +221,8 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        mDecision = ACCEPTED;
+                        assert mState == PROMPT_OPEN;
+                        mState = PROMPT_ACCEPTED;
                     }
                 });
 
@@ -186,7 +230,8 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        mDecision = CANCELED;
+                        assert mState == PROMPT_OPEN;
+                        mState = PROMPT_DENIED;
                     }
                 });
 
@@ -195,18 +240,20 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
         mDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialog) {
-                // Null if dismiss initiated by C++, or for some unknown reason (crbug.com/708562).
+                mDialog = null;
+
                 if (mDialogDelegate == null) {
-                    scheduleDisplay();
+                    // We get into here if a tab navigates or is closed underneath the prompt.
+                    mState = NOT_SHOWING;
                     return;
                 }
 
-                mDialog = null;
-                if (mDecision == ACCEPTED) {
+                if (mState == PROMPT_ACCEPTED) {
                     // Request Android permissions if necessary. This will call back into either
                     // onAndroidPermissionAccepted or onAndroidPermissionCanceled, which will
                     // schedule the next permission dialog. If it returns false, no system level
                     // permissions need to be requested, so just run the accept callback.
+                    mState = REQUEST_ANDROID_PERMISSIONS;
                     if (!AndroidPermissionRequester.requestAndroidPermissions(
                                 mDialogDelegate.getTab(), mDialogDelegate.getContentSettingsTypes(),
                                 PermissionDialogController.this)) {
@@ -215,9 +262,10 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
                 } else {
                     // Otherwise, run the necessary delegate callback immediately and schedule the
                     // next dialog.
-                    if (mDecision == CANCELED) {
-                        mDialogDelegate.onCancel(mSwitchView.isChecked());
+                    if (mState == PROMPT_DENIED) {
+                        mDialogDelegate.onCancel();
                     } else {
+                        assert mState == PROMPT_OPEN;
                         mDialogDelegate.onDismiss();
                     }
                     destroyDelegate();
@@ -227,6 +275,7 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
         });
 
         mDialog.show();
+        mState = PROMPT_OPEN;
     }
 
     private CharSequence prepareMainMessageString(final PermissionDialogDelegate delegate) {
@@ -245,15 +294,15 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
 
     public void dismissFromNative(PermissionDialogDelegate delegate) {
         if (mDialogDelegate == delegate) {
+            // Some caution is required here to handle cases where the user actions or dismisses
+            // the prompt at roughly the same time as native. Due to asynchronicity, this function
+            // may be called after onClick and before onDismiss, or before both of those listeners.
             mDialogDelegate = null;
-            AlertDialog dialog = mDialog;
-            mDialog = null;
-            if (dialog != null) {
-                dialog.dismiss();
+            if (mState == PROMPT_OPEN) {
+                mDialog.dismiss();
             } else {
-                // The prompt was accepted but the tab navigated or was closed while the Android
-                // permission prompt was active.
-                assert mDecision == ACCEPTED;
+                assert mState == PROMPT_PENDING || mState == REQUEST_ANDROID_PERMISSIONS
+                        || mState == PROMPT_DENIED || mState == PROMPT_ACCEPTED;
             }
         } else {
             assert mRequestQueue.contains(delegate);
@@ -265,5 +314,6 @@ public class PermissionDialogController implements AndroidPermissionRequester.Re
     private void destroyDelegate() {
         mDialogDelegate.destroy();
         mDialogDelegate = null;
+        mState = NOT_SHOWING;
     }
 }

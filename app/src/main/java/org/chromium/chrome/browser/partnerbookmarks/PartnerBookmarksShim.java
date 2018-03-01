@@ -39,15 +39,19 @@ public class PartnerBookmarksShim {
 
         PartnerBookmarksReader reader = new PartnerBookmarksReader(context);
 
+        boolean systemOrPreStable =
+                (context.getApplicationInfo().flags & ApplicationInfo.FLAG_SYSTEM) == 1
+                || !ChromeVersionInfo.isStableBuild();
+        if (!systemOrPreStable) {
+            reader.onBookmarksRead();
+            return;
+        }
+
         boolean skip = shouldSkipReading();
         RecordHistogram.recordBooleanHistogram("PartnerBookmark.Skipped", skip);
         if (skip) {
             Log.i(TAG, "Skip reading partner bookmarks since recent result was empty.");
-        }
-        boolean systemOrPreStable =
-                (context.getApplicationInfo().flags & ApplicationInfo.FLAG_SYSTEM) == 1
-                || !ChromeVersionInfo.isStableBuild();
-        if (skip || !systemOrPreStable) {
+            reader.recordPartnerBookmarkCount(0);
             reader.onBookmarksRead();
             return;
         }
@@ -57,7 +61,12 @@ public class PartnerBookmarksShim {
     private static boolean shouldSkipReading() {
         SharedPreferences pref = ContextUtils.getAppSharedPreferences();
         long last = pref.getLong(PartnerBookmarksReader.LAST_EMPTY_READ_PREFS_NAME, 0);
-        long elapsed = System.currentTimeMillis() - last;
+        int elapsed = (int) TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - last);
+
+        if (last > 0) {
+            RecordHistogram.recordCustomCountHistogram("PartnerBookmark.TimeSinceLastEmptyRead2",
+                    elapsed, 1, (int) TimeUnit.DAYS.toSeconds(365), 50);
+        }
         // Without checking elapsed >= 0, we might get stuck at an "always skip mode" if
         // |LAST_EMPTY_READ_PREFS_NAME| is a bogus future time.
         return 0 <= elapsed && elapsed < BAN_DURATION_MS;

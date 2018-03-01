@@ -6,24 +6,32 @@ package org.chromium.chrome.browser.toolbar;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.os.Build;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContextUtils;
+import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.dom_distiller.DomDistillerServiceFactory;
 import org.chromium.chrome.browser.dom_distiller.DomDistillerTabUtils;
+import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.ntp.NewTabPage;
 import org.chromium.chrome.browser.offlinepages.OfflinePageUtils;
 import org.chromium.chrome.browser.profiles.Profile;
+import org.chromium.chrome.browser.search_engines.TemplateUrlService;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.toolbar.ToolbarModel.ToolbarModelDelegate;
 import org.chromium.chrome.browser.util.ColorUtils;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
 import org.chromium.components.dom_distiller.core.DomDistillerService;
 import org.chromium.components.dom_distiller.core.DomDistillerUrlUtils;
+import org.chromium.components.security_state.ConnectionSecurityLevel;
 import org.chromium.content_public.browser.WebContents;
+import org.chromium.ui.base.DeviceFormFactor;
 
 /**
  * Contains the data and state for the toolbar.
@@ -103,6 +111,8 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
 
     @Override
     public String getText() {
+        if (clearUrlForBottomSheetOpen()) return "";
+
         String displayText = super.getText();
 
         if (!hasTab() || mTab.isFrozen()) return displayText;
@@ -188,5 +198,97 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
     @Override
     public boolean isOfflinePage() {
         return hasTab() && OfflinePageUtils.isOfflinePage(mTab);
+    }
+
+    @Override
+    public boolean shouldShowGoogleG(String urlBarText) {
+        LocaleManager localeManager = LocaleManager.getInstance();
+        if (localeManager.hasCompletedSearchEnginePromo()
+                || localeManager.hasShownSearchEnginePromoThisSession()) {
+            return false;
+        }
+
+        // Only access ChromeFeatureList and TemplateUrlService after the NTP check,
+        // to prevent native method calls before the native side has been initialized.
+        NewTabPage ntp = getNewTabPageForCurrentTab();
+        boolean isShownInRegularNtp = ntp != null && ntp.isLocationBarShownInNTP()
+                && ChromeFeatureList.isEnabled(ChromeFeatureList.NTP_SHOW_GOOGLE_G_IN_OMNIBOX);
+
+        boolean isShownInBottomSheet = mBottomSheet != null && !mBottomSheet.isShowingNewTab()
+                && mBottomSheet.isSheetOpen() && TextUtils.isEmpty(urlBarText)
+                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
+                && ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_CLEAR_URL_ON_OPEN)
+                && ChromeFeatureList.isEnabled(
+                           ChromeFeatureList.CHROME_HOME_SHOW_GOOGLE_G_WHEN_URL_CLEARED);
+
+        return (isShownInRegularNtp || isShownInBottomSheet)
+                && TemplateUrlService.getInstance().isDefaultSearchEngineGoogle();
+    }
+
+    @Override
+    public boolean shouldShowSecurityIcon() {
+        return !clearUrlForBottomSheetOpen() && getSecurityIconResource() != 0;
+    }
+
+    @Override
+    public boolean shouldShowVerboseStatus() {
+        // Because is offline page is cleared a bit slower, we also ensure that connection security
+        // level is NONE or HTTP_SHOW_WARNING (http://crbug.com/671453).
+        int securityLevel = getSecurityLevel();
+        return !clearUrlForBottomSheetOpen() && isOfflinePage()
+                && (securityLevel == ConnectionSecurityLevel.NONE
+                           || securityLevel == ConnectionSecurityLevel.HTTP_SHOW_WARNING);
+    }
+
+    @Override
+    public int getSecurityLevel() {
+        return getSecurityLevel(getTab(), isOfflinePage());
+    }
+
+    @Override
+    public int getSecurityIconResource() {
+        return getSecurityIconResource(
+                getSecurityLevel(), !DeviceFormFactor.isTablet(), isOfflinePage());
+    }
+
+    @VisibleForTesting
+    @ConnectionSecurityLevel
+    static int getSecurityLevel(Tab tab, boolean isOfflinePage) {
+        if (tab == null || isOfflinePage) {
+            return ConnectionSecurityLevel.NONE;
+        }
+        return tab.getSecurityLevel();
+    }
+
+    @VisibleForTesting
+    @DrawableRes
+    static int getSecurityIconResource(
+            int securityLevel, boolean isSmallDevice, boolean isOfflinePage) {
+        if (isOfflinePage) {
+            return R.drawable.offline_pin_round;
+        }
+
+        switch (securityLevel) {
+            case ConnectionSecurityLevel.NONE:
+                return isSmallDevice ? 0 : R.drawable.omnibox_info;
+            case ConnectionSecurityLevel.HTTP_SHOW_WARNING:
+                return R.drawable.omnibox_info;
+            case ConnectionSecurityLevel.DANGEROUS:
+                return R.drawable.omnibox_https_invalid;
+            case ConnectionSecurityLevel.SECURE_WITH_POLICY_INSTALLED_CERT:
+            case ConnectionSecurityLevel.SECURE:
+            case ConnectionSecurityLevel.EV_SECURE:
+                return R.drawable.omnibox_https_valid;
+            default:
+                assert false;
+        }
+        return 0;
+    }
+
+    private boolean clearUrlForBottomSheetOpen() {
+        return mBottomSheet != null && mBottomSheet.isSheetOpen()
+                && mBottomSheet.getTargetSheetState() != BottomSheet.SHEET_STATE_PEEK
+                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
+                && ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_CLEAR_URL_ON_OPEN);
     }
 }

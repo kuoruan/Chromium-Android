@@ -20,7 +20,8 @@ import java.lang.annotation.RetentionPolicy;
     SavePageResult.CONTENT_UNAVAILABLE, SavePageResult.ARCHIVE_CREATION_FAILED,
     SavePageResult.STORE_FAILURE, SavePageResult.ALREADY_EXISTS, SavePageResult.SKIPPED,
     SavePageResult.SECURITY_CERTIFICATE_ERROR, SavePageResult.ERROR_PAGE,
-    SavePageResult.INTERSTITIAL_PAGE, SavePageResult.RESULT_COUNT
+    SavePageResult.INTERSTITIAL_PAGE, SavePageResult.DIGEST_CALCULATION_FAILED,
+    SavePageResult.RESULT_COUNT
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface SavePageResult {
@@ -46,8 +47,12 @@ public @interface SavePageResult {
    */
   int INTERSTITIAL_PAGE = 10;
   /**
+   * Failed to compute digest for the archive file.
+   */
+  int DIGEST_CALCULATION_FAILED = 11;
+  /**
    * NOTE: always keep this entry at the end. Add new result types only immediately above this line.
    * Make sure to update the corresponding histogram enum accordingly.
    */
-  int RESULT_COUNT = 11;
+  int RESULT_COUNT = 12;
 }

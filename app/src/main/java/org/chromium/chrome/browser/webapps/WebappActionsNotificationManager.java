@@ -21,7 +21,6 @@ import org.chromium.chrome.browser.notifications.NotificationConstants;
 import org.chromium.chrome.browser.notifications.NotificationUmaTracker;
 import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
 import org.chromium.chrome.browser.tab.Tab;
-import org.chromium.components.url_formatter.UrlFormatter;
 import org.chromium.ui.widget.Toast;
 
 /**
@@ -83,11 +82,8 @@ class WebappActionsNotificationManager {
                 .createChromeNotificationBuilder(
                         true /* prefer compat */, ChannelDefinitions.CHANNEL_ID_WEBAPP_ACTIONS)
                 .setSmallIcon(R.drawable.ic_chrome)
-                .setContentTitle(
-                        mWebappActivity.getString(R.string.webapp_runs_in_chrome_disclosure,
-                                mWebappActivity.mWebappInfo.shortName()))
-                .setContentText(
-                        UrlFormatter.formatUrlForDisplay(mWebappActivity.getActivityTab().getUrl()))
+                .setContentTitle(mWebappActivity.mWebappInfo.shortName())
+                .setContentText(mWebappActivity.getString(R.string.webapp_tap_to_copy_url))
                 .setShowWhen(false)
                 .setAutoCancel(false)
                 .setOngoing(true)

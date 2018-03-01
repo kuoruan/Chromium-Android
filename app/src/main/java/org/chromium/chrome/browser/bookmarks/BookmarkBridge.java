@@ -4,12 +4,16 @@
 
 package org.chromium.chrome.browser.bookmarks;
 
+import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.ObserverList;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
+import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.chrome.browser.partnerbookmarks.PartnerBookmarksShim;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.components.bookmarks.BookmarkId;
 import org.chromium.components.bookmarks.BookmarkType;
@@ -17,6 +21,7 @@ import org.chromium.components.url_formatter.UrlFormatter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Provides the communication channel for Android to fetch and manipulate the
@@ -291,24 +296,33 @@ public class BookmarkBridge {
 
     /**
      * Schedules a runnable to run after the bookmark model is loaded. If the
-     * model is already loaded, executes the runnable immediately.
+     * model is already loaded, executes the runnable immediately. If not, also
+     * kick off partner bookmark reading.
      * @return Whether the given runnable is executed synchronously.
      */
-    public boolean runAfterBookmarkModelLoaded(final Runnable runnable) {
+    public boolean finishLoadingBookmarkModel(final Runnable runAfterModelLoaded) {
         if (isBookmarkModelLoaded()) {
-            runnable.run();
+            runAfterModelLoaded.run();
             return true;
         }
+
+        long startTime = SystemClock.elapsedRealtime();
         addObserver(new BookmarkModelObserver() {
             @Override
             public void bookmarkModelLoaded() {
                 removeObserver(this);
-                runnable.run();
+                RecordHistogram.recordTimesHistogram("PartnerBookmark.LoadingTime",
+                        SystemClock.elapsedRealtime() - startTime, TimeUnit.MILLISECONDS);
+                runAfterModelLoaded.run();
             }
             @Override
             public void bookmarkModelChanged() {
             }
         });
+
+        // Start reading as a fail-safe measure to avoid waiting forever if the caller forgets to
+        // call kickOffReading().
+        PartnerBookmarksShim.kickOffReading(ContextUtils.getApplicationContext());
         return false;
     }
 

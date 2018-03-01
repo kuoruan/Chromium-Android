@@ -4,8 +4,8 @@
 
 package org.chromium.chrome.browser.compositor.overlays.strip;
 
-import static org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.AnimatableAnimation.createAnimation;
-
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.graphics.RectF;
 
@@ -13,10 +13,10 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.ObserverList;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation;
-import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animatable;
-import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animation;
+import org.chromium.chrome.browser.compositor.animation.CompositorAnimator;
+import org.chromium.chrome.browser.compositor.animation.FloatProperty;
 import org.chromium.chrome.browser.compositor.layouts.LayoutRenderHost;
+import org.chromium.chrome.browser.compositor.layouts.LayoutUpdateHost;
 import org.chromium.chrome.browser.compositor.layouts.components.CompositorButton;
 import org.chromium.chrome.browser.compositor.layouts.components.CompositorButton.CompositorOnClickHandler;
 import org.chromium.chrome.browser.compositor.layouts.components.VirtualView;
@@ -34,9 +34,7 @@ import java.util.List;
  * {@link StripLayoutTab} is used to keep track of the strip position and rendering information for
  * a particular tab so it can draw itself onto the GL canvas.
  */
-public class StripLayoutTab
-        implements ChromeAnimation.Animatable<StripLayoutTab.Property>, VirtualView {
-
+public class StripLayoutTab implements VirtualView {
     /** An observer interface for StripLayoutTab. */
     public interface Observer {
         /** @param visible Whether the StripLayoutTab is visible. */
@@ -61,15 +59,47 @@ public class StripLayoutTab
         void handleCloseButtonClick(StripLayoutTab tab, long time);
     }
 
-    /**
-     * Animatable properties that can be used with a {@link ChromeAnimation.Animatable} on a
-     * {@link StripLayoutTab}.
-     */
-    enum Property {
-        X_OFFSET,
-        Y_OFFSET,
-        WIDTH,
-    }
+    /** A property for animations to use for changing the X offset of the tab. */
+    public static final FloatProperty<StripLayoutTab> X_OFFSET =
+            new FloatProperty<StripLayoutTab>("offsetX") {
+                @Override
+                public void setValue(StripLayoutTab object, float value) {
+                    object.setOffsetX(value);
+                }
+
+                @Override
+                public Float get(StripLayoutTab object) {
+                    return object.getOffsetX();
+                }
+            };
+
+    /** A property for animations to use for changing the Y offset of the tab. */
+    public static final FloatProperty<StripLayoutTab> Y_OFFSET =
+            new FloatProperty<StripLayoutTab>("offsetY") {
+                @Override
+                public void setValue(StripLayoutTab object, float value) {
+                    object.setOffsetY(value);
+                }
+
+                @Override
+                public Float get(StripLayoutTab object) {
+                    return object.getOffsetY();
+                }
+            };
+
+    /** A property for animations to use for changing the width of the tab. */
+    public static final FloatProperty<StripLayoutTab> WIDTH =
+            new FloatProperty<StripLayoutTab>("width") {
+                @Override
+                public void setValue(StripLayoutTab object, float value) {
+                    object.setWidth(value);
+                }
+
+                @Override
+                public Float get(StripLayoutTab object) {
+                    return object.getHeight();
+                }
+            };
 
     // Behavior Constants
     private static final float VISIBILITY_FADE_CLOSE_BUTTON_PERCENTAGE = 0.99f;
@@ -85,6 +115,7 @@ public class StripLayoutTab
     private final StripLayoutTabDelegate mDelegate;
     private final TabLoadTracker mLoadTracker;
     private final LayoutRenderHost mRenderHost;
+    private final LayoutUpdateHost mUpdateHost;
 
     private boolean mVisible = true;
     private boolean mIsDying;
@@ -111,7 +142,7 @@ public class StripLayoutTab
     private final CompositorButton mCloseButton;
 
     // Content Animations
-    private ChromeAnimation<Animatable<?>> mContentAnimations;
+    private CompositorAnimator mButtonOpacityAnimation;
 
     private float mLoadingSpinnerRotationDegrees;
 
@@ -134,11 +165,12 @@ public class StripLayoutTab
      */
     public StripLayoutTab(Context context, int id, StripLayoutTabDelegate delegate,
             TabLoadTrackerCallback loadTrackerCallback, LayoutRenderHost renderHost,
-            boolean incognito) {
+            LayoutUpdateHost updateHost, boolean incognito) {
         mId = id;
         mDelegate = delegate;
         mLoadTracker = new TabLoadTracker(id, loadTrackerCallback);
         mRenderHost = renderHost;
+        mUpdateHost = updateHost;
         mIncognito = incognito;
         CompositorOnClickHandler closeClickAction = new CompositorOnClickHandler() {
             @Override
@@ -505,71 +537,12 @@ public class StripLayoutTab
         return mTabOffsetY;
     }
 
-    private void startAnimation(Animation<Animatable<?>> animation, boolean finishPrevious) {
-        if (finishPrevious) finishAnimation();
-
-        if (mContentAnimations == null) {
-            mContentAnimations = new ChromeAnimation<Animatable<?>>();
-        }
-
-        mContentAnimations.add(animation);
-    }
-
     /**
      * Finishes any content animations currently owned and running on this StripLayoutTab.
      */
     public void finishAnimation() {
-        if (mContentAnimations == null) return;
-
-        mContentAnimations.updateAndFinish();
-        mContentAnimations = null;
+        if (mButtonOpacityAnimation != null) mButtonOpacityAnimation.end();
     }
-
-    /**
-     * @return Whether or not there are any content animations running on this StripLayoutTab.
-     */
-    public boolean isAnimating() {
-        return mContentAnimations != null;
-    }
-
-    /**
-     * Updates any content animations on this StripLayoutTab.
-     * @param time      The current time of the app in ms.
-     * @param jumpToEnd Whether or not to force any current animations to end.
-     * @return          Whether or not animations are done.
-     */
-    public boolean onUpdateAnimation(long time, boolean jumpToEnd) {
-        if (mContentAnimations == null) return true;
-
-        boolean finished = true;
-        if (jumpToEnd) {
-            finished = mContentAnimations.finished();
-        } else {
-            finished = mContentAnimations.update(time);
-        }
-
-        if (jumpToEnd || finished) finishAnimation();
-
-        return finished;
-    }
-
-    @Override
-    public void setProperty(Property prop, float val) {
-        switch (prop) {
-            case X_OFFSET:
-                setOffsetX(val);
-                break;
-            case Y_OFFSET:
-                setOffsetY(val);
-                break;
-            case WIDTH:
-                setWidth(val);
-                break;
-        }
-    }
-
-    @Override
-    public void onPropertyAnimationFinished(Property prop) {}
 
     private void resetCloseRect() {
         RectF closeRect = getCloseRect();
@@ -615,18 +588,22 @@ public class StripLayoutTab
         if (shouldShow != mShowingCloseButton) {
             float opacity = shouldShow ? 1.f : 0.f;
             if (animate) {
-                startAnimation(buildCloseButtonOpacityAnimation(opacity), true);
+                if (mButtonOpacityAnimation != null) mButtonOpacityAnimation.end();
+                mButtonOpacityAnimation = CompositorAnimator.ofFloatProperty(
+                        mUpdateHost.getAnimationHandler(), mCloseButton, CompositorButton.OPACITY,
+                        mCloseButton.getOpacity(), opacity, ANIM_TAB_CLOSE_BUTTON_FADE_MS);
+                mButtonOpacityAnimation.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        mButtonOpacityAnimation = null;
+                    }
+                });
+                mButtonOpacityAnimation.start();
             } else {
                 mCloseButton.setOpacity(opacity);
             }
             mShowingCloseButton = shouldShow;
             if (!mShowingCloseButton) mCloseButton.setPressed(false);
         }
-    }
-
-    private Animation<Animatable<?>> buildCloseButtonOpacityAnimation(float finalOpacity) {
-        return createAnimation(mCloseButton, CompositorButton.Property.OPACITY,
-                mCloseButton.getOpacity(), finalOpacity, ANIM_TAB_CLOSE_BUTTON_FADE_MS, 0, false,
-                ChromeAnimation.getLinearInterpolator());
     }
 }

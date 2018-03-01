@@ -9,6 +9,7 @@ import org.chromium.chrome.browser.ntp.NewTabPage;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.toolbar.ToolbarDataProvider;
+import org.chromium.components.security_state.ConnectionSecurityLevel;
 
 class SearchBoxDataProvider implements ToolbarDataProvider {
     private Tab mTab;
@@ -70,7 +71,32 @@ class SearchBoxDataProvider implements ToolbarDataProvider {
     }
 
     @Override
+    public boolean shouldShowGoogleG(String urlBarText) {
+        return false;
+    }
+
+    @Override
     public boolean isOfflinePage() {
         return false;
+    }
+
+    @Override
+    public boolean shouldShowSecurityIcon() {
+        return false;
+    }
+
+    @Override
+    public boolean shouldShowVerboseStatus() {
+        return false;
+    }
+
+    @Override
+    public int getSecurityLevel() {
+        return ConnectionSecurityLevel.NONE;
+    }
+
+    @Override
+    public int getSecurityIconResource() {
+        return 0;
     }
 }

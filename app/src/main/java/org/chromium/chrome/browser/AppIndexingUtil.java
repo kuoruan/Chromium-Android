@@ -76,22 +76,20 @@ public class AppIndexingUtil {
             if (copylessPaste == null) {
                 return;
             }
-            copylessPaste.getEntities(new CopylessPaste.GetEntitiesResponse() {
-                @Override
-                public void call(WebPage webpage) {
-                    putCacheEntry(url, webpage != null);
-                    if (sCallbackForTesting != null) {
-                        sCallbackForTesting.onResult(webpage);
-                    }
-                    if (webpage == null) return;
-                    getAppIndexingReporter().reportWebPage(webpage);
+            copylessPaste.getEntities(webpage -> {
+                copylessPaste.close();
+                putCacheEntry(url, webpage != null);
+                if (sCallbackForTesting != null) {
+                    sCallbackForTesting.onResult(webpage);
                 }
+                if (webpage == null) return;
+                getAppIndexingReporter().reportWebPage(webpage);
             });
         }
     }
 
     @VisibleForTesting
-    public static void setCallbackForTesting(Callback<WebPage> callback) {
+    static void setCallbackForTesting(Callback<WebPage> callback) {
         sCallbackForTesting = callback;
     }
 

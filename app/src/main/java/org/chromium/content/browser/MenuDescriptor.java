@@ -40,6 +40,7 @@ public class MenuDescriptor {
             mIcon = icon;
         }
 
+        @Override
         public boolean equals(Object obj) {
             if (obj == null || !(obj instanceof ItemDescriptor)) return false;
             ItemDescriptor rhs = (ItemDescriptor) obj;
@@ -47,6 +48,7 @@ public class MenuDescriptor {
                     && isTitleEqual(mTitle, rhs.mTitle);
         }
 
+        @Override
         public int hashCode() {
             return mItemId;
         }
@@ -71,12 +73,14 @@ public class MenuDescriptor {
         mRemoved.add(itemId);
     }
 
+    @Override
     public boolean equals(Object obj) {
         if (obj == null || !(obj instanceof MenuDescriptor)) return false;
         MenuDescriptor rhs = (MenuDescriptor) obj;
         return mRemoved.equals(rhs.mRemoved) && mAdded.equals(rhs.mAdded);
     }
 
+    @Override
     public int hashCode() {
         return 1;
     }

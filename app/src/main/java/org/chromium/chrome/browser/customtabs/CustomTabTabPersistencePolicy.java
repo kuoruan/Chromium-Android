@@ -125,7 +125,7 @@ public class CustomTabTabPersistencePolicy implements TabPersistencePolicy {
 
     @Override
     @Nullable
-    public String getStateToBeMergedFileName() {
+    public List<String> getStateToBeMergedFileNames() {
         return null;
     }
 

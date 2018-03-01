@@ -6,13 +6,23 @@ package org.chromium.chrome.browser.infobar;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.support.annotation.StringRes;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
+import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.base.Callback;
 import org.chromium.chrome.R;
+import org.chromium.ui.text.NoUnderlineClickableSpan;
+import org.chromium.ui.widget.TextViewWithClickableSpans;
 
 /**
  * Lays out controls along a line, sandwiched between an (optional) icon and close button.
@@ -88,5 +98,85 @@ public class InfoBarCompactLayout extends LinearLayout implements View.OnClickLi
                 new LinearLayout.LayoutParams(mCompactInfoBarSize, mCompactInfoBarSize);
         addView(closeButton, closeParams);
         return closeButton;
+    }
+
+    /**
+     * Helps building a standard message to display in a compact InfoBar. The message can feature
+     * a link to perform and action from this infobar.
+     */
+    public static class MessageBuilder {
+        private final InfoBarCompactLayout mLayout;
+        private CharSequence mMessage;
+        private CharSequence mLink;
+
+        /** @param layout The layout we are building a message view for. */
+        public MessageBuilder(InfoBarCompactLayout layout) {
+            mLayout = layout;
+        }
+
+        public MessageBuilder withText(CharSequence message) {
+            assert mMessage == null;
+            mMessage = message;
+
+            return this;
+        }
+
+        public MessageBuilder withText(@StringRes int messageResId) {
+            assert mMessage == null;
+            mMessage = mLayout.getResources().getString(messageResId);
+
+            return this;
+        }
+
+        /** The link will be appended after the main message. */
+        public MessageBuilder withLink(@StringRes int textResId, Callback<View> onTapCallback) {
+            assert mLink == null;
+
+            String label = mLayout.getResources().getString(textResId);
+            SpannableString link = new SpannableString(label);
+            link.setSpan(new NoUnderlineClickableSpan() {
+                @Override
+                public void onClick(View view) {
+                    onTapCallback.onResult(view);
+                }
+            }, 0, label.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+            mLink = link;
+
+            return this;
+        }
+
+        /** Finalizes the message view as set up in the builder and inserts it into the layout. */
+        public void buildAndInsert() {
+            mLayout.addContent(build(), 1f);
+        }
+
+        /**
+         * Finalizes the message view as set up in the builder. The caller is responsible for adding
+         * it to the parent layout.
+         */
+        public View build() {
+            // TODO(dgn): Should be able to handle ReaderMode and Survey infobars but they have non
+            // standard interaction models (no button/link, whole bar is a button) or style (large
+            // rather than default text). Revisit after snowflake review.
+
+            assert mMessage != null;
+
+            final int messagePadding = mLayout.getResources().getDimensionPixelOffset(
+                    R.dimen.reader_mode_infobar_text_padding);
+
+            SpannableStringBuilder builder = new SpannableStringBuilder();
+            builder.append(mMessage);
+            if (mLink != null) builder.append(" ").append(mLink);
+
+            TextView prompt = new TextViewWithClickableSpans(mLayout.getContext());
+            ApiCompatibilityUtils.setTextAppearance(prompt, R.style.BlackBodyDefault);
+            prompt.setText(builder);
+            prompt.setGravity(Gravity.CENTER_VERTICAL);
+            prompt.setPadding(0, messagePadding, 0, messagePadding);
+
+            if (mLink != null) prompt.setMovementMethod(LinkMovementMethod.getInstance());
+
+            return prompt;
+        }
     }
 }

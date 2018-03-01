@@ -7,7 +7,6 @@ package org.chromium.chrome.browser;
 import android.content.Intent;
 import android.util.Pair;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tab.TabDelegateFactory;
 import org.chromium.chrome.browser.tab.TabUma.TabCreationState;
@@ -27,7 +26,6 @@ import java.io.File;
  * Example applications that might use this Activity would be webapps and streaming media
  * activities - anything where maintaining multiple tabs is unnecessary.
  */
-@SuppressFBWarnings("URF_UNREAD_FIELD")
 public abstract class SingleTabActivity extends ChromeActivity {
     protected static final String BUNDLE_TAB_ID = "tabId";
     protected static final String BUNDLE_TAB_URL = "tabUrl";

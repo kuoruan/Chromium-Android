@@ -17,7 +17,7 @@ import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
     MatchClassificationStyle.NONE, MatchClassificationStyle.URL, MatchClassificationStyle.MATCH,
-    MatchClassificationStyle.DIM
+    MatchClassificationStyle.DIM, MatchClassificationStyle.INVISIBLE
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface MatchClassificationStyle {
@@ -25,4 +25,5 @@ public @interface MatchClassificationStyle {
   int URL = 1 << 0;
   int MATCH = 1 << 1;
   int DIM = 1 << 2;
+  int INVISIBLE = 1 << 3;
 }

@@ -5,7 +5,12 @@
 package org.chromium.net;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.os.Build;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.ObserverList;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
@@ -36,6 +41,7 @@ public class NetworkChangeNotifier {
 
     private final ArrayList<Long> mNativeChangeNotifiers;
     private final ObserverList<ConnectionTypeObserver> mConnectionTypeObservers;
+    private final ConnectivityManager mConnectivityManager;
     private NetworkChangeNotifierAutoDetect mAutoDetector;
     // Last value broadcast via ConnectionTypeChange signal.
     private int mCurrentConnectionType = ConnectionType.CONNECTION_UNKNOWN;
@@ -47,6 +53,9 @@ public class NetworkChangeNotifier {
     protected NetworkChangeNotifier() {
         mNativeChangeNotifiers = new ArrayList<Long>();
         mConnectionTypeObservers = new ObserverList<ConnectionTypeObserver>();
+        mConnectivityManager =
+                (ConnectivityManager) ContextUtils.getApplicationContext().getSystemService(
+                        Context.CONNECTIVITY_SERVICE);
     }
 
     /**
@@ -117,6 +126,15 @@ public class NetworkChangeNotifier {
     @CalledByNative
     public void removeNativeObserver(long nativeChangeNotifier) {
         mNativeChangeNotifiers.remove(nativeChangeNotifier);
+    }
+
+    /**
+     * Returns {@code true} if NetworkCallback failed to register, indicating that network-specific
+     * callbacks will not be issued.
+     */
+    @CalledByNative
+    public boolean registerNetworkCallbackFailed() {
+        return mAutoDetector == null ? false : mAutoDetector.registerNetworkCallbackFailed();
     }
 
     /**
@@ -367,6 +385,28 @@ public class NetworkChangeNotifier {
 
     private void removeConnectionTypeObserverInternal(ConnectionTypeObserver observer) {
         mConnectionTypeObservers.removeObserver(observer);
+    }
+
+    /**
+     * Is the process bound to a network?
+     */
+    @TargetApi(Build.VERSION_CODES.M)
+    private boolean isProcessBoundToNetworkInternal() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            return false;
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return ConnectivityManager.getProcessDefaultNetwork() != null;
+        } else {
+            return mConnectivityManager.getBoundNetworkForProcess() != null;
+        }
+    }
+
+    /**
+     * Is the process bound to a network?
+     */
+    @CalledByNative
+    public static boolean isProcessBoundToNetwork() {
+        return getInstance().isProcessBoundToNetworkInternal();
     }
 
     @NativeClassQualifiedName("NetworkChangeNotifierDelegateAndroid")

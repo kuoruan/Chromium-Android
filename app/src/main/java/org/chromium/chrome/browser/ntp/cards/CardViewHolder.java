@@ -23,8 +23,8 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ntp.ContextMenuManager;
 import org.chromium.chrome.browser.ntp.ContextMenuManager.ContextMenuItemId;
+import org.chromium.chrome.browser.suggestions.SuggestionsConfig;
 import org.chromium.chrome.browser.suggestions.SuggestionsRecyclerView;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.MathUtils;
 import org.chromium.chrome.browser.util.ViewUtils;
 import org.chromium.chrome.browser.widget.displaystyle.HorizontalDisplayStyle;
@@ -125,7 +125,7 @@ public abstract class CardViewHolder
         // lateral shadow of the card 9-patch and avoid a rounded corner effect.
         int cardCornerRadius = resources.getDimensionPixelSize(R.dimen.card_corner_radius);
         assert mCardShadow.left == mCardShadow.right;
-        if (FeatureUtilities.isChromeHomeEnabled()) {
+        if (SuggestionsConfig.useModernLayout()) {
             mDefaultLateralMargin =
                     resources.getDimensionPixelSize(R.dimen.content_suggestions_card_modern_margin);
         } else {
@@ -215,7 +215,7 @@ public abstract class CardViewHolder
         if (getAdapterPosition() == RecyclerView.NO_POSITION) return;
 
         // Nothing to do for the modern layout.
-        if (FeatureUtilities.isChromeHomeEnabled()) return;
+        if (SuggestionsConfig.useModernLayout()) return;
 
         NewTabPageAdapter adapter = mRecyclerView.getNewTabPageAdapter();
 

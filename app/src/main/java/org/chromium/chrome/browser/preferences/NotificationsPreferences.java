@@ -4,11 +4,11 @@
 
 package org.chromium.chrome.browser.preferences;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ContentSettingsType;
 import org.chromium.chrome.browser.ntp.snippets.SnippetsBridge;
@@ -33,7 +33,8 @@ public class NotificationsPreferences extends PreferenceFragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        assert !BuildInfo.isAtLeastO() : "NotificationsPreferences should only be used pre-O.";
+        assert Build.VERSION.SDK_INT < Build.VERSION_CODES.O
+            : "NotificationsPreferences should only be used pre-O.";
 
         super.onCreate(savedInstanceState);
 

@@ -293,10 +293,8 @@ public interface TabObserver {
     public void onActivityAttachmentChanged(Tab tab, boolean isAttached);
 
     /**
-     * Called when the tab reparenting process has finished.
-     * Deprecated, use {@link #onActivityAttachmentChanged(Tab, boolean)} instead.
-     * @param tab The notifying {@link Tab}.
+     * A notification when tab changes whether or not it is interactable and is accepting input.
+     * @param isInteractable Whether or not the tab is interactable.
      */
-    @Deprecated
-    public void onReparentingFinished(Tab tab);
+    public void onInteractabilityChanged(boolean isInteractable);
 }

@@ -451,7 +451,6 @@ public class CastMediaRouteProvider implements MediaRouteProvider, DiscoveryDele
         mMessageHandler = new CastMessageHandler(this);
     }
 
-    @Nullable
     private boolean canAutoJoin(MediaSource source, String origin, int tabId) {
         if (source.getAutoJoinPolicy().equals(MediaSource.AUTOJOIN_PAGE_SCOPED)) return false;
 

@@ -16,40 +16,39 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
-    WebContextMenuMediaType.MEDIA_TYPE_NONE, WebContextMenuMediaType.MEDIA_TYPE_IMAGE,
-    WebContextMenuMediaType.MEDIA_TYPE_VIDEO, WebContextMenuMediaType.MEDIA_TYPE_AUDIO,
-    WebContextMenuMediaType.MEDIA_TYPE_CANVAS, WebContextMenuMediaType.MEDIA_TYPE_FILE,
-    WebContextMenuMediaType.MEDIA_TYPE_PLUGIN, WebContextMenuMediaType.MEDIA_TYPE_LAST
+    WebContextMenuMediaType.NONE, WebContextMenuMediaType.IMAGE, WebContextMenuMediaType.VIDEO,
+    WebContextMenuMediaType.AUDIO, WebContextMenuMediaType.CANVAS, WebContextMenuMediaType.FILE,
+    WebContextMenuMediaType.PLUGIN, WebContextMenuMediaType.LAST
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface WebContextMenuMediaType {
   /**
    * No special node is in context.
    */
-  int MEDIA_TYPE_NONE = 0;
+  int NONE = 0;
   /**
    * An image node is selected.
    */
-  int MEDIA_TYPE_IMAGE = 1;
+  int IMAGE = 1;
   /**
    * A video node is selected.
    */
-  int MEDIA_TYPE_VIDEO = 2;
+  int VIDEO = 2;
   /**
    * An audio node is selected.
    */
-  int MEDIA_TYPE_AUDIO = 3;
+  int AUDIO = 3;
   /**
    * A canvas node is selected.
    */
-  int MEDIA_TYPE_CANVAS = 4;
+  int CANVAS = 4;
   /**
    * A file node is selected.
    */
-  int MEDIA_TYPE_FILE = 5;
+  int FILE = 5;
   /**
    * A plugin node is selected.
    */
-  int MEDIA_TYPE_PLUGIN = 6;
-  int MEDIA_TYPE_LAST = 6;
+  int PLUGIN = 6;
+  int LAST = 6;
 }

@@ -16,10 +16,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
-    BookmarkType.NORMAL, BookmarkType.PARTNER
+    BookmarkType.NORMAL, BookmarkType.PARTNER, BookmarkType.LAST
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface BookmarkType {
   int NORMAL = 0;
   int PARTNER = 1;
+  /**
+   * LAST must be the last element.
+   */
+  int LAST = 1;
 }

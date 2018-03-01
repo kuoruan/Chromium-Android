@@ -201,11 +201,6 @@ public class EditorFieldModel {
         return result;
     }
 
-    /** Constructs a dropdown field model. */
-    public static EditorFieldModel createDropdown() {
-        return new EditorFieldModel(INPUT_TYPE_HINT_DROPDOWN);
-    }
-
     /**
      * Constructs a dropdown field model.
      *

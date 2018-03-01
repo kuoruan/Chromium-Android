@@ -122,7 +122,10 @@
 <string name="password_entry_editor_password_copied_into_clipboard">"Password copied"</string>
 <string name="password_entry_editor_set_lock_screen">"To view or copy your password here, set screen lock on this device."</string>
 <string name="password_generation_popup_content_description">"Showing password generation popup"</string>
-<string name="lockscreen_description">"Unlock to continue setting up your phone"</string>
+<string name="save_password_preferences_export_action_title">"Export passwords…"</string>
+<string name="save_password_preferences_export_action_description">"Export passwords stored with Chrome"</string>
+<string name="lockscreen_description_copy">"Unlock to copy your password"</string>
+<string name="lockscreen_description_view">"Unlock to view your password"</string>
 <string name="options_homepage_edit_title">"Edit home page"</string>
 <string name="options_homepage_edit_label">"Open this page"</string>
 <string name="prefs_notifications">"Notifications"</string>
@@ -143,16 +146,8 @@
 <string name="safe_browsing_scout_reporting_summary">"Automatically send some system information and page content to Google to help detect dangerous apps and sites"</string>
 <string name="safe_browsing_title">"Safe Browsing"</string>
 <string name="safe_browsing_summary">"Protect you and your device from dangerous sites"</string>
-<string name="ntp_sites_exploration_category_personalized_title">"Personalized"</string>
-<string name="ntp_sites_exploration_category_news_title">"News"</string>
-<string name="ntp_sites_exploration_category_social_title">"Social"</string>
-<string name="ntp_sites_exploration_category_entertainment_title">"Entertainment"</string>
-<string name="ntp_sites_exploration_category_ecommerce_title">"E-commerce"</string>
-<string name="ntp_sites_exploration_category_tools_title">"Tools"</string>
-<string name="ntp_sites_exploration_category_travel_title">"Travel"</string>
-<string name="ntp_sites_exploration_category_other_title">"Other"</string>
-<string name="network_predictions_title">"Automatically download pages"</string>
-<string name="network_predictions_summary">"Load pages more quickly and save popular pages for offline reading"</string>
+<string name="network_predictions_title">"Use page predictions"</string>
+<string name="network_predictions_summary">"Preload pages for faster loading and offline reading"</string>
 <string name="contextual_search_title">"Touch to Search"</string>
 <string name="contextual_search_description">"Learn about topics on websites without leaving the page. Touch to Search sends a word and its surrounding context to Google Search, returning definitions, pictures, search results, and other details.
 
@@ -160,26 +155,19 @@ To adjust your search term, long press to select. To refine your search, slide t
 <string name="contextual_search_short_description">"Touch to Search sends the selected word and the current page as context to Google Search. You can turn it off in &lt;link&gt;Settings&lt;/link&gt;."</string>
 <string name="contextual_search_allow_button">"Allow"</string>
 <string name="contextual_search_no_thanks_button">"No thanks"</string>
-<string name="contextual_search_peek_promo_text">"Now you can search with one touch"</string>
-<string name="contextual_search_peek_promo_new">"New"</string>
 <string name="do_not_track_title">"“Do Not Track”"</string>
 <string name="do_not_track_description">"Enabling “Do Not Track” means that a request will be included with your browsing traffic. Any effect depends on whether a website responds to the request, and how the request is interpreted.
 
 For example, some websites may respond to this request by showing you ads that aren’t based on other websites you’ve visited. Many websites will still collect and use your browsing data — for example to improve security, to provide content, ads and recommendations, and to generate reporting statistics."</string>
 <string name="clear_browsing_data_title">"Clear browsing data"</string>
 <string name="clear_browsing_data_summary">"Clear history, cookies, site data, cache…"</string>
-<string name="clear_browsing_data_footnote_site_settings">"Saved site settings will not be deleted and may reflect your browsing habits. &lt;link&gt;Learn more&lt;/link&gt;"</string>
-<string name="clear_browsing_data_footnote_sync_and_site_settings">"This clears synced data from all devices. Saved site settings will not be deleted and may reflect your browsing habits. &lt;link&gt;Learn more&lt;/link&gt;"</string>
-<string name="clear_browsing_data_footnote_signed">"You won’t be signed out of your Google account."</string>
-<string name="clear_browsing_data_footnote_signed_and_other_forms_of_history">"You won’t be signed out of your Google account. Your Google account may have other forms of browsing history at &lt;link&gt;history.google.com&lt;/link&gt;."</string>
 <string name="clear_browsing_data_history_dialog_title">"Cleared Chrome data"</string>
 <string name="clear_browsing_data_history_dialog_data_text">"The selected data has been removed from Chrome and your synced devices.
 
-Your Google account may have other forms of browsing history like searches and activity from other Google services at &lt;link&gt;history.google.com&lt;/link&gt;."</string>
+Your Google account may have other forms of browsing history like searches and activity from other Google services at &lt;link&gt;myactivity.google.com&lt;/link&gt;."</string>
 <string name="clear_cache_title">"Cached images and files"</string>
 <string name="clear_history_title">"Browsing history"</string>
 <string name="clear_cookies_and_site_data_title">"Cookies and site data"</string>
-<string name="clear_cookies_and_site_data_summary">"This will sign you out of most websites."</string>
 <string name="clear_cookies_and_site_data_summary_basic">"Signs you out of most sites."</string>
 <string name="clear_cookies_and_site_data_signed_in_summary_basic">"Signs you out of most sites. You won\'t be signed out of your Google Account."</string>
 <string name="clear_browsing_history_summary">"Clears history and autocompletions in the address bar."</string>
@@ -191,24 +179,18 @@ Your Google account may have other forms of browsing history like searches and a
 <string name="clear_browsing_data_progress_title">"Clearing browsing data"</string>
 <string name="clear_data_delete">"Clear data"</string>
 <string name="clear_browsing_data_progress_message">"Please wait…"</string>
-<string name="clear_browsing_data_period_title">"Clear data from the"</string>
-<string name="clear_browsing_data_period_hour">"past hour"</string>
-<string name="clear_browsing_data_period_day">"past day"</string>
-<string name="clear_browsing_data_period_week">"past week"</string>
-<string name="clear_browsing_data_period_four_weeks">"last 4 weeks"</string>
-<string name="clear_browsing_data_period_everything">"beginning of time"</string>
 <string name="clear_browsing_data_tab_period_title">"Time range"</string>
 <string name="clear_browsing_data_tab_period_hour">"Last hour"</string>
 <string name="clear_browsing_data_tab_period_24_hours">"Last 24 hours"</string>
 <string name="clear_browsing_data_tab_period_7_days">"Last 7 days"</string>
 <string name="clear_browsing_data_tab_period_four_weeks">"Last 4 weeks"</string>
+<string name="clear_browsing_data_tab_period_older_than_30_days">"Older than 30 days"</string>
 <string name="clear_browsing_data_tab_period_everything">"All time"</string>
 <string name="clear_browsing_data_important_dialog_text">"This will clear data for all sites, including:"</string>
 <string name="clear_browsing_data_important_dialog_button">"Clear"</string>
 <string name="open_clear_browsing_data_dialog_button">"Clear browsing data…"</string>
 <string name="clear_browsing_data_basic_tab_title">"Basic"</string>
-<string name="android_history_other_forms_of_history">"Your Google Account may have other forms of browsing history at &lt;link&gt;history.google.com&lt;/link&gt;."</string>
-<string name="android_history_other_forms_of_history_new">"Your Google Account may have other forms of browsing history at &lt;link&gt;myactivity.google.com&lt;/link&gt;."</string>
+<string name="android_history_other_forms_of_history">"Your Google Account may have other forms of browsing history at &lt;link&gt;myactivity.google.com&lt;/link&gt;."</string>
 <string name="android_history_blocked_site">"Blocked site"</string>
 <string name="usage_and_crash_reports_title">"Usage and crash reports"</string>
 <string name="usage_and_crash_reports_description">"Automatically send usage statistics and crash reports to Google"</string>
@@ -217,8 +199,8 @@ Your Google account may have other forms of browsing history like searches and a
 <string name="font_size_preview_text">"Drag the slider until you can read this comfortably. Text should look at least this big after double-tapping on a paragraph."</string>
 <string name="force_enable_zoom_title">"Force enable zoom"</string>
 <string name="force_enable_zoom_summary">"Override a website’s request to prevent zooming in"</string>
-<string name="reader_for_accessibility_title">"Simplified View"</string>
-<string name="reader_for_accessibility_summary">"Enable Simplified View on all articles"</string>
+<string name="reader_for_accessibility_title">"Simplified view"</string>
+<string name="reader_for_accessibility_summary">"Enable simplified view on all articles"</string>
 <string name="prefs_site_settings">"Site settings"</string>
 <string name="all_sites">"All sites"</string>
 <string name="intrusive_ads_information">"This site tends to show intrusive ads"</string>
@@ -243,7 +225,8 @@ Your Google account may have other forms of browsing history like searches and a
 <string name="website_settings_add_site_description_autoplay">"Allow autoplay of muted videos for a specific site."</string>
 <string name="website_settings_add_site_description_javascript">"Allow JavaScript for a specific site."</string>
 <string name="website_settings_add_site_description_background_sync">"Allow Background Sync for a specific site."</string>
-<string name="website_settings_add_site_description_sound">"Mute Sound for a specific site."</string>
+<string name="website_settings_add_site_description_sound_allow">"Allow sound for a specific site."</string>
+<string name="website_settings_add_site_description_sound_block">"Mute sound for a specific site."</string>
 <string name="website_settings_add_site_site_url">"Site URL"</string>
 <string name="example_url">"www.example.com"</string>
 <string name="website_settings_site_category">"Site"</string>
@@ -264,6 +247,9 @@ Your Google account may have other forms of browsing history like searches and a
 <string name="website_settings_category_autoplay_allowed">"Allow sites to automatically play muted videos (recommended)"</string>
 <string name="website_settings_category_autoplay_disabled_data_saver">"Unavailable when Data Saver is turned on"</string>
 <string name="website_settings_category_javascript_allowed">"Allow sites to run JavaScript (recommended)"</string>
+<string name="website_settings_category_sound_allowed">"Allow sites to play sound (recommended)"</string>
+<string name="website_settings_category_sound_blocked">"Mute sites that play sound"</string>
+<string name="website_settings_category_sound_blocked_list">"Muted"</string>
 <string name="website_settings_category_popups_blocked">"Block sites from showing pop-ups (recommended)"</string>
 <string name="website_settings_category_ads_blocked">"Block ads from sites that tend to show intrusive ads"</string>
 <string name="website_settings_category_ads_blocked_list">"Blocked from some sites"</string>
@@ -283,6 +269,11 @@ Your Google account may have other forms of browsing history like searches and a
 <string name="webstorage_clear_data_dialog_ok_button">"Clear all"</string>
 <string name="website_settings_embedded_in">"Embedded in %1$s"</string>
 <string name="no_saved_website_settings">"You have no saved website settings."</string>
+<string name="prefs_languages">"Languages"</string>
+<string name="prefs_add_language">"Add language"</string>
+<string name="languages_list_prefs_description">"Websites will show text in your preferred language, when possible."</string>
+<string name="languages_offer_translate_switch">"Offer to translate pages in other languages"</string>
+<string name="languages_item_option_offer_to_translate">"Offer to translate"</string>
 <string name="website_settings_device_location">"Location"</string>
 <string name="geolocation_permission_title">"Location access"</string>
 <string name="android_location_off">"Turn on location in &lt;link&gt;Android Settings&lt;/link&gt;."</string>
@@ -385,7 +376,7 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="signout_managed_account_message">"You are signing out of an account managed by %1$s. This will delete the Chrome data stored on this device, but the data will remain in your Google Account."</string>
 <string name="signout_dialog_positive_button">"Sign out"</string>
 <string name="sign_in_button">"Sign in"</string>
-<string name="sign_in_getting_account_management_policy">"Contacting Google…this may take a minute"</string>
+<string name="sign_in_getting_account_management_policy">"Contacting Google. This may take a minute…"</string>
 <string name="sign_in_timeout_title">"Can’t sign in"</string>
 <string name="sign_in_timeout_message">"Google took too long to respond"</string>
 <string name="sign_out_managed_account">"Sign out of managed account"</string>
@@ -444,7 +435,7 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="bluetooth_searching">"&lt;link&gt;Get help&lt;/link&gt; while scanning for devices…"</string>
 <string name="bluetooth_confirm_button">"Pair"</string>
 <string name="bluetooth_not_seeing_it_idle">"&lt;link1&gt;Get help&lt;/link1&gt; or &lt;link2&gt;re-scan&lt;/link2&gt;"</string>
-<string name="bluetooth_not_found">"No Bluetooth devices found"</string>
+<string name="bluetooth_not_found">"No compatible devices found"</string>
 <string name="bluetooth_adapter_off">"&lt;link&gt;Turn on Bluetooth&lt;/link&gt; to allow pairing"</string>
 <string name="bluetooth_unable_to_turn_on_adapter">"Chrome is unable to turn on Bluetooth adapter"</string>
 <string name="bluetooth_adapter_off_help">"&lt;link&gt;Get help&lt;/link&gt;"</string>
@@ -485,7 +476,6 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="duplicate_download_infobar_text">"Do you want to download ^1 again?"</string>
 <string name="duplicate_download_request_infobar_text">"Do you want to start downloading ^1 again?"</string>
 <string name="duplicate_download_infobar_download_button">"Download"</string>
-<string name="permission_prompt_persist_text">"Remember my decision"</string>
 <string name="translate_infobar_text">"This page is in ^1. Translate it to ^2?"</string>
 <string name="translate_infobar_change_languages">"Change languages"</string>
 <string name="translate_infobar_translation_done">"Translated to %1$s."</string>
@@ -678,11 +668,12 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="os_version_missing_features">"Critical functionality required to run Chrome is missing; either your Chrome installation is incomplete, or not compatible with this version of Android."</string>
 <string name="incompatible_libraries">"Chrome’s components are incompatible with one another. Chrome may be upgrading, please try again in a few minutes. If the problem continues, try uninstalling and re-installing Chrome."</string>
 <string name="native_startup_failed">"Chrome failed during startup with an unexpected error."</string>
+<string name="fre_activity_label">"Chrome First Run Experience"</string>
 <string name="fre_skip_text">"No thanks"</string>
 <string name="fre_tos_and_privacy">"By using this application, you agree to Chrome’s &lt;LINK1&gt;Terms of Service&lt;/LINK1&gt; and &lt;LINK2&gt;Privacy Notice&lt;/LINK2&gt;."</string>
 <string name="fre_tos_and_privacy_child_account">"By using this application, you agree to Chrome’s &lt;LINK1&gt;Terms of Service&lt;/LINK1&gt; and &lt;LINK2&gt;Privacy Notice&lt;/LINK2&gt;, and the &lt;LINK3&gt;Privacy Notice for Google Accounts Managed with Family Link&lt;/LINK3&gt;."</string>
-<string name="lightweight_fre_tos_and_privacy">"By continuing, you agree to Chrome’s &lt;LINK1&gt;Terms of Service&lt;/LINK1&gt; and &lt;LINK2&gt;Privacy Notice&lt;/LINK2&gt;."</string>
-<string name="lightweight_fre_tos_and_privacy_child_account">"By continuing, you agree to Chrome\'s &lt;LINK1&gt;Terms of Service&lt;/LINK1&gt; and &lt;LINK2&gt;Privacy Notice&lt;/LINK2&gt;, and the &lt;LINK3&gt;Privacy Notice for Google Accounts Managed with Family Link&lt;/LINK3&gt;."</string>
+<string name="lightweight_fre_associated_app_tos_and_privacy">"%1$s will open in Chrome. By continuing, you agree to Chrome’s &lt;LINK1&gt;Terms of Service&lt;/LINK1&gt; and &lt;LINK2&gt;Privacy Notice&lt;/LINK2&gt;."</string>
+<string name="lightweight_fre_associated_app_tos_and_privacy_child_account">"%1$s will open in Chrome. By continuing, you agree to Chrome\'s &lt;LINK1&gt;Terms of Service&lt;/LINK1&gt; and &lt;LINK2&gt;Privacy Notice&lt;/LINK2&gt;, and the &lt;LINK3&gt;Privacy Notice for Google Accounts Managed with Family Link&lt;/LINK3&gt;."</string>
 <string name="fre_send_report_check">"Help make Chrome better by sending usage statistics and crash reports to Google."</string>
 <string name="fre_accept_continue">"Accept &amp; continue"</string>
 <string name="fre_welcome">"Welcome to Chrome"</string>
@@ -749,6 +740,7 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="ntp_all_dismissed_body_text_evening">"More articles will appear soon. Enjoy your evening!"</string>
 <string name="ntp_all_dismissed_body_text_modern">"Tap More to get articles"</string>
 <string name="ntp_suggestions_fetch_failed">"Can’t get suggestions"</string>
+<string name="ntp_suggestions_fetch_no_new_suggestions">"No new suggestions"</string>
 <string name="ntp_all_dismissed_refresh">"Refresh"</string>
 <string name="open_tabs">"Open tabs"</string>
 <string name="button_new_tab">"New tab"</string>
@@ -825,10 +817,10 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="menu_open_in_product">"Open in %1$s"</string>
 <string name="menu_open_in_product_default">"Open in browser"</string>
 <string name="reader_view_text">"Make page mobile-friendly"</string>
-<string name="reader_view_text_alt">"Simplify page"</string>
+<string name="reader_view_text_alt">"Show simplified view"</string>
 <string name="content_provider_search_description">"Bookmarks and web history"</string>
 <string name="url_copied">"URL copied."</string>
-<string name="survey_prompt">"Help improve Chrome. &lt;LINK&gt;Take survey.&lt;/LINK&gt;"</string>
+<string name="chrome_home_survey_prompt">"Help improve Chrome. &lt;LINK&gt;Take survey.&lt;/LINK&gt;"</string>
 <string name="accessibility_toolbar_btn_forward">"Go forward"</string>
 <string name="accessibility_toolbar_btn_back">"Go back"</string>
 <string name="accessibility_toolbar_btn_menu">"More options"</string>
@@ -859,10 +851,10 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="accessibility_tabstrip_incognito_identifier">"Incognito Tab"</string>
 <string name="accessibility_tabstrip_incognito_identifier_selected">"Selected Incognito Tab"</string>
 <string name="accessibility_omnibox_btn_refine">"Refine"</string>
-<string name="accessibility_bookmark_more_info">"Options"</string>
 <string name="accessibility_cancel_selection">"Cancel selection"</string>
 <string name="accessibility_drawer_toggle_btn_open">"Open navigation drawer"</string>
 <string name="accessibility_drawer_toggle_btn_close">"Close navigation drawer"</string>
+<string name="accessibility_list_menu_button">"Options"</string>
 <string name="accessibility_toolbar_screen_position">"Options available near top of the screen"</string>
 <plurals name="accessibility_share_selected_items">
   <item quantity="one">"Share 1 selected item"</item>
@@ -892,6 +884,9 @@ However, you aren’t invisible. Going incognito doesn’t hide your browsing fr
 <string name="contextual_search_quick_action_caption_generic_event">"Create event"</string>
 <string name="contextual_search_quick_action_caption_phone">"Call"</string>
 <string name="contextual_search_quick_action_caption_generic_website">"Go to page"</string>
+<string name="contextual_search_iph_entity">"See instant search results in this panel"</string>
+<string name="contextual_search_iph_search_result">"Tap a word to search instantly or see related actions"</string>
+<string name="contextual_search_iph_tap">"You can also search with a quick tap on a word"</string>
 <string name="webapp_activity_title">"Web App"</string>
 <string name="print_share_activity_title">"Print"</string>
 <string name="omnibox_confirm_delete">"Remove suggestion from history?"</string>
@@ -935,7 +930,7 @@ You must have Bluetooth and Location turned on in order to use the Physical Web.
 <string name="physical_web_broadcast_notification">"Website is broadcasting"</string>
 <string name="physical_web_stop_broadcast">"Stop"</string>
 <string name="usb_chooser_dialog_prompt">"%1$s wants to connect"</string>
-<string name="usb_chooser_dialog_no_devices_found_prompt">"No devices found"</string>
+<string name="usb_chooser_dialog_no_devices_found_prompt">"No compatible devices found"</string>
 <string name="usb_chooser_dialog_connect_button_text">"Connect"</string>
 <string name="usb_chooser_dialog_footnote_text">"&lt;link&gt;Get help&lt;/link&gt;"</string>
 <string name="decoder_description">"Image decoder"</string>
@@ -947,9 +942,11 @@ You must have Bluetooth and Location turned on in order to use the Physical Web.
 <string name="using_google">"Using Google for search"</string>
 <string name="item_chooser_item_name_with_id">"%1$s (%2$s)"</string>
 <string name="webapk_running_in_chrome_disclosure">"This app is running in Chrome."</string>
-<string name="webapp_runs_in_chrome_disclosure">"%1$s runs in Chrome"</string>
+<string name="webapp_tap_to_copy_url">"Tap to copy the URL for this app"</string>
+<string name="webapp_twa_offline_dialog">"To use %1$s, please connect to the internet."</string>
 <string name="webapk_offline_dialog">"To use %1$s for the first time, please connect to the internet."</string>
-<string name="webapk_offline_dialog_quit_button">"OK"</string>
+<string name="webapp_cannot_connect_to_site">"Can\'t connect to the site"</string>
+<string name="webapp_network_error_message_tunnel_connection_failed">"Establishing a tunnel via proxy server failed"</string>
 <string name="keyboard_shortcut_open_new_tab">"Open a new tab"</string>
 <string name="keyboard_shortcut_reopen_new_tab">"Reopen the last closed tab"</string>
 <string name="keyboard_shortcut_new_incognito_tab">"Open a new tab in Incognito mode"</string>
@@ -996,7 +993,8 @@ You must have Bluetooth and Location turned on in order to use the Physical Web.
 <string name="search_with_product">"Search with %1$s"</string>
 <string name="disabled_incognito_launcher_shortcut_message">"Remove and recreate this shortcut"</string>
 <string name="bottom_sheet_help_bubble_message">"Pull up to see bookmarks and more"</string>
-<string name="bottom_sheet_expand_button_help_bubble_message">"Tap to see bookmarks and more"</string>
+<string name="bottom_sheet_pull_to_refresh_help_bubble_message">"Access the address bar here"</string>
+<string name="bottom_sheet_pull_to_refresh_help_bubble_accessibility_message">"Access the address bar at the bottom of your screen"</string>
 <string name="bottom_sheet_accessibility_expand_button_help_bubble_message">"Tap to see downloads, bookmarks, and history"</string>
 <string name="bottom_sheet_expand_button_accessibility">"access downloads, bookmarks, and history."</string>
 <string name="bottom_sheet_accessibility_description">"Navigation panel. Swipe down to close."</string>
@@ -1010,7 +1008,7 @@ You must have Bluetooth and Location turned on in order to use the Physical Web.
 <string name="bottom_sheet_app_menu_iph">"Where are downloads, bookmarks, and history?"</string>
 <string name="chrome_home_promo_dialog_message">"Swipe up for easy access to popular sites and articles, downloads, and more"</string>
 <string name="chrome_home_promo_dialog_message_accessibility">"Swipe up from the bottom of the screen or tap the expand button for easy access to popular sites and articles, downloads, and more"</string>
-<string name="chrome_home_promo_dialog_not_now">"Not now"</string>
+<string name="chrome_home_promo_dialog_not_yet">"Not yet"</string>
 <string name="chrome_home_promo_dialog_title">"Introducing the new Chrome"</string>
 <string name="chrome_home_promo_dialog_try_it">"Try it"</string>
 <string name="chrome_home_promo_dialog_turn_off">"Turn off"</string>
@@ -1021,4 +1019,8 @@ You must have Bluetooth and Location turned on in order to use the Physical Web.
 <string name="photo_picker_camera">"Camera"</string>
 <string name="photo_picker_browse">"Browse"</string>
 <string name="updating_chrome">"Updating Chrome…"</string>
+<string name="redirect_blocked_message">"Chrome stopped this site from taking you to"</string>
+<string name="redirect_blocked_short_message">"Redirect blocked."</string>
+<string name="near_oom_intervention_message">"This page uses too much memory, so Chrome paused it."</string>
+<string name="near_oom_intervention_decline">"Resume"</string>
 </resources>

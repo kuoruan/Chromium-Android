@@ -6,6 +6,7 @@ package org.chromium.base.metrics;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.base.annotations.MainDex;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,6 +25,7 @@ import java.util.concurrent.TimeUnit;
  * code.
  */
 @JNINamespace("base::android")
+@MainDex
 public class RecordHistogram {
     private static Throwable sDisabledBy;
     private static Map<String, Long> sCache =

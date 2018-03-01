@@ -28,15 +28,21 @@ import java.security.MessageDigest;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * UI component for displaying certificate information.
  */
 class CertificateViewer implements OnItemSelectedListener {
     private static final String X_509 = "X.509";
+    private static final int SUBJECTALTERNATIVENAME_DNSNAME_ID = 2;
+    private static final int SUBJECTALTERNATIVENAME_IPADDRESS_ID = 7;
+
     private final Context mContext;
     private final ArrayList<LinearLayout> mViews;
     private final ArrayList<String> mTitles;
@@ -179,8 +185,16 @@ class CertificateViewer implements OnItemSelectedListener {
         addSectionTitle(certificateView, nativeGetCertFingerprintsText());
         addItem(certificateView, nativeGetCertSHA256FingerprintText(),
                 formatBytes(sha256Digest, ' '));
-        addItem(certificateView, nativeGetCertSHA1FingerprintText(),
-                formatBytes(sha1Digest, ' '));
+        addItem(certificateView, nativeGetCertSHA1FingerprintText(), formatBytes(sha1Digest, ' '));
+
+        List<String> subjectAltNames = getSubjectAlternativeNames(x509);
+        if (!subjectAltNames.isEmpty()) {
+            addSectionTitle(certificateView, nativeGetCertExtensionText());
+            addLabel(certificateView, nativeGetCertSANText());
+            for (String name : subjectAltNames) {
+                addValue(certificateView, name);
+            }
+        }
     }
 
     private void addSectionTitle(LinearLayout certificateView, String label) {
@@ -238,6 +252,31 @@ class CertificateViewer implements OnItemSelectedListener {
         }
     }
 
+    private static List<String> getSubjectAlternativeNames(X509Certificate x509) {
+        List<String> result = new ArrayList<>();
+        Collection<List<?>> subjectAltNameList = null;
+        try {
+            subjectAltNameList = x509.getSubjectAlternativeNames();
+        } catch (CertificateParsingException e) {
+            // Ignore exception.
+        }
+        if (subjectAltNameList != null && !subjectAltNameList.isEmpty()) {
+            for (List<?> names : subjectAltNameList) {
+                if (names == null || names.size() != 2 || names.get(0) == null
+                        || names.get(0).getClass() != Integer.class || names.get(1) == null
+                        || names.get(1).getClass() != String.class) {
+                    continue;
+                }
+                int id = ((Integer) names.get(0)).intValue();
+                if ((id == SUBJECTALTERNATIVENAME_DNSNAME_ID
+                            || id == SUBJECTALTERNATIVENAME_IPADDRESS_ID)) {
+                    result.add(names.get(1).toString());
+                }
+            }
+        }
+        return result;
+    }
+
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         for (int i = 0; i < mViews.size(); ++i) {
@@ -262,4 +301,6 @@ class CertificateViewer implements OnItemSelectedListener {
     private static native String nativeGetCertFingerprintsText();
     private static native String nativeGetCertSHA256FingerprintText();
     private static native String nativeGetCertSHA1FingerprintText();
+    private static native String nativeGetCertExtensionText();
+    private static native String nativeGetCertSANText();
 }

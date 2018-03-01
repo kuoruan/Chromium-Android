@@ -63,14 +63,15 @@ public class SystemDownloadNotifier2 implements DownloadNotifier {
     @Override
     public void notifyDownloadPaused(DownloadInfo info) {
         mDownloadNotificationService.notifyDownloadPaused(info.getContentId(), info.getFileName(),
-                true, false, info.isOffTheRecord(), info.getIsTransient(), info.getIcon(), false);
+                true, false, info.isOffTheRecord(), info.getIsTransient(), info.getIcon(), false,
+                false);
     }
 
     @Override
     public void notifyDownloadInterrupted(DownloadInfo info, boolean isAutoResumable) {
         mDownloadNotificationService.notifyDownloadPaused(info.getContentId(), info.getFileName(),
                 info.isResumable(), isAutoResumable, info.isOffTheRecord(), info.getIsTransient(),
-                info.getIcon(), false);
+                info.getIcon(), false, false);
     }
 
     @Override

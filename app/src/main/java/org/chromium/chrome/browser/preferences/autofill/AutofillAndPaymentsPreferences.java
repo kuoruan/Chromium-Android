@@ -13,6 +13,7 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.payments.AndroidPaymentAppFactory;
+import org.chromium.chrome.browser.payments.ServiceWorkerPaymentAppBridge;
 import org.chromium.chrome.browser.preferences.ChromeSwitchPreference;
 import org.chromium.chrome.browser.preferences.PreferenceUtils;
 
@@ -27,7 +28,7 @@ public class AutofillAndPaymentsPreferences extends PreferenceFragment {
     // chrome/browser/ui/webui/options/autofill_options_handler.cc
     public static final String SETTINGS_ORIGIN = "Chrome settings";
     private static final String PREF_AUTOFILL_SWITCH = "autofill_switch";
-    private static final String PREF_ANDROID_PAYMENT_APPS = "android_payment_apps";
+    private static final String PREF_PAYMENT_APPS = "payment_apps";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -45,12 +46,13 @@ public class AutofillAndPaymentsPreferences extends PreferenceFragment {
             }
         });
 
-        if (ChromeFeatureList.isEnabled(ChromeFeatureList.ANDROID_PAYMENT_APPS)) {
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.ANDROID_PAYMENT_APPS)
+                || ChromeFeatureList.isEnabled(ChromeFeatureList.SERVICE_WORKER_PAYMENT_APPS)) {
             Preference pref = new Preference(getActivity());
             pref.setTitle(getActivity().getString(R.string.payment_apps_title));
             pref.setFragment(AndroidPaymentAppsFragment.class.getCanonicalName());
             pref.setShouldDisableView(true);
-            pref.setKey(PREF_ANDROID_PAYMENT_APPS);
+            pref.setKey(PREF_PAYMENT_APPS);
             getPreferenceScreen().addPreference(pref);
         }
     }
@@ -60,19 +62,38 @@ public class AutofillAndPaymentsPreferences extends PreferenceFragment {
         super.onResume();
         ((ChromeSwitchPreference) findPreference(PREF_AUTOFILL_SWITCH))
                 .setChecked(PersonalDataManager.isAutofillEnabled());
-        refreshPaymentAppsPref();
+
+        Preference pref = findPreference(PREF_PAYMENT_APPS);
+        if (pref != null) {
+            refreshPaymentAppsPrefForAndroidPaymentApps(pref);
+        }
     }
 
-    private void refreshPaymentAppsPref() {
-        Preference pref = findPreference(PREF_ANDROID_PAYMENT_APPS);
-        if (pref != null) {
-            if (AndroidPaymentAppFactory.hasAndroidPaymentApps()) {
-                pref.setSummary(null);
-                pref.setEnabled(true);
-            } else {
-                pref.setSummary(getActivity().getString(R.string.payment_no_apps_summary));
-                pref.setEnabled(false);
-            }
+    private void refreshPaymentAppsPrefForAndroidPaymentApps(Preference pref) {
+        if (AndroidPaymentAppFactory.hasAndroidPaymentApps()) {
+            setPaymentAppsPrefStatus(pref, true);
+        } else {
+            refreshPaymentAppsPrefForServiceWorkerPaymentApps(pref);
+        }
+    }
+
+    private void refreshPaymentAppsPrefForServiceWorkerPaymentApps(Preference pref) {
+        ServiceWorkerPaymentAppBridge.hasServiceWorkerPaymentApps(
+                new ServiceWorkerPaymentAppBridge.HasServiceWorkerPaymentAppsCallback() {
+                    @Override
+                    public void onHasServiceWorkerPaymentAppsResponse(boolean hasPaymentApps) {
+                        setPaymentAppsPrefStatus(pref, hasPaymentApps);
+                    }
+                });
+    }
+
+    private void setPaymentAppsPrefStatus(Preference pref, boolean enabled) {
+        if (enabled) {
+            pref.setSummary(null);
+            pref.setEnabled(true);
+        } else {
+            pref.setSummary(getActivity().getString(R.string.payment_no_apps_summary));
+            pref.setEnabled(false);
         }
     }
 }

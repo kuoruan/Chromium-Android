@@ -6,11 +6,13 @@ package org.chromium.chrome.browser.contextualsearch;
 
 import android.os.Build;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.view.textclassifier.TextClassifier;
 
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.content.browser.ContentViewCore;
 import org.chromium.content_public.browser.SelectionClient;
+import org.chromium.content_public.browser.SelectionMetricsLogger;
 import org.chromium.content_public.browser.WebContents;
 
 /**
@@ -50,6 +52,13 @@ public class SelectionClientManager {
             contentViewCore.setSelectionClient(mOptionalSelectionClient);
         }
         mIsSmartSelectionEnabledInChrome = mOptionalSelectionClient != null;
+    }
+
+    @VisibleForTesting
+    /** Test-only constructor. */
+    SelectionClientManager(SelectionClient optionalSelectionClient, boolean enableSmartSelection) {
+        mOptionalSelectionClient = optionalSelectionClient;
+        mIsSmartSelectionEnabledInChrome = enableSmartSelection;
     }
 
     /** @return Whether Smart Text Selection is currently enabled in Chrome. */
@@ -190,6 +199,11 @@ public class SelectionClientManager {
         @Override
         public TextClassifier getCustomTextClassifier() {
             return mSmartSelectionClient.getCustomTextClassifier();
+        }
+
+        @Override
+        public SelectionMetricsLogger getSelectionMetricsLogger() {
+            return mSmartSelectionClient.getSelectionMetricsLogger();
         }
     }
 }

@@ -18,7 +18,7 @@
     android:paddingBottom="@dimen/ntp_suggestions_footer_padding_bottom"
     android:paddingStart="16dp"
     android:paddingEnd="16dp">
-    <TextView
+    <org.chromium.ui.widget.TextViewWithClickableSpans
         android:id="@+id/text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -12,12 +12,16 @@ import android.os.MessageQueue;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 
+import java.lang.Thread.UncaughtExceptionHandler;
+
 /**
  * Thread in Java with an Android Handler. This class is not thread safe.
  */
 @JNINamespace("base::android")
 public class JavaHandlerThread {
     private final HandlerThread mThread;
+
+    private Throwable mUnhandledException;
 
     /**
      * Construct a java-only instance. Can be connected with native side later.
@@ -93,7 +97,10 @@ public class JavaHandlerThread {
     @CalledByNative
     private void stop(final long nativeThread) {
         assert hasStarted();
-        new Handler(mThread.getLooper()).post(new Runnable() {
+        // Looper may be null if the thread crashed.
+        Looper looper = mThread.getLooper();
+        if (!isAlive() || looper == null) return;
+        new Handler(looper).post(new Runnable() {
             @Override
             public void run() {
                 stopOnThread(nativeThread);
@@ -109,6 +116,24 @@ public class JavaHandlerThread {
     @CalledByNative
     private boolean isAlive() {
         return mThread.isAlive();
+    }
+
+    // This should *only* be used for tests. In production we always need to call the original
+    // uncaught exception handler (the framework's) after any uncaught exception handling we do, as
+    // it generates crash dumps and kills the process.
+    @CalledByNative
+    private void listenForUncaughtExceptionsForTesting() {
+        mThread.setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                mUnhandledException = e;
+            }
+        });
+    }
+
+    @CalledByNative
+    private Throwable getUncaughtExceptionIfAny() {
+        return mUnhandledException;
     }
 
     private native void nativeInitializeThread(long nativeJavaHandlerThread, long nativeEvent);

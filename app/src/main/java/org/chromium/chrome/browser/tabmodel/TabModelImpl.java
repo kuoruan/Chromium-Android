@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.tabmodel;
 
-import org.chromium.base.ContextUtils;
 import org.chromium.base.ObserverList;
 import org.chromium.base.TraceEvent;
 import org.chromium.chrome.browser.ChromeTabbedActivity;
@@ -398,7 +397,7 @@ public class TabModelImpl extends TabModelJniBridge {
 
         if (allowDelegation && mModelDelegate.closeAllTabsRequest(isIncognito())) return;
 
-        if (HomepageManager.isHomepageEnabled(ContextUtils.getApplicationContext())) {
+        if (HomepageManager.isHomepageEnabled()) {
             commitAllTabClosures();
 
             for (int i = 0; i < getCount(); i++) getTabAt(i).setClosing(true);

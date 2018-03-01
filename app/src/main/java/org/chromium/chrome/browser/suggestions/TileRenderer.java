@@ -21,8 +21,9 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.ChromeFeatureList;
+import org.chromium.chrome.browser.favicon.IconType;
 import org.chromium.chrome.browser.favicon.LargeIconBridge;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.RoundedIconGenerator;
 
 import java.util.HashMap;
@@ -39,7 +40,7 @@ public class TileRenderer {
     private static final int ICON_CORNER_RADIUS_DP = 4;
     private static final int ICON_TEXT_SIZE_DP = 20;
     private static final int ICON_MIN_SIZE_PX = 48;
-    private static final int ICON_DECREASED_MIN_SIZE_PX = 32;
+    private static final int ICON_DECREASED_MIN_SIZE_PX = 24;
 
     private final Resources mResources;
     private final ImageFetcher mImageFetcher;
@@ -85,7 +86,7 @@ public class TileRenderer {
     }
 
     private static boolean useDecreasedMinSize() {
-        return ChromeFeatureList.isEnabled(ChromeFeatureList.NTP_TILES_LOWER_RESOLUTION_FAVICONS);
+        return FeatureUtilities.isChromeHomeEnabled();
     }
 
     /**
@@ -166,7 +167,7 @@ public class TileRenderer {
                 if (icon == null) {
                     mImageFetcher.makeLargeIconRequest(siteData.url, mMinIconSize, iconCallback);
                 } else {
-                    iconCallback.onLargeIconAvailable(icon, Color.BLACK, false);
+                    iconCallback.onLargeIconAvailable(icon, Color.BLACK, false, IconType.INVALID);
                 }
             }
         };

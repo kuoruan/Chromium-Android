@@ -20,7 +20,6 @@ import org.chromium.chrome.browser.ntp.cards.CardsVariationParameters;
 import org.chromium.chrome.browser.ntp.cards.NewTabPageRecyclerView;
 import org.chromium.chrome.browser.ntp.snippets.SnippetsConfig;
 import org.chromium.chrome.browser.suggestions.SiteSection;
-import org.chromium.chrome.browser.suggestions.SuggestionsConfig;
 import org.chromium.chrome.browser.suggestions.TileGridLayout;
 
 /**
@@ -119,10 +118,7 @@ public class NewTabPageLayout extends LinearLayout {
     }
 
     /**
-     * @return different result depending on whether {@link
-     * SuggestionsConfig#useSitesExplorationUi()} is enabled. When the sites exploration feature is
-     * enabled, this will return the enclosing view group of the explore layout file. Otherwise,
-     * this method will return a {@link TileGridLayout}.
+     * @return the embedded {@link TileGridLayout}.
      */
     public ViewGroup getSiteSectionView() {
         return mSiteSectionView;
@@ -147,18 +143,10 @@ public class NewTabPageLayout extends LinearLayout {
         mLogoSpacer.setVisibility(View.GONE);
         mSearchBoxSpacer.setVisibility(View.GONE);
 
-        if (!SuggestionsConfig.useSitesExplorationUi()) {
-            // Remove the extra spacing before measuring because it might not be needed anymore.
-            ((TileGridLayout) mSiteSectionView).setExtraVerticalSpacing(0);
-        }
+        // Remove the extra spacing before measuring because it might not be needed anymore.
+        ((TileGridLayout) mSiteSectionView).setExtraVerticalSpacing(0);
 
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-
-        if (SuggestionsConfig.useSitesExplorationUi()) {
-            // We want to skip vertical spacing when site explore is enabled, but we still need
-            // to call onMeasure() before returning.
-            return;
-        }
 
         boolean hasSpaceForPeekingCard = false;
         int spaceToFill = mParentViewportHeight - mPeekingCardHeight - mTabStripHeight;

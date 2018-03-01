@@ -110,7 +110,7 @@ public class DownloadBroadcastManager extends Service {
     void cancelQueuedResumptions() {
         DownloadResumptionScheduler
                 .getDownloadResumptionScheduler(ContextUtils.getApplicationContext())
-                .cancelTask();
+                .cancel();
         // Reset number of attempts left if the action is triggered by user.
         clearResumptionAttemptLeft();
     }
@@ -129,7 +129,7 @@ public class DownloadBroadcastManager extends Service {
         switch (action) {
             case ACTION_DOWNLOAD_PAUSE:
                 mDownloadNotificationService.notifyDownloadPaused(entry.id, entry.fileName, true,
-                        false, entry.isOffTheRecord, entry.isTransient, null, true);
+                        false, entry.isOffTheRecord, entry.isTransient, null, true, false);
                 break;
 
             case ACTION_DOWNLOAD_CANCEL:

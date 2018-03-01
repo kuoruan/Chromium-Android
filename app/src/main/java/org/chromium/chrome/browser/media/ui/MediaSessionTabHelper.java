@@ -8,10 +8,10 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
+import android.os.Build;
 import android.os.Handler;
 import android.text.TextUtils;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.base.Log;
 import org.chromium.base.SysUtils;
 import org.chromium.base.VisibleForTesting;
@@ -433,7 +433,8 @@ public class MediaSessionTabHelper implements MediaImageCallback {
 
         // Disable favicons in notifications for low memory devices on O
         // where the notification icon is optional.
-        if (SysUtils.isLowEndDevice() && BuildInfo.isAtLeastO()) return false;
+        if (SysUtils.isLowEndDevice() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            return false;
 
         if (!MediaNotificationManager.isBitmapSuitableAsMediaImage(icon)) return false;
         if (mFavicon != null && (icon.getWidth() < mFavicon.getWidth()

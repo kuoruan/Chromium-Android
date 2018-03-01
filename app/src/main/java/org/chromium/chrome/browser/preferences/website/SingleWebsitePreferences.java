@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -22,7 +23,6 @@ import android.text.format.Formatter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeFeatureList;
@@ -31,7 +31,6 @@ import org.chromium.chrome.browser.notifications.channels.SiteChannelsManager;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.preferences.PreferenceUtils;
 import org.chromium.components.url_formatter.UrlFormatter;
-import org.chromium.content_public.browser.WebContents;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -45,17 +44,12 @@ import java.util.Set;
 public class SingleWebsitePreferences extends PreferenceFragment
         implements OnPreferenceChangeListener, OnPreferenceClickListener {
     // SingleWebsitePreferences expects either EXTRA_SITE (a Website) or
-    // EXTRA_ORIGIN (a WebsiteAddress) to be present (but not both). If
+    // EXTRA_SITE_ADDRESS (a WebsiteAddress) to be present (but not both). If
     // EXTRA_SITE is present, the fragment will display the permissions in that
-    // Website object. If EXTRA_ORIGIN is present, the fragment will find all
-    // permissions for that website address and display those. If EXTRA_LOCATION
-    // is present, the fragment will add a Location toggle, even if the site
-    // specifies no Location permission.
+    // Website object. If EXTRA_SITE_ADDRESS is present, the fragment will find all
+    // permissions for that website address and display those.
     public static final String EXTRA_SITE = "org.chromium.chrome.preferences.site";
-    public static final String EXTRA_ORIGIN = "org.chromium.chrome.preferences.origin";
-    public static final String EXTRA_LOCATION = "org.chromium.chrome.preferences.location";
-
-    public static final String EXTRA_WEB_CONTENTS = "org.chromium.chrome.preferences.web_contents";
+    public static final String EXTRA_SITE_ADDRESS = "org.chromium.chrome.preferences.site_address";
     public static final String EXTRA_USB_INFO = "org.chromium.chrome.preferences.usb_info";
 
     // Preference keys, see single_website_preferences.xml
@@ -112,18 +106,15 @@ public class SingleWebsitePreferences extends PreferenceFragment
     // The website this page is displaying details about.
     private Website mSite;
 
-    // The address of the site we want to display. Used only if EXTRA_ADDRESS is provided.
-    private WebsiteAddress mSiteAddress;
-
     // The number of USB device permissions displayed.
     private int mUsbPermissionCount;
 
     private class SingleWebsitePermissionsPopulator
             implements WebsitePermissionsFetcher.WebsitePermissionsCallback {
-        private final WebContents mWebContents;
+        private final WebsiteAddress mSiteAddress;
 
-        public SingleWebsitePermissionsPopulator(WebContents webContents) {
-            mWebContents = webContents;
+        public SingleWebsitePermissionsPopulator(WebsiteAddress siteAddress) {
+            mSiteAddress = siteAddress;
         }
 
         @Override
@@ -153,7 +144,7 @@ public class SingleWebsitePreferences extends PreferenceFragment
         // equivalent of the call below, because this is perfectly fine for non-display purposes.
         String origin =
                 UrlFormatter.formatUrlForSecurityDisplay(URI.create(url), true /* showScheme */);
-        fragmentArgs.putString(SingleWebsitePreferences.EXTRA_ORIGIN, origin);
+        fragmentArgs.putSerializable(EXTRA_SITE_ADDRESS, WebsiteAddress.create(origin));
         return fragmentArgs;
     }
 
@@ -164,18 +155,15 @@ public class SingleWebsitePreferences extends PreferenceFragment
         listView.setDivider(null);
 
         Object extraSite = getArguments().getSerializable(EXTRA_SITE);
-        Object extraOrigin = getArguments().getSerializable(EXTRA_ORIGIN);
-        getArguments().setClassLoader(WebContents.class.getClassLoader());
-        Object webContents = getArguments().get(EXTRA_WEB_CONTENTS);
+        Object extraSiteAddress = getArguments().getSerializable(EXTRA_SITE_ADDRESS);
 
-        if (extraSite != null && extraOrigin == null) {
+        if (extraSite != null && extraSiteAddress == null) {
             mSite = (Website) extraSite;
             displaySitePermissions();
-        } else if (extraOrigin != null && extraSite == null) {
-            mSiteAddress = WebsiteAddress.create((String) extraOrigin);
+        } else if (extraSiteAddress != null && extraSite == null) {
             WebsitePermissionsFetcher fetcher;
             fetcher = new WebsitePermissionsFetcher(
-                new SingleWebsitePermissionsPopulator((WebContents) webContents));
+                    new SingleWebsitePermissionsPopulator((WebsiteAddress) extraSiteAddress));
             fetcher.fetchAllPreferences();
         } else {
             assert false : "Exactly one of EXTRA_SITE or EXTRA_SITE_ADDRESS must be provided.";
@@ -252,15 +240,30 @@ public class SingleWebsitePreferences extends PreferenceFragment
                     merged.addUsbInfo(usbInfo);
                 }
             }
+            if (host.equals(other.getAddress().getHost())) {
+                if (merged.getJavaScriptException() == null
+                        && other.getJavaScriptException() != null) {
+                    merged.setJavaScriptException(other.getJavaScriptException());
+                }
+                if (merged.getSoundException() == null && other.getSoundException() != null) {
+                    merged.setSoundException(other.getSoundException());
+                }
+                if (merged.getAutoplayException() == null && other.getAutoplayException() != null) {
+                    merged.setAutoplayException(other.getAutoplayException());
+                }
+                if (merged.getBackgroundSyncException() == null
+                        && other.getBackgroundSyncException() != null) {
+                    merged.setBackgroundSyncException(other.getBackgroundSyncException());
+                }
+                if (merged.getPopupException() == null && other.getPopupException() != null) {
+                    merged.setPopupException(other.getPopupException());
+                }
+            }
 
             // TODO(crbug.com/763982): Deal with this TODO colony.
             // TODO(mvanouwerkerk): Make the various info types share a common interface that
             // supports reading the origin or host.
-            // TODO(mvanouwerkerk): Merge in PopupExceptionInfo? It uses a pattern, and is never
-            // set on Android.
-            // TODO(mvanouwerkerk): Merge in JavaScriptExceptionInfo? It uses a pattern.
             // TODO(lshang): Merge in CookieException? It will use patterns.
-            // TODO(steimel): Merge in SoundExceptionInfo? It uses a pattern.
         }
         return merged;
     }
@@ -365,7 +368,7 @@ public class SingleWebsitePreferences extends PreferenceFragment
     }
 
     private void setUpNotificationsPreference(Preference preference) {
-        if (BuildInfo.isAtLeastO()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                 && ChromeFeatureList.isEnabled(ChromeFeatureList.SITE_NOTIFICATION_CHANNELS)) {
             final ContentSetting value = mSite.getNotificationPermission();
             if (!(value == ContentSetting.ALLOW || value == ContentSetting.BLOCK)) {
@@ -614,17 +617,11 @@ public class SingleWebsitePreferences extends PreferenceFragment
 
     private void setUpLocationPreference(Preference preference) {
         ContentSetting permission = mSite.getGeolocationPermission();
-        Object locationAllowed = getArguments().getSerializable(EXTRA_LOCATION);
         if (shouldUseDSEGeolocationSetting()) {
             String origin = mSite.getAddress().getOrigin();
             mSite.setGeolocationInfo(new GeolocationInfo(origin, origin, false));
             setUpListPreference(preference, ContentSetting.ALLOW);
             updateLocationPreferenceForDSESetting(preference);
-        } else if (permission == null && locationAllowed != null) {
-            String origin = mSite.getAddress().getOrigin();
-            mSite.setGeolocationInfo(new GeolocationInfo(origin, origin, false));
-            setUpListPreference(preference, (boolean) locationAllowed
-                    ? ContentSetting.ALLOW : ContentSetting.BLOCK);
         } else {
             setUpListPreference(preference, permission);
         }

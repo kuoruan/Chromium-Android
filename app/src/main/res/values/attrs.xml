@@ -76,4 +76,9 @@
              lines. -->
         <attr name="singleLine" format="boolean" />
     </declare-styleable>
+
+    <declare-styleable name="ListMenuButton">
+        <!-- Used to customize the width of the popup menu. -->
+        <attr name="menuWidth" format="reference|dimension" />
+    </declare-styleable>
 </resources>

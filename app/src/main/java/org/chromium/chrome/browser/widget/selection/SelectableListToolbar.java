@@ -311,6 +311,8 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
 
     @Override
     public void onClick(View view) {
+        if (mIsDestroyed) return;
+
         switch (mNavigationButton) {
             case NAVIGATION_BUTTON_NONE:
                 break;
@@ -682,6 +684,12 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
     @VisibleForTesting
     public int getNavigationButtonForTests() {
         return mNavigationButton;
+    }
+
+    /** Ends any in-progress animations. */
+    @VisibleForTesting
+    public void endAnimationsForTesting() {
+        mNumberRollView.endAnimationsForTesting();
     }
 
     private void makeTextViewChildrenAccessible() {

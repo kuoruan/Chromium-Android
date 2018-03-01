@@ -15,6 +15,8 @@ import android.graphics.drawable.Drawable;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
+import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,7 +28,9 @@ import org.chromium.base.ActivityState;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.ApplicationStatus.ActivityStateListener;
+import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.base.library_loader.LibraryProcessType;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.ChromeFeatureList;
@@ -45,10 +49,9 @@ import org.chromium.chrome.browser.util.ViewUtils;
 import org.chromium.chrome.browser.widget.ViewHighlighter;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.BottomSheetContent;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.StateChangeReason;
-import org.chromium.chrome.browser.widget.bottomsheet.base.BottomNavigationItemView;
-import org.chromium.chrome.browser.widget.bottomsheet.base.BottomNavigationMenuView;
 import org.chromium.chrome.browser.widget.bottomsheet.base.BottomNavigationView;
 import org.chromium.chrome.browser.widget.bottomsheet.base.BottomNavigationView.OnNavigationItemSelectedListener;
+import org.chromium.content.browser.BrowserStartupController;
 import org.chromium.ui.UiUtils;
 
 import java.lang.annotation.Retention;
@@ -62,8 +65,8 @@ import java.util.Map.Entry;
  * Displays and controls a {@link BottomNavigationView} fixed to the bottom of the
  * {@link BottomSheet}. Also manages {@link BottomSheetContent} displayed in the BottomSheet.
  */
-public class BottomSheetContentController extends BottomNavigationView
-        implements OnNavigationItemSelectedListener {
+public class BottomSheetContentController
+        extends BottomSheetNavigationView implements OnNavigationItemSelectedListener {
     /** The different types of content that may be displayed in the bottom sheet. */
     @IntDef({TYPE_SUGGESTIONS, TYPE_DOWNLOADS, TYPE_BOOKMARKS, TYPE_HISTORY, TYPE_INCOGNITO_HOME,
             TYPE_AUXILIARY_CONTENT})
@@ -89,7 +92,15 @@ public class BottomSheetContentController extends BottomNavigationView
     // value must also be an invalid ID.
     private static final int PLACEHOLDER_ID = -2;
 
+    /** The threshold of application screen height for showing a tall bottom navigation bar. */
+    private static final float TALL_BOTTOM_NAV_THRESHOLD_DP = 683.0f;
+
+    /** The height of the bottom navigation bar that appears when the bottom sheet is expanded. */
+    private int mBottomNavHeight;
+
     private final Map<Integer, BottomSheetContent> mBottomSheetContents = new HashMap<>();
+    private boolean mLabelsEnabled;
+    private boolean mDestroyed;
 
     private final BottomSheetObserver mBottomSheetObserver = new EmptyBottomSheetObserver() {
         @Override
@@ -170,14 +181,14 @@ public class BottomSheetContentController extends BottomNavigationView
                 return;
             }
 
-            if (mBottomSheet.getSheetState() == BottomSheet.SHEET_STATE_PEEK) {
-                clearBottomSheetContents(mBottomSheet.getCurrentSheetContent() == null);
+            // If the home content is showing and the sheet is closed, destroy sheet contents that
+            // are no longer needed.
+            if ((mShouldClearContentsOnNextContentChange
+                        || mBottomSheet.getSheetState() == BottomSheet.SHEET_STATE_PEEK)
+                    && (newContent == null
+                               || newContent == mBottomSheetContents.get(getHomeContentId()))) {
+                clearBottomSheetContents(newContent == null);
             }
-        }
-
-        @Override
-        public void onSheetLayout(int windowHeight, int containerHeight) {
-            setTranslationY(containerHeight - windowHeight);
         }
     };
 
@@ -187,6 +198,7 @@ public class BottomSheetContentController extends BottomNavigationView
     private int mSelectedItemId;
     private ChromeActivity mActivity;
     private boolean mShouldOpenSheetOnNextContentChange;
+    private boolean mShouldClearContentsOnNextContentChange;
     private PlaceholderSheetContent mPlaceholderContent;
     private boolean mOmniboxHasFocus;
     private TabModelSelectorObserver mTabModelSelectorObserver;
@@ -207,6 +219,7 @@ public class BottomSheetContentController extends BottomNavigationView
 
     /** Called when the activity containing the bottom sheet is destroyed. */
     public void destroy() {
+        mDestroyed = true;
         clearBottomSheetContents(true);
         if (mPlaceholderContent != null) {
             mPlaceholderContent.destroy();
@@ -216,6 +229,20 @@ public class BottomSheetContentController extends BottomNavigationView
             mTabModelSelector.removeObserver(mTabModelSelectorObserver);
             mTabModelSelector = null;
         }
+    }
+
+    @Override
+    public void onFinishInflate() {
+        BrowserStartupController.get(LibraryProcessType.PROCESS_BROWSER)
+                .addStartupCompletedObserver(new BrowserStartupController.StartupCallback() {
+                    @Override
+                    public void onSuccess(boolean alreadyStarted) {
+                        initBottomNavMenu();
+                    }
+
+                    @Override
+                    public void onFailure() {}
+                });
     }
 
     /**
@@ -234,7 +261,13 @@ public class BottomSheetContentController extends BottomNavigationView
         mTabModelSelectorObserver = new EmptyTabModelSelectorObserver() {
             @Override
             public void onTabModelSelected(TabModel newModel, TabModel oldModel) {
-                updateVisuals(newModel.isIncognito(), true);
+                // Remove all bottom sheet contents except Home if switching between standard and
+                // incognito mode to prevent contents from being out of date.
+                if (newModel.isIncognito() != oldModel.isIncognito()) {
+                    mShouldClearContentsOnNextContentChange = true;
+                }
+
+                updateVisuals(newModel.isIncognito());
                 showBottomSheetContent(R.id.action_home);
                 mPlaceholderContent.setIsIncognito(newModel.isIncognito());
 
@@ -249,16 +282,9 @@ public class BottomSheetContentController extends BottomNavigationView
         mTabModelSelector.addObserver(mTabModelSelectorObserver);
 
         setOnNavigationItemSelectedListener(this);
-        hideMenuLabels();
 
         ViewGroup snackbarContainer =
                 (ViewGroup) activity.findViewById(R.id.bottom_sheet_snackbar_container);
-
-        if (mBottomSheet.useTallBottomNav()) {
-            getLayoutParams().height = (int) mBottomSheet.getBottomNavHeight();
-            ((MarginLayoutParams) snackbarContainer.getLayoutParams()).bottomMargin =
-                    (int) mBottomSheet.getBottomNavHeight();
-        }
 
         mSnackbarManager = new SnackbarManager(mActivity, snackbarContainer);
         mSnackbarManager.onStart();
@@ -279,8 +305,81 @@ public class BottomSheetContentController extends BottomNavigationView
                 updateMenuItemSpacing();
             }
         });
-        updateVisuals(mTabModelSelector.isIncognitoSelected(), true);
+
+        updateVisuals(mTabModelSelector.isIncognitoSelected());
         BottomSheetPaddingUtils.applyPaddingToContent(mPlaceholderContent, mBottomSheet);
+    }
+
+    /**
+     * Initializes the height of the bottom navigation menu based on the device's screen dp density,
+     * and whether or not we're showing labels beneath the icons in the menu.
+     *
+     * Needs to be called after the native library is loaded.
+     */
+    private void initBottomNavMenu() {
+        assert ChromeFeatureList.isInitialized();
+
+        DisplayMetrics metrics =
+                ContextUtils.getApplicationContext().getResources().getDisplayMetrics();
+        boolean useTallBottomNav =
+                ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_BOTTOM_NAV_LABELS)
+                || Float.compare(
+                           Math.max(metrics.heightPixels, metrics.widthPixels) / metrics.density,
+                           TALL_BOTTOM_NAV_THRESHOLD_DP)
+                        >= 0;
+        mBottomNavHeight = getResources().getDimensionPixelSize(
+                useTallBottomNav ? R.dimen.bottom_nav_height_tall : R.dimen.bottom_nav_height);
+
+        initializeMenuView();
+    }
+
+    /**
+     * Initializes the menu, hiding labels and showing the shadow if necessary, and centering menu
+     * items.
+     *
+     * Also takes care of correctly positioning the snackbar above the menu view.
+     *
+     * Needs to be called after the native library is loaded.
+     */
+    private void initializeMenuView() {
+        if (mDestroyed) return;
+
+        mLabelsEnabled =
+                ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_BOTTOM_NAV_LABELS);
+        if (mLabelsEnabled) {
+            ImageView bottomNavShadow = (ImageView) findViewById(R.id.bottom_nav_shadow);
+            if (bottomNavShadow != null) bottomNavShadow.setVisibility(View.VISIBLE);
+        } else {
+            hideMenuLabels();
+        }
+
+        // Since the BottomSheetContentController may also include a shadow, we need to ensure
+        // that the menu gets adjusted to the appropriate height, and that we include the height
+        // of the shadow in the controller's height.
+        int bottomNavShadowHeight = mLabelsEnabled
+                ? mActivity.getResources().getDimensionPixelSize(R.dimen.bottom_nav_shadow_height)
+                : 0;
+        getLayoutParams().height = mBottomNavHeight + bottomNavShadowHeight;
+        getMenuView().getLayoutParams().height = mBottomNavHeight;
+        getMenuView().getLayoutParams().width = LayoutParams.MATCH_PARENT;
+        getMenuView().setGravity(Gravity.CENTER);
+
+        ViewGroup snackbarContainer =
+                (ViewGroup) mActivity.findViewById(R.id.bottom_sheet_snackbar_container);
+        ((MarginLayoutParams) snackbarContainer.getLayoutParams()).bottomMargin = mBottomNavHeight;
+
+        setMenuBackgroundColor(
+                mTabModelSelector != null ? mTabModelSelector.isIncognitoSelected() : false);
+    }
+
+    /**
+     * A helper function to set the menu view background color.
+     *
+     * @param isIncognitoTabModelSelected Whether or not we're using incognito mode.
+     */
+    private void setMenuBackgroundColor(boolean isIncognitoTabModelSelected) {
+        getMenuView().setBackgroundResource(
+                getBackgroundColorResource(isIncognitoTabModelSelected));
     }
 
     /**
@@ -369,9 +468,10 @@ public class BottomSheetContentController extends BottomNavigationView
     }
 
     private void hideMenuLabels() {
-        BottomNavigationMenuView menuView = getMenuView();
+        BottomSheetNavigationMenuView menuView = getMenuView();
         for (int i = 0; i < menuView.getChildCount(); i++) {
-            BottomNavigationItemView item = (BottomNavigationItemView) menuView.getChildAt(i);
+            BottomSheetNavigationItemView item =
+                    (BottomSheetNavigationItemView) menuView.getChildAt(i);
             item.hideLabel();
         }
     }
@@ -385,6 +485,11 @@ public class BottomSheetContentController extends BottomNavigationView
         if (content != null) return content;
 
         return createAndCacheContentForId(navItemId);
+    }
+
+    private int getHomeContentId() {
+        if (mTabModelSelector.isIncognitoSelected()) return INCOGNITO_HOME_ID;
+        return R.id.action_home;
     }
 
     /**
@@ -424,6 +529,13 @@ public class BottomSheetContentController extends BottomNavigationView
         mSelectedItemId = navItemId;
         getMenu().findItem(mSelectedItemId).setChecked(true);
 
+        // Cancel clearing contents for switched tab model if showing contents other than Home.
+        // This is to prevent crash when bottom nav is clicked shortly after switching tab model.
+        // See crbug.com/780430 for more details.
+        if (mShouldClearContentsOnNextContentChange && mSelectedItemId != getHomeContentId()) {
+            mShouldClearContentsOnNextContentChange = false;
+        }
+
         BottomSheetContent newContent = getSheetContentForId(mSelectedItemId);
         mBottomSheet.showContent(newContent);
     }
@@ -440,20 +552,13 @@ public class BottomSheetContentController extends BottomNavigationView
         }
     }
 
-    private void updateVisuals(
-            boolean isIncognitoTabModelSelected, boolean bottomNavIsTransparent) {
-        if (bottomNavIsTransparent) {
-            setBackgroundResource(isIncognitoTabModelSelected
-                            ? R.color.incognito_primary_color_home_bottom_nav
-                            : R.color.primary_color_home_bottom_nav);
-        } else {
-            setBackgroundResource(isIncognitoTabModelSelected ? R.color.incognito_primary_color
-                                                              : R.color.modern_primary_color);
-        }
+    private void updateVisuals(boolean isIncognitoTabModelSelected) {
+        setMenuBackgroundColor(isIncognitoTabModelSelected);
 
         ColorStateList tint = ApiCompatibilityUtils.getColorStateList(getResources(),
                 isIncognitoTabModelSelected ? R.color.bottom_nav_tint_incognito
                                             : R.color.bottom_nav_tint);
+
         setItemIconTintList(tint);
         setItemTextColor(tint);
     }
@@ -470,6 +575,25 @@ public class BottomSheetContentController extends BottomNavigationView
         getMenu().findItem(R.id.action_downloads).setIcon(null);
         getMenu().findItem(R.id.action_bookmarks).setIcon(null);
         getMenu().findItem(R.id.action_history).setIcon(null);
+    }
+
+    /**
+     * Get the background color resource ID for the bottom navigation menu based on whether
+     * we're in incognito mode.
+     *
+     * Falls back to the common default if the feature list hasn't been initialized yet, which is
+     * the case on the initial layout pass before the native libraries are loaded.
+     *
+     * @param isIncognitoTabModelSelected Is the incognito tab model selected.
+     * @return The Android resource ID for the background color.
+     */
+    private int getBackgroundColorResource(boolean isIncognitoTabModelSelected) {
+        if (isIncognitoTabModelSelected) {
+            return mLabelsEnabled ? R.color.incognito_primary_color
+                                  : R.color.incognito_primary_color_home_bottom_nav;
+        }
+        return mLabelsEnabled ? R.color.modern_primary_color
+                              : R.color.primary_color_home_bottom_nav;
     }
 
     @VisibleForTesting
@@ -494,6 +618,14 @@ public class BottomSheetContentController extends BottomNavigationView
             entry.getValue().destroy();
             contentIterator.remove();
         }
+    }
+
+    /**
+     * Gets the bottom navigation menu height in pixels.
+     * @return Bottom navigation menu height in pixels.
+     */
+    public int getBottomNavHeight() {
+        return mBottomNavHeight;
     }
 
     /**

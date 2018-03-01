@@ -35,9 +35,9 @@ public enum ChromeContextMenuItem implements ContextMenuItem {
             R.id.contextmenu_open_in_new_tab),
     OPEN_IN_INCOGNITO_TAB(R.drawable.incognito_statusbar,
             R.string.contextmenu_open_in_incognito_tab, R.id.contextmenu_open_in_incognito_tab),
-    COPY_LINK_ADDRESS(R.drawable.ic_content_copy, R.string.contextmenu_copy_link_address,
+    COPY_LINK_ADDRESS(R.drawable.ic_content_copy_black, R.string.contextmenu_copy_link_address,
             R.id.contextmenu_copy_link_address),
-    COPY_LINK_TEXT(R.drawable.ic_content_copy, R.string.contextmenu_copy_link_text,
+    COPY_LINK_TEXT(R.drawable.ic_content_copy_black, R.string.contextmenu_copy_link_text,
             R.id.contextmenu_copy_link_text),
     SAVE_LINK_AS(R.drawable.ic_file_download_white_24dp, R.string.contextmenu_save_link,
             R.id.contextmenu_save_link_as),
@@ -60,7 +60,7 @@ public enum ChromeContextMenuItem implements ContextMenuItem {
             R.id.contextmenu_send_message),
     ADD_TO_CONTACTS(R.drawable.context_menu_add_to_contacts, R.string.contextmenu_add_to_contacts,
             R.id.contextmenu_add_to_contacts),
-    COPY(R.drawable.ic_content_copy, R.string.contextmenu_copy, R.id.contextmenu_copy),
+    COPY(R.drawable.ic_content_copy_black, R.string.contextmenu_copy, R.id.contextmenu_copy),
 
     // Video Group
     SAVE_VIDEO(R.drawable.ic_file_download_white_24dp, R.string.contextmenu_save_video,
@@ -68,7 +68,7 @@ public enum ChromeContextMenuItem implements ContextMenuItem {
 
     // Other
     OPEN_IN_CHROME(R.drawable.context_menu_new_tab, R.string.menu_open_in_chrome,
-            R.id.menu_id_open_in_chrome),
+            R.id.contextmenu_open_in_chrome),
 
     // Browser Action Items
     BROWSER_ACTIONS_OPEN_IN_BACKGROUND(R.drawable.context_menu_new_tab,
@@ -78,8 +78,8 @@ public enum ChromeContextMenuItem implements ContextMenuItem {
             R.id.browser_actions_open_in_incognito_tab),
     BROWSER_ACTION_SAVE_LINK_AS(R.drawable.ic_file_download_white_24dp,
             R.string.browser_actions_save_link_as, R.id.browser_actions_save_link_as),
-    BROWSER_ACTIONS_COPY_ADDRESS(R.drawable.ic_content_copy, R.string.browser_actions_copy_address,
-            R.id.browser_actions_copy_address);
+    BROWSER_ACTIONS_COPY_ADDRESS(R.drawable.ic_content_copy_black,
+            R.string.browser_actions_copy_address, R.id.browser_actions_copy_address);
 
     @DrawableRes
     private final int mIconId;

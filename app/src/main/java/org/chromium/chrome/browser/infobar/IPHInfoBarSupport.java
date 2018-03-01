@@ -4,23 +4,15 @@
 
 package org.chromium.chrome.browser.infobar;
 
-import android.content.Context;
 import android.support.annotation.StringRes;
 import android.support.v4.view.ViewCompat;
 import android.view.View;
 import android.widget.PopupWindow.OnDismissListener;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
-import org.chromium.chrome.R;
-import org.chromium.chrome.browser.feature_engagement.TrackerFactory;
 import org.chromium.chrome.browser.infobar.InfoBarContainer.InfoBarContainerObserver;
 import org.chromium.chrome.browser.infobar.InfoBarContainerLayout.Item;
-import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.widget.textbubble.TextBubble;
-import org.chromium.chrome.browser.widget.textbubble.ViewAnchoredTextBubble;
-import org.chromium.components.feature_engagement.EventConstants;
 import org.chromium.components.feature_engagement.FeatureConstants;
-import org.chromium.components.feature_engagement.Tracker;
 
 /**
  * A helper class to managing showing and dismissing in-product help dialogs based on which infobar
@@ -30,11 +22,8 @@ import org.chromium.components.feature_engagement.Tracker;
  */
 class IPHInfoBarSupport implements OnDismissListener, InfoBarContainer.InfoBarAnimationListener,
                                    InfoBarContainerObserver {
-    private final Context mContext;
-    private final Tracker mTracker;
-
     /** Helper class to hold all relevant display parameters for an in-product help window. */
-    private static class TrackerParameters {
+    public static class TrackerParameters {
         public TrackerParameters(
                 String feature, @StringRes int textId, @StringRes int accessibilityTextId) {
             this.feature = feature;
@@ -53,7 +42,7 @@ class IPHInfoBarSupport implements OnDismissListener, InfoBarContainer.InfoBarAn
     }
 
     /** Helper class to manage state relating to a particular instance of an in-product window. */
-    private static class PopupState {
+    public static class PopupState {
         /** The View that represents the infobar that the in-product window is attached to. */
         public View view;
 
@@ -64,14 +53,44 @@ class IPHInfoBarSupport implements OnDismissListener, InfoBarContainer.InfoBarAn
         public String feature;
     }
 
+    /**
+     * Delegate responsible for interacting with the in-product help backend and creating any
+     * {@link TextBubble}s if necessary.
+     */
+    public static interface IPHBubbleDelegate {
+        /**
+         * Will be called when a valid infobar of type {@code infoBarId} is showing and is attached
+         * to the view hierarchy.
+         * @param anchorView The {@link View} the {@link TextBubble} should be attached to.
+         * @param infoBarId  The id representing the type of infobar to potentially show an
+         *                   in-product help for.
+         * @return           {@code null} if no bubble should be shown.  Otherwise a valid
+         *                   {@link PopupState} representing the current state of the shown
+         *                   {@link TextBubble}.
+         */
+        PopupState createStateForInfoBar(View anchorView, @InfoBarIdentifier int infoBarId);
+
+        /**
+         * Will be called when the {@link TextBubble} related to the currently showing infobar has
+         * been dismissed.
+         * @param state The {@link PopupState} that represents the {@link TextBubble} and state
+         *              created from an earlier call to {@link #createStateForInfoBar(View, int)}.
+         */
+        void onPopupDismissed(PopupState state);
+    }
+
+    /**
+     * The delegate responsible for interacting with external components (Creating a TextBubble and
+     * interacting with the IPH backend.
+     */
+    private final IPHBubbleDelegate mDelegate;
+
     /** The state of the currently showing in-product window or {@code null} if none is showing. */
     private PopupState mCurrentState;
 
     /** Creates a new instance of an IPHInfoBarSupport class. */
-    IPHInfoBarSupport(Context context) {
-        mContext = context;
-        Profile profile = Profile.getLastUsedProfile();
-        mTracker = TrackerFactory.getTrackerForProfile(profile);
+    IPHInfoBarSupport(IPHBubbleDelegate delegate) {
+        mDelegate = delegate;
     }
 
     // InfoBarContainer.InfoBarAnimationListener implementation.
@@ -83,7 +102,6 @@ class IPHInfoBarSupport implements OnDismissListener, InfoBarContainer.InfoBarAn
     // goes through the Android SDK, FindBugs does not see this as happening, so the FindBugs
     // warning for a field guaranteed to be non-null being checked for null equality needs to be
     // suppressed.
-    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
     @Override
     public void notifyAllAnimationsFinished(Item frontInfoBar) {
         View view = frontInfoBar == null ? null : frontInfoBar.getView();
@@ -98,23 +116,11 @@ class IPHInfoBarSupport implements OnDismissListener, InfoBarContainer.InfoBarAn
 
         if (frontInfoBar == null || view == null || !ViewCompat.isAttachedToWindow(view)) return;
 
-        // Check if we need to log any IPH events based on the infobar.
-        logEvent(frontInfoBar);
+        mCurrentState = mDelegate.createStateForInfoBar(view, frontInfoBar.getInfoBarIdentifier());
+        if (mCurrentState == null) return;
 
-        // Check if there are any IPH'es we need to show.
-        TrackerParameters params = getTrackerParameters(frontInfoBar);
-        if (params == null) return;
-
-        if (!mTracker.shouldTriggerHelpUI(params.feature)) return;
-
-        mCurrentState = new PopupState();
-        mCurrentState.view = view;
-        mCurrentState.bubble = new ViewAnchoredTextBubble(
-                mContext, view, params.textId, params.accessibilityTextId);
         mCurrentState.bubble.addOnDismissListener(this);
-        mCurrentState.bubble.setDismissOnTouchInteraction(true);
         mCurrentState.bubble.show();
-        mCurrentState.feature = params.feature;
     }
 
     // InfoBarContainerObserver implementation.
@@ -126,7 +132,6 @@ class IPHInfoBarSupport implements OnDismissListener, InfoBarContainer.InfoBarAn
     // goes through the Android SDK, FindBugs does not see this as happening, so the FindBugs
     // warning for a field guaranteed to be non-null being checked for null equality needs to be
     // suppressed.
-    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
     @Override
     public void onRemoveInfoBar(InfoBarContainer container, InfoBar infoBar, boolean isLast) {
         if (mCurrentState != null && infoBar.getView() == mCurrentState.view) {
@@ -144,29 +149,12 @@ class IPHInfoBarSupport implements OnDismissListener, InfoBarContainer.InfoBarAn
     // PopupWindow.OnDismissListener implementation.
     @Override
     public void onDismiss() {
+        // Helper for crbug.com/786916 to catch why we are getting two dismiss calls in a row.
+        if (mCurrentState == null) return;
         assert mCurrentState != null;
-        String feature = mCurrentState.feature;
+        mDelegate.onPopupDismissed(mCurrentState);
         mCurrentState = null;
-        mTracker.dismissed(feature);
     }
 
-    private void logEvent(Item infoBar) {
-        switch (infoBar.getInfoBarIdentifier()) {
-            case InfoBarIdentifier.DATA_REDUCTION_PROXY_PREVIEW_INFOBAR_DELEGATE:
-                mTracker.notifyEvent(EventConstants.DATA_SAVER_PREVIEW_INFOBAR_SHOWN);
-                break;
-            default:
-                break;
-        }
-    }
 
-    private TrackerParameters getTrackerParameters(Item infoBar) {
-        switch (infoBar.getInfoBarIdentifier()) {
-            case InfoBarIdentifier.DATA_REDUCTION_PROXY_PREVIEW_INFOBAR_DELEGATE:
-                return new TrackerParameters(FeatureConstants.DATA_SAVER_PREVIEW_FEATURE,
-                        R.string.iph_data_saver_preview_text, R.string.iph_data_saver_preview_text);
-            default:
-                return null;
-        }
-    }
 }

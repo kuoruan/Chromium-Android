@@ -12,7 +12,6 @@ import android.os.SystemClock;
 
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.annotations.MainDex;
-import org.chromium.base.annotations.SuppressFBWarnings;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -96,7 +95,6 @@ public class EarlyTraceEvent {
 
     /** @see TraceEvent#MaybeEnableEarlyTracing().
      */
-    @SuppressFBWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
     static void maybeEnable() {
         ThreadUtils.assertOnUiThread();
         boolean shouldEnable = false;
@@ -196,11 +194,15 @@ public class EarlyTraceEvent {
     }
 
     private static void maybeFinishLocked() {
-        if (!sPendingEvents.isEmpty()) return;
-        sState = STATE_FINISHED;
-        dumpEvents(sCompletedEvents);
-        sCompletedEvents = null;
-        sPendingEvents = null;
+        if (!sCompletedEvents.isEmpty()) {
+            dumpEvents(sCompletedEvents);
+            sCompletedEvents.clear();
+        }
+        if (sPendingEvents.isEmpty()) {
+            sState = STATE_FINISHED;
+            sPendingEvents = null;
+            sCompletedEvents = null;
+        }
     }
 
     private static void dumpEvents(List<Event> events) {

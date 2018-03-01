@@ -71,7 +71,7 @@
             <org.chromium.chrome.browser.widget.TintedImageButton
                 android:id="@+id/menu_button"
                 style="@style/ToolbarMenuButtonTablet"
-                android:src="@drawable/btn_menu"
+                android:src="@drawable/ic_more_vert_black_24dp"
                 android:contentDescription="@string/accessibility_toolbar_btn_menu" />
 
             <ImageView

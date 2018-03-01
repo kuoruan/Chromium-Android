@@ -6,7 +6,7 @@ package org.chromium.chrome.browser.payments;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.payments.mojom.WebAppManifestSection;
+import org.chromium.components.payments.WebAppManifestSection;
 
 /** Java wrapper of the payment manifest web data service. */
 @JNINamespace("payments")
@@ -100,10 +100,7 @@ public class PaymentManifestWebDataService {
     @CalledByNative
     private static void addSectionToManifest(WebAppManifestSection[] manifest, int sectionIndex,
             String id, long minVersion, int numberOfFingerprints) {
-        manifest[sectionIndex] = new WebAppManifestSection();
-        manifest[sectionIndex].id = id;
-        manifest[sectionIndex].minVersion = minVersion;
-        manifest[sectionIndex].fingerprints = new byte[numberOfFingerprints][];
+        manifest[sectionIndex] = new WebAppManifestSection(id, minVersion, numberOfFingerprints);
     }
 
     @CalledByNative

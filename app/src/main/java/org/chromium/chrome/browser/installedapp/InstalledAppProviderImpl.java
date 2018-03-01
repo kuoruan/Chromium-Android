@@ -144,7 +144,8 @@ public class InstalledAppProviderImpl implements InstalledAppProvider {
             if (app.platform.equals(RELATED_APP_PLATFORM_ANDROID) && app.id != null) {
                 if (isInstantAppId(app.id)) {
                     if (mInstantAppsHandler.isInstantAppAvailable(frameUrl.toString(),
-                                INSTANT_APP_HOLDBACK_ID_STRING.equals(app.id))) {
+                                INSTANT_APP_HOLDBACK_ID_STRING.equals(app.id),
+                                true /* includeUserPrefersBrowser */)) {
                         installedApps.add(app);
                     }
                     continue;

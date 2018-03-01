@@ -1,4 +1,4 @@
-// Copyright 2015 The Chromium Authors. All rights reserved.
+// Copyright 2017 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -8,355 +8,211 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.text.TextUtils;
+import android.support.annotation.Nullable;
+import android.util.Pair;
 
-import org.chromium.base.StrictModeContext;
+import org.chromium.base.Callback;
+import org.chromium.base.CollectionUtil;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.metrics.StatisticsRecorderAndroid;
-import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
-import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
 import org.chromium.chrome.browser.profiles.Profile;
-import org.chromium.chrome.browser.util.FeatureUtilities;
-import org.chromium.components.variations.VariationsAssociatedData;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 /**
- * A class which collects generic information about Chrome which is useful for all types of
- * feedback, and provides it as a {@link Bundle}.
- *
- * Creating a {@link FeedbackCollector} initiates asynchronous operations for gathering feedback
- * data, which may or not finish before the bundle is requested by calling {@link #getBundle()}.
- *
- * Interacting with the {@link FeedbackCollector} is only allowed on the main thread.
+ * Used for gathering a variety of feedback from various components in Chrome and bundling it into
+ * a set of Key - Value pairs used to submit feedback requests.
  */
-public class FeedbackCollector
-        implements ConnectivityTask.ConnectivityResult, ScreenshotTask.ScreenshotTaskCallback {
-    /**
-     * A user visible string describing the current URL.
-     */
-    @VisibleForTesting
-    static final String URL_KEY = "URL";
-
-    /**
-     * A user visible string describing Chrome Home's current enabled state.
-     */
-    @VisibleForTesting
-    static final String CHROME_HOME_STATE_KEY = "Chrome Home State";
-    private static final String CHROME_HOME_ENABLED_VALUE = "Enabled";
-    private static final String CHROME_HOME_DISABLED_VALUE = "Disabled";
-    private static final String CHROME_HOME_OPT_IN_VALUE = "Opt-In";
-    private static final String CHROME_HOME_OPT_OUT_VALUE = "Opt-Out";
-
-    /**
-     * The timeout (ms) for gathering data asynchronously.
-     * This timeout is ignored for taking screenshots.
-     */
+public class FeedbackCollector implements Runnable {
+    /** The timeout for gathering data asynchronously. This timeout is ignored for screenshots. */
     private static final int TIMEOUT_MS = 500;
 
-    /**
-     * The timeout (ms) for gathering connection data.
-     * This may be more than the main timeout as taking the screenshot can take more time than
-     * {@link #TIMEOUT_MS}.
-     */
-    private static final int CONNECTIVITY_CHECK_TIMEOUT_MS = 5000;
+    private final List<FeedbackSource> mSynchronousSources;
+    private final List<AsyncFeedbackSource> mAsynchronousSources;
+    private final long mStartTime = SystemClock.elapsedRealtime();
 
-    private final Map<String, String> mData;
-    private final Profile mProfile;
-    private final String mUrl;
-    private final FeedbackResult mCallback;
-    private final long mCollectionStartTime;
-    private final boolean mTakeScreenshot;
-    // Not final because created during init. Should be used as a final member.
-    protected ConnectivityTask mConnectivityTask;
+    private final String mCategoryTag;
+    private final String mDescription;
 
-    /**
-     * An optional description for the feedback report.
-     */
-    private String mDescription;
+    private ScreenshotSource mScreenshotTask;
 
-    /**
-     * An optional screenshot for the feedback report.
-     */
-    private Bitmap mScreenshot;
+    /** The callback is cleared once notified so we will never notify the caller twice. */
+    private Callback<FeedbackCollector> mCallback;
 
-    /**
-     * All the registered histograms as JSON text.
-     */
-    private String mHistograms;
-
-    /**
-     * A flag indicating whether gathering connection data has finished.
-     */
-    private boolean mConnectivityTaskFinished;
-
-    /**
-     * A flag indicating whether taking a screenshot has finished.
-     */
-    private boolean mScreenshotTaskFinished;
-
-    /**
-     * A flag indicating whether the result has already been posted. This is used to ensure that
-     * the result is not posted again if a timeout happens.
-     */
-    private boolean mResultPosted;
-
-    /**
-     * The CategoryTag for the report. This allows Feedback systems to route the report accordingly.
-     */
-    private String mCategoryTag;
-
-    /**
-     * A callback for when the gathering of feedback data has finished. This may be called either
-     * when all data has been collected, or after a timeout.
-     */
-    public interface FeedbackResult {
-        /**
-         * Called when feedback data collection result is ready.
-         * @param collector the {@link FeedbackCollector} to retrieve the data from.
-         */
-        void onResult(FeedbackCollector collector);
-    }
-
-    /**
-     * Creates a {@link FeedbackCollector} and starts asynchronous operations to gather extra data.
-     * @param profile the current Profile.
-     * @param url The URL of the current tab to include in the feedback the user sends, if any.
-     *            This parameter may be null.
-     * @param takeScreenshot Whether to take screenshot.
-     * @param callback The callback which is invoked when feedback gathering is finished.
-     * @return the created {@link FeedbackCollector}.
-     */
-    public static FeedbackCollector create(Activity activity, Profile profile, @Nullable String url,
-            boolean takeScreenshot, FeedbackResult callback) {
-        ThreadUtils.assertOnUiThread();
-        return new FeedbackCollector(activity, profile, url, takeScreenshot, callback);
-    }
-
-    @VisibleForTesting
-    FeedbackCollector(Activity activity, Profile profile, String url, boolean takeScreenshot,
-            FeedbackResult callback) {
-        mData = new HashMap<>();
-        mProfile = profile;
-        mUrl = url;
-        mCallback = callback;
-        mCollectionStartTime = SystemClock.elapsedRealtime();
-        mTakeScreenshot = takeScreenshot;
-        init(activity);
-    }
-
-    @VisibleForTesting
-    void init(Activity activity) {
-        postTimeoutTask();
-        mConnectivityTask = ConnectivityTask.create(mProfile, CONNECTIVITY_CHECK_TIMEOUT_MS, this);
-        if (mTakeScreenshot) {
-            ScreenshotTask.create(activity, this);
-        }
-        if (!mProfile.isOffTheRecord()) {
-            mHistograms = StatisticsRecorderAndroid.toJson();
-        }
-    }
-
-    /**
-     * {@link ConnectivityTask.ConnectivityResult} implementation.
-     */
-    @Override
-    public void onResult(ConnectivityTask.FeedbackData feedbackData) {
-        ThreadUtils.assertOnUiThread();
-        mConnectivityTaskFinished = true;
-        Map<String, String> connectivityMap = feedbackData.toMap();
-        mData.putAll(connectivityMap);
-        maybePostResult();
-    }
-
-    /**
-     * {@link ScreenshotTask.ScreenshotTaskCallback} implementation.
-     */
-    @Override
-    public void onGotBitmap(@Nullable Bitmap bitmap) {
-        ThreadUtils.assertOnUiThread();
-        mScreenshotTaskFinished = true;
-        mScreenshot = bitmap;
-        maybePostResult();
-    }
-
-    private void postTimeoutTask() {
-        ThreadUtils.postOnUiThreadDelayed(new Runnable() {
-            @Override
-            public void run() {
-                maybePostResult();
-            }
-        }, TIMEOUT_MS);
-    }
-
-    private boolean shouldWaitForScreenshot() {
-        // We should always wait for the screenshot unless we're not taking one.
-        return mTakeScreenshot && !mScreenshotTaskFinished;
-    }
-
-    private boolean shouldWaitForConnectivityTask() {
-        return !mConnectivityTaskFinished && !hasTimedOut();
-    }
-
-    @VisibleForTesting
-    void maybePostResult() {
-        ThreadUtils.assertOnUiThread();
-        if (mCallback == null) return;
-        if (mResultPosted) return;
-        if (shouldWaitForScreenshot() || shouldWaitForConnectivityTask()) return;
-
-        mResultPosted = true;
-        ThreadUtils.postOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mCallback.onResult(FeedbackCollector.this);
-            }
-        });
-    }
-
-    @VisibleForTesting
-    boolean hasTimedOut() {
-        return SystemClock.elapsedRealtime() - mCollectionStartTime > TIMEOUT_MS;
-    }
-
-    /**
-     * Adds a key-value pair of data to be included in the feedback report. This data
-     * is user visible and should only contain single-line forms of data, not long Strings.
-     * @param key the user visible key.
-     * @param value the user visible value.
-     */
-    public void add(String key, String value) {
-        ThreadUtils.assertOnUiThread();
-        mData.put(key, value);
-    }
-
-    /**
-     * Sets the default description to invoke feedback with.
-     * @param description the user visible description.
-     */
-    public void setDescription(String description) {
-        ThreadUtils.assertOnUiThread();
+    public FeedbackCollector(Activity activity, Profile profile, @Nullable String url,
+            @Nullable String categoryTag, @Nullable String description, boolean takeScreenshot,
+            Callback<FeedbackCollector> callback) {
+        mCategoryTag = categoryTag;
         mDescription = description;
+        mCallback = callback;
+
+        // 1. Build all synchronous and asynchronous sources.
+        mSynchronousSources = buildSynchronousFeedbackSources(profile, url);
+        mAsynchronousSources = buildAsynchronousFeedbackSources(profile);
+
+        // 2. Build the screenshot task if necessary.
+        if (takeScreenshot) mScreenshotTask = buildScreenshotSource(activity);
+
+        // 3. Start all asynchronous sources and the screenshot task.
+        CollectionUtil.forEach(mAsynchronousSources, source -> source.start(this));
+        if (mScreenshotTask != null) mScreenshotTask.capture(this);
+
+        // 4. Kick off a task to timeout the async sources.
+        ThreadUtils.postOnUiThreadDelayed(this, TIMEOUT_MS);
+
+        // 5. Sanity check in case everything finished or we have no sources.
+        checkIfReady();
     }
 
-    /**
-     * @return the default description to invoke feedback with.
-     */
     @VisibleForTesting
+    protected List<FeedbackSource> buildSynchronousFeedbackSources(
+            Profile profile, @Nullable String url) {
+        List<FeedbackSource> sources = new ArrayList<>();
+
+        // This is the list of all synchronous sources of feedback.  Please add new synchronous
+        // entries here.
+        sources.add(new UrlFeedbackSource(url));
+        sources.add(new VariationsFeedbackSource(profile));
+        sources.add(new DataReductionProxyFeedbackSource(profile));
+        sources.add(new HistogramFeedbackSource(profile));
+        sources.add(new ChromeHomeFeedbackSource(profile));
+        sources.add(new LowEndDeviceFeedbackSource());
+        sources.add(new IMEFeedbackSource());
+
+        return sources;
+    }
+
+    @VisibleForTesting
+    protected List<AsyncFeedbackSource> buildAsynchronousFeedbackSources(Profile profile) {
+        List<AsyncFeedbackSource> sources = new ArrayList<>();
+
+        // This is the list of all asynchronous sources of feedback.  Please add new asynchronous
+        // entries here.
+        sources.add(new ConnectivityFeedbackSource(profile));
+        sources.add(new SystemInfoFeedbackSource());
+
+        return sources;
+    }
+
+    @VisibleForTesting
+    protected ScreenshotSource buildScreenshotSource(Activity activity) {
+        return new ScreenshotTask(activity);
+    }
+
+    /** @return The category tag for this feedback report. */
+    public String getCategoryTag() {
+        return mCategoryTag;
+    }
+
+    /** @return The description of this feedback report. */
     public String getDescription() {
-        ThreadUtils.assertOnUiThread();
         return mDescription;
     }
 
     /**
-     * Sets the CategoryTag to invoke feedback with.
-     * @param categoryTag the user visible description.
+     * Deprecated.  Please use {@link #getLogs()} instead for all potentially large feedback data.
+     * @return Returns the histogram data from {@link #getLogs()}.
      */
-    public void setCategoryTag(String categoryTag) {
-        ThreadUtils.assertOnUiThread();
-        mCategoryTag = categoryTag;
-    }
-
-    /**
-     * @return the CategoryTag for the feedback report.
-     */
-    public String getCategoryTag() {
-        ThreadUtils.assertOnUiThread();
-        return mCategoryTag;
-    }
-
-    /**
-     * Sets the screenshot to use for the feedback report.
-     * @param screenshot the user visible screenshot.
-     */
-    @VisibleForTesting
-    public void setScreenshot(Bitmap screenshot) {
-        ThreadUtils.assertOnUiThread();
-        mScreenshot = screenshot;
-    }
-
-    /**
-     * @return the screenshot to use for the feedback report.
-     */
-    @VisibleForTesting
-    public Bitmap getScreenshot() {
-        ThreadUtils.assertOnUiThread();
-        return mScreenshot;
-    }
-
-    /**
-     * @return All the registered histograms as JSON text.
-     */
+    @Deprecated
     public String getHistograms() {
-        return mHistograms;
+        return getLogs().get(HistogramFeedbackSource.HISTOGRAMS_KEY);
     }
 
     /**
-     * @return the collected data as a {@link Bundle}.
+     * After calling this, this collector will not notify the {@link Callback} specified in the
+     * constructor (if it hasn't already).
+     *
+     * @return A {@link Bundle} containing all of the feedback for this report.
+     * @see #getLogs() to get larger feedback data (logs).
      */
-    @VisibleForTesting
     public Bundle getBundle() {
         ThreadUtils.assertOnUiThread();
-        addUrl();
-        addConnectivityData();
-        addDataReductionProxyData();
-        addVariationsData();
-        addChromeHomeData();
-        return asBundle();
-    }
 
-    private void addUrl() {
-        if (!TextUtils.isEmpty(mUrl)) {
-            mData.put(URL_KEY, mUrl);
-        }
-    }
+        // At this point we will no longer update the caller if we get more info from sources.
+        mCallback = null;
 
-    private void addConnectivityData() {
-        if (mConnectivityTaskFinished) return;
-        Map<String, String> connectivityMap = mConnectivityTask.get().toMap();
-        mData.putAll(connectivityMap);
-    }
-
-    private void addDataReductionProxyData() {
-        if (mProfile.isOffTheRecord()) return;
-        Map<String, String> dataReductionProxyMap =
-                DataReductionProxySettings.getInstance().toFeedbackMap();
-        mData.putAll(dataReductionProxyMap);
-    }
-
-    private void addVariationsData() {
-        if (mProfile.isOffTheRecord()) return;
-        mData.putAll(VariationsAssociatedData.getFeedbackMap());
-    }
-
-    private void addChromeHomeData() {
-        if (mProfile.isOffTheRecord()) return;
-
-        boolean userPreferenceSet = false;
-        // Allow disk access for preferences while Chrome Home is in experimentation.
-        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
-            userPreferenceSet =
-                    ChromePreferenceManager.getInstance().isChromeHomeUserPreferenceSet();
-        }
-
-        String value;
-        if (FeatureUtilities.isChromeHomeEnabled()) {
-            value = userPreferenceSet ? CHROME_HOME_OPT_IN_VALUE : CHROME_HOME_ENABLED_VALUE;
-        } else {
-            value = userPreferenceSet ? CHROME_HOME_OPT_OUT_VALUE : CHROME_HOME_DISABLED_VALUE;
-        }
-        mData.put(CHROME_HOME_STATE_KEY, value);
-    }
-
-    private Bundle asBundle() {
         Bundle bundle = new Bundle();
-        for (Map.Entry<String, String> entry : mData.entrySet()) {
-            bundle.putString(entry.getKey(), entry.getValue());
-        }
+        doWorkOnAllFeedbackSources(source -> {
+            Map<String, String> feedback = source.getFeedback();
+            if (feedback == null) return;
+
+            CollectionUtil.forEach(feedback, e -> { bundle.putString(e.getKey(), e.getValue()); });
+        });
         return bundle;
+    }
+
+    /**
+     * After calling this, this collector will not notify the {@link Callback} specified in the
+     * constructor (if it hasn't already).
+     *
+     * @return A {@link Map} containing all of the logs for this report.
+     * @see #getBundle() to get smaller feedback data (key -> value).
+     */
+    public Map<String, String> getLogs() {
+        ThreadUtils.assertOnUiThread();
+
+        // At this point we will no longer update the caller if we get more info from sources.
+        mCallback = null;
+
+        Map<String, String> logs = new HashMap<>();
+        doWorkOnAllFeedbackSources(source -> {
+            Pair<String, String> log = source.getLogs();
+            if (log == null) return;
+
+            logs.put(log.first, log.second);
+        });
+        return logs;
+    }
+
+    /** @return A screenshot for this report (if one was able to be taken). */
+    public @Nullable Bitmap getScreenshot() {
+        return mScreenshotTask == null ? null : mScreenshotTask.getScreenshot();
+    }
+
+    /**
+     * Allows overriding the internal screenshot logic to always return {@code screenshot}.
+     * @param screenshot The screenshot {@link Bitmap} to use.
+     */
+    public void setScreenshot(@Nullable Bitmap screenshot) {
+        mScreenshotTask = new StaticScreenshotSource(screenshot);
+        mScreenshotTask.capture(this);
+    }
+
+    /* Called whenever an AsyncFeedbackCollector is done querying data or we have timed out. */
+    @Override
+    public void run() {
+        checkIfReady();
+    }
+
+    private void checkIfReady() {
+        if (mCallback == null) return;
+
+        // The screenshot capture overrides the timeout.
+        if (mScreenshotTask != null && !mScreenshotTask.isReady()) return;
+
+        if (mAsynchronousSources.size() > 0
+                && SystemClock.elapsedRealtime() - mStartTime < TIMEOUT_MS) {
+            for (AsyncFeedbackSource source : mAsynchronousSources) {
+                if (!source.isReady()) return;
+            }
+        }
+
+        final Callback<FeedbackCollector> callback = mCallback;
+        mCallback = null;
+
+        ThreadUtils.postOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                callback.onResult(FeedbackCollector.this);
+            }
+        });
+    }
+
+    private void doWorkOnAllFeedbackSources(Callback<FeedbackSource> worker) {
+        CollectionUtil.forEach(mSynchronousSources, worker);
+        CollectionUtil.forEach(mAsynchronousSources, worker);
     }
 }

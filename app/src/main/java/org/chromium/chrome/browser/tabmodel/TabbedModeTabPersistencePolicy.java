@@ -21,7 +21,10 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.base.library_loader.LibraryLoader;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.TabState;
+import org.chromium.chrome.browser.browseractions.BrowserActionsTabModelSelector;
+import org.chromium.chrome.browser.browseractions.BrowserActionsTabPersistencePolicy;
 import org.chromium.chrome.browser.compositor.layouts.content.TabContentManager;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -112,8 +115,17 @@ public class TabbedModeTabPersistencePolicy implements TabPersistencePolicy {
     }
 
     @Override
-    public String getStateToBeMergedFileName() {
-        return getStateFileName(mOtherSelectorIndex);
+    public List<String> getStateToBeMergedFileNames() {
+        List<String> mergedFileNames = new ArrayList<>();
+        if (FeatureUtilities.isTabModelMergingEnabled()) {
+            mergedFileNames.add(getStateFileName(mOtherSelectorIndex));
+        }
+        if (!BrowserActionsTabModelSelector.isInitialized()) {
+            BrowserActionsTabPersistencePolicy browserActionsPersistencePolicy =
+                    new BrowserActionsTabPersistencePolicy();
+            mergedFileNames.add(browserActionsPersistencePolicy.getStateFileName());
+        }
+        return mergedFileNames;
     }
 
     /**

@@ -19,7 +19,7 @@ import java.lang.annotation.RetentionPolicy;
     VideoCodec.UNKNOWN_VIDEO_CODEC, VideoCodec.CODEC_H264, VideoCodec.CODEC_VC1,
     VideoCodec.CODEC_MPEG2, VideoCodec.CODEC_MPEG4, VideoCodec.CODEC_THEORA, VideoCodec.CODEC_VP8,
     VideoCodec.CODEC_VP9, VideoCodec.CODEC_HEVC, VideoCodec.CODEC_DOLBY_VISION,
-    VideoCodec.VIDEO_CODEC_MAX
+    VideoCodec.CODEC_AV1, VideoCodec.VIDEO_CODEC_MAX
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface VideoCodec {
@@ -38,9 +38,10 @@ public @interface VideoCodec {
   int CODEC_VP9 = 7;
   int CODEC_HEVC = 8;
   int CODEC_DOLBY_VISION = 9;
+  int CODEC_AV1 = 10;
   /**
    * DO NOT ADD RANDOM VIDEO CODECS! The only acceptable time to add a new codec is if there is
    * production code that uses said codec in the same CL.
    */
-  int VIDEO_CODEC_MAX = 9;
+  int VIDEO_CODEC_MAX = 10;
 }

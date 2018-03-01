@@ -20,13 +20,6 @@ import org.chromium.content_public.browser.WebContents;
  */
 public class FaviconHelper {
 
-    // Please keep in sync with favicon_types.h's IconType.
-    public static final int INVALID_ICON = 0;
-    public static final int FAVICON = 1 << 0;
-    public static final int TOUCH_ICON = 1 << 1;
-    public static final int TOUCH_PRECOMPOSED_ICON = 1 << 2;
-    public static final int WEB_MANIFEST_ICON = 1 << 3;
-
     private long mNativeFaviconHelper;
 
     /**
@@ -86,7 +79,6 @@ public class FaviconHelper {
             FaviconImageCallback faviconImageCallback) {
         assert mNativeFaviconHelper != 0;
         return nativeGetLocalFaviconImageForURL(mNativeFaviconHelper, profile, pageUrl,
-                FAVICON | TOUCH_ICON | TOUCH_PRECOMPOSED_ICON | WEB_MANIFEST_ICON,
                 desiredSizeInPixel, faviconImageCallback);
     }
 
@@ -112,7 +104,7 @@ public class FaviconHelper {
      * @param webContents The object used to download the icon.
      * @param pageUrl The target Page URL to get the favicon for.
      * @param iconUrl The URL of the icon to retrieve.
-     * @param isLargeIcon Specifies whether the type is TOUCH_ICON (true) or FAVICON (false).
+     * @param isLargeIcon Specifies whether the type is kTouchIcon (true) or kFavicon (false).
      * @param callback Called when completed (download not needed, finished or failed).
      */
     public void ensureIconIsAvailable(Profile profile, WebContents webContents, String pageUrl,
@@ -134,7 +126,7 @@ public class FaviconHelper {
     private static native long nativeInit();
     private static native void nativeDestroy(long nativeFaviconHelper);
     private static native boolean nativeGetLocalFaviconImageForURL(long nativeFaviconHelper,
-            Profile profile, String pageUrl, int iconTypes, int desiredSizeInDip,
+            Profile profile, String pageUrl, int desiredSizeInDip,
             FaviconImageCallback faviconImageCallback);
     private static native Bitmap nativeGetSyncedFaviconImageForURL(long nativeFaviconHelper,
             Profile profile, String pageUrl);

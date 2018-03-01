@@ -12,7 +12,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import org.chromium.base.Log;
 import org.chromium.base.TraceEvent;
 import org.chromium.chrome.browser.externalauth.ExternalAuthUtils;
-import org.chromium.chrome.browser.externalauth.UserRecoverableErrorHandler;
 
 import java.util.concurrent.TimeUnit;
 
@@ -50,8 +49,7 @@ public class ChromeGoogleApiClientImpl implements ChromeGoogleApiClient {
     public boolean isGooglePlayServicesAvailable() {
         TraceEvent.begin("ChromeGoogleApiClientImpl:isGooglePlayServicesAvailable");
         try {
-            return ExternalAuthUtils.getInstance().canUseGooglePlayServices(
-                    mApplicationContext, new UserRecoverableErrorHandler.Silent());
+            return ExternalAuthUtils.canUseGooglePlayServices();
         } finally {
             TraceEvent.end("ChromeGoogleApiClientImpl:isGooglePlayServicesAvailable");
         }

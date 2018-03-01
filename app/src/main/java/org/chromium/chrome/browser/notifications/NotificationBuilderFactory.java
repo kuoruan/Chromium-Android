@@ -7,8 +7,8 @@ package org.chromium.chrome.browser.notifications;
 import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.os.Build;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.base.ContextUtils;
 import org.chromium.chrome.browser.notifications.channels.ChannelsInitializer;
 
@@ -34,7 +34,7 @@ public class NotificationBuilderFactory {
     public static ChromeNotificationBuilder createChromeNotificationBuilder(
             boolean preferCompat, String channelId) {
         Context context = ContextUtils.getApplicationContext();
-        if (BuildInfo.isAtLeastO()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             return createNotificationBuilderForO(channelId, context);
         }
         return preferCompat ? new NotificationCompatBuilder(context)

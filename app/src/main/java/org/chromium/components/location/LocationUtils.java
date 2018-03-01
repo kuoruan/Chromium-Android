@@ -18,7 +18,6 @@ import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.ui.base.WindowAndroid;
 
 /**
@@ -37,7 +36,6 @@ public class LocationUtils {
     /**
      * Returns the singleton instance of LocationSettings, creating it if needed.
      */
-    @SuppressFBWarnings("LI_LAZY_INIT_STATIC")
     public static LocationUtils getInstance() {
         ThreadUtils.assertOnUiThread();
         if (sInstance == null) {

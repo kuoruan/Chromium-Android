@@ -31,6 +31,7 @@ import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.firstrun.FirstRunUtils;
+import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.metrics.UmaSessionStats;
 import org.chromium.chrome.browser.omnibox.OmniboxPlaceholderFieldTrial;
 import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
@@ -283,10 +284,7 @@ public class FeatureUtilities {
         manager.setChromeHomeEnabled(isChromeHomeEnabled);
 
         PrefServiceBridge.getInstance().setChromeHomePersonalizedOmniboxSuggestionsEnabled(
-                !isChromeHomeEnabled()
-                        ? false
-                        : ChromeFeatureList.isEnabled(
-                                  ChromeFeatureList.CHROME_HOME_PERSONALIZED_OMNIBOX_SUGGESTIONS));
+                areChromeHomePersonalizedOmniboxSuggestionsEnabled());
 
         if (!ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_PROMO)
                 && manager.isChromeHomeUserPreferenceSet()) {
@@ -300,6 +298,14 @@ public class FeatureUtilities {
 
         UmaSessionStats.registerSyntheticFieldTrial(SYNTHETIC_CHROME_HOME_EXPERIMENT_NAME,
                 isChromeHomeEnabled() ? ENABLED_EXPERIMENT_GROUP : DISABLED_EXPERIMENT_GROUP);
+    }
+
+    private static boolean areChromeHomePersonalizedOmniboxSuggestionsEnabled() {
+        LocaleManager localeManager = LocaleManager.getInstance();
+        return isChromeHomeEnabled() && !localeManager.hasCompletedSearchEnginePromo()
+                && !localeManager.hasShownSearchEnginePromoThisSession()
+                && ChromeFeatureList.isEnabled(
+                           ChromeFeatureList.CHROME_HOME_PERSONALIZED_OMNIBOX_SUGGESTIONS);
     }
 
     /**
@@ -409,14 +415,6 @@ public class FeatureUtilities {
         }
 
         return false;
-    }
-
-    /**
-     * @return Whether or not showing the Doodle in the Chrome Home NTP is enabled.
-     */
-    public static boolean isChromeHomeDoodleEnabled() {
-        return isChromeHomeEnabled()
-                && ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_DOODLE);
     }
 
     private static native void nativeSetCustomTabVisible(boolean visible);

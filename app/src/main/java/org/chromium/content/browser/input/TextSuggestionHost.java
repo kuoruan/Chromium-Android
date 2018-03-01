@@ -7,7 +7,8 @@ package org.chromium.content.browser.input;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.content.browser.ContentViewCore;
+import org.chromium.content.browser.ContentViewCoreImpl;
+import org.chromium.content.browser.webcontents.WebContentsImpl;
 import org.chromium.content_public.browser.WebContents;
 
 /**
@@ -18,14 +19,18 @@ import org.chromium.content_public.browser.WebContents;
 @JNINamespace("content")
 public class TextSuggestionHost {
     private long mNativeTextSuggestionHost;
-    private final ContentViewCore mContentViewCore;
+    private final ContentViewCoreImpl mContentViewCore;
 
     private SpellCheckPopupWindow mSpellCheckPopupWindow;
     private TextSuggestionsPopupWindow mTextSuggestionsPopupWindow;
 
-    public TextSuggestionHost(ContentViewCore contentViewCore) {
+    public TextSuggestionHost(ContentViewCoreImpl contentViewCore) {
         mContentViewCore = contentViewCore;
         mNativeTextSuggestionHost = nativeInit(contentViewCore.getWebContents());
+    }
+
+    private static float getContentOffsetYPix(WebContents webContents) {
+        return ((WebContentsImpl) webContents).getRenderCoordinates().getContentOffsetYPix();
     }
 
     @CalledByNative
@@ -43,8 +48,8 @@ public class TextSuggestionHost {
                 mContentViewCore.getContainerView(), mContentViewCore);
 
         mSpellCheckPopupWindow.show(caretXPx,
-                caretYPx + mContentViewCore.getRenderCoordinates().getContentOffsetYPix(),
-                markedText, suggestions);
+                caretYPx + getContentOffsetYPix(mContentViewCore.getWebContents()), markedText,
+                suggestions);
     }
 
     @CalledByNative
@@ -62,8 +67,8 @@ public class TextSuggestionHost {
                 this, mContentViewCore.getContainerView(), mContentViewCore);
 
         mTextSuggestionsPopupWindow.show(caretXPx,
-                caretYPx + mContentViewCore.getRenderCoordinates().getContentOffsetYPix(),
-                markedText, suggestions);
+                caretYPx + getContentOffsetYPix(mContentViewCore.getWebContents()), markedText,
+                suggestions);
     }
 
     /**

@@ -12,45 +12,43 @@ import android.os.Message;
 import android.os.MessageQueue.IdleHandler;
 
 import org.chromium.base.annotations.CalledByNative;
+import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.annotations.MainDex;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 @MainDex
+@JNINamespace("base")
 class SystemMessageHandler extends Handler {
-
     private static final String TAG = "cr.SysMessageHandler";
 
     private static final int SCHEDULED_WORK = 1;
     private static final int DELAYED_SCHEDULED_WORK = 2;
 
-    // Native class pointer set by the constructor of the SharedClient native class.
-    private long mMessagePumpDelegateNative;
-    private long mMessagePumpNative;
-    private long mDelayedScheduledTimeTicks;
+    private long mNativeMessagePumpForUI;
+    private boolean mScheduledDelayedWork;
 
     private final IdleHandler mIdleHandler = new IdleHandler() {
         @Override
         public boolean queueIdle() {
-            nativeDoIdleWork(mMessagePumpDelegateNative, mMessagePumpNative);
+            if (mNativeMessagePumpForUI == 0) return false;
+            nativeDoIdleWork(mNativeMessagePumpForUI);
             return true;
         }
     };
 
-    protected SystemMessageHandler(long messagePumpDelegateNative, long messagePumpNative) {
-        mMessagePumpDelegateNative = messagePumpDelegateNative;
-        mMessagePumpNative = messagePumpNative;
+    protected SystemMessageHandler(long nativeMessagePumpForUI) {
+        mNativeMessagePumpForUI = nativeMessagePumpForUI;
         Looper.myQueue().addIdleHandler(mIdleHandler);
     }
 
     @Override
     public void handleMessage(Message msg) {
-        if (msg.what == DELAYED_SCHEDULED_WORK) {
-            mDelayedScheduledTimeTicks = 0;
-        }
-        nativeDoRunLoopOnce(
-                mMessagePumpDelegateNative, mMessagePumpNative, mDelayedScheduledTimeTicks);
+        if (mNativeMessagePumpForUI == 0) return;
+        boolean delayed = msg.what == DELAYED_SCHEDULED_WORK;
+        if (delayed) mScheduledDelayedWork = false;
+        nativeDoRunLoopOnce(mNativeMessagePumpForUI, delayed);
     }
 
     @SuppressWarnings("unused")
@@ -61,20 +59,20 @@ class SystemMessageHandler extends Handler {
 
     @SuppressWarnings("unused")
     @CalledByNative
-    private void scheduleDelayedWork(long delayedTimeTicks, long millis) {
-        if (mDelayedScheduledTimeTicks != 0) {
-            removeMessages(DELAYED_SCHEDULED_WORK);
-        }
-        mDelayedScheduledTimeTicks = delayedTimeTicks;
+    private void scheduleDelayedWork(long millis) {
+        if (mScheduledDelayedWork) removeMessages(DELAYED_SCHEDULED_WORK);
+        mScheduledDelayedWork = true;
         sendMessageDelayed(obtainAsyncMessage(DELAYED_SCHEDULED_WORK), millis);
     }
 
     @SuppressWarnings("unused")
     @CalledByNative
-    private void removeAllPendingMessages() {
-        removeMessages(SCHEDULED_WORK);
-        removeMessages(DELAYED_SCHEDULED_WORK);
-        Looper.myQueue().removeIdleHandler(mIdleHandler);
+    private void shutdown() {
+        // No need to perform a slow removeMessages call, we should have executed all of the
+        // outstanding tasks already, and if there happen to be any left, we'll ignore them.
+        // The idleHandler will also remove itself next time the queue goes idle, so no need to
+        // remove it here.
+        mNativeMessagePumpForUI = 0;
     }
 
     private Message obtainAsyncMessage(int what) {
@@ -131,11 +129,8 @@ class SystemMessageHandler extends Handler {
 
             LegacyMessageWrapperImpl() {
                 try {
-                    Class<?> messageClass = Class.forName("android.os.Message");
                     mMessageMethodSetAsynchronous =
-                            messageClass.getMethod("setAsynchronous", new Class[] {boolean.class});
-                } catch (ClassNotFoundException e) {
-                    Log.e(TAG, "Failed to find android.os.Message class", e);
+                            Message.class.getMethod("setAsynchronous", new Class[] {boolean.class});
                 } catch (NoSuchMethodException e) {
                     Log.e(TAG, "Failed to load Message.setAsynchronous method", e);
                 } catch (RuntimeException e) {
@@ -168,12 +163,10 @@ class SystemMessageHandler extends Handler {
     }
 
     @CalledByNative
-    private static SystemMessageHandler create(
-            long messagePumpDelegateNative, long messagePumpNative) {
-        return new SystemMessageHandler(messagePumpDelegateNative, messagePumpNative);
+    private static SystemMessageHandler create(long nativeMessagePumpForUI) {
+        return new SystemMessageHandler(nativeMessagePumpForUI);
     }
 
-    private native void nativeDoRunLoopOnce(
-            long messagePumpDelegateNative, long messagePumpNative, long delayedScheduledTimeTicks);
-    private native void nativeDoIdleWork(long messagePumpDelegateNative, long messagePumpNative);
+    private native void nativeDoRunLoopOnce(long nativeMessagePumpForUI, boolean delayed);
+    private native void nativeDoIdleWork(long nativeMessagePumpForUI);
 }

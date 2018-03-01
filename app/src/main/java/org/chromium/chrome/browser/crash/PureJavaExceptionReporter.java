@@ -4,6 +4,9 @@
 
 package org.chromium.chrome.browser.crash;
 
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningAppProcessInfo;
+import android.content.Context;
 import android.util.Log;
 
 import org.chromium.base.BuildInfo;
@@ -17,6 +20,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.UUID;
 
 /**
@@ -27,7 +32,7 @@ import java.util.UUID;
 @MainDex
 public class PureJavaExceptionReporter {
     // report fields, please keep the name sync with MIME blocks in breakpad_linux.cc
-    public static final String CHANNEL = "Channel";
+    public static final String CHANNEL = "channel";
     public static final String VERSION = "ver";
     public static final String PRODUCT = "prod";
     public static final String ANDROID_BUILD_ID = "android_build_id";
@@ -55,11 +60,37 @@ public class PureJavaExceptionReporter {
     private final String mBoundary = "------------" + UUID.randomUUID() + RN;
 
     /**
-     * Report and upload the device info and stack trace as if it was a crash.
+     * Report and upload the device info and stack trace as if it was a crash. Runs synchronously
+     * and results in I/O on the main thread.
      *
      * @param javaException The exception to report.
      */
-    public void createAndUploadReport(Throwable javaException) {
+    public static void reportJavaException(Throwable javaException) {
+        PureJavaExceptionReporter reporter = new PureJavaExceptionReporter();
+        reporter.createAndUploadReport(javaException);
+    }
+
+    /**
+     * Detect if the current process is isolated.
+     *
+     * @return whether the process is isolated, or null if cannot determine.
+     */
+    public static Boolean detectIsIsolatedProcess() {
+        try {
+            Method isIsolatedMethod = android.os.Process.class.getMethod("isIsolated");
+            Object retVal = isIsolatedMethod.invoke(null);
+            if (retVal == null || !(retVal instanceof Boolean)) {
+                return null;
+            }
+            return (Boolean) retVal;
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
+                | NoSuchMethodException | SecurityException e) {
+            return null;
+        }
+    }
+
+    @VisibleForTesting
+    void createAndUploadReport(Throwable javaException) {
         // It is OK to do IO in main thread when we know there is a crash happens.
         try (StrictModeContext unused = StrictModeContext.allowDiskWrites()) {
             createReport(javaException);
@@ -69,7 +100,7 @@ public class PureJavaExceptionReporter {
     }
 
     @VisibleForTesting
-    public File getMinidumpFile() {
+    File getMinidumpFile() {
         return mMinidumpFile;
     }
 
@@ -99,9 +130,14 @@ public class PureJavaExceptionReporter {
             mMinidumpFileStream = null;
             return;
         }
+        String processName = detectCurrentProcessName();
+        if (processName == null || !processName.contains(":")) {
+            processName = "browser";
+        }
+
         String[] allInfo = BuildInfo.getAll();
         addPairedString(PRODUCT, "Chrome_Android");
-        addPairedString(PROCESS_TYPE, "browser");
+        addPairedString(PROCESS_TYPE, processName);
         addPairedString(DEVICE, allInfo[BuildInfo.DEVICE_INDEX]);
         addPairedString(VERSION, ChromeVersionInfo.getProductVersion());
         addPairedString(CHANNEL, getChannel());
@@ -144,6 +180,24 @@ public class PureJavaExceptionReporter {
             return "stable";
         }
         return "";
+    }
+
+    private static String detectCurrentProcessName() {
+        try {
+            int pid = android.os.Process.myPid();
+
+            ActivityManager manager =
+                    (ActivityManager) ContextUtils.getApplicationContext().getSystemService(
+                            Context.ACTIVITY_SERVICE);
+            for (RunningAppProcessInfo processInfo : manager.getRunningAppProcesses()) {
+                if (processInfo.pid == pid) {
+                    return processInfo.processName;
+                }
+            }
+            return null;
+        } catch (SecurityException e) {
+            return null;
+        }
     }
 
     @VisibleForTesting

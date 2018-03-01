@@ -14,7 +14,6 @@ import android.view.ViewGroup;
 import android.view.animation.Interpolator;
 
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.browser.compositor.LayerTitleCache;
 import org.chromium.chrome.browser.compositor.animation.CompositorAnimationHandler;
 import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animatable;
@@ -917,7 +916,6 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
     /**
      * @return The {@link LayoutTab}s to be drawn.
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public LayoutTab[] getLayoutTabsToRender() {
         return mLayoutTabs;
     }

@@ -11,7 +11,6 @@
 
 package org.chromium.media.mojom;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
@@ -44,6 +43,8 @@ class PlatformVerification_Internal {
 
 
     private static final int CHALLENGE_PLATFORM_ORDINAL = 0;
+
+    private static final int GET_STORAGE_ID_ORDINAL = 1;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements PlatformVerification.Proxy {
@@ -78,6 +79,28 @@ ChallengePlatformResponse callback) {
         }
 
 
+        @Override
+        public void getStorageId(
+int version, 
+GetStorageIdResponse callback) {
+
+            PlatformVerificationGetStorageIdParams _message = new PlatformVerificationGetStorageIdParams();
+
+            _message.version = version;
+
+
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    GET_STORAGE_ID_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new PlatformVerificationGetStorageIdResponseParamsForwardToCallback(callback));
+
+        }
+
+
     }
 
     static final class Stub extends org.chromium.mojo.bindings.Interface.Stub<PlatformVerification> {
@@ -100,6 +123,8 @@ ChallengePlatformResponse callback) {
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 PlatformVerification_Internal.MANAGER, messageWithHeader);
+            
+            
             
             
             
@@ -140,6 +165,21 @@ ChallengePlatformResponse callback) {
                                 PlatformVerificationChallengePlatformParams.deserialize(messageWithHeader.getPayload());
             
                         getImpl().challengePlatform(data.serviceId, data.challenge, new PlatformVerificationChallengePlatformResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
+            
+            
+            
+            
+            
+            
+            
+                    case GET_STORAGE_ID_ORDINAL: {
+            
+                        PlatformVerificationGetStorageIdParams data =
+                                PlatformVerificationGetStorageIdParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().getStorageId(data.version, new PlatformVerificationGetStorageIdResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
             
@@ -438,6 +478,263 @@ ChallengePlatformResponse callback) {
                             mCore,
                             new org.chromium.mojo.bindings.MessageHeader(
                                     CHALLENGE_PLATFORM_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
+        }
+    }
+
+
+
+    
+    static final class PlatformVerificationGetStorageIdParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int version;
+    
+        private PlatformVerificationGetStorageIdParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public PlatformVerificationGetStorageIdParams() {
+            this(0);
+        }
+    
+        public static PlatformVerificationGetStorageIdParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static PlatformVerificationGetStorageIdParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static PlatformVerificationGetStorageIdParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            PlatformVerificationGetStorageIdParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new PlatformVerificationGetStorageIdParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.version = decoder0.readInt(8);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.version, 8);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            PlatformVerificationGetStorageIdParams other = (PlatformVerificationGetStorageIdParams) object;
+            if (this.version!= other.version)
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.version);
+            return result;
+        }
+    }
+
+
+
+    
+    static final class PlatformVerificationGetStorageIdResponseParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int version;
+        public byte[] storageId;
+    
+        private PlatformVerificationGetStorageIdResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public PlatformVerificationGetStorageIdResponseParams() {
+            this(0);
+        }
+    
+        public static PlatformVerificationGetStorageIdResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static PlatformVerificationGetStorageIdResponseParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static PlatformVerificationGetStorageIdResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            PlatformVerificationGetStorageIdResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new PlatformVerificationGetStorageIdResponseParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.version = decoder0.readInt(8);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.storageId = decoder0.readBytes(16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.version, 8);
+            
+            encoder0.encode(this.storageId, 16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            PlatformVerificationGetStorageIdResponseParams other = (PlatformVerificationGetStorageIdResponseParams) object;
+            if (this.version!= other.version)
+                return false;
+            if (!java.util.Arrays.equals(this.storageId, other.storageId))
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.version);
+            result = prime * result + java.util.Arrays.hashCode(this.storageId);
+            return result;
+        }
+    }
+
+    static class PlatformVerificationGetStorageIdResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final PlatformVerification.GetStorageIdResponse mCallback;
+
+        PlatformVerificationGetStorageIdResponseParamsForwardToCallback(PlatformVerification.GetStorageIdResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(GET_STORAGE_ID_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                PlatformVerificationGetStorageIdResponseParams response = PlatformVerificationGetStorageIdResponseParams.deserialize(messageWithHeader.getPayload());
+
+                mCallback.call(response.version, response.storageId);
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class PlatformVerificationGetStorageIdResponseParamsProxyToResponder implements PlatformVerification.GetStorageIdResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        PlatformVerificationGetStorageIdResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call(Integer version, byte[] storageId) {
+            PlatformVerificationGetStorageIdResponseParams _response = new PlatformVerificationGetStorageIdResponseParams();
+
+            _response.version = version;
+
+            _response.storageId = storageId;
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    GET_STORAGE_ID_ORDINAL,
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
                                     mRequestId));
             mMessageReceiver.accept(_message);

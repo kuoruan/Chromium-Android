@@ -24,7 +24,6 @@ import android.view.View;
 import org.chromium.base.ActivityState;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ApplicationStatus;
-import org.chromium.base.BuildInfo;
 import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
 import org.chromium.ui.UiUtils;
@@ -181,7 +180,7 @@ public class ActivityWindowAndroid
         String permissionQueriedKey = permission;
         // Prior to O, permissions were granted at the group level.  Post O, each permission is
         // granted individually.
-        if (!BuildInfo.isAtLeastO()) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             try {
                 // Runtime permissions are controlled at the group level.  So when determining
                 // whether we have requested a particular permission before, we should check whether
@@ -250,6 +249,8 @@ public class ActivityWindowAndroid
         keyboardVisibilityPossiblyChanged(UiUtils.isKeyboardShowing(getActivity().get(), v));
     }
 
+    protected void logUMAOnRequestPermissionDenied(String permission) {}
+
     private int generateNextRequestCode() {
         int requestCode = REQUEST_CODE_PREFIX + mNextRequestCode;
         mNextRequestCode = (mNextRequestCode + 1) % REQUEST_CODE_RANGE_SIZE;
@@ -291,6 +292,7 @@ public class ActivityWindowAndroid
             SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
             if (!prefs.getBoolean(permissionQueriedKey, false)) return true;
 
+            logUMAOnRequestPermissionDenied(permission);
             return false;
         }
 

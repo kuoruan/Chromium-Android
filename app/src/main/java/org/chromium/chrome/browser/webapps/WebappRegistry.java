@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.text.TextUtils;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
@@ -17,9 +18,11 @@ import org.chromium.chrome.browser.browsing_data.UrlFilter;
 import org.chromium.chrome.browser.browsing_data.UrlFilterBridge;
 import org.chromium.webapk.lib.common.WebApkConstants;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -166,6 +169,24 @@ public class WebappRegistry {
             }
         }
         return bestMatch;
+    }
+
+    /**
+     * Returns the list of WebAPK IDs with pending updates. Filters out WebAPKs which have been
+     * uninstalled.
+     * */
+    public List<String> findWebApksWithPendingUpdate() {
+        ArrayList<String> webApkIdsWithPendingUpdate = new ArrayList<String>();
+        PackageManager packageManager = ContextUtils.getApplicationContext().getPackageManager();
+        for (HashMap.Entry<String, WebappDataStorage> entry : mStorages.entrySet()) {
+            WebappDataStorage storage = entry.getValue();
+            if (!TextUtils.isEmpty(storage.getPendingUpdateRequestPath())
+                    && InstallerDelegate.isInstalled(
+                               packageManager, storage.getWebApkPackageName())) {
+                webApkIdsWithPendingUpdate.add(entry.getKey());
+            }
+        }
+        return webApkIdsWithPendingUpdate;
     }
 
     /**

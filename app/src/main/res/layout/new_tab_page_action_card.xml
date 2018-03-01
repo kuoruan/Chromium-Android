@@ -19,7 +19,7 @@
         android:id="@+id/action_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
+        android:layout_gravity="center_vertical|start"
         android:text="@string/more" />
 
     <org.chromium.chrome.browser.ntp.cards.ProgressIndicatorView

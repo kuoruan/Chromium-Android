@@ -14,6 +14,7 @@ import android.support.v4.content.FileProvider;
 
 import org.chromium.chrome.browser.UrlConstants;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
 
@@ -46,7 +47,7 @@ public class ChromeFileProvider extends FileProvider {
      * @param context Activity context that is used to access package manager.
      */
     public static Uri generateUriAndBlockAccess(final Context context) {
-        String authority = context.getPackageName() + AUTHORITY_SUFFIX;
+        String authority = getAuthority(context);
         String fileName = BLOCKED_FILE_PREFIX + String.valueOf(System.nanoTime());
         Uri blockingUri = new Uri.Builder()
                                   .scheme(UrlConstants.CONTENT_SCHEME)
@@ -61,6 +62,16 @@ public class ChromeFileProvider extends FileProvider {
             sLock.notify();
         }
         return blockingUri;
+    }
+
+    /**
+     * Returns an unique uri to identify the file to be shared.
+     *
+     * @param context Activity context that is used to access package manager.
+     * @param file File for which the Uri is generated.
+     */
+    public static Uri generateUri(final Context context, File file) {
+        return getUriForFile(context, getAuthority(context), file);
     }
 
     /**
@@ -170,6 +181,14 @@ public class ChromeFileProvider extends FileProvider {
             if (doesMatchCurrentBlockingUri(uri)) return sFileUri;
         }
         return null;
+    }
+
+    /**
+     * Gets the authority string for content URI generation.
+     * @param context Activity context that is used to access package manager.
+     */
+    private static String getAuthority(Context context) {
+        return context.getPackageName() + AUTHORITY_SUFFIX;
     }
 
     private static boolean doesMatchCurrentBlockingUri(Uri uri) {

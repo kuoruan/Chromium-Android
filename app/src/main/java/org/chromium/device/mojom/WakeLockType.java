@@ -11,7 +11,6 @@
 
 package org.chromium.device.mojom;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 public final class WakeLockType {
@@ -21,6 +20,8 @@ public final class WakeLockType {
 
     public static final int PREVENT_DISPLAY_SLEEP = (int) (1L);
 
+    public static final int PREVENT_DISPLAY_SLEEP_ALLOW_DIMMING = (int) (2L);
+
 
     private static final boolean IS_EXTENSIBLE = false;
 
@@ -28,6 +29,7 @@ public final class WakeLockType {
         switch (value) {
             case 0:
             case 1:
+            case 2:
                 return true;
         }
         return false;

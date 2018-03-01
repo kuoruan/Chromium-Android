@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.widget.textbubble;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.StringRes;
 import android.view.Gravity;
@@ -129,7 +130,7 @@ public class TextBubble implements OnTouchListener {
     private final int mAccessibilityStringId;
 
     /**
-     * Constructs a {@link TextBubble} instance.
+     * Constructs a {@link TextBubble} instance using the default arrow drawable background.
      * @param context  Context to draw resources from.
      * @param rootView The {@link View} to use for size calculations and for display.
      * @param stringId The id of the string resource for the text that should be shown.
@@ -137,12 +138,28 @@ public class TextBubble implements OnTouchListener {
      */
     public TextBubble(Context context, View rootView, @StringRes int stringId,
             @StringRes int accessibilityStringId) {
+        this(context, rootView, stringId, accessibilityStringId, true);
+    }
+
+    /**
+     * Constructs a {@link TextBubble} instance.
+     * @param context  Context to draw resources from.
+     * @param rootView The {@link View} to use for size calculations and for display.
+     * @param stringId The id of the string resource for the text that should be shown.
+     * @param accessibilityStringId The id of the string resource of the accessibility text.
+     * @param showArrow Whether the bubble should have an arrow.
+     */
+    public TextBubble(Context context, View rootView, @StringRes int stringId,
+            @StringRes int accessibilityStringId, boolean showArrow) {
         mContext = context;
         mRootView = rootView.getRootView();
         mStringId = stringId;
         mAccessibilityStringId = accessibilityStringId;
         mPopupWindow = new PopupWindow(mContext);
+
         mDrawable = new ArrowBubbleDrawable(context);
+        mDrawable.setShowArrow(showArrow);
+
         mHandler = new Handler();
 
         mPopupWindow.setWidth(ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -171,17 +188,7 @@ public class TextBubble implements OnTouchListener {
         createContentView();
         updateBubbleLayout();
         mPopupWindow.showAtLocation(mRootView, Gravity.TOP | Gravity.START, mX, mY);
-
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (!mPopupWindow.isShowing() || mPopupWindow.getContentView() == null) return;
-
-                mPopupWindow.getContentView().announceForAccessibility(
-                        mContext.getString(mAccessibilityStringId));
-            }
-        });
-
+        announceForAccessibility();
         sBubbles.add(this);
     }
 
@@ -191,6 +198,13 @@ public class TextBubble implements OnTouchListener {
      */
     public void dismiss() {
         mPopupWindow.dismiss();
+    }
+
+    /**
+     * @return Whether the bubble is currently showing.
+     */
+    public boolean isShowing() {
+        return mPopupWindow.isShowing();
     }
 
     /**
@@ -348,14 +362,19 @@ public class TextBubble implements OnTouchListener {
         // In landscape mode, root view includes the decorations in some devices. So we guard the
         // window dimensions against |mCachedWindowRect.right| instead.
         mX = MathUtils.clamp(mX, mMarginPx, mCachedWindowRect.right - mWidth - mMarginPx);
-        int arrowXOffset = mAnchorRect.centerX() - mX;
 
-        // Force the anchor to be in a reasonable spot w.r.t. the bubble (not over the corners).
-        int minArrowOffset = mDrawable.getArrowLeftSpacing();
-        int maxArrowOffset = mWidth - mDrawable.getArrowRightSpacing();
-        arrowXOffset = MathUtils.clamp(arrowXOffset, minArrowOffset, maxArrowOffset);
+        int arrowXOffset = 0;
+        if (mDrawable.isShowingArrow()) {
+            arrowXOffset = mAnchorRect.centerX() - mX;
 
-        // TODO(dtrainor): Figure out how to move the arrow and bubble to make things look better.
+            // Force the anchor to be in a reasonable spot w.r.t. the bubble (not over the corners).
+            int minArrowOffset = mDrawable.getArrowLeftSpacing();
+            int maxArrowOffset = mWidth - mDrawable.getArrowRightSpacing();
+            arrowXOffset = MathUtils.clamp(arrowXOffset, minArrowOffset, maxArrowOffset);
+        }
+
+        // TODO(dtrainor): Figure out how to move the arrow and bubble to make things look
+        // better.
 
         mDrawable.setPositionProperties(arrowXOffset, positionBelow);
 
@@ -387,6 +406,29 @@ public class TextBubble implements OnTouchListener {
         // is shown. Explicitly set the LayoutParams to avoid crashing. See crbug.com/713759.
         view.setLayoutParams(
                 new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+    }
+
+    /**
+     * Announce an accessibility event about the bubble text.
+     */
+    private void announceForAccessibility() {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (!mPopupWindow.isShowing() || mPopupWindow.getContentView() == null) return;
+
+                View view = null;
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
+                    view = mPopupWindow.getContentView();
+                } else {
+                    // For Android J and K, send the accessibility event from root view.
+                    // See https://crbug.com/773387.
+                    view = mRootView;
+                }
+                if (view == null) return;
+                view.announceForAccessibility(mContext.getString(mAccessibilityStringId));
+            }
+        });
     }
 
     // OnTouchListener implementation.

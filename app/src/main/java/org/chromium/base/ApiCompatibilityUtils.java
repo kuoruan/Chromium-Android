@@ -434,7 +434,7 @@ public class ApiCompatibilityUtils {
         // removing or shrinking the SurfaceFlinger overlay required for our views.
         // This benefits battery usage on L and M.  However, this no longer provides a battery
         // benefit as of N and starts to cause flicker bugs on O, so don't bother on O and up.
-        if (!BuildInfo.isAtLeastO() && statusBarColor == Color.BLACK
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O && statusBarColor == Color.BLACK
                 && window.getNavigationBarColor() == Color.BLACK) {
             window.clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         } else {

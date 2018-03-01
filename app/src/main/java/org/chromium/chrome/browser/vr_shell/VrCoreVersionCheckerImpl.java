@@ -25,12 +25,18 @@ public class VrCoreVersionCheckerImpl implements VrCoreVersionChecker {
     private static final String MIN_SDK_VERSION_PARAM_NAME = "min_sdk_version";
 
     public VrCoreInfo getVrCoreInfo() {
+        int minSdkVersion = Build.VERSION_CODES.KITKAT;
         // Supported Build version is determined by the webvr cardboard support feature.
         // Default is KITKAT unless specified via server side finch config.
-        if (Build.VERSION.SDK_INT < ChromeFeatureList.getFieldTrialParamByFeatureAsInt(
-                                            ChromeFeatureList.WEBVR_CARDBOARD_SUPPORT,
-                                            MIN_SDK_VERSION_PARAM_NAME,
-                                            Build.VERSION_CODES.KITKAT)) {
+        // Note that this may be called before native initialization, in which case the callsite
+        // must be aware that we're using the lowest supported build version and not the one that's
+        // set in the origin trial.
+        if (ChromeFeatureList.isInitialized()) {
+            minSdkVersion = ChromeFeatureList.getFieldTrialParamByFeatureAsInt(
+                    ChromeFeatureList.WEBVR_CARDBOARD_SUPPORT, MIN_SDK_VERSION_PARAM_NAME,
+                    Build.VERSION_CODES.KITKAT);
+        }
+        if (Build.VERSION.SDK_INT < minSdkVersion) {
             return new VrCoreInfo(null, VrCoreCompatibility.VR_NOT_SUPPORTED);
         }
         try {
@@ -56,6 +62,9 @@ public class VrCoreVersionCheckerImpl implements VrCoreVersionChecker {
                     != -1) {
                 return new VrCoreInfo(null, VrCoreCompatibility.VR_OUT_OF_DATE);
             }
+            return new VrCoreInfo(null, VrCoreCompatibility.VR_NOT_AVAILABLE);
+        } catch (SecurityException e) {
+            Log.e(TAG, "Cannot query VrCore version: " + e.toString());
             return new VrCoreInfo(null, VrCoreCompatibility.VR_NOT_AVAILABLE);
         }
     }

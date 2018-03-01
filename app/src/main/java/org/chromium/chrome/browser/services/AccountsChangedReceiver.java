@@ -13,7 +13,6 @@ import android.os.AsyncTask;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.library_loader.ProcessInitException;
 import org.chromium.chrome.browser.ChromeApplication;
 import org.chromium.chrome.browser.init.BrowserParts;
@@ -62,7 +61,6 @@ public class AccountsChangedReceiver extends BroadcastReceiver {
         }
     }
 
-    @SuppressFBWarnings("DM_EXIT")
     private static void startBrowserIfNeededAndValidateAccounts(final Context context) {
         BrowserParts parts = new EmptyBrowserParts() {
             @Override

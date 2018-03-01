@@ -22,7 +22,6 @@ import android.view.MenuItem;
 import android.view.Surface;
 import android.view.View;
 import android.view.View.MeasureSpec;
-import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.view.ViewGroup;
 import android.view.ViewStub;
@@ -159,12 +158,9 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
      *                              of the menu.  Can be 0 if no such view is required.  The footer
      *                              is always visible and overlays other app menu items if
      *                              necessary.
-     * @param headerResourceId      The resource id for a view to add as the first item in menu
-     *                              list.  Can be 0 if no such view is required.
-     *                              See {@link ListView#addHeaderView(View)}.
-     * @param headerOnClickListener The {@link OnClickListener} to notify when the header view is
-     *                              clicked.  May be null if nothing should happen when the header
-     *                              is clicked.
+     * @param headerView            The {@link View} to add as the first item in menu list.  Can be
+     *                              null if no such view is required. See
+     *                              {@link ListView#addHeaderView(View)}.
      * @param highlightedItemId     The resource id of the menu item that should be highlighted.
      *                              Can be {@code null} if no item should be highlighted.  Note that
      *                              {@code 0} is dedicated to custom menu items and can be declared
@@ -172,8 +168,7 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
      */
     void show(Context context, final View anchorView, boolean isByPermanentButton,
             int screenRotation, Rect visibleDisplayFrame, int screenHeight,
-            @IdRes int footerResourceId, int headerResourceId,
-            OnClickListener headerOnClickListener, Integer highlightedItemId) {
+            @IdRes int footerResourceId, View headerView, Integer highlightedItemId) {
         mPopup = new PopupWindow(context);
         mPopup.setFocusable(true);
         if (!isByPermanentButton) mPopup.setClippingEnabled(false);
@@ -264,8 +259,7 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
 
         int footerHeight =
                 inflateFooter(footerResourceId, contentView, menuWidth, highlightedItemId);
-        int headerHeight =
-                inflateHeader(headerResourceId, headerOnClickListener, context, menuWidth);
+        int headerHeight = addHeaderView(headerView, menuWidth);
 
         // Set the adapter after the header is added to avoid crashes on JellyBean.
         // See crbug.com/761726.
@@ -577,24 +571,8 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
         return mFooterView.getMeasuredHeight();
     }
 
-    private int inflateHeader(int headerResourceId, OnClickListener headerOnClickListener,
-            Context context, int menuWidth) {
-        if (headerResourceId == 0) return 0;
-
-        View headerView = LayoutInflater.from(context).inflate(headerResourceId, null);
-
-        headerView.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // If an OnClickListener for the header isn't provided, do nothing. Setting a no-op
-                // OnClickListener on headerView ensures that a touch on the header view doesn't
-                // go to the first menu item.
-                if (headerOnClickListener == null) return;
-
-                headerOnClickListener.onClick(v);
-                dismiss();
-            }
-        });
+    private int addHeaderView(View headerView, int menuWidth) {
+        if (headerView == null) return 0;
 
         int widthMeasureSpec = MeasureSpec.makeMeasureSpec(menuWidth, MeasureSpec.EXACTLY);
         int heightMeasureSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);

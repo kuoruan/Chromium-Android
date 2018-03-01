@@ -106,6 +106,31 @@ public class CompositorAnimator extends Animator {
         return animator;
     }
 
+    /**
+     * A utility for creating a basic animator.
+     * @param handler The {@link CompositorAnimationHandler} responsible for running the animation.
+     * @param target The object to modify.
+     * @param property The projecty of the object to modify.
+     * @param startValue The starting animation value.
+     * @param endValue The end animation value.
+     * @param durationMs The duration of the animation in ms.
+     * @return A {@link CompositorAnimator} for the property.
+     */
+    public static <T> CompositorAnimator ofFloatProperty(CompositorAnimationHandler handler,
+            final T target, final FloatProperty<T> property, float startValue, float endValue,
+            long durationMs) {
+        CompositorAnimator animator = new CompositorAnimator(handler);
+        animator.setValues(startValue, endValue);
+        animator.setDuration(durationMs);
+        animator.addUpdateListener(new AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(CompositorAnimator animator) {
+                property.setValue(target, animator.getAnimatedValue());
+            }
+        });
+        return animator;
+    }
+
     /** An interface for listening for frames of an animation. */
     public interface AnimatorUpdateListener {
         /**

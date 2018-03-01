@@ -40,7 +40,7 @@
         android:background="@drawable/tile_view_highlight" />
 
     <!-- The offline badge. -->
-    <org.chromium.chrome.browser.widget.TintedImageView
+    <ImageView
         android:id="@+id/offline_badge"
         android:layout_width="@dimen/tile_view_offline_badge_size_modern"
         android:layout_height="@dimen/tile_view_offline_badge_size_modern"
@@ -49,8 +49,7 @@
         android:layout_marginEnd="@dimen/tile_view_offline_badge_margin_end_modern"
         android:visibility="gone"
         android:contentDescription="@string/accessibility_ntp_offline_badge"
-        chrome:chrometint="@color/suggestions_offline_badge_tint"
-        android:src="@drawable/offline_pin_round" />
+        chrome:srcCompat="@drawable/ic_offline_pin_blue_white" />
 
     <!-- The title. -->
     <TextView

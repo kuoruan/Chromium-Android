@@ -11,7 +11,6 @@
 
 package org.chromium.media.mojom;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
@@ -31,7 +30,7 @@ org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client, org.chromium.
 
 
     void initialize(
-VideoDecoderConfig config, boolean lowDelay, 
+VideoDecoderConfig config, boolean lowDelay, int cdmId, 
 InitializeResponse callback);
 
     interface InitializeResponse extends org.chromium.mojo.bindings.Callbacks.Callback3<Boolean, Boolean, Integer> { }

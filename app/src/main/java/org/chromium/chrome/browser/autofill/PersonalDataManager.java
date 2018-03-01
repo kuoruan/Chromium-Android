@@ -10,7 +10,6 @@ import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ResourceId;
 import org.chromium.chrome.browser.preferences.autofill.AutofillAndPaymentsPreferences;
@@ -541,7 +540,6 @@ public class PersonalDataManager {
     private static PersonalDataManager sManager;
 
     // Suppress FindBugs warning, since |sManager| is only used on the UI thread.
-    @SuppressFBWarnings("LI_LAZY_INIT_STATIC")
     public static PersonalDataManager getInstance() {
         ThreadUtils.assertOnUiThread();
         if (sManager == null) {
@@ -874,20 +872,19 @@ public class PersonalDataManager {
 
     /**
      * Normalizes the address of the profile associated with the {@code guid} if the rules
-     * associated with the {@code regionCode} are done loading. Otherwise sets up the callback to
+     * associated with the profile's region are done loading. Otherwise sets up the callback to
      * start normalizing the address when the rules are loaded. The normalized profile will be sent
      * to the {@code delegate}. If the profile is not normalized in the specified
      * {@code sRequestTimeoutSeconds}, the {@code delegate} will be notified.
      *
      * @param profile The profile to normalize.
-     * @param regionCode The region code indicating which rules to use for normalization.
      * @param delegate The object requesting the normalization.
      */
     public void normalizeAddress(
-            AutofillProfile profile, String regionCode, NormalizedAddressRequestDelegate delegate) {
+            AutofillProfile profile, NormalizedAddressRequestDelegate delegate) {
         ThreadUtils.assertOnUiThread();
         nativeStartAddressNormalization(
-                mPersonalDataManagerAndroid, profile, regionCode, sRequestTimeoutSeconds, delegate);
+                mPersonalDataManagerAndroid, profile, sRequestTimeoutSeconds, delegate);
     }
 
     /**
@@ -1021,8 +1018,7 @@ public class PersonalDataManager {
     private native void nativeLoadRulesForSubKeys(
             long nativePersonalDataManagerAndroid, String regionCode);
     private native void nativeStartAddressNormalization(long nativePersonalDataManagerAndroid,
-            AutofillProfile profile, String regionCode, int timeoutSeconds,
-            NormalizedAddressRequestDelegate delegate);
+            AutofillProfile profile, int timeoutSeconds, NormalizedAddressRequestDelegate delegate);
     private native void nativeStartRegionSubKeysRequest(long nativePersonalDataManagerAndroid,
             String regionCode, int timeoutSeconds, GetSubKeysRequestDelegate delegate);
     private static native boolean nativeHasProfiles(long nativePersonalDataManagerAndroid);

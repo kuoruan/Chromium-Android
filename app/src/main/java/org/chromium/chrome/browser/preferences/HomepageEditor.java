@@ -33,7 +33,7 @@ public class HomepageEditor extends Fragment implements TextWatcher {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mHomepageManager = HomepageManager.getInstance(getActivity());
+        mHomepageManager = HomepageManager.getInstance();
         getActivity().setTitle(R.string.options_homepage_edit_title);
         View v = inflater.inflate(R.layout.homepage_editor, container, false);
 

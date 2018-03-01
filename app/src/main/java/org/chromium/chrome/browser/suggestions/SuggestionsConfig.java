@@ -44,18 +44,11 @@ public final class SuggestionsConfig {
     }
 
     /**
-     * @return Whether to use the Sites exploration UI to display the site suggestions.
-     */
-    public static boolean useSitesExplorationUi() {
-        return ChromeFeatureList.isEnabled(ChromeFeatureList.SITE_EXPLORATION_UI);
-    }
-
-    /**
      * @param resources The resources to fetch the color from.
      * @return The background color for the suggestions sheet content.
      */
     public static int getBackgroundColor(Resources resources) {
-        return FeatureUtilities.isChromeHomeEnabled()
+        return useModernLayout()
                 ? ApiCompatibilityUtils.getColor(resources, R.color.suggestions_modern_bg)
                 : ApiCompatibilityUtils.getColor(resources, R.color.ntp_bg);
     }
@@ -66,10 +59,9 @@ public final class SuggestionsConfig {
     @TileView.Style
     public static int getTileStyle(UiConfig uiConfig) {
         boolean small = uiConfig.getCurrentDisplayStyle().isSmall();
-        if (FeatureUtilities.isChromeHomeEnabled()) {
+        if (useModernLayout()) {
             return small ? TileView.Style.MODERN_CONDENSED : TileView.Style.MODERN;
         }
-        if (FeatureUtilities.isChromeHomeEnabled()) return TileView.Style.CLASSIC;
         if (useCondensedTileLayout(small)) return TileView.Style.CLASSIC_CONDENSED;
         return TileView.Style.CLASSIC;
     }
@@ -78,11 +70,16 @@ public final class SuggestionsConfig {
         if (isScreenSmall) {
             return ChromeFeatureList.getFieldTrialParamByFeatureAsBoolean(
                     ChromeFeatureList.NTP_CONDENSED_TILE_LAYOUT,
-                    PARAM_CONDENSED_TILE_LAYOUT_FOR_SMALL_SCREENS_ENABLED, false);
+                    PARAM_CONDENSED_TILE_LAYOUT_FOR_SMALL_SCREENS_ENABLED, true);
         }
 
         return ChromeFeatureList.getFieldTrialParamByFeatureAsBoolean(
                 ChromeFeatureList.NTP_CONDENSED_TILE_LAYOUT,
                 PARAM_CONDENSED_TILE_LAYOUT_FOR_LARGE_SCREENS_ENABLED, false);
+    }
+
+    public static boolean useModernLayout() {
+        return FeatureUtilities.isChromeHomeEnabled()
+                || ChromeFeatureList.isEnabled(ChromeFeatureList.NTP_MODERN_LAYOUT);
     }
 }

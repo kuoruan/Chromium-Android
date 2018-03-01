@@ -3,8 +3,10 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/OverflowMenuHeaderLayout" >
+<org.chromium.chrome.browser.widget.bottomsheet.ChromeHomePromoMenuHeader
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/OverflowMenuHeaderLayout"
+    android:id="@+id/chrome_home_promo_menu_header" >
 
     <TextView
         style="@style/OverflowMenuHeaderText"
@@ -12,4 +14,4 @@
 
     <include layout="@layout/chrome_home_menu_header_icon" />
 
-</LinearLayout>
+</org.chromium.chrome.browser.widget.bottomsheet.ChromeHomePromoMenuHeader>

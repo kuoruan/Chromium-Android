@@ -7,6 +7,8 @@ package org.chromium.chrome.browser.suggestions;
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import org.chromium.base.Callback;
 import org.chromium.base.DiscardableReferencePool;
@@ -243,7 +245,7 @@ public class ImageFetcher {
         ensureIconIsAvailable(
                 getSnippetDomain(snippetUri), // Store to the cache for the whole domain.
                 String.format(FAVICON_SERVICE_FORMAT, snippetUri.getHost(), sizePx),
-                /* useLargeIcon = */ false, new FaviconHelper.IconAvailabilityCallback() {
+                /* isLargeIcon = */ false, new FaviconHelper.IconAvailabilityCallback() {
                     @Override
                     public void onIconAvailabilityChecked(boolean newlyAvailable) {
                         if (!newlyAvailable) {
@@ -360,12 +362,17 @@ public class ImageFetcher {
         }
 
         @Override
-        public String getFilePath() {
+        public @Nullable String getFilePath() {
             return mSuggestion.getAssetDownloadFile().getAbsolutePath();
         }
 
         @Override
-        public void onThumbnailRetrieved(String filePath, Bitmap thumbnail) {
+        public @Nullable String getContentId() {
+            return mSuggestion.getAssetDownloadGuid();
+        }
+
+        @Override
+        public void onThumbnailRetrieved(@NonNull String contentId, @Nullable Bitmap thumbnail) {
             mThumbnailReceivedPromise.fulfill(thumbnail);
         }
 

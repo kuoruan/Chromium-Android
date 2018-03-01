@@ -4,6 +4,7 @@
 
 package org.chromium.base;
 
+import android.content.res.AssetManager;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
@@ -26,7 +27,7 @@ public class ResourceExtractor {
     private static final String TAG = "base";
     private static final String ICU_DATA_FILENAME = "icudtl.dat";
     private static final String V8_NATIVES_DATA_FILENAME = "natives_blob.bin";
-    private static final String V8_SNAPSHOT_DATA_FILENAME = "snapshot_blob_32.bin";
+    private static final String V8_SNAPSHOT_DATA_FILENAME = "snapshot_blob.bin";
     private static final String FALLBACK_LOCALE = "en-US";
 
     private class ExtractTask extends AsyncTask<Void, Void, Void> {
@@ -79,13 +80,13 @@ public class ResourceExtractor {
             // A missing file means Chrome has updated. Delete stale files first.
             deleteFiles(existingFileNames);
 
+            AssetManager assetManager = ContextUtils.getApplicationAssets();
             byte[] buffer = new byte[BUFFER_SIZE];
             for (String assetName : mAssetsToExtract) {
                 File output = new File(outputDir, assetName + extractSuffix);
                 TraceEvent.begin("ExtractResource");
                 try {
-                    InputStream inputStream =
-                            ContextUtils.getApplicationContext().getAssets().open(assetName);
+                    InputStream inputStream = assetManager.open(assetName);
                     extractResourceHelper(inputStream, output, buffer);
                 } catch (IOException e) {
                     // The app would just crash later if files are missing.
@@ -152,6 +153,8 @@ public class ResourceExtractor {
             assert Arrays.asList(BuildConfig.COMPRESSED_LOCALES).contains(FALLBACK_LOCALE);
             activeLocalePakFiles.add(FALLBACK_LOCALE + ".pak");
         }
+        Log.i(TAG, "Android Locale: %s requires .pak files: %s", defaultLocale,
+                activeLocalePakFiles);
         return activeLocalePakFiles.toArray(new String[activeLocalePakFiles.size()]);
     }
 

@@ -299,12 +299,6 @@ public class FirstRunActivity extends FirstRunActivityBase implements FirstRunPa
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putBoolean(EXTRA_COMING_FROM_CHROME_ICON, mLaunchedFromChromeIcon);
-    }
-
-    @Override
     public void onRestoreInstanceState(Bundle state) {
         // Don't automatically restore state here. This is a counterpart to the override
         // of transformSavedInstanceStateForOnCreate() as the two need to be consistent.
@@ -454,13 +448,10 @@ public class FirstRunActivity extends FirstRunActivityBase implements FirstRunPa
 
     /** Initialize local state from launch intent and from saved instance state. */
     private void initializeStateFromLaunchData() {
-        Bundle readFrom = new Bundle();
-        if (getSavedInstanceState() != null) {
-            readFrom = getSavedInstanceState();
-        } else if (getIntent() != null) {
-            readFrom = getIntent().getExtras();
+        if (getIntent() != null) {
+            mLaunchedFromChromeIcon =
+                    getIntent().getBooleanExtra(EXTRA_COMING_FROM_CHROME_ICON, false);
         }
-        mLaunchedFromChromeIcon = readFrom.getBoolean(EXTRA_COMING_FROM_CHROME_ICON);
     }
 
     /**

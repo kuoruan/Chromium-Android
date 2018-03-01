@@ -123,7 +123,6 @@ public class DefaultSearchEnginePromoDialog extends PromoDialog {
 
     /** See {@link #sObserver}. */
     @VisibleForTesting
-    @Nullable
     public static void setObserverForTests(DefaultSearchEnginePromoDialogObserver observer) {
         sObserver = observer;
     }

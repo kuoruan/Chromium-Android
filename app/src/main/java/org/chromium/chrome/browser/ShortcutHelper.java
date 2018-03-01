@@ -9,10 +9,11 @@ import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.pm.ShortcutInfo;
+import android.content.pm.ShortcutManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -24,12 +25,12 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Base64;
 
 import org.chromium.base.ApiCompatibilityUtils;
-import org.chromium.base.BuildInfo;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
@@ -49,9 +50,6 @@ import org.chromium.ui.widget.Toast;
 import org.chromium.webapk.lib.client.WebApkValidator;
 
 import java.io.ByteArrayOutputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,6 +75,8 @@ public class ShortcutHelper {
     public static final String EXTRA_THEME_COLOR = "org.chromium.chrome.browser.theme_color";
     public static final String EXTRA_BACKGROUND_COLOR =
             "org.chromium.chrome.browser.background_color";
+    public static final String EXTRA_SPLASH_SCREEN_URL =
+            "org.chromium.chrome.browser.webapp_splash_screen_url";
     public static final String EXTRA_IS_ICON_GENERATED =
             "org.chromium.chrome.browser.is_icon_generated";
     public static final String EXTRA_VERSION =
@@ -113,8 +113,7 @@ public class ShortcutHelper {
     // True when it is already checked if ShortcutManager.requestPinShortcut() is supported.
     private static boolean sCheckedIfRequestPinShortcutSupported;
 
-    // TODO(martiw): Use 'ShortcutInfo' instead of 'Object' below when compileSdk is bumped to O.
-    private static Object sShortcutManager;
+    private static ShortcutManager sShortcutManager;
 
     /** Helper for generating home screen shortcuts. */
     public static class Delegate {
@@ -162,7 +161,7 @@ public class ShortcutHelper {
             final String userTitle, final String name, final String shortName, final String iconUrl,
             final Bitmap icon, @WebDisplayMode final int displayMode, final int orientation,
             final int source, final long themeColor, final long backgroundColor,
-            final long callbackPointer) {
+            final String splashScreenUrl, final long callbackPointer) {
         new AsyncTask<Void, Void, Intent>() {
             @Override
             protected Intent doInBackground(Void... args0) {
@@ -178,7 +177,7 @@ public class ShortcutHelper {
                 Intent shortcutIntent = createWebappShortcutIntent(id,
                         sDelegate.getFullscreenAction(), url, nonEmptyScopeUrl, name, shortName,
                         encodedIcon, WEBAPP_SHORTCUT_VERSION, displayMode, orientation, themeColor,
-                        backgroundColor, iconUrl.isEmpty());
+                        backgroundColor, splashScreenUrl, iconUrl.isEmpty());
                 shortcutIntent.putExtra(EXTRA_MAC, getEncodedMac(context, url));
                 shortcutIntent.putExtra(EXTRA_SOURCE, source);
                 return shortcutIntent;
@@ -220,52 +219,19 @@ public class ShortcutHelper {
         }
     }
 
-    // TODO(martiw): Use Build.VERSION_CODES.O instead of hardcoded number when it is available.
-    @TargetApi(26)
+    @TargetApi(Build.VERSION_CODES.O)
     private static void addShortcutWithShortcutManager(
             String title, Bitmap icon, Intent shortcutIntent) {
         String id = shortcutIntent.getStringExtra(ShortcutHelper.EXTRA_ID);
         Context context = ContextUtils.getApplicationContext();
 
-        // The code in the try-block uses reflection in order to compile as it calls APIs newer than
-        // our compileSdkVersion of Android. The equivalent code without reflection looks like this:
-        //  ShortcutInfo shortcutInfo = new ShortcutInfo.Builder(context, id)
-        //                                  .setShortLabel(title)
-        //                                  .setLongLabel(title)
-        //                                  .setIcon(Icon.createWithBitmap(icon))
-        //                                  .setIntent(shortcutIntent)
-        //                                  .build();
-        //  sShortcutManager.requestPinShortcut(shortcutInfo, null);
-        // TODO(martiw): Remove the following reflection once compileSdk is bumped to O.
-        try {
-            Class<?> builderClass = Class.forName("android.content.pm.ShortcutInfo$Builder");
-            Constructor<?> builderConstructor =
-                    builderClass.getDeclaredConstructor(Context.class, String.class);
-            Object shortcutBuilder = builderConstructor.newInstance(context, id);
-
-            Method setShortLabel = builderClass.getMethod("setShortLabel", CharSequence.class);
-            setShortLabel.invoke(shortcutBuilder, title);
-
-            Method setLongLabel = builderClass.getMethod("setLongLabel", CharSequence.class);
-            setLongLabel.invoke(shortcutBuilder, title);
-
-            Method setIcon = builderClass.getMethod("setIcon", Icon.class);
-            setIcon.invoke(shortcutBuilder, Icon.createWithBitmap(icon));
-
-            Method setIntent = builderClass.getMethod("setIntent", Intent.class);
-            setIntent.invoke(shortcutBuilder, shortcutIntent);
-
-            Method build = builderClass.getMethod("build");
-            Object shortcutInfo = build.invoke(shortcutBuilder);
-
-            Class<?> ShortcutInfoClass = Class.forName("android.content.pm.ShortcutInfo");
-            Method requestPinShortcut = sShortcutManager.getClass().getMethod(
-                    "requestPinShortcut", ShortcutInfoClass, IntentSender.class);
-            requestPinShortcut.invoke(sShortcutManager, shortcutInfo, null);
-        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException
-                | InvocationTargetException | IllegalAccessException e) {
-            Log.e(TAG, "Error adding shortcut with ShortcutManager:", e);
-        }
+        ShortcutInfo shortcutInfo = new ShortcutInfo.Builder(context, id)
+                                            .setShortLabel(title)
+                                            .setLongLabel(title)
+                                            .setIcon(Icon.createWithBitmap(icon))
+                                            .setIntent(shortcutIntent)
+                                            .build();
+        sShortcutManager.requestPinShortcut(shortcutInfo, null);
     }
 
     /**
@@ -350,6 +316,7 @@ public class ShortcutHelper {
      * @param orientation     Orientation of the web app.
      * @param themeColor      Theme color of the web app.
      * @param backgroundColor Background color of the web app.
+     * @param splashScreenUrl Url of the HTML splash screen.
      * @param isIconGenerated True if the icon is generated by Chromium.
      * @return Intent for onclick action of the shortcut.
      * This method must not be called on the UI thread.
@@ -357,7 +324,7 @@ public class ShortcutHelper {
     public static Intent createWebappShortcutIntent(String id, String action, String url,
             String scope, String name, String shortName, String encodedIcon, int version,
             @WebDisplayMode int displayMode, int orientation, long themeColor, long backgroundColor,
-            boolean isIconGenerated) {
+            String splashScreenUrl, boolean isIconGenerated) {
         // Create an intent as a launcher icon for a full-screen Activity.
         Intent shortcutIntent = new Intent();
         shortcutIntent.setPackage(ContextUtils.getApplicationContext().getPackageName())
@@ -373,6 +340,7 @@ public class ShortcutHelper {
                 .putExtra(EXTRA_ORIENTATION, orientation)
                 .putExtra(EXTRA_THEME_COLOR, themeColor)
                 .putExtra(EXTRA_BACKGROUND_COLOR, backgroundColor)
+                .putExtra(EXTRA_SPLASH_SCREEN_URL, splashScreenUrl)
                 .putExtra(EXTRA_IS_ICON_GENERATED, isIconGenerated);
         return shortcutIntent;
     }
@@ -386,7 +354,7 @@ public class ShortcutHelper {
      */
     public static Intent createWebappShortcutIntentForTesting(String id, String url) {
         return createWebappShortcutIntent(id, null, url, getScopeFromUrl(url), null, null, null,
-                WEBAPP_SHORTCUT_VERSION, WebDisplayMode.STANDALONE, 0, 0, 0, false);
+                WEBAPP_SHORTCUT_VERSION, WebDisplayMode.STANDALONE, 0, 0, 0, null, false);
     }
 
     /**
@@ -697,7 +665,7 @@ public class ShortcutHelper {
 
     private static boolean isRequestPinShortcutSupported() {
         if (!sCheckedIfRequestPinShortcutSupported) {
-            if (BuildInfo.isAtLeastO()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 checkIfRequestPinShortcutSupported();
             }
             sCheckedIfRequestPinShortcutSupported = true;
@@ -705,28 +673,11 @@ public class ShortcutHelper {
         return sIsRequestPinShortcutSupported;
     }
 
-    // TODO(martiw): Use Build.VERSION_CODES.O instead of hardcoded number when it is available.
-    @TargetApi(26)
+    @TargetApi(Build.VERSION_CODES.O)
     private static void checkIfRequestPinShortcutSupported() {
-        // The code in the try-block uses reflection in order to compile as it calls APIs newer than
-        // our target version of Android. The equivalent code without reflection is as follows:
-        //  sShortcutManager =
-        //          ContextUtils.getApplicationContext().getSystemService(ShortcutManager.class);
-        //  sIsRequestPinShortcutSupported = sShortcutManager.isRequestPinShortcutSupported();
-        // TODO(martiw): Remove the following reflection once compileSdk is bumped to O.
-        try {
-            Class<?> ShortcutManagerClass = Class.forName("android.content.pm.ShortcutManager");
-            sShortcutManager =
-                    ContextUtils.getApplicationContext().getSystemService(ShortcutManagerClass);
-
-            Method isRequestPinShortcutSupported =
-                    ShortcutManagerClass.getMethod("isRequestPinShortcutSupported");
-            sIsRequestPinShortcutSupported =
-                    (boolean) isRequestPinShortcutSupported.invoke(sShortcutManager);
-        } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException
-                | IllegalAccessException e) {
-            Log.e(TAG, "Error checking if RequestPinShortcut is supported:", e);
-        }
+        sShortcutManager =
+                ContextUtils.getApplicationContext().getSystemService(ShortcutManager.class);
+        sIsRequestPinShortcutSupported = sShortcutManager.isRequestPinShortcutSupported();
     }
 
     private static int getSizeFromResourceInPx(Context context, int resource) {
@@ -777,7 +728,7 @@ public class ShortcutHelper {
                 if (webApkInfo != null) {
                     names.add(webApkInfo.name());
                     shortNames.add(webApkInfo.shortName());
-                    packageNames.add(webApkInfo.webApkPackageName());
+                    packageNames.add(webApkInfo.apkPackageName());
                     shellApkVersions.add(webApkInfo.shellApkVersion());
                     versionCodes.add(packageInfo.versionCode);
                     uris.add(webApkInfo.uri().toString());

@@ -86,11 +86,11 @@
                 android:id="@+id/bottom_nav_stub"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/bottom_nav_height"
-                android:layout_gravity="start|bottom"
+                android:layout_gravity="bottom"
                 android:inflatedId="@+id/bottom_nav"
                 android:layout="@layout/bottom_sheet_bottom_nav" />
 
-           <FrameLayout
+            <FrameLayout
                 android:id="@+id/bottom_sheet_snackbar_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

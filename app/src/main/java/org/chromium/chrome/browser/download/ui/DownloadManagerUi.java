@@ -36,6 +36,7 @@ import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarController;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.ThumbnailProvider;
 import org.chromium.chrome.browser.widget.ThumbnailProviderImpl;
+import org.chromium.chrome.browser.widget.selection.SelectableBottomSheetContent.SelectableBottomSheetContentManager;
 import org.chromium.chrome.browser.widget.selection.SelectableListLayout;
 import org.chromium.chrome.browser.widget.selection.SelectableListToolbar;
 import org.chromium.chrome.browser.widget.selection.SelectableListToolbar.SearchDelegate;
@@ -53,8 +54,9 @@ import java.util.Set;
  * Displays and manages the UI for the download manager.
  */
 
-public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegate {
-
+public class DownloadManagerUi
+        implements OnMenuItemClickListener, SearchDelegate,
+                   SelectableBottomSheetContentManager<DownloadHistoryItemWrapper> {
     /**
      * Interface to observe the changes in the download manager ui. This should be implemented by
      * the ui components that is shown, in order to let them get proper notifications.
@@ -250,8 +252,9 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
     }
 
     /**
-     * Called when the activity/native page is destroyed.
+     * Called when the bottom sheet content/activity/native page is destroyed.
      */
+    @Override
     public void onDestroyed() {
         for (DownloadUiObserver observer : mObservers) {
             observer.onManagerDestroyed();
@@ -278,39 +281,24 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
         return false;
     }
 
-    /**
-     * @return The view that shows the main download UI.
-     */
+    @Override
     public ViewGroup getView() {
         return mMainView;
     }
 
-    /**
-     * @return The {@link RecyclerView} that contains the list of download items.
-     */
+    @Override
     public RecyclerView getRecyclerView() {
         return mRecyclerView;
     }
 
-    /**
-     * @return The {@link TextView} shown when there are no download items to be shown.
-     */
+    @Override
     public TextView getEmptyView() {
         return mEmptyView;
     }
 
-    /**
-     * See {@link SelectableListLayout#detachToolbarView()}.
-     */
+    @Override
     public SelectableListToolbar<DownloadHistoryItemWrapper> detachToolbarView() {
         return mSelectableListLayout.detachToolbarView();
-    }
-
-    /**
-     * @return The vertical scroll offset of the content view.
-     */
-    public int getVerticalScrollOffset() {
-        return mRecyclerView.computeVerticalScrollOffset();
     }
 
     /**
@@ -526,12 +514,5 @@ public class DownloadManagerUi implements OnMenuItemClickListener, SearchDelegat
     @VisibleForTesting
     public static void setProviderForTests(BackendProvider provider) {
         sProviderForTests = provider;
-    }
-
-    /**
-     * Called to scroll to the top of the downloads list.
-     */
-    public void scrollToTop() {
-        mRecyclerView.smoothScrollToPosition(0);
     }
 }

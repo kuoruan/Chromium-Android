@@ -65,12 +65,16 @@ public class BottomToolbarPhone extends ToolbarPhone {
             // content description. If the content description is changed while the view is
             // focused, the new content description is read immediately.
             if (hasFocus() && !urlHasFocus()) mBottomSheet.requestFocus();
+
+            mLocationBar.updateLoadingState(true);
         }
 
         @Override
         public void onSheetClosed(@StateChangeReason int reason) {
             onPrimaryColorChanged(true);
             updateMenuButtonClickableState();
+
+            mLocationBar.updateLoadingState(true);
         }
 
         @Override
@@ -87,6 +91,8 @@ public class BottomToolbarPhone extends ToolbarPhone {
             // movement of the sheet should unfocus it.
             if (isMovingDown && getLocationBar().isUrlBarFocused()) {
                 getLocationBar().setUrlBarFocus(false);
+                // Revert the URL to match the current page.
+                getLocationBar().setUrlToPageUrl();
             }
             boolean buttonsClickable = heightFraction == 0.f;
             mToggleTabStackButton.setClickable(buttonsClickable);

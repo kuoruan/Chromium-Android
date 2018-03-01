@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.bookmarks;
 import android.app.Activity;
 import android.view.View;
 
+import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.BasicNativePage;
 import org.chromium.chrome.browser.NativePageHost;
@@ -60,8 +61,13 @@ public class BookmarkPage extends BasicNativePage {
 
     @Override
     public void destroy() {
-        mManager.destroy();
+        mManager.onDestroyed();
         mManager = null;
         super.destroy();
+    }
+
+    @VisibleForTesting
+    public BookmarkManager getManagerForTesting() {
+        return mManager;
     }
 }

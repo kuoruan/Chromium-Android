@@ -43,7 +43,6 @@ sync_components() {
 		${components}/payments/content/android/java/src/* \
 		${components}/policy/android/java/src/* \
 		${components}/safe_browsing/android/java/src/* \
-		${components}/safe_json/android/java/src/* \
 		${components}/signin/core/browser/android/java/src/* \
 		${components}/spellcheck/browser/android/java/src/* \
 		${components}/sync/android/java/src/* \
@@ -115,6 +114,7 @@ sync_chrome() {
 	cp -r ${BASE_DIR}/base/android/java/src/* \
 		${BASE_DIR}/build/android/buildhooks/java/* \
 		${BASE_DIR}/chrome/android/java/src/* \
+        ${BASE_DIR}/chrome/android/third_party/compositor_animator/java/src/* \
 		${BASE_DIR}/chrome/android/third_party/widget_bottomsheet_base/java/src/* \
 		${BASE_DIR}/chrome/android/webapk/libs/client/src/* \
 		${BASE_DIR}/chrome/android/webapk/libs/common/src/* \
@@ -134,6 +134,7 @@ sync_chrome() {
 		${BASE_DIR}/mojo/public/java/system/src/* \
 		${BASE_DIR}/net/android/java/src/* \
 		${BASE_DIR}/printing/android/java/src/* \
+        ${BASE_DIR}/services/data_decoder/public/cpp/android/java/src/* \
 		${BASE_DIR}/services/device/android/java/src/* \
 		${BASE_DIR}/services/device/battery/android/java/src/* \
 		${BASE_DIR}/services/device/generic_sensor/android/java/src/* \
@@ -171,7 +172,6 @@ sync_chrome() {
 		"$res_dir"
 
 	cp -r \
-		${RELEASE_DIR}/gen/chrome/android/chrome_public_apk__native_libraries_java/java_cpp_template/* \
 		${RELEASE_DIR}/gen/base/base_build_config_gen/java_cpp_template/* \
 		${RELEASE_DIR}/gen/net/android/net_errors_java/java_cpp_template/* \
 		"$src_dir"

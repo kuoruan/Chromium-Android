@@ -139,17 +139,19 @@ public class SmartSelectionProvider {
             int start = mOriginalStart;
             int end = mOriginalEnd;
 
+            TextSelection textSelection = null;
+
             if (mRequestType == SUGGEST_AND_CLASSIFY) {
-                TextSelection suggested = mTextClassifier.suggestSelection(
+                textSelection = mTextClassifier.suggestSelection(
                         mText, start, end, makeLocaleList(mLocales));
-                start = Math.max(0, suggested.getSelectionStartIndex());
-                end = Math.min(mText.length(), suggested.getSelectionEndIndex());
+                start = Math.max(0, textSelection.getSelectionStartIndex());
+                end = Math.min(mText.length(), textSelection.getSelectionEndIndex());
                 if (isCancelled()) return new SelectionClient.Result();
             }
 
             TextClassification tc =
                     mTextClassifier.classifyText(mText, start, end, makeLocaleList(mLocales));
-            return makeResult(start, end, tc);
+            return makeResult(start, end, tc, textSelection);
         }
 
         @SuppressLint("NewApi")
@@ -158,7 +160,8 @@ public class SmartSelectionProvider {
             return new LocaleList(locales);
         }
 
-        private SelectionClient.Result makeResult(int start, int end, TextClassification tc) {
+        private SelectionClient.Result makeResult(
+                int start, int end, TextClassification tc, TextSelection ts) {
             SelectionClient.Result result = new SelectionClient.Result();
 
             result.startAdjust = start - mOriginalStart;
@@ -167,6 +170,8 @@ public class SmartSelectionProvider {
             result.icon = tc.getIcon();
             result.intent = tc.getIntent();
             result.onClickListener = tc.getOnClickListener();
+            result.textSelection = ts;
+            result.textClassification = tc;
 
             return result;
         }

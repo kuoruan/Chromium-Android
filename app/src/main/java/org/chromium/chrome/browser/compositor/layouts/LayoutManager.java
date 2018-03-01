@@ -17,7 +17,6 @@ import android.view.ViewGroup;
 import org.chromium.base.ObserverList;
 import org.chromium.base.TraceEvent;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.compositor.LayerTitleCache;
 import org.chromium.chrome.browser.compositor.animation.CompositorAnimationHandler;
@@ -528,7 +527,6 @@ public class LayoutManager
         }
     }
 
-    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
     @Override
     public void doneHiding() {
         // TODO: If next layout is default layout clear caches (should this be a sub layout thing?)

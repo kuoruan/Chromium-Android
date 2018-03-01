@@ -13,7 +13,6 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.library_loader.LoaderErrors;
 import org.chromium.chrome.R;
 
@@ -33,7 +32,6 @@ public class InvalidStartupDialog extends DialogFragment {
      * @param activity The activity showing the dialog.
      * @param errorCode The error code that triggered the failure.
      */
-    @SuppressFBWarnings("DM_EXIT")
     public static void show(Activity activity, int errorCode) {
         int msg;
         switch (errorCode) {
@@ -76,7 +74,6 @@ public class InvalidStartupDialog extends DialogFragment {
         return builder.create();
     }
 
-    @SuppressFBWarnings("DM_EXIT")
     @Override
     public void onDismiss(DialogInterface dialog) {
         super.onDismiss(dialog);

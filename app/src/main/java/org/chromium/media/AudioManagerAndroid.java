@@ -33,7 +33,6 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.base.annotations.SuppressFBWarnings;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -420,7 +419,6 @@ class AudioManagerAndroid {
      * Required permissions: android.Manifest.permission.MODIFY_AUDIO_SETTINGS
      * and android.Manifest.permission.RECORD_AUDIO.
      */
-    @SuppressFBWarnings("UC_USELESS_OBJECT")
     @CalledByNative
     private AudioDeviceName[] getAudioInputDeviceNames() {
         if (DEBUG) logd("getAudioInputDeviceNames");

@@ -509,6 +509,25 @@ public class TabWebContentsDelegateAndroid extends WebContentsDelegateAndroid {
     }
 
     @Override
+    public int getTopControlsHeight() {
+        return mTab.getTopControlsHeight();
+    }
+
+    @Override
+    public int getBottomControlsHeight() {
+        return mTab.getBottomControlsHeight();
+    }
+
+    @Override
+    public boolean controlsResizeView() {
+        return mTab.controlsResizeView();
+    }
+
+    private float getDipScale() {
+        return mTab.getWindowAndroid().getDisplay().getDipScale();
+    }
+
+    @Override
     public ContentVideoViewEmbedder getContentVideoViewEmbedder() {
         return new ActivityContentVideoViewEmbedder(mTab.getActivity()) {
             @Override

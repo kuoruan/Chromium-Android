@@ -79,7 +79,7 @@ public class ContextualSearchTabHelper
 
     @Override
     public void onPageLoadStarted(Tab tab, String url) {
-        updateHooksForNewContentViewCore(tab);
+        updateHooksForTab(tab);
         ContextualSearchManager manager = getContextualSearchManager(tab);
         if (manager != null) manager.onBasePageLoadStarted();
     }
@@ -100,12 +100,12 @@ public class ContextualSearchTabHelper
             };
             TemplateUrlService.getInstance().addObserver(mTemplateUrlObserver);
         }
-        updateHooksForNewContentViewCore(tab);
+        updateHooksForTab(tab);
     }
 
     @Override
     public void onWebContentsSwapped(Tab tab, boolean didStartLoad, boolean didFinishLoad) {
-        updateHooksForNewContentViewCore(tab);
+        updateHooksForTab(tab);
     }
 
     @Override
@@ -138,7 +138,7 @@ public class ContextualSearchTabHelper
     @Override
     public void onActivityAttachmentChanged(Tab tab, boolean isAttached) {
         if (isAttached) {
-            updateHooksForNewContentViewCore(tab);
+            updateHooksForTab(tab);
         } else {
             removeContextualSearchHooks(mContentViewCore);
             mContextualSearchManager = null;
@@ -171,7 +171,7 @@ public class ContextualSearchTabHelper
      * existing ContentViewCore, if necessary, and then adds hooks for the new ContentViewCore.
      * @param tab The current tab.
      */
-    private void updateHooksForNewContentViewCore(Tab tab) {
+    private void updateHooksForTab(Tab tab) {
         ContentViewCore currentContentViewCore = tab.getActiveContentViewCore();
         if (currentContentViewCore != mContentViewCore
                 || mContextualSearchManager != getContextualSearchManager(tab)) {
@@ -187,18 +187,15 @@ public class ContextualSearchTabHelper
     /**
      * Updates the Contextual Search hooks, adding or removing them depending on whether it is
      * currently active. If the current tab's {@link ContentViewCore} may have changed, call {@link
-     * #updateHooksForNewContentViewCore(Tab)} instead.
+     * #updateHooksForTab(Tab)} instead.
      *
      * @param cvc The content view core to attach the gesture state listener to.
      */
     private void updateContextualSearchHooks(ContentViewCore cvc) {
         if (cvc == null) return;
 
-        if (isContextualSearchActive(cvc)) {
-            addContextualSearchHooks(cvc);
-        } else {
-            removeContextualSearchHooks(cvc);
-        }
+        removeContextualSearchHooks(cvc);
+        if (isContextualSearchActive(cvc)) addContextualSearchHooks(cvc);
     }
 
     /**
@@ -232,7 +229,10 @@ public class ContextualSearchTabHelper
             mGestureStateListener = null;
 
             // If we needed to remove our listener, we also need to remove our selection client.
-            cvc.setSelectionClient(mSelectionClientManager.removeContextualSearchSelectionClient());
+            if (mSelectionClientManager != null) {
+                cvc.setSelectionClient(
+                        mSelectionClientManager.removeContextualSearchSelectionClient());
+            }
         }
     }
 

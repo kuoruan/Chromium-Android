@@ -20,6 +20,7 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.UrlConstants;
@@ -49,7 +50,6 @@ public class ExternalNavigationHandler {
 
     private static final String WTAI_URL_PREFIX = "wtai://wp/";
     private static final String WTAI_MC_URL_PREFIX = "wtai://wp/mc;";
-    private static final String SMS_SCHEME = "sms";
 
     private static final String PLAY_PACKAGE_PARAM = "id";
     private static final String PLAY_REFERRER_PARAM = "referrer";
@@ -300,6 +300,7 @@ public class ExternalNavigationHandler {
                     Uri.parse(WebView.SCHEME_TEL
                             + params.getUrl().substring(WTAI_MC_URL_PREFIX.length()))), false);
             if (DEBUG) Log.i(TAG, "OVERRIDE_WITH_EXTERNAL_INTENT wtai:// link handled");
+            RecordUserAction.record("Android.PhoneIntent");
             return OverrideUrlLoadingResult.OVERRIDE_WITH_EXTERNAL_INTENT;
         }
 
@@ -378,11 +379,14 @@ public class ExternalNavigationHandler {
             intent.removeExtra(EXTRA_BROWSER_FALLBACK_URL);
         }
 
-        if (intent.getPackage() == null) {
-            final Uri uri = intent.getData();
-            if (uri != null && SMS_SCHEME.equals(uri.getScheme())) {
-                intent.setPackage(getDefaultSmsPackageName(resolvingInfos));
-            }
+        final Uri uri = intent.getData();
+        if (intent.getPackage() == null && uri != null
+                && UrlConstants.SMS_SCHEME.equals(uri.getScheme())) {
+            intent.setPackage(getDefaultSmsPackageName(resolvingInfos));
+        } else if (uri != null && UrlConstants.TEL_SCHEME.equals(uri.getScheme())
+                || (Intent.ACTION_DIAL.equals(intent.getAction()))
+                || (Intent.ACTION_CALL.equals(intent.getAction()))) {
+            RecordUserAction.record("Android.PhoneIntent");
         }
 
         // Set the Browser application ID to us in case the user chooses Chrome
@@ -530,7 +534,7 @@ public class ExternalNavigationHandler {
             // To avoid bouncing indefinitely, don't override the navigation if we are currently
             // showing the WebApk |params.webApkPackageName()| that we will redirect to.
             if (targetWebApkPackageName != null
-                    && targetWebApkPackageName.equals(params.webApkPackageName())) {
+                    && targetWebApkPackageName.equals(params.nativeClientPackageName())) {
                 if (DEBUG) Log.i(TAG, "NO_OVERRIDE: Navigation in WebApk");
                 return OverrideUrlLoadingResult.NO_OVERRIDE;
             }

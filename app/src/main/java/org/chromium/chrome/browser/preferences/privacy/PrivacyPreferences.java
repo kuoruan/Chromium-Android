@@ -110,11 +110,6 @@ public class PrivacyPreferences extends PreferenceFragment
             preferenceScreen.removePreference(findPreference(PREF_PHYSICAL_WEB));
         }
 
-        if (ClearBrowsingDataTabsFragment.isFeatureEnabled()) {
-            findPreference(PREF_CLEAR_BROWSING_DATA)
-                    .setFragment(ClearBrowsingDataTabsFragment.class.getName());
-        }
-
         updateSummaries();
     }
 

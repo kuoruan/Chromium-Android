@@ -14,7 +14,7 @@ public final class SigninInvestigator {
      * Calls into native code to investigate potential ramifications of a
      * successful signin from the account corresponding to the given email.
      *
-     * @returns int value that corresponds to enum InvestigatedScenario.
+     * @return int value that corresponds to enum InvestigatedScenario.
      */
     public static int investigate(String currentEmail) {
         return nativeInvestigate(currentEmail);

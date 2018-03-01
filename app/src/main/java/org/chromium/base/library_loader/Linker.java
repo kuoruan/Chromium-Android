@@ -458,7 +458,9 @@ public abstract class Linker {
             }
             TestRunner testRunner = null;
             try {
-                testRunner = (TestRunner) Class.forName(mTestRunnerClassName).newInstance();
+                testRunner = (TestRunner) Class.forName(mTestRunnerClassName)
+                                     .getDeclaredConstructor()
+                                     .newInstance();
             } catch (Exception e) {
                 Log.wtf(TAG, "Could not instantiate test runner class by name", e);
                 assertForTesting(false);

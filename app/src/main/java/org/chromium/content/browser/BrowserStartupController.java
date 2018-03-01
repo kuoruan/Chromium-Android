@@ -4,6 +4,7 @@
 
 package org.chromium.content.browser;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.StrictMode;
 
@@ -102,9 +103,30 @@ public class BrowserStartupController {
 
     private int mLibraryProcessType;
 
+    private TracingControllerAndroid mTracingController;
+
     BrowserStartupController(int libraryProcessType) {
         mAsyncStartupCallbacks = new ArrayList<>();
         mLibraryProcessType = libraryProcessType;
+        ThreadUtils.postOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                addStartupCompletedObserver(new StartupCallback() {
+                    @Override
+                    public void onSuccess(boolean alreadyStarted) {
+                        assert mTracingController == null;
+                        Context context = ContextUtils.getApplicationContext();
+                        mTracingController = new TracingControllerAndroid(context);
+                        mTracingController.registerReceiver(context);
+                    }
+
+                    @Override
+                    public void onFailure() {
+                        // Startup failed.
+                    }
+                });
+            }
+        });
     }
 
     /**

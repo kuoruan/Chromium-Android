@@ -94,12 +94,10 @@ public class SystemAccountManagerDelegate implements AccountManagerDelegate {
             return;
         }
 
-        if (GoogleApiAvailability.getInstance().isUserResolvableError(resultCode)) {
-            throw new GmsAvailabilityException(
-                    String.format("Can't use Google Play Services: %s",
-                            GoogleApiAvailability.getInstance().getErrorString(resultCode)),
-                    resultCode);
-        }
+        throw new GmsAvailabilityException(
+                String.format("Can't use Google Play Services: %s",
+                        GoogleApiAvailability.getInstance().getErrorString(resultCode)),
+                resultCode);
     }
 
     @Override

@@ -28,8 +28,48 @@ public class WebsitePermissionsFetcher {
         void onWebsitePermissionsAvailable(Collection<Website> sites);
     }
 
+    /**
+     * A specialization of Pair to hold an (origin, embedder) tuple. This overrides
+     * android.util.Pair#hashCode, which simply XORs the hashCodes of the pair of values together.
+     * Having origin == embedder (a fix for a crash in crbug.com/636330) results in pathological
+     * performance and causes Site Settings/All Sites to lag significantly on opening. See
+     * crbug.com/732907.
+     */
+    public static class OriginAndEmbedder extends Pair<WebsiteAddress, WebsiteAddress> {
+        public OriginAndEmbedder(WebsiteAddress origin, WebsiteAddress embedder) {
+            super(origin, embedder);
+        }
+
+        public static OriginAndEmbedder create(WebsiteAddress origin, WebsiteAddress embedder) {
+            return new OriginAndEmbedder(origin, embedder);
+        }
+
+        private static boolean isEqual(Object o1, Object o2) {
+            // Returns true iff o1 == o2, handling nulls.
+            return (o1 == o2) || (o1 != null && o1.equals(o2));
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            // Prior to KitKat, android.util.Pair would crash with a NullPointerException in this
+            // method. This override specialises the post-Kitkat implementation to this class, and
+            // correctly handles nulls.
+            if (!(o instanceof OriginAndEmbedder)) return false;
+
+            OriginAndEmbedder p = (OriginAndEmbedder) o;
+            return isEqual(p.first, first) && isEqual(p.second, second);
+        }
+
+        @Override
+        public int hashCode() {
+            // This is the calculation used by Arrays#hashCode().
+            int result = 31 + (first == null ? 0 : first.hashCode());
+            return 31 * result + (second == null ? 0 : second.hashCode());
+        }
+    }
+
     // This map looks up Websites by their origin and embedder.
-    private final Map<Pair<WebsiteAddress, WebsiteAddress>, Website> mSites = new HashMap<>();
+    private final Map<OriginAndEmbedder, Website> mSites = new HashMap<>();
 
     // The callback to run when the permissions have been fetched.
     private final WebsitePermissionsCallback mCallback;
@@ -164,11 +204,7 @@ public class WebsitePermissionsFetcher {
     }
 
     private Website findOrCreateSite(WebsiteAddress origin, WebsiteAddress embedder) {
-        // In Jelly Bean a null value triggers a NullPointerException in Pair.hashCode(). Storing
-        // the origin twice works around it and won't conflict with other entries as this is how the
-        // native code indicates to this class that embedder == origin.  https://crbug.com/636330
-        Pair<WebsiteAddress, WebsiteAddress> key =
-                Pair.create(origin, embedder == null ? origin : embedder);
+        OriginAndEmbedder key = OriginAndEmbedder.create(origin, embedder);
         Website site = mSites.get(key);
         if (site == null) {
             site = new Website(origin, embedder);

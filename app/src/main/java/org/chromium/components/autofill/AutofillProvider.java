@@ -76,7 +76,7 @@ public abstract class AutofillProvider {
             FormData formData, int focus, float x, float y, float width, float height);
 
     /**
-     * Invoked when text field is changed.
+     * Invoked when text field's value is changed.
      *
      * @param index index of field in current form.
      * @param x the boundary of focus field.
@@ -87,6 +87,20 @@ public abstract class AutofillProvider {
      */
     @CalledByNative
     protected abstract void onTextFieldDidChange(
+            int index, float x, float y, float width, float height);
+
+    /**
+     * Invoked when text field is scrolled.
+     *
+     * @param index index of field in current form.
+     * @param x the boundary of focus field.
+     * @param y the boundary of focus field.
+     * @param width the boundary of focus field.
+     * @param height the boundary of focus field.
+     *
+     */
+    @CalledByNative
+    protected abstract void onTextFieldDidScroll(
             int index, float x, float y, float width, float height);
 
     /**

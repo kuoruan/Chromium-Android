@@ -14,9 +14,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.Browser;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.library_loader.LibraryProcessType;
@@ -185,7 +185,7 @@ public class ContentSuggestionsNotifier {
                         .setPriority(priority)
                         .setLargeIcon(image)
                         .setSmallIcon(R.drawable.ic_chrome);
-        if (!BuildInfo.isAtLeastO()) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             PendingIntent settingsIntent = PendingIntent.getActivity(context, 0,
                     PreferencesLauncher.createIntentForSettingsPage(
                             context, NotificationsPreferences.class.getName()),
@@ -452,7 +452,7 @@ public class ContentSuggestionsNotifier {
      */
     @CalledByNative
     private static boolean registerChannel(boolean enabled) {
-        if (!BuildInfo.isAtLeastO()) return false;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false;
         SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
         if (prefs.getBoolean(PREF_CHANNEL_CREATED, false)) return false;
 
@@ -478,7 +478,7 @@ public class ContentSuggestionsNotifier {
      */
     @CalledByNative
     private static void unregisterChannel() {
-        if (!BuildInfo.isAtLeastO()) return;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
         SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
         if (!prefs.getBoolean(PREF_CHANNEL_CREATED, false)) return;
 

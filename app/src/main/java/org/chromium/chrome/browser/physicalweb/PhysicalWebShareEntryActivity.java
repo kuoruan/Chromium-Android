@@ -38,6 +38,7 @@ public class PhysicalWebShareEntryActivity extends Activity {
                 .setMessage(R.string.physical_web_share_entry_message)
                 .setPositiveButton(R.string.continue_button,
                         new DialogInterface.OnClickListener() {
+                            @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 PhysicalWeb.setSharingOptedIn();
                                 PhysicalWebBroadcastService.startBroadcastService(url);
@@ -46,6 +47,7 @@ public class PhysicalWebShareEntryActivity extends Activity {
                         })
                 .setNegativeButton(R.string.cancel,
                         new DialogInterface.OnClickListener() {
+                            @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 finish();
                             }

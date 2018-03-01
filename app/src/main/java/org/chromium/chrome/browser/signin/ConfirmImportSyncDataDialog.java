@@ -13,7 +13,6 @@ import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -42,12 +41,12 @@ public class ConfirmImportSyncDataDialog extends DialogFragment
          * The user has completed the dialog using the positive button.
          * @param wipeData Whether the user requested that existing data should be wiped.
          */
-        public void onConfirm(boolean wipeData);
+        void onConfirm(boolean wipeData);
 
         /**
          * The user dismisses the dialog through any means other than the positive button.
          */
-        public void onCancel();
+        void onCancel();
     }
 
     /**
@@ -149,12 +148,8 @@ public class ConfirmImportSyncDataDialog extends DialogFragment
         // If the account is managed, disallow merging information.
         if (SigninManager.get(getActivity()).getManagementDomain() != null) {
             mKeepSeparateOption.setChecked(true);
-            mConfirmImportOption.setOnClickListener(new OnClickListener(){
-                @Override
-                public void onClick(View v) {
-                    ManagedPreferencesUtils.showManagedByAdministratorToast(getActivity());
-                }
-            });
+            mConfirmImportOption.setOnClickListener(
+                    view -> ManagedPreferencesUtils.showManagedByAdministratorToast(getActivity()));
         } else {
             if (importSyncType == ImportSyncType.SWITCHING_SYNC_ACCOUNTS) {
                 mKeepSeparateOption.setChecked(true);

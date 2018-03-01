@@ -41,6 +41,9 @@ public class NotificationConstants {
     static final String EXTRA_NOTIFICATION_REPLY = "notification_reply";
     static final String EXTRA_NOTIFICATION_ACTION = "notification_action";
 
+    static final String EXTRA_JOB_SCHEDULED_TIME_MS = "notification_job_scheduled_time_ms";
+    static final String EXTRA_JOB_STARTED_TIME_MS = "notification_job_started_time_ms";
+
     /**
      * Unique identifier for a single sync notification. Since the notification ID is reused,
      * old notifications will be overwritten.

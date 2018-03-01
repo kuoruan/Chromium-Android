@@ -11,7 +11,6 @@ import android.os.SystemClock;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.SuppressFBWarnings;
 
 import javax.annotation.Nullable;
 
@@ -64,7 +63,6 @@ class VisibleNetworksTracker {
      * Determines if the visible networks need to be refreshed and asynchronously updates them if
      * needed.
      */
-    @SuppressFBWarnings("LI_LAZY_INIT_UPDATE_STATIC")
     static void refreshVisibleNetworks(final Context context) {
         ThreadUtils.assertOnUiThread();
         if (isValidCachedVisibleNetworks() || sOngoingRefresh != null) {

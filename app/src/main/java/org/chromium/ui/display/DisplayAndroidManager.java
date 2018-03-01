@@ -19,7 +19,6 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.base.annotations.SuppressFBWarnings;
 
 /**
  * DisplayAndroidManager is a class that informs its observers Display changes.
@@ -193,7 +192,6 @@ public class DisplayAndroidManager {
     private DisplayListenerBackend mBackend;
     private int mNextVirtualDisplayId = VIRTUAL_DISPLAY_ID_BEGIN;
 
-    @SuppressFBWarnings("LI_LAZY_INIT_UPDATE_STATIC")
     /* package */ static DisplayAndroidManager getInstance() {
         if (sDisplayAndroidManager == null) {
             // Split between creation and initialization to allow for calls

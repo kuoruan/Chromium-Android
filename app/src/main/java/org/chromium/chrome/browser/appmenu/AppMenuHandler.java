@@ -165,9 +165,12 @@ public class AppMenuHandler {
         if (mDelegate.shouldShowFooter(appRect.height())) {
             footerResourceId = mDelegate.getFooterResourceId();
         }
+        View headerView = null;
+        if (mDelegate.shouldShowHeader(appRect.height())) {
+            headerView = mDelegate.getHeaderView();
+        }
         mAppMenu.show(wrapper, anchorView, isByPermanentButton, rotation, appRect, pt.y,
-                footerResourceId, mDelegate.getHeaderResourceId(),
-                mDelegate.getHeaderOnClickListener(), mHighlightMenuId);
+                footerResourceId, headerView, mHighlightMenuId);
         mAppMenuDragHelper.onShow(startDragging);
         mDelegate.onShow(mAppMenu);
         setMenuHighlight(null);

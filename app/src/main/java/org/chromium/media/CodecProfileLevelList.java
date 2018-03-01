@@ -117,8 +117,10 @@ class CodecProfileLevelList {
                     case CodecProfileLevel.VP9Profile1:
                         return VideoCodecProfile.VP9PROFILE_PROFILE1;
                     case CodecProfileLevel.VP9Profile2:
+                    case CodecProfileLevel.VP9Profile2HDR:
                         return VideoCodecProfile.VP9PROFILE_PROFILE2;
                     case CodecProfileLevel.VP9Profile3:
+                    case CodecProfileLevel.VP9Profile3HDR:
                         return VideoCodecProfile.VP9PROFILE_PROFILE3;
                     default:
                         throw new UnsupportedCodecProfileException();
@@ -128,9 +130,8 @@ class CodecProfileLevelList {
                     case CodecProfileLevel.HEVCProfileMain:
                         return VideoCodecProfile.HEVCPROFILE_MAIN;
                     case CodecProfileLevel.HEVCProfileMain10:
-                        return VideoCodecProfile.HEVCPROFILE_MAIN10;
                     case CodecProfileLevel.HEVCProfileMain10HDR10:
-                        return VideoCodecProfile.HEVCPROFILE_MAIN_STILL_PICTURE;
+                        return VideoCodecProfile.HEVCPROFILE_MAIN10;
                     default:
                         throw new UnsupportedCodecProfileException();
                 }

@@ -9,7 +9,6 @@ import android.os.SystemClock;
 
 import org.chromium.base.Log;
 import org.chromium.base.PathUtils;
-import org.chromium.base.annotations.SuppressFBWarnings;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -154,7 +153,6 @@ class ModernLinker extends Linker {
 
     // Used internally to wait for shared RELROs. Returns once useSharedRelros() has been
     // called to supply a valid shared RELROs bundle.
-    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE")
     private void waitForSharedRelrosLocked() {
         if (DEBUG) {
             Log.i(TAG, "waitForSharedRelros called");

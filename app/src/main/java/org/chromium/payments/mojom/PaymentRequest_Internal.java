@@ -11,7 +11,6 @@
 
 package org.chromium.payments.mojom;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
@@ -49,11 +48,13 @@ class PaymentRequest_Internal {
 
     private static final int UPDATE_WITH_ORDINAL = 2;
 
-    private static final int ABORT_ORDINAL = 3;
+    private static final int NO_UPDATED_PAYMENT_DETAILS_ORDINAL = 3;
 
-    private static final int COMPLETE_ORDINAL = 4;
+    private static final int ABORT_ORDINAL = 4;
 
-    private static final int CAN_MAKE_PAYMENT_ORDINAL = 5;
+    private static final int COMPLETE_ORDINAL = 5;
+
+    private static final int CAN_MAKE_PAYMENT_ORDINAL = 6;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements PaymentRequest.Proxy {
@@ -115,6 +116,21 @@ PaymentDetails details) {
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
                             new org.chromium.mojo.bindings.MessageHeader(UPDATE_WITH_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void noUpdatedPaymentDetails(
+) {
+
+            PaymentRequestNoUpdatedPaymentDetailsParams _message = new PaymentRequestNoUpdatedPaymentDetailsParams();
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(NO_UPDATED_PAYMENT_DETAILS_ORDINAL)));
 
         }
 
@@ -231,6 +247,18 @@ int result) {
             
             
             
+                    case NO_UPDATED_PAYMENT_DETAILS_ORDINAL: {
+            
+                        PaymentRequestNoUpdatedPaymentDetailsParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().noUpdatedPaymentDetails();
+                        return true;
+                    }
+            
+            
+            
+            
+            
                     case ABORT_ORDINAL: {
             
                         PaymentRequestAbortParams.deserialize(messageWithHeader.getPayload());
@@ -288,6 +316,8 @@ int result) {
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), PaymentRequest_Internal.MANAGER, messageWithHeader, receiver);
+            
+            
             
             
             
@@ -622,6 +652,87 @@ int result) {
             final int prime = 31;
             int result = prime + getClass().hashCode();
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.details);
+            return result;
+        }
+    }
+
+
+
+    
+    static final class PaymentRequestNoUpdatedPaymentDetailsParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 8;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+    
+        private PaymentRequestNoUpdatedPaymentDetailsParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public PaymentRequestNoUpdatedPaymentDetailsParams() {
+            this(0);
+        }
+    
+        public static PaymentRequestNoUpdatedPaymentDetailsParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static PaymentRequestNoUpdatedPaymentDetailsParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static PaymentRequestNoUpdatedPaymentDetailsParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            PaymentRequestNoUpdatedPaymentDetailsParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new PaymentRequestNoUpdatedPaymentDetailsParams(mainDataHeader.elementsOrVersion);
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
             return result;
         }
     }

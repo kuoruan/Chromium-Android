@@ -6,7 +6,6 @@ package org.chromium.chrome.browser.compositor.resources;
 
 import android.content.Context;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.R;
 import org.chromium.ui.base.DeviceFormFactor;
 
@@ -34,7 +33,6 @@ public class StaticResourcePreloads {
         return DeviceFormFactor.isTablet() ? sSynchronousResources : sEmptyList;
     }
 
-    @SuppressFBWarnings("MS_EXPOSE_REP")
     public static int[] getAsynchronousResources(Context context) {
         return DeviceFormFactor.isTablet() ? sAsynchronousResources : sEmptyList;
     }

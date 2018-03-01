@@ -77,6 +77,7 @@ class AudioTrackOutputStream {
             mDone = true;
         }
 
+        @Override
         public void run() {
             // This should not be a busy loop, since the thread would be blocked in either
             // AudioSyncReader::WaitUntilDataIsReady() or AudioTrack.write().

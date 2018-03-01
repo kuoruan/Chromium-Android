@@ -9,21 +9,29 @@ import android.content.res.Resources;
 import android.graphics.RectF;
 
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation;
+import org.chromium.chrome.browser.compositor.animation.FloatProperty;
 
 /**
  * {@link CompositorButton} keeps track of state for buttons that are rendered
  * in the compositor.
  */
-public class CompositorButton
-        implements ChromeAnimation.Animatable<CompositorButton.Property>, VirtualView {
+public class CompositorButton implements VirtualView {
     /**
-     * Animatable properties that can be used with a {@link ChromeAnimation.Animatable} on a
-     * {@link CompositorButton}.
+     * A property that can be used with a
+     * {@link org.chromium.chrome.browser.compositor.animation.CompositorAnimator}.
      */
-    public enum Property {
-        OPACITY,
-    }
+    public static final FloatProperty<CompositorButton> OPACITY =
+            new FloatProperty<CompositorButton>("opacity") {
+                @Override
+                public void setValue(CompositorButton object, float value) {
+                    object.setOpacity(value);
+                }
+
+                @Override
+                public Float get(CompositorButton object) {
+                    return object.getOpacity();
+                }
+            };
 
     /** Handler for click actions on VirtualViews. */
     public interface CompositorOnClickHandler {
@@ -79,27 +87,16 @@ public class CompositorButton
     }
 
     /**
-     * Secondary constructor for {@link CompositorButton}
-     * @param context      An Android context for fetching dimens.
-     * @param bounds       A RectF that bounds the button.
-     * @param clickHandler The action to be performed on click.
-     */
-    public CompositorButton(Context context, RectF bounds, CompositorOnClickHandler clickHandler) {
-        this(context, bounds.width(), bounds.height(), clickHandler);
-        mBounds.set(bounds);
-    }
-
-    /**
      * A set of Android resources to supply to the compositor.
      * @param resource                  The default Android resource.
      * @param pressedResource           The pressed Android resource.
      * @param incognitoResource         The incognito Android resource.
      * @param incognitoPressedResource  The incognito pressed resource.
      */
-    public void setResources(int resource, int presssedResource, int incognitoResource,
+    public void setResources(int resource, int pressedResource, int incognitoResource,
             int incognitoPressedResource) {
         mResource = resource;
-        mPressedResource = presssedResource;
+        mPressedResource = pressedResource;
         mIncognitoResource = incognitoResource;
         mIncognitoPressedResource = incognitoPressedResource;
     }
@@ -183,7 +180,7 @@ public class CompositorButton
     }
 
     /**
-     * @param bounds A {@link Rect} representing the location of the button.
+     * @param bounds A {@link RectF} representing the location of the button.
      */
     public void setBounds(RectF bounds) {
         mBounds.set(bounds);
@@ -253,7 +250,7 @@ public class CompositorButton
     }
 
     /**
-     * @param state Whether or not the button can be interacted with.
+     * @param enabled Whether or not the button can be interacted with.
      */
     public void setEnabled(boolean enabled) {
         mIsEnabled = enabled;
@@ -346,25 +343,4 @@ public class CompositorButton
         setPressed(false);
         return state;
     }
-
-    /**
-     * Callback for {@link org.chromium.chrome.browser.compositor.layouts.ChromeAnimation
-     * .Animatable}
-     *
-     * @param prop The property to set
-     * @param val The value to set it to
-     */
-    @Override
-    public void setProperty(Property prop, float val) {
-        switch (prop) {
-            case OPACITY:
-                setOpacity(val);
-                break;
-            default:
-                // Do nothing.
-        }
-    }
-
-    @Override
-    public void onPropertyAnimationFinished(Property prop) {}
 }

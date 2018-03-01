@@ -20,7 +20,6 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.library_loader.LibraryLoader;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.AppHooks;
@@ -102,7 +101,6 @@ public class LocaleManager {
     /**
      * @return An instance of the {@link LocaleManager}. This should only be called on UI thread.
      */
-    @SuppressFBWarnings("LI_LAZY_INIT_STATIC")
     @CalledByNative
     public static LocaleManager getInstance() {
         assert ThreadUtils.runningOnUiThread();

@@ -16,6 +16,8 @@ public class ToolbarActionModeCallback implements ActionMode.Callback {
 
     private ActionModeController mActionModeController;
 
+    private boolean mMovedToolbar;
+
     /**
      * Sets the {@link #mActionModeController}.
      */
@@ -30,15 +32,24 @@ public class ToolbarActionModeCallback implements ActionMode.Callback {
 
     @Override
     public void onDestroyActionMode(ActionMode mode) {
-        if (isFloatingActionMode(mode)) return;
-        mActionModeController.startHideAnimation();
+        ensureValidToolbarVisibility(false);
     }
 
     @Override
     public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-        if (isFloatingActionMode(mode)) return true;
-        mActionModeController.startShowAnimation();
+        ensureValidToolbarVisibility(!isFloatingActionMode(mode));
         return true;
+    }
+
+    private void ensureValidToolbarVisibility(boolean shouldBeMoved) {
+        if (shouldBeMoved == mMovedToolbar) return;
+
+        if (shouldBeMoved) {
+            mActionModeController.startShowAnimation();
+        } else {
+            mActionModeController.startHideAnimation();
+        }
+        mMovedToolbar = shouldBeMoved;
     }
 
     @Override

@@ -59,6 +59,7 @@ public class StandardNotificationBuilder extends NotificationBuilderBase {
         builder.setDefaults(mDefaults);
         if (mVibratePattern != null) builder.setVibrate(mVibratePattern);
         builder.setWhen(mTimestamp);
+        builder.setShowWhen(true);
         builder.setOnlyAlertOnce(!mRenotify);
         setGroupOnBuilder(builder, mOrigin);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

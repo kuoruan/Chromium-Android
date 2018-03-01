@@ -94,7 +94,7 @@ public class ScreenOrientationProvider {
     }
 
     @CalledByNative
-    static void unlockOrientation(@Nullable WindowAndroid window) {
+    public static void unlockOrientation(@Nullable WindowAndroid window) {
         // WindowAndroid may be null if the tab is being reparented.
         if (window == null) return;
         Activity activity = window.getActivity().get();

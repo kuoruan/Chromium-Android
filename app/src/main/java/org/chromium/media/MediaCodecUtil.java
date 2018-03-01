@@ -612,8 +612,11 @@ class MediaCodecUtil {
     static boolean isSetOutputSurfaceSupported() {
         // All Huawei devices based on this processor will immediately hang during
         // MediaCodec.setOutputSurface().  http://crbug.com/683401
+        // Huawei P9 lite will, eventually, get the decoder into a bad state if SetSurface is called
+        // enough times (https://crbug.com/792261).
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                && !Build.HARDWARE.equalsIgnoreCase("hi6210sft");
+                && !Build.HARDWARE.equalsIgnoreCase("hi6210sft")
+                && !Build.HARDWARE.equalsIgnoreCase("hi6250");
     }
 
     /**

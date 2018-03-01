@@ -14,8 +14,10 @@ import android.widget.TextView;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ContentSettingsType;
+import org.chromium.chrome.browser.metrics.WebApkUma;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.webapps.WebApkActivity;
 import org.chromium.ui.base.WindowAndroid;
 import org.chromium.ui.base.WindowAndroid.PermissionCallback;
 
@@ -97,8 +99,11 @@ public class AndroidPermissionRequester {
             public void onRequestPermissionsResult(String[] permissions, int[] grantResults) {
                 boolean allRequestable = true;
                 Set<Integer> deniedContentSettings = new HashSet<Integer>();
+                List<String> deniedPermissions = new ArrayList<String>();
+
                 for (int i = 0; i < grantResults.length; i++) {
                     if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+                        deniedPermissions.add(permissions[i]);
                         deniedContentSettings.add(getContentSettingType(
                                 contentSettingsTypesToPermissionsMap, permissions[i]));
 
@@ -109,6 +114,11 @@ public class AndroidPermissionRequester {
                 }
 
                 Activity activity = windowAndroid.getActivity().get();
+                if (activity instanceof WebApkActivity && deniedPermissions.size() > 0) {
+                    WebApkUma.recordAndroidRuntimePermissionDeniedInWebApk(
+                            deniedPermissions.toArray(new String[deniedPermissions.size()]));
+                }
+
                 if (allRequestable && !deniedContentSettings.isEmpty() && activity != null) {
                     int deniedStringId = -1;
                     if (deniedContentSettings.size() == 2
@@ -173,8 +183,12 @@ public class AndroidPermissionRequester {
             Collections.addAll(
                     permissionsToRequest, contentSettingsTypesToPermissionsMap.valueAt(i));
         }
-        windowAndroid.requestPermissions(
-                permissionsToRequest.toArray(new String[permissionsToRequest.size()]), callback);
+        String[] permissions =
+                permissionsToRequest.toArray(new String[permissionsToRequest.size()]);
+        windowAndroid.requestPermissions(permissions, callback);
+        if (windowAndroid.getActivity().get() instanceof WebApkActivity) {
+            WebApkUma.recordAndroidRuntimePermissionPromptInWebApk(permissions);
+        }
         return true;
     }
 }

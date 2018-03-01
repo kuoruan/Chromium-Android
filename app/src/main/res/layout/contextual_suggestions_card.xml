@@ -15,8 +15,8 @@
 
     <org.chromium.chrome.browser.widget.TintedImageView
         android:id="@+id/article_thumbnail"
-        android:layout_width="@dimen/snippets_thumbnail_size_large"
-        android:layout_height="@dimen/snippets_thumbnail_size_large"
+        android:layout_width="@dimen/snippets_thumbnail_size"
+        android:layout_height="@dimen/snippets_thumbnail_size"
         android:layout_alignParentTop="true"
         android:layout_alignParentStart="true"
         android:scaleType="centerCrop"

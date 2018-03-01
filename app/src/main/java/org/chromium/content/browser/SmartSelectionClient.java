@@ -12,6 +12,7 @@ import android.view.textclassifier.TextClassifier;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.content_public.browser.SelectionClient;
+import org.chromium.content_public.browser.SelectionMetricsLogger;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.base.WindowAndroid;
 
@@ -45,6 +46,7 @@ public class SmartSelectionClient implements SelectionClient {
     private long mNativeSmartSelectionClient;
     private SmartSelectionProvider mProvider;
     private ResultCallback mCallback;
+    private SmartSelectionMetricsLogger mSmartSelectionMetricLogger;
 
     /**
      * Creates the SmartSelectionClient. Returns null in case SmartSelectionProvider does not exist
@@ -54,15 +56,16 @@ public class SmartSelectionClient implements SelectionClient {
         WindowAndroid windowAndroid = webContents.getTopLevelNativeWindow();
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || windowAndroid == null) return null;
 
-        SmartSelectionProvider provider = new SmartSelectionProvider(callback, windowAndroid);
-        return new SmartSelectionClient(provider, callback, webContents);
+        return new SmartSelectionClient(callback, webContents, windowAndroid);
     }
 
     private SmartSelectionClient(
-            SmartSelectionProvider provider, ResultCallback callback, WebContents webContents) {
+            ResultCallback callback, WebContents webContents, WindowAndroid windowAndroid) {
         assert Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
-        mProvider = provider;
+        mProvider = new SmartSelectionProvider(callback, windowAndroid);
         mCallback = callback;
+        mSmartSelectionMetricLogger =
+                SmartSelectionMetricsLogger.create(windowAndroid.getContext().get());
         mNativeSmartSelectionClient = nativeInit(webContents);
     }
 
@@ -99,6 +102,11 @@ public class SmartSelectionClient implements SelectionClient {
         }
 
         mProvider.cancelAllRequests();
+    }
+
+    @Override
+    public SelectionMetricsLogger getSelectionMetricsLogger() {
+        return mSmartSelectionMetricLogger;
     }
 
     @Override

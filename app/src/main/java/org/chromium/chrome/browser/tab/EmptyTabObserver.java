@@ -116,8 +116,8 @@ public class EmptyTabObserver implements TabObserver {
             String targetUrl, WebContents newWebContents) {}
 
     @Override
-    public void onReparentingFinished(Tab tab) { }
+    public void onActivityAttachmentChanged(Tab tab, boolean isAttached) {}
 
     @Override
-    public void onActivityAttachmentChanged(Tab tab, boolean isAttached) {}
+    public void onInteractabilityChanged(boolean isInteractable) {}
 }

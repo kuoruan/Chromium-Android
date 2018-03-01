@@ -5,12 +5,12 @@
 package org.chromium.components.gcm_driver.instance_id;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.text.TextUtils;
 
 import com.google.android.gms.iid.InstanceID;
 
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.SuppressFBWarnings;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -20,22 +20,25 @@ import java.util.Map;
  * InstanceID wrapper that allows multiple InstanceIDs to be created, depending
  * on the provided subtype. Only for platforms-within-platforms like browsers.
  */
-public class InstanceIDWithSubtype extends InstanceID {
-    private final String mSubtype;
+public class InstanceIDWithSubtype {
+    // Must match the private InstanceID.OPTION_SUBTYPE, which is guaranteed to not change.
+    private static final String OPTION_SUBTYPE = "subtype";
 
-    /** Cached instances. May be accessed from multiple threads; synchronize on InstanceID.class. */
+    private final InstanceID mInstanceID;
+
+    /**
+     * Cached instances. May be accessed from multiple threads; synchronize on sSubtypeInstancesLock
+     */
     @VisibleForTesting
-    @SuppressFBWarnings("MS_MUTABLE_COLLECTION_PKGPROTECT")
-    public static final Map<String, InstanceIDWithSubtype> sSubtypeInstances = new HashMap<>();
+    protected static final Map<String, InstanceIDWithSubtype> sSubtypeInstances = new HashMap<>();
+    protected static final Object sSubtypeInstancesLock = new Object();
 
     /** Fake subclasses can set this so getInstance creates instances of them. */
     @VisibleForTesting
-    @SuppressFBWarnings("MS_SHOULD_BE_FINAL")
     protected static FakeFactory sFakeFactoryForTesting;
 
-    protected InstanceIDWithSubtype(Context context, String subtype) {
-        super(context, subtype, null /* options */);
-        mSubtype = subtype;
+    protected InstanceIDWithSubtype(InstanceID instanceID) {
+        mInstanceID = instanceID;
     }
 
     /**
@@ -48,22 +51,16 @@ public class InstanceIDWithSubtype extends InstanceID {
         }
         context = context.getApplicationContext();
 
-        // Synchronize on the base class, to match the synchronized statements in
-        // InstanceID.getInstance.
-        synchronized (InstanceID.class) {
-            if (sSubtypeInstances.isEmpty() && sFakeFactoryForTesting == null) {
-                // The static InstanceID.getInstance method performs some one-time initialization
-                // logic that is also necessary for users of this sub-class. To work around this,
-                // first get (but don't use) the default InstanceID.
-                InstanceID.getInstance(context);
-            }
-
+        synchronized (sSubtypeInstancesLock) {
             InstanceIDWithSubtype existing = sSubtypeInstances.get(subtype);
             if (existing == null) {
                 if (sFakeFactoryForTesting != null) {
-                    existing = sFakeFactoryForTesting.create(context, subtype);
+                    existing = sFakeFactoryForTesting.create(subtype);
                 } else {
-                    existing = new InstanceIDWithSubtype(context, subtype);
+                    Bundle options = new Bundle();
+                    options.putCharSequence(OPTION_SUBTYPE, subtype);
+                    InstanceID instanceID = InstanceID.getInstance(context, options);
+                    existing = new InstanceIDWithSubtype(instanceID);
                 }
                 sSubtypeInstances.put(subtype, existing);
             }
@@ -71,22 +68,41 @@ public class InstanceIDWithSubtype extends InstanceID {
         }
     }
 
-    @Override
+    public String getSubtype() {
+        return mInstanceID.getSubtype();
+    }
+
+    public String getId() {
+        return mInstanceID.getId();
+    }
+
+    public long getCreationTime() {
+        return mInstanceID.getCreationTime();
+    }
+
     public void deleteInstanceID() throws IOException {
-        // Synchronize on the base class, to match getInstance.
-        synchronized (InstanceID.class) {
-            sSubtypeInstances.remove(mSubtype);
-            super.deleteInstanceID();
+        synchronized (sSubtypeInstancesLock) {
+            sSubtypeInstances.remove(mInstanceID.getSubtype());
+            mInstanceID.deleteInstanceID();
         }
     }
 
-    public String getSubtype() {
-        return mSubtype;
+    public void deleteToken(String authorizedEntity, String scope) throws IOException {
+        mInstanceID.deleteToken(authorizedEntity, scope);
+    }
+
+    public String getToken(String authorizedEntity, String scope) throws IOException {
+        return mInstanceID.getToken(authorizedEntity, scope);
+    }
+
+    public String getToken(String authorizedEntity, String scope, Bundle extras)
+            throws IOException {
+        return mInstanceID.getToken(authorizedEntity, scope, extras);
     }
 
     /** Fake subclasses can set {@link #sFakeFactoryForTesting} to an implementation of this. */
     @VisibleForTesting
     public interface FakeFactory {
-        public InstanceIDWithSubtype create(Context context, String subtype);
+        public InstanceIDWithSubtype create(String subtype);
     }
 }

@@ -18,7 +18,7 @@ import java.lang.annotation.RetentionPolicy;
 @IntDef({
     SigninReason.SIGNIN_PRIMARY_ACCOUNT, SigninReason.ADD_SECONDARY_ACCOUNT,
     SigninReason.REAUTHENTICATION, SigninReason.UNLOCK, SigninReason.UNKNOWN_REASON,
-    SigninReason.MAX
+    SigninReason.FORCED_SIGNIN_PRIMARY_ACCOUNT, SigninReason.MAX
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface SigninReason {
@@ -27,5 +27,6 @@ public @interface SigninReason {
   int REAUTHENTICATION = 2;
   int UNLOCK = 3;
   int UNKNOWN_REASON = 4;
-  int MAX = 5;
+  int FORCED_SIGNIN_PRIMARY_ACCOUNT = 5;
+  int MAX = 6;
 }

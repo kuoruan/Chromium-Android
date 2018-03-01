@@ -406,6 +406,7 @@ public class RecentTabsManager implements AndroidSyncSettingsObserver, SignInSta
             mProfileDataCache.update(Collections.singletonList(defaultAccountName));
             profileData = mProfileDataCache.getProfileDataOrDefault(defaultAccountName);
         }
+        mSigninPromoController.detach();
         mSigninPromoController.setupPromoView(mContext, view, profileData, null);
     }
 

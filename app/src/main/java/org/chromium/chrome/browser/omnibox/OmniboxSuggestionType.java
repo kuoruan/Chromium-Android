@@ -27,7 +27,8 @@ import java.lang.annotation.RetentionPolicy;
     OmniboxSuggestionType.BOOKMARK_TITLE, OmniboxSuggestionType.NAVSUGGEST_PERSONALIZED,
     OmniboxSuggestionType.CALCULATOR, OmniboxSuggestionType.CLIPBOARD,
     OmniboxSuggestionType.VOICE_SUGGEST, OmniboxSuggestionType.PHYSICAL_WEB,
-    OmniboxSuggestionType.PHYSICAL_WEB_OVERFLOW, OmniboxSuggestionType.NUM_TYPES
+    OmniboxSuggestionType.PHYSICAL_WEB_OVERFLOW, OmniboxSuggestionType.TAB_SEARCH,
+    OmniboxSuggestionType.NUM_TYPES
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface OmniboxSuggestionType {
@@ -87,5 +88,9 @@ public @interface OmniboxSuggestionType {
   /**
    * Physical Web nearby URLs.
    */
-  int NUM_TYPES = 23;
+  int TAB_SEARCH = 23;
+  /**
+   * URL or title, via HQP.
+   */
+  int NUM_TYPES = 24;
 }

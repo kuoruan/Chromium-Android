@@ -12,7 +12,6 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.preferences.autofill.AutofillAndPaymentsPreferences;
 import org.chromium.chrome.browser.preferences.password.SavePasswordsPreferences;
-import org.chromium.chrome.browser.preferences.privacy.ClearBrowsingDataPreferences;
 import org.chromium.chrome.browser.preferences.privacy.ClearBrowsingDataTabsFragment;
 
 /**
@@ -59,10 +58,7 @@ public class PreferencesLauncher {
      * @param context The current Activity, or an application context if no Activity is available.
      */
     public static Intent createIntentForClearBrowsingDataPage(Context context) {
-        String fragmentName = ClearBrowsingDataTabsFragment.isFeatureEnabled()
-                ? ClearBrowsingDataTabsFragment.class.getName()
-                : ClearBrowsingDataPreferences.class.getName();
-        return createIntentForSettingsPage(context, fragmentName);
+        return createIntentForSettingsPage(context, ClearBrowsingDataTabsFragment.class.getName());
     }
 
     @CalledByNative

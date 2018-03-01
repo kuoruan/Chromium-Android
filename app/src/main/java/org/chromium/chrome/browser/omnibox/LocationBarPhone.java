@@ -19,11 +19,8 @@ import android.widget.FrameLayout;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.WindowDelegate;
-import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.ntp.NewTabPage;
-import org.chromium.chrome.browser.search_engines.TemplateUrlService;
 import org.chromium.chrome.browser.toolbar.ToolbarDataProvider;
 import org.chromium.chrome.browser.util.MathUtils;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
@@ -214,24 +211,7 @@ public class LocationBarPhone extends LocationBarLayout {
         ToolbarDataProvider toolbarDataProvider = getToolbarDataProvider();
         if (toolbarDataProvider == null) return;
 
-        LocaleManager localeManager = LocaleManager.getInstance();
-        if (localeManager.hasCompletedSearchEnginePromo()
-                || localeManager.hasShownSearchEnginePromoThisSession()) {
-            mGoogleGContainer.setVisibility(View.GONE);
-            return;
-        }
-
-        // Only access ChromeFeatureList and TemplateUrlService after the NTP check,
-        // to prevent native method calls before the native side has been initialized.
-        NewTabPage ntp = toolbarDataProvider.getNewTabPageForCurrentTab();
-        boolean isShownInRegularNtp = ntp != null && ntp.isLocationBarShownInNTP()
-                && ChromeFeatureList.isEnabled(ChromeFeatureList.NTP_SHOW_GOOGLE_G_IN_OMNIBOX)
-                && TemplateUrlService.getInstance().isDefaultSearchEngineGoogle();
-
-        boolean isShownInBottomSheetNtp =
-                mBottomSheet != null && mBottomSheet.shouldShowGoogleGInLocationBar();
-
-        if (!isShownInRegularNtp && !isShownInBottomSheetNtp) {
+        if (!getToolbarDataProvider().shouldShowGoogleG(mUrlBar.getEditableText().toString())) {
             mGoogleGContainer.setVisibility(View.GONE);
             return;
         }
@@ -364,6 +344,13 @@ public class LocationBarPhone extends LocationBarLayout {
             @Override
             public void onSheetOpened(@StateChangeReason int reason) {
                 if (reason == StateChangeReason.OMNIBOX_FOCUS) mCloseSheetOnBackButton = true;
+
+                updateGoogleG();
+            }
+
+            @Override
+            public void onSheetClosed(@StateChangeReason int reason) {
+                updateGoogleG();
             }
 
             @Override
@@ -378,24 +365,21 @@ public class LocationBarPhone extends LocationBarLayout {
             }
         });
 
-        // TODO(twellington): Remove after flag to enable search provider logo is removed and
-        // clear out variables associated with Google G. This will help reduce Java heap memory.
-        mGoogleGWidth = getResources().getDimensionPixelSize(
-                R.dimen.location_bar_google_g_width_bottom_sheet);
-        mGoogleG.getLayoutParams().width = mGoogleGWidth;
-
         // Chrome Home does not use the incognito badge. Remove the View to save memory.
         removeView(mIncognitoBadge);
         mIncognitoBadge = null;
+
+        // TODO(twellington): remove and null out mGoogleG and mGoogleGContainer if we remove
+        //                    support for the Google 'G' to save memory.
     }
 
     @Override
     public void backKeyPressed() {
-        super.backKeyPressed();
-
         if (mCloseSheetOnBackButton) {
             mBottomSheet.setSheetState(BottomSheet.SHEET_STATE_PEEK, true);
         }
         mCloseSheetOnBackButton = false;
+
+        super.backKeyPressed();
     }
 }

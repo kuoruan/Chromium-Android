@@ -17,7 +17,7 @@ import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
     TimePeriod.LAST_HOUR, TimePeriod.LAST_DAY, TimePeriod.LAST_WEEK, TimePeriod.FOUR_WEEKS,
-    TimePeriod.ALL_TIME, TimePeriod.TIME_PERIOD_LAST
+    TimePeriod.ALL_TIME, TimePeriod.OLDER_THAN_30_DAYS, TimePeriod.TIME_PERIOD_LAST
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface TimePeriod {
@@ -26,5 +26,6 @@ public @interface TimePeriod {
   int LAST_WEEK = 2;
   int FOUR_WEEKS = 3;
   int ALL_TIME = 4;
-  int TIME_PERIOD_LAST = 4;
+  int OLDER_THAN_30_DAYS = 5;
+  int TIME_PERIOD_LAST = 5;
 }

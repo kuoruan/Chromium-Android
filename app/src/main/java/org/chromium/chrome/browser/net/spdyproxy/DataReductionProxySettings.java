@@ -5,9 +5,6 @@
 package org.chromium.chrome.browser.net.spdyproxy;
 
 import android.content.Context;
-import android.net.Uri;
-import android.text.TextUtils;
-import android.webkit.URLUtil;
 
 import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
@@ -73,10 +70,6 @@ public class DataReductionProxySettings {
             "BANDWIDTH_REDUCTION_FIRST_ENABLED_TIME";
 
     private static final String PARAM_PERSISTENT_MENU_ITEM_ENABLED = "persistent_menu_item_enabled";
-
-    private static final String WEBLITE_HOSTNAME = "googleweblight.com";
-
-    private static final String WEBLITE_QUERY_PARAM = "lite_url";
 
     private Callback<List<DataReductionDataUseItem>> mQueryDataUsageCallback;
 
@@ -352,28 +345,7 @@ public class DataReductionProxySettings {
      * @return The URL to be used. Returns null if the URL param is null.
      */
     public String maybeRewriteWebliteUrl(String url) {
-        if (url == null || !URLUtil.isValidUrl(url) || !areLoFiPreviewsEnabled()
-                || !isDataReductionProxyEnabled()) {
-            return url;
-        }
-        String rewritten = extractUrlFromWebliteQueryParams(url);
-        if (rewritten == null
-                || !TextUtils.equals(Uri.parse(rewritten).getScheme(),
-                        UrlConstants.HTTP_SCHEME)) {
-            return url;
-        }
-
-        return rewritten;
-    }
-
-    private String extractUrlFromWebliteQueryParams(String url) {
-        Uri uri = Uri.parse(url);
-        if (!TextUtils.equals(uri.getHost(), WEBLITE_HOSTNAME)) return null;
-        return uri.getQueryParameter(WEBLITE_QUERY_PARAM);
-    }
-
-    private boolean areLoFiPreviewsEnabled() {
-        return nativeAreLoFiPreviewsEnabled(mNativeDataReductionProxySettings);
+        return nativeMaybeRewriteWebliteUrl(mNativeDataReductionProxySettings, url);
     }
 
     /**
@@ -432,8 +404,8 @@ public class DataReductionProxySettings {
             long nativeDataReductionProxySettingsAndroid);
     private native boolean nativeIsDataReductionProxyUnreachable(
             long nativeDataReductionProxySettingsAndroid);
-    private native boolean nativeAreLoFiPreviewsEnabled(
-            long nativeDataReductionProxySettingsAndroid);
+    private native String nativeMaybeRewriteWebliteUrl(
+            long nativeDataReductionProxySettingsAndroid, String url);
     private native String nativeGetHttpProxyList(long nativeDataReductionProxySettingsAndroid);
     private native String nativeGetLastBypassEvent(long nativeDataReductionProxySettingsAndroid);
     private native void nativeQueryDataUsage(long nativeDataReductionProxySettingsAndroid,

@@ -21,6 +21,8 @@ public class UrlConstants {
     public static final String INLINE_SCHEME = "inline";
     public static final String JAR_SCHEME = "jar";
     public static final String JAVASCRIPT_SCHEME = "javascript";
+    public static final String SMS_SCHEME = "sms";
+    public static final String TEL_SCHEME = "tel";
 
     public static final String CONTENT_URL_SHORT_PREFIX = "content:";
     public static final String CHROME_URL_SHORT_PREFIX = "chrome:";
@@ -63,4 +65,13 @@ public class UrlConstants {
 
     public static final String GOOGLE_ACCOUNT_ACTIVITY_CONTROLS_URL =
             "https://myaccount.google.com/activitycontrols/search";
+
+    public static final String MY_ACTIVITY_URL_IN_CBD =
+            "https://myactivity.google.com/myactivity/?utm_source=chrome_cbd";
+
+    public static final String MY_ACTIVITY_URL_IN_CBD_NOTICE =
+            "https://myactivity.google.com/myactivity/?utm_source=chrome_n";
+
+    public static final String MY_ACTIVITY_URL_IN_HISTORY =
+            "https://myactivity.google.com/myactivity/?utm_source=chrome_h";
 }

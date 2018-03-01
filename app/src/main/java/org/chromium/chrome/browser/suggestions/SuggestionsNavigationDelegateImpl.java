@@ -144,7 +144,7 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
         // TODO(mastiz): Extend this with support for other categories.
         if (article.mCategory == KnownCategories.ARTICLES) {
             loadUrlParams.setReferrer(new Referrer(CHROME_CONTENT_SUGGESTIONS_REFERRER,
-                    WebReferrerPolicy.WEB_REFERRER_POLICY_ALWAYS));
+                    WebReferrerPolicy.ALWAYS));
         }
 
         Tab loadingTab = openUrl(windowOpenDisposition, loadUrlParams);
@@ -213,13 +213,14 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
     }
 
     private void saveUrlForOffline(String url) {
+        OfflinePageBridge offlinePageBridge =
+                SuggestionsDependencyFactory.getInstance().getOfflinePageBridge(mProfile);
         if (mHost.getActiveTab() != null) {
-            OfflinePageBridge.getForProfile(mProfile).scheduleDownload(
-                    mHost.getActiveTab().getWebContents(), "ntp_suggestions", url,
-                    DownloadUiActionFlags.ALL);
+            offlinePageBridge.scheduleDownload(mHost.getActiveTab().getWebContents(),
+                    OfflinePageBridge.NTP_SUGGESTIONS_NAMESPACE, url, DownloadUiActionFlags.ALL);
         } else {
-            OfflinePageBridge.getForProfile(mProfile).savePageLater(
-                    url, "ntp_suggestions", true /* userRequested */);
+            offlinePageBridge.savePageLater(
+                    url, OfflinePageBridge.NTP_SUGGESTIONS_NAMESPACE, true /* userRequested */);
         }
     }
 }

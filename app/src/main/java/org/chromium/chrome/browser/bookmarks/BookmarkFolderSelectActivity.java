@@ -25,6 +25,7 @@ import org.chromium.chrome.browser.SynchronousInitializationActivity;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkItem;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkModelObserver;
 import org.chromium.chrome.browser.util.FeatureUtilities;
+import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.chrome.browser.widget.TintedDrawable;
 import org.chromium.chrome.browser.widget.TintedImageButton;
 import org.chromium.chrome.browser.widget.TintedImageView;
@@ -118,8 +119,22 @@ public class BookmarkFolderSelectActivity extends SynchronousInitializationActiv
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mModel = new BookmarkModel();
+        List<String> stringList =
+                IntentUtils.safeGetStringArrayListExtra(getIntent(), INTENT_BOOKMARKS_TO_MOVE);
+
+        // If the intent does not contain a list of bookmarks to move, return early. See
+        // crbug.com/728244. If the bookmark model is not loaded, return early to avoid crashing
+        // when trying to access bookmark model methods. The bookmark model should always be
+        // loaded when BookmarkFolderSelectActivity is created unless the entire Chrome process
+        // is being recreated. If we add a loading screen, we could wait for the model to be
+        // loaded but this flow is rare. See crbug.com/704872.
+        if (stringList == null || !mModel.isBookmarkModelLoaded()) {
+            finish();
+            return;
+        }
+
         mModel.addObserver(mBookmarkModelObserver);
-        List<String> stringList = getIntent().getStringArrayListExtra(INTENT_BOOKMARKS_TO_MOVE);
+
         mBookmarksToMove = new ArrayList<>(stringList.size());
         for (String string : stringList) {
             BookmarkId bookmarkId = BookmarkId.getBookmarkIdFromString(string);

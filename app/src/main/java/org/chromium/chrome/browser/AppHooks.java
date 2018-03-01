@@ -6,10 +6,11 @@ package org.chromium.chrome.browser;
 
 import android.app.Notification;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.Nullable;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
@@ -18,7 +19,6 @@ import org.chromium.chrome.browser.banners.AppDetailsDelegate;
 import org.chromium.chrome.browser.customtabs.CustomTabsConnection;
 import org.chromium.chrome.browser.datausage.ExternalDataUseObserver;
 import org.chromium.chrome.browser.externalauth.ExternalAuthUtils;
-import org.chromium.chrome.browser.feedback.EmptyFeedbackReporter;
 import org.chromium.chrome.browser.feedback.FeedbackReporter;
 import org.chromium.chrome.browser.gsa.GSAHelper;
 import org.chromium.chrome.browser.help.HelpAndFeedback;
@@ -31,6 +31,9 @@ import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.net.qualityprovider.ExternalEstimateProviderAndroid;
 import org.chromium.chrome.browser.offlinepages.CCTRequestStatus;
 import org.chromium.chrome.browser.omaha.RequestGenerator;
+import org.chromium.chrome.browser.partnerbookmarks.PartnerBookmark;
+import org.chromium.chrome.browser.partnerbookmarks.PartnerBookmarksProviderIterator;
+import org.chromium.chrome.browser.partnercustomizations.PartnerBrowserCustomizations;
 import org.chromium.chrome.browser.physicalweb.PhysicalWebBleClient;
 import org.chromium.chrome.browser.policy.PolicyAuditor;
 import org.chromium.chrome.browser.preferences.LocationSettings;
@@ -157,7 +160,7 @@ public abstract class AppHooks {
      * @return An instance of {@link FeedbackReporter} to report feedback.
      */
     public FeedbackReporter createFeedbackReporter() {
-        return new EmptyFeedbackReporter();
+        return new FeedbackReporter() {};
     }
 
     /**
@@ -279,9 +282,10 @@ public abstract class AppHooks {
      *
      * @param intent The {@link Intent} to fire to start the service.
      */
-    @SuppressWarnings("Unused")
     public void startForegroundService(Intent intent) {
-        ContextUtils.getApplicationContext().startService(intent);
+        // TODO(crbug.com/758280): Remove this whole method once the downstream override is gone and
+        // all overrides have been ported over.
+        ContextUtils.startForegroundService(ContextUtils.getApplicationContext(), intent);
     }
 
     /**
@@ -291,7 +295,7 @@ public abstract class AppHooks {
      */
     @CalledByNative
     public boolean shouldDetectVideoFullscreen() {
-        return BuildInfo.isAtLeastO();
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
     }
 
     /**
@@ -310,5 +314,21 @@ public abstract class AppHooks {
      */
     public List<String> getOfflinePagesCctWhitelist() {
         return Collections.emptyList();
+    }
+
+    /**
+     * @return An iterator of partner bookmarks.
+     */
+    @Nullable
+    public PartnerBookmark.BookmarkIterator getPartnerBookmarkIterator() {
+        return PartnerBookmarksProviderIterator.createIfAvailable();
+    }
+
+    /**
+     * @return An instance of PartnerBrowserCustomizations.Provider that provides customizations
+     * specified by partners.
+     */
+    public PartnerBrowserCustomizations.Provider getCustomizationProvider() {
+        return new PartnerBrowserCustomizations.ProviderPackage();
     }
 }

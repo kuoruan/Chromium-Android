@@ -21,7 +21,8 @@ public class UriUtils {
      * @return Whether the method name has the correct format to be a URI payment method name.
      */
     public static boolean looksLikeUriMethod(String method) {
-        return method.startsWith(UrlConstants.HTTPS_URL_PREFIX);
+        return method.startsWith(UrlConstants.HTTPS_URL_PREFIX)
+                || method.startsWith(UrlConstants.HTTP_URL_PREFIX);
     }
 
     /**
@@ -44,7 +45,8 @@ public class UriUtils {
 
         if (!uri.isAbsolute()) return null;
 
-        assert UrlConstants.HTTPS_SCHEME.equals(uri.getScheme());
+        assert UrlConstants.HTTPS_SCHEME.equals(uri.getScheme())
+                || UrlConstants.HTTP_SCHEME.equals(uri.getScheme());
 
         return uri;
     }

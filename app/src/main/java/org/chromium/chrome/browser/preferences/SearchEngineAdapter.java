@@ -424,8 +424,6 @@ public class SearchEngineAdapter extends BaseAdapter
             String url = TemplateUrlService.getInstance().getSearchEngineUrlFromTemplateUrl(
                     toKeyword(mSelectedSearchEnginePosition));
             Bundle fragmentArgs = SingleWebsitePreferences.createFragmentArgsForSite(url);
-            fragmentArgs.putBoolean(SingleWebsitePreferences.EXTRA_LOCATION,
-                    locationEnabled((TemplateUrl) getItem(mSelectedSearchEnginePosition)));
             settingsIntent.putExtra(Preferences.EXTRA_SHOW_FRAGMENT_ARGUMENTS, fragmentArgs);
             mContext.startActivity(settingsIntent);
         }

@@ -7,8 +7,8 @@ package org.chromium.chrome.browser.notifications.channels;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.notifications.NotificationManagerProxyImpl;
@@ -32,7 +32,7 @@ public class ChannelsUpdater {
     private static class LazyHolder {
         // If pre-O, initialize with nulls as a small optimization to avoid getting AppContext etc
         // when we won't need it. It's ok for these parameters to be null when mIsAtLeastO is false.
-        public static final ChannelsUpdater INSTANCE = !BuildInfo.isAtLeastO()
+        public static final ChannelsUpdater INSTANCE = Build.VERSION.SDK_INT < Build.VERSION_CODES.O
                 ? new ChannelsUpdater(false /* isAtLeastO */, null, null, -1)
                 : new ChannelsUpdater(true /* isAtLeastO */, ContextUtils.getAppSharedPreferences(),
                           new ChannelsInitializer(

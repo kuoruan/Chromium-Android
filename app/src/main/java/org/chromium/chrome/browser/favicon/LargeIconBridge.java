@@ -28,11 +28,14 @@ public class LargeIconBridge {
         public Bitmap icon;
         public int fallbackColor;
         public boolean isFallbackColorDefault;
+        public @IconType int iconType;
 
-        CachedFavicon(Bitmap newIcon, int newFallbackColor, boolean newIsFallbackColorDefault) {
+        CachedFavicon(Bitmap newIcon, int newFallbackColor, boolean newIsFallbackColorDefault,
+                @IconType int newIconType) {
             icon = newIcon;
             fallbackColor = newFallbackColor;
             isFallbackColorDefault = newIsFallbackColorDefault;
+            iconType = newIconType;
         }
     }
 
@@ -46,10 +49,12 @@ public class LargeIconBridge {
          * @param icon The icon, or null if none is available.
          * @param fallbackColor The fallback color to use if icon is null.
          * @param isFallbackColorDefault Whether the fallback color is the default color.
+         * @param iconType The type of the icon contributing to this event as defined in {@link
+         * IconType}.
          */
         @CalledByNative("LargeIconCallback")
-        void onLargeIconAvailable(
-                @Nullable Bitmap icon, int fallbackColor, boolean isFallbackColorDefault);
+        void onLargeIconAvailable(@Nullable Bitmap icon, int fallbackColor,
+                boolean isFallbackColorDefault, @IconType int iconType);
     }
 
     /**
@@ -124,23 +129,32 @@ public class LargeIconBridge {
         } else {
             CachedFavicon cached = mFaviconCache.get(pageUrl);
             if (cached != null) {
-                callback.onLargeIconAvailable(
-                        cached.icon, cached.fallbackColor, cached.isFallbackColorDefault);
+                callback.onLargeIconAvailable(cached.icon, cached.fallbackColor,
+                        cached.isFallbackColorDefault, cached.iconType);
                 return true;
             }
 
             LargeIconCallback callbackWrapper = new LargeIconCallback() {
                 @Override
-                public void onLargeIconAvailable(
-                        Bitmap icon, int fallbackColor, boolean isFallbackColorDefault) {
+                public void onLargeIconAvailable(Bitmap icon, int fallbackColor,
+                        boolean isFallbackColorDefault, @IconType int iconType) {
                     mFaviconCache.put(pageUrl,
-                            new CachedFavicon(icon, fallbackColor, isFallbackColorDefault));
-                    callback.onLargeIconAvailable(icon, fallbackColor, isFallbackColorDefault);
+                            new CachedFavicon(
+                                    icon, fallbackColor, isFallbackColorDefault, iconType));
+                    callback.onLargeIconAvailable(
+                            icon, fallbackColor, isFallbackColorDefault, iconType);
                 }
             };
             return nativeGetLargeIconForURL(mNativeLargeIconBridge, mProfile, pageUrl,
                     desiredSizePx, callbackWrapper);
         }
+    }
+
+    /**
+     * Removes the favicon from the local cache for the given URL.
+     */
+    public void clearFavicon(String url) {
+        mFaviconCache.remove(url);
     }
 
     private static native long nativeInit();

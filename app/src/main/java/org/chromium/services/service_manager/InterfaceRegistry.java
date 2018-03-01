@@ -25,7 +25,7 @@ public class InterfaceRegistry implements InterfaceProvider {
     private final Map<String, InterfaceBinder> mBinders = new HashMap<String, InterfaceBinder>();
 
     public <I extends Interface> void addInterface(
-            Interface.Manager<I, ? extends I.Proxy> manager, InterfaceFactory<I> factory) {
+            Interface.Manager<I, ? extends Interface.Proxy> manager, InterfaceFactory<I> factory) {
         mBinders.put(manager.getName(), new InterfaceBinder<I>(manager, factory));
     }
 
@@ -57,11 +57,11 @@ public class InterfaceRegistry implements InterfaceProvider {
     InterfaceRegistry() {}
 
     private static class InterfaceBinder<I extends Interface> {
-        private Interface.Manager<I, ? extends I.Proxy> mManager;
+        private Interface.Manager<I, ? extends Interface.Proxy> mManager;
         private InterfaceFactory<I> mFactory;
 
-        public InterfaceBinder(
-                Interface.Manager<I, ? extends I.Proxy> manager, InterfaceFactory<I> factory) {
+        public InterfaceBinder(Interface.Manager<I, ? extends Interface.Proxy> manager,
+                InterfaceFactory<I> factory) {
             mManager = manager;
             mFactory = factory;
         }

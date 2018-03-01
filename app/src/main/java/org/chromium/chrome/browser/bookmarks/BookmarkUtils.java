@@ -248,6 +248,8 @@ public class BookmarkUtils {
         RecordUserAction.record("MobileBookmarkManagerEntryOpened");
         RecordHistogram.recordEnumeratedHistogram(
                 "Stars.LaunchLocation", launchLocation, BookmarkLaunchLocation.COUNT);
+        RecordHistogram.recordEnumeratedHistogram(
+                "Bookmarks.OpenBookmarkType", bookmarkId.getType(), BookmarkType.LAST + 1);
 
         if (DeviceFormFactor.isTablet()) {
             // For tablets, the bookmark manager is open in a tab in the ChromeActivity. Use
@@ -269,7 +271,6 @@ public class BookmarkUtils {
      * @return A {@link TintedDrawable} to use for displaying bookmark folders.
      */
     public static TintedDrawable getFolderIcon(Resources res) {
-        // TODO(twellington): Update tinting to 65% black to match mocks.
         return TintedDrawable.constructTintedDrawable(
                 res, R.drawable.ic_folder_blue_24dp, getFolderIconTint());
     }

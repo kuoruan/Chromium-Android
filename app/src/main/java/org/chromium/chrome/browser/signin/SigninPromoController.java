@@ -20,6 +20,7 @@ import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.metrics.ImpressionTracker;
+import org.chromium.chrome.browser.metrics.OneShotImpressionListener;
 import org.chromium.chrome.browser.signin.AccountSigninActivity.AccessPoint;
 
 
@@ -29,7 +30,7 @@ import org.chromium.chrome.browser.signin.AccountSigninActivity.AccessPoint;
  * or not. The controller also takes care of counting impressions, recording signin related user
  * actions and histograms.
  */
-public class SigninPromoController implements ImpressionTracker.Listener {
+public class SigninPromoController {
     /**
      * Receives notifications when user clicks close button in the promo.
      */
@@ -48,13 +49,18 @@ public class SigninPromoController implements ImpressionTracker.Listener {
     private static final int MAX_IMPRESSIONS_BOOKMARKS = 20;
     private static final int MAX_IMPRESSIONS_SETTINGS = 20;
 
-    private final ImpressionTracker mImpressionTracker = new ImpressionTracker(this);
     private @Nullable DisplayableProfileData mProfileData;
+    private @Nullable ImpressionTracker mImpressionTracker;
+    private final OneShotImpressionListener mImpressionFilter =
+            new OneShotImpressionListener(this::recordSigninPromoImpression);
     private final @AccessPoint int mAccessPoint;
     private final @Nullable String mImpressionCountName;
     private final String mImpressionUserActionName;
     private final String mImpressionWithAccountUserActionName;
     private final String mImpressionWithNoAccountUserActionName;
+    private final String mSigninWithDefaultUserActionName;
+    private final String mSigninNotDefaultUserActionName;
+    private final String mSigninNewAccountUserActionName;
     private final @Nullable String mImpressionsTilDismissHistogramName;
     private final @Nullable String mImpressionsTilSigninButtonsHistogramName;
     private final @Nullable String mImpressionsTilXButtonHistogramName;
@@ -109,6 +115,9 @@ public class SigninPromoController implements ImpressionTracker.Listener {
                         "Signin_ImpressionWithAccount_FromBookmarkManager";
                 mImpressionWithNoAccountUserActionName =
                         "Signin_ImpressionWithNoAccount_FromBookmarkManager";
+                mSigninWithDefaultUserActionName = "Signin_SigninWithDefault_FromBookmarkManager";
+                mSigninNotDefaultUserActionName = "Signin_SigninNotDefault_FromBookmarkManager";
+                mSigninNewAccountUserActionName = "Signin_SigninNewAccount_FromBookmarkManager";
                 mImpressionsTilDismissHistogramName =
                         "MobileSignInPromo.BookmarkManager.ImpressionsTilDismiss";
                 mImpressionsTilSigninButtonsHistogramName =
@@ -125,6 +134,12 @@ public class SigninPromoController implements ImpressionTracker.Listener {
                         "Signin_ImpressionWithAccount_FromNTPContentSuggestions";
                 mImpressionWithNoAccountUserActionName =
                         "Signin_ImpressionWithNoAccount_FromNTPContentSuggestions";
+                mSigninWithDefaultUserActionName =
+                        "Signin_SigninWithDefault_FromNTPContentSuggestions";
+                mSigninNotDefaultUserActionName =
+                        "Signin_SigninNotDefault_FromNTPContentSuggestions";
+                mSigninNewAccountUserActionName =
+                        "Signin_SigninNewAccount_FromNTPContentSuggestions";
                 mImpressionsTilDismissHistogramName = null;
                 mImpressionsTilSigninButtonsHistogramName = null;
                 mImpressionsTilXButtonHistogramName = null;
@@ -138,6 +153,9 @@ public class SigninPromoController implements ImpressionTracker.Listener {
                         "Signin_ImpressionWithAccount_FromRecentTabs";
                 mImpressionWithNoAccountUserActionName =
                         "Signin_ImpressionWithNoAccount_FromRecentTabs";
+                mSigninWithDefaultUserActionName = "Signin_SigninWithDefault_FromRecentTabs";
+                mSigninNotDefaultUserActionName = "Signin_SigninNotDefault_FromRecentTabs";
+                mSigninNewAccountUserActionName = "Signin_SigninNewAccount_FromRecentTabs";
                 mImpressionsTilDismissHistogramName = null;
                 mImpressionsTilSigninButtonsHistogramName = null;
                 mImpressionsTilXButtonHistogramName = null;
@@ -147,6 +165,9 @@ public class SigninPromoController implements ImpressionTracker.Listener {
                 mImpressionCountName = SIGNIN_PROMO_IMPRESSIONS_COUNT_SETTINGS;
                 mImpressionUserActionName = "Signin_Impression_FromSettings";
                 mImpressionWithAccountUserActionName = "Signin_ImpressionWithAccount_FromSettings";
+                mSigninWithDefaultUserActionName = "Signin_SigninWithDefault_FromSettings";
+                mSigninNotDefaultUserActionName = "Signin_SigninNotDefault_FromSettings";
+                mSigninNewAccountUserActionName = "Signin_SigninNewAccount_FromSettings";
                 mImpressionWithNoAccountUserActionName =
                         "Signin_ImpressionWithNoAccount_FromSettings";
                 mImpressionsTilDismissHistogramName =
@@ -175,7 +196,8 @@ public class SigninPromoController implements ImpressionTracker.Listener {
     }
 
     /**
-     * Configures the signin promo view and resets the impression tracker.
+     * Configures the signin promo view and resets the impression tracker. If this controller has
+     * been previously set up, it should be {@link #detach detached} first.
      * @param view The view in which the promo will be added.
      * @param profileData If not null, the promo will be configured to be in the hot state, using
      *         the account image, email and full name of the user to set the picture and the text of
@@ -189,7 +211,11 @@ public class SigninPromoController implements ImpressionTracker.Listener {
             final @Nullable OnDismissListener onDismissListener) {
         mProfileData = profileData;
         mWasDisplayed = true;
-        mImpressionTracker.reset(mImpressionTracker.wasTriggered() ? null : view);
+
+        assert mImpressionTracker == null : "detach() should be called before setting up a new " +
+                "view";
+        mImpressionTracker = new ImpressionTracker(view);
+        mImpressionTracker.setListener(mImpressionFilter);
 
         view.getDescription().setText(mDescriptionStringId);
 
@@ -213,16 +239,19 @@ public class SigninPromoController implements ImpressionTracker.Listener {
         }
     }
 
+    /**
+     * Should be called when the view is not in use anymore (e.g. it's being recycled).
+     */
+    public void detach() {
+        if (mImpressionTracker != null) {
+            mImpressionTracker.setListener(null);
+            mImpressionTracker = null;
+        }
+    }
+
     /** @return the resource used for the text displayed as promo description. */
     public @StringRes int getDescriptionStringId() {
         return mDescriptionStringId;
-    }
-
-    // ImpressionTracker.Listener implementation.
-    @Override
-    public void onImpression() {
-        recordSigninPromoImpression();
-        mImpressionTracker.reset(null);
     }
 
     private void setupColdState(final Context context, PersonalizedSigninPromoView view) {
@@ -230,11 +259,7 @@ public class SigninPromoController implements ImpressionTracker.Listener {
         setImageSize(context, view, R.dimen.signin_promo_cold_state_image_size);
 
         view.getSigninButton().setText(R.string.sign_in_to_chrome);
-        view.getSigninButton().setOnClickListener(promoView -> {
-            recordSigninButtonUsed();
-            context.startActivity(AccountSigninActivity.createIntentForAddAccountSigninFlow(
-                    context, mAccessPoint, true));
-        });
+        view.getSigninButton().setOnClickListener(v -> signinWithNewAccount(context));
 
         view.getChooseAccountButton().setVisibility(View.GONE);
     }
@@ -247,26 +272,39 @@ public class SigninPromoController implements ImpressionTracker.Listener {
         String signinButtonText = context.getString(
                 R.string.signin_promo_continue_as, mProfileData.getFullNameOrEmail());
         view.getSigninButton().setText(signinButtonText);
-        view.getSigninButton().setOnClickListener(promoView -> {
-            recordSigninButtonUsed();
-            context.startActivity(AccountSigninActivity.createIntentForConfirmationOnlySigninFlow(
-                    context, mAccessPoint, mProfileData.getAccountName(), true, true));
-        });
+        view.getSigninButton().setOnClickListener(v -> signinWithDefaultAccount(context));
 
         String chooseAccountButtonText = context.getString(
                 R.string.signin_promo_choose_account, mProfileData.getAccountName());
         view.getChooseAccountButton().setText(chooseAccountButtonText);
-        view.getChooseAccountButton().setOnClickListener(promoView -> {
-            recordSigninButtonUsed();
-            context.startActivity(AccountSigninActivity.createIntentForDefaultSigninFlow(
-                    context, mAccessPoint, true));
-        });
+        view.getChooseAccountButton().setOnClickListener(v -> signinWithNotDefaultAccount(context));
         view.getChooseAccountButton().setVisibility(View.VISIBLE);
     }
 
     private int getNumImpressions() {
         SharedPreferences preferences = ContextUtils.getAppSharedPreferences();
         return preferences.getInt(mImpressionCountName, 0);
+    }
+
+    private void signinWithNewAccount(Context context) {
+        recordSigninButtonUsed();
+        RecordUserAction.record(mSigninNewAccountUserActionName);
+        context.startActivity(AccountSigninActivity.createIntentForAddAccountSigninFlow(
+                context, mAccessPoint, true));
+    }
+
+    private void signinWithDefaultAccount(Context context) {
+        recordSigninButtonUsed();
+        RecordUserAction.record(mSigninWithDefaultUserActionName);
+        context.startActivity(AccountSigninActivity.createIntentForConfirmationOnlySigninFlow(
+                context, mAccessPoint, mProfileData.getAccountName(), true, true));
+    }
+
+    private void signinWithNotDefaultAccount(Context context) {
+        recordSigninButtonUsed();
+        RecordUserAction.record(mSigninNotDefaultUserActionName);
+        context.startActivity(AccountSigninActivity.createIntentForDefaultSigninFlow(
+                context, mAccessPoint, true));
     }
 
     private void recordSigninButtonUsed() {

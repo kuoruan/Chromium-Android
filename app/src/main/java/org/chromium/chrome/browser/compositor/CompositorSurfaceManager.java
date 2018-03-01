@@ -13,8 +13,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import org.chromium.base.annotations.UsedByReflection;
-
 /**
  * Manage multiple SurfaceViews for the compositor, so that transitions between
  * surfaces with and without an alpha channel can be visually smooth.
@@ -267,8 +265,7 @@ class CompositorSurfaceManager implements SurfaceHolder.Callback2 {
         // Intentionally not implemented.
     }
 
-    // TODO(boliu): Mark this override instead.
-    @UsedByReflection("Android")
+    @Override
     public void surfaceRedrawNeededAsync(SurfaceHolder holder, Runnable drawingFinished) {
         mClient.surfaceRedrawNeededAsync(holder, drawingFinished);
     }

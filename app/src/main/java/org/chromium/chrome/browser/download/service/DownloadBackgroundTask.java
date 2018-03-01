@@ -12,6 +12,7 @@ import org.chromium.chrome.browser.background_task_scheduler.NativeBackgroundTas
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.components.background_task_scheduler.TaskParameters;
 import org.chromium.components.download.DownloadTaskType;
+import org.chromium.components.download.internal.BatteryStatusListenerAndroid;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +39,16 @@ public class DownloadBackgroundTask extends NativeBackgroundTask {
     @Override
     protected int onStartTaskBeforeNativeLoaded(
             Context context, TaskParameters taskParameters, TaskFinishedCallback callback) {
+        boolean requiresCharging = taskParameters.getExtras().getBoolean(
+                DownloadTaskScheduler.EXTRA_BATTERY_REQUIRES_CHARGING);
+        int optimalBatteryPercentage = taskParameters.getExtras().getInt(
+                DownloadTaskScheduler.EXTRA_OPTIMAL_BATTERY_PERCENTAGE);
+        // Reschedule if minimum battery level is not satisfied.
+        if (!requiresCharging
+                && BatteryStatusListenerAndroid.getBatteryPercentage() < optimalBatteryPercentage) {
+            return NativeBackgroundTask.RESCHEDULE;
+        }
+
         return NativeBackgroundTask.LOAD_NATIVE;
     }
 

@@ -79,7 +79,7 @@
         android:layout_gravity="center_vertical|end"
         android:layout_width="42dp"
         android:paddingEnd="4dp"
-        android:src="@drawable/btn_menu"
+        android:src="@drawable/ic_more_vert_black_24dp"
         android:contentDescription="@string/accessibility_toolbar_btn_menu"
         android:background="@null" />
 </org.chromium.chrome.browser.toolbar.CustomTabToolbar>

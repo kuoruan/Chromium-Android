@@ -47,6 +47,9 @@ public class PaymentRequestFactory implements InterfaceFactory<PaymentRequest> {
         public void updateWith(PaymentDetails details) {}
 
         @Override
+        public void noUpdatedPaymentDetails() {}
+
+        @Override
         public void abort() {}
 
         @Override

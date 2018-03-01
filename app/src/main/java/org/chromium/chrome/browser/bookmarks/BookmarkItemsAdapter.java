@@ -50,7 +50,6 @@ class BookmarkItemsAdapter
     private final List<List<? extends Object>> mSections;
 
     // The promo header section will always contain 0 or 1 elements.
-    @ViewType
     private final List<Integer> mPromoHeaderSection = new ArrayList<>();
     private final List<BookmarkId> mFolderSection = new ArrayList<>();
     private final List<BookmarkId> mBookmarkSection = new ArrayList<>();
@@ -61,6 +60,7 @@ class BookmarkItemsAdapter
     private Context mContext;
     private BookmarkPromoHeader mPromoHeaderManager;
     private String mSearchText;
+    private BookmarkId mCurrentFolder;
 
     private BookmarkModelObserver mBookmarkModelObserver = new BookmarkModelObserver() {
         @Override
@@ -74,6 +74,12 @@ class BookmarkItemsAdapter
         public void bookmarkNodeRemoved(BookmarkItem parent, int oldIndex, BookmarkItem node,
                 boolean isDoingExtensiveChanges) {
             assert mDelegate != null;
+
+            if (mDelegate.getCurrentState() == BookmarkUIState.STATE_SEARCHING
+                    && TextUtils.equals(mSearchText, EMPTY_QUERY)) {
+                mDelegate.closeSearchUI();
+            }
+
             if (node.isFolder()) {
                 mDelegate.notifyStateChange(BookmarkItemsAdapter.this);
             } else {
@@ -248,9 +254,21 @@ class BookmarkItemsAdapter
         }
     }
 
-    // BookmarkUIObserver implementations.
-
     @Override
+    public void onViewRecycled(ViewHolder holder) {
+        switch (holder.getItemViewType()) {
+            case ViewType.PERSONALIZED_SIGNIN_PROMO:
+                mPromoHeaderManager.detachPersonalizePromoView();
+                break;
+            default:
+                // Other view holders don't have special recycling code.
+        }
+    }
+
+    /**
+     * Sets the delegate to use to handle UI actions related to this adapter.
+     * @param delegate A {@link BookmarkDelegate} instance to handle all backend interaction.
+     */
     public void onBookmarkDelegateInitialized(BookmarkDelegate delegate) {
         mDelegate = delegate;
         mDelegate.addUIObserver(this);
@@ -279,6 +297,7 @@ class BookmarkItemsAdapter
         populateTopLevelFoldersList();
     }
 
+    // BookmarkUIObserver implementations.
     @Override
     public void onDestroy() {
         mDelegate.removeUIObserver(this);
@@ -292,6 +311,7 @@ class BookmarkItemsAdapter
         assert mDelegate != null;
 
         mSearchText = EMPTY_QUERY;
+        mCurrentFolder = folder;
 
         if (folder.equals(mDelegate.getModel().getRootFolderId())) {
             setBookmarks(mTopLevelFolders, new ArrayList<BookmarkId>());
@@ -308,6 +328,14 @@ class BookmarkItemsAdapter
 
     @Override
     public void onSelectionStateChange(List<BookmarkId> selectedBookmarks) {}
+
+    /**
+     * Refresh the list of bookmarks within the currently visible folder.
+     */
+    public void refresh() {
+        if (mCurrentFolder == null) return;
+        onFolderStateSet(mCurrentFolder);
+    }
 
     /**
      * Synchronously searches for the given query.

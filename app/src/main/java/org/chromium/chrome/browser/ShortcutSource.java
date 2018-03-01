@@ -21,7 +21,7 @@ import java.lang.annotation.RetentionPolicy;
     ShortcutSource.NOTIFICATION, ShortcutSource.ADD_TO_HOMESCREEN_PWA,
     ShortcutSource.ADD_TO_HOMESCREEN_STANDALONE, ShortcutSource.ADD_TO_HOMESCREEN_SHORTCUT,
     ShortcutSource.EXTERNAL_INTENT, ShortcutSource.APP_BANNER_WEBAPK, ShortcutSource.WEBAPK_UNKNOWN,
-    ShortcutSource.COUNT
+    ShortcutSource.TRUSTED_WEB_ACTIVITY, ShortcutSource.WEBAPK_SHARE_TARGET, ShortcutSource.COUNT
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface ShortcutSource {
@@ -61,5 +61,13 @@ public @interface ShortcutSource {
    * Used for WebAPK PWAs whose install source info was lost.
    */
   int WEBAPK_UNKNOWN = 11;
-  int COUNT = 12;
+  /**
+   * Used for Trusted Web Activities launched from third party Android apps.
+   */
+  int TRUSTED_WEB_ACTIVITY = 12;
+  /**
+   * Used for WebAPK intents received as a result of share events.
+   */
+  int WEBAPK_SHARE_TARGET = 13;
+  int COUNT = 14;
 }

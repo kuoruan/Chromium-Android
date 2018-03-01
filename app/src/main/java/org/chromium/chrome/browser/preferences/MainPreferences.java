@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.preferences;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.Preference;
@@ -37,6 +38,7 @@ public class MainPreferences extends PreferenceFragment
     public static final String PREF_HOMEPAGE = "homepage";
     public static final String PREF_DATA_REDUCTION = "data_reduction";
     public static final String PREF_NOTIFICATIONS = "notifications";
+    public static final String PREF_LANGUAGES = "languages";
 
     private final ManagedPreferenceDelegate mManagedPreferenceDelegate;
     private final Map<String, Preference> mAllPreferences = new HashMap<>();
@@ -92,7 +94,7 @@ public class MainPreferences extends PreferenceFragment
         setManagedPreferenceDelegateForPreference(PREF_SAVED_PASSWORDS);
         setManagedPreferenceDelegateForPreference(PREF_DATA_REDUCTION);
 
-        if (BuildInfo.isAtLeastO()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // If we are on Android O+ the Notifications preference should lead to the Android
             // Settings notifications page, not to Chrome's notifications settings page.
             Preference notifications = findPreference(PREF_NOTIFICATIONS);
@@ -117,6 +119,12 @@ public class MainPreferences extends PreferenceFragment
             // user's device, not whether the user has Content Suggestions Notifications themselves
             // enabled (which is what the user can toggle on the Notifications Preferences page).
             getPreferenceScreen().removePreference(findPreference(PREF_NOTIFICATIONS));
+        }
+
+        // This checks whether the Languages Preference *feature* is enabled on the user's device.
+        // If not, remove the languages preference.
+        if (!ChromeFeatureList.isEnabled(ChromeFeatureList.LANGUAGES_PREFERENCE)) {
+            getPreferenceScreen().removePreference(findPreference(PREF_LANGUAGES));
         }
 
         if (!TemplateUrlService.getInstance().isLoaded()) {
@@ -152,15 +160,9 @@ public class MainPreferences extends PreferenceFragment
 
         updateSearchEnginePreference();
 
-        ChromeBasePreference passwordsPref =
-                (ChromeBasePreference) findPreference(PREF_SAVED_PASSWORDS);
-        setOnOffSummary(
-                passwordsPref, PrefServiceBridge.getInstance().isRememberPasswordsEnabled());
-
         if (HomepageManager.shouldShowHomepageSetting()) {
             Preference homepagePref = addPreferenceIfAbsent(PREF_HOMEPAGE);
-            setOnOffSummary(homepagePref,
-                    HomepageManager.getInstance(getActivity()).getPrefHomepageEnabled());
+            setOnOffSummary(homepagePref, HomepageManager.getInstance().getPrefHomepageEnabled());
         } else {
             removePreferenceIfPresent(PREF_HOMEPAGE);
         }

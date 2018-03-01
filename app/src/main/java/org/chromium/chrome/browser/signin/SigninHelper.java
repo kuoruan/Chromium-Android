@@ -17,8 +17,6 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.invalidation.InvalidationServiceFactory;
-import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
-import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.signin.SigninManager.SignInCallback;
 import org.chromium.chrome.browser.sync.ProfileSyncService;
@@ -60,9 +58,8 @@ public class SigninHelper {
     /**
      * Retrieve more detailed information from account changed intents.
      */
-    public static interface AccountChangeEventChecker {
-        public List<String> getAccountChangeEvents(
-                Context context, int index, String accountName);
+    public interface AccountChangeEventChecker {
+        List<String> getAccountChangeEvents(Context context, int index, String accountName);
     }
 
     /**
@@ -77,7 +74,7 @@ public class SigninHelper {
             try {
                 List<AccountChangeEvent> list = GoogleAuthUtil.getAccountChangeEvents(
                         context, index, accountName);
-                List<String> result = new ArrayList<String>(list.size());
+                List<String> result = new ArrayList<>(list.size());
                 for (AccountChangeEvent e : list) {
                     if (e.getChangeType() == GoogleAuthUtil.CHANGE_TYPE_ACCOUNT_RENAMED_TO) {
                         result.add(e.getChangeData());
@@ -91,7 +88,7 @@ public class SigninHelper {
             } catch (GoogleAuthException e) {
                 Log.w(TAG, "Failed to get change events", e);
             }
-            return new ArrayList<String>(0);
+            return new ArrayList<>(0);
         }
     }
 
@@ -137,19 +134,6 @@ public class SigninHelper {
 
         Account syncAccount = mChromeSigninController.getSignedInUser();
         if (syncAccount == null) {
-            ChromePreferenceManager chromePreferenceManager = ChromePreferenceManager.getInstance();
-            if (chromePreferenceManager.getShowSigninPromo()) return;
-
-            // Never shows a signin promo if user has manually disconnected.
-            String lastSyncAccountName =
-                    PrefServiceBridge.getInstance().getSyncLastAccountName();
-            if (lastSyncAccountName != null && !lastSyncAccountName.isEmpty()) return;
-
-            if (!chromePreferenceManager.getSigninPromoShown()
-                    && AccountManagerFacade.get().tryGetGoogleAccountNames().size() > 0) {
-                chromePreferenceManager.setShowSigninPromo(true);
-            }
-
             return;
         }
 
@@ -225,16 +209,13 @@ public class SigninHelper {
 
         // TODO(acleung): Deal with passphrase or just prompt user to re-enter it?
         // Perform a sign-out with a callback to sign-in again.
-        mSigninManager.signOut(new Runnable() {
-            @Override
-            public void run() {
-                // Clear the shared perf only after signOut is successful.
-                // If Chrome dies, we can try it again on next run.
-                // Otherwise, if re-sign-in fails, we'll just leave chrome
-                // signed-out.
-                clearNewSignedInAccountName(mContext);
-                performResignin(newName);
-            }
+        mSigninManager.signOut(() -> {
+            // Clear the shared perf only after signOut is successful.
+            // If Chrome dies, we can try it again on next run.
+            // Otherwise, if re-sign-in fails, we'll just leave chrome
+            // signed-out.
+            clearNewSignedInAccountName(mContext);
+            performResignin(newName);
         });
     }
 

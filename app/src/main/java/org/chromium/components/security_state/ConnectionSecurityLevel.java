@@ -41,8 +41,9 @@ public @interface ConnectionSecurityLevel {
    */
   int SECURE = 3;
   /**
-   * HTTPS, but the certificate verification chain is anchored on a certificate that was installed
-   * by the system administrator. Currently used only on ChromeOS.
+   * HTTPS, but a certificate chain anchored to a root certificate installed by the system
+   * administrator has been observed in this profile, suggesting a MITM was present. Used only on
+   * ChromeOS, this status is unreached on other platforms.
    */
   int SECURE_WITH_POLICY_INSTALLED_CERT = 4;
   /**

@@ -20,8 +20,6 @@ import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.style.StyleSpan;
 
-import org.chromium.base.BuildInfo;
-import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
@@ -31,7 +29,6 @@ import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeFeatureList;
-import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
 import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
 import org.chromium.chrome.browser.notifications.channels.SiteChannelsManager;
@@ -49,6 +46,7 @@ import org.chromium.webapk.lib.client.WebApkValidator;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -165,6 +163,7 @@ public class NotificationPlatformBridge {
                 return false;
             }
         }
+        recordJobStartDelayUMA(intent);
 
         String notificationId = intent.getStringExtra(NotificationConstants.EXTRA_NOTIFICATION_ID);
 
@@ -202,6 +201,17 @@ public class NotificationPlatformBridge {
 
         Log.e(TAG, "Unrecognized Notification action: " + intent.getAction());
         return false;
+    }
+
+    private static void recordJobStartDelayUMA(Intent intent) {
+        if (intent.hasExtra(NotificationConstants.EXTRA_JOB_SCHEDULED_TIME_MS)
+                && intent.hasExtra(NotificationConstants.EXTRA_JOB_STARTED_TIME_MS)) {
+            long duration = intent.getLongExtra(NotificationConstants.EXTRA_JOB_STARTED_TIME_MS, -1)
+                    - intent.getLongExtra(NotificationConstants.EXTRA_JOB_SCHEDULED_TIME_MS, -1);
+            if (duration < 0) return; // Possible if device rebooted before job started.
+            RecordHistogram.recordMediumTimesHistogram(
+                    "Notifications.Android.JobStartDelay", duration, TimeUnit.MILLISECONDS);
+        }
     }
 
     @Nullable
@@ -658,7 +668,7 @@ public class NotificationPlatformBridge {
         // (It's okay to not set a channel on them because web apks don't target O yet.)
         // TODO(crbug.com/700377): Channel ID should be retrieved from cache in native and passed
         // through to here with other notification parameters.
-        String channelId = (forWebApk || !BuildInfo.isAtLeastO())
+        String channelId = (forWebApk || Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
                 ? null
                 : ChromeFeatureList.isEnabled(ChromeFeatureList.SITE_NOTIFICATION_CHANNELS)
                         ? SiteChannelsManager.getInstance().getChannelIdForOrigin(origin)
@@ -695,8 +705,6 @@ public class NotificationPlatformBridge {
      * Determines whether to use standard notification layouts, using NotificationCompat.Builder,
      * or custom layouts using Chrome's own templates.
      *
-     * The --{enable,disable}-web-notification-custom-layouts command line flags take precedence.
-     *
      * Normally a standard layout is used on Android N+, and a custom layout is used on older
      * versions of Android. But if the notification has a content image, there isn't enough room for
      * the Site Settings button to go on its own line when showing an image, nor is there enough
@@ -707,20 +715,7 @@ public class NotificationPlatformBridge {
      */
     @VisibleForTesting
     static boolean useCustomLayouts(boolean hasImage) {
-        CommandLine commandLine = CommandLine.getInstance();
-        if (commandLine.hasSwitch(ChromeSwitches.ENABLE_WEB_NOTIFICATION_CUSTOM_LAYOUTS)) {
-            return true;
-        }
-        if (commandLine.hasSwitch(ChromeSwitches.DISABLE_WEB_NOTIFICATION_CUSTOM_LAYOUTS)) {
-            return false;
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            return false;
-        }
-        if (hasImage) {
-            return false;
-        }
-        return true;
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.N && !hasImage;
     }
 
     /**

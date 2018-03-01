@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.offlinepages;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
@@ -20,6 +21,8 @@ import org.chromium.chrome.browser.AppHooks;
  */
 public class CctOfflinePageModelObserver {
     private static final String TAG = "CctModelObserver";
+    private static final String ORIGIN_VERIFICATION_KEY =
+            "org.chromium.chrome.extra.CHROME_NAME_PENDING_INTENT";
     private static final String ACTION_OFFLINE_PAGES_UPDATED =
             "org.chromium.chrome.browser.offlinepages.OFFLINE_PAGES_CHANGED";
 
@@ -43,6 +46,14 @@ public class CctOfflinePageModelObserver {
         Intent intent = new Intent();
         intent.setAction(ACTION_OFFLINE_PAGES_UPDATED);
         intent.setPackage(origin.getAppName());
+
+        // Create a pending intent and cancel it, as this is only expected to verify
+        // that chrome created the OFFLINE_PAGES_UPDATED broadcast, not for actual use.
+        PendingIntent originVerification = PendingIntent.getBroadcast(
+                context, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT);
+        originVerification.cancel();
+
+        intent.putExtra(ORIGIN_VERIFICATION_KEY, originVerification);
         context.sendBroadcast(intent);
     }
 

@@ -16,6 +16,7 @@ import android.util.Base64;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ApplicationStatus;
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.ShortcutHelper;
@@ -101,7 +102,7 @@ public class WebappLauncherActivity extends Activity {
             // WebappActivity and the user selects the WebappActivity from "Android Recents" the
             // WebappActivity is launched without going through WebappLauncherActivity first.
             WebappActivity.addWebappInfo(webappInfo.id(), webappInfo);
-            Intent launchIntent = createWebappLaunchIntent(webappInfo, webappSource, validWebApk);
+            Intent launchIntent = createWebappLaunchIntent(webappInfo, validWebApk);
             IntentHandler.addTimestampToIntent(launchIntent, mCreateTime);
             startActivity(launchIntent);
             return;
@@ -172,7 +173,7 @@ public class WebappLauncherActivity extends Activity {
      * @param isWebApk If true, launch the app as a WebApkActivity.  If false, launch the app as
      *                 a WebappActivity.
      */
-    private Intent createWebappLaunchIntent(WebappInfo info, int source, boolean isWebApk) {
+    public static Intent createWebappLaunchIntent(WebappInfo info, boolean isWebApk) {
         String activityName = isWebApk ? WebApkActivity.class.getName()
                 : WebappActivity.class.getName();
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
@@ -200,7 +201,7 @@ public class WebappLauncherActivity extends Activity {
 
         // Create an intent to launch the Webapp in an unmapped WebappActivity.
         Intent launchIntent = new Intent();
-        launchIntent.setClassName(this, activityName);
+        launchIntent.setClassName(ContextUtils.getApplicationContext(), activityName);
         info.setWebappIntentExtras(launchIntent);
 
         // On L+, firing intents with the exact same data should relaunch a particular

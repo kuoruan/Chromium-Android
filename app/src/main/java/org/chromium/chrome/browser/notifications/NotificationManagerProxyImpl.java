@@ -11,8 +11,6 @@ import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.os.Build;
 
-import org.chromium.base.BuildInfo;
-
 import java.util.List;
 
 /**
@@ -44,7 +42,7 @@ public class NotificationManagerProxyImpl implements NotificationManagerProxy {
     @TargetApi(Build.VERSION_CODES.O)
     @Override
     public void createNotificationChannel(NotificationChannel channel) {
-        assert BuildInfo.isAtLeastO();
+        assert Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
         // Suppress the notification dot/number that may appear on the browser app launcher. We
         // suppress this because showing it may imply that tapping the launch icon will lead
         // to some way of dismissing the dot, which is generally not the case. We don't want to
@@ -57,28 +55,28 @@ public class NotificationManagerProxyImpl implements NotificationManagerProxy {
     @TargetApi(Build.VERSION_CODES.O)
     @Override
     public void createNotificationChannelGroup(NotificationChannelGroup channelGroup) {
-        assert BuildInfo.isAtLeastO();
+        assert Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
         mNotificationManager.createNotificationChannelGroup(channelGroup);
     }
 
     @TargetApi(Build.VERSION_CODES.O)
     @Override
     public List<NotificationChannel> getNotificationChannels() {
-        assert BuildInfo.isAtLeastO();
+        assert Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
         return mNotificationManager.getNotificationChannels();
     }
 
     @TargetApi(Build.VERSION_CODES.O)
     @Override
     public List<NotificationChannelGroup> getNotificationChannelGroups() {
-        assert BuildInfo.isAtLeastO();
+        assert Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
         return mNotificationManager.getNotificationChannelGroups();
     }
 
     @TargetApi(Build.VERSION_CODES.O)
     @Override
     public void deleteNotificationChannel(String id) {
-        assert BuildInfo.isAtLeastO();
+        assert Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
         mNotificationManager.deleteNotificationChannel(id);
     }
 
@@ -95,14 +93,14 @@ public class NotificationManagerProxyImpl implements NotificationManagerProxy {
     @TargetApi(Build.VERSION_CODES.O)
     @Override
     public NotificationChannel getNotificationChannel(String channelId) {
-        assert BuildInfo.isAtLeastO();
+        assert Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
         return mNotificationManager.getNotificationChannel(channelId);
     }
 
     @TargetApi(Build.VERSION_CODES.O)
     @Override
     public void deleteNotificationChannelGroup(String groupId) {
-        assert BuildInfo.isAtLeastO();
+        assert Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
         mNotificationManager.deleteNotificationChannelGroup(groupId);
     }
 }

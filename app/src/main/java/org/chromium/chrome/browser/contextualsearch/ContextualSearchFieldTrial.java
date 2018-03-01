@@ -25,12 +25,6 @@ public class ContextualSearchFieldTrial {
     static final String MANDATORY_PROMO_LIMIT = "mandatory_promo_limit";
     static final int MANDATORY_PROMO_DEFAULT_LIMIT = 10;
 
-    private static final String PEEK_PROMO_FORCED = "peek_promo_forced";
-    @VisibleForTesting
-    static final String PEEK_PROMO_ENABLED = "peek_promo_enabled";
-    private static final String PEEK_PROMO_MAX_SHOW_COUNT = "peek_promo_max_show_count";
-    private static final int PEEK_PROMO_DEFAULT_MAX_SHOW_COUNT = 10;
-
     private static final String DISABLE_SEARCH_TERM_RESOLUTION = "disable_search_term_resolution";
     private static final String WAIT_AFTER_TAP_DELAY_MS = "wait_after_tap_delay_ms";
 
@@ -76,7 +70,7 @@ public class ContextualSearchFieldTrial {
     static final String ONLINE_DETECTION_DISABLED = "disable_online_detection";
     private static final String DISABLE_AMP_AS_SEPARATE_TAB = "disable_amp_as_separate_tab";
     // Disable logging for Machine Learning
-    private static final String DISABLE_RANKER_LOGGING = "disable_ranker_logging";
+    private static final String DISABLE_UKM_RANKER_LOGGING = "disable_ukm_ranker_logging";
     private static final String DISABLE_SUPPRESS_FOR_SMART_SELECTION =
             "disable_suppress_for_smart_selection";
 
@@ -93,8 +87,6 @@ public class ContextualSearchFieldTrial {
     private static Boolean sDisableSearchTermResolution;
     private static Boolean sIsMandatoryPromoEnabled;
     private static Integer sMandatoryPromoLimit;
-    private static Boolean sIsPeekPromoEnabled;
-    private static Integer sPeekPromoMaxCount;
     private static Boolean sIsTranslationDisabled;
     private static Boolean sIsEnglishTargetTranslationEnabled;
     private static Integer sScreenTopSuppressionDps;
@@ -107,11 +99,11 @@ public class ContextualSearchFieldTrial {
     private static Integer sMinimumSelectionLength;
     private static Boolean sIsOnlineDetectionDisabled;
     private static Boolean sIsAmpAsSeparateTabDisabled;
-    private static Boolean sContextualSearchSingleActionsEnabled;
+    private static Boolean sContextualSearchMlTapSuppressionEnabled;
+    private static Boolean sContextualSearchSecondTapMlOverrideEnabled;
     private static Boolean sIsSendHomeCountryDisabled;
     private static Boolean sIsPageContentNotificationDisabled;
-    private static Boolean sContextualSearchUrlActionsEnabled;
-    private static Boolean sIsRankerLoggingDisabled;
+    private static Boolean sIsUkmRankerLoggingDisabled;
     private static Boolean sIsSuppressForSmartSelectionDisabled;
     private static Integer sWaitAfterTapDelayMs;
     private static Integer sTapDurationThresholdMs;
@@ -192,35 +184,6 @@ public class ContextualSearchFieldTrial {
                     MANDATORY_PROMO_DEFAULT_LIMIT);
         }
         return sMandatoryPromoLimit.intValue();
-    }
-
-    /**
-     * @return Whether the Peek Promo is forcibly enabled (used for testing).
-     */
-    static boolean isPeekPromoForced() {
-        return CommandLine.getInstance().hasSwitch(PEEK_PROMO_FORCED);
-    }
-
-    /**
-     * @return Whether the Peek Promo is enabled.
-     */
-    static boolean isPeekPromoEnabled() {
-        if (sIsPeekPromoEnabled == null) {
-            sIsPeekPromoEnabled = getBooleanParam(PEEK_PROMO_ENABLED);
-        }
-        return sIsPeekPromoEnabled.booleanValue();
-    }
-
-    /**
-     * @return The maximum number of times the Peek Promo should be displayed.
-     */
-    static int getPeekPromoMaxShowCount() {
-        if (sPeekPromoMaxCount == null) {
-            sPeekPromoMaxCount = getIntParamValueOrDefault(
-                    PEEK_PROMO_MAX_SHOW_COUNT,
-                    PEEK_PROMO_DEFAULT_MAX_SHOW_COUNT);
-        }
-        return sPeekPromoMaxCount.intValue();
     }
 
     /**
@@ -369,13 +332,13 @@ public class ContextualSearchFieldTrial {
     }
 
     /**
-     * @return Whether or not logging to Ranker is disabled.
+     * @return Whether or not logging to Ranker via UKM is disabled.
      */
-    static boolean isRankerLoggingDisabled() {
-        if (sIsRankerLoggingDisabled == null) {
-            sIsRankerLoggingDisabled = getBooleanParam(DISABLE_RANKER_LOGGING);
+    static boolean isUkmRankerLoggingDisabled() {
+        if (sIsUkmRankerLoggingDisabled == null) {
+            sIsUkmRankerLoggingDisabled = getBooleanParam(DISABLE_UKM_RANKER_LOGGING);
         }
-        return sIsRankerLoggingDisabled;
+        return sIsUkmRankerLoggingDisabled;
     }
 
     /**
@@ -436,27 +399,25 @@ public class ContextualSearchFieldTrial {
     // ---------------------------
 
     /**
-     * @return Whether or not single actions based on Contextual Cards is enabled.
+     * @return Whether or not ML-based Tap suppression is enabled.
      */
-    static boolean isContextualSearchSingleActionsEnabled() {
-        if (sContextualSearchSingleActionsEnabled == null) {
-            sContextualSearchSingleActionsEnabled =
-                    ChromeFeatureList.isEnabled(ChromeFeatureList.CONTEXTUAL_SEARCH_SINGLE_ACTIONS);
+    static boolean isContextualSearchMlTapSuppressionEnabled() {
+        if (sContextualSearchMlTapSuppressionEnabled == null) {
+            sContextualSearchMlTapSuppressionEnabled = ChromeFeatureList.isEnabled(
+                    ChromeFeatureList.CONTEXTUAL_SEARCH_ML_TAP_SUPPRESSION);
         }
-
-        return sContextualSearchSingleActionsEnabled;
+        return sContextualSearchMlTapSuppressionEnabled;
     }
 
     /**
-     * @return Whether or not URL actions based on Contextual Cards is enabled.
+     * @return Whether or not to override an ML-based Tap suppression on a second tap.
      */
-    static boolean isContextualSearchUrlActionsEnabled() {
-        if (sContextualSearchUrlActionsEnabled == null) {
-            sContextualSearchUrlActionsEnabled =
-                    ChromeFeatureList.isEnabled(ChromeFeatureList.CONTEXTUAL_SEARCH_URL_ACTIONS);
+    static boolean isContextualSearchSecondTapMlOverrideEnabled() {
+        if (sContextualSearchSecondTapMlOverrideEnabled == null) {
+            sContextualSearchSecondTapMlOverrideEnabled =
+                    ChromeFeatureList.isEnabled(ChromeFeatureList.CONTEXTUAL_SEARCH_SECOND_TAP);
         }
-
-        return sContextualSearchUrlActionsEnabled;
+        return sContextualSearchSecondTapMlOverrideEnabled;
     }
 
     // --------------------------------------------------------------------------------------------

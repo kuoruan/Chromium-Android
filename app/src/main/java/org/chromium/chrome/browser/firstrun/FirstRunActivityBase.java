@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import org.chromium.base.Log;
-import org.chromium.chrome.browser.LaunchIntentDispatcher;
 import org.chromium.chrome.browser.customtabs.CustomTabsConnection;
 import org.chromium.chrome.browser.init.AsyncInitializationActivity;
 import org.chromium.chrome.browser.metrics.UmaUtils;
@@ -25,6 +24,8 @@ public abstract class FirstRunActivityBase extends AsyncInitializationActivity {
     // Incoming parameters:
     public static final String EXTRA_COMING_FROM_CHROME_ICON = "Extra.ComingFromChromeIcon";
     public static final String EXTRA_CHROME_LAUNCH_INTENT = "Extra.FreChromeLaunchIntent";
+    public static final String EXTRA_CHROME_LAUNCH_INTENT_IS_CCT =
+            "Extra.FreChromeLaunchIntentIsCct";
 
     static final String SHOW_WELCOME_PAGE = "ShowWelcome";
     static final String SHOW_DATA_REDUCTION_PAGE = "ShowDataReduction";
@@ -89,25 +90,33 @@ public abstract class FirstRunActivityBase extends AsyncInitializationActivity {
     protected final boolean sendPendingIntentIfNecessary(final boolean complete) {
         PendingIntent pendingIntent =
                 IntentUtils.safeGetParcelableExtra(getIntent(), EXTRA_CHROME_LAUNCH_INTENT);
+        boolean pendingIntentIsCCT = IntentUtils.safeGetBooleanExtra(
+                getIntent(), EXTRA_CHROME_LAUNCH_INTENT_IS_CCT, false);
         if (pendingIntent == null) return false;
+
+        // Calling pending intent to report failure can result in UI flicker (crbug.com/788153).
+        // Avoid doing that unless the intent is for custom tabs, in which case we don't have a
+        // choice because we need to call "first run" CCT callback with the intent.
+        if (!complete && !pendingIntentIsCCT) return false;
 
         Intent extraDataIntent = new Intent();
         extraDataIntent.putExtra(EXTRA_FIRST_RUN_ACTIVITY_RESULT, true);
         extraDataIntent.putExtra(EXTRA_FIRST_RUN_COMPLETE, complete);
 
         try {
-            // After the PendingIntent has been sent, send a first run callback to custom tabs if
-            // necessary.
-            PendingIntent.OnFinished onFinished = new PendingIntent.OnFinished() {
-                @Override
-                public void onSendFinished(PendingIntent pendingIntent, Intent intent,
-                        int resultCode, String resultData, Bundle resultExtras) {
-                    if (LaunchIntentDispatcher.isCustomTabIntent(intent)) {
+            PendingIntent.OnFinished onFinished = null;
+            if (pendingIntentIsCCT) {
+                // After the PendingIntent has been sent, send a first run callback to custom tabs
+                // if necessary.
+                onFinished = new PendingIntent.OnFinished() {
+                    @Override
+                    public void onSendFinished(PendingIntent pendingIntent, Intent intent,
+                            int resultCode, String resultData, Bundle resultExtras) {
                         CustomTabsConnection.getInstance().sendFirstRunCallbackIfNecessary(
                                 intent, complete);
                     }
-                }
-            };
+                };
+            }
 
             // Use the PendingIntent to send the intent that originally launched Chrome. The intent
             // will go back to the ChromeLauncherActivity, which will route it accordingly.

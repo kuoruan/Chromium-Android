@@ -4,33 +4,23 @@
 
 package org.chromium.chrome.browser.download;
 
-import android.view.View;
-
 import org.chromium.base.ActivityState;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.ApplicationStatus.ActivityStateListener;
-import org.chromium.base.CollectionUtil;
 import org.chromium.base.ThreadUtils;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.download.ui.DownloadHistoryItemWrapper;
 import org.chromium.chrome.browser.download.ui.DownloadManagerUi;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;
-import org.chromium.chrome.browser.toolbar.BottomToolbarPhone;
-import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.BottomSheetContent;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheetContentController;
-import org.chromium.chrome.browser.widget.selection.SelectableListToolbar;
-
-import java.util.List;
+import org.chromium.chrome.browser.widget.selection.SelectableBottomSheetContent;
 
 /**
  * A {@link BottomSheetContent} holding a {@link DownloadManagerUi} for display in the BottomSheet.
  */
-public class DownloadSheetContent implements BottomSheetContent {
-    private final View mContentView;
-    private final SelectableListToolbar<DownloadHistoryItemWrapper> mToolbarView;
+public class DownloadSheetContent extends SelectableBottomSheetContent<DownloadHistoryItemWrapper> {
     private final ActivityStateListener mActivityStateListener;
-    private DownloadManagerUi mDownloadManager;
 
     /**
      * @param activity The activity displaying the download manager UI.
@@ -39,25 +29,13 @@ public class DownloadSheetContent implements BottomSheetContent {
      */
     public DownloadSheetContent(final ChromeActivity activity, final boolean isIncognito,
             SnackbarManager snackbarManager) {
+        super();
+
         ThreadUtils.assertOnUiThread();
 
-        mDownloadManager = new DownloadManagerUi(
+        DownloadManagerUi downloadManager = new DownloadManagerUi(
                 activity, isIncognito, activity.getComponentName(), false, snackbarManager);
-        mContentView = mDownloadManager.getView();
-        mToolbarView = mDownloadManager.detachToolbarView();
-        mToolbarView.addObserver(new SelectableListToolbar.SelectableListToolbarObserver() {
-            @Override
-            public void onThemeColorChanged(boolean isLightTheme) {
-                activity.getBottomSheet().updateHandleTint();
-            }
-
-            @Override
-            public void onStartSearch() {
-                activity.getBottomSheet().setSheetState(BottomSheet.SHEET_STATE_FULL, true);
-            }
-        });
-        ((BottomToolbarPhone) activity.getToolbarManager().getToolbar())
-                .setOtherToolbarStyle(mToolbarView);
+        initialize(activity, downloadManager);
 
         // #destroy() unregisters the ActivityStateListener to avoid checking for externally removed
         // downloads after the downloads UI is closed. This requires each download UI to have its
@@ -67,64 +45,20 @@ public class DownloadSheetContent implements BottomSheetContent {
         mActivityStateListener = (activity1, newState) -> {
             if (newState == ActivityState.RESUMED) {
                 DownloadUtils.checkForExternallyRemovedDownloads(
-                        mDownloadManager.getBackendProvider(), isIncognito);
+                        downloadManager.getBackendProvider(), isIncognito);
             }
         };
         ApplicationStatus.registerStateListenerForActivity(mActivityStateListener, activity);
-
-        mToolbarView.setActionBarDelegate(activity.getBottomSheet().getActionBarDelegate());
-    }
-
-    @Override
-    public View getContentView() {
-        return mContentView;
-    }
-
-    @Override
-    public List<View> getViewsForPadding() {
-        return CollectionUtil.newArrayList(
-                mDownloadManager.getRecyclerView(), mDownloadManager.getEmptyView());
-    }
-
-    @Override
-    public View getToolbarView() {
-        return mToolbarView;
-    }
-
-    @Override
-    public boolean isUsingLightToolbarTheme() {
-        return mToolbarView.isLightTheme();
-    }
-
-    @Override
-    public boolean isIncognitoThemedContent() {
-        return false;
-    }
-
-    @Override
-    public int getVerticalScrollOffset() {
-        return mDownloadManager.getVerticalScrollOffset();
     }
 
     @Override
     public void destroy() {
-        mDownloadManager.onDestroyed();
-        mDownloadManager = null;
+        super.destroy();
         ApplicationStatus.unregisterActivityStateListener(mActivityStateListener);
     }
 
     @Override
     public int getType() {
         return BottomSheetContentController.TYPE_DOWNLOADS;
-    }
-
-    @Override
-    public boolean applyDefaultTopPadding() {
-        return false;
-    }
-
-    @Override
-    public void scrollToTop() {
-        mDownloadManager.scrollToTop();
     }
 }

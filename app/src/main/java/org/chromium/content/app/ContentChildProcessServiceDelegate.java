@@ -88,6 +88,19 @@ public class ContentChildProcessServiceDelegate implements ChildProcessServiceDe
     }
 
     @Override
+    public void preloadNativeLibrary(Context hostContext) {
+        // This function can be called before command line is set. That is fine because
+        // preloading explicitly doesn't run any Chromium code, see NativeLibraryPreloader
+        // for more info.
+        try {
+            LibraryLoader libraryLoader = LibraryLoader.get(mLibraryProcessType);
+            libraryLoader.preloadNowOverrideApplicationContext(hostContext);
+        } catch (ProcessInitException e) {
+            Log.w(TAG, "Failed to preload native library", e);
+        }
+    }
+
+    @Override
     public boolean loadNativeLibrary(Context hostContext) {
         String processType =
                 CommandLine.getInstance().getSwitchValue(ContentSwitches.SWITCH_PROCESS_TYPE);

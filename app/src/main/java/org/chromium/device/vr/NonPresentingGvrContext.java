@@ -69,8 +69,10 @@ public class NonPresentingGvrContext implements DisplayAndroid.DisplayAndroidObs
         mNativeGvrDevice = 0;
     }
 
+    @Override
     public void onRotationChanged(int rotation) {}
 
+    @Override
     public void onDIPScaleChanged(float dipScale) {
         mGvrApi.refreshDisplayMetrics();
         if (mNativeGvrDevice != 0) {

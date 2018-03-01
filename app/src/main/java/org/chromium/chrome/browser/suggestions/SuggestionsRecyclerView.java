@@ -88,6 +88,7 @@ public class SuggestionsRecyclerView extends RecyclerView {
         this(context, null);
     }
 
+    @SuppressWarnings("RestrictTo")
     public SuggestionsRecyclerView(Context context, AttributeSet attrs) {
         super(new ContextThemeWrapper(context, R.style.NewTabPageRecyclerView), attrs);
 

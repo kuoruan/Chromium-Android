@@ -12,9 +12,7 @@ import org.chromium.chrome.browser.browsing_data.ClearBrowsingDataTab;
  * A more advanced version of {@link ClearBrowsingDataPreferences} with more dialog options and less
  * explanatory text.
  */
-public class ClearBrowsingDataPreferencesAdvanced extends ClearBrowsingDataPreferencesTab {
-    // TODO(dullweber): Add more options.
-
+public class ClearBrowsingDataPreferencesAdvanced extends ClearBrowsingDataPreferences {
     @Override
     protected int getPreferenceType() {
         return ClearBrowsingDataTab.ADVANCED;

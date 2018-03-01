@@ -46,6 +46,7 @@ import org.chromium.chrome.browser.suggestions.DestructionObserver;
 import org.chromium.chrome.browser.suggestions.SiteSection;
 import org.chromium.chrome.browser.suggestions.SiteSectionViewHolder;
 import org.chromium.chrome.browser.suggestions.SuggestionsConfig;
+import org.chromium.chrome.browser.suggestions.SuggestionsDependencyFactory;
 import org.chromium.chrome.browser.suggestions.SuggestionsUiDelegate;
 import org.chromium.chrome.browser.suggestions.Tile;
 import org.chromium.chrome.browser.suggestions.TileGroup;
@@ -89,6 +90,11 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
      * Experiment parameter for the logo height in dp in the condensed layout.
      */
     private static final String PARAM_CONDENSED_LAYOUT_LOGO_HEIGHT = "condensed_layout_logo_height";
+
+    /**
+     * Default experiment parameter value for the logo height in dp in the condensed layout.
+     */
+    private static final int PARAM_DEFAULT_VALUE_CONDENSED_LAYOUT_LOGO_HEIGHT_DP = 100;
 
     private NewTabPageRecyclerView mRecyclerView;
 
@@ -255,7 +261,8 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
         });
 
         Profile profile = Profile.getLastUsedProfile();
-        OfflinePageBridge offlinePageBridge = OfflinePageBridge.getForProfile(profile);
+        OfflinePageBridge offlinePageBridge =
+                SuggestionsDependencyFactory.getInstance().getOfflinePageBridge(profile);
         TileRenderer tileRenderer =
                 new TileRenderer(mTab.getActivity(), SuggestionsConfig.getTileStyle(mUiConfig),
                         getTileTitleLines(), mManager.getImageFetcher());
@@ -268,7 +275,8 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
 
         mSearchProviderLogoView = mNewTabPageLayout.findViewById(R.id.search_provider_logo);
         int experimentalLogoHeightDp = ChromeFeatureList.getFieldTrialParamByFeatureAsInt(
-                ChromeFeatureList.NTP_CONDENSED_LAYOUT, PARAM_CONDENSED_LAYOUT_LOGO_HEIGHT, 0);
+                ChromeFeatureList.NTP_CONDENSED_LAYOUT, PARAM_CONDENSED_LAYOUT_LOGO_HEIGHT,
+                PARAM_DEFAULT_VALUE_CONDENSED_LAYOUT_LOGO_HEIGHT_DP);
         if (experimentalLogoHeightDp > 0) {
             ViewGroup.LayoutParams logoParams = mSearchProviderLogoView.getLayoutParams();
             logoParams.height = dpToPx(getContext(), experimentalLogoHeightDp);
@@ -278,6 +286,9 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
                 mManager.getNavigationDelegate(), mSearchProviderLogoView, profile);
 
         mSearchBoxView = mNewTabPageLayout.findViewById(R.id.search_box);
+        if (SuggestionsConfig.useModernLayout()) {
+            ViewUtils.setNinePatchBackgroundResource(mSearchBoxView, R.drawable.card_modern);
+        }
         mNoSearchLogoSpacer = mNewTabPageLayout.findViewById(R.id.no_search_logo_spacer);
 
         mSnapScrollRunnable = new SnapScrollRunnable();
@@ -295,9 +306,10 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
         mRecyclerView.init(mUiConfig, mContextMenuManager);
 
         // Set up snippets
-        NewTabPageAdapter newTabPageAdapter = new NewTabPageAdapter(mManager, mNewTabPageLayout,
-                mUiConfig, offlinePageBridge, mContextMenuManager, /* tileGroupDelegate = */ null,
-                /* suggestionsCarousel = */ null);
+        NewTabPageAdapter newTabPageAdapter =
+                new NewTabPageAdapter(mManager, mNewTabPageLayout, /* logoView = */ null, mUiConfig,
+                        offlinePageBridge, mContextMenuManager, /* tileGroupDelegate = */ null,
+                        /* suggestionsCarousel = */ null);
         newTabPageAdapter.refreshSuggestions();
         mRecyclerView.setAdapter(newTabPageAdapter);
         mRecyclerView.getLinearLayoutManager().scrollToPosition(scrollPosition);
@@ -951,7 +963,7 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
         boolean condensedLayoutEnabled =
                 ChromeFeatureList.isEnabled(ChromeFeatureList.NTP_CONDENSED_LAYOUT);
         boolean showLogoInCondensedLayout = ChromeFeatureList.getFieldTrialParamByFeatureAsBoolean(
-                ChromeFeatureList.NTP_CONDENSED_LAYOUT, PARAM_CONDENSED_LAYOUT_SHOW_LOGO, false);
+                ChromeFeatureList.NTP_CONDENSED_LAYOUT, PARAM_CONDENSED_LAYOUT_SHOW_LOGO, true);
         return mSearchProviderHasLogo && (!condensedLayoutEnabled || showLogoInCondensedLayout);
     }
 

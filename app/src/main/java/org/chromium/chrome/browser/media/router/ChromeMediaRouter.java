@@ -35,6 +35,7 @@ public class ChromeMediaRouter implements MediaRouteManager {
 
     private static MediaRouteProvider.Factory sRouteProviderFactory =
             new MediaRouteProvider.Factory() {
+                @Override
                 public void addProviders(MediaRouteManager manager) {
                     MediaRouteProvider castProvider = CastMediaRouteProvider.create(manager);
                     manager.addMediaRouteProvider(castProvider);

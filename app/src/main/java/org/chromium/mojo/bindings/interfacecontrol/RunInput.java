@@ -11,7 +11,6 @@
 
 package org.chromium.mojo.bindings.interfacecontrol;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
@@ -34,33 +33,21 @@ public final class RunInput extends org.chromium.mojo.bindings.Union {
       return mTag_ == -1;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setQueryVersion(QueryVersion queryVersion) {
         this.mTag_ = Tag.QueryVersion;
         this.mQueryVersion = queryVersion;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public QueryVersion getQueryVersion() {
         assert this.mTag_ == Tag.QueryVersion;
         return this.mQueryVersion;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setFlushForTesting(FlushForTesting flushForTesting) {
         this.mTag_ = Tag.FlushForTesting;
         this.mFlushForTesting = flushForTesting;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public FlushForTesting getFlushForTesting() {
         assert this.mTag_ == Tag.FlushForTesting;
         return this.mFlushForTesting;

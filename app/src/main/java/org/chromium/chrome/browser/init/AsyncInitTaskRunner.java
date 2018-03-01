@@ -70,14 +70,18 @@ public abstract class AsyncInitTaskRunner {
 
     private class FetchSeedTask extends AsyncTask<Void, Void, Void> {
         private final String mRestrictMode;
+        private final String mMilestone;
+        private final String mChannel;
 
         public FetchSeedTask(String restrictMode) {
             mRestrictMode = restrictMode;
+            mMilestone = Integer.toString(ChromeVersionInfo.getProductMajorVersion());
+            mChannel = getChannelString();
         }
 
         @Override
         protected Void doInBackground(Void... params) {
-            VariationsSeedFetcher.get().fetchSeed(mRestrictMode);
+            VariationsSeedFetcher.get().fetchSeed(mRestrictMode, mMilestone, mChannel);
             return null;
         }
 
@@ -85,6 +89,22 @@ public abstract class AsyncInitTaskRunner {
         protected void onPostExecute(Void result) {
             mFetchingVariations = false;
             tasksPossiblyComplete(true);
+        }
+
+        private String getChannelString() {
+            if (ChromeVersionInfo.isCanaryBuild()) {
+                return "canary";
+            }
+            if (ChromeVersionInfo.isDevBuild()) {
+                return "dev";
+            }
+            if (ChromeVersionInfo.isBetaBuild()) {
+                return "beta";
+            }
+            if (ChromeVersionInfo.isStableBuild()) {
+                return "stable";
+            }
+            return "";
         }
     }
 

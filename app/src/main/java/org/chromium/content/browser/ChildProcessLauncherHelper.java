@@ -18,7 +18,6 @@ import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.library_loader.Linker;
 import org.chromium.base.process_launcher.ChildConnectionAllocator;
 import org.chromium.base.process_launcher.ChildProcessConnection;
@@ -273,7 +272,6 @@ public class ChildProcessLauncherHelper {
 
     // Lazy initialize sBindingManager
     // TODO(boliu): This should be internal to content.
-    @SuppressFBWarnings("LI_LAZY_INIT_STATIC") // Method is single thread.
     public static BindingManager getBindingManager() {
         assert LauncherThread.runningOnLauncherThread();
         if (sBindingManager == null) {

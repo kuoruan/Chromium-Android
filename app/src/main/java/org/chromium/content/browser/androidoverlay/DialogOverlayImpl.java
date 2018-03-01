@@ -33,6 +33,10 @@ public class DialogOverlayImpl implements AndroidOverlay, DialogOverlayCore.Host
     // Runnable that we'll run when the overlay notifies us that it's been released.
     private Runnable mReleasedRunnable;
 
+    // Runnable that will release |mDialogCore| when posted to mOverlayHandler.  We keep this
+    // separately from mDialogCore itself so that we can call it after we've discarded the latter.
+    private Runnable mReleaseCoreRunnable;
+
     private final ThreadHoppingHost mHoppingHost;
 
     private DialogOverlayCore mDialogCore;
@@ -97,6 +101,13 @@ public class DialogOverlayImpl implements AndroidOverlay, DialogOverlayCore.Host
                 });
             }
         });
+
+        mReleaseCoreRunnable = new Runnable() {
+            @Override
+            public void run() {
+                dialogCore.release();
+            }
+        };
     }
 
     // AndroidOverlay impl.
@@ -113,19 +124,12 @@ public class DialogOverlayImpl implements AndroidOverlay, DialogOverlayCore.Host
         // that the client calls it.
 
         // Allow surfaceDestroyed to proceed, if it's waiting.
-        mHoppingHost.onCleanup();
+        mHoppingHost.onClose();
 
-        // Notify |mDialogCore| that it has been released.  This might not be called if it notifies
-        // us that it's been destroyed.  We still might send it in that case if the client closes
-        // the connection before we find out that it's been destroyed on the overlay thread.
-        if (mDialogCore != null) {
-            final DialogOverlayCore dialogCore = mDialogCore;
-            mOverlayHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    dialogCore.release();
-                }
-            });
+        // Notify |mDialogCore| that it has been released.
+        if (mReleaseCoreRunnable != null) {
+            mOverlayHandler.post(mReleaseCoreRunnable);
+            mReleaseCoreRunnable = null;
 
             // Note that we might get messagaes from |mDialogCore| after this, since they might be
             // dispatched before |r| arrives.  Clearing |mDialogCore| causes us to ignore them.
@@ -208,13 +212,13 @@ public class DialogOverlayImpl implements AndroidOverlay, DialogOverlayCore.Host
     // DialogOverlayCore.Host impl.
     // Due to threading issues, |mHoppingHost| doesn't forward this.
     @Override
-    public void waitForCleanup() {
+    public void waitForClose() {
         assert false : "Not reached";
     }
 
     // DialogOverlayCore.Host impl
     @Override
-    public void enforceCleanup() {
+    public void enforceClose() {
         // Pretend that the client closed us, even if they didn't.  It's okay if this is called more
         // than once.  The client might have already called it, or might call it later.
         close();

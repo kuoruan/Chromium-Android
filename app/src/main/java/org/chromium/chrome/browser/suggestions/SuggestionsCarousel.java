@@ -18,7 +18,8 @@ import android.webkit.URLUtil;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.metrics.ImpressionTracker;
+import org.chromium.chrome.browser.metrics.ImpressionTracker.Listener;
+import org.chromium.chrome.browser.metrics.OneShotImpressionListener;
 import org.chromium.chrome.browser.ntp.ContextMenuManager;
 import org.chromium.chrome.browser.ntp.cards.ItemViewType;
 import org.chromium.chrome.browser.ntp.cards.NewTabPageViewHolder;
@@ -41,10 +42,10 @@ import java.util.Locale;
  *
  * When there is no context, i.e. the user is on a native page, the carousel will not be shown.
  */
-public class SuggestionsCarousel extends OptionalLeaf implements ImpressionTracker.Listener {
+public class SuggestionsCarousel extends OptionalLeaf {
     private final SuggestionsCarouselAdapter mAdapter;
     private final SuggestionsUiDelegate mUiDelegate;
-    private final ImpressionTracker mImpressionTracker;
+    private final OneShotImpressionListener mImpressionFilter;
     @Nullable
     private String mCurrentContextUrl;
 
@@ -61,7 +62,8 @@ public class SuggestionsCarousel extends OptionalLeaf implements ImpressionTrack
         mUiDelegate = uiDelegate;
 
         // The impression tracker will record metrics only once per bottom sheet opened.
-        mImpressionTracker = new ImpressionTracker(this);
+        mImpressionFilter = new OneShotImpressionListener(
+                SuggestionsMetrics::recordContextualSuggestionsCarouselShown);
 
         // TODO(dgn): Handle this case properly. Also enable test in ContextualSuggestionsTest.
         // We need to keep the carousel always internally visible because it is the first item in
@@ -86,7 +88,8 @@ public class SuggestionsCarousel extends OptionalLeaf implements ImpressionTrack
 
         // Reset the impression tracker to record if the carousel is shown. We do this once per
         // bottom sheet opened.
-        mImpressionTracker.clearTriggered();
+        mImpressionFilter.reset();
+
         // Reset that the carousel has not been scrolled in this impression yet.
         mWasScrolledSinceShown = false;
 
@@ -113,12 +116,6 @@ public class SuggestionsCarousel extends OptionalLeaf implements ImpressionTrack
     }
 
     @Override
-    public void onImpression() {
-        SuggestionsMetrics.recordContextualSuggestionsCarouselShown();
-        mImpressionTracker.reset(null);
-    }
-
-    @Override
     protected void onBindViewHolder(NewTabPageViewHolder holder) {
         RecyclerView carouselRecyclerView = (RecyclerView) holder.itemView;
 
@@ -127,7 +124,7 @@ public class SuggestionsCarousel extends OptionalLeaf implements ImpressionTrack
         // We want to record only once that the carousel was shown after the bottom sheet was
         // opened. The first time that the carousel is shown, the mImpressionTracker will be
         // triggered and we don't want it to track any views anymore.
-        mImpressionTracker.reset(mImpressionTracker.wasTriggered() ? null : holder.itemView);
+        ((ViewHolder) holder).setListener(mImpressionFilter);
 
         // If we have recorded a scroll since the carousel was shown, we don't want to register a
         // scroll listener again.
@@ -179,13 +176,19 @@ public class SuggestionsCarousel extends OptionalLeaf implements ImpressionTrack
      */
     public static class ViewHolder extends NewTabPageViewHolder {
         private final RecyclerView mRecyclerView;
-
         public ViewHolder(ViewGroup parentView) {
             super(new RecyclerView(parentView.getContext()));
 
             mRecyclerView = (RecyclerView) itemView;
 
             setUpRecyclerView();
+        }
+
+        /**
+         * @param listener The impression tracker's listener.
+         */
+        public void setListener(Listener listener) {
+            setImpressionListener(listener);
         }
 
         private void setUpRecyclerView() {

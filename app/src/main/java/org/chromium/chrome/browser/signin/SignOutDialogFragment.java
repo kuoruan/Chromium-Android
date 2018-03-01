@@ -31,7 +31,7 @@ public class SignOutDialogFragment extends DialogFragment implements
         /**
          * Called when the user clicks "Sign out".
          */
-        public void onSignOutClicked();
+        void onSignOutClicked();
 
         /**
          * Called when the dialog is dismissed.
@@ -39,7 +39,7 @@ public class SignOutDialogFragment extends DialogFragment implements
          * @param signOutClicked Whether the user clicked the "sign out" button before the dialog
          *                       was dismissed.
          */
-        public void onSignOutDialogDismissed(boolean signOutClicked);
+        void onSignOutDialogDismissed(boolean signOutClicked);
     }
 
     private boolean mSignOutClicked;

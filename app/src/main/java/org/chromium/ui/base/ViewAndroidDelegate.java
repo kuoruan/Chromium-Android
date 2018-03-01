@@ -52,7 +52,7 @@ public abstract class ViewAndroidDelegate {
     }
 
     /**
-     * Set the anchor view to specified position and size (all units in dp).
+     * Set the anchor view to specified position and size (all units in px).
      * @param view The anchor view that needs to be positioned.
      * @param x X coordinate of the top left corner of the anchor view.
      * @param y Y coordinate of the top left corner of the anchor view.
@@ -60,24 +60,24 @@ public abstract class ViewAndroidDelegate {
      * @param height The height of the anchor view.
      */
     @CalledByNative
-    public void setViewPosition(View view, float x, float y,
-            float width, float height, float scale, int leftMargin, int topMargin) {
+    public void setViewPosition(
+            View view, float x, float y, float width, float height, int leftMargin, int topMargin) {
         ViewGroup containerView = getContainerView();
         if (containerView == null) return;
 
-        int scaledWidth = Math.round(width * scale);
-        int scaledHeight = Math.round(height * scale);
+        int widthInt = Math.round(width);
+        int heightInt = Math.round(height);
         int startMargin;
 
         if (ApiCompatibilityUtils.isLayoutRtl(containerView)) {
-            startMargin = containerView.getMeasuredWidth() - Math.round((width + x) * scale);
+            startMargin = containerView.getMeasuredWidth() - Math.round(width + x);
         } else {
             startMargin = leftMargin;
         }
-        if (scaledWidth + startMargin > containerView.getWidth()) {
-            scaledWidth = containerView.getWidth() - startMargin;
+        if (widthInt + startMargin > containerView.getWidth()) {
+            widthInt = containerView.getWidth() - startMargin;
         }
-        LayoutParams lp = new LayoutParams(scaledWidth, scaledHeight);
+        LayoutParams lp = new LayoutParams(widthInt, heightInt);
         ApiCompatibilityUtils.setMarginStart(lp, startMargin);
         lp.topMargin = topMargin;
         view.setLayoutParams(lp);
@@ -121,122 +121,122 @@ public abstract class ViewAndroidDelegate {
 
         int pointerIconType = PointerIcon.TYPE_ARROW;
         switch (cursorType) {
-            case WebCursorInfoType.TYPE_NONE:
+            case WebCursorInfoType.NONE:
                 pointerIconType = PointerIcon.TYPE_NULL;
                 break;
-            case WebCursorInfoType.TYPE_POINTER:
+            case WebCursorInfoType.POINTER:
                 pointerIconType = PointerIcon.TYPE_ARROW;
                 break;
-            case WebCursorInfoType.TYPE_CONTEXT_MENU:
+            case WebCursorInfoType.CONTEXT_MENU:
                 pointerIconType = PointerIcon.TYPE_CONTEXT_MENU;
                 break;
-            case WebCursorInfoType.TYPE_HAND:
+            case WebCursorInfoType.HAND:
                 pointerIconType = PointerIcon.TYPE_HAND;
                 break;
-            case WebCursorInfoType.TYPE_HELP:
+            case WebCursorInfoType.HELP:
                 pointerIconType = PointerIcon.TYPE_HELP;
                 break;
-            case WebCursorInfoType.TYPE_WAIT:
+            case WebCursorInfoType.WAIT:
                 pointerIconType = PointerIcon.TYPE_WAIT;
                 break;
-            case WebCursorInfoType.TYPE_CELL:
+            case WebCursorInfoType.CELL:
                 pointerIconType = PointerIcon.TYPE_CELL;
                 break;
-            case WebCursorInfoType.TYPE_CROSS:
+            case WebCursorInfoType.CROSS:
                 pointerIconType = PointerIcon.TYPE_CROSSHAIR;
                 break;
-            case WebCursorInfoType.TYPE_I_BEAM:
+            case WebCursorInfoType.I_BEAM:
                 pointerIconType = PointerIcon.TYPE_TEXT;
                 break;
-            case WebCursorInfoType.TYPE_VERTICAL_TEXT:
+            case WebCursorInfoType.VERTICAL_TEXT:
                 pointerIconType = PointerIcon.TYPE_VERTICAL_TEXT;
                 break;
-            case WebCursorInfoType.TYPE_ALIAS:
+            case WebCursorInfoType.ALIAS:
                 pointerIconType = PointerIcon.TYPE_ALIAS;
                 break;
-            case WebCursorInfoType.TYPE_COPY:
+            case WebCursorInfoType.COPY:
                 pointerIconType = PointerIcon.TYPE_COPY;
                 break;
-            case WebCursorInfoType.TYPE_NO_DROP:
+            case WebCursorInfoType.NO_DROP:
                 pointerIconType = PointerIcon.TYPE_NO_DROP;
                 break;
-            case WebCursorInfoType.TYPE_COLUMN_RESIZE:
+            case WebCursorInfoType.COLUMN_RESIZE:
                 pointerIconType = PointerIcon.TYPE_HORIZONTAL_DOUBLE_ARROW;
                 break;
-            case WebCursorInfoType.TYPE_ROW_RESIZE:
+            case WebCursorInfoType.ROW_RESIZE:
                 pointerIconType = PointerIcon.TYPE_VERTICAL_DOUBLE_ARROW;
                 break;
-            case WebCursorInfoType.TYPE_NORTH_EAST_SOUTH_WEST_RESIZE:
+            case WebCursorInfoType.NORTH_EAST_SOUTH_WEST_RESIZE:
                 pointerIconType = PointerIcon.TYPE_TOP_RIGHT_DIAGONAL_DOUBLE_ARROW;
                 break;
-            case WebCursorInfoType.TYPE_NORTH_WEST_SOUTH_EAST_RESIZE:
+            case WebCursorInfoType.NORTH_WEST_SOUTH_EAST_RESIZE:
                 pointerIconType = PointerIcon.TYPE_TOP_LEFT_DIAGONAL_DOUBLE_ARROW;
                 break;
-            case WebCursorInfoType.TYPE_ZOOM_IN:
+            case WebCursorInfoType.ZOOM_IN:
                 pointerIconType = PointerIcon.TYPE_ZOOM_IN;
                 break;
-            case WebCursorInfoType.TYPE_ZOOM_OUT:
+            case WebCursorInfoType.ZOOM_OUT:
                 pointerIconType = PointerIcon.TYPE_ZOOM_OUT;
                 break;
-            case WebCursorInfoType.TYPE_GRAB:
+            case WebCursorInfoType.GRAB:
                 pointerIconType = PointerIcon.TYPE_GRAB;
                 break;
-            case WebCursorInfoType.TYPE_GRABBING:
+            case WebCursorInfoType.GRABBING:
                 pointerIconType = PointerIcon.TYPE_GRABBING;
                 break;
             // TODO(jaebaek): set types correctly
             // after fixing http://crbug.com/584424.
-            case WebCursorInfoType.TYPE_EAST_WEST_RESIZE:
+            case WebCursorInfoType.EAST_WEST_RESIZE:
                 pointerIconType = PointerIcon.TYPE_HORIZONTAL_DOUBLE_ARROW;
                 break;
-            case WebCursorInfoType.TYPE_NORTH_SOUTH_RESIZE:
+            case WebCursorInfoType.NORTH_SOUTH_RESIZE:
                 pointerIconType = PointerIcon.TYPE_VERTICAL_DOUBLE_ARROW;
                 break;
-            case WebCursorInfoType.TYPE_EAST_RESIZE:
+            case WebCursorInfoType.EAST_RESIZE:
                 pointerIconType = PointerIcon.TYPE_HORIZONTAL_DOUBLE_ARROW;
                 break;
-            case WebCursorInfoType.TYPE_NORTH_RESIZE:
+            case WebCursorInfoType.NORTH_RESIZE:
                 pointerIconType = PointerIcon.TYPE_VERTICAL_DOUBLE_ARROW;
                 break;
-            case WebCursorInfoType.TYPE_NORTH_EAST_RESIZE:
+            case WebCursorInfoType.NORTH_EAST_RESIZE:
                 pointerIconType = PointerIcon.TYPE_TOP_RIGHT_DIAGONAL_DOUBLE_ARROW;
                 break;
-            case WebCursorInfoType.TYPE_NORTH_WEST_RESIZE:
+            case WebCursorInfoType.NORTH_WEST_RESIZE:
                 pointerIconType = PointerIcon.TYPE_TOP_LEFT_DIAGONAL_DOUBLE_ARROW;
                 break;
-            case WebCursorInfoType.TYPE_SOUTH_RESIZE:
+            case WebCursorInfoType.SOUTH_RESIZE:
                 pointerIconType = PointerIcon.TYPE_VERTICAL_DOUBLE_ARROW;
                 break;
-            case WebCursorInfoType.TYPE_SOUTH_EAST_RESIZE:
+            case WebCursorInfoType.SOUTH_EAST_RESIZE:
                 pointerIconType = PointerIcon.TYPE_TOP_LEFT_DIAGONAL_DOUBLE_ARROW;
                 break;
-            case WebCursorInfoType.TYPE_SOUTH_WEST_RESIZE:
+            case WebCursorInfoType.SOUTH_WEST_RESIZE:
                 pointerIconType = PointerIcon.TYPE_TOP_RIGHT_DIAGONAL_DOUBLE_ARROW;
                 break;
-            case WebCursorInfoType.TYPE_WEST_RESIZE:
+            case WebCursorInfoType.WEST_RESIZE:
                 pointerIconType = PointerIcon.TYPE_HORIZONTAL_DOUBLE_ARROW;
                 break;
-            case WebCursorInfoType.TYPE_PROGRESS:
+            case WebCursorInfoType.PROGRESS:
                 pointerIconType = PointerIcon.TYPE_WAIT;
                 break;
-            case WebCursorInfoType.TYPE_NOT_ALLOWED:
+            case WebCursorInfoType.NOT_ALLOWED:
                 pointerIconType = PointerIcon.TYPE_NO_DROP;
                 break;
-            case WebCursorInfoType.TYPE_MOVE:
-            case WebCursorInfoType.TYPE_MIDDLE_PANNING:
+            case WebCursorInfoType.MOVE:
+            case WebCursorInfoType.MIDDLE_PANNING:
                 pointerIconType = PointerIcon.TYPE_ALL_SCROLL;
                 break;
-            case WebCursorInfoType.TYPE_EAST_PANNING:
-            case WebCursorInfoType.TYPE_NORTH_PANNING:
-            case WebCursorInfoType.TYPE_NORTH_EAST_PANNING:
-            case WebCursorInfoType.TYPE_NORTH_WEST_PANNING:
-            case WebCursorInfoType.TYPE_SOUTH_PANNING:
-            case WebCursorInfoType.TYPE_SOUTH_EAST_PANNING:
-            case WebCursorInfoType.TYPE_SOUTH_WEST_PANNING:
-            case WebCursorInfoType.TYPE_WEST_PANNING:
+            case WebCursorInfoType.EAST_PANNING:
+            case WebCursorInfoType.NORTH_PANNING:
+            case WebCursorInfoType.NORTH_EAST_PANNING:
+            case WebCursorInfoType.NORTH_WEST_PANNING:
+            case WebCursorInfoType.SOUTH_PANNING:
+            case WebCursorInfoType.SOUTH_EAST_PANNING:
+            case WebCursorInfoType.SOUTH_WEST_PANNING:
+            case WebCursorInfoType.WEST_PANNING:
                 assert false : "These pointer icon types are not supported";
                 break;
-            case WebCursorInfoType.TYPE_CUSTOM:
+            case WebCursorInfoType.CUSTOM:
                 assert false : "onCursorChangedToCustom must be called instead";
                 break;
         }
@@ -306,6 +306,30 @@ public abstract class ViewAndroidDelegate {
         if (container == null) return 0;
 
         container.getLocationInWindow(mTemporaryContainerLocation);
+        return mTemporaryContainerLocation[1];
+    }
+
+    /**
+     * Return the X location of our container view on screen.
+     */
+    @CalledByNative
+    private int getXLocationOnScreen() {
+        ViewGroup container = getContainerView();
+        if (container == null) return 0;
+
+        container.getLocationOnScreen(mTemporaryContainerLocation);
+        return mTemporaryContainerLocation[0];
+    }
+
+    /**
+     * Return the Y location of our container view on screen.
+     */
+    @CalledByNative
+    private int getYLocationOnScreen() {
+        ViewGroup container = getContainerView();
+        if (container == null) return 0;
+
+        container.getLocationOnScreen(mTemporaryContainerLocation);
         return mTemporaryContainerLocation[1];
     }
 

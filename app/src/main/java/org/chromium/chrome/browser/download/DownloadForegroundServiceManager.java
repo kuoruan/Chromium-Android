@@ -15,6 +15,8 @@ import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.IBinder;
 
+import com.google.ipc.invalidation.util.Preconditions;
+
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
@@ -116,7 +118,7 @@ public class DownloadForegroundServiceManager {
         // Stop the foreground service.
         // In the pending case, this will stop the foreground immediately after it was started.
         if (!isActive(downloadUpdate.mDownloadStatus)) {
-            stopAndUnbindService(downloadUpdate.mDownloadStatus == DownloadStatus.CANCEL);
+            stopAndUnbindService(downloadUpdate.mDownloadStatus);
             cleanDownloadUpdateQueue();
             return;
         }
@@ -238,28 +240,55 @@ public class DownloadForegroundServiceManager {
     /** Helper code to stop and unbind service. */
 
     @VisibleForTesting
-    void stopAndUnbindService(boolean isCancelled) {
+    void stopAndUnbindService(DownloadStatus downloadStatus) {
+        Preconditions.checkNotNull(mBoundService);
         mIsServiceBound = false;
 
-        if (mBoundService != null) {
-            stopAndUnbindServiceInternal(isCancelled);
-            mBoundService = null;
-        }
+        // For pre-Lollipop phones (API < 21), we need to kill the notification in the pause case
+        // because otherwise the notification gets stuck in the ongoing state.
+        boolean needAdjustNotificationPreLollipop =
+                isPreLollipop() && downloadStatus == DownloadStatus.PAUSE;
 
-        // If the download isn't cancelled,  need to relaunch the notification so it is no longer
-        // pinned to the foreground service.
-        if (!isCancelled && Build.VERSION.SDK_INT < 24) {
+        // Pause: only try to detach, do not kill notification.
+        // Complete/failed: try to detach, if that doesn't work, kill.
+        // Cancel: don't even try to detach, just kill.
+
+        boolean detachNotification = downloadStatus == DownloadStatus.PAUSE
+                || downloadStatus == DownloadStatus.COMPLETE
+                || downloadStatus == DownloadStatus.FAIL;
+        boolean killNotification = downloadStatus == DownloadStatus.CANCEL
+                || downloadStatus == DownloadStatus.COMPLETE
+                || downloadStatus == DownloadStatus.FAIL || needAdjustNotificationPreLollipop;
+
+        boolean notificationHandledProperly =
+                stopAndUnbindServiceInternal(detachNotification, killNotification);
+        mBoundService = null;
+
+        // Relaunch notification so it is no longer pinned to the foreground service when the
+        // download is completed/failed or if a pre-Lollipop adjustment is needed.
+        if (((downloadStatus == DownloadStatus.COMPLETE || downloadStatus == DownloadStatus.FAIL)
+                    && Build.VERSION.SDK_INT < 24)
+                || needAdjustNotificationPreLollipop) {
             relaunchPinnedNotification();
         }
-        mPinnedNotificationId = INVALID_NOTIFICATION_ID;
+
+        // Only reset the pinned notification if it was killed or detached.
+        if (notificationHandledProperly) mPinnedNotificationId = INVALID_NOTIFICATION_ID;
     }
 
     @VisibleForTesting
-    void stopAndUnbindServiceInternal(boolean isCancelled) {
-        mBoundService.stopDownloadForegroundService(isCancelled);
+    boolean stopAndUnbindServiceInternal(boolean detachNotification, boolean killNotification) {
+        boolean notificationHandledProperly =
+                mBoundService.stopDownloadForegroundService(detachNotification, killNotification);
         ContextUtils.getApplicationContext().unbindService(mConnection);
-        DownloadForegroundServiceObservers.removeObserver(
-                DownloadNotificationServiceObserver.class);
+
+        // Only remove the observer if the notification has been detached or killed.
+        if (notificationHandledProperly) {
+            DownloadForegroundServiceObservers.removeObserver(
+                    DownloadNotificationServiceObserver.class);
+        }
+
+        return notificationHandledProperly;
     }
 
     /** Helper code for testing. */
@@ -267,5 +296,10 @@ public class DownloadForegroundServiceManager {
     @VisibleForTesting
     void setBoundService(DownloadForegroundService service) {
         mBoundService = service;
+    }
+
+    @VisibleForTesting
+    boolean isPreLollipop() {
+        return Build.VERSION.SDK_INT < 21;
     }
 }

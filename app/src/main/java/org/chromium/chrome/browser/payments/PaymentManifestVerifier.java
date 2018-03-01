@@ -9,12 +9,11 @@ import android.content.pm.ResolveInfo;
 import android.content.pm.Signature;
 
 import org.chromium.base.Log;
-import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.components.payments.PaymentManifestDownloader;
 import org.chromium.components.payments.PaymentManifestDownloader.ManifestDownloadCallback;
 import org.chromium.components.payments.PaymentManifestParser;
 import org.chromium.components.payments.PaymentManifestParser.ManifestParseCallback;
-import org.chromium.payments.mojom.WebAppManifestSection;
+import org.chromium.components.payments.WebAppManifestSection;
 
 import java.net.URI;
 import java.security.MessageDigest;
@@ -102,9 +101,6 @@ public class PaymentManifestVerifier
     private static final String TAG = "PaymentManifest";
     private static final String ALL_ORIGINS_SUPPORTED_INDICATOR = "*";
 
-    /** The hostname used by the embedded test server in testing. */
-    private static final String LOCALHOST_FOR_TEST = "127.0.0.1";
-
     /**
      * The payment method name that's being verified. The corresponding payment method manifest
      * and default web app manifests will be downloaded, parsed, and cached.
@@ -151,8 +147,7 @@ public class PaymentManifestVerifier
      * Builds the manifest verifier.
      *
      * @param methodName             The name of the payment method name that apps offer to handle.
-     *                               Must be an absolute URI with HTTPS scheme, but HTTP localhost
-     *                               is allowed in testing.
+     *                               Must be an absolute URI with HTTPS scheme or HTTP localhost.
      * @param defaultApplications    The identifying information for the native Android payment apps
      *                               that offer to handle this payment method as a default app,
      *                               i.e., as one of the "default_applications". Can be null.
@@ -170,9 +165,6 @@ public class PaymentManifestVerifier
             PaymentManifestDownloader downloader, PaymentManifestParser parser,
             PackageManagerDelegate packageManagerDelegate, ManifestVerifyCallback callback) {
         assert methodName.isAbsolute();
-        assert UrlConstants.HTTPS_SCHEME.equals(methodName.getScheme())
-                || (LOCALHOST_FOR_TEST.equals(methodName.getHost())
-                           && UrlConstants.HTTP_SCHEME.equals(methodName.getScheme()));
 
         mMethodName = methodName;
 

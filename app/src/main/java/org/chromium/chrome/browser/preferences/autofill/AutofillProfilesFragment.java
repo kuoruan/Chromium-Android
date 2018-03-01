@@ -9,11 +9,14 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
+import android.support.annotation.VisibleForTesting;
 
 import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.base.StrictModeContext;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.AutofillProfile;
+import org.chromium.chrome.browser.payments.ui.EditorObserverForTest;
 import org.chromium.chrome.browser.preferences.PreferenceUtils;
 
 /**
@@ -21,6 +24,9 @@ import org.chromium.chrome.browser.preferences.PreferenceUtils;
  */
 public class AutofillProfilesFragment
         extends PreferenceFragment implements PersonalDataManager.PersonalDataManagerObserver {
+    private static EditorObserverForTest sObserverForTest;
+    static final String PREF_NEW_PROFILE = "new_profile";
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,6 +42,7 @@ public class AutofillProfilesFragment
         // deleted (GUID list changes), the profile summary (name+addr) might be different.  To be
         // safe, we update all.
         rebuildProfileList();
+        if (sObserverForTest != null) sObserverForTest.onEditorDismiss();
     }
 
     private void rebuildProfileList() {
@@ -44,25 +51,30 @@ public class AutofillProfilesFragment
 
         for (AutofillProfile profile : PersonalDataManager.getInstance().getProfilesForSettings()) {
             // Add a preference for the profile.
-            Preference pref = new Preference(getActivity());
-            pref.setTitle(profile.getFullName());
-            pref.setSummary(profile.getLabel());
-
+            Preference pref;
             if (profile.getIsLocal()) {
-                pref.setFragment(AutofillProfileEditor.class.getName());
+                AutofillProfileEditorPreference localPref =
+                        new AutofillProfileEditorPreference(getActivity(), sObserverForTest);
+                localPref.setTitle(profile.getFullName());
+                localPref.setSummary(profile.getLabel());
+                localPref.setKey(localPref.getTitle().toString()); // For testing.
+                pref = localPref;
             } else {
+                pref = new Preference(getActivity());
                 pref.setWidgetLayoutResource(R.layout.autofill_server_data_label);
                 pref.setFragment(AutofillServerProfilePreferences.class.getName());
             }
-
             Bundle args = pref.getExtras();
             args.putString(AutofillAndPaymentsPreferences.AUTOFILL_GUID, profile.getGUID());
-            getPreferenceScreen().addPreference(pref);
+            try (StrictModeContext unused = StrictModeContext.allowDiskWrites()) {
+                getPreferenceScreen().addPreference(pref);
+            }
         }
 
         // Add 'Add address' button. Tap of it brings up address editor which allows users type in
         // new addresses.
-        Preference pref = new Preference(getActivity());
+        AutofillProfileEditorPreference pref =
+                new AutofillProfileEditorPreference(getActivity(), sObserverForTest);
         Drawable plusIcon = ApiCompatibilityUtils.getDrawable(getResources(), R.drawable.plus);
         plusIcon.mutate();
         plusIcon.setColorFilter(
@@ -70,13 +82,17 @@ public class AutofillProfilesFragment
                 PorterDuff.Mode.SRC_IN);
         pref.setIcon(plusIcon);
         pref.setTitle(R.string.autofill_create_profile);
-        pref.setFragment(AutofillProfileEditor.class.getName());
-        getPreferenceScreen().addPreference(pref);
+        pref.setKey(PREF_NEW_PROFILE); // For testing.
+
+        try (StrictModeContext unused = StrictModeContext.allowDiskWrites()) {
+            getPreferenceScreen().addPreference(pref);
+        }
     }
 
     @Override
     public void onPersonalDataChanged() {
         rebuildProfileList();
+        if (sObserverForTest != null) sObserverForTest.onEditorDismiss();
     }
 
     @Override
@@ -89,5 +105,10 @@ public class AutofillProfilesFragment
     public void onDestroyView() {
         PersonalDataManager.getInstance().unregisterDataObserver(this);
         super.onDestroyView();
+    }
+
+    @VisibleForTesting
+    public static void setObserverForTest(EditorObserverForTest observerForTest) {
+        sObserverForTest = observerForTest;
     }
 }

@@ -4,42 +4,18 @@
 
 package org.chromium.chrome.browser.vr;
 
-import android.content.Intent;
-import android.view.WindowManager;
-
-import org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity;
-import org.chromium.chrome.browser.util.IntentUtils;
-import org.chromium.chrome.browser.vr_shell.VrIntentUtils;
-import org.chromium.chrome.browser.vr_shell.VrShellDelegate;
+import org.chromium.chrome.browser.document.ChromeLauncherActivity;
 
 /**
- * A subclass of SeparateTaskCustomTabActivity created when starting Chrome in VR mode.
+ * This is the VR equivalent of {@link ChromeLauncherActivity}. It exists only because the Android
+ * platform doesn't inherently support hybrid VR apps (like Chrome). All VR intents for Chrome
+ * should eventually be routed through this activity as its manifest entry contains VR specific
+ * attributes to ensure a smooth transition into Chrome VR.
  *
- * The main purpose of this activity is to add flexibility to the way Chrome is started when the
- * user's phone is already in their VR headset (e.g, we want to hide the System UI).
+ * More specifically, a special VR theme disables the Preview Window feature to prevent the system
+ * UI from showing up while Chrome prepares to enter VR mode. The android:enabledVrMode attribute
+ * ensures that the system doesn't kick us out of VR mode during the transition as this as this can
+ * result in a screen brightness flicker. Both of these sound minor but look jarring from a VR
+ * headset.
  */
-public class VrMainActivity extends SeparateTaskCustomTabActivity {
-    @Override
-    public void preInflationStartup() {
-        assert VrIntentUtils.getHandlerInstance().isTrustedDaydreamIntent(getIntent());
-
-        // Set VR specific window mode.
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        getWindow().getDecorView().setSystemUiVisibility(VrShellDelegate.VR_SYSTEM_UI_FLAGS);
-
-        super.preInflationStartup();
-    }
-
-    @Override
-    protected boolean isStartedUpCorrectly(Intent intent) {
-        if (!VrIntentUtils.getHandlerInstance().isTrustedDaydreamIntent(getIntent())) {
-            return false;
-        }
-        return super.isStartedUpCorrectly(intent);
-    }
-
-    @Override
-    protected Intent validateIntent(final Intent intent) {
-        return IntentUtils.sanitizeIntent(intent);
-    }
-}
+public class VrMainActivity extends ChromeLauncherActivity {}

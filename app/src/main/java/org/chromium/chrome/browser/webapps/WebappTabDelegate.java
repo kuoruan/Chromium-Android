@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.webapps;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.StrictMode;
+import android.provider.Browser;
 import android.support.customtabs.CustomTabsIntent;
 
 import org.chromium.base.ContextUtils;
@@ -30,9 +31,14 @@ import java.net.URISyntaxException;
  */
 public class WebappTabDelegate extends TabDelegate {
     private static final String TAG = "WebappTabDelegate";
+    private @WebappActivity.ActivityType int mActivityType;
+    private String mApkPackageName;
 
-    public WebappTabDelegate(boolean incognito) {
+    public WebappTabDelegate(
+            boolean incognito, @WebappActivity.ActivityType int activityType, String packageName) {
         super(incognito);
+        mActivityType = activityType;
+        mApkPackageName = packageName;
     }
 
     @Override
@@ -49,6 +55,8 @@ public class WebappTabDelegate extends TabDelegate {
         intent.setData(Uri.parse(url));
         intent.putExtra(CustomTabIntentDataProvider.EXTRA_SEND_TO_EXTERNAL_DEFAULT_HANDLER, true);
         intent.putExtra(CustomTabIntentDataProvider.EXTRA_IS_OPENED_BY_CHROME, true);
+        intent.putExtra(CustomTabIntentDataProvider.EXTRA_BROWSER_LAUNCH_SOURCE, mActivityType);
+        intent.putExtra(Browser.EXTRA_APPLICATION_ID, mApkPackageName);
         addAsyncTabExtras(asyncParams, parentId, false /* isChromeUI */, assignedTabId, intent);
 
         IntentHandler.startActivityForTrustedIntent(intent);

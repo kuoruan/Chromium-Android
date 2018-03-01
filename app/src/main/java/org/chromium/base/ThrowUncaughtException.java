@@ -6,10 +6,8 @@ package org.chromium.base;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.MainDex;
-import org.chromium.base.annotations.SuppressFBWarnings;
 
 @MainDex
-@SuppressFBWarnings("NM_CLASS_NOT_EXCEPTION")
 abstract class ThrowUncaughtException {
     @CalledByNative
     private static void post() {

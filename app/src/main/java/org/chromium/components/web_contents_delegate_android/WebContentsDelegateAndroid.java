@@ -150,4 +150,28 @@ public class WebContentsDelegateAndroid {
     public boolean shouldBlockMediaRequest(String url) {
         return false;
     }
+
+    /**
+     * @return The height of the top controls in DIP.
+     */
+    @CalledByNative
+    public int getTopControlsHeight() {
+        return 0;
+    }
+
+    /**
+     * @return The height of the bottom controls in DIP.
+     */
+    @CalledByNative
+    public int getBottomControlsHeight() {
+        return 0;
+    }
+
+    /**
+     * @return Whether or not the browser controls resize Blink's view size.
+     */
+    @CalledByNative
+    public boolean controlsResizeView() {
+        return false;
+    }
 }

@@ -60,15 +60,20 @@
         android:key="content_settings"
         android:order="10"
         android:title="@string/prefs_site_settings"/>
+    <Preference
+        android:fragment="org.chromium.chrome.browser.preferences.languages.LanguagesPreferences"
+        android:key="languages"
+        android:order="11"
+        android:title="@string/prefs_languages"/>
     <org.chromium.chrome.browser.preferences.ChromeBasePreference
         android:fragment="org.chromium.chrome.browser.preferences.datareduction.DataReductionPreferences"
         android:key="data_reduction"
-        android:order="11"
+        android:order="12"
         android:title="@string/data_reduction_title"/>
     <Preference
         android:fragment="org.chromium.chrome.browser.preferences.AboutChromePreferences"
         android:key="about_chrome"
-        android:order="12"
+        android:order="13"
         android:title="@string/prefs_about_chrome"/>
 
 </PreferenceScreen>

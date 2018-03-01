@@ -647,8 +647,9 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
     private ConnectivityManagerDelegate mConnectivityManagerDelegate;
     private WifiManagerDelegate mWifiManagerDelegate;
     // mNetworkCallback and mNetworkRequest are only non-null in Android L and above.
-    private final MyNetworkCallback mNetworkCallback;
-    private final NetworkRequest mNetworkRequest;
+    // mNetworkCallback will be null if ConnectivityManager.registerNetworkCallback() ever fails.
+    private MyNetworkCallback mNetworkCallback;
+    private NetworkRequest mNetworkRequest;
     private boolean mRegistered;
     private NetworkState mNetworkState;
     // When a BroadcastReceiver is registered for a sticky broadcast that has been sent out at
@@ -665,6 +666,9 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
     // been updated to the current device state, so no signals are necessary. This is simply an
     // optimization to avoid useless work.
     private boolean mShouldSignalObserver;
+    // Indicates if ConnectivityManager.registerNetworkRequest() ever failed. When true, no
+    // network-specific callbacks (e.g. Observer.onNetwork*() ) will be issued.
+    private boolean mRegisterNetworkCallbackFailed;
 
     /**
      * Observer interface by which observer is notified of network changes.
@@ -817,8 +821,19 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
 
         if (mNetworkCallback != null) {
             mNetworkCallback.initializeVpnInPlace();
-            mConnectivityManagerDelegate.registerNetworkCallback(mNetworkRequest, mNetworkCallback);
-            if (mShouldSignalObserver) {
+            try {
+                mConnectivityManagerDelegate.registerNetworkCallback(
+                        mNetworkRequest, mNetworkCallback);
+            } catch (IllegalArgumentException e) {
+                mRegisterNetworkCallbackFailed = true;
+                // If Android thinks this app has used up all available NetworkRequests, don't
+                // bother trying to register any more callbacks as Android will still think
+                // all available NetworkRequests are used up and fail again needlessly.
+                // Also don't bother unregistering as this call didn't actually register.
+                // See crbug.com/791025 for more info.
+                mNetworkCallback = null;
+            }
+            if (!mRegisterNetworkCallbackFailed && mShouldSignalObserver) {
                 // registerNetworkCallback() will rematch the NetworkRequest
                 // against active networks, so a cached list of active networks
                 // will be repopulated immediatly after this. However we need to
@@ -922,6 +937,14 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
             return NetId.INVALID;
         }
         return mConnectivityManagerDelegate.getDefaultNetId();
+    }
+
+    /**
+     * Returns {@code true} if NetworkCallback failed to register, indicating that network-specific
+     * callbacks will not be issued.
+     */
+    public boolean registerNetworkCallbackFailed() {
+        return mRegisterNetworkCallbackFailed;
     }
 
     /**

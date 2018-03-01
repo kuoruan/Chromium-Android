@@ -10,11 +10,11 @@ import android.app.PictureInPictureParams;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.util.Rational;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.base.Callback;
 import org.chromium.base.Log;
 import org.chromium.base.library_loader.LibraryLoader;
@@ -105,7 +105,7 @@ public class PictureInPictureController {
             return false;
         }
 
-        if (!BuildInfo.isAtLeastO()) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             recordAttemptResult(METRICS_ATTEMPT_RESULT_NO_SYSTEM_SUPPORT);
             return false;
         }
@@ -295,7 +295,7 @@ public class PictureInPictureController {
     /**
      * A class to dismiss the Activity when the tab:
      * - Closes.
-     * - Reparents.
+     * - Reparents: Attaches to a different activity.
      * - Crashes.
      * - Leaves fullscreen.
      */
@@ -306,8 +306,10 @@ public class PictureInPictureController {
         }
 
         @Override
-        public void onReparentingFinished(Tab tab) {
-            dismissActivity(mActivity, METRICS_END_REASON_REPARENT);
+        public void onActivityAttachmentChanged(Tab tab, boolean isAttached) {
+            if (isAttached) {
+                dismissActivity(mActivity, METRICS_END_REASON_REPARENT);
+            }
         }
 
         @Override

@@ -12,17 +12,16 @@ import android.widget.Button;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.metrics.ImpressionTracker;
 import org.chromium.chrome.browser.ntp.ContextMenuManager;
 import org.chromium.chrome.browser.ntp.snippets.CategoryInt;
 import org.chromium.chrome.browser.snackbar.Snackbar;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;
 import org.chromium.chrome.browser.suggestions.ContentSuggestionsAdditionalAction;
+import org.chromium.chrome.browser.suggestions.SuggestionsConfig;
 import org.chromium.chrome.browser.suggestions.SuggestionsMetrics;
 import org.chromium.chrome.browser.suggestions.SuggestionsRanker;
 import org.chromium.chrome.browser.suggestions.SuggestionsRecyclerView;
 import org.chromium.chrome.browser.suggestions.SuggestionsUiDelegate;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.displaystyle.UiConfig;
 
 import java.lang.annotation.Retention;
@@ -129,10 +128,13 @@ public class ActionItem extends OptionalLeaf {
      * Perform the Action associated with this ActionItem.
      * @param uiDelegate A {@link SuggestionsUiDelegate} to provide context.
      * @param onFailure A {@link Runnable} that will be run if the action was to fetch more
-     *                  suggestions but that action failed.
+     *         suggestions, but that action failed.
+     * @param onNoNewSuggestions A {@link Runnable} that will be run if the action was to fetch more
+     *         suggestions, the fetch succeeded but there were no new suggestions.
      */
     @VisibleForTesting
-    void performAction(SuggestionsUiDelegate uiDelegate, @Nullable Runnable onFailure) {
+    void performAction(SuggestionsUiDelegate uiDelegate, @Nullable Runnable onFailure,
+            @Nullable Runnable onNoNewSuggestions) {
         assert mState == State.BUTTON;
 
         uiDelegate.getEventReporter().onMoreButtonClicked(this);
@@ -144,7 +146,7 @@ public class ActionItem extends OptionalLeaf {
                 mCategoryInfo.performViewAllAction(uiDelegate.getNavigationDelegate());
                 return;
             case ContentSuggestionsAdditionalAction.FETCH:
-                mParentSection.fetchSuggestions(onFailure);
+                mParentSection.fetchSuggestions(onFailure, onNoNewSuggestions);
                 return;
             case ContentSuggestionsAdditionalAction.NONE:
             default:
@@ -169,14 +171,7 @@ public class ActionItem extends OptionalLeaf {
             mButton = itemView.findViewById(R.id.action_button);
             mUiDelegate = uiDelegate;
             mButton.setOnClickListener(v -> mActionListItem.performAction(uiDelegate,
-                    this::showFetchFailureSnackbar));
-
-            new ImpressionTracker(itemView, () -> {
-                if (mActionListItem != null && !mActionListItem.mImpressionTracked) {
-                    mActionListItem.mImpressionTracked = true;
-                    uiDelegate.getEventReporter().onMoreButtonShown(mActionListItem);
-                }
-            });
+                    this::showFetchFailureSnackbar, this::showNoNewSuggestionsSnackbar));
         }
 
         private void showFetchFailureSnackbar() {
@@ -188,15 +183,26 @@ public class ActionItem extends OptionalLeaf {
             );
         }
 
+        private void showNoNewSuggestionsSnackbar() {
+            mUiDelegate.getSnackbarManager().showSnackbar(Snackbar.make(
+                    itemView.getResources().getString(
+                            R.string.ntp_suggestions_fetch_no_new_suggestions),
+                    new SnackbarManager.SnackbarController() { },
+                    Snackbar.TYPE_ACTION,
+                    Snackbar.UMA_SNIPPET_FETCH_NO_NEW_SUGGESTIONS)
+            );
+        }
+
         public void onBindViewHolder(ActionItem item) {
             super.onBindViewHolder();
             mActionListItem = item;
+            setImpressionListener(this::onImpression);
             setState(item.mState);
         }
 
         @LayoutRes
         private static int getLayout() {
-            return FeatureUtilities.isChromeHomeEnabled()
+            return SuggestionsConfig.useModernLayout()
                     ? R.layout.content_suggestions_action_card_modern
                     : R.layout.new_tab_page_action_card;
         }
@@ -215,6 +221,13 @@ public class ActionItem extends OptionalLeaf {
             } else {
                 // Not even HIDDEN is supported as the item should not be able to receive updates.
                 assert false : "ActionViewHolder got notified of an unsupported state: " + state;
+            }
+        }
+
+        private void onImpression() {
+            if (mActionListItem != null && !mActionListItem.mImpressionTracked) {
+                mActionListItem.mImpressionTracked = true;
+                mUiDelegate.getEventReporter().onMoreButtonShown(mActionListItem);
             }
         }
     }

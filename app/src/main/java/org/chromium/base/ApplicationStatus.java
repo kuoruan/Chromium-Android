@@ -8,13 +8,20 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
 import android.app.Application.ActivityLifecycleCallbacks;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.view.Window;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.annotations.MainDex;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +34,15 @@ import java.util.concurrent.ConcurrentHashMap;
 @JNINamespace("base::android")
 @MainDex
 public class ApplicationStatus {
+    private static final String TOOLBAR_CALLBACK_INTERNAL_WRAPPER_CLASS =
+            "android.support.v7.internal.app.ToolbarActionBar$ToolbarCallbackWrapper";
+    // In builds using the --use_unpublished_apis flag, the ToolbarActionBar class name does not
+    // include the "internal" package.
+    private static final String TOOLBAR_CALLBACK_WRAPPER_CLASS =
+            "android.support.v7.app.ToolbarActionBar$ToolbarCallbackWrapper";
+    private static final String WINDOW_PROFILER_CALLBACK =
+            "com.android.tools.profiler.support.event.WindowProfilerCallback";
+
     private static class ActivityInfo {
         private int mStatus = ActivityState.DESTROYED;
         private ObserverList<ActivityStateListener> mListeners = new ObserverList<>();
@@ -67,6 +83,8 @@ public class ApplicationStatus {
     /** A lazily initialized listener that forwards application state changes to native. */
     private static ApplicationStateListener sNativeApplicationStateListener;
 
+    private static boolean sIsInitialized;
+
     /**
      * A map of which observers listen to state changes from which {@link Activity}.
      */
@@ -83,6 +101,13 @@ public class ApplicationStatus {
      * changes.  See {@link #getStateForApplication()}.
      */
     private static final ObserverList<ApplicationStateListener> sApplicationStateListeners =
+            new ObserverList<>();
+
+    /**
+     * A list of observers to be notified when the window focus changes.
+     * See {@link #registerWindowFocusChangedListener}.
+     */
+    private static final ObserverList<WindowFocusChangedListener> sWindowFocusListeners =
             new ObserverList<>();
 
     /**
@@ -108,64 +133,172 @@ public class ApplicationStatus {
         void onActivityStateChange(Activity activity, @ActivityState int newState);
     }
 
+    /**
+     * Interface to be implemented by listeners for window focus events.
+     */
+    public interface WindowFocusChangedListener {
+        /**
+         * Called when the window focus changes for {@code activity}.
+         * @param activity The {@link Activity} that has a window focus changed event.
+         * @param hasFocus Whether or not {@code activity} gained or lost focus.
+         */
+        public void onWindowFocusChanged(Activity activity, boolean hasFocus);
+    }
+
     private ApplicationStatus() {}
+
+    /**
+     * Registers a listener to receive window focus updates on activities in this application.
+     * @param listener Listener to receive window focus events.
+     */
+    public static void registerWindowFocusChangedListener(WindowFocusChangedListener listener) {
+        sWindowFocusListeners.addObserver(listener);
+    }
+
+    /**
+     * Unregisters a listener from receiving window focus updates on activities in this application.
+     * @param listener Listener that doesn't want to receive window focus events.
+     */
+    public static void unregisterWindowFocusChangedListener(WindowFocusChangedListener listener) {
+        sWindowFocusListeners.removeObserver(listener);
+    }
+
+    /**
+     * Intercepts calls to an existing Window.Callback. Most invocations are passed on directly
+     * to the composed Window.Callback but enables intercepting/manipulating others.
+     *
+     * This is used to relay window focus changes throughout the app and remedy a bug in the
+     * appcompat library.
+     */
+    private static class WindowCallbackProxy implements InvocationHandler {
+        private final Window.Callback mCallback;
+        private final Activity mActivity;
+
+        public WindowCallbackProxy(Activity activity, Window.Callback callback) {
+            mCallback = callback;
+            mActivity = activity;
+        }
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            if (method.getName().equals("onWindowFocusChanged") && args.length == 1
+                    && args[0] instanceof Boolean) {
+                onWindowFocusChanged((boolean) args[0]);
+                return null;
+            } else {
+                try {
+                    return method.invoke(mCallback, args);
+                } catch (InvocationTargetException e) {
+                    // Special-case for when a method is not defined on the underlying
+                    // Window.Callback object. Because we're using a Proxy to forward all method
+                    // calls, this breaks the Android framework's handling for apps built against
+                    // an older SDK. The framework expects an AbstractMethodError but due to
+                    // reflection it becomes wrapped inside an InvocationTargetException. Undo the
+                    // wrapping to signal the framework accordingly.
+                    if (e.getCause() instanceof AbstractMethodError) {
+                        throw e.getCause();
+                    }
+                    throw e;
+                }
+            }
+        }
+
+        public void onWindowFocusChanged(boolean hasFocus) {
+            mCallback.onWindowFocusChanged(hasFocus);
+
+            for (WindowFocusChangedListener listener : sWindowFocusListeners) {
+                listener.onWindowFocusChanged(mActivity, hasFocus);
+            }
+        }
+    }
 
     /**
      * Initializes the activity status for a specified application.
      *
      * @param application The application whose status you wish to monitor.
      */
-    public static void initialize(BaseChromiumApplication application) {
-        application.registerWindowFocusChangedListener(
-                new BaseChromiumApplication.WindowFocusChangedListener() {
-                    @Override
-                    public void onWindowFocusChanged(Activity activity, boolean hasFocus) {
-                        if (!hasFocus || activity == sActivity) return;
+    public static void initialize(Application application) {
+        if (sIsInitialized) return;
+        sIsInitialized = true;
 
-                        int state = getStateForActivity(activity);
+        registerWindowFocusChangedListener(new WindowFocusChangedListener() {
+            @Override
+            public void onWindowFocusChanged(Activity activity, boolean hasFocus) {
+                if (!hasFocus || activity == sActivity) return;
 
-                        if (state != ActivityState.DESTROYED && state != ActivityState.STOPPED) {
-                            sActivity = activity;
-                        }
+                int state = getStateForActivity(activity);
 
-                        // TODO(dtrainor): Notify of active activity change?
-                    }
-                });
+                if (state != ActivityState.DESTROYED && state != ActivityState.STOPPED) {
+                    sActivity = activity;
+                }
+
+                // TODO(dtrainor): Notify of active activity change?
+            }
+        });
 
         application.registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
             @Override
             public void onActivityCreated(final Activity activity, Bundle savedInstanceState) {
                 onStateChange(activity, ActivityState.CREATED);
+                Window.Callback callback = activity.getWindow().getCallback();
+                activity.getWindow().setCallback((Window.Callback) Proxy.newProxyInstance(
+                        Window.Callback.class.getClassLoader(), new Class[] {Window.Callback.class},
+                        new ApplicationStatus.WindowCallbackProxy(activity, callback)));
             }
 
             @Override
             public void onActivityDestroyed(Activity activity) {
                 onStateChange(activity, ActivityState.DESTROYED);
+                checkCallback(activity);
             }
 
             @Override
             public void onActivityPaused(Activity activity) {
                 onStateChange(activity, ActivityState.PAUSED);
+                checkCallback(activity);
             }
 
             @Override
             public void onActivityResumed(Activity activity) {
                 onStateChange(activity, ActivityState.RESUMED);
+                checkCallback(activity);
             }
 
             @Override
-            public void onActivitySaveInstanceState(Activity activity, Bundle outState) {}
+            public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+                checkCallback(activity);
+            }
 
             @Override
             public void onActivityStarted(Activity activity) {
                 onStateChange(activity, ActivityState.STARTED);
+                checkCallback(activity);
             }
 
             @Override
             public void onActivityStopped(Activity activity) {
                 onStateChange(activity, ActivityState.STOPPED);
+                checkCallback(activity);
+            }
+
+            private void checkCallback(Activity activity) {
+                if (BuildConfig.DCHECK_IS_ON) {
+                    Class<? extends Window.Callback> callback =
+                            activity.getWindow().getCallback().getClass();
+                    assert(Proxy.isProxyClass(callback)
+                            || callback.getName().equals(TOOLBAR_CALLBACK_WRAPPER_CLASS)
+                            || callback.getName().equals(TOOLBAR_CALLBACK_INTERNAL_WRAPPER_CLASS)
+                            || callback.getName().equals(WINDOW_PROFILER_CALLBACK));
+                }
             }
         });
+    }
+
+    /**
+     * Asserts that initialize method has been called.
+     */
+    private static void assertInitialized() {
+        assert sIsInitialized;
     }
 
     /**
@@ -191,7 +324,7 @@ public class ApplicationStatus {
             //                changed in O and the activity info may have been lazily created
             //                on first access to avoid a crash on startup.  This should be removed
             //                once the new lifecycle APIs are available.
-            if (!BuildInfo.isAtLeastO()) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                 assert !sActivityInfo.containsKey(activity);
             }
             sActivityInfo.put(activity, new ActivityInfo());
@@ -251,6 +384,7 @@ public class ApplicationStatus {
      * @return A {@link List} of all non-destroyed {@link Activity}s.
      */
     public static List<WeakReference<Activity>> getRunningActivities() {
+        assertInitialized();
         List<WeakReference<Activity>> activities = new ArrayList<>();
         for (Activity activity : sActivityInfo.keySet()) {
             activities.add(new WeakReference<>(activity));
@@ -302,7 +436,9 @@ public class ApplicationStatus {
      * @return The state of the specified activity (see {@link ActivityState}).
      */
     @ActivityState
-    public static int getStateForActivity(Activity activity) {
+    public static int getStateForActivity(@Nullable Activity activity) {
+        ApplicationStatus.assertInitialized();
+        if (activity == null) return ActivityState.DESTROYED;
         ActivityInfo info = sActivityInfo.get(activity);
         return info != null ? info.getStatus() : ActivityState.DESTROYED;
     }
@@ -361,12 +497,14 @@ public class ApplicationStatus {
     public static void registerStateListenerForActivity(ActivityStateListener listener,
             Activity activity) {
         assert activity != null;
+        ApplicationStatus.assertInitialized();
 
         ActivityInfo info = sActivityInfo.get(activity);
         // TODO(tedchoc): crbug/691100.  The timing of application callback lifecycles were changed
         //                in O and the activity info may need to be lazily created if the onCreate
         //                event has not yet been received.
-        if (BuildInfo.isAtLeastO() && info == null && !activity.isDestroyed()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && info == null
+                && !activity.isDestroyed()) {
             info = new ActivityInfo();
             sActivityInfo.put(activity, info);
         }
@@ -412,6 +550,8 @@ public class ApplicationStatus {
         sApplicationStateListeners.clear();
         sGeneralActivityStateListeners.clear();
         sActivityInfo.clear();
+        sWindowFocusListeners.clear();
+        sIsInitialized = false;
         synchronized (sCachedApplicationStateLock) {
             sCachedApplicationState = null;
         }

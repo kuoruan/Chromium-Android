@@ -11,7 +11,6 @@
 
 package org.chromium.media.mojom;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
@@ -36,49 +35,31 @@ public final class VideoFrameData extends org.chromium.mojo.bindings.Union {
       return mTag_ == -1;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setEosData(EosVideoFrameData eosData) {
         this.mTag_ = Tag.EosData;
         this.mEosData = eosData;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public EosVideoFrameData getEosData() {
         assert this.mTag_ == Tag.EosData;
         return this.mEosData;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setSharedBufferData(SharedBufferVideoFrameData sharedBufferData) {
         this.mTag_ = Tag.SharedBufferData;
         this.mSharedBufferData = sharedBufferData;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public SharedBufferVideoFrameData getSharedBufferData() {
         assert this.mTag_ == Tag.SharedBufferData;
         return this.mSharedBufferData;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setMailboxData(MailboxVideoFrameData mailboxData) {
         this.mTag_ = Tag.MailboxData;
         this.mMailboxData = mailboxData;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public MailboxVideoFrameData getMailboxData() {
         assert this.mTag_ == Tag.MailboxData;
         return this.mMailboxData;

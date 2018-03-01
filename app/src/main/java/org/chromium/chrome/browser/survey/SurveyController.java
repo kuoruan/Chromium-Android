@@ -31,13 +31,13 @@ public class SurveyController {
      * Asynchronously downloads the survey using the provided parameters.
      * @param context The context used to register a broadcast receiver.
      * @param siteId The id of the site from where the survey will be downloaded.
-     * @param advertisingId Optional advertising id sent with the download request. Pass empty
-     *                      string for no advertising id.
      * @param onSuccessRunnable The runnable to notify when the survey is ready.
      *                          If no survey is available, the runnable will not be run.
+     * @param siteContext Optional parameter to build the download request. Site context can be
+     *                    used for adding metadata.
      */
     public void downloadSurvey(
-            Context context, String siteId, String advertisingId, Runnable onSuccessRunnable) {}
+            Context context, String siteId, Runnable onSuccessRunnable, String siteContext) {}
 
     /**
      * Show the survey.

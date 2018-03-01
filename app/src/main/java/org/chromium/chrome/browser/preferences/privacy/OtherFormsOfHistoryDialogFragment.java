@@ -21,6 +21,7 @@ import android.widget.TextView;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
 import org.chromium.chrome.browser.tabmodel.document.TabDelegate;
 import org.chromium.ui.text.NoUnderlineClickableSpan;
@@ -35,10 +36,6 @@ public class OtherFormsOfHistoryDialogFragment extends DialogFragment implements
     public static final String PREF_OTHER_FORMS_OF_HISTORY_DIALOG_SHOWN =
             "org.chromium.chrome.browser.preferences.privacy."
             + "PREF_OTHER_FORMS_OF_HISTORY_DIALOG_SHOWN";
-
-    /** The my activity URL. */
-    private static final String WEB_HISTORY_URL =
-            "https://history.google.com/history/?utm_source=chrome_n";
 
     private static final String TAG = "OtherFormsOfHistoryDialogFragment";
 
@@ -63,8 +60,9 @@ public class OtherFormsOfHistoryDialogFragment extends DialogFragment implements
                 new SpanApplier.SpanInfo("<link>", "</link>", new NoUnderlineClickableSpan() {
                     @Override
                     public void onClick(View widget) {
-                        new TabDelegate(false /* incognito */).launchUrl(
-                                WEB_HISTORY_URL, TabLaunchType.FROM_CHROME_UI);
+                        new TabDelegate(false /* incognito */)
+                                .launchUrl(UrlConstants.MY_ACTIVITY_URL_IN_CBD_NOTICE,
+                                        TabLaunchType.FROM_CHROME_UI);
                     }
                 }));
 

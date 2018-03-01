@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.infobar;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
+import android.support.annotation.Nullable;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -127,12 +128,13 @@ public class InfoBarContainer extends SwipableOverlayView {
         }
 
         @Override
-        public void onReparentingFinished(Tab tab) {
+        public void onActivityAttachmentChanged(Tab tab, boolean isAttached) {
+            if (!isAttached) return;
+
             setParentView((ViewGroup) tab.getActivity().findViewById(R.id.bottom_container));
             mTab = tab;
         }
     };
-
 
     /**
      * Adds/removes the {@link InfoBarContainer} when the tab's view is attached/detached. This is
@@ -213,7 +215,8 @@ public class InfoBarContainer extends SwipableOverlayView {
         addView(mLayout, new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL));
 
-        mIPHSupport = new IPHInfoBarSupport(context);
+        mIPHSupport = new IPHInfoBarSupport(new IPHBubbleDelegateImpl(context));
+
         mLayout.addAnimationListener(mIPHSupport);
         addObserver(mIPHSupport);
 
@@ -275,6 +278,13 @@ public class InfoBarContainer extends SwipableOverlayView {
     @VisibleForTesting
     public void addAnimationListener(InfoBarAnimationListener listener) {
         mLayout.addAnimationListener(listener);
+    }
+
+    /**
+     * Removes the passed in {@link InfoBarAnimationListener} from the {@link InfoBarContainer}.
+     */
+    public void removeAnimationListener(InfoBarAnimationListener listener) {
+        mLayout.removeAnimationListener(listener);
     }
 
     /**
@@ -536,6 +546,15 @@ public class InfoBarContainer extends SwipableOverlayView {
             }
         });
         mScrollDirectionChangeAnimation.start();
+    }
+
+    /**
+     * @return The infobar in front.
+     */
+    @Nullable
+    InfoBar getFrontInfoBar() {
+        if (mInfoBars.isEmpty()) return null;
+        return mInfoBars.get(0);
     }
 
     private native long nativeInit();

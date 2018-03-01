@@ -211,6 +211,8 @@ public class SiteSettingsPreferences extends PreferenceFragment
                 checked = PrefServiceBridge.getInstance().popupsEnabled();
             } else if (PROTECTED_CONTENT_KEY.equals(prefName)) {
                 checked = PrefServiceBridge.getInstance().isProtectedMediaIdentifierEnabled();
+            } else if (SOUND_KEY.equals(prefName)) {
+                checked = PrefServiceBridge.getInstance().isSoundEnabled();
             }
 
             int contentType = keyToContentSettingsType(prefName);
@@ -230,8 +232,8 @@ public class SiteSettingsPreferences extends PreferenceFragment
                 p.setSummary(ContentSettingsResources.getGeolocationAllowedSummary());
             } else if (ADS_KEY.equals(prefName) && !checked) {
                 p.setSummary(ContentSettingsResources.getAdsBlockedListSummary());
-            } else if (SOUND_KEY.equals(prefName)) {
-                // Don't set the summary for Sound, since the default setting cannot be changed.
+            } else if (SOUND_KEY.equals(prefName) && !checked) {
+                p.setSummary(ContentSettingsResources.getSoundBlockedListSummary());
             } else {
                 p.setSummary(ContentSettingsResources.getCategorySummary(contentType, checked));
             }

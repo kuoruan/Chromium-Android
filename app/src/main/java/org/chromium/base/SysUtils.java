@@ -4,6 +4,7 @@
 
 package org.chromium.base;
 
+import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -13,6 +14,7 @@ import android.util.Log;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.base.metrics.CachedMetrics;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -31,6 +33,10 @@ public class SysUtils {
     private static final String TAG = "SysUtils";
 
     private static Boolean sLowEndDevice;
+    private static Integer sAmountOfPhysicalMemoryKB;
+
+    private static CachedMetrics.BooleanHistogramSample sLowEndMatches =
+            new CachedMetrics.BooleanHistogramSample("Android.SysUtilsLowEndMatches");
 
     private SysUtils() { }
 
@@ -39,7 +45,7 @@ public class SysUtils {
      * @return Amount of physical memory in kilobytes, or 0 if there was
      *         an error trying to access the information.
      */
-    private static int amountOfPhysicalMemoryKB() {
+    private static int detectAmountOfPhysicalMemoryKB() {
         // Extract total memory RAM size by parsing /proc/meminfo, note that
         // this is exactly what the implementation of sysconf(_SC_PHYS_PAGES)
         // does. However, it can't be called because this method must be
@@ -107,10 +113,20 @@ public class SysUtils {
     }
 
     /**
+     * @return Whether or not this device should be considered a low end device.
+     */
+    public static int amountOfPhysicalMemoryKB() {
+        if (sAmountOfPhysicalMemoryKB == null) {
+            sAmountOfPhysicalMemoryKB = detectAmountOfPhysicalMemoryKB();
+        }
+        return sAmountOfPhysicalMemoryKB.intValue();
+    }
+
+    /**
      * @return Whether or not the system has low available memory.
      */
     @CalledByNative
-    private static boolean isCurrentlyLowMemory() {
+    public static boolean isCurrentlyLowMemory() {
         ActivityManager am =
                 (ActivityManager) ContextUtils.getApplicationContext().getSystemService(
                         Context.ACTIVITY_SERVICE);
@@ -123,8 +139,9 @@ public class SysUtils {
      * Resets the cached value, if any.
      */
     @VisibleForTesting
-    public static void reset() {
+    public static void resetForTesting() {
         sLowEndDevice = null;
+        sAmountOfPhysicalMemoryKB = null;
     }
 
     public static boolean hasCamera(final Context context) {
@@ -137,6 +154,7 @@ public class SysUtils {
         return hasCamera;
     }
 
+    @TargetApi(Build.VERSION_CODES.KITKAT)
     private static boolean detectLowEndDevice() {
         assert CommandLine.isInitialized();
         if (CommandLine.getInstance().hasSwitch(BaseSwitches.ENABLE_LOW_END_DEVICE_MODE)) {
@@ -146,13 +164,27 @@ public class SysUtils {
             return false;
         }
 
-        int ramSizeKB = amountOfPhysicalMemoryKB();
-        if (ramSizeKB <= 0) return false;
-
-        if (BuildInfo.isAtLeastO()) {
-            return ramSizeKB / 1024 <= ANDROID_O_LOW_MEMORY_DEVICE_THRESHOLD_MB;
+        sAmountOfPhysicalMemoryKB = detectAmountOfPhysicalMemoryKB();
+        boolean isLowEnd = true;
+        if (sAmountOfPhysicalMemoryKB <= 0) {
+            isLowEnd = false;
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            isLowEnd = sAmountOfPhysicalMemoryKB / 1024 <= ANDROID_O_LOW_MEMORY_DEVICE_THRESHOLD_MB;
+        } else {
+            isLowEnd = sAmountOfPhysicalMemoryKB / 1024 <= ANDROID_LOW_MEMORY_DEVICE_THRESHOLD_MB;
         }
-        return ramSizeKB / 1024 <= ANDROID_LOW_MEMORY_DEVICE_THRESHOLD_MB;
+
+        // For evaluation purposes check whether our computation agrees with Android API value.
+        Context appContext = ContextUtils.getApplicationContext();
+        boolean isLowRam = false;
+        if (appContext != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            isLowRam = ((ActivityManager) ContextUtils.getApplicationContext().getSystemService(
+                                Context.ACTIVITY_SERVICE))
+                               .isLowRamDevice();
+        }
+        sLowEndMatches.record(isLowEnd == isLowRam);
+
+        return isLowEnd;
     }
 
     /**

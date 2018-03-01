@@ -51,7 +51,6 @@ public class PureJavaExceptionHandler implements Thread.UncaughtExceptionHandler
     }
 
     private void reportJavaException(Throwable e) {
-        PureJavaExceptionReporter exceptionReporter = new PureJavaExceptionReporter();
-        exceptionReporter.createAndUploadReport(e);
+        PureJavaExceptionReporter.reportJavaException(e);
     }
 }

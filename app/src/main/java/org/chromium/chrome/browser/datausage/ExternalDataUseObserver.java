@@ -20,7 +20,7 @@ import org.chromium.chrome.browser.AppHooks;
  * This class provides a base class implementation of a data use observer that is external to
  * Chromium. This class should be accessed only on UI thread.
  */
-@JNINamespace("chrome::android")
+@JNINamespace("android")
 public class ExternalDataUseObserver {
     /**
      * Listens for application state changes and whenever Chromium state changes to running, checks

@@ -42,11 +42,11 @@ public interface TabPersistencePolicy {
     boolean shouldMergeOnStartup();
 
     /**
-     * @return The filename of the state that is to be merged.  If null, no merge will be
-     *         triggered.
+     * @return The filename list of the state that is to be merged.  If null or empty list, no
+     *         merge will be triggered.
      */
     @Nullable
-    String getStateToBeMergedFileName();
+    List<String> getStateToBeMergedFileNames();
 
     /**
      * Performs any necessary initialization required before accessing the tab information.  This

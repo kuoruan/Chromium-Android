@@ -8,11 +8,13 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.IntDef;
+import android.support.annotation.VisibleForTesting;
 import android.view.View;
 
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.StrictModeContext;
 import org.chromium.base.SysUtils;
+import org.chromium.base.ThreadUtils;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
@@ -34,6 +36,13 @@ import java.lang.ref.WeakReference;
  * activity to bring a user in or out of the feature.
  */
 public class ChromeHomePromoDialog extends PromoDialog {
+    /** Notified about dialog events. */
+    public static interface ChromeHomePromoDialogTestObserver {
+        void onDialogShown(ChromeHomePromoDialog shownDialog);
+    }
+
+    private static ChromeHomePromoDialogTestObserver sTestObserver;
+
     /** Reasons that the promo was shown. */
     @IntDef({ShowReason.NTP, ShowReason.MENU, ShowReason.STARTUP, ShowReason.BOUNDARY})
     @Retention(RetentionPolicy.SOURCE)
@@ -62,6 +71,9 @@ public class ChromeHomePromoDialog extends PromoDialog {
 
     /** Whether Chrome Home should be enabled or disabled after the promo is dismissed. */
     private boolean mChromeHomeShouldBeEnabled;
+
+    /** Whether Chrome Home is enabled when the promo is shown. */
+    private boolean mChromeHomeEnabledOnShow;
 
     /**
      * Default constructor.
@@ -101,7 +113,7 @@ public class ChromeHomePromoDialog extends PromoDialog {
             params.secondaryButtonStringResource = R.string.chrome_home_promo_dialog_turn_off;
         } else {
             params.primaryButtonStringResource = R.string.chrome_home_promo_dialog_try_it;
-            params.secondaryButtonStringResource = R.string.chrome_home_promo_dialog_not_now;
+            params.secondaryButtonStringResource = R.string.chrome_home_promo_dialog_not_yet;
         }
 
         if (SysUtils.isLowEndDevice()) {
@@ -127,6 +139,10 @@ public class ChromeHomePromoDialog extends PromoDialog {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mChromeHomeEnabledOnShow = FeatureUtilities.isChromeHomeEnabled();
+
+        if (sTestObserver != null) sTestObserver.onDialogShown(this);
     }
 
     /**
@@ -182,6 +198,10 @@ public class ChromeHomePromoDialog extends PromoDialog {
         // options.
         if (ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_PROMO_INFO_ONLY)) return;
 
+        // If the state of Chrome Home changed while this dialog was opened, do nothing. This can
+        // happen in multi-window if this dialog is shown in both windows.
+        if (mChromeHomeEnabledOnShow != FeatureUtilities.isChromeHomeEnabled()) return;
+
         String histogramName = null;
         switch (mShowReason) {
             case ShowReason.MENU:
@@ -213,5 +233,15 @@ public class ChromeHomePromoDialog extends PromoDialog {
         FeatureUtilities.switchChromeHomeUserSetting(mChromeHomeShouldBeEnabled);
 
         if (restartRequired) restartChromeInstances();
+    }
+
+    /**
+     * An observer to be notified about dialog events.  Used for testing. Must be called on the UI
+     * thread.
+     */
+    @VisibleForTesting
+    public static void setObserverForTests(ChromeHomePromoDialogTestObserver observer) {
+        ThreadUtils.assertOnUiThread();
+        sTestObserver = observer;
     }
 }

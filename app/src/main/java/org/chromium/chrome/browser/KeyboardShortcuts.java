@@ -11,12 +11,12 @@ import android.view.KeyEvent;
 import android.view.KeyboardShortcutGroup;
 import android.view.KeyboardShortcutInfo;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModelUtils;
-import org.chromium.content.browser.ContentViewCore;
+import org.chromium.content_public.browser.WebContents;
+import org.chromium.device.gamepad.GamepadList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,11 +38,6 @@ public class KeyboardShortcuts {
                 | (event.isShiftPressed() ? SHIFT : 0);
     }
 
-    private static boolean isGamepadAPIActive(ChromeActivity activity) {
-        ContentViewCore cvc = activity.getCurrentContentViewCore();
-        return (cvc != null) ? cvc.isGamepadAPIActive() : false;
-    }
-
     /**
      * This should be called from the Activity's dispatchKeyEvent() to handle keyboard shortcuts.
      *
@@ -56,7 +51,6 @@ public class KeyboardShortcuts {
      * @return True if the event was handled. False if the event was ignored. Null if the event
      *         should be handled by the activity's parent class.
      */
-    @SuppressFBWarnings("NP_BOOLEAN_RETURN_NULL")
     public static Boolean dispatchKeyEvent(KeyEvent event, ChromeActivity activity,
             boolean uiInitialized) {
         int keyCode = event.getKeyCode();
@@ -199,7 +193,7 @@ public class KeyboardShortcuts {
         int keyCode = event.getKeyCode();
         if (event.getRepeatCount() != 0 || KeyEvent.isModifierKey(keyCode)) return false;
         if (KeyEvent.isGamepadButton(keyCode)) {
-            if (isGamepadAPIActive(activity)) return false;
+            if (GamepadList.isGamepadAPIActive()) return false;
         } else if (!event.isCtrlPressed() && !event.isAltPressed()
                 && keyCode != KeyEvent.KEYCODE_F3
                 && keyCode != KeyEvent.KEYCODE_F5
@@ -304,17 +298,14 @@ public class KeyboardShortcuts {
                 case CTRL | SHIFT | KeyEvent.KEYCODE_PLUS:
                 case CTRL | SHIFT | KeyEvent.KEYCODE_EQUALS:
                 case KeyEvent.KEYCODE_ZOOM_IN:
-                    ContentViewCore cvc = activity.getCurrentContentViewCore();
-                    if (cvc != null) cvc.zoomIn();
+                    ZoomController.zoomIn(getCurrentWebContents(activity));
                     return true;
                 case CTRL | KeyEvent.KEYCODE_MINUS:
                 case KeyEvent.KEYCODE_ZOOM_OUT:
-                    cvc = activity.getCurrentContentViewCore();
-                    if (cvc != null) cvc.zoomOut();
+                    ZoomController.zoomOut(getCurrentWebContents(activity));
                     return true;
                 case CTRL | KeyEvent.KEYCODE_0:
-                    cvc = activity.getCurrentContentViewCore();
-                    if (cvc != null) cvc.zoomReset();
+                    ZoomController.zoomReset(getCurrentWebContents(activity));
                     return true;
                 case SHIFT | CTRL | KeyEvent.KEYCODE_R:
                 case CTRL | KeyEvent.KEYCODE_R:
@@ -354,5 +345,9 @@ public class KeyboardShortcuts {
         }
 
         return false;
+    }
+
+    private static WebContents getCurrentWebContents(ChromeActivity activity) {
+        return activity.getActivityTab().getWebContents();
     }
 }

@@ -107,8 +107,7 @@
     <dimen name="infobar_translate_menu_width">260dp</dimen>
 
     <!-- Contextual search dimensions -->
-    <dimen name="contextual_search_peek_promo_height">48dp</dimen>
-    <dimen name="contextual_search_peek_promo_padding">12dp</dimen>
+    <dimen name="contextual_search_bar_banner_padding">12dp</dimen>
     <dimen name="contextual_search_bar_image_size">36dp</dimen>
     <!-- The following two dimensions were taking from the UI specs for contextual search, where
     they were 36dp and 3dp respectively, but have been updated to allow for padding around
@@ -119,6 +118,7 @@
     <dimen name="contextual_search_end_button_width">48dp</dimen>
     <dimen name="contextual_search_divider_line_width">1dp</dimen>
     <dimen name="contextual_search_divider_line_height">24dp</dimen>
+    <dimen name="contextual_search_bubble_y_inset">14dp</dimen>
 
     <!-- Overlay panel dimensions -->
     <dimen name="overlay_panel_bar_height">56dp</dimen>
@@ -199,6 +199,7 @@
     <dimen name="control_container_height">56dp</dimen>
     <dimen name="bottom_control_container_height">56dp</dimen>
     <dimen name="custom_tabs_control_container_height">56dp</dimen>
+    <dimen name="fullscreen_activity_control_container_height">0dp</dimen>
 
     <!-- The combined height of the tab strip and toolbar. -->
     <dimen name="tab_strip_and_toolbar_height">56dp</dimen>
@@ -246,7 +247,6 @@
 
     <dimen name="toolbar_edge_padding">8dp</dimen>
     <dimen name="location_bar_google_g_width">24dp</dimen>
-    <dimen name="location_bar_google_g_width_bottom_sheet">20dp</dimen>
     <dimen name="location_bar_google_g_margin">8dp</dimen>
     <!-- location_bar_google_g_width + 2 * location_bar_google_g_margin -->
     <dimen name="location_bar_google_g_container_width">40dp</dimen>
@@ -325,9 +325,10 @@
     <dimen name="tile_view_title_margin_top_condensed">62dp</dimen>
     <dimen name="tile_view_title_margin_top_modern">61dp</dimen>
     <dimen name="ntp_logo_height">116dp</dimen>
-    <dimen name="ntp_logo_height_modern">30dp</dimen>
     <dimen name="ntp_logo_margin_top_modern">25dp</dimen>
-    <dimen name="ntp_logo_margin_bottom_modern">8dp</dimen>
+    <!-- bottom_control_container_height + 8 -->
+    <dimen name="ntp_logo_margin_bottom_modern">64dp</dimen>
+    <dimen name="ntp_logo_max_internal_space_bottom_modern">8dp</dimen>
     <dimen name="ntp_search_box_height">62dp</dimen>
     <dimen name="ntp_search_box_shadow_width">4dp</dimen>
     <dimen name="ntp_search_box_transition_length">16dp</dimen>
@@ -337,10 +338,8 @@
     <dimen name="ntp_shadow_height">9dp</dimen>
     <dimen name="ntp_sign_in_promo_margin_top">20dp</dimen>
     <dimen name="ntp_progress_indicator_diameter">56dp</dimen>
-    <dimen name="snippets_thumbnail_size">72dp</dimen>
-    <dimen name="snippets_thumbnail_size_large">124dp</dimen>
+    <dimen name="snippets_thumbnail_size">124dp</dimen>
     <dimen name="snippets_thumbnail_size_modern">114dp</dimen>
-    <dimen name="snippets_thumbnail_margin">16dp</dimen>
     <!-- The default padding for the peeking card and the amount the card peeks by in the current
          peeking card animation (the calculations assume this is the same). -->
     <dimen name="snippets_padding">16dp</dimen>
@@ -355,6 +354,9 @@
     <dimen name="snippets_offline_icon_size">18sp</dimen>
     <dimen name="ntp_suggestions_footer_padding_top">40dp</dimen>
     <dimen name="ntp_suggestions_footer_padding_bottom">18dp</dimen>
+    <dimen name="chrome_home_logo_minimum_height">1dp</dimen>
+    <!-- bottom_control_container_height - chrome_home_logo_minimum_height -->
+    <dimen name="chrome_home_suggestions_recycler_view_padding_top">55dp</dimen>
     <dimen name="chrome_home_suggestions_footer_padding_top">24dp</dimen>
     <dimen name="chrome_home_suggestions_footer_padding_bottom">24dp</dimen>
     <dimen name="content_suggestions_card_modern_margin">16dp</dimen>
@@ -376,7 +378,6 @@
     <dimen name="snackbar_shadow_height">8dp</dimen>
 
     <!-- Bookmarks dimensions -->
-    <dimen name="bookmark_item_popup_width">140dp</dimen>
     <dimen name="bookmark_folder_item_left">16dp</dimen>
     <dimen name="bookmark_minimum_dialog_size_tablet">500dp</dimen>
     <dimen name="bookmark_list_view_padding_top">64dp</dimen>
@@ -420,7 +421,6 @@
     <dimen name="psl_info_tooltip_margin">8dp</dimen>
 
     <!-- Clear browsing data preferences dimensions -->
-    <dimen name="clear_browsing_data_checkbox_height">56dp</dimen>
     <dimen name="clear_browsing_data_button_margin">8dp</dimen>
 
     <!-- Payments UI
@@ -459,6 +459,8 @@
     <dimen name="pref_icon_padding">4.6dp</dimen>
     <dimen name="pref_spinner_padding_end">8dp</dimen>
 
+    <dimen name="pref_languages_item_popup_width">260dp</dimen>
+
     <!-- Dialog dimensions.
          https://www.google.com/design/spec/components/dialogs.html#dialogs-simple-dialogs -->
     <dimen name="dialog_width_unit">56dp</dimen>  <!-- MD dialog widths are multiples of this. -->
@@ -475,6 +477,7 @@
     <dimen name="list_item_start_icon_width">36dp</dimen>
     <dimen name="list_item_start_icon_corner_radius">18dp</dimen>
     <dimen name="list_item_end_icon_width">56dp</dimen>
+    <dimen name="list_menu_width">140dp</dimen>
 
     <!-- SelectableListLayout dimensions -->
     <dimen name="selectable_list_layout_row_padding">16dp</dimen>
@@ -490,6 +493,8 @@
     <dimen name="bottom_sheet_help_bubble_inset">10dp</dimen>
     <dimen name="bottom_nav_height">40dp</dimen>
     <dimen name="bottom_nav_height_tall">48dp</dimen>
+    <dimen name="bottom_nav_menu_label_size">10sp</dimen>
+    <dimen name="bottom_nav_shadow_height">8dp</dimen>
 
     <!-- Chrome Home dimensions -->
     <dimen name="chrome_home_empty_view_top_padding">72dp</dimen>
@@ -517,10 +522,13 @@
     <dimen name="sad_tab_bullet_leading_offset">1dp</dimen>
 
     <!-- Context Menu Dimensions -->
+    <dimen name="context_menu_header_image_width_padding">15dp</dimen>
     <dimen name="context_menu_header_image_min_size">56dp</dimen>
-    <dimen name="context_menu_header_image_max_size">56dp</dimen>
+    <dimen name="context_menu_header_image_max_height">150dp</dimen>
     <dimen name="context_menu_max_width">500dp</dimen>
     <dimen name="context_menu_min_padding">20dp</dimen>
+    <dimen name="context_menu_image_top_margin">30dp</dimen>
+    <dimen name="context_menu_selectable_items_min_size">120dp</dimen>
 
     <!-- Divider Dimensions -->
     <dimen name="divider_height">1dp</dimen>

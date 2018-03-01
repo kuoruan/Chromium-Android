@@ -55,6 +55,7 @@ public class LibraryLoader {
 
     // The singleton instance of NativeLibraryPreloader.
     private static NativeLibraryPreloader sLibraryPreloader;
+    private static boolean sLibraryPreloaderCalled;
 
     // The singleton instance of LibraryLoader.
     private static volatile LibraryLoader sInstance;
@@ -151,6 +152,38 @@ public class LibraryLoader {
     }
 
     /**
+     * Calls native library preloader (see {@link #setNativeLibraryPreloader}) with the app
+     * context. If there is no preloader set, this function does nothing.
+     * Preloader is called only once, so calling it explicitly via this method means
+     * that it won't be (implicitly) called during library loading.
+     */
+    public void preloadNow() {
+        preloadNowOverrideApplicationContext(ContextUtils.getApplicationContext());
+    }
+
+    /**
+     * Similar to {@link #preloadNow}, but allows specifying app context to use.
+     */
+    public void preloadNowOverrideApplicationContext(Context appContext) {
+        synchronized (sLock) {
+            if (!Linker.isUsed()) {
+                preloadAlreadyLocked(appContext);
+            }
+        }
+    }
+
+    private void preloadAlreadyLocked(Context appContext) {
+        try (TraceEvent te = TraceEvent.scoped("LibraryLoader.preloadAlreadyLocked")) {
+            // Preloader uses system linker, we shouldn't preload if Chromium linker is used.
+            assert !Linker.isUsed();
+            if (sLibraryPreloader != null && !sLibraryPreloaderCalled) {
+                mLibraryPreloaderStatus = sLibraryPreloader.loadLibrary(appContext);
+                sLibraryPreloaderCalled = true;
+            }
+        }
+    }
+
+    /**
      * Checks if library is fully loaded and initialized.
      */
     public static boolean isInitialized() {
@@ -243,33 +276,46 @@ public class LibraryLoader {
         if (isNotPrefetchingLibraries()) return;
 
         final boolean coldStart = mPrefetchLibraryHasBeenCalled.compareAndSet(false, true);
+
+        // Collection should start close to the native library load, but doesn't have
+        // to be simultaneous with it. Also, don't prefetch in this case, as this would
+        // skew the results.
+        if (coldStart && CommandLine.getInstance().hasSwitch("log-native-library-residency")) {
+            // nativePeriodicallyCollectResidency() sleeps, run it on another thread,
+            // and not on the AsyncTask thread pool.
+            new Thread(LibraryLoader::nativePeriodicallyCollectResidency).start();
+            return;
+        }
+
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
-                TraceEvent.begin("LibraryLoader.asyncPrefetchLibrariesToMemory");
-                int percentage = nativePercentageOfResidentNativeLibraryCode();
-                boolean success = false;
-                // Arbitrary percentage threshold. If most of the native library is already
-                // resident (likely with monochrome), don't bother creating a prefetch process.
-                boolean prefetch = coldStart && percentage < 90;
-                if (prefetch) {
-                    success = nativeForkAndPrefetchNativeLibrary();
-                    if (!success) {
-                        Log.w(TAG, "Forking a process to prefetch the native library failed.");
+                try (TraceEvent e =
+                                TraceEvent.scoped("LibraryLoader.asyncPrefetchLibrariesToMemory")) {
+                    int percentage = nativePercentageOfResidentNativeLibraryCode();
+                    boolean success = false;
+                    // Arbitrary percentage threshold. If most of the native library is already
+                    // resident (likely with monochrome), don't bother creating a prefetch process.
+                    boolean prefetch = coldStart && percentage < 90;
+                    if (prefetch) {
+                        success = nativeForkAndPrefetchNativeLibrary();
+                        if (!success) {
+                            Log.w(TAG, "Forking a process to prefetch the native library failed.");
+                        }
+                    }
+                    // As this runs in a background thread, it can be called before histograms are
+                    // initialized. In this instance, histograms are dropped.
+                    RecordHistogram.initialize();
+                    if (prefetch) {
+                        RecordHistogram.recordBooleanHistogram(
+                                "LibraryLoader.PrefetchStatus", success);
+                    }
+                    if (percentage != -1) {
+                        String histogram = "LibraryLoader.PercentageOfResidentCodeBeforePrefetch"
+                                + (coldStart ? ".ColdStartup" : ".WarmStartup");
+                        RecordHistogram.recordPercentageHistogram(histogram, percentage);
                     }
                 }
-                // As this runs in a background thread, it can be called before histograms are
-                // initialized. In this instance, histograms are dropped.
-                RecordHistogram.initialize();
-                if (prefetch) {
-                    RecordHistogram.recordBooleanHistogram("LibraryLoader.PrefetchStatus", success);
-                }
-                if (percentage != -1) {
-                    String histogram = "LibraryLoader.PercentageOfResidentCodeBeforePrefetch"
-                            + (coldStart ? ".ColdStartup" : ".WarmStartup");
-                    RecordHistogram.recordPercentageHistogram(histogram, percentage);
-                }
-                TraceEvent.end("LibraryLoader.asyncPrefetchLibrariesToMemory");
                 return null;
             }
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -305,7 +351,7 @@ public class LibraryLoader {
     // TODO(crbug.com/635567): Fix this properly.
     @SuppressLint("DefaultLocale")
     private void loadAlreadyLocked(Context appContext) throws ProcessInitException {
-        try {
+        try (TraceEvent te = TraceEvent.scoped("LibraryLoader.loadAlreadyLocked")) {
             if (!mLoaded) {
                 assert !mInitialized;
 
@@ -348,9 +394,7 @@ public class LibraryLoader {
 
                     linker.finishLibraryLoad();
                 } else {
-                    if (sLibraryPreloader != null) {
-                        mLibraryPreloaderStatus = sLibraryPreloader.loadLibrary(appContext);
-                    }
+                    preloadAlreadyLocked(appContext);
                     // Load libraries using the system linker.
                     for (String library : NativeLibraries.LIBRARIES) {
                         try {
@@ -545,4 +589,7 @@ public class LibraryLoader {
     // Returns the percentage of the native library code page that are currently reseident in
     // memory.
     private static native int nativePercentageOfResidentNativeLibraryCode();
+
+    // Periodically logs native library residency from this thread.
+    private static native void nativePeriodicallyCollectResidency();
 }

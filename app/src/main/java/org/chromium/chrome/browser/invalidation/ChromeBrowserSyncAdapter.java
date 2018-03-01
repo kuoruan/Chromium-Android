@@ -16,7 +16,6 @@ import android.os.Bundle;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.library_loader.ProcessInitException;
 import org.chromium.chrome.browser.init.BrowserParts;
 import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
@@ -89,7 +88,6 @@ public class ChromeBrowserSyncAdapter extends AbstractThreadedSyncAdapter {
         try {
             ThreadUtils.runOnUiThreadBlocking(new Runnable() {
                 @Override
-                @SuppressFBWarnings("DM_EXIT")
                 public void run() {
                     ChromeBrowserInitializer.getInstance(getContext()).handlePreNativeStartup(
                             parts);

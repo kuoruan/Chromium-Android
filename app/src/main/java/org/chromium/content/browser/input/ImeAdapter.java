@@ -742,6 +742,8 @@ public class ImeAdapter {
             // sends ACTION_DOWN), so it's fine to silently drop it.
             return false;
         }
+
+        for (ImeEventObserver observer : mEventObservers) observer.onBeforeSendKeyEvent(event);
         onImeEvent();
 
         return nativeSendKeyEvent(mNativeImeAdapterAndroid, event, type,

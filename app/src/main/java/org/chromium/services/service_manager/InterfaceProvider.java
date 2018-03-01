@@ -33,7 +33,7 @@ public class InterfaceProvider implements ConnectionErrorHandler {
      * @param request The request for the interface I.
      */
     public <I extends Interface> void getInterface(
-            I.Manager<I, ? extends I.Proxy> manager, InterfaceRequest<I> request) {
+            Interface.Manager<I, ? extends Interface.Proxy> manager, InterfaceRequest<I> request) {
         mInterfaceProvider.getInterface(manager.getName(), request.passHandle());
     }
 
@@ -44,7 +44,7 @@ public class InterfaceProvider implements ConnectionErrorHandler {
      * @return A bound Proxy for interface I.
      */
     public <I extends Interface, P extends Interface.Proxy> P getInterface(
-            I.Manager<I, P> manager) {
+            Interface.Manager<I, P> manager) {
         Pair<P, InterfaceRequest<I>> result = manager.getInterfaceRequest(mCore);
         getInterface(manager, result.second);
         return result.first;

@@ -54,7 +54,7 @@ public class SigninAndSyncView extends LinearLayout
         /**
          * The user has pressed 'no thanks' and expects the view to be removed from its parent.
          */
-        public void onViewDismissed();
+        void onViewDismissed();
     }
 
     /**
@@ -283,6 +283,6 @@ public class SigninAndSyncView extends LinearLayout
     @Override
     public void androidSyncSettingsChanged() {
         // AndroidSyncSettings calls this method from non-UI threads.
-        ThreadUtils.runOnUiThread(() -> update());
+        ThreadUtils.runOnUiThread(this::update);
     }
 }

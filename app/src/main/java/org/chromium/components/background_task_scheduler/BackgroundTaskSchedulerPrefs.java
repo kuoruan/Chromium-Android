@@ -66,6 +66,7 @@ public class BackgroundTaskSchedulerPrefs {
          * Converts a task info to a shared preference entry in the format:
          * BACKGROUND_TASK_CLASS_NAME:TASK_ID.
          */
+        @Override
         public String toString() {
             return mBackgroundTaskClass + ENTRY_SEPARATOR + mTaskId;
         }

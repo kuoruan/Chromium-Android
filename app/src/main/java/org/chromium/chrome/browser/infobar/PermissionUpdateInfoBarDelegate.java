@@ -13,6 +13,8 @@ import org.chromium.base.ActivityState;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.ApplicationStatus.ActivityStateListener;
 import org.chromium.base.annotations.CalledByNative;
+import org.chromium.chrome.browser.metrics.WebApkUma;
+import org.chromium.chrome.browser.webapps.WebApkActivity;
 import org.chromium.content.browser.ContentViewCore;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.base.WindowAndroid;
@@ -64,10 +66,13 @@ class PermissionUpdateInfoBarDelegate implements WindowAndroid.PermissionCallbac
                             || windowAndroid.canRequestPermission(mAndroidPermisisons[i]));
         }
 
+        Activity activity = windowAndroid.getActivity().get();
         if (canRequestAllPermissions) {
             windowAndroid.requestPermissions(mAndroidPermisisons, this);
+            if (activity instanceof WebApkActivity) {
+                WebApkUma.recordAndroidRuntimePermissionPromptInWebApk(mAndroidPermisisons);
+            }
         } else {
-            Activity activity = windowAndroid.getActivity().get();
             if (activity == null) {
                 nativeOnPermissionResult(mNativePtr, false);
                 return;

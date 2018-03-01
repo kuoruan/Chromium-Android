@@ -26,6 +26,7 @@ import android.view.accessibility.AccessibilityNodeProvider;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.content.browser.RenderCoordinates;
+import org.chromium.content.browser.webcontents.WebContentsImpl;
 import org.chromium.content_public.browser.WebContents;
 
 import java.util.ArrayList;
@@ -58,10 +59,13 @@ public class WebContentsAccessibility extends AccessibilityNodeProvider {
     protected static final int ACTION_SCROLL_LEFT = 0x01020039;
     protected static final int ACTION_SCROLL_RIGHT = 0x0102003b;
 
+    // Constant for no granularity selected.
+    private static final int NO_GRANULARITY_SELECTED = 0;
+
     protected final AccessibilityManager mAccessibilityManager;
     private final Context mContext;
     private final RenderCoordinates mRenderCoordinates;
-    private final WebContents mWebContents;
+    private final WebContentsImpl mWebContents;
     protected long mNativeObj;
     private Rect mAccessibilityFocusRect;
     private boolean mIsHovering;
@@ -84,33 +88,31 @@ public class WebContentsAccessibility extends AccessibilityNodeProvider {
      * Create a WebContentsAccessibility object.
      */
     public static WebContentsAccessibility create(Context context, ViewGroup containerView,
-            WebContents webContents, RenderCoordinates renderCoordinates,
-            boolean shouldFocusOnPageLoad) {
+            WebContents webContents, boolean shouldFocusOnPageLoad) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             return new OWebContentsAccessibility(
-                    context, containerView, webContents, renderCoordinates, shouldFocusOnPageLoad);
+                    context, containerView, webContents, shouldFocusOnPageLoad);
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return new LollipopWebContentsAccessibility(
-                    context, containerView, webContents, renderCoordinates, shouldFocusOnPageLoad);
+                    context, containerView, webContents, shouldFocusOnPageLoad);
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             return new KitKatWebContentsAccessibility(
-                    context, containerView, webContents, renderCoordinates, shouldFocusOnPageLoad);
+                    context, containerView, webContents, shouldFocusOnPageLoad);
         } else {
             return new WebContentsAccessibility(
-                    context, containerView, webContents, renderCoordinates, shouldFocusOnPageLoad);
+                    context, containerView, webContents, shouldFocusOnPageLoad);
         }
     }
 
     protected WebContentsAccessibility(Context context, ViewGroup containerView,
-            WebContents webContents, RenderCoordinates renderCoordinates,
-            boolean shouldFocusOnPageLoad) {
+            WebContents webContents, boolean shouldFocusOnPageLoad) {
         mContext = context;
-        mWebContents = webContents;
+        mWebContents = (WebContentsImpl) webContents;
         mAccessibilityFocusId = View.NO_ID;
         mIsHovering = false;
         mCurrentRootId = View.NO_ID;
         mView = containerView;
-        mRenderCoordinates = renderCoordinates;
+        mRenderCoordinates = mWebContents.getRenderCoordinates();
         mAccessibilityManager =
                 (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
         mShouldFocusOnPageLoad = shouldFocusOnPageLoad;
@@ -410,11 +412,11 @@ public class WebContentsAccessibility extends AccessibilityNodeProvider {
     }
 
     private void setGranularityAndUpdateSelection(int granularity) {
-        if (mSelectionGranularity == 0) {
+        mSelectionGranularity = granularity;
+        if (mSelectionGranularity == NO_GRANULARITY_SELECTED) {
             mSelectionStartIndex = -1;
             mSelectionEndIndex = -1;
         }
-        mSelectionGranularity = granularity;
         if (nativeIsEditableText(mNativeObj, mAccessibilityFocusId)
                 && nativeIsFocused(mNativeObj, mAccessibilityFocusId)) {
             mSelectionStartIndex =
@@ -428,7 +430,7 @@ public class WebContentsAccessibility extends AccessibilityNodeProvider {
         setGranularityAndUpdateSelection(granularity);
         // This calls finishGranularityMove when it's done.
         return nativeNextAtGranularity(mNativeObj, mSelectionGranularity, extendSelection,
-                mAccessibilityFocusId, mSelectionEndIndex);
+                mAccessibilityFocusId, mSelectionStartIndex);
     }
 
     private boolean previousAtGranularity(int granularity, boolean extendSelection) {
@@ -514,9 +516,9 @@ public class WebContentsAccessibility extends AccessibilityNodeProvider {
 
         mAccessibilityFocusId = newAccessibilityFocusId;
         mAccessibilityFocusRect = null;
-        mSelectionGranularity = 0;
-        mSelectionStartIndex = 0;
-        mSelectionEndIndex = 0;
+        mSelectionGranularity = NO_GRANULARITY_SELECTED;
+        mSelectionStartIndex = -1;
+        mSelectionEndIndex = nativeGetTextLength(mNativeObj, newAccessibilityFocusId);
 
         // Calling nativeSetAccessibilityFocus will asynchronously load inline text boxes for
         // this node and its subtree. If accessibility focus is on anything other than
@@ -1205,6 +1207,19 @@ public class WebContentsAccessibility extends AccessibilityNodeProvider {
         return 0;
     }
 
+    /**
+     * @see View#onDetachedFromWindow()
+     */
+    public void onDetachedFromWindow() {}
+
+    /**
+     * @see View#onAttachedToWindow()
+     * For versions before L, this method will not be called when container view is already
+     * attached to a window and webContentsAccessibility gets created later as a check for L plus
+     * versions is added in {@link ContentViewCore#getAccessibilityNodeProvider()}.
+     */
+    public void onAttachedToWindow() {}
+
     private native long nativeInit(WebContents webContents);
     private native void nativeOnAutofillPopupDisplayed(long nativeWebContentsAccessibilityAndroid);
     private native void nativeOnAutofillPopupDismissed(long nativeWebContentsAccessibilityAndroid);
@@ -1258,4 +1273,5 @@ public class WebContentsAccessibility extends AccessibilityNodeProvider {
             long nativeWebContentsAccessibilityAndroid, int id);
     protected native int[] nativeGetCharacterBoundingBoxes(
             long nativeWebContentsAccessibilityAndroid, int id, int start, int len);
+    private native int nativeGetTextLength(long nativeWebContentsAccessibilityAndroid, int id);
 }

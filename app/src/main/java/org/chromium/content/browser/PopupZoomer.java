@@ -45,7 +45,7 @@ import org.chromium.content_public.browser.WebContents;
  * must re-tap the magnified content in order to clarify their intent.
  */
 @JNINamespace("content")
-class PopupZoomer extends View {
+public class PopupZoomer extends View {
     private static final String TAG = "cr.PopupZoomer";
 
     // The padding between the edges of the view and the popup. Note that there is a mirror

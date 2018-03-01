@@ -29,8 +29,10 @@ class BackgroundTaskSchedulerUma {
     static final int BACKGROUND_TASK_DOWNLOAD_CLEANUP = 9;
     static final int BACKGROUND_TASK_WEBVIEW_VARIATIONS = 10;
     static final int BACKGROUND_TASK_OFFLINE_CONTENT_NOTIFICATION = 11;
+    static final int BACKGROUND_TASK_WEBAPK_UPDATE = 12;
+    static final int BACKGROUND_TASK_DOWNLOAD_RESUMPTION = 13;
     // Keep this one at the end and increment appropriately when adding new tasks.
-    static final int BACKGROUND_TASK_COUNT = 12;
+    static final int BACKGROUND_TASK_COUNT = 14;
 
     static final String KEY_CACHED_UMA = "bts_cached_uma";
 
@@ -79,6 +81,7 @@ class BackgroundTaskSchedulerUma {
         }
 
         /** Converts cached UMA entry to a string in format: EVENT:VALUE:COUNT. */
+        @Override
         public String toString() {
             return mEvent + SEPARATOR + mValue + SEPARATOR + mCount;
         }
@@ -234,6 +237,10 @@ class BackgroundTaskSchedulerUma {
                 return BACKGROUND_TASK_WEBVIEW_VARIATIONS;
             case TaskIds.OFFLINE_PAGES_PREFETCH_NOTIFICATION_JOB_ID:
                 return BACKGROUND_TASK_OFFLINE_CONTENT_NOTIFICATION;
+            case TaskIds.WEBAPK_UPDATE_JOB_ID:
+                return BACKGROUND_TASK_WEBAPK_UPDATE;
+            case TaskIds.DOWNLOAD_RESUMPTION_JOB_ID:
+                return BACKGROUND_TASK_DOWNLOAD_RESUMPTION;
             default:
                 assert false;
         }

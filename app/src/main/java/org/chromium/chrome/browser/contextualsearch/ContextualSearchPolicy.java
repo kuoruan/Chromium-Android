@@ -155,6 +155,8 @@ class ContextualSearchPolicy {
      * @return Whether surroundings are available.
      */
     boolean canSendSurroundings() {
+        if (mDidOverrideDecidedStateForTesting) return mDecidedStateForTesting;
+
         if (isPromoAvailable()) return isBasePageHTTP(mNetworkCommunicator.getBasePageUrl());
 
         return true;
@@ -176,66 +178,6 @@ class ContextualSearchPolicy {
      */
     boolean isPromoAvailable() {
         return isUserUndecided();
-    }
-
-    /**
-     * @return Whether the Peek promo is available to be shown above the Search Bar.
-     */
-    public boolean isPeekPromoAvailable() {
-        // Allow Promo to be forcefully enabled for testing.
-        if (ContextualSearchFieldTrial.isPeekPromoForced()) return true;
-
-        // Enabled by Finch.
-        if (!ContextualSearchFieldTrial.isPeekPromoEnabled()) return false;
-
-        return isPeekPromoConditionSatisfied();
-    }
-
-    /**
-     * @return Whether the condition to show the Peek promo is satisfied.
-     */
-    public boolean isPeekPromoConditionSatisfied() {
-        // Check for several conditions to determine whether the Peek Promo can be shown.
-
-        // 1) If the Panel was never opened.
-        if (getPromoOpenCount() > 0) return false;
-
-        // 2) User has not opted in.
-        if (!isUserUndecided()) return false;
-
-        // 3) Selection was caused by a long press.
-        if (mSelectionController.getSelectionType() != SelectionType.LONG_PRESS) return false;
-
-        // 4) Promo was not shown more than the maximum number of times defined by Finch.
-        final int maxShowCount = ContextualSearchFieldTrial.getPeekPromoMaxShowCount();
-        final int peekPromoShowCount = mPreferenceManager.getContextualSearchPeekPromoShowCount();
-        if (peekPromoShowCount >= maxShowCount) return false;
-
-        // 5) Only then, show the promo.
-        return true;
-    }
-
-    /**
-     * Register that the Peek Promo was seen.
-     */
-    public void registerPeekPromoSeen() {
-        final int peekPromoShowCount = mPreferenceManager.getContextualSearchPeekPromoShowCount();
-        mPreferenceManager.setContextualSearchPeekPromoShowCount(peekPromoShowCount + 1);
-    }
-
-    /**
-     * Logs metrics related to the Peek Promo.
-     * @param wasPromoSeen Whether the Peek Promo was seen.
-     * @param wouldHaveShownPromo Whether the Promo would have shown.
-     */
-    public void logPeekPromoMetrics(boolean wasPromoSeen, boolean wouldHaveShownPromo) {
-        final boolean hasOpenedPanel = getPromoOpenCount() > 0;
-        ContextualSearchUma.logPeekPromoOutcome(wasPromoSeen, wouldHaveShownPromo, hasOpenedPanel);
-
-        if (wasPromoSeen) {
-            final int showCount = mPreferenceManager.getContextualSearchPeekPromoShowCount();
-            ContextualSearchUma.logPeekPromoShowCount(showCount, hasOpenedPanel);
-        }
     }
 
     /**

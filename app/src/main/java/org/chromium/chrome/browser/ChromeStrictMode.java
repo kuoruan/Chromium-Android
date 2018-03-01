@@ -15,7 +15,6 @@ import org.chromium.base.CommandLine;
 import org.chromium.base.JavaExceptionReporter;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.library_loader.LibraryLoader;
 
 import java.lang.reflect.Field;
@@ -157,7 +156,6 @@ public class ChromeStrictMode {
      */
     @UiThread
     // FindBugs doesn't like conditionals with compile time results
-    @SuppressFBWarnings("UCF_USELESS_CONTROL_FLOW")
     public static void configureStrictMode() {
         assert ThreadUtils.runningOnUiThread();
         if (sIsStrictModeAlreadyConfigured) {

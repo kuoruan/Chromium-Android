@@ -8,8 +8,11 @@ import android.support.annotation.IntDef;
 
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
+import org.chromium.chrome.browser.feature_engagement.TrackerFactory;
+import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.BottomSheetContent;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.StateChangeReason;
+import org.chromium.components.feature_engagement.EventConstants;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -101,17 +104,27 @@ public class BottomSheetMetrics extends EmptyBottomSheetObserver {
             return;
         }
 
-        if (newContent.getType() == BottomSheetContentController.TYPE_SUGGESTIONS) {
+        int contentType = newContent.getType();
+
+        if (contentType == BottomSheetContentController.TYPE_SUGGESTIONS) {
             RecordUserAction.record("Android.ChromeHome.ShowSuggestions");
-        } else if (newContent.getType() == BottomSheetContentController.TYPE_DOWNLOADS) {
+        } else if (contentType == BottomSheetContentController.TYPE_DOWNLOADS) {
             RecordUserAction.record("Android.ChromeHome.ShowDownloads");
-        } else if (newContent.getType() == BottomSheetContentController.TYPE_BOOKMARKS) {
+        } else if (contentType == BottomSheetContentController.TYPE_BOOKMARKS) {
             RecordUserAction.record("Android.ChromeHome.ShowBookmarks");
-        } else if (newContent.getType() == BottomSheetContentController.TYPE_HISTORY) {
+        } else if (contentType == BottomSheetContentController.TYPE_HISTORY) {
             RecordUserAction.record("Android.ChromeHome.ShowHistory");
-        } else if (newContent.getType() == BottomSheetContentController.TYPE_INCOGNITO_HOME) {
+        } else if (contentType == BottomSheetContentController.TYPE_INCOGNITO_HOME) {
             RecordUserAction.record("Android.ChromeHome.ShowIncognitoHome");
         }
+
+        if (contentType == BottomSheetContentController.TYPE_DOWNLOADS
+                || contentType == BottomSheetContentController.TYPE_BOOKMARKS
+                || contentType == BottomSheetContentController.TYPE_HISTORY) {
+            TrackerFactory.getTrackerForProfile(Profile.getLastUsedProfile())
+                    .notifyEvent(EventConstants.CHROME_HOME_NON_HOME_CONTENT_SHOWN);
+        }
+
         mLastContent = newContent;
     }
 

@@ -27,7 +27,6 @@ import android.view.MenuItem;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.library_loader.ProcessInitException;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.help.HelpAndFeedback;
@@ -59,7 +58,6 @@ public class Preferences extends AppCompatActivity implements
 
     private static boolean sActivityNotExportedChecked;
 
-    @SuppressFBWarnings("DM_EXIT")
     @SuppressLint("InlinedApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {

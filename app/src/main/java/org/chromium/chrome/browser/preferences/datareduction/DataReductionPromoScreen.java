@@ -9,7 +9,6 @@ import android.content.DialogInterface;
 import android.view.View;
 
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
 import org.chromium.chrome.browser.widget.PromoDialog;
 import org.chromium.ui.widget.Toast;
@@ -31,9 +30,6 @@ public class DataReductionPromoScreen extends PromoDialog {
         if (isIncognito) return false;
         if (!DataReductionPromoUtils.canShowPromos()) return false;
         if (DataReductionPromoUtils.getDisplayedFreOrSecondRunPromo()) return false;
-        // Showing the promo dialog in multiwindow mode is broken on Galaxy Note devices:
-        // http://crbug.com/354696. If we're in multiwindow mode, save the dialog for later.
-        if (MultiWindowUtils.getInstance().isLegacyMultiWindow(parentActivity)) return false;
 
         DataReductionPromoScreen promoScreen = new DataReductionPromoScreen(parentActivity);
         promoScreen.setOnDismissListener(promoScreen);

@@ -5,8 +5,11 @@
 package org.chromium.chrome.browser.signin;
 
 import android.app.Dialog;
-import android.content.Context;
+import android.app.DialogFragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.DialogInterface;
+import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 
 import org.chromium.chrome.R;
@@ -44,13 +47,99 @@ public class ConfirmSyncDataStateMachineDelegate {
         void onRetry();
     }
 
-    private final Context mContext;
+    /**
+     * Progress Dialog that is shown while account management policy is being fetched.
+     */
+    public static class ProgressDialogFragment extends DialogFragment {
+        private ProgressDialogListener mListener;
 
-    private Dialog mProgressDialog;
-    private AlertDialog mTimeoutAlertDialog;
+        public ProgressDialogFragment() {
+            // Fragment must have an empty public constructor
+        }
 
-    public ConfirmSyncDataStateMachineDelegate(Context context) {
-        mContext = context;
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // If the dialog is being recreated it won't have the listener set and so won't be
+            // functional. Therefore we dismiss, and the user will need to open the dialog again.
+            if (savedInstanceState != null) {
+                dismiss();
+            }
+
+            return new AlertDialog.Builder(getActivity(), R.style.SigninAlertDialogTheme)
+                    .setView(R.layout.signin_progress_bar_dialog)
+                    .setNegativeButton(R.string.cancel, (dialog, i) -> dialog.cancel())
+                    .create();
+        }
+
+        private void setListener(ProgressDialogListener listener) {
+            assert mListener == null;
+            mListener = listener;
+        }
+
+        private static ProgressDialogFragment create(ProgressDialogListener listener) {
+            ProgressDialogFragment result = new ProgressDialogFragment();
+            result.setListener(listener);
+            return result;
+        }
+
+        @Override
+        public void onCancel(DialogInterface dialog) {
+            super.onCancel(dialog);
+            mListener.onCancel();
+        }
+    }
+
+    /**
+     * Timeout Dialog that is shown if account management policy fetch times out.
+     */
+    public static class TimeoutDialogFragment extends DialogFragment {
+        private TimeoutDialogListener mListener;
+
+        public TimeoutDialogFragment() {
+            // Fragment must have an empty public constructor
+        }
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // If the dialog is being recreated it won't have the listener set and so won't be
+            // functional. Therefore we dismiss, and the user will need to open the dialog again.
+            if (savedInstanceState != null) {
+                dismiss();
+            }
+
+            return new AlertDialog.Builder(getActivity(), R.style.SigninAlertDialogTheme)
+                    .setTitle(R.string.sign_in_timeout_title)
+                    .setMessage(R.string.sign_in_timeout_message)
+                    .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.cancel())
+                    .setPositiveButton(R.string.retry, (dialog, which) -> mListener.onRetry())
+                    .create();
+        }
+
+        private void setListener(TimeoutDialogListener listener) {
+            assert mListener == null;
+            mListener = listener;
+        }
+
+        private static TimeoutDialogFragment create(TimeoutDialogListener listener) {
+            TimeoutDialogFragment result = new TimeoutDialogFragment();
+            result.setListener(listener);
+            return result;
+        }
+
+        @Override
+        public void onCancel(DialogInterface dialog) {
+            super.onCancel(dialog);
+            mListener.onCancel();
+        }
+    }
+
+    private static final String PROGRESS_DIALOG_TAG = "ConfirmSyncTimeoutDialog";
+    private static final String TIMEOUT_DIALOG_TAG = "ConfirmSyncProgressDialog";
+
+    private final FragmentManager mFragmentManager;
+
+    public ConfirmSyncDataStateMachineDelegate(FragmentManager fragmentManager) {
+        mFragmentManager = fragmentManager;
     }
 
     /**
@@ -60,23 +149,7 @@ public class ConfirmSyncDataStateMachineDelegate {
      */
     public void showFetchManagementPolicyProgressDialog(final ProgressDialogListener listener) {
         dismissAllDialogs();
-        mProgressDialog = new AlertDialog.Builder(mContext, R.style.SigninAlertDialogTheme)
-                                  .setView(R.layout.signin_progress_bar_dialog)
-                                  .setNegativeButton(R.string.cancel,
-                                          new DialogInterface.OnClickListener() {
-                                              @Override
-                                              public void onClick(DialogInterface dialog, int i) {
-                                                  dialog.cancel();
-                                              }
-                                          })
-                                  .setOnCancelListener(new DialogInterface.OnCancelListener() {
-                                      @Override
-                                      public void onCancel(DialogInterface dialog) {
-                                          listener.onCancel();
-                                      }
-                                  })
-                                  .create();
-        mProgressDialog.show();
+        showAllowingStateLoss(ProgressDialogFragment.create(listener), PROGRESS_DIALOG_TAG);
     }
 
     /**
@@ -86,42 +159,26 @@ public class ConfirmSyncDataStateMachineDelegate {
      */
     public void showFetchManagementPolicyTimeoutDialog(final TimeoutDialogListener listener) {
         dismissAllDialogs();
-        mTimeoutAlertDialog =
-                new AlertDialog.Builder(mContext, R.style.SigninAlertDialogTheme)
-                        .setTitle(R.string.sign_in_timeout_title)
-                        .setMessage(R.string.sign_in_timeout_message)
-                        .setNegativeButton(R.string.cancel,
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.cancel();
-                                    }
-                                })
-                        .setPositiveButton(R.string.retry,
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        listener.onRetry();
-                                    }
-                                })
-                        .setOnCancelListener(new DialogInterface.OnCancelListener() {
-                            @Override
-                            public void onCancel(DialogInterface dialog) {
-                                listener.onCancel();
-                            }
-                        })
-                        .create();
-        mTimeoutAlertDialog.show();
+        showAllowingStateLoss(TimeoutDialogFragment.create(listener), TIMEOUT_DIALOG_TAG);
+    }
+
+    private void showAllowingStateLoss(DialogFragment dialogFragment, String tag) {
+        FragmentTransaction transaction = mFragmentManager.beginTransaction();
+        transaction.add(dialogFragment, tag);
+        transaction.commitAllowingStateLoss();
     }
 
     /**
      * Dismisses all dialogs.
      */
     public void dismissAllDialogs() {
-        if (mProgressDialog != null) mProgressDialog.dismiss();
-        mProgressDialog = null;
+        dismissDialog(PROGRESS_DIALOG_TAG);
+        dismissDialog(TIMEOUT_DIALOG_TAG);
+    }
 
-        if (mTimeoutAlertDialog != null) mTimeoutAlertDialog.dismiss();
-        mTimeoutAlertDialog = null;
+    private void dismissDialog(String tag) {
+        DialogFragment fragment = (DialogFragment) mFragmentManager.findFragmentByTag(tag);
+        if (fragment == null) return;
+        fragment.dismissAllowingStateLoss();
     }
 }

@@ -171,4 +171,18 @@ public class MathUtils {
     public static boolean areFloatsEqual(float f1, float f2) {
         return Math.abs(f1 - f2) < MathUtils.EPSILON;
     }
+
+    /**
+     * Compute the distance between two points.
+     * @param x1 X of point 1.
+     * @param y1 Y of point 1.
+     * @param x2 X of point 2.
+     * @param y2 Y of point 2.
+     * @return The distance between the two points.
+     */
+    public static float distance(float x1, float y1, float x2, float y2) {
+        float xDist = x2 - x1;
+        float yDist = y2 - y1;
+        return (float) Math.sqrt(xDist * xDist + yDist * yDist);
+    }
 }

@@ -11,7 +11,6 @@
 
 package org.chromium.payments.mojom;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
@@ -37,6 +36,11 @@ PaymentRequestClient client, PaymentMethodData[] methodData, PaymentDetails deta
 
     void updateWith(
 PaymentDetails details);
+
+
+
+    void noUpdatedPaymentDetails(
+);
 
 
 

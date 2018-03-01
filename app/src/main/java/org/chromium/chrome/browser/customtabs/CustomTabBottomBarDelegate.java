@@ -131,14 +131,14 @@ class CustomTabBottomBarDelegate implements FullscreenListener {
             hideBottomBar();
             mClickableIDs = null;
             mClickPendingIntent = null;
+            return true;
         } else {
             // TODO: investigate updating the RemoteViews without replacing the entire hierarchy.
             mClickableIDs = clickableIDs;
             mClickPendingIntent = pendingIntent;
             if (getBottomBarView().getChildCount() > 1) getBottomBarView().removeViewAt(1);
-            showRemoteViews(remoteViews);
+            return showRemoteViews(remoteViews);
         }
-        return true;
     }
 
     /**
@@ -206,13 +206,13 @@ class CustomTabBottomBarDelegate implements FullscreenListener {
         mFullscreenManager.setBottomControlsHeight(0);
     }
 
-    private void showRemoteViews(RemoteViews remoteViews) {
+    private boolean showRemoteViews(RemoteViews remoteViews) {
         try {
             final View inflatedView =
                     remoteViews.apply(mActivity.getApplicationContext(), getBottomBarView());
             if (mClickableIDs != null && mClickPendingIntent != null) {
                 for (int id: mClickableIDs) {
-                    if (id < 0) return;
+                    if (id < 0) return false;
                     View view = inflatedView.findViewById(id);
                     if (view != null) view.setOnClickListener(mBottomBarClickListener);
                 }
@@ -226,8 +226,10 @@ class CustomTabBottomBarDelegate implements FullscreenListener {
                     mFullscreenManager.setBottomControlsHeight(v.getHeight());
                 }
             });
+            return true;
         } catch (RemoteViews.ActionException e) {
             Log.e(TAG, "Failed to inflate the RemoteViews", e);
+            return false;
         }
     }
 

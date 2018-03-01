@@ -14,7 +14,6 @@ import org.chromium.base.ActivityState;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.ThreadUtils;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.browser.ApplicationLifetime;
 import org.chromium.chrome.browser.BrowserRestartActivity;
 
@@ -55,7 +54,6 @@ class ChromeLifetimeController implements ApplicationLifetime.Observer,
     /**
      * Initialize the ChromeLifetimeController;
      */
-    @SuppressFBWarnings("LI_LAZY_INIT_UPDATE_STATIC")
     public static void initialize() {
         ThreadUtils.assertOnUiThread();
         if (sInstance != null) return;

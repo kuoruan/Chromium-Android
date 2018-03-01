@@ -298,8 +298,7 @@ public class ContentView extends FrameLayout
     // Implements SmartClipProvider
     @Override
     public void extractSmartClipData(int x, int y, int width, int height) {
-        mContentViewCore.getWebContents().requestSmartClipExtract(
-                x, y, width, height, mContentViewCore.getRenderCoordinates());
+        mContentViewCore.getWebContents().requestSmartClipExtract(x, y, width, height);
     }
 
     // Implements SmartClipProvider

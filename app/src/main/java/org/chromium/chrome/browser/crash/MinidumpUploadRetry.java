@@ -9,7 +9,6 @@ import android.content.Context;
 import android.os.Handler;
 
 import org.chromium.base.NonThreadSafe;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.components.minidump_uploader.util.CrashReportingPermissionManager;
 import org.chromium.net.ConnectionType;
 import org.chromium.net.NetworkChangeNotifier;
@@ -66,7 +65,6 @@ class MinidumpUploadRetry implements NetworkChangeNotifier.ConnectionTypeObserve
         NetworkChangeNotifier.addConnectionTypeObserver(this);
     }
 
-    @SuppressFBWarnings("ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD")
     @Override
     public void onConnectionTypeChanged(int connectionType) {
         // Early-out if not connected at all - to avoid checking the current network state.

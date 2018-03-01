@@ -41,11 +41,9 @@ import org.chromium.chrome.browser.dom_distiller.DomDistillerServiceFactory;
 import org.chromium.chrome.browser.dom_distiller.DomDistillerTabUtils;
 import org.chromium.chrome.browser.ntp.NativePageFactory;
 import org.chromium.chrome.browser.ntp.NewTabPage;
-import org.chromium.chrome.browser.offlinepages.OfflinePageUtils;
 import org.chromium.chrome.browser.omnibox.LocationBar;
 import org.chromium.chrome.browser.omnibox.LocationBarLayout;
 import org.chromium.chrome.browser.omnibox.UrlBar;
-import org.chromium.chrome.browser.omnibox.UrlFocusChangeListener;
 import org.chromium.chrome.browser.page_info.PageInfoPopup;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.tab.Tab;
@@ -55,9 +53,7 @@ import org.chromium.chrome.browser.widget.TintedDrawable;
 import org.chromium.chrome.browser.widget.TintedImageButton;
 import org.chromium.components.dom_distiller.core.DomDistillerService;
 import org.chromium.components.dom_distiller.core.DomDistillerUrlUtils;
-import org.chromium.components.security_state.ConnectionSecurityLevel;
 import org.chromium.content_public.common.ContentUrlConstants;
-import org.chromium.ui.base.DeviceFormFactor;
 import org.chromium.ui.base.WindowAndroid;
 import org.chromium.ui.interpolators.BakedBezierInterpolator;
 import org.chromium.ui.widget.Toast;
@@ -115,7 +111,6 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
     private TextView mTitleBar;
     private TintedImageButton mSecurityButton;
     private ImageButton mCustomActionButton;
-    private int mSecurityIconType;
     private ImageButton mCloseButton;
 
     // Whether dark tint should be applied to icons and text.
@@ -127,7 +122,6 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
     private CustomTabToolbarAnimationDelegate mAnimDelegate;
     private int mState = STATE_DOMAIN_ONLY;
     private String mFirstUrl;
-    private boolean mShowsOfflinePage;
 
     protected ToolbarDataProvider mToolbarDataProvider;
 
@@ -160,7 +154,6 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
         mTitleUrlContainer = findViewById(R.id.title_url_container);
         mTitleUrlContainer.setOnLongClickListener(this);
         mSecurityButton = (TintedImageButton) findViewById(R.id.security_button);
-        mSecurityIconType = ConnectionSecurityLevel.NONE;
         mCustomActionButton = (ImageButton) findViewById(R.id.action_button);
         mCustomActionButton.setOnLongClickListener(this);
         mCloseButton = (ImageButton) findViewById(R.id.close_button);
@@ -294,7 +287,7 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
             mTitleBar.setLayoutParams(lp);
             mTitleBar.setTextSize(TypedValue.COMPLEX_UNIT_PX,
                     getResources().getDimension(R.dimen.custom_tabs_title_text_size));
-            updateSecurityIcon(getSecurityLevel());
+            updateSecurityIcon();
         } else {
             assert false : "Unreached state";
         }
@@ -342,7 +335,7 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
                 setUrlBarHidden(false);
             }
         }
-        updateSecurityIcon(getSecurityLevel());
+        updateSecurityIcon();
     }
 
     @Override
@@ -401,7 +394,7 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
     @Override
     public void updateLoadingState(boolean updateUrl) {
         if (updateUrl) setUrlToPageUrl();
-        updateSecurityIcon(getSecurityLevel());
+        updateSecurityIcon();
     }
 
     @Override
@@ -417,7 +410,7 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
     @Override
     public void updateVisualsForState() {
         Resources resources = getResources();
-        updateSecurityIcon(getSecurityLevel());
+        updateSecurityIcon();
         updateButtonsTint();
         mUrlBar.setUseDarkTextColors(mUseDarkColors);
 
@@ -472,37 +465,21 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
     public void initializeControls(WindowDelegate windowDelegate, WindowAndroid windowAndroid) {
     }
 
-    private int getSecurityLevel() {
-        if (getCurrentTab() == null) return ConnectionSecurityLevel.NONE;
-        return getCurrentTab().getSecurityLevel();
-    }
-
     @Override
-    public void updateSecurityIcon(int securityLevel) {
+    public void updateSecurityIcon() {
         if (mState == STATE_TITLE_ONLY) return;
 
-        mSecurityIconType = securityLevel;
-
-        boolean isSmallDevice = !DeviceFormFactor.isTablet();
-        boolean isOfflinePage =
-                getCurrentTab() != null && OfflinePageUtils.isOfflinePage(getCurrentTab());
-
-        int id = LocationBarLayout.getSecurityIconResource(
-                securityLevel, isSmallDevice, isOfflinePage);
         boolean showSecurityButton = true;
-        if (id == 0) {
+        if (!getToolbarDataProvider().shouldShowSecurityIcon()) {
             // Hide the button if we don't have an actual icon to display.
             showSecurityButton = false;
             mSecurityButton.setImageDrawable(null);
         } else {
             // ImageView#setImageResource is no-op if given resource is the current one.
-            mSecurityButton.setImageResource(id);
-            mSecurityButton.setTint(
-                    LocationBarLayout.getColorStateList(securityLevel, getToolbarDataProvider(),
-                            getResources(), false /* omnibox is not opaque */));
+            mSecurityButton.setImageResource(getToolbarDataProvider().getSecurityIconResource());
+            mSecurityButton.setTint(LocationBarLayout.getColorStateList(getToolbarDataProvider(),
+                    getResources(), false /* omnibox is not opaque */, false));
         }
-
-        mShowsOfflinePage = isOfflinePage;
 
         if (showSecurityButton) {
             mAnimDelegate.showSecurityButton();
@@ -703,9 +680,6 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
     public void backKeyPressed() {
         assert false : "The URL bar should never take focus in CCTs.";
     }
-
-    @Override
-    public void setUrlFocusChangeListener(UrlFocusChangeListener listener) {}
 
     @Override
     public void setUrlBarFocus(boolean shouldBeFocused) {}

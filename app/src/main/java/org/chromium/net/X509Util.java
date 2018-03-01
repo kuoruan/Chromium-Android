@@ -15,10 +15,8 @@ import android.security.KeyChain;
 import android.util.Log;
 import android.util.Pair;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.base.annotations.SuppressFBWarnings;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -54,32 +52,19 @@ public class X509Util {
 
     private static final String TAG = "X509Util";
 
-    // For Android O+, ACTION_STORAGE_CHANGED is split into several different
-    // intents.
-    //
-    // TODO(davidben): Replace these with the constants from android.security.Keychain once O is
-    // released.
-    private static final String ACTION_KEYCHAIN_CHANGED =
-            "android.security.action.KEYCHAIN_CHANGED";
-    private static final String ACTION_KEY_ACCESS_CHANGED =
-            "android.security.action.KEY_ACCESS_CHANGED";
-    private static final String ACTION_TRUST_STORE_CHANGED =
-            "android.security.action.TRUST_STORE_CHANGED";
-    private static final String EXTRA_KEY_ACCESSIBLE = "android.security.extra.KEY_ACCESSIBLE";
-
     private static final class TrustStorageListener extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             boolean shouldReloadTrustManager = false;
-            if (BuildInfo.isAtLeastO()) {
-                if (ACTION_KEYCHAIN_CHANGED.equals(intent.getAction())
-                        || ACTION_TRUST_STORE_CHANGED.equals(intent.getAction())) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (KeyChain.ACTION_KEYCHAIN_CHANGED.equals(intent.getAction())
+                        || KeyChain.ACTION_TRUST_STORE_CHANGED.equals(intent.getAction())) {
                     // TODO(davidben): ACTION_KEYCHAIN_CHANGED indicates client certificates
                     // changed, not the trust store. The two signals within CertDatabase are
                     // identical, so we are reloading more than needed. But note b/36492171.
                     shouldReloadTrustManager = true;
-                } else if (ACTION_KEY_ACCESS_CHANGED.equals(intent.getAction())
-                        && !intent.getBooleanExtra(EXTRA_KEY_ACCESSIBLE, false)) {
+                } else if (KeyChain.ACTION_KEY_ACCESS_CHANGED.equals(intent.getAction())
+                        && !intent.getBooleanExtra(KeyChain.EXTRA_KEY_ACCESSIBLE, false)) {
                     // We lost access to a client certificate key. Reload all client certificate
                     // state as we are not currently able to forget an individual identity.
                     shouldReloadTrustManager = true;
@@ -234,7 +219,6 @@ public class X509Util {
      */
     // FindBugs' static field initialization warnings do not handle methods that are expected to be
     // called locked.
-    @SuppressFBWarnings({"LI_LAZY_INIT_STATIC", "LI_LAZY_INIT_UPDATE_STATIC"})
     private static void ensureInitializedLocked()
             throws CertificateException, KeyStoreException, NoSuchAlgorithmException {
         assert Thread.holdsLock(sLock);
@@ -281,10 +265,10 @@ public class X509Util {
         if (!sDisableNativeCodeForTest && sTrustStorageListener == null) {
             sTrustStorageListener = new TrustStorageListener();
             IntentFilter filter = new IntentFilter();
-            if (BuildInfo.isAtLeastO()) {
-                filter.addAction(ACTION_KEYCHAIN_CHANGED);
-                filter.addAction(ACTION_KEY_ACCESS_CHANGED);
-                filter.addAction(ACTION_TRUST_STORE_CHANGED);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                filter.addAction(KeyChain.ACTION_KEYCHAIN_CHANGED);
+                filter.addAction(KeyChain.ACTION_KEY_ACCESS_CHANGED);
+                filter.addAction(KeyChain.ACTION_TRUST_STORE_CHANGED);
             } else {
                 filter.addAction(KeyChain.ACTION_STORAGE_CHANGED);
             }

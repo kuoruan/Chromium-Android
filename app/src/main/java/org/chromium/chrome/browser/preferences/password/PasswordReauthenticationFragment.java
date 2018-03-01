@@ -14,13 +14,15 @@ import android.os.Build;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 
-import org.chromium.chrome.R;
-
 /** Show the lock screen confirmation and lock the screen. */
 public class PasswordReauthenticationFragment extends Fragment {
+    // The key for the description argument, which is used to retrieve an explanation of the
+    // reauthentication prompt to the user.
+    public static final String DESCRIPTION_ID = "description";
+
     protected static final int CONFIRM_DEVICE_CREDENTIAL_REQUEST_CODE = 2;
 
-    private boolean mPreventLockDevice;
+    private static boolean sPreventLockDevice = false;
 
     private FragmentManager mFragmentManager;
 
@@ -28,7 +30,7 @@ public class PasswordReauthenticationFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mFragmentManager = getFragmentManager();
-        if (!mPreventLockDevice) {
+        if (!sPreventLockDevice) {
             lockDevice();
         }
     }
@@ -38,7 +40,7 @@ public class PasswordReauthenticationFragment extends Fragment {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == CONFIRM_DEVICE_CREDENTIAL_REQUEST_CODE) {
             if (resultCode == getActivity().RESULT_OK) {
-                SavePasswordsPreferences.setLastReauthTimeMillis(System.currentTimeMillis());
+                ReauthenticationManager.setLastReauthTimeMillis(System.currentTimeMillis());
                 mFragmentManager.popBackStack();
             }
         }
@@ -47,8 +49,8 @@ public class PasswordReauthenticationFragment extends Fragment {
     /**
      * Prevent calling the {@link #lockDevice} method in {@link #onCreate}.
      */
-    public void preventLockingForTesting(boolean preventLockDevice) {
-        mPreventLockDevice = preventLockDevice;
+    public static void preventLockingForTesting() {
+        sPreventLockDevice = true;
     }
 
     /**
@@ -59,8 +61,13 @@ public class PasswordReauthenticationFragment extends Fragment {
         assert Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
         KeyguardManager keyguardManager =
                 (KeyguardManager) getActivity().getSystemService(Context.KEYGUARD_SERVICE);
-        Intent intent = keyguardManager.createConfirmDeviceCredentialIntent(
-                null /* title */, getString(R.string.lockscreen_description) /* description */);
+        final int resourceId = getArguments().getInt(DESCRIPTION_ID, 0);
+        // Forgetting to set the DESCRIPTION_ID is an error on the callsite.
+        assert resourceId != 0;
+        // Set title to null to use the system default title which is adapted to the particular type
+        // of device lock which the user set up.
+        Intent intent =
+                keyguardManager.createConfirmDeviceCredentialIntent(null, getString(resourceId));
         if (intent != null) {
             startActivityForResult(intent, CONFIRM_DEVICE_CREDENTIAL_REQUEST_CODE);
             return;

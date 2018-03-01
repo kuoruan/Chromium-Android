@@ -209,7 +209,7 @@ public class SectionList
      */
     public void restoreDismissedSections() {
         mUiDelegate.getSuggestionsSource().restoreDismissedCategories();
-        resetSections(/* allowEmptySections = */ true);
+        resetSections(/* alwaysAllowEmptySections = */ true);
         mUiDelegate.getSuggestionsSource().fetchRemoteSuggestions();
     }
 
@@ -257,10 +257,21 @@ public class SectionList
             Log.d(TAG, "SectionList.fetchMore - Supporting section is already loading.");
         } else {
             // Fetch more is called when the user does not explicitly trigger a fetch (eg, the user
-            // scrolls down). In this case we don't inform the user of a failure, hence the null
-            // parameter.
-            supportingSections.get(0).fetchSuggestions(null);
+            // scrolls down). In this case we don't inform the user of the outcomes, hence the null
+            // parameters.
+            supportingSections.get(0).fetchSuggestions(null, null);
         }
+    }
+
+    /**
+     * Drops all but the first {@code n} thumbnails on articles.
+     * @param n The number of article thumbnails to keep.
+     */
+    public void dropAllButFirstNArticleThumbnails(int n) {
+        SuggestionsSection articles = mSections.get(KnownCategories.ARTICLES);
+        if (articles == null) return;
+
+        articles.dropAllButFirstNThumbnails(n);
     }
 
     /** Returns a string showing the categories of all the contained sections. */

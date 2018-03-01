@@ -87,8 +87,7 @@ public class PaymentResponseHelper implements NormalizedAddressRequestDelegate {
             // merchant.
             mIsWaitingForShippingNormalization = true;
             PersonalDataManager.getInstance().normalizeAddress(
-                    mSelectedShippingAddress.getProfile(),
-                    AutofillAddress.getCountryCode(mSelectedShippingAddress.getProfile()), this);
+                    mSelectedShippingAddress.getProfile(), this);
         }
     }
 

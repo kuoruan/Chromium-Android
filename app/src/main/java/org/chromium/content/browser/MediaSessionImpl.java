@@ -59,6 +59,18 @@ public class MediaSessionImpl extends MediaSession {
     }
 
     @Override
+    public void seekForward(long millis) {
+        assert millis >= 0 : "Attempted to seek by a negative number of milliseconds";
+        nativeSeekForward(mNativeMediaSessionAndroid, millis);
+    }
+
+    @Override
+    public void seekBackward(long millis) {
+        assert millis >= 0 : "Attempted to seek by a negative number of milliseconds";
+        nativeSeekBackward(mNativeMediaSessionAndroid, millis);
+    }
+
+    @Override
     public void didReceiveAction(int action) {
         nativeDidReceiveAction(mNativeMediaSessionAndroid, action);
     }
@@ -118,6 +130,8 @@ public class MediaSessionImpl extends MediaSession {
     private native void nativeResume(long nativeMediaSessionAndroid);
     private native void nativeSuspend(long nativeMediaSessionAndroid);
     private native void nativeStop(long nativeMediaSessionAndroid);
+    private native void nativeSeekForward(long nativeMediaSessionAndroid, long millis);
+    private native void nativeSeekBackward(long nativeMediaSessionAndroid, long millis);
     private native void nativeDidReceiveAction(long nativeMediaSessionAndroid, int action);
     private static native MediaSessionImpl nativeGetMediaSessionFromWebContents(
             WebContents contents);

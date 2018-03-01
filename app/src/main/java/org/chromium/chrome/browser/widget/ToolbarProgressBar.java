@@ -161,9 +161,10 @@ public class ToolbarProgressBar extends ClipDrawableProgressBar {
                     mAnimatingView.update(progress * width);
                 }
 
-                if (getProgress() == mTargetProgress) {
+                if (MathUtils.areFloatsEqual(getProgress(), mTargetProgress)) {
                     if (!mIsStarted) postOnAnimationDelayed(mHideRunnable, mHidingDelayMs);
                     mProgressAnimator.end();
+                    if (MathUtils.areFloatsEqual(getProgress(), 1.f)) finish(false);
                     return;
                 }
             }
@@ -349,7 +350,10 @@ public class ToolbarProgressBar extends ClipDrawableProgressBar {
      * @param delayed Whether a delayed fading out animation should be posted.
      */
     public void finish(boolean delayed) {
-        if (mProgressThrottle != null && mProgressThrottle.isRunning()) return;
+        if (mProgressThrottle != null && mProgressThrottle.isRunning()
+                || mAnimatingView != null && mAnimatingView.isRunning()) {
+            return;
+        }
 
         mIsStarted = false;
 
@@ -423,10 +427,10 @@ public class ToolbarProgressBar extends ClipDrawableProgressBar {
     }
 
     private void updateVisibleProgress() {
-        if (mStartSmoothAnimation) {
+        if (mStartSmoothAnimation || (mAnimatingView != null && mAnimatingView.isRunning())) {
             // The progress animator will stop if the animation reaches the target progress. If the
             // animation was running for the current page load, keep running it.
-            if (!mProgressAnimator.isRunning()) mProgressAnimator.start();
+            mProgressAnimator.start();
         } else {
             super.setProgress(mTargetProgress);
             if (!mIsStarted) postOnAnimationDelayed(mHideRunnable, mHidingDelayMs);

@@ -86,7 +86,7 @@ public abstract class PaymentInstrument extends PaymentOption {
 
     /**
      * @return Whether this is an autofill instrument. All autofill instruments are sorted below all
-     * non-autofill instruments.
+     *         non-autofill instruments.
      */
     public boolean isAutofillInstrument() {
         return false;
@@ -108,11 +108,20 @@ public abstract class PaymentInstrument extends PaymentOption {
 
     /**
      * @return Whether the instrument is exactly matching all filters provided by the merchant. For
-     * example, this can return false for unknown card types, if the merchant requested only debit
-     * cards.
+     *         example, this can return false for unknown card types, if the merchant requested only
+     *         debit cards.
      */
     public boolean isExactlyMatchingMerchantRequest() {
         return true;
+    }
+
+    /**
+     * @return Whether the instrument supports the payment method with the method data. For example,
+     *         supported card types and networks in the data should be verified for 'basic-card'
+     *         payment method.
+     */
+    public boolean isValidForPaymentMethodData(String method, PaymentMethodData data) {
+        return getInstrumentMethodNames().contains(method);
     }
 
     /** @return The country code (or null if none) associated with this payment instrument. */
@@ -123,7 +132,7 @@ public abstract class PaymentInstrument extends PaymentOption {
 
     /**
      * @return Whether presence of this payment instrument should cause the
-     * PaymentRequest.canMakePayment() to return true.
+     *         PaymentRequest.canMakePayment() to return true.
      */
     public boolean canMakePayment() {
         return true;

@@ -197,6 +197,13 @@ class BookmarkPromoHeader implements AndroidSyncSettingsObserver, SignInStateObs
     }
 
     /**
+     * Detaches the previously configured {@link PersonalizedSigninPromoView}.
+     */
+    void detachPersonalizePromoView() {
+        mSigninPromoController.detach();
+    }
+
+    /**
      * Saves that the personalized signin promo was declined and updates the UI.
      */
     private void setPersonalizedSigninPromoDeclined() {

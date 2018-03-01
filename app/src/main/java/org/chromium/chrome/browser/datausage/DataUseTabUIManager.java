@@ -202,7 +202,7 @@ public class DataUseTabUIManager {
                                         pageTransitionType);
                                 if (!TextUtils.isEmpty(referrerUrl)) {
                                     Referrer referrer = new Referrer(referrerUrl,
-                                            WebReferrerPolicy.WEB_REFERRER_POLICY_ALWAYS);
+                                            WebReferrerPolicy.ALWAYS);
                                     loadUrlParams.setReferrer(referrer);
                                 }
                                 tab.loadUrl(loadUrlParams);

@@ -6,10 +6,10 @@ package org.chromium.components.invalidation;
 
 import android.accounts.Account;
 import android.content.Intent;
+import android.os.Build;
 
 import com.google.protos.ipc.invalidation.Types;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
@@ -74,7 +74,7 @@ public class InvalidationService {
     private void startServiceIfPossible(Intent intent) {
         // The use of background services is restricted when the application is not in foreground
         // for O. See crbug.com/680812.
-        if (BuildInfo.isAtLeastO()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
                 ContextUtils.getApplicationContext().startService(intent);
             } catch (IllegalStateException exception) {

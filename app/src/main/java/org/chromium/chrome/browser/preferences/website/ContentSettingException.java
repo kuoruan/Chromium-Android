@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.preferences.website;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 
 import java.io.Serializable;
@@ -12,7 +11,6 @@ import java.io.Serializable;
 /**
  * Exception information for a given origin.
  */
-@SuppressFBWarnings("NM_CLASS_NOT_EXCEPTION")
 public class ContentSettingException implements Serializable {
     private final int mContentSettingType;
     private final String mPattern;

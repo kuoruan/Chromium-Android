@@ -4,8 +4,9 @@
 
 package org.chromium.chrome.browser.compositor.overlays.strip;
 
-import static org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.AnimatableAnimation.createAnimation;
-
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
@@ -23,11 +24,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ListPopupWindow;
 
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation;
-import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animatable;
-import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animation;
+import org.chromium.chrome.browser.compositor.animation.CompositorAnimator;
 import org.chromium.chrome.browser.compositor.layouts.LayoutRenderHost;
 import org.chromium.chrome.browser.compositor.layouts.LayoutUpdateHost;
 import org.chromium.chrome.browser.compositor.layouts.components.CompositorButton;
@@ -111,7 +109,7 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
     private StripLayoutTab[] mStripTabsToRender = new StripLayoutTab[0];
     private final StripTabEventHandler mStripTabEventHandler = new StripTabEventHandler();
     private final TabLoadTrackerCallback mTabLoadTrackerHost = new TabLoadTrackerCallbackImpl();
-    private ChromeAnimation<Animatable<?>> mLayoutAnimations;
+    private Animator mRunningAnimator;
 
     private final CompositorButton mNewTabButton;
 
@@ -198,7 +196,7 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
 
         // Create tab menu
         mTabMenu = new ListPopupWindow(mContext);
-        mTabMenu.setAdapter(new ArrayAdapter<String>(mContext, R.layout.bookmark_popup_item,
+        mTabMenu.setAdapter(new ArrayAdapter<String>(mContext, R.layout.list_menu_item,
                 new String[] {
                         mContext.getString(!mIncognito ? R.string.menu_close_all_tabs
                                                        : R.string.menu_close_all_incognito_tabs)}));
@@ -245,7 +243,6 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
     /**
      * @return The visually ordered list of visible {@link StripLayoutTab}s.
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public StripLayoutTab[] getStripLayoutTabsToRender() {
         return mStripTabsToRender;
     }
@@ -442,7 +439,16 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
      * @return     Whether or not animations are done.
      */
     public boolean updateLayout(long time, long dt) {
-        final boolean doneAnimating = onUpdateAnimation(time, false);
+        // 1. Handle any Scroller movements (flings).
+        updateScrollOffset(time);
+
+        // 2. Handle reordering automatically scrolling the tab strip.
+        handleReorderAutoScrolling(time);
+
+        // 3. Update tab spinners.
+        updateSpinners(time);
+
+        final boolean doneAnimating = mRunningAnimator == null || !mRunningAnimator.isRunning();
         updateStrip();
 
         // If this is the first layout pass, scroll to the selected tab so that it is visible.
@@ -550,7 +556,12 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
 
         // 2. Start an animation for the newly created tab.
         StripLayoutTab tab = findTabById(id);
-        if (tab != null) startAnimation(buildTabCreatedAnimation(tab), true);
+        if (tab != null) {
+            finishAnimation();
+            mRunningAnimator = CompositorAnimator.ofFloatProperty(mUpdateHost.getAnimationHandler(),
+                    tab, StripLayoutTab.Y_OFFSET, tab.getHeight(), 0f, ANIM_TAB_CREATED_MS);
+            mRunningAnimator.start();
+        }
 
         // 3. Figure out which tab needs to be visible.
         StripLayoutTab fastExpandTab = findTabById(prevId);
@@ -820,11 +831,29 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
     }
 
     @Override
-    public void handleCloseButtonClick(StripLayoutTab tab, long time) {
+    public void handleCloseButtonClick(final StripLayoutTab tab, long time) {
         if (tab == null || tab.isDying()) return;
 
         // 1. Start the close animation.
-        startAnimation(buildTabClosedAnimation(tab), true);
+        finishAnimation();
+        mRunningAnimator = CompositorAnimator.ofFloatProperty(mUpdateHost.getAnimationHandler(),
+                tab, StripLayoutTab.Y_OFFSET, tab.getOffsetY(), tab.getHeight(),
+                ANIM_TAB_CLOSED_MS);
+
+        mRunningAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                // Find out if we're closing the last tab.  This determines if we resize
+                // immediately.
+                boolean lastTab = mStripTabs.length == 0
+                        || mStripTabs[mStripTabs.length - 1].getId() == tab.getId();
+
+                // Resize the tabs appropriately.
+                resizeTabStrip(!lastTab);
+            }
+        });
+
+        mRunningAnimator.start();
 
         // 2. Set the dying state of the tab.
         tab.setIsDying(true);
@@ -832,13 +861,6 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
         // 3. Fake a selection on the next tab now.
         Tab nextTab = mModel.getNextTabIfClosed(tab.getId());
         if (nextTab != null) tabSelected(time, nextTab.getId(), tab.getId());
-
-        // 4. Find out if we're closing the last tab.  This determines if we resize immediately.
-        boolean lastTab =
-                mStripTabs.length == 0 || mStripTabs[mStripTabs.length - 1].getId() == tab.getId();
-
-        // 5. Resize the tabs appropriately.
-        resizeTabStrip(!lastTab);
     }
 
     @Override
@@ -896,54 +918,13 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
         }
     }
 
-    private boolean onUpdateAnimation(long time, boolean jumpToEnd) {
-        // 1. Handle any Scroller movements (flings).
-        if (!jumpToEnd) updateScrollOffset(time);
-
-        // 2. Handle reordering automatically scrolling the tab strip.
-        handleReorderAutoScrolling(time);
-
-        // 3. Handle layout-wide animations.
-        boolean update = false;
-        boolean finished = true;
-        if (mLayoutAnimations != null) {
-            if (jumpToEnd) {
-                finished = mLayoutAnimations.finished();
-            } else {
-                finished = mLayoutAnimations.update(time);
-            }
-            if (jumpToEnd || finished) finishAnimation();
-
-            update = true;
-        }
-
-        // 4. Handle tab-specific content animations.
-        for (int i = 0; i < mStripTabs.length; i++) {
-            StripLayoutTab tab = mStripTabs[i];
-            if (tab.isAnimating()) {
-                update = true;
-                finished &= tab.onUpdateAnimation(time, jumpToEnd);
-            }
-        }
-
-        // 5. Update tab spinners.
-        updateSpinners(time);
-
-        // 6. Stop any flings if we're trying to stop animations.
-        if (jumpToEnd) mScroller.forceFinished(true);
-
-        // 7. Request another update if anything requires it.
-        if (update) mUpdateHost.requestUpdate();
-
-        return finished;
-    }
-
     /**
      * @return Whether or not the tabs are moving.
      */
     @VisibleForTesting
     public boolean isAnimating() {
-        return mLayoutAnimations != null || !mScroller.isFinished();
+        return (mRunningAnimator != null && mRunningAnimator.isRunning())
+                || !mScroller.isFinished();
     }
 
     /**
@@ -951,11 +932,11 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
      * {@link TabModel}.
      */
     public void finishAnimation() {
-        if (mLayoutAnimations == null) return;
+        if (mRunningAnimator == null) return;
 
         // 1. Force any outstanding animations to finish.
-        mLayoutAnimations.updateAndFinish();
-        mLayoutAnimations = null;
+        mRunningAnimator.end();
+        mRunningAnimator = null;
 
         // 2. Figure out which tabs need to be closed.
         ArrayList<StripLayoutTab> tabsToRemove = new ArrayList<StripLayoutTab>();
@@ -970,23 +951,6 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
         }
 
         if (!tabsToRemove.isEmpty()) mUpdateHost.requestUpdate();
-    }
-
-    private void startAnimation(Animation<Animatable<?>> animation, boolean finishPrevious) {
-        if (finishPrevious) finishAnimation();
-
-        if (mLayoutAnimations == null) {
-            mLayoutAnimations = new ChromeAnimation<ChromeAnimation.Animatable<?>>();
-        }
-
-        mLayoutAnimations.add(animation);
-
-        mUpdateHost.requestUpdate();
-    }
-
-    private void cancelAnimation(StripLayoutTab tab, StripLayoutTab.Property property) {
-        if (mLayoutAnimations == null) return;
-        mLayoutAnimations.cancel(tab, property);
     }
 
     private void updateSpinners(long time) {
@@ -1094,7 +1058,7 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
     private StripLayoutTab createStripTab(int id) {
         // TODO: Cache these
         StripLayoutTab tab = new StripLayoutTab(
-                mContext, id, this, mTabLoadTrackerHost, mRenderHost, mIncognito);
+                mContext, id, this, mTabLoadTrackerHost, mRenderHost, mUpdateHost, mIncognito);
         tab.setHeight(mHeight);
         pushStackerPropertiesToTab(tab);
         return tab;
@@ -1144,19 +1108,30 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
         // 4. Calculate the realistic tab width.
         mCachedTabWidth = MathUtils.clamp(optimalTabWidth, mMinTabWidth, mMaxTabWidth);
 
-        // 5. Propagate the tab width to all tabs.
+        // 5. Prepare animations and propagate width to all tabs.
+        finishAnimation();
+        ArrayList<Animator> resizeAnimationList = null;
+        if (animate && !mAnimationsDisabledForTesting) resizeAnimationList = new ArrayList<>();
+
         for (int i = 0; i < mStripTabs.length; i++) {
             StripLayoutTab tab = mStripTabs[i];
             if (tab.isDying()) continue;
 
-            // 5.a. Cancel any outstanding tab width animations.
-            cancelAnimation(mStripTabs[i], StripLayoutTab.Property.WIDTH);
-
-            if (animate && !mAnimationsDisabledForTesting) {
-                startAnimation(buildTabResizeAnimation(tab, mCachedTabWidth), false);
+            if (resizeAnimationList != null) {
+                CompositorAnimator animator = CompositorAnimator.ofFloatProperty(
+                        mUpdateHost.getAnimationHandler(), tab, StripLayoutTab.WIDTH,
+                        tab.getWidth(), mCachedTabWidth, ANIM_TAB_RESIZE_MS);
+                resizeAnimationList.add(animator);
             } else {
                 mStripTabs[i].setWidth(mCachedTabWidth);
             }
+        }
+
+        if (resizeAnimationList != null) {
+            AnimatorSet set = new AnimatorSet();
+            set.playTogether(resizeAnimationList);
+            mRunningAnimator = set;
+            mRunningAnimator.start();
         }
     }
 
@@ -1189,15 +1164,7 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
         // 6. Figure out where to put the new tab button.
         updateNewTabButtonState();
 
-        // 7. Check if we have any animations and request an update if so.
-        for (int i = 0; i < mStripTabs.length; i++) {
-            if (mStripTabs[i].isAnimating()) {
-                mUpdateHost.requestUpdate();
-                break;
-            }
-        }
-
-        // 8. Invalidate the accessibility provider in case the visible virtual views have changed.
+        // 7. Invalidate the accessibility provider in case the visible virtual views have changed.
         mRenderHost.invalidateAccessibilityProvider();
     }
 
@@ -1391,7 +1358,11 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
         mInReorderMode = false;
 
         // 2. Clear any drag offset.
-        startAnimation(buildTabMoveAnimation(mInteractingTab, mInteractingTab.getOffsetX()), true);
+        finishAnimation();
+        mRunningAnimator = CompositorAnimator.ofFloatProperty(mUpdateHost.getAnimationHandler(),
+                mInteractingTab, StripLayoutTab.X_OFFSET, mInteractingTab.getOffsetX(), 0f,
+                ANIM_TAB_MOVE_MS);
+        mRunningAnimator.start();
 
         // 3. Request an update.
         mUpdateHost.requestUpdate();
@@ -1485,7 +1456,11 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
             final float animationLength =
                     MathUtils.flipSignIf(direction * flipWidth, LocalizationUtils.isLayoutRtl());
             StripLayoutTab slideTab = mStripTabs[newIndex - direction];
-            startAnimation(buildTabMoveAnimation(slideTab, animationLength), true);
+
+            finishAnimation();
+            mRunningAnimator = CompositorAnimator.ofFloatProperty(mUpdateHost.getAnimationHandler(),
+                    slideTab, StripLayoutTab.X_OFFSET, animationLength, 0f, ANIM_TAB_MOVE_MS);
+            mRunningAnimator.start();
         }
     }
 
@@ -1567,29 +1542,6 @@ public class StripLayoutHelper implements StripLayoutTab.StripLayoutTabDelegate 
         public void loadStateChanged(int id) {
             mUpdateHost.requestUpdate();
         }
-    }
-
-    private static Animation<Animatable<?>> buildTabCreatedAnimation(StripLayoutTab tab) {
-        return createAnimation(tab, StripLayoutTab.Property.Y_OFFSET, tab.getHeight(), 0.f,
-                ANIM_TAB_CREATED_MS, 0, false, ChromeAnimation.getLinearInterpolator());
-    }
-
-    private static Animation<Animatable<?>> buildTabClosedAnimation(StripLayoutTab tab) {
-        return createAnimation(tab, StripLayoutTab.Property.Y_OFFSET, tab.getOffsetY(),
-                tab.getHeight(), ANIM_TAB_CLOSED_MS, 0, false,
-                ChromeAnimation.getLinearInterpolator());
-    }
-
-    private static Animation<Animatable<?>> buildTabResizeAnimation(
-            StripLayoutTab tab, float width) {
-        return createAnimation(tab, StripLayoutTab.Property.WIDTH, tab.getWidth(), width,
-                ANIM_TAB_RESIZE_MS, 0, false, ChromeAnimation.getLinearInterpolator());
-    }
-
-    private static Animation<Animatable<?>> buildTabMoveAnimation(
-            StripLayoutTab tab, float startX) {
-        return createAnimation(tab, StripLayoutTab.Property.X_OFFSET, startX, 0.f, ANIM_TAB_MOVE_MS,
-                0, false, ChromeAnimation.getLinearInterpolator());
     }
 
     private static <T> void moveElement(T[] array, int oldIndex, int newIndex) {

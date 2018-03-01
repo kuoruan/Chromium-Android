@@ -30,10 +30,6 @@ class BindingManagerImpl implements BindingManager {
     // High reduce ratio of moderate binding.
     private static final float MODERATE_BINDING_HIGH_REDUCE_RATIO = 0.5f;
 
-    // Delay of 1 second used when removing temporary strong binding of a process (only on
-    // non-low-memory devices).
-    private static final long DETACH_AS_ACTIVE_HIGH_END_DELAY_MILLIS = 1 * 1000;
-
     // Delays used when clearing moderate binding pool when onSentToBackground happens.
     private static final long MODERATE_BINDING_POOL_CLEARER_DELAY_MILLIS = 10 * 1000;
 
@@ -100,8 +96,9 @@ class BindingManagerImpl implements BindingManager {
         }
 
         void addConnection(ManagedConnection managedConnection) {
-            assert !mConnections.contains(managedConnection);
-            managedConnection.addModerateBinding();
+            if (!mConnections.contains(managedConnection)) {
+                managedConnection.addModerateBinding();
+            }
             addConnectionImpl(managedConnection);
         }
 
@@ -197,28 +194,12 @@ class BindingManagerImpl implements BindingManager {
         }
 
         /** Removes a strong service binding. */
-        private void removeStrongBinding(final boolean keepAsModerate) {
+        private void removeStrongBinding(boolean keepAsModerate) {
             // We have to fail gracefully if the strong binding is not present.
             if (!mConnection.isStrongBindingBound()) return;
-
-            // This runnable performs the actual unbinding. It will be executed synchronously when
-            // on low-end devices and posted with a delay otherwise.
-            Runnable doUnbind = new Runnable() {
-                @Override
-                public void run() {
-                    if (mConnection.isStrongBindingBound()) {
-                        mConnection.removeStrongBinding();
-                        if (keepAsModerate) {
-                            addConnectionToModerateBindingPool(mConnection);
-                        }
-                    }
-                }
-            };
-
-            if (mIsLowMemoryDevice) {
-                doUnbind.run();
-            } else {
-                LauncherThread.postDelayed(doUnbind, DETACH_AS_ACTIVE_HIGH_END_DELAY_MILLIS);
+            mConnection.removeStrongBinding();
+            if (keepAsModerate) {
+                addConnectionToModerateBindingPool(mConnection);
             }
         }
 
@@ -264,6 +245,8 @@ class BindingManagerImpl implements BindingManager {
                 removeStrongBinding(true);
             }
             if (mBoostPriorityForPendingViews && !boostForPendingViews) {
+                // Decrease the likelihood of a recently created background tab getting evicted by
+                // immediately adding moderate binding.
                 addConnectionToModerateBindingPool(mConnection);
                 mConnection.removeInitialBinding();
             }

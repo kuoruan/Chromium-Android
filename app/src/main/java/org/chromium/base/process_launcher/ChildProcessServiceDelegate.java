@@ -44,6 +44,14 @@ public interface ChildProcessServiceDelegate {
     boolean loadNativeLibrary(Context hostContext);
 
     /**
+     * Called when the delegate should preload the native library.
+     * Preloading is automatically done during library loading, but can also be called explicitly
+     * to speed up the loading. See {@link LibraryLoader.preloadNow}.
+     * @param hostContext The host context the library should be preloaded with (i.e. Chrome).
+     */
+    void preloadNativeLibrary(Context hostContext);
+
+    /**
      * Should return a map that associatesfile descriptors' IDs to keys.
      * This is needed as at the moment we use 2 different stores for the FDs in native code:
      * base::FileDescriptorStore which associates FDs with string identifiers (the key), and

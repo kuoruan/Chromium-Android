@@ -13,7 +13,6 @@ import android.text.TextUtils;
 
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.AppHooks;
@@ -38,7 +37,6 @@ public class HelpAndFeedback {
     /**
      * Returns the singleton instance of HelpAndFeedback, creating it if needed.
      */
-    @SuppressFBWarnings("LI_LAZY_INIT_STATIC")
     public static HelpAndFeedback getInstance(Context context) {
         ThreadUtils.assertOnUiThread();
         if (sInstance == null) {
@@ -87,13 +85,9 @@ public class HelpAndFeedback {
     public void show(final Activity activity, final String helpContext, Profile profile,
             @Nullable String url) {
         RecordUserAction.record("MobileHelpAndFeedback");
-        FeedbackCollector.create(activity, profile, url, true /* takeScreenshot */,
-                new FeedbackCollector.FeedbackResult() {
-                    @Override
-                    public void onResult(FeedbackCollector collector) {
-                        show(activity, helpContext, collector);
-                    }
-                });
+        new FeedbackCollector(activity, profile, url, null /* categoryTag */,
+                null /* description */, true /* takeScreenshot */,
+                collector -> show(activity, helpContext, collector));
     }
 
     /**
@@ -107,16 +101,8 @@ public class HelpAndFeedback {
      */
     public void showFeedback(final Activity activity, Profile profile, @Nullable String url,
             @Nullable final String categoryTag) {
-        FeedbackCollector.create(activity, profile, url, false /* takeScreenshot */,
-                new FeedbackCollector.FeedbackResult() {
-                    @Override
-                    public void onResult(FeedbackCollector collector) {
-                        if (categoryTag != null) {
-                            collector.setCategoryTag(categoryTag);
-                        }
-                        showFeedback(activity, collector);
-                    }
-                });
+        new FeedbackCollector(activity, profile, url, categoryTag, null /* description */,
+                true /* takeScreenshot */, collector -> showFeedback(activity, collector));
     }
 
     /**

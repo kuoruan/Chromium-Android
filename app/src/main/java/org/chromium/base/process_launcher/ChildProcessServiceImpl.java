@@ -8,7 +8,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.Process;
@@ -21,7 +23,6 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.annotations.MainDex;
-import org.chromium.base.annotations.SuppressFBWarnings;
 
 import java.util.List;
 import java.util.concurrent.Semaphore;
@@ -144,15 +145,17 @@ public class ChildProcessServiceImpl {
 
     // The ClassLoader for the host context.
     private ClassLoader mHostClassLoader;
+    private Context mHostContext;
 
     /**
      * Loads Chrome's native libraries and initializes a ChildProcessServiceImpl.
      * @param context The application context.
      * @param hostContext The host context the library should be loaded with (i.e. Chrome).
      */
-    @SuppressFBWarnings("ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD") // For sCreateCalled check.
+    // For sCreateCalled check.
     public void create(final Context context, final Context hostContext) {
         mHostClassLoader = hostContext.getClassLoader();
+        mHostContext = hostContext;
         Log.i(TAG, "Creating new ChildProcessService pid=%d", Process.myPid());
         if (sCreateCalled) {
             throw new RuntimeException("Illegal child process reuse.");
@@ -166,7 +169,6 @@ public class ChildProcessServiceImpl {
 
         mMainThread = new Thread(new Runnable() {
             @Override
-            @SuppressFBWarnings("DM_EXIT")
             public void run() {
                 try {
                     // CommandLine must be initialized before everything else.
@@ -238,7 +240,6 @@ public class ChildProcessServiceImpl {
         mMainThread.start();
     }
 
-    @SuppressFBWarnings("DM_EXIT")
     public void destroy() {
         Log.i(TAG, "Destroying ChildProcessService pid=%d", Process.myPid());
         if (mActivitySemaphore.tryAcquire()) {
@@ -281,6 +282,9 @@ public class ChildProcessServiceImpl {
                 intent.getBooleanExtra(ChildProcessConstants.EXTRA_BIND_TO_CALLER, false);
         mServiceBound = true;
         mDelegate.onServiceBound(intent);
+        // Don't block bind() with any extra work, post it to the application thread instead.
+        new Handler(Looper.getMainLooper())
+                .post(() -> mDelegate.preloadNativeLibrary(mHostContext));
         return mBinder;
     }
 

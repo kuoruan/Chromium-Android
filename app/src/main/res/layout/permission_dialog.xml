@@ -17,28 +17,4 @@
         android:textSize="@dimen/dialog_text_size"
         android:paddingBottom="24dp"
         android:drawablePadding="8dp" />
-
-    <LinearLayout
-        android:id="@+id/permission_dialog_persist_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:paddingStart="32dp"
-        android:gravity="bottom">
-
-        <TextView
-            android:id="@+id/permission_dialog_persist_message"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginEnd="@dimen/infobar_control_margin_between_items"
-            android:gravity="center_vertical"
-            android:textSize="@dimen/dialog_text_size" />
-
-        <android.support.v7.widget.SwitchCompat
-            android:id="@+id/permission_dialog_persist_toggle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-    </LinearLayout>
 </LinearLayout>

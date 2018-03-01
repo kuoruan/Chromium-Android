@@ -122,7 +122,10 @@
 <string name="password_entry_editor_password_copied_into_clipboard">"已复制密码"</string>
 <string name="password_entry_editor_set_lock_screen">"要想在此处查看或复制您的密码，请在此设备上设置屏幕锁定。"</string>
 <string name="password_generation_popup_content_description">"目前显示的是密码生成弹出式窗口"</string>
-<string name="lockscreen_description">"您需要解锁才能继续设置手机"</string>
+<string name="save_password_preferences_export_action_title">"导出密码…"</string>
+<string name="save_password_preferences_export_action_description">"导出存储在 Chrome 中的密码"</string>
+<string name="lockscreen_description_copy">"需解锁才能复制您的密码"</string>
+<string name="lockscreen_description_view">"需解锁才能查看您的密码"</string>
 <string name="options_homepage_edit_title">"修改主页"</string>
 <string name="options_homepage_edit_label">"打开此网页"</string>
 <string name="prefs_notifications">"通知"</string>
@@ -143,16 +146,8 @@
 <string name="safe_browsing_scout_reporting_summary">"自动向 Google 发送某些系统信息和网页内容，以帮助检测危险应用和网站"</string>
 <string name="safe_browsing_title">"安全浏览"</string>
 <string name="safe_browsing_summary">"保护您和您的设备不受危险网站的侵害"</string>
-<string name="ntp_sites_exploration_category_personalized_title">"个性化"</string>
-<string name="ntp_sites_exploration_category_news_title">"资讯"</string>
-<string name="ntp_sites_exploration_category_social_title">"社交"</string>
-<string name="ntp_sites_exploration_category_entertainment_title">"娱乐"</string>
-<string name="ntp_sites_exploration_category_ecommerce_title">"电子商务"</string>
-<string name="ntp_sites_exploration_category_tools_title">"工具"</string>
-<string name="ntp_sites_exploration_category_travel_title">"旅游"</string>
-<string name="ntp_sites_exploration_category_other_title">"其他"</string>
-<string name="network_predictions_title">"自动下载网页"</string>
-<string name="network_predictions_summary">"更快速地加载网页，并保存热门网页以供离线阅读"</string>
+<string name="network_predictions_title">"使用网页联想查询功能"</string>
+<string name="network_predictions_summary">"预加载网页，以便更快地加载并实现离线阅读"</string>
 <string name="contextual_search_title">"触摸搜索"</string>
 <string name="contextual_search_description">"无需离开所在页面，即可了解网站上的主题。“触摸搜索”功能会将被触摸的字词及上下文一起发送至 Google 搜索，后者将返回相应的定义、图片、搜索结果及其他详细信息。
 
@@ -160,26 +155,19 @@
 <string name="contextual_search_short_description">"“触摸搜索”会将所选字词和当前页面（作为上下文）一起发送给 Google 搜索。您可以在&lt;link&gt;设置&lt;/link&gt;中停用此功能。"</string>
 <string name="contextual_search_allow_button">"允许"</string>
 <string name="contextual_search_no_thanks_button">"不用了，谢谢"</string>
-<string name="contextual_search_peek_promo_text">"现在，您只需触摸一下即可启动搜索"</string>
-<string name="contextual_search_peek_promo_new">"新建"</string>
 <string name="do_not_track_title">"“不跟踪”"</string>
 <string name="do_not_track_description">"如果您启用了“不跟踪”，您的浏览流量中将会包含一项请求。具体影响取决于网站是否会回应该请求以及如何解读该请求。
 
 例如：某些网站在收到该请求后，可能会向您展示相应的广告（这些广告并不是根据您访问过的其他网站而展示的）。许多网站仍会出于一些目的收集并使用您的浏览数据，例如，为了提高安全性，为了提供相关内容、广告和推荐内容，以及为了生成报告统计信息。"</string>
 <string name="clear_browsing_data_title">"清除浏览数据"</string>
 <string name="clear_browsing_data_summary">"清除历史记录、Cookie、网站数据、缓存内容…"</string>
-<string name="clear_browsing_data_footnote_site_settings">"已保存的网站设置将不会遭到删除，并且可能会反映您的浏览习惯。&lt;link&gt;了解详情&lt;/link&gt;"</string>
-<string name="clear_browsing_data_footnote_sync_and_site_settings">"这将清除所有设备上的已同步数据。已保存的网站设置将不会遭到删除，并且可能会反映您的浏览习惯。&lt;link&gt;了解详情&lt;/link&gt;"</string>
-<string name="clear_browsing_data_footnote_signed">"您不会因此而退出自己的 Google 帐号。"</string>
-<string name="clear_browsing_data_footnote_signed_and_other_forms_of_history">"您不会因此而退出自己的 Google 帐号。您的 Google 帐号在 &lt;link&gt;history.google.com&lt;/link&gt; 上可能有其他形式的浏览记录。"</string>
 <string name="clear_browsing_data_history_dialog_title">"已清除 Chrome 数据"</string>
-<string name="clear_browsing_data_history_dialog_data_text">"所选数据已从 Chrome 和您的同步设备中移除。
+<string name="clear_browsing_data_history_dialog_data_text">"所选数据已从 Chrome 和同步的设备中移除。
 
-不过，您的 Google 帐号在 &lt;link&gt;history.google.com&lt;/link&gt; 上可能有其他形式的浏览记录（例如，在其他 Google 服务中的搜索记录和活动记录）。"</string>
+不过，您的 Google 帐号在 &lt;link&gt;myactivity.google.com&lt;/link&gt; 上可能还有其他形式的浏览记录（例如，在其他 Google 服务中的搜索记录和活动记录）。"</string>
 <string name="clear_cache_title">"缓存的图片和文件"</string>
 <string name="clear_history_title">"浏览记录"</string>
 <string name="clear_cookies_and_site_data_title">"Cookie 和网站数据"</string>
-<string name="clear_cookies_and_site_data_summary">"这将使您退出大多数网站。"</string>
 <string name="clear_cookies_and_site_data_summary_basic">"您会从大多数网站退出。"</string>
 <string name="clear_cookies_and_site_data_signed_in_summary_basic">"您会从大多数网站退出，但不会退出自己的 Google 帐号。"</string>
 <string name="clear_browsing_history_summary">"清除历史记录和地址栏中的自动填充项。"</string>
@@ -191,24 +179,18 @@
 <string name="clear_browsing_data_progress_title">"正在清除浏览数据"</string>
 <string name="clear_data_delete">"清除数据"</string>
 <string name="clear_browsing_data_progress_message">"请稍候…"</string>
-<string name="clear_browsing_data_period_title">"清除以下时间段内的数据："</string>
-<string name="clear_browsing_data_period_hour">"过去 1 小时"</string>
-<string name="clear_browsing_data_period_day">"过去 1 天"</string>
-<string name="clear_browsing_data_period_week">"过去 1 周"</string>
-<string name="clear_browsing_data_period_four_weeks">"过去 4 周"</string>
-<string name="clear_browsing_data_period_everything">"自始至今"</string>
 <string name="clear_browsing_data_tab_period_title">"时间范围"</string>
 <string name="clear_browsing_data_tab_period_hour">"过去一小时"</string>
 <string name="clear_browsing_data_tab_period_24_hours">"过去 24 小时"</string>
 <string name="clear_browsing_data_tab_period_7_days">"过去 7 天"</string>
 <string name="clear_browsing_data_tab_period_four_weeks">"近 4 周"</string>
+<string name="clear_browsing_data_tab_period_older_than_30_days">"30 天之前的"</string>
 <string name="clear_browsing_data_tab_period_everything">"时间不限"</string>
 <string name="clear_browsing_data_important_dialog_text">"这会清除所有网站的数据，包括："</string>
 <string name="clear_browsing_data_important_dialog_button">"清除"</string>
 <string name="open_clear_browsing_data_dialog_button">"清除浏览数据…"</string>
 <string name="clear_browsing_data_basic_tab_title">"基本"</string>
-<string name="android_history_other_forms_of_history">"您的 Google 帐号在 &lt;link&gt;history.google.com&lt;/link&gt; 上可能有其他形式的浏览记录。"</string>
-<string name="android_history_other_forms_of_history_new">"您的 Google 帐号在 &lt;link&gt;myactivity.google.com&lt;/link&gt; 上可能有其他形式的浏览记录。"</string>
+<string name="android_history_other_forms_of_history">"您的 Google 帐号在 &lt;link&gt;myactivity.google.com&lt;/link&gt; 上可能有其他形式的浏览记录。"</string>
 <string name="android_history_blocked_site">"禁止访问的网站"</string>
 <string name="usage_and_crash_reports_title">"使用情况统计信息和崩溃报告"</string>
 <string name="usage_and_crash_reports_description">"将使用情况统计信息和崩溃报告自动发送给 Google"</string>
@@ -218,7 +200,7 @@
 <string name="force_enable_zoom_title">"强制启用缩放功能"</string>
 <string name="force_enable_zoom_summary">"覆盖网站的请求，以防止放大"</string>
 <string name="reader_for_accessibility_title">"简化版视图"</string>
-<string name="reader_for_accessibility_summary">"使用简化版视图查看所有文章"</string>
+<string name="reader_for_accessibility_summary">"为所有文章启用简化版视图"</string>
 <string name="prefs_site_settings">"网站设置"</string>
 <string name="all_sites">"所有网站"</string>
 <string name="intrusive_ads_information">"此网站常常会展示侵扰性广告"</string>
@@ -243,7 +225,8 @@
 <string name="website_settings_add_site_description_autoplay">"允许特定网站自动播放静音的视频。"</string>
 <string name="website_settings_add_site_description_javascript">"允许特定网站运行 JavaScript。"</string>
 <string name="website_settings_add_site_description_background_sync">"允许特定网站进行后台同步。"</string>
-<string name="website_settings_add_site_description_sound">"将某个特定网站静音。"</string>
+<string name="website_settings_add_site_description_sound_allow">"允许特定网站播放声音。"</string>
+<string name="website_settings_add_site_description_sound_block">"将某个特定网站静音。"</string>
 <string name="website_settings_add_site_site_url">"网站网址"</string>
 <string name="example_url">"www.example.com"</string>
 <string name="website_settings_site_category">"网站"</string>
@@ -264,6 +247,9 @@
 <string name="website_settings_category_autoplay_allowed">"允许网站自动播放静音的视频（推荐）"</string>
 <string name="website_settings_category_autoplay_disabled_data_saver">"在流量节省程序处于开启状态时不可用"</string>
 <string name="website_settings_category_javascript_allowed">"允许网站运行 JavaScript（推荐）"</string>
+<string name="website_settings_category_sound_allowed">"允许网站播放声音（推荐）"</string>
+<string name="website_settings_category_sound_blocked">"将播放声音的网站静音"</string>
+<string name="website_settings_category_sound_blocked_list">"已静音的网站"</string>
 <string name="website_settings_category_popups_blocked">"禁止网站显示弹出式窗口（推荐）"</string>
 <string name="website_settings_category_ads_blocked">"阻止常常会展示侵扰性广告的网站显示广告"</string>
 <string name="website_settings_category_ads_blocked_list">"已阻止在部分网站中显示广告"</string>
@@ -283,6 +269,11 @@
 <string name="webstorage_clear_data_dialog_ok_button">"全部清除"</string>
 <string name="website_settings_embedded_in">"嵌入位置：%1$s"</string>
 <string name="no_saved_website_settings">"您没有已保存的网站设置。"</string>
+<string name="prefs_languages">"语言"</string>
+<string name="prefs_add_language">"添加语言"</string>
+<string name="languages_list_prefs_description">"网站将尽可能以您的首选语言显示文字。"</string>
+<string name="languages_offer_translate_switch">"显示翻译界面以翻译其他语言的网页"</string>
+<string name="languages_item_option_offer_to_translate">"提供翻译"</string>
 <string name="website_settings_device_location">"位置"</string>
 <string name="geolocation_permission_title">"位置信息使用权"</string>
 <string name="android_location_off">"在 &lt;link&gt;Android 设置&lt;/link&gt;部分开启位置信息服务。"</string>
@@ -385,7 +376,7 @@
 <string name="signout_managed_account_message">"您要退出某个由 %1$s 管理的帐号。这会导致系统删除此设备上存储的 Chrome 数据，但这些数据仍会保留在您的 Google 帐号中。"</string>
 <string name="signout_dialog_positive_button">"退出"</string>
 <string name="sign_in_button">"登录"</string>
-<string name="sign_in_getting_account_management_policy">"正在连接到 Google…请稍等片刻"</string>
+<string name="sign_in_getting_account_management_policy">"正在连接到 Google，请稍等片刻…"</string>
 <string name="sign_in_timeout_title">"无法登录"</string>
 <string name="sign_in_timeout_message">"Google 的响应速度太慢"</string>
 <string name="sign_out_managed_account">"退出受管理的帐号"</string>
@@ -444,7 +435,7 @@
 <string name="bluetooth_searching">"正在搜寻设备…&lt;link&gt;获取帮助&lt;/link&gt;"</string>
 <string name="bluetooth_confirm_button">"配对"</string>
 <string name="bluetooth_not_seeing_it_idle">"&lt;link1&gt;获取帮助&lt;/link1&gt;或&lt;link2&gt;重新扫描&lt;/link2&gt;"</string>
-<string name="bluetooth_not_found">"未找到任何蓝牙设备"</string>
+<string name="bluetooth_not_found">"未找到任何兼容设备"</string>
 <string name="bluetooth_adapter_off">"请&lt;link&gt;开启蓝牙&lt;/link&gt;以允许配对"</string>
 <string name="bluetooth_unable_to_turn_on_adapter">"Chrome 无法开启蓝牙适配器"</string>
 <string name="bluetooth_adapter_off_help">"&lt;link&gt;获取帮助&lt;/link&gt;"</string>
@@ -485,7 +476,6 @@
 <string name="duplicate_download_infobar_text">"要重新下载“^1”吗？"</string>
 <string name="duplicate_download_request_infobar_text">"要重新开始下载 ^1 吗？"</string>
 <string name="duplicate_download_infobar_download_button">"下载"</string>
-<string name="permission_prompt_persist_text">"记住我的决定"</string>
 <string name="translate_infobar_text">"这是^1网页，要将其翻译成^2吗？"</string>
 <string name="translate_infobar_change_languages">"更改语言"</string>
 <string name="translate_infobar_translation_done">"已翻译成%1$s。"</string>
@@ -502,7 +492,7 @@
 <string name="translate_button_done">"完成"</string>
 <string name="translate_never_translate_site">"一律不翻译此网站"</string>
 <string name="translate_never_translate_language">"一律不翻译%1$s"</string>
-<string name="translate_option_always_translate">"一律翻译源语言为%1$s的网页"</string>
+<string name="translate_option_always_translate">"一律翻译%1$s网页"</string>
 <string name="translate_option_never_translate">"一律不翻译源语言为%1$s的网页"</string>
 <string name="translate_option_more_language">"更多语言"</string>
 <string name="translate_option_not_source_language">"网页的源语言不是%1$s？"</string>
@@ -678,11 +668,12 @@
 <string name="os_version_missing_features">"缺少运行 Chrome 所需的关键功能；您可能未完成 Chrome 安装过程，或者 Chrome 与此版本的 Android 不兼容。"</string>
 <string name="incompatible_libraries">"Chrome 的组件互不兼容。Chrome 可能正在升级，请过几分钟后重试。如果问题仍然存在，请尝试卸载并重新安装 Chrome。"</string>
 <string name="native_startup_failed">"由于出现意外错误，Chrome 启动失败。"</string>
+<string name="fre_activity_label">"Chrome 首次运行体验"</string>
 <string name="fre_skip_text">"不用了，谢谢"</string>
 <string name="fre_tos_and_privacy">"使用此应用即表示您同意遵守 Chrome 的&lt;LINK1&gt;服务条款&lt;/LINK1&gt;和&lt;LINK2&gt;隐私权声明&lt;/LINK2&gt;。"</string>
 <string name="fre_tos_and_privacy_child_account">"使用此应用即表示您同意 Chrome 的&lt;LINK1&gt;服务条款&lt;/LINK1&gt;和&lt;LINK2&gt;隐私权声明&lt;/LINK2&gt;，以及&lt;LINK3&gt;针对通过 Family Link 管理的 Google 帐号的隐私权声明&lt;/LINK3&gt;。"</string>
-<string name="lightweight_fre_tos_and_privacy">"继续操作即表示您同意 Chrome 的&lt;LINK1&gt;服务条款&lt;/LINK1&gt;和&lt;LINK2&gt;隐私权声明&lt;/LINK2&gt;。"</string>
-<string name="lightweight_fre_tos_and_privacy_child_account">"继续操作即表示您同意 Chrome 的&lt;LINK1&gt;服务条款&lt;/LINK1&gt;和&lt;LINK2&gt;隐私权声明&lt;/LINK2&gt;，以及&lt;LINK3&gt;针对通过 Family Link 管理的 Google 帐号的隐私权声明&lt;/LINK3&gt;。"</string>
+<string name="lightweight_fre_associated_app_tos_and_privacy">"%1$s将在 Chrome 中打开。继续操作即表示您同意 Chrome 的&lt;LINK1&gt;服务条款&lt;/LINK1&gt;和&lt;LINK2&gt;隐私权声明&lt;/LINK2&gt;。"</string>
+<string name="lightweight_fre_associated_app_tos_and_privacy_child_account">"%1$s将在 Chrome 中打开。继续操作即表示您同意 Chrome 的&lt;LINK1&gt;服务条款&lt;/LINK1&gt;和&lt;LINK2&gt;隐私权声明&lt;/LINK2&gt;，以及&lt;LINK3&gt;针对通过 Family Link 管理的 Google 帐号的隐私权声明&lt;/LINK3&gt;。"</string>
 <string name="fre_send_report_check">"将使用情况统计信息和崩溃报告发送给 Google，帮助我们完善 Chrome。"</string>
 <string name="fre_accept_continue">"接受并继续"</string>
 <string name="fre_welcome">"欢迎使用 Chrome"</string>
@@ -740,7 +731,7 @@
 <string name="recently_closed">"最近关闭的标签页"</string>
 <string name="show_full_history">"显示全部历史记录"</string>
 <string name="remove_all">"全部删除"</string>
-<string name="accessibility_ntp_offline_badge">"可离线查看"</string>
+<string name="accessibility_ntp_offline_badge">"可离线使用"</string>
 <string name="accessibility_suggestion_with_video_badge">"包含视频"</string>
 <string name="ntp_chrome_home_promo">"体验&lt;link&gt;更轻松的浏览方式&lt;/link&gt;"</string>
 <string name="ntp_learn_more_about_suggested_content">"&lt;link&gt;详细了解&lt;/link&gt;推荐内容"</string>
@@ -749,6 +740,7 @@
 <string name="ntp_all_dismissed_body_text_evening">"我们很快将会为您奉上更多文章，伴您度过美好的夜晚时光！"</string>
 <string name="ntp_all_dismissed_body_text_modern">"点按“更多”即可获取相关文章"</string>
 <string name="ntp_suggestions_fetch_failed">"无法获取建议"</string>
+<string name="ntp_suggestions_fetch_no_new_suggestions">"没有新建议"</string>
 <string name="ntp_all_dismissed_refresh">"刷新"</string>
 <string name="open_tabs">"目前打开的标签页"</string>
 <string name="button_new_tab">"打开新的标签页"</string>
@@ -825,10 +817,10 @@
 <string name="menu_open_in_product">"在%1$s中打开"</string>
 <string name="menu_open_in_product_default">"在浏览器中打开"</string>
 <string name="reader_view_text">"使网页适合移动设备"</string>
-<string name="reader_view_text_alt">"简化网页"</string>
+<string name="reader_view_text_alt">"显示简化版视图"</string>
 <string name="content_provider_search_description">"书签和网络历史记录"</string>
 <string name="url_copied">"已复制网址。"</string>
-<string name="survey_prompt">"欢迎帮助我们改进 Chrome。&lt;LINK&gt;参与调查&lt;/LINK&gt;。"</string>
+<string name="chrome_home_survey_prompt">"欢迎帮助我们改进 Chrome。&lt;LINK&gt;参与调查&lt;/LINK&gt;。"</string>
 <string name="accessibility_toolbar_btn_forward">"前进"</string>
 <string name="accessibility_toolbar_btn_back">"返回"</string>
 <string name="accessibility_toolbar_btn_menu">"更多选项"</string>
@@ -859,10 +851,10 @@
 <string name="accessibility_tabstrip_incognito_identifier">"隐身标签页"</string>
 <string name="accessibility_tabstrip_incognito_identifier_selected">"所选的隐身标签页"</string>
 <string name="accessibility_omnibox_btn_refine">"优化"</string>
-<string name="accessibility_bookmark_more_info">"选项"</string>
 <string name="accessibility_cancel_selection">"取消选择"</string>
 <string name="accessibility_drawer_toggle_btn_open">"打开抽屉式导航栏"</string>
 <string name="accessibility_drawer_toggle_btn_close">"关闭抽屉式导航栏"</string>
+<string name="accessibility_list_menu_button">"选项"</string>
 <string name="accessibility_toolbar_screen_position">"选项位于屏幕顶部附近"</string>
 <plurals name="accessibility_share_selected_items">
   <item quantity="one">"分享 1 个所选项"</item>
@@ -892,6 +884,9 @@
 <string name="contextual_search_quick_action_caption_generic_event">"创建活动"</string>
 <string name="contextual_search_quick_action_caption_phone">"拨打"</string>
 <string name="contextual_search_quick_action_caption_generic_website">"转至相关网页"</string>
+<string name="contextual_search_iph_entity">"您可以在此面板查看即时搜索结果"</string>
+<string name="contextual_search_iph_search_result">"点按某个字词可立即开始搜索或查看相关操作"</string>
+<string name="contextual_search_iph_tap">"您也可以通过快速点按某个字词进行搜索"</string>
 <string name="webapp_activity_title">"网络应用"</string>
 <string name="print_share_activity_title">"打印"</string>
 <string name="omnibox_confirm_delete">"要从历史记录中移除建议吗？"</string>
@@ -935,7 +930,7 @@
 <string name="physical_web_broadcast_notification">"网站正在广播"</string>
 <string name="physical_web_stop_broadcast">"停止"</string>
 <string name="usb_chooser_dialog_prompt">"%1$s 希望连接到以下所选设备："</string>
-<string name="usb_chooser_dialog_no_devices_found_prompt">"未找到任何设备"</string>
+<string name="usb_chooser_dialog_no_devices_found_prompt">"未找到任何兼容设备"</string>
 <string name="usb_chooser_dialog_connect_button_text">"连接"</string>
 <string name="usb_chooser_dialog_footnote_text">"&lt;link&gt;获取帮助&lt;/link&gt;"</string>
 <string name="decoder_description">"图片解码器"</string>
@@ -947,9 +942,11 @@
 <string name="using_google">"目前使用的搜索引擎是 Google"</string>
 <string name="item_chooser_item_name_with_id">"%1$s (%2$s)"</string>
 <string name="webapk_running_in_chrome_disclosure">"此应用正在 Chrome 中运行。"</string>
-<string name="webapp_runs_in_chrome_disclosure">"%1$s正在 Chrome 中运行"</string>
+<string name="webapp_tap_to_copy_url">"点按即可复制该应用的网址"</string>
+<string name="webapp_twa_offline_dialog">"若想使用“%1$s”，请连接到互联网。"</string>
 <string name="webapk_offline_dialog">"如果您是首次使用%1$s，则需连接到互联网。"</string>
-<string name="webapk_offline_dialog_quit_button">"确定"</string>
+<string name="webapp_cannot_connect_to_site">"无法连接到该网站"</string>
+<string name="webapp_network_error_message_tunnel_connection_failed">"未能成功通过代理服务器建立隧道"</string>
 <string name="keyboard_shortcut_open_new_tab">"打开新标签页"</string>
 <string name="keyboard_shortcut_reopen_new_tab">"重新打开上次关闭的标签页"</string>
 <string name="keyboard_shortcut_new_incognito_tab">"在无痕模式下打开新标签页"</string>
@@ -996,7 +993,8 @@
 <string name="search_with_product">"使用 %1$s 进行搜索"</string>
 <string name="disabled_incognito_launcher_shortcut_message">"移除并重新创建此快捷方式"</string>
 <string name="bottom_sheet_help_bubble_message">"上拉即可查看书签及更多内容"</string>
-<string name="bottom_sheet_expand_button_help_bubble_message">"点按即可查看书签及更多内容"</string>
+<string name="bottom_sheet_pull_to_refresh_help_bubble_message">"前往此处的地址栏"</string>
+<string name="bottom_sheet_pull_to_refresh_help_bubble_accessibility_message">"前往屏幕底部的地址栏"</string>
 <string name="bottom_sheet_accessibility_expand_button_help_bubble_message">"点按即可查看“下载内容”、“书签”和“历史记录”"</string>
 <string name="bottom_sheet_expand_button_accessibility">"访问“下载内容”、“书签”和“历史记录”。"</string>
 <string name="bottom_sheet_accessibility_description">"导航面板。向下滑动手指即可关闭。"</string>
@@ -1010,7 +1008,7 @@
 <string name="bottom_sheet_app_menu_iph">"下载内容、书签和历史记录在哪里？"</string>
 <string name="chrome_home_promo_dialog_message">"向上滑动即可轻松浏览热门网站和文章，查看各项下载内容等等"</string>
 <string name="chrome_home_promo_dialog_message_accessibility">"从屏幕底部向上滑动手指或点按“展开”按钮，即可轻松浏览热门网站和文章，查看各项下载内容等等"</string>
-<string name="chrome_home_promo_dialog_not_now">"以后再说"</string>
+<string name="chrome_home_promo_dialog_not_yet">"目前还不可以"</string>
 <string name="chrome_home_promo_dialog_title">"欢迎使用新版 Chrome"</string>
 <string name="chrome_home_promo_dialog_try_it">"试用一下"</string>
 <string name="chrome_home_promo_dialog_turn_off">"关闭"</string>
@@ -1021,4 +1019,8 @@
 <string name="photo_picker_camera">"摄像头"</string>
 <string name="photo_picker_browse">"浏览"</string>
 <string name="updating_chrome">"正在更新 Chrome…"</string>
+<string name="redirect_blocked_message">"Chrome 已阻止此网站将您重定向至"</string>
+<string name="redirect_blocked_short_message">"已阻止重定向。"</string>
+<string name="near_oom_intervention_message">"此网页占用的内存过多，因此 Chrome 已将其暂停。"</string>
+<string name="near_oom_intervention_decline">"继续"</string>
 </resources>

@@ -22,66 +22,38 @@ public class AndroidKeyStore {
     private static final String TAG = "AndroidKeyStore";
 
     /**
-     * Sign a given message with a given PrivateKey object. This method
-     * shall only be used to implement signing in the context of SSL
-     * client certificate support.
-     *
-     * The message will actually be a hash, computed by OpenSSL itself,
-     * depending on the type of the key. The result should match exactly
-     * what the vanilla implementations of the following OpenSSL function
-     * calls do:
-     *
-     *  - For a RSA private key, this should be equivalent to calling
-     *    RSA_private_encrypt(..., RSA_PKCS1_PADDING), i.e. it must
-     *    generate a raw RSA signature. The message must be either a
-     *    combined, 36-byte MD5+SHA1 message digest or a DigestInfo
-     *    value wrapping a message digest.
-     *
-     *  - For a ECDSA private keys, this should be equivalent to calling
-     *    ECDSA_sign(0,...). The message must be a hash and the function shall
-     *    compute a direct ECDSA signature for it.
+     * Sign a given message with a given PrivateKey object.
      *
      * @param privateKey The PrivateKey handle.
+     * @param algorithm The signature algorithm to use.
      * @param message The message to sign.
      * @return signature as a byte buffer.
      *
-     * Important: Due to a platform bug, this function will always fail on
-     *            Android < 4.2 for RSA PrivateKey objects. See the
-     *            getOpenSSLHandleForPrivateKey() below for work-around.
+     * Note: NONEwithRSA is not implemented in Android < 4.2. See
+     * getOpenSSLHandleForPrivateKey() below for a work-around.
      */
     @CalledByNative
-    private static byte[] rawSignDigestWithPrivateKey(PrivateKey privateKey, byte[] message) {
-        // Get the Signature for this key.
-        Signature signature = null;
+    private static byte[] signWithPrivateKey(
+            PrivateKey privateKey, String algorithm, byte[] message) {
         // Hint: Algorithm names come from:
         // http://docs.oracle.com/javase/6/docs/technotes/guides/security/StandardNames.html
+        Signature signature = null;
         try {
-            String keyAlgorithm = privateKey.getAlgorithm();
-            if ("RSA".equalsIgnoreCase(keyAlgorithm)) {
-                // IMPORTANT: Due to a platform bug, this will throw NoSuchAlgorithmException
-                // on Android 4.1.x. Fixed in 4.2 and higher.
-                // See https://android-review.googlesource.com/#/c/40352/
-                signature = Signature.getInstance("NONEwithRSA");
-            } else if ("EC".equalsIgnoreCase(keyAlgorithm)) {
-                signature = Signature.getInstance("NONEwithECDSA");
-            }
+            signature = Signature.getInstance(algorithm);
         } catch (NoSuchAlgorithmException e) {
-            // Intentionally do nothing.
-        }
-
-        if (signature == null) {
-            Log.e(TAG, "Unsupported private key algorithm: " + privateKey.getAlgorithm());
+            Log.e(TAG, "Signature algorithm " + algorithm + " not supported: " + e);
             return null;
         }
 
-        // Sign the message.
         try {
             signature.initSign(privateKey);
             signature.update(message);
             return signature.sign();
         } catch (Exception e) {
-            Log.e(TAG, "Exception while signing message with " + privateKey.getAlgorithm()
-                    + " private key: " + e);
+            Log.e(TAG,
+                    "Exception while signing message with " + algorithm + " and "
+                            + privateKey.getAlgorithm() + " private key ("
+                            + privateKey.getClass().getName() + "): " + e);
             return null;
         }
     }
@@ -148,8 +120,8 @@ public class AndroidKeyStore {
      * object.
      *
      * This shall only be used when the "NONEwithRSA" signature is not
-     * available, as described in rawSignDigestWithPrivateKey(). I.e.
-     * never use this on Android 4.2 or higher.
+     * available, as described in signWithPrivateKey(). I.e. never use this on
+     * Android 4.2 or higher.
      *
      * This can only work in Android 4.0.4 and higher, for older versions
      * of the platform (e.g. 4.0.3), there is no system OpenSSL EVP_PKEY,

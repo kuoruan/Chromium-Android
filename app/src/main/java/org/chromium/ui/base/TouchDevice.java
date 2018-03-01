@@ -59,7 +59,12 @@ public class TouchDevice {
         result[0] = result[1] = 0;
 
         for (int deviceId : InputDevice.getDeviceIds()) {
-            InputDevice inputDevice = InputDevice.getDevice(deviceId);
+            InputDevice inputDevice = null;
+            try {
+                inputDevice = InputDevice.getDevice(deviceId);
+            } catch (RuntimeException e) {
+                // Swallow the exception. See crbug.com/781377.
+            }
             if (inputDevice == null) continue;
 
             int sources = inputDevice.getSources();

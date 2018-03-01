@@ -14,6 +14,7 @@ import android.util.AttributeSet;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkItem;
+import org.chromium.chrome.browser.favicon.IconType;
 import org.chromium.chrome.browser.favicon.LargeIconBridge.LargeIconCallback;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.RoundedIconGenerator;
@@ -83,8 +84,8 @@ public class BookmarkItemRow extends BookmarkRow implements LargeIconCallback {
     // LargeIconCallback implementation.
 
     @Override
-    public void onLargeIconAvailable(
-            Bitmap icon, int fallbackColor, boolean isFallbackColorDefault) {
+    public void onLargeIconAvailable(Bitmap icon, int fallbackColor, boolean isFallbackColorDefault,
+            @IconType int iconType) {
         if (icon == null) {
             mIconGenerator.setBackgroundColor(fallbackColor);
             icon = mIconGenerator.generateIconForUrl(mUrl);

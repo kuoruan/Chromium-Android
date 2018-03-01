@@ -1,4 +1,4 @@
-// Copyright 2015 The Chromium Authors. All rights reserved.
+// Copyright 2017 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -15,7 +15,6 @@ import org.chromium.base.annotations.JNINamespace;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.ui.UiUtils;
-import org.chromium.ui.base.WindowAndroid;
 
 import javax.annotation.Nullable;
 
@@ -23,53 +22,105 @@ import javax.annotation.Nullable;
  * A utility class to take a feedback-formatted screenshot of an {@link Activity}.
  */
 @JNINamespace("chrome::android")
-public final class ScreenshotTask {
+final class ScreenshotTask implements ScreenshotSource {
     /**
      * Maximum dimension for the screenshot to be sent to the feedback handler.  This size
      * ensures the size of bitmap < 1MB, which is a requirement of the handler.
      */
     private static final int MAX_FEEDBACK_SCREENSHOT_DIMENSION = 600;
 
+    private final Activity mActivity;
+
+    private boolean mDone;
+    private Bitmap mBitmap;
+    private Runnable mCallback;
+
     /**
-     * A callback passed to {@link #create} which will get a bitmap version of the screenshot.
+     * Creates a {@link ScreenshotTask} instance that, will grab a screenshot of {@code activity}.
+     * @param activity The {@link Activity} to grab a screenshot of.
      */
-    public interface ScreenshotTaskCallback {
-        /**
-         * Called when collection of the bitmap has completed.
-         * @param bitmap the bitmap or null.
-         */
-        void onGotBitmap(@Nullable Bitmap bitmap);
+    public ScreenshotTask(Activity activity) {
+        mActivity = activity;
     }
 
-    /**
-     * Prepares screenshot (possibly asynchronously) and invokes the callback when the screenshot
-     * is available, or collection has failed. The asynchronous path is only taken when the activity
-     * that is passed in is a {@link ChromeActivity}.
-     * The callback is always invoked asynchronously.
-     */
-    public static void create(Activity activity, final ScreenshotTaskCallback callback) {
-        if (activity instanceof ChromeActivity) {
-            ChromeActivity chromeActivity = (ChromeActivity) activity;
-            if (shouldTakeCompositorScreenshot(chromeActivity)) {
-                Rect rect = new Rect();
-                activity.getWindow().getDecorView().getRootView().getWindowVisibleDisplayFrame(
-                        rect);
-                createCompositorScreenshot(chromeActivity.getWindowAndroid(), rect, callback);
-                return;
-            }
-        }
+    // ScreenshotSource implementation.
+    @Override
+    public void capture(@Nullable Runnable callback) {
+        mCallback = callback;
 
-        final Bitmap bitmap = prepareScreenshot(activity, null);
+        if (takeCompositorScreenshot(mActivity)) return;
+        if (takeAndroidViewScreenshot(mActivity)) return;
+
+        // If neither the compositor nor the Android view screenshot tasks were kicked off, admit
+        // defeat and return a {@code null} screenshot.
         ThreadUtils.postOnUiThread(new Runnable() {
             @Override
             public void run() {
-                callback.onGotBitmap(bitmap);
+                onBitmapReceived(null);
             }
         });
     }
 
-    private static boolean shouldTakeCompositorScreenshot(ChromeActivity activity) {
-        Tab currentTab = activity.getActivityTab();
+    @Override
+    public boolean isReady() {
+        return mDone;
+    }
+
+    @Override
+    public Bitmap getScreenshot() {
+        return mBitmap;
+    }
+
+    // This will be called on the UI thread in response to nativeGrabWindowSnapshotAsync.
+    @CalledByNative
+    private void onBytesReceived(byte[] pngBytes) {
+        Bitmap bitmap = null;
+        if (pngBytes != null) bitmap = BitmapFactory.decodeByteArray(pngBytes, 0, pngBytes.length);
+        onBitmapReceived(bitmap);
+    }
+
+    private void onBitmapReceived(@Nullable Bitmap bitmap) {
+        mDone = true;
+        mBitmap = bitmap;
+        if (mCallback != null) mCallback.run();
+        mCallback = null;
+    }
+
+    private boolean takeCompositorScreenshot(@Nullable Activity activity) {
+        if (!shouldTakeCompositorScreenshot((activity))) return false;
+
+        Rect rect = new Rect();
+        activity.getWindow().getDecorView().getRootView().getWindowVisibleDisplayFrame(rect);
+        nativeGrabWindowSnapshotAsync(this,
+                ((ChromeActivity) activity).getWindowAndroid().getNativePointer(), rect.width(),
+                rect.height());
+
+        return true;
+    }
+
+    private boolean takeAndroidViewScreenshot(@Nullable final Activity activity) {
+        if (activity == null) return false;
+
+        ThreadUtils.postOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Bitmap bitmap = UiUtils.generateScaledScreenshot(
+                        activity.getWindow().getDecorView().getRootView(),
+                        MAX_FEEDBACK_SCREENSHOT_DIMENSION, Bitmap.Config.ARGB_8888);
+                onBitmapReceived(bitmap);
+            }
+        });
+
+        return true;
+    }
+
+    private boolean shouldTakeCompositorScreenshot(Activity activity) {
+        // If Activity isn't a ChromeActivity, we aren't using the Compositor to render.
+        if (!(activity instanceof ChromeActivity)) return false;
+
+        ChromeActivity chromeActivity = (ChromeActivity) activity;
+        Tab currentTab = chromeActivity.getActivityTab();
+
         // If the tab is null, assume in the tab switcher so a Compositor snapshot is good.
         if (currentTab == null) return true;
         // If the tab is not interactable, also assume in the tab switcher.
@@ -83,62 +134,6 @@ public final class ScreenshotTask {
         return false;
     }
 
-    /**
-     * A callback passed to the native snapshot API which returns the result in PNG format.
-     */
-    private interface SnapshotResultCallback {
-        /**
-         * Called when collection of the bitmap has completed.
-         * @param pngBytes PNG-formatted bitmap in byte array if successful; otherwise null
-         */
-        void onCompleted(@Nullable byte[] pngBytes);
-    }
-
-    private static void createCompositorScreenshot(WindowAndroid windowAndroid,
-            Rect windowRect, final ScreenshotTaskCallback callback) {
-        SnapshotResultCallback resultCallback = new SnapshotResultCallback() {
-            @Override
-            public void onCompleted(byte[] pngBytes) {
-                callback.onGotBitmap(pngBytes != null
-                        ? BitmapFactory.decodeByteArray(pngBytes, 0, pngBytes.length) : null);
-            }
-        };
-        nativeGrabWindowSnapshotAsync(resultCallback, windowAndroid.getNativePointer(),
-                windowRect.width(), windowRect.height());
-    }
-
-    /**
-     * Prepares a given screenshot for sending with a feedback.
-     * If no screenshot is given it creates one from the activity View if an activity is provided.
-     * @param activity An activity or null
-     * @param bitmap A screenshot or null
-     * @return A feedback-ready screenshot or null
-     */
-    private static Bitmap prepareScreenshot(@Nullable Activity activity, @Nullable Bitmap bitmap) {
-        if (bitmap == null) {
-            if (activity == null) return null;
-            return UiUtils.generateScaledScreenshot(
-                    activity.getWindow().getDecorView().getRootView(),
-                    MAX_FEEDBACK_SCREENSHOT_DIMENSION, Bitmap.Config.ARGB_8888);
-        }
-
-        int screenshotMaxDimension = Math.max(bitmap.getWidth(), bitmap.getHeight());
-        if (screenshotMaxDimension <= MAX_FEEDBACK_SCREENSHOT_DIMENSION) return bitmap;
-
-        float screenshotScale = (float) MAX_FEEDBACK_SCREENSHOT_DIMENSION / screenshotMaxDimension;
-        int destWidth = (int) (bitmap.getWidth() * screenshotScale);
-        int destHeight = (int) (bitmap.getHeight() * screenshotScale);
-        return Bitmap.createScaledBitmap(bitmap, destWidth, destHeight, true);
-    }
-
-    @CalledByNative
-    private static void notifySnapshotFinished(Object callback, byte[] pngBytes) {
-        ((SnapshotResultCallback) callback).onCompleted(pngBytes);
-    }
-
-    // This is a utility class, so it should never be created.
-    private ScreenshotTask() {}
-
-    private static native void nativeGrabWindowSnapshotAsync(SnapshotResultCallback callback,
-            long nativeWindowAndroid, int width, int height);
+    private static native void nativeGrabWindowSnapshotAsync(
+            ScreenshotTask callback, long nativeWindowAndroid, int width, int height);
 }

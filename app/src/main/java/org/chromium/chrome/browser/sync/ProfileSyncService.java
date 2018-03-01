@@ -10,7 +10,6 @@ import org.json.JSONException;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.components.sync.ModelType;
 import org.chromium.components.sync.PassphraseType;
 
@@ -100,7 +99,6 @@ public class ProfileSyncService {
      * Can only be accessed on the main thread.
      */
     @Nullable
-    @SuppressFBWarnings("LI_LAZY_INIT")
     public static ProfileSyncService get() {
         ThreadUtils.assertOnUiThread();
         if (!sInitialized) {
@@ -420,12 +418,6 @@ public class ProfileSyncService {
         }
     }
 
-    @VisibleForTesting
-    public String getSyncInternalsInfoForTest() {
-        ThreadUtils.assertOnUiThread();
-        return nativeGetAboutInfoForTest(mNativeProfileSyncServiceAndroid);
-    }
-
     /**
      * Starts the sync engine.
      */
@@ -585,7 +577,6 @@ public class ProfileSyncService {
     private native boolean nativeIsPassphrasePrompted(long nativeProfileSyncServiceAndroid);
     private native void nativeSetPassphrasePrompted(long nativeProfileSyncServiceAndroid,
                                                     boolean prompted);
-    private native String nativeGetAboutInfoForTest(long nativeProfileSyncServiceAndroid);
     private native long nativeGetLastSyncedTimeForTest(long nativeProfileSyncServiceAndroid);
     private native void nativeOverrideNetworkResourcesForTest(
             long nativeProfileSyncServiceAndroid, long networkResources);

@@ -8,7 +8,6 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 
-import org.chromium.base.BuildInfo;
 import org.chromium.chrome.browser.notifications.channels.ChannelsInitializer;
 
 /**
@@ -21,7 +20,7 @@ public class NotificationBuilderForO extends NotificationBuilder {
     public NotificationBuilderForO(
             Context context, String channelId, ChannelsInitializer channelsInitializer) {
         super(context);
-        assert BuildInfo.isAtLeastO();
+        assert Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
         if (channelId == null) {
             // The channelId may be null if the notification will be posted by another app that
             // does not target O or sets its own channels. E.g. Web apk notifications.

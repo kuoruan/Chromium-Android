@@ -8,7 +8,6 @@ import android.content.res.Resources;
 import android.view.ViewGroup;
 
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.displaystyle.MarginResizer;
 import org.chromium.chrome.browser.widget.displaystyle.UiConfig;
 
@@ -29,7 +28,7 @@ public class TileGridViewHolder extends SiteSectionViewHolder {
         mSectionView.setMaxRows(maxRows);
         mSectionView.setMaxColumns(maxColumns);
 
-        if (FeatureUtilities.isChromeHomeEnabled()) {
+        if (SuggestionsConfig.useModernLayout()) {
             Resources res = itemView.getResources();
             int defaultLateralMargin =
                     res.getDimensionPixelSize(R.dimen.tile_grid_layout_padding_start);

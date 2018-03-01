@@ -473,6 +473,7 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
     public void onAddOrReplaceDownloadSharedPreferenceEntry(final ContentId id) {
         // Alert DownloadItemViews displaying information about the item that it has changed.
         for (DownloadItemView view : mViews) {
+            if (view.getItem() == null) continue;
             if (TextUtils.equals(id.id, view.getItem().getId())) {
                 view.displayItem(mBackendProvider, view.getItem());
             }

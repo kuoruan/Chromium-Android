@@ -2,19 +2,20 @@
 <!--DO NOT MODIFY THIS FILE DIRECTLY!
 IT IS GENERATED FROM policy_templates.json.-->
 <resources>
-  <string name="AllowedDomainsForAppsTitle">Define domains allowed to access Google Apps</string>
-  <string name="AllowedDomainsForAppsDesc">Enables Chromium\'s restricted log in feature in Google Apps and prevents users from changing this setting.
+  <string name="AllowedDomainsForAppsTitle">Define domains allowed to access G Suite</string>
+  <string name="AllowedDomainsForAppsDesc">Enables Chromium\'s restricted log in feature in G Suite and prevents users from changing this setting.
 
-If you define this setting, the user will only be able to access
-Google Apps (such as Gmail) using accounts from the specified domains.
+If you define this setting, the user will only be able to access Google
+Apps using accounts from the specified domains (note that this does not
+work for gmail.com/googlemail.com).
 
 This setting will NOT prevent the user from loging in on a managed device
 that requires Google authentication. The user will still be allowed to
 sign in to accounts from other domains, but they will receive an error
-when trying to use Google Apps with those accounts.
+when trying to use G Suite with those accounts.
 
 If you leave this setting empty/not-configured, the user will be able to
-access Google Apps with any account.
+access G Suite with any account.
 
 This policy causes the X-GoogApps-Allowed-Domains header to be appended to
 all HTTP and HTTPS requests to all google.com domains, as described in
@@ -189,7 +190,7 @@ If you enable or disable this setting, users cannot change or override this sett
 If this policy is left not set, the default search provider is enabled, and the user will be able to set the search provider list.
 
 This policy is not available on Windows instances that are not joined
-to a MicrosoftÂ® Active DirectoryÂ® domain.</string>
+to a Microsoft® Active Directory® domain.</string>
   <string name="DefaultSearchProviderEncodingsTitle">Default search provider encodings</string>
   <string name="DefaultSearchProviderEncodingsDesc">Specifies the character encodings supported by the search provider. Encodings are code page names like UTF-8, GB2312, and ISO-8859-1. They are tried in the order provided.
 
@@ -214,20 +215,6 @@ This policy is only respected if the \'DefaultSearchProviderEnabled\' policy is 
 This policy is optional. If not set, image search request will be sent using the GET method.
 
 This policy is only respected if the \'DefaultSearchProviderEnabled\' policy is enabled.</string>
-  <string name="DefaultSearchProviderInstantURLTitle">Default search provider instant URL</string>
-  <string name="DefaultSearchProviderInstantURLDesc">Specifies the URL of the search engine used to provide instant results. The URL should contain the string \'{searchTerms}\', which will be replaced at query time by the text the user has entered so far.
-
-This policy is optional. If not set, no instant search results will be provided.
-
-Google\'s instant results URL can be specified as: \'{google:baseURL}suggest?q={searchTerms}\'.
-
-This policy is only respected if the \'DefaultSearchProviderEnabled\' policy is enabled.</string>
-  <string name="DefaultSearchProviderInstantURLPostParamsTitle">Parameters for instant URL which uses POST</string>
-  <string name="DefaultSearchProviderInstantURLPostParamsDesc">Specifies the parameters used when doing instant search with POST. It consists of comma-separated name/value pairs. If a value is a template parameter, like {searchTerms} in above example, it will be replaced with real search terms data.
-
-This policy is optional. If not set, instant search request will be sent using the GET method.
-
-This policy is only respected if the \'DefaultSearchProviderEnabled\' policy is enabled.</string>
   <string name="DefaultSearchProviderKeywordTitle">Default search provider keyword</string>
   <string name="DefaultSearchProviderKeywordDesc">Specifies the keyword, which is the shortcut used in the omnibox to trigger the search for this provider.
 
@@ -244,16 +231,10 @@ This policy is only considered if the \'DefaultSearchProviderEnabled\' policy is
 This policy is optional. If not set, no new tab page will be provided.
 
 This policy is only respected if the \'DefaultSearchProviderEnabled\' policy is enabled.</string>
-  <string name="DefaultSearchProviderSearchTermsReplacementKeyTitle">Parameter controlling search term placement for the default search provider</string>
-  <string name="DefaultSearchProviderSearchTermsReplacementKeyDesc">If this policy is set and a search URL suggested from the omnibox contains this parameter in the query string or in the fragment identifier, then the suggestion will show the search terms and search provider instead of the raw search URL.
-
-This policy is optional. If not set, no search term replacement will be performed.
-
-This policy is only respected if the \'DefaultSearchProviderEnabled\' policy is enabled.</string>
   <string name="DefaultSearchProviderSearchURLTitle">Default search provider search URL</string>
   <string name="DefaultSearchProviderSearchURLDesc">Specifies the URL of the search engine used when doing a default search. The URL should contain the string \'{searchTerms}\', which will be replaced at query time by the terms the user is searching for.
 
-Google\'s search URL can be specified as: \'{google:baseURL}search?q={searchTerms}&amp;amp;{google:RLZ}{google:originalQueryForSuggestion}{google:assistedQueryStats}{google:searchFieldtrialParameter}{google:searchClient}{google:sourceId}{google:instantExtendedEnabledParameter}ie={inputEncoding}\'.
+Google\'s search URL can be specified as: \'{google:baseURL}search?q={searchTerms}&amp;amp;{google:RLZ}{google:originalQueryForSuggestion}{google:assistedQueryStats}{google:searchFieldtrialParameter}{google:searchClient}{google:sourceId}ie={inputEncoding}\'.
 
 This option must be set when the \'DefaultSearchProviderEnabled\' policy is enabled and will only be respected if this is the case.</string>
   <string name="DefaultSearchProviderSearchURLPostParamsTitle">Parameters for search URL which uses POST</string>
@@ -426,6 +407,12 @@ If this policy is left not set, network prediction will be enabled but the user 
     <item>1</item>
     <item>2</item>
   </string-array>
+  <string name="NtlmV2EnabledTitle">Whether NTLMv2 authentication is enabled.</string>
+  <string name="NtlmV2EnabledDesc">Controls whether NTLMv2 is enabled.
+
+All recent versions of Samba and Windows servers support NTLMv2. This should only be disabled for backwards compatibility and reduces the security of authentication.
+
+The default value when this policy is not defined is currently false for backwards compatibility, but will change to true in the future.</string>
   <string name="PasswordManagerEnabledTitle">Enable saving passwords to the password manager</string>
   <string name="PasswordManagerEnabledDesc">If this setting is enabled, users can have Chromium memorize passwords and provide them automatically the next time they log in to a site.
 
@@ -559,9 +546,9 @@ If false or unset then the content provider returns no information.</string>
   <string name="TranslateEnabledTitle">Enable Translate</string>
   <string name="TranslateEnabledDesc">Enables the integrated Google Translate service on Chromium.
 
-If you enable this setting, Chromium will show an integrated toolbar offering to translate the page for the user, when appropriate.
+If you enable this setting, Chromium will offer translation functionality to the user by showing an integrated translate toolbar (when appropriate) and a translate option on the right-click context menu.
 
-If you disable this setting, users will never see the translation bar.
+If you disable this setting, all built-in translate features will be disabled.
 
 If you enable or disable this setting, users cannot change or override this setting in Chromium.
 

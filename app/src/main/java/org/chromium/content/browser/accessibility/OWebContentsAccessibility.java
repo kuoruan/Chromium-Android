@@ -18,7 +18,6 @@ import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.content.browser.RenderCoordinates;
 import org.chromium.content_public.browser.WebContents;
 
 import java.util.Arrays;
@@ -30,8 +29,8 @@ import java.util.Arrays;
 @TargetApi(Build.VERSION_CODES.O)
 public class OWebContentsAccessibility extends LollipopWebContentsAccessibility {
     OWebContentsAccessibility(Context context, ViewGroup containerView, WebContents webContents,
-            RenderCoordinates renderCoordinates, boolean shouldFocusOnPageLoad) {
-        super(context, containerView, webContents, renderCoordinates, shouldFocusOnPageLoad);
+            boolean shouldFocusOnPageLoad) {
+        super(context, containerView, webContents, shouldFocusOnPageLoad);
     }
 
     @Override

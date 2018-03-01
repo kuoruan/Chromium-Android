@@ -74,6 +74,7 @@ public class MediaDrmBridge {
     private static final byte[] UNPROVISION = "unprovision".getBytes();
 
     private MediaDrm mMediaDrm;
+    private MediaCrypto mMediaCrypto;
     private long mNativeMediaDrmBridge;
     private UUID mSchemeUUID;
 
@@ -306,9 +307,9 @@ public class MediaDrmBridge {
         // Create MediaCrypto object.
         try {
             if (MediaCrypto.isCryptoSchemeSupported(mSchemeUUID)) {
-                MediaCrypto mediaCrypto = new MediaCrypto(mSchemeUUID, mMediaCryptoSession.drmId());
+                mMediaCrypto = new MediaCrypto(mSchemeUUID, mMediaCryptoSession.drmId());
                 Log.d(TAG, "MediaCrypto successfully created!");
-                onMediaCryptoReady(mediaCrypto);
+                onMediaCryptoReady(mMediaCrypto);
                 return true;
             } else {
                 Log.e(TAG, "Cannot create MediaCrypto for unsupported scheme.");
@@ -600,6 +601,11 @@ public class MediaDrmBridge {
         if (mMediaDrm != null) {
             mMediaDrm.release();
             mMediaDrm = null;
+        }
+
+        if (mMediaCrypto != null) {
+            mMediaCrypto.release();
+            mMediaCrypto = null;
         }
     }
 

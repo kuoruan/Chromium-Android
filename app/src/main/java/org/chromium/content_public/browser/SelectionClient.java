@@ -7,7 +7,9 @@ package org.chromium.content_public.browser;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.view.View.OnClickListener;
+import android.view.textclassifier.TextClassification;
 import android.view.textclassifier.TextClassifier;
+import android.view.textclassifier.TextSelection;
 
 import org.chromium.content.browser.ContentViewCore;
 import org.chromium.content.browser.SmartSelectionClient;
@@ -51,6 +53,16 @@ public interface SelectionClient {
          * OnClickListener for the suggested menu item.
          */
         public OnClickListener onClickListener;
+
+        /**
+         * TextClassification for logging.
+         */
+        public TextClassification textClassification;
+
+        /**
+         * TextSelection for logging.
+         */
+        public TextSelection textSelection;
 
         /**
          * A helper method that returns true if the result has both visual info
@@ -119,6 +131,13 @@ public interface SelectionClient {
     // TODO(donnd): remove this once it's supported.  See b/67428051.
     // clang-format off
     /**
+     * Returns a SelectionMetricsLogger associated with the SelectionClient or null.
+     */
+    default SelectionMetricsLogger getSelectionMetricsLogger() {
+        return null;
+    }
+
+    /**
      * Sets the TextClassifier for the Smart Text Selection feature. Pass {@code null} to use the
      * system classifier.
      * @param textClassifier The custom {@link TextClassifier} to start using or {@code null} to
@@ -141,6 +160,7 @@ public interface SelectionClient {
     default TextClassifier getCustomTextClassifier() {
         return null;
     }
+    // clang-format on
 
     /** Creates a {@link SelectionClient} instance. */
     public static SelectionClient createSmartSelectionClient(WebContents webContents) {
@@ -148,5 +168,4 @@ public interface SelectionClient {
                 ContentViewCore.fromWebContents(webContents).getPopupControllerResultCallback();
         return SmartSelectionClient.create(callback, webContents);
     }
-        // clang-format on
 }

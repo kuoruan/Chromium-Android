@@ -159,29 +159,42 @@ public abstract class ChromeFeatureList {
     public static final String CCT_POST_MESSAGE_API = "CCTPostMessageAPI";
     public static final String CCT_REDIRECT_PRECONNECT = "CCTRedirectPreconnect";
     public static final String CHROME_HOME = "ChromeHome";
+    public static final String CHROME_HOME_BOTTOM_NAV_LABELS = "ChromeHomeBottomNavLabels";
+    public static final String CHROME_HOME_CLEAR_URL_ON_OPEN = "ChromeHomeClearUrlOnOpen";
     public static final String CHROME_HOME_DESTROY_SUGGESTIONS = "ChromeHomeDestroySuggestions";
-    public static final String CHROME_HOME_DOODLE = "ChromeHomeDoodle";
+    public static final String CHROME_HOME_DROP_ALL_BUT_FIRST_THUMBNAIL =
+            "ChromeHomeDropAllButFirstThumbnail";
+    public static final String CHROME_HOME_INACTIVITY_SHEET_EXPANSION =
+            "ChromeHomeInactivitySheetExpansion";
     public static final String CHROME_HOME_OPT_OUT_SNACKBAR = "ChromeHomeOptOutSnackbar";
+    public static final String CHROME_HOME_PERSISTENT_IPH = "ChromeHomePersistentIph";
     public static final String CHROME_HOME_PERSONALIZED_OMNIBOX_SUGGESTIONS =
             "ChromeHomePersonalizedOmniboxSuggestions";
     public static final String CHROME_HOME_PROMO = "ChromeHomePromo";
     public static final String CHROME_HOME_PROMO_INFO_ONLY = "ChromeHomePromoInfoOnly";
     public static final String CHROME_HOME_PROMO_ON_STARTUP = "ChromeHomePromoOnStartup";
+    public static final String CHROME_HOME_SHOW_GOOGLE_G_WHEN_URL_CLEARED =
+            "ChromeHomeShowGoogleGWhenUrlCleared";
+    public static final String CHROME_HOME_PULL_TO_REFRESH_IPH_AT_TOP =
+            "ChromeHomePullToRefreshIphAtTop";
+    public static final String CHROME_HOME_SURVEY = "ChromeHomeSurvey";
+    public static final String CHROME_HOME_SWIPE_VELOCITY_FEATURE = "ChromeHomeSwipeLogicVelocity";
     public static final String CHROME_MEMEX = "ChromeMemex";
     public static final String CHROME_SMART_SELECTION = "ChromeSmartSelection";
+    public static final String CLEAR_OLD_BROWSING_DATA = "ClearOldBrowsingData";
     public static final String CONTENT_SUGGESTIONS_FAVICONS_FROM_NEW_SERVER =
             "ContentSuggestionsFaviconsFromNewServer";
     public static final String CONTENT_SUGGESTIONS_NOTIFICATIONS =
             "ContentSuggestionsNotifications";
-    public static final String CONTENT_SUGGESTIONS_LARGE_THUMBNAIL =
-            "ContentSuggestionsLargeThumbnail";
     public static final String CONTENT_SUGGESTIONS_SCROLL_TO_LOAD =
             "ContentSuggestionsScrollToLoad";
     public static final String CONTENT_SUGGESTIONS_SETTINGS = "ContentSuggestionsSettings";
     public static final String CONTENT_SUGGESTIONS_THUMBNAIL_DOMINANT_COLOR =
             "ContentSuggestionsThumbnailDominantColor";
-    public static final String CONTEXTUAL_SEARCH_SINGLE_ACTIONS = "ContextualSearchSingleActions";
-    public static final String CONTEXTUAL_SEARCH_URL_ACTIONS = "ContextualSearchUrlActions";
+    public static final String CONTEXTUAL_SEARCH_ML_TAP_SUPPRESSION =
+            "ContextualSearchMlTapSuppression";
+    public static final String CONTEXTUAL_SEARCH_RANKER_QUERY = "ContextualSearchRankerQuery";
+    public static final String CONTEXTUAL_SEARCH_SECOND_TAP = "ContextualSearchSecondTap";
     public static final String CONTEXTUAL_SUGGESTIONS_CAROUSEL = "ContextualSuggestionsCarousel";
     public static final String COPYLESS_PASTE = "CopylessPaste";
     public static final String CUSTOM_CONTEXT_MENU = "CustomContextMenu";
@@ -197,7 +210,7 @@ public abstract class ChromeFeatureList {
     public static final String FULLSCREEN_ACTIVITY = "FullscreenActivity";
     // Whether we show an important sites dialog in the "Clear Browsing Data" flow.
     public static final String IMPORTANT_SITES_IN_CBD = "ImportantSitesInCBD";
-    public static final String TABS_IN_CBD = "TabsInCBD";
+    public static final String LANGUAGES_PREFERENCE = "LanguagesPreference";
     public static final String SEARCH_ENGINE_PROMO_EXISTING_DEVICE =
             "SearchEnginePromo.ExistingDevice";
     public static final String SEARCH_ENGINE_PROMO_NEW_DEVICE = "SearchEnginePromo.NewDevice";
@@ -207,36 +220,35 @@ public abstract class ChromeFeatureList {
     public static final String NO_CREDIT_CARD_ABORT = "NoCreditCardAbort";
     public static final String NTP_CONDENSED_LAYOUT = "NTPCondensedLayout";
     public static final String NTP_CONDENSED_TILE_LAYOUT = "NTPCondensedTileLayout";
+    public static final String NTP_MODERN_LAYOUT = "NTPModernLayout";
     public static final String NTP_FOREIGN_SESSIONS_SUGGESTIONS = "NTPForeignSessionsSuggestions";
     public static final String NTP_LAUNCH_AFTER_INACTIVITY = "NTPLaunchAfterInactivity";
     public static final String NTP_OFFLINE_PAGES_FEATURE_NAME = "NTPOfflinePages";
     public static final String NTP_SHOW_GOOGLE_G_IN_OMNIBOX = "NTPShowGoogleGInOmnibox";
     public static final String NTP_SNIPPETS_INCREASED_VISIBILITY = "NTPSnippetsIncreasedVisibility";
-    public static final String NTP_TILES_LOWER_RESOLUTION_FAVICONS =
-            "NTPTilesLowerResolutionFavicons";
     public static final String OMNIBOX_SPARE_RENDERER = "OmniboxSpareRenderer";
     public static final String PAY_WITH_GOOGLE_V1 = "PayWithGoogleV1";
     public static final String PROGRESS_BAR_THROTTLE = "ProgressBarThrottle";
     public static final String PWA_PERSISTENT_NOTIFICATION = "PwaPersistentNotification";
     public static final String READER_MODE_IN_CCT = "ReaderModeInCCT";
     public static final String SERVICE_WORKER_PAYMENT_APPS = "ServiceWorkerPaymentApps";
-    public static final String SITE_EXPLORATION_UI = "SiteExplorationUi";
     public static final String SITE_NOTIFICATION_CHANNELS = "SiteNotificationChannels";
     public static final String SOUND_CONTENT_SETTING = "SoundContentSetting";
     public static final String SPANNABLE_INLINE_AUTOCOMPLETE = "SpannableInlineAutocomplete";
     public static final String TAB_REPARENTING = "TabReparenting";
+    public static final String TRUSTED_WEB_ACTIVITY = "TrustedWebActivity";
     public static final String VIDEO_PERSISTENCE = "VideoPersistence";
+    public static final String VR_BROWSING = "VrBrowsing";
     public static final String VR_BROWSING_FEEDBACK = "VrBrowsingFeedback";
-    public static final String VR_CUSTOM_TAB_BROWSING = "VrCustomTabBrowsing";
-    public static final String VR_SHELL = "VrShell";
+    public static final String VR_BROWSING_IN_CUSTOM_TAB = "VrBrowsingInCustomTab";
+    public static final String VR_LAUNCH_INTENT = "VrLaunchIntents";
     public static final String WEB_PAYMENTS = "WebPayments";
     public static final String WEB_PAYMENTS_METHOD_SECTION_ORDER_V2 =
             "WebPaymentsMethodSectionOrderV2";
     public static final String WEB_PAYMENTS_MODIFIERS = "WebPaymentsModifiers";
     public static final String WEB_PAYMENTS_SINGLE_APP_UI_SKIP = "WebPaymentsSingleAppUiSkip";
-    public static final String WEBVR_AUTOPRESENT = "WebVrAutopresent";
-    public static final String WEBVR_CARDBOARD_SUPPORT = "WebVRCardboardSupport";
-    public static final String XGEO_VISIBLE_NETWORKS = "XGEOVisibleNetworks";
+    public static final String WEBVR_AUTOPRESENT_FROM_INTENT = "WebVrAutopresentFromIntent";
+    public static final String WEBVR_CARDBOARD_SUPPORT = "WebVrCardboardSupport";
 
     private static native boolean nativeIsInitialized();
     private static native boolean nativeIsEnabled(String featureName);

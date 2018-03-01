@@ -11,7 +11,6 @@
 
 package org.chromium.mojo.bindings.interfacecontrol;
 
-import org.chromium.base.annotations.SuppressFBWarnings;
 import org.chromium.mojo.bindings.DeserializationException;
 
 
@@ -32,17 +31,11 @@ public final class RunOrClosePipeInput extends org.chromium.mojo.bindings.Union 
       return mTag_ == -1;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setRequireVersion(RequireVersion requireVersion) {
         this.mTag_ = Tag.RequireVersion;
         this.mRequireVersion = requireVersion;
     }
 
-    // TODO(rockot): Fix the findbugs error and remove this suppression.
-    // See http://crbug.com/570386.
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public RequireVersion getRequireVersion() {
         assert this.mTag_ == Tag.RequireVersion;
         return this.mRequireVersion;

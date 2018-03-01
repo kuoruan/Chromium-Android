@@ -18,8 +18,6 @@ import java.util.List;
  * the UI to acquire data from the backend.
  */
 public class BookmarkModel extends BookmarkBridge {
-    private static final int FAVICON_MAX_CACHE_SIZE = 10 * 1024 * 1024; // 10MB
-
     /**
      * Observer that listens to delete event. This interface is used by undo controllers to know
      * which bookmarks were deleted. Note this observer only listens to events that go through
@@ -66,7 +64,7 @@ public class BookmarkModel extends BookmarkBridge {
      * Add an observer that listens to delete events that go through the bookmark model.
      * @param observer The observer to add.
      */
-    public void addDeleteObserver(BookmarkDeleteObserver observer) {
+    void addDeleteObserver(BookmarkDeleteObserver observer) {
         mDeleteObservers.addObserver(observer);
     }
 
@@ -74,7 +72,7 @@ public class BookmarkModel extends BookmarkBridge {
      * Remove the observer from listening to bookmark deleting events.
      * @param observer The observer to remove.
      */
-    public void removeDeleteObserver(BookmarkDeleteObserver observer) {
+    void removeDeleteObserver(BookmarkDeleteObserver observer) {
         mDeleteObservers.removeObserver(observer);
     }
 
@@ -86,7 +84,7 @@ public class BookmarkModel extends BookmarkBridge {
      *                  children, because deleting folder will also remove all its children, and
      *                  deleting children once more will cause errors.
      */
-    public void deleteBookmarks(BookmarkId... bookmarks) {
+    void deleteBookmarks(BookmarkId... bookmarks) {
         assert bookmarks != null && bookmarks.length > 0;
         // Store all titles of bookmarks.
         String[] titles = new String[bookmarks.length];
@@ -115,17 +113,17 @@ public class BookmarkModel extends BookmarkBridge {
      * Calls {@link BookmarkBridge#moveBookmark(BookmarkId, BookmarkId, int)} for the given
      * bookmark list. The bookmarks are appended at the end.
      */
-    public void moveBookmarks(List<BookmarkId> bookmarkIds, BookmarkId newParentId) {
-        int appenedIndex = getChildCount(newParentId);
+    void moveBookmarks(List<BookmarkId> bookmarkIds, BookmarkId newParentId) {
+        int appendIndex = getChildCount(newParentId);
         for (int i = 0; i < bookmarkIds.size(); ++i) {
-            moveBookmark(bookmarkIds.get(i), newParentId, appenedIndex + i);
+            moveBookmark(bookmarkIds.get(i), newParentId, appendIndex + i);
         }
     }
 
     /**
      * @see org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkItem#getTitle()
      */
-    public String getBookmarkTitle(BookmarkId bookmarkId) {
+    String getBookmarkTitle(BookmarkId bookmarkId) {
         return getBookmarkById(bookmarkId).getTitle();
     }
 

@@ -16,12 +16,11 @@ import android.support.annotation.IntDef;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.ChromeFeatureList;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.ui.base.LocalizationUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.concurrent.TimeUnit;
 
 /**
  * When suggestions cards are displayed on a white background, thumbnails with white backgrounds
@@ -48,35 +47,27 @@ public class ThumbnailGradient {
      * the Bitmap.
      */
     public static Drawable createDrawableWithGradientIfNeeded(Bitmap bitmap, Resources resources) {
-        if (isEnabled()) {
-            int direction = getGradientDirection();
+        int direction = getGradientDirection();
 
-            // We want to keep an eye on how long this takes.
-            long time = SystemClock.elapsedRealtime();
-            boolean lightImage = hasLightCorner(bitmap, direction);
-            RecordHistogram.recordTimesHistogram("Thumbnails.Gradient.ImageDetectionTime",
-                    SystemClock.elapsedRealtime() - time,
-                    java.util.concurrent.TimeUnit.MILLISECONDS);
+        // We want to keep an eye on how long this takes.
+        long time = SystemClock.elapsedRealtime();
+        boolean lightImage = hasLightCorner(bitmap, direction);
+        RecordHistogram.recordTimesHistogram("Thumbnails.Gradient.ImageDetectionTime",
+                SystemClock.elapsedRealtime() - time, TimeUnit.MILLISECONDS);
 
-            RecordHistogram.recordBooleanHistogram(
-                    "Thumbnails.Gradient.ImageRequiresGradient", lightImage);
+        RecordHistogram.recordBooleanHistogram(
+                "Thumbnails.Gradient.ImageRequiresGradient", lightImage);
 
-            if (lightImage) {
-                Drawable gradient = ApiCompatibilityUtils.getDrawable(resources,
-                        direction == TOP_LEFT ? R.drawable.thumbnail_gradient_top_left
-                                              : R.drawable.thumbnail_gradient_top_right);
+        if (lightImage) {
+            Drawable gradient = ApiCompatibilityUtils.getDrawable(resources,
+                    direction == TOP_LEFT ? R.drawable.thumbnail_gradient_top_left
+                                          : R.drawable.thumbnail_gradient_top_right);
 
-                return new LayerDrawable(
-                        new Drawable[] {new BitmapDrawable(resources, bitmap), gradient});
-            }
+            return new LayerDrawable(
+                    new Drawable[] {new BitmapDrawable(resources, bitmap), gradient});
         }
 
         return new BitmapDrawable(resources, bitmap);
-    }
-
-    private static boolean isEnabled() {
-        return ChromeFeatureList.isEnabled(ChromeFeatureList.CONTENT_SUGGESTIONS_LARGE_THUMBNAIL)
-                || FeatureUtilities.isChromeHomeEnabled();
     }
 
     /**
@@ -123,11 +114,9 @@ public class ThumbnailGradient {
      */
     @GradientDirection
     private static int getGradientDirection() {
-        assert isEnabled();
-
         // The drawable is set up correctly for the modern layout, but needs to be flipped for the
         // large thumbnail layout.
-        boolean modern = FeatureUtilities.isChromeHomeEnabled();
+        boolean modern = SuggestionsConfig.useModernLayout();
 
         // The drawable resource does not get flipped automatically if we are in RTL, so we must
         // flip it ourselves.
