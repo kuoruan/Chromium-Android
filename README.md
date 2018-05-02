@@ -29,9 +29,9 @@ Notice: If you have something wrong with build, try close instant run in Android
 
 If you want to update Chromium source, these steps may help:
 
-1. [Checking out and building Chromium for Android](https://chromium.googlesource.com/chromium/src/+/master/docs/android_build_instructions.md), to match our build settings, use [args.gn](Chromium/args.gn)
+1. [Checking out and building Chromium for Android](https://chromium.googlesource.com/chromium/src/+/master/docs/android_build_instructions.md), to match our build settings, use [args.gn](tools/args.gn)
 2. Generate files for Android Studio with [this guide](https://chromium.googlesource.com/chromium/src/+/master/docs/android_studio.md)
-3. Sync files with [this script](Chromium/sync_chromium.sh)
+3. Sync files with [this script](tools/sync_chromium.sh)
 4. Replace all files in project with the new files.
 
 Notice:

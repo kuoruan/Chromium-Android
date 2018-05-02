@@ -114,7 +114,7 @@ sync_chrome() {
 	cp -r ${BASE_DIR}/base/android/java/src/* \
 		${BASE_DIR}/build/android/buildhooks/java/* \
 		${BASE_DIR}/chrome/android/java/src/* \
-        ${BASE_DIR}/chrome/android/third_party/compositor_animator/java/src/* \
+		${BASE_DIR}/chrome/android/third_party/compositor_animator/java/src/* \
 		${BASE_DIR}/chrome/android/third_party/widget_bottomsheet_base/java/src/* \
 		${BASE_DIR}/chrome/android/webapk/libs/client/src/* \
 		${BASE_DIR}/chrome/android/webapk/libs/common/src/* \
@@ -134,7 +134,7 @@ sync_chrome() {
 		${BASE_DIR}/mojo/public/java/system/src/* \
 		${BASE_DIR}/net/android/java/src/* \
 		${BASE_DIR}/printing/android/java/src/* \
-        ${BASE_DIR}/services/data_decoder/public/cpp/android/java/src/* \
+		${BASE_DIR}/services/data_decoder/public/cpp/android/java/src/* \
 		${BASE_DIR}/services/device/android/java/src/* \
 		${BASE_DIR}/services/device/battery/android/java/src/* \
 		${BASE_DIR}/services/device/generic_sensor/android/java/src/* \
