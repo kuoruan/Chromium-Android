@@ -6,30 +6,20 @@ package org.chromium.content.browser;
 
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStructure;
 import android.view.accessibility.AccessibilityNodeProvider;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputConnection;
-import android.view.textclassifier.TextClassifier;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.content.browser.accessibility.WebContentsAccessibility;
-import org.chromium.content.browser.input.ImeAdapter;
 import org.chromium.content.browser.input.SelectPopup;
 import org.chromium.content.browser.input.TextSuggestionHost;
-import org.chromium.content_public.browser.ActionModeCallbackHelper;
-import org.chromium.content_public.browser.GestureStateListener;
-import org.chromium.content_public.browser.ImeEventObserver;
-import org.chromium.content_public.browser.SelectionClient;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.base.ViewAndroidDelegate;
 import org.chromium.ui.base.WindowAndroid;
@@ -87,11 +77,6 @@ public interface ContentViewCore {
         void onScrollChanged(int lPix, int tPix, int oldlPix, int oldtPix);
 
         /**
-         * @see View#awakenScrollBars()
-         */
-        boolean awakenScrollBars();
-
-        /**
          * @see View#awakenScrollBars(int, boolean)
          */
         boolean super_awakenScrollBars(int startDelay, boolean invalidate);
@@ -130,12 +115,6 @@ public interface ContentViewCore {
     void removeWindowAndroidChangedObserver(WindowAndroidChangedObserver observer);
 
     /**
-     * Add {@link ImeEventObserver} object to {@link ImeAdapter}.
-     * @param observer imeEventObserver instance to add.
-     */
-    void addImeEventObserver(ImeEventObserver imeEventObserver);
-
-    /**
      * Initialize {@link ContentViewCore} object.
      * @param viewDelegate Delegate to add/remove anchor views.
      * @param internalDispatcher Handles dispatching all hidden or super methods to the
@@ -152,24 +131,6 @@ public interface ContentViewCore {
      * @param windowAndroid The new {@link WindowAndroid} for this {@link ContentViewCore}.
      */
     void updateWindowAndroid(WindowAndroid windowAndroid);
-
-    /**
-     * Set {@link ActionMode.Callback} used by {@link SelectionPopupController}.
-     * @param callback ActionMode.Callback instance.
-     */
-    void setActionModeCallback(ActionMode.Callback callback);
-
-    /**
-     * Set {@link ActionMode.Callback} used by {@link SelectionPopupController} when no text is
-     * selected.
-     * @param callback ActionMode.Callback instance.
-     */
-    void setNonSelectionActionModeCallback(ActionMode.Callback callback);
-
-    /**
-     * @return {@link SelectionClient.ResultCallback} instance.
-     */
-    SelectionClient.ResultCallback getPopupControllerResultCallback();
 
     /**
      * Sets a new container view for this {@link ContentViewCore}.
@@ -227,16 +188,6 @@ public interface ContentViewCore {
     int getViewportHeightPix();
 
     /**
-     * @return The number of pixels (DIPs) each tick of the mouse wheel should scroll.
-     */
-    float getMouseWheelTickMultiplier();
-
-    /**
-     * @return Whether the current focused node is editable.
-     */
-    boolean isFocusedNodeEditable();
-
-    /**
      * @return Whether a scroll targeting web content is in progress.
      */
     boolean isScrollInProgress();
@@ -257,18 +208,6 @@ public interface ContentViewCore {
     void cancelFling(long timeMs);
 
     /**
-     * Add a listener that gets alerted on gesture state changes.
-     * @param listener Listener to add.
-     */
-    void addGestureStateListener(GestureStateListener listener);
-
-    /**
-     * Removes a listener that was added to watch for gesture state changes.
-     * @param listener Listener to remove.
-     */
-    void removeGestureStateListener(GestureStateListener listener);
-
-    /**
      * To be called when the ContentView is shown.
      */
     void onShow();
@@ -283,16 +222,6 @@ public interface ContentViewCore {
      * To be called when the ContentView is hidden.
      */
     void onHide();
-
-    /**
-     * Hide action mode and put into destroyed state.
-     */
-    void destroySelectActionMode();
-
-    /**
-     * @return {@code true} if select action bar is showing.
-     */
-    boolean isSelectActionBarShowing();
 
     /**
      * Whether or not the associated ContentView is currently attached to a window.
@@ -310,24 +239,9 @@ public interface ContentViewCore {
     void onDetachedFromWindow();
 
     /**
-     * @see View#onCreateInputConnection(EditorInfo)
-     */
-    InputConnection onCreateInputConnection(EditorInfo outAttrs);
-
-    /**
-     * @see View#onCheckIsTextEditor()
-     */
-    boolean onCheckIsTextEditor();
-
-    /**
      * @see View#onConfigurationChanged(Configuration)
      */
     void onConfigurationChanged(Configuration newConfig);
-
-    /**
-     * @see View#onSizeChanged(int, int, int, int)
-     */
-    void onSizeChanged(int wPix, int hPix, int owPix, int ohPix);
 
     /**
      * @see View#onGenericMotionEvent(MotionEvent)
@@ -457,16 +371,6 @@ public interface ContentViewCore {
     void selectPopupMenuItems(int[] indices);
 
     /**
-     * @return {@link ActionModeCallbackHelper} object.
-     */
-    ActionModeCallbackHelper getActionModeCallbackHelper();
-
-    /**
-     * Clears the current text selection.
-     */
-    void clearSelection();
-
-    /**
      * Ensure the selection is preserved the next time the view loses focus.
      */
     void preserveSelectionOnNextLossOfFocus();
@@ -518,14 +422,6 @@ public interface ContentViewCore {
     void setObscuredByAnotherView(boolean isObscured);
 
     /**
-     * Called when the processed text is replied from an activity that supports
-     * Intent.ACTION_PROCESS_TEXT.
-     * @param resultCode the code that indicates if the activity successfully processed the text
-     * @param data the reply that contains the processed text.
-     */
-    void onReceivedProcessTextResult(int resultCode, Intent data);
-
-    /**
      * Returns true if accessibility is on and touch exploration is enabled.
      */
     boolean isTouchExplorationEnabled();
@@ -565,36 +461,7 @@ public interface ContentViewCore {
      */
     void setFullscreenRequiredForOrientationLock(boolean value);
 
-    /** Sets the given {@link SelectionClient} in the selection popup controller. */
-    void setSelectionClient(SelectionClient selectionClient);
-
-    /**
-     * Sets TextClassifier for Smart Text selection.
-     */
-    void setTextClassifier(TextClassifier textClassifier);
-
-    /**
-     * Returns TextClassifier that is used for Smart Text selection. If the custom classifier
-     * has been set with setTextClassifier, returns that object, otherwise returns the system
-     * classifier.
-     */
-    TextClassifier getTextClassifier();
-
-    /**
-     * Returns the TextClassifier which has been set with setTextClassifier(), or null.
-     */
-    TextClassifier getCustomTextClassifier();
-
     // Test-only methods
-
-    /**
-     * @return The SelectionPopupController that handles select action mode on web contents.
-     */
-    @VisibleForTesting
-    SelectionPopupController getSelectionPopupControllerForTesting();
-
-    @VisibleForTesting
-    void setSelectionPopupControllerForTesting(SelectionPopupController actionMode);
 
     /**
      * @return The TextSuggestionHost that handles displaying the text suggestion menu.
@@ -606,19 +473,7 @@ public interface ContentViewCore {
     void setTextSuggestionHostForTesting(TextSuggestionHost textSuggestionHost);
 
     @VisibleForTesting
-    void setImeAdapterForTest(ImeAdapter imeAdapter);
-
-    @VisibleForTesting
-    ImeAdapter getImeAdapterForTest();
-
-    @VisibleForTesting
     void setPopupZoomerForTest(PopupZoomer popupZoomer);
-
-    /**
-     * @return The selected text (empty if no text selected).
-     */
-    @VisibleForTesting
-    String getSelectedText();
 
     /**
      * @return The amount of the top controls height if controls are in the state

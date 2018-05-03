@@ -6,6 +6,8 @@ package org.chromium.chrome.browser.util;
 
 import android.util.Log;
 
+import org.chromium.base.ApiCompatibilityUtils;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Formatter;
@@ -41,7 +43,7 @@ public final class HashUtil {
         try {
             String digestText = params.mText + (params.mSalt == null ? "" : params.mSalt);
             MessageDigest m = MessageDigest.getInstance(algorithm);
-            byte[] digest = m.digest(digestText.getBytes());
+            byte[] digest = m.digest(ApiCompatibilityUtils.getBytesUtf8(digestText));
             return encodeHex(digest);
         } catch (NoSuchAlgorithmException e) {
             Log.e(TAG, "Unable to find digest algorithm " + algorithm);

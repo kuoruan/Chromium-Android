@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.bookmarks;
 import android.content.Context;
 import android.util.AttributeSet;
 
+import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkItem;
 import org.chromium.chrome.browser.widget.ListMenuButton;
@@ -43,6 +44,7 @@ abstract class BookmarkRow extends SelectableItemView<BookmarkId>
         BookmarkItem bookmarkItem = mDelegate.getModel().getBookmarkById(bookmarkId);
         mMoreIcon.dismiss();
 
+        mMoreIcon.setContentDescriptionContext(bookmarkItem.getTitle());
         mMoreIcon.setVisibility(bookmarkItem.isEditable() ? VISIBLE : GONE);
         setChecked(mDelegate.getSelectionDelegate().isItemSelected(bookmarkId));
 
@@ -92,6 +94,7 @@ abstract class BookmarkRow extends SelectableItemView<BookmarkId>
     public void onItemSelected(Item item) {
         if (item.getTextId() == R.string.bookmark_item_select) {
             setChecked(mDelegate.getSelectionDelegate().toggleSelectionForItem(mBookmarkId));
+            RecordUserAction.record("Android.BookmarkPage.SelectFromMenu");
         } else if (item.getTextId() == R.string.bookmark_item_edit) {
             BookmarkItem bookmarkItem = mDelegate.getModel().getBookmarkById(mBookmarkId);
             if (bookmarkItem.isFolder()) {
@@ -105,6 +108,7 @@ abstract class BookmarkRow extends SelectableItemView<BookmarkId>
         } else if (item.getTextId() == R.string.bookmark_item_delete) {
             if (mDelegate != null && mDelegate.getModel() != null) {
                 mDelegate.getModel().deleteBookmarks(mBookmarkId);
+                RecordUserAction.record("Android.BookmarkPage.RemoveItem");
             }
         }
     }

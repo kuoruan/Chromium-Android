@@ -16,12 +16,11 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class SyncToken extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 40;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
+    private static final int STRUCT_SIZE = 32;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public boolean verifiedFlush;
     public int namespaceId;
-    public int extraDataField;
     public long commandBufferId;
     public long releaseCount;
 
@@ -71,15 +70,11 @@ public final class SyncToken extends org.chromium.mojo.bindings.Struct {
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.extraDataField = decoder0.readInt(16);
+                result.commandBufferId = decoder0.readLong(16);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.commandBufferId = decoder0.readLong(24);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.releaseCount = decoder0.readLong(32);
+                result.releaseCount = decoder0.readLong(24);
             }
         } finally {
             decoder0.decreaseStackDepth();
@@ -96,11 +91,9 @@ public final class SyncToken extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.namespaceId, 12);
         
-        encoder0.encode(this.extraDataField, 16);
+        encoder0.encode(this.commandBufferId, 16);
         
-        encoder0.encode(this.commandBufferId, 24);
-        
-        encoder0.encode(this.releaseCount, 32);
+        encoder0.encode(this.releaseCount, 24);
     }
 
     /**
@@ -119,8 +112,6 @@ public final class SyncToken extends org.chromium.mojo.bindings.Struct {
             return false;
         if (this.namespaceId!= other.namespaceId)
             return false;
-        if (this.extraDataField!= other.extraDataField)
-            return false;
         if (this.commandBufferId!= other.commandBufferId)
             return false;
         if (this.releaseCount!= other.releaseCount)
@@ -137,7 +128,6 @@ public final class SyncToken extends org.chromium.mojo.bindings.Struct {
         int result = prime + getClass().hashCode();
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.verifiedFlush);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.namespaceId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.extraDataField);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.commandBufferId);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.releaseCount);
         return result;

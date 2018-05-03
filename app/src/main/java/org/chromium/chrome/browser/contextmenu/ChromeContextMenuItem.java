@@ -9,8 +9,8 @@ import android.graphics.drawable.Drawable;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.IdRes;
 import android.support.annotation.StringRes;
+import android.support.v7.content.res.AppCompatResources;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.DefaultBrowserInfo;
 import org.chromium.chrome.browser.search_engines.TemplateUrlService;
@@ -132,8 +132,9 @@ public enum ChromeContextMenuItem implements ContextMenuItem {
     public Drawable getDrawable(Context context) {
         if (mIconId == R.drawable.context_menu_new_tab
                 || mIconId == R.drawable.context_menu_add_to_contacts
-                || mIconId == R.drawable.context_menu_load_image) {
-            return ApiCompatibilityUtils.getDrawable(context.getResources(), mIconId);
+                || mIconId == R.drawable.context_menu_load_image
+                || mIconId == R.drawable.ic_content_copy_black) {
+            return AppCompatResources.getDrawable(context, mIconId);
         } else if (mIconId == 0) {
             return null;
         } else {

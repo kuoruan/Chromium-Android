@@ -20,7 +20,7 @@
 
     <TextView
         android:id="@+id/page_info_permission_status"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toEndOf="@id/page_info_permission_icon"
         android:textAppearance="@style/BlackBodyDefault" />

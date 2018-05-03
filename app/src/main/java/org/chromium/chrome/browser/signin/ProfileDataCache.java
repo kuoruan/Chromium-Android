@@ -25,7 +25,6 @@ import android.support.v7.content.res.AppCompatResources;
 import org.chromium.base.ObserverList;
 import org.chromium.base.ThreadUtils;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.profiles.ProfileDownloader;
 import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.components.signin.ProfileDataSource;
@@ -91,7 +90,6 @@ public class ProfileDataCache implements ProfileDownloader.Observer, ProfileData
     }
 
     private final Context mContext;
-    private final Profile mProfile;
     private final int mImageSize;
     private @Nullable final BadgeConfig mBadgeConfig;
     private final Drawable mPlaceholderImage;
@@ -99,14 +97,12 @@ public class ProfileDataCache implements ProfileDownloader.Observer, ProfileData
     private final Map<String, DisplayableProfileData> mCachedProfileData = new HashMap<>();
     private @Nullable final ProfileDataSource mProfileDataSource;
 
-    public ProfileDataCache(Context context, Profile profile, int imageSize) {
-        this(context, profile, imageSize, null);
+    public ProfileDataCache(Context context, int imageSize) {
+        this(context, imageSize, null);
     }
 
-    public ProfileDataCache(
-            Context context, Profile profile, int imageSize, @Nullable BadgeConfig badgeConfig) {
+    public ProfileDataCache(Context context, int imageSize, @Nullable BadgeConfig badgeConfig) {
         mContext = context;
-        mProfile = profile;
         mImageSize = imageSize;
         mBadgeConfig = badgeConfig;
 
@@ -131,7 +127,7 @@ public class ProfileDataCache implements ProfileDownloader.Observer, ProfileData
         for (int i = 0; i < accounts.size(); i++) {
             if (mCachedProfileData.get(accounts.get(i)) == null) {
                 ProfileDownloader.startFetchingAccountInfoFor(
-                        mContext, mProfile, accounts.get(i), mImageSize, true);
+                        mContext, accounts.get(i), mImageSize, true);
             }
         }
     }

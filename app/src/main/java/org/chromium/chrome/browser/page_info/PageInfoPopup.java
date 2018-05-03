@@ -676,8 +676,7 @@ public class PageInfoPopup implements OnClickListener {
                 assert false : "Invalid setting " + permission.setting + " for permission "
                         + permission.type;
         }
-        if (permission.type == ContentSettingsType.CONTENT_SETTINGS_TYPE_GEOLOCATION
-                && WebsitePreferenceBridge.shouldUseDSEGeolocationSetting(mFullUrl, false)) {
+        if (WebsitePreferenceBridge.isPermissionControlledByDSE(permission.type, mFullUrl, false)) {
             status_text = statusTextForDSEPermission(permission);
         }
         builder.append(status_text);

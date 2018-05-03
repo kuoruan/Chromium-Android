@@ -9,6 +9,7 @@ import android.app.ActivityManager.RunningAppProcessInfo;
 import android.content.Context;
 import android.util.Log;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.BuildInfo;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.StrictModeContext;
@@ -112,7 +113,7 @@ public class PureJavaExceptionReporter {
 
     private void addString(String s) {
         try {
-            mMinidumpFileStream.write(s.getBytes());
+            mMinidumpFileStream.write(ApiCompatibilityUtils.getBytesUtf8(s));
         } catch (IOException e) {
             // Nothing we can do here.
         }

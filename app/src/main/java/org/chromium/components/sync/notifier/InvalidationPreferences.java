@@ -11,6 +11,7 @@ import android.util.Base64;
 
 import com.google.ipc.invalidation.external.client.types.ObjectId;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
@@ -205,7 +206,8 @@ public class InvalidationPreferences {
         } catch (NumberFormatException e) {
             return null;
         }
-        byte[] objectName = objectIdString.substring(separatorPos + 1).getBytes();
+        byte[] objectName =
+                ApiCompatibilityUtils.getBytesUtf8(objectIdString.substring(separatorPos + 1));
         return ObjectId.newInstance(objectSource, objectName);
     }
 }

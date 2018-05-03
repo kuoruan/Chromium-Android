@@ -6,6 +6,7 @@ package org.chromium.media;
 
 import android.media.MediaDrm;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Callback;
 import org.chromium.media.MediaDrmStorageBridge.PersistentInfo;
 
@@ -72,7 +73,8 @@ class MediaDrmSessionManager {
          * @return Session ID with random generated EME session ID.
          */
         static SessionId createPersistentSessionId(byte[] drmId) {
-            byte[] emeId = UUID.randomUUID().toString().replace('-', '0').getBytes();
+            byte[] emeId = ApiCompatibilityUtils.getBytesUtf8(
+                    UUID.randomUUID().toString().replace('-', '0'));
             return new SessionId(emeId, drmId, null /* keySetId */);
         }
 

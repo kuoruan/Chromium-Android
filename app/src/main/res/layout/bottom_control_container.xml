@@ -9,7 +9,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content" >
 
-    <FrameLayout
+    <view
+        class="org.chromium.chrome.browser.widget.bottomsheet.BottomSheet$TouchRestrictingFrameLayout"
         android:id="@+id/bottom_sheet_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -37,7 +38,8 @@
                 android:scaleY="-1"
                 android:contentDescription="@null" />
 
-            <FrameLayout
+            <view
+                class="org.chromium.chrome.browser.widget.bottomsheet.BottomSheet$TouchRestrictingFrameLayout"
                 android:id="@+id/toolbar_holder"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/bottom_control_container_height"
@@ -48,7 +50,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
 
-            </FrameLayout>
+            </view>
 
             <ImageView
                 android:id="@+id/toolbar_handle"

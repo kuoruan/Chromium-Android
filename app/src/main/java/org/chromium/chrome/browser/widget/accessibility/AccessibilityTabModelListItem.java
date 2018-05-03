@@ -322,16 +322,14 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
             if (mTab.isIncognito()) {
                 setBackgroundResource(R.color.incognito_primary_color);
                 mFaviconView.getBackground().setLevel(mIncognitoLevel);
-                ApiCompatibilityUtils.setTextAppearance(mTitleView, R.style.WhiteDenseListText1);
-                ApiCompatibilityUtils.setTextAppearance(
-                        mDescriptionView, R.style.WhiteDenseListText2);
+                ApiCompatibilityUtils.setTextAppearance(mTitleView, R.style.WhiteTitle1);
+                ApiCompatibilityUtils.setTextAppearance(mDescriptionView, R.style.WhiteBody);
                 mCloseButton.setTint(mLightIconColor);
             } else {
                 setBackgroundResource(R.color.modern_primary_color);
                 mFaviconView.getBackground().setLevel(mDefaultLevel);
-                ApiCompatibilityUtils.setTextAppearance(mTitleView, R.style.BlackDenseListText1);
-                ApiCompatibilityUtils.setTextAppearance(
-                        mDescriptionView, R.style.BlackDenseListText2);
+                ApiCompatibilityUtils.setTextAppearance(mTitleView, R.style.BlackTitle1);
+                ApiCompatibilityUtils.setTextAppearance(mDescriptionView, R.style.BlackBody);
                 mCloseButton.setTint(mDarkIconColor);
             }
 

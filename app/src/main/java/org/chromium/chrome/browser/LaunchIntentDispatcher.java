@@ -19,19 +19,16 @@ import android.support.annotation.Nullable;
 import android.support.customtabs.CustomTabsIntent;
 import android.support.customtabs.CustomTabsSessionToken;
 import android.support.customtabs.TrustedWebUtils;
-import android.text.TextUtils;
 
-import org.chromium.base.ContextUtils;
+import org.chromium.base.CommandLine;
 import org.chromium.base.Log;
+import org.chromium.base.StrictModeContext;
 import org.chromium.base.metrics.CachedMetrics;
-import org.chromium.chrome.R;
-import org.chromium.chrome.browser.IntentHandler.ExternalAppId;
 import org.chromium.chrome.browser.browserservices.BrowserSessionContentUtils;
 import org.chromium.chrome.browser.customtabs.CustomTabActivity;
 import org.chromium.chrome.browser.customtabs.CustomTabIntentDataProvider;
 import org.chromium.chrome.browser.customtabs.CustomTabsConnection;
 import org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity;
-import org.chromium.chrome.browser.dom_distiller.ReaderModeManager;
 import org.chromium.chrome.browser.firstrun.FirstRunFlowSequencer;
 import org.chromium.chrome.browser.instantapps.InstantAppsHandler;
 import org.chromium.chrome.browser.metrics.MediaNotificationUma;
@@ -43,7 +40,6 @@ import org.chromium.chrome.browser.tabmodel.DocumentModeAssassin;
 import org.chromium.chrome.browser.upgrade.UpgradeActivity;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.IntentUtils;
-import org.chromium.chrome.browser.util.UrlUtilities;
 import org.chromium.chrome.browser.vr.CustomTabVrActivity;
 import org.chromium.chrome.browser.vr_shell.VrIntentUtils;
 import org.chromium.chrome.browser.webapps.ActivityAssigner;
@@ -54,7 +50,6 @@ import org.chromium.ui.widget.Toast;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.net.URI;
 import java.util.UUID;
 
 /**
@@ -88,7 +83,6 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
     private final Activity mActivity;
     private final Intent mIntent;
     private final boolean mIsCustomTabIntent;
-    private final boolean mIsHerbIntent;
     private final boolean mIsVrIntent;
 
     @IntDef({Action.CONTINUE, Action.FINISH_ACTIVITY, Action.FINISH_ACTIVITY_REMOVE_TASK})
@@ -154,15 +148,7 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
         mIsVrIntent = VrIntentUtils.isVrIntent(mIntent);
         boolean isCustomTabIntent = (!mIsVrIntent && isCustomTabIntent(mIntent))
                 || (mIsVrIntent && VrIntentUtils.isCustomTabVrIntent(mIntent));
-        boolean isHerbIntent = false;
-        // If the intent was created by Reader Mode, ignore herb and custom tab information.
-        if (!isCustomTabIntent && !ReaderModeManager.isReaderModeCreatedIntent(mIntent)
-                && !mIsVrIntent) {
-            isHerbIntent = isHerbIntent(mIntent);
-            isCustomTabIntent = isHerbIntent;
-        }
         mIsCustomTabIntent = isCustomTabIntent;
-        mIsHerbIntent = isHerbIntent;
     }
 
     /**
@@ -221,7 +207,7 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
 
         // Check if we should launch an Instant App to handle the intent.
         if (InstantAppsHandler.getInstance().handleIncomingIntent(
-                    mActivity, mIntent, mIsCustomTabIntent && !mIsHerbIntent, false)) {
+                    mActivity, mIntent, mIsCustomTabIntent, false)) {
             return Action.FINISH_ACTIVITY;
         }
 
@@ -287,79 +273,6 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
     }
 
     /**
-     * @return Whether or not an Herb prototype may hijack an Intent.
-     */
-    private static boolean canBeHijackedByHerb(Intent intent) {
-        String url = IntentHandler.getUrlFromIntent(intent);
-
-        // Only VIEW Intents with URLs are rerouted to Custom Tabs.
-        if (intent == null || !TextUtils.equals(Intent.ACTION_VIEW, intent.getAction())
-                || TextUtils.isEmpty(url)) {
-            return false;
-        }
-
-        // Don't open explicitly opted out intents in custom tabs.
-        if (CustomTabsIntent.shouldAlwaysUseBrowserUI(intent)) {
-            return false;
-        }
-
-        // Don't reroute Chrome Intents.
-        Context context = ContextUtils.getApplicationContext();
-        ExternalAppId externalAppId =
-                IntentHandler.determineExternalIntentSource(context.getPackageName(), intent);
-        if (ExternalAppId.CHROME == externalAppId || IntentHandler.wasIntentSenderChrome(intent)) {
-            return false;
-        }
-
-        // Don't reroute internal chrome URLs.
-        try {
-            URI uri = URI.create(url);
-            if (UrlUtilities.isInternalScheme(uri)) return false;
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
-
-        // Don't reroute Home screen shortcuts.
-        if (IntentUtils.safeHasExtra(intent, ShortcutHelper.EXTRA_SOURCE)) {
-            return false;
-        }
-
-        // Don't reroute intents created by Reader Mode.
-        if (ReaderModeManager.isReaderModeCreatedIntent(intent)) {
-            return false;
-        }
-
-        // Blacklist apps whose in app browsing experiences provides a conflict and poor interaction
-        // with the CustomTab based UI.
-        if (ExternalAppId.FACEBOOK == externalAppId) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * @return Whether or not a Custom Tab will be forcefully used for the incoming Intent.
-     */
-    private static boolean isHerbIntent(Intent intent) {
-        if (!canBeHijackedByHerb(intent)) return false;
-
-        // Different Herb flavors handle incoming intents differently.
-        String flavor = FeatureUtilities.getHerbFlavor();
-        if (TextUtils.isEmpty(flavor)
-                || TextUtils.equals(ChromeSwitches.HERB_FLAVOR_DISABLED, flavor)) {
-            return false;
-        } else if (TextUtils.equals(flavor, ChromeSwitches.HERB_FLAVOR_ELDERBERRY)) {
-            return IntentUtils.safeGetBooleanExtra(
-                    intent, EXTRA_IS_ALLOWED_TO_RETURN_TO_PARENT, true);
-        } else {
-            // Legacy Herb Flavors might hit this path before the caching logic corrects it, so
-            // treat this as disabled.
-            return false;
-        }
-    }
-
-    /**
      * @return Whether the intent is for launching a Custom Tab.
      */
     public static boolean isCustomTabIntent(Intent intent) {
@@ -374,8 +287,7 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
     /**
      * Creates an Intent that can be used to launch a {@link CustomTabActivity}.
      */
-    public static Intent createCustomTabActivityIntent(
-            Context context, Intent intent, boolean addHerbExtras) {
+    public static Intent createCustomTabActivityIntent(Context context, Intent intent) {
         // Use the copy constructor to carry over the myriad of extras.
         Uri uri = Uri.parse(IntentHandler.getUrlFromIntent(intent));
 
@@ -383,6 +295,18 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
         newIntent.setAction(Intent.ACTION_VIEW);
         newIntent.setData(uri);
         newIntent.setClassName(context, CustomTabActivity.class.getName());
+
+        // If |uri| is a content:// URI, we want to propagate the URI permissions. This can't be
+        // achieved by simply adding the FLAG_GRANT_READ_URI_PERMISSION to the Intent, since the
+        // data URI on the Intent isn't |uri|, it just has |uri| as a query parameter.
+        if (uri != null && UrlConstants.CONTENT_SCHEME.equals(uri.getScheme())) {
+            context.grantUriPermission(
+                    context.getPackageName(), uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
+
+        if (CommandLine.getInstance().hasSwitch(ChromeSwitches.OPEN_CUSTOM_TABS_IN_NEW_TASK)) {
+            newIntent.setFlags(newIntent.getFlags() | Intent.FLAG_ACTIVITY_NEW_TASK);
+        }
 
         // If a CCT intent triggers First Run, then NEW_TASK will be automatically applied.  As
         // part of that, it will inherit the EXCLUDE_FROM_RECENTS bit from ChromeLauncherActivity,
@@ -416,19 +340,7 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
                                       .query(url)
                                       .build());
         }
-
-        if (addHerbExtras) {
-            // TODO(tedchoc|mariakhomenko): Specifically not marking the intent is from Chrome via
-            //                              IntentHandler.addTrustedIntentExtras as it breaks the
-            //                              redirect logic for triggering instant apps.  See if
-            //                              this is better addressed in TabRedirectHandler long
-            //                              term.
-            newIntent.putExtra(CustomTabIntentDataProvider.EXTRA_IS_OPENED_BY_CHROME, true);
-            newIntent.putExtra(CustomTabsIntent.EXTRA_DEFAULT_SHARE_MENU_ITEM, true);
-        } else {
-            IntentUtils.safeRemoveExtra(
-                    intent, CustomTabIntentDataProvider.EXTRA_IS_OPENED_BY_CHROME);
-        }
+        IntentUtils.safeRemoveExtra(intent, CustomTabIntentDataProvider.EXTRA_IS_OPENED_BY_CHROME);
 
         return newIntent;
     }
@@ -444,11 +356,11 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
         maybePrefetchDnsInBackground();
 
         // Create and fire a launch intent.
-        mActivity.startActivity(createCustomTabActivityIntent(mActivity, mIntent,
-                                        !isCustomTabIntent(mIntent) && mIsHerbIntent),
-                getStartActivityIntentOptions());
-        if (mIsHerbIntent) {
-            mActivity.overridePendingTransition(R.anim.activity_open_enter, R.anim.no_anim);
+        Intent launchIntent = createCustomTabActivityIntent(mActivity, mIntent);
+        // Allow disk writes during startActivity() to avoid strict mode violations on some
+        // Samsung devices, see https://crbug.com/796548.
+        try (StrictModeContext smc = StrictModeContext.allowDiskWrites()) {
+            mActivity.startActivity(launchIntent, getStartActivityIntentOptions());
         }
     }
 

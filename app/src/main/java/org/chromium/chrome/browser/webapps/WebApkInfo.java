@@ -16,7 +16,9 @@ import android.text.TextUtils;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.blink_public.platform.WebDisplayMode;
+import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.ShortcutHelper;
+import org.chromium.chrome.browser.ShortcutSource;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.content_public.common.ScreenOrientationValues;
 import org.chromium.webapk.lib.common.WebApkConstants;
@@ -60,6 +62,14 @@ public class WebApkInfo extends WebappInfo {
 
         String url = urlFromIntent(intent);
         int source = sourceFromIntent(intent);
+
+        if (source == ShortcutSource.EXTERNAL_INTENT) {
+            if (IntentHandler.determineExternalIntentSource(
+                        ContextUtils.getApplicationContext().getPackageName(), intent)
+                    == IntentHandler.ExternalAppId.CHROME) {
+                source = ShortcutSource.EXTERNAL_INTENT_FROM_CHROME;
+            }
+        }
 
         // Force navigation if the extra is not specified to avoid breaking deep linking for old
         // WebAPKs which don't specify the {@link ShortcutHelper#EXTRA_FORCE_NAVIGATION} intent
@@ -308,17 +318,7 @@ public class WebApkInfo extends WebappInfo {
         Map<String, String> iconUrlAndIconMurmur2HashMap = new HashMap<String, String>();
         String iconUrlsAndIconMurmur2Hashes = metaData.getString(
                 WebApkMetaDataKeys.ICON_URLS_AND_ICON_MURMUR2_HASHES);
-        if (TextUtils.isEmpty(iconUrlsAndIconMurmur2Hashes)) {
-            // Open old WebAPKs which support single icon only.
-            // TODO(hanxi): crbug.com/665549. Clean up the following code after all the old WebAPKs
-            // are updated.
-            String iconUrl = metaData.getString(WebApkMetaDataKeys.ICON_URL);
-            if (TextUtils.isEmpty(iconUrl)) {
-                return iconUrlAndIconMurmur2HashMap;
-            }
-            iconUrlAndIconMurmur2HashMap.put(iconUrl, getIconMurmur2HashFromMetaData(metaData));
-            return iconUrlAndIconMurmur2HashMap;
-        }
+        if (TextUtils.isEmpty(iconUrlsAndIconMurmur2Hashes)) return iconUrlAndIconMurmur2HashMap;
 
         // Parse the metadata tag which contains "URL1 hash1 URL2 hash2 URL3 hash3..." pairs and
         // create a hash map.
@@ -333,23 +333,6 @@ public class WebApkInfo extends WebappInfo {
             iconUrlAndIconMurmur2HashMap.put(urlsAndHashes[i], urlsAndHashes[i + 1]);
         }
         return iconUrlAndIconMurmur2HashMap;
-    }
-
-    /**
-     * Extracts icon murmur2 hash from the WebAPK's meta data. Return value is a string because the
-     * hash can take values up to 2^64-1 which is greater than {@link Long#MAX_VALUE}.
-     * Note: keep this function for supporting old WebAPKs which have single icon only.
-     * @param metaData WebAPK meta data to extract the hash from.
-     * @return The hash. An empty string if the hash could not be extracted.
-     */
-    private static String getIconMurmur2HashFromMetaData(Bundle metaData) {
-        String value = metaData.getString(WebApkMetaDataKeys.ICON_MURMUR2_HASH);
-
-        // The value should be terminated with 'L' to force the value to be a string.
-        if (value == null || !value.endsWith("L")) {
-            return "";
-        }
-        return value.substring(0, value.length() - 1);
     }
 
     /**

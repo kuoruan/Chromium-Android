@@ -19,23 +19,28 @@ class Nfc_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<Nfc, Nfc.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<Nfc, Nfc.Proxy>() {
     
+        @Override
         public String getName() {
             return "device::mojom::NFC";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, Nfc impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public Nfc[] buildArray(int size) {
           return new Nfc[size];
         }

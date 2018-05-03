@@ -19,23 +19,28 @@ class ServiceControl_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<ServiceControl, ServiceControl.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<ServiceControl, ServiceControl.Proxy>() {
     
+        @Override
         public String getName() {
             return "service_manager::mojom::ServiceControl";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, ServiceControl impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public ServiceControl[] buildArray(int size) {
           return new ServiceControl[size];
         }

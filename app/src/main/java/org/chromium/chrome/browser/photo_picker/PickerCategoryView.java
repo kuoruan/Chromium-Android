@@ -158,6 +158,7 @@ public class PickerCategoryView extends RelativeLayout
         mRecyclerView.setLayoutManager(mLayoutManager);
         mSpacingDecoration = new GridSpacingItemDecoration(mColumns, mPadding);
         mRecyclerView.addItemDecoration(mSpacingDecoration);
+        mRecyclerView.setRecyclerListener(this);
 
         final long maxMemory = ConversionUtils.bytesToKilobytes(Runtime.getRuntime().maxMemory());
         mCacheSizeLarge = (int) (maxMemory / 2); // 1/2 of the available memory.

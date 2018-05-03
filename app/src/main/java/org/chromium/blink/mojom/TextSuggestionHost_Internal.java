@@ -19,23 +19,28 @@ class TextSuggestionHost_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<TextSuggestionHost, TextSuggestionHost.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<TextSuggestionHost, TextSuggestionHost.Proxy>() {
     
+        @Override
         public String getName() {
             return "blink::mojom::TextSuggestionHost";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, TextSuggestionHost impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public TextSuggestionHost[] buildArray(int size) {
           return new TextSuggestionHost[size];
         }

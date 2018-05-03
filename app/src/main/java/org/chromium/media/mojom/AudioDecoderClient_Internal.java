@@ -19,23 +19,28 @@ class AudioDecoderClient_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<AudioDecoderClient, AudioDecoderClient.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<AudioDecoderClient, AudioDecoderClient.Proxy>() {
     
+        @Override
         public String getName() {
             return "media::mojom::AudioDecoderClient";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, AudioDecoderClient impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public AudioDecoderClient[] buildArray(int size) {
           return new AudioDecoderClient[size];
         }

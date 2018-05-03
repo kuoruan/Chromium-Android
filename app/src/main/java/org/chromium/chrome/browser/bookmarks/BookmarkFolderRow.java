@@ -42,7 +42,7 @@ public class BookmarkFolderRow extends BookmarkRow {
     BookmarkItem setBookmarkId(BookmarkId bookmarkId) {
         BookmarkItem item = super.setBookmarkId(bookmarkId);
         mTitleView.setText(item.getTitle());
-        int childCount = mDelegate.getModel().getChildCount(bookmarkId);
+        int childCount = mDelegate.getModel().getTotalBookmarkCount(bookmarkId);
         mDescriptionView.setText((childCount > 0)
                         ? getResources().getQuantityString(
                                   R.plurals.bookmarks_count, childCount, childCount)

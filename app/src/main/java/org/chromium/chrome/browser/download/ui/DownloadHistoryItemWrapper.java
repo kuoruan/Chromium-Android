@@ -111,6 +111,26 @@ public abstract class DownloadHistoryItemWrapper extends TimedItem {
         return filter == getFilterType() || filter == DownloadFilter.FILTER_ALL;
     }
 
+    /** Called when this download should be shared. */
+    void share() {
+        mBackendProvider.getUIDelegate().shareItem(this);
+    }
+
+    /**
+     * Starts the delete process, which may or may not immediately delete the item or bring up a UI
+     * surface first.
+     */
+    void startRemove() {
+        mBackendProvider.getUIDelegate().deleteItem(this);
+    }
+
+    /**
+     * @return Whether or not this item can be interacted with or not.  This will change based on
+     *         the current selection state of the owning list. */
+    boolean isInteractive() {
+        return !mBackendProvider.getSelectionDelegate().isSelectionEnabled();
+    }
+
     /** @return Item that is being wrapped. */
     abstract Object getItem();
 
@@ -197,7 +217,7 @@ public abstract class DownloadHistoryItemWrapper extends TimedItem {
      *
      * @return Whether the file associated with the download item was deleted.
      */
-    abstract boolean remove();
+    abstract boolean removePermanently();
 
     protected void recordOpenSuccess() {
         RecordUserAction.record("Android.DownloadManager.Item.OpenSucceeded");
@@ -362,9 +382,10 @@ public abstract class DownloadHistoryItemWrapper extends TimedItem {
         }
 
         @Override
-        public boolean remove() {
+        public boolean removePermanently() {
             // Tell the DownloadManager to remove the file from history.
-            mBackendProvider.getDownloadDelegate().removeDownload(getId(), isOffTheRecord());
+            mBackendProvider.getDownloadDelegate().removeDownload(
+                    getId(), isOffTheRecord(), hasBeenExternallyRemoved());
             mBackendProvider.getThumbnailProvider().removeThumbnailsFromDisk(getId());
             return true;
         }
@@ -552,7 +573,7 @@ public abstract class DownloadHistoryItemWrapper extends TimedItem {
         }
 
         @Override
-        public boolean remove() {
+        public boolean removePermanently() {
             getOfflineContentProvider().removeItem(mItem.id);
             return true;
         }

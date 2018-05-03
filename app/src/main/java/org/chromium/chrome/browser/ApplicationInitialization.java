@@ -10,7 +10,6 @@ import android.util.TypedValue;
 
 import org.chromium.base.CommandLine;
 import org.chromium.chrome.R;
-import org.chromium.content.app.ContentApplication;
 import org.chromium.content.common.ContentSwitches;
 
 
@@ -29,7 +28,7 @@ public final class ApplicationInitialization {
      */
     public static void enableFullscreenFlags(
             Resources resources, Context context, int resControlContainerHeight) {
-        ContentApplication.initCommandLine(context);
+        ((ChromeApplication) context.getApplicationContext()).initCommandLine();
 
         CommandLine commandLine = CommandLine.getInstance();
         if (commandLine.hasSwitch(ChromeSwitches.DISABLE_FULLSCREEN)) return;

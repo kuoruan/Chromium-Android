@@ -11,8 +11,7 @@ import android.view.textclassifier.TextClassification;
 import android.view.textclassifier.TextClassifier;
 import android.view.textclassifier.TextSelection;
 
-import org.chromium.content.browser.ContentViewCore;
-import org.chromium.content.browser.SmartSelectionClient;
+import org.chromium.content.browser.selection.SmartSelectionClient;
 
 /**
  * Interface to a content layer client that can process and modify selection text.
@@ -165,7 +164,7 @@ public interface SelectionClient {
     /** Creates a {@link SelectionClient} instance. */
     public static SelectionClient createSmartSelectionClient(WebContents webContents) {
         SelectionClient.ResultCallback callback =
-                ContentViewCore.fromWebContents(webContents).getPopupControllerResultCallback();
+                SelectionPopupController.fromWebContents(webContents).getResultCallback();
         return SmartSelectionClient.create(callback, webContents);
     }
 }

@@ -10,11 +10,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
 
-import org.chromium.base.library_loader.LibraryProcessType;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.metrics.WebApkUma;
 import org.chromium.chrome.browser.util.IntentUtils;
-import org.chromium.content.browser.ChildProcessCreationParams;
 import org.chromium.webapk.lib.common.WebApkConstants;
 
 import java.util.concurrent.TimeUnit;
@@ -26,12 +24,6 @@ import java.util.concurrent.TimeUnit;
 public class WebApkActivity extends WebappActivity {
     /** Manages whether to check update for the WebAPK, and starts update check if needed. */
     private WebApkUpdateManager mUpdateManager;
-
-    /** Indicates whether launching renderer in WebAPK process is enabled. */
-    private boolean mCanLaunchRendererInWebApkProcess;
-
-    private final ChildProcessCreationParams mDefaultParams =
-            ChildProcessCreationParams.getDefault();
 
     /** The start time that the activity becomes focused. */
     private long mStartTime;
@@ -65,7 +57,7 @@ public class WebApkActivity extends WebappActivity {
     @Override
     protected void initializeUI(Bundle savedInstance) {
         super.initializeUI(savedInstance);
-        getActivityTab().setWebappManifestScope(mWebappInfo.scopeUri().toString());
+        getActivityTab().setWebappManifestScope(getWebappInfo().scopeUri().toString());
     }
 
     @Override
@@ -80,26 +72,8 @@ public class WebApkActivity extends WebappActivity {
     }
 
     @Override
-    public void finishNativeInitialization() {
-        super.finishNativeInitialization();
-        if (!isInitialized()) return;
-        mCanLaunchRendererInWebApkProcess = ChromeWebApkHost.canLaunchRendererInWebApkProcess();
-    }
-
-    @Override
     public String getNativeClientPackageName() {
         return getWebappInfo().apkPackageName();
-    }
-
-    @Override
-    public void onResumeWithNative() {
-        super.onResumeWithNative();
-
-        // When launching Chrome renderer in WebAPK process is enabled, WebAPK hosts Chrome's
-        // renderer processes by declaring the Chrome's renderer service in its AndroidManifest.xml
-        // and sets {@link ChildProcessCreationParams} for WebAPK's renderer process so the
-        // {@link ChildProcessLauncher} knows which application's renderer service to connect to.
-        initializeChildProcessCreationParams(mCanLaunchRendererInWebApkProcess);
     }
 
     @Override
@@ -120,7 +94,7 @@ public class WebApkActivity extends WebappActivity {
     protected void onDeferredStartupWithStorage(WebappDataStorage storage) {
         super.onDeferredStartupWithStorage(storage);
 
-        WebApkInfo info = (WebApkInfo) mWebappInfo;
+        WebApkInfo info = (WebApkInfo) getWebappInfo();
         WebApkUma.recordShellApkVersion(info.shellApkVersion(), info.apkPackageName());
 
         mUpdateManager = new WebApkUpdateManager(storage);
@@ -136,35 +110,9 @@ public class WebApkActivity extends WebappActivity {
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        initializeChildProcessCreationParams(false);
-    }
-
-    @Override
     public void onPauseWithNative() {
         WebApkUma.recordWebApkSessionDuration(SystemClock.elapsedRealtime() - mStartTime);
         super.onPauseWithNative();
-    }
-
-    /**
-     * Initializes {@link ChildProcessCreationParams} as a WebAPK's renderer process if
-     * {@link isForWebApk}} is true; as Chrome's child process otherwise.
-     * @param isForWebApk: Whether the {@link ChildProcessCreationParams} is initialized as a
-     *                     WebAPK renderer process.
-     */
-    private void initializeChildProcessCreationParams(boolean isForWebApk) {
-        // TODO(hanxi): crbug.com/664530. WebAPKs shouldn't use a global ChildProcessCreationParams.
-        ChildProcessCreationParams params = mDefaultParams;
-        if (isForWebApk) {
-            boolean isExternalService = false;
-            boolean bindToCaller = false;
-            boolean ignoreVisibilityForImportance = false;
-            params = new ChildProcessCreationParams(getWebappInfo().apkPackageName(),
-                    isExternalService, LibraryProcessType.PROCESS_CHILD, bindToCaller,
-                    ignoreVisibilityForImportance);
-        }
-        ChildProcessCreationParams.registerDefault(params);
     }
 
     @Override

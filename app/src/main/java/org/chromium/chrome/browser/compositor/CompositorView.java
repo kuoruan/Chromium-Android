@@ -12,8 +12,6 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.view.MotionEvent;
 import android.view.Surface;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.widget.FrameLayout;
 
@@ -29,7 +27,6 @@ import org.chromium.chrome.browser.compositor.scene_layer.SceneLayer;
 import org.chromium.chrome.browser.externalnav.IntentWithGesturesHandler;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.tabmodel.TabModelImpl;
-import org.chromium.chrome.browser.widget.ClipDrawableProgressBar.DrawingInfo;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.base.WindowAndroid;
 import org.chromium.ui.resources.AndroidResourceType;
@@ -43,7 +40,7 @@ import java.util.List;
  */
 @JNINamespace("android")
 public class CompositorView
-        extends FrameLayout implements CompositorSurfaceManager.SurfaceHolderCallbackTarget {
+        extends FrameLayout implements CompositorSurfaceManager.SurfaceManagerCallbackTarget {
     private static final String TAG = "CompositorView";
     private static final long NANOSECONDS_PER_MILLISECOND = 1000000;
 
@@ -51,7 +48,7 @@ public class CompositorView
     private final Rect mCacheAppRect = new Rect();
     private final int[] mCacheViewPosition = new int[2];
 
-    private final CompositorSurfaceManager mCompositorSurfaceManager;
+    private CompositorSurfaceManager mCompositorSurfaceManager;
     private boolean mOverlayVideoEnabled;
     private boolean mAlwaysTranslucent;
 
@@ -86,7 +83,7 @@ public class CompositorView
         super(c);
         mRenderHost = host;
 
-        mCompositorSurfaceManager = new CompositorSurfaceManager(this, this);
+        mCompositorSurfaceManager = new CompositorSurfaceManagerImpl(this, this);
 
         // Cover the black surface before it has valid content.  Set this placeholder view to
         // visible, but don't yet make SurfaceView visible, in order to delay
@@ -170,12 +167,14 @@ public class CompositorView
      */
     public void initNativeCompositor(boolean lowMemDevice, WindowAndroid windowAndroid,
             LayerTitleCache layerTitleCache, TabContentManager tabContentManager) {
+        // https://crbug.com/802160. We can't call setWindowAndroid here because updating the window
+        // visibility here breaks exiting Reader Mode somehow.
         mWindowAndroid = windowAndroid;
         mLayerTitleCache = layerTitleCache;
         mTabContentManager = tabContentManager;
 
-        mNativeCompositorView = nativeInit(lowMemDevice,
-                windowAndroid.getNativePointer(), layerTitleCache, tabContentManager);
+        mNativeCompositorView =
+                nativeInit(lowMemDevice, windowAndroid, layerTitleCache, tabContentManager);
 
         // compositor_impl_android.cc will use 565 EGL surfaces if and only if we're using a low
         // memory device, and no alpha channel is desired.  Otherwise, it will use 8888.  Since
@@ -202,16 +201,14 @@ public class CompositorView
         nativeSetNeedsComposite(mNativeCompositorView);
     }
 
+    private void setWindowAndroid(WindowAndroid windowAndroid) {
+        mWindowAndroid = windowAndroid;
+        onWindowVisibilityChangedInternal(getWindowVisibility());
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent e) {
         return super.onTouchEvent(e);
-    }
-
-    /**
-     * @see SurfaceView#getHolder
-     */
-    SurfaceHolder getHolder() {
-        return mCompositorSurfaceManager.getHolder();
     }
 
     /**
@@ -235,22 +232,22 @@ public class CompositorView
     }
 
     @Override
-    public void surfaceRedrawNeededAsync(SurfaceHolder holder, Runnable drawingFinished) {
+    public void surfaceRedrawNeededAsync(Runnable drawingFinished) {
         if (mDrawingFinishedCallbacks == null) mDrawingFinishedCallbacks = new ArrayList<>();
         mDrawingFinishedCallbacks.add(drawingFinished);
         if (mNativeCompositorView != 0) nativeSetNeedsComposite(mNativeCompositorView);
     }
 
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+    public void surfaceChanged(Surface surface, int format, int width, int height) {
         if (mNativeCompositorView == 0) return;
 
-        nativeSurfaceChanged(mNativeCompositorView, format, width, height, holder.getSurface());
+        nativeSurfaceChanged(mNativeCompositorView, format, width, height, surface);
         mRenderHost.onSurfaceResized(width, height);
     }
 
     @Override
-    public void surfaceCreated(SurfaceHolder holder) {
+    public void surfaceCreated(Surface surface) {
         if (mNativeCompositorView == 0) return;
 
         nativeSurfaceCreated(mNativeCompositorView);
@@ -259,7 +256,7 @@ public class CompositorView
     }
 
     @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
+    public void surfaceDestroyed(Surface surface) {
         if (mNativeCompositorView == 0) return;
 
         nativeSurfaceDestroyed(mNativeCompositorView);
@@ -268,6 +265,10 @@ public class CompositorView
     @Override
     public void onWindowVisibilityChanged(int visibility) {
         super.onWindowVisibilityChanged(visibility);
+        onWindowVisibilityChangedInternal(visibility);
+    }
+
+    private void onWindowVisibilityChangedInternal(int visibility) {
         if (mWindowAndroid == null) return;
         if (visibility == View.GONE) {
             mWindowAndroid.onVisibilityChanged(false);
@@ -334,8 +335,7 @@ public class CompositorView
      * @param provider               Provides the layout to be rendered.
      * @param forRotation            Whether or not this is a special draw during a rotation.
      */
-    public void finalizeLayers(final LayoutProvider provider, boolean forRotation,
-            final DrawingInfo progressBarDrawingInfo) {
+    public void finalizeLayers(final LayoutProvider provider, boolean forRotation) {
         TraceEvent.begin("CompositorView:finalizeLayers");
         Layout layout = provider.getActiveLayout();
         if (layout == null || mNativeCompositorView == 0) {
@@ -385,9 +385,8 @@ public class CompositorView
     @Override
     public void setVisibility(int visibility) {
         super.setVisibility(visibility);
-        // Also set the visibility on any child SurfaceViews, since that hides
-        // the surface as well.  Otherwise, the surface is kept, which can
-        // interfere with VR.
+        // Also set the visibility on any child SurfaceViews, since that hides the surface as
+        // well. Otherwise, the surface is kept, which can interfere with VR.
         mCompositorSurfaceManager.setVisibility(visibility);
         // Clear out any outstanding callbacks that won't run if set to invisible.
         if (visibility == View.INVISIBLE) {
@@ -404,8 +403,40 @@ public class CompositorView
         }
     }
 
-    // Implemented in native
-    private native long nativeInit(boolean lowMemDevice, long nativeWindowAndroid,
+    /**
+     * Replaces the surface manager and swaps the window the compositor is attached to as tab
+     * reparenting doesn't handle replacing of the window the compositor uses.
+     *
+     * @param vrCompositorSurfaceManager The surface manager for VR.
+     * @param window The VR WindowAndroid to switch to.
+     */
+    public void replaceSurfaceManagerForVr(
+            CompositorSurfaceManager vrCompositorSurfaceManager, WindowAndroid window) {
+        mCompositorSurfaceManager.shutDown();
+        nativeSetCompositorWindow(mNativeCompositorView, window);
+        mCompositorSurfaceManager = vrCompositorSurfaceManager;
+        mCompositorSurfaceManager.requestSurface(PixelFormat.OPAQUE);
+        nativeSetNeedsComposite(mNativeCompositorView);
+        setWindowAndroid(window);
+    }
+
+    /**
+     * Restores the non-VR surface manager and passes back control over the surface(s) to it.
+     * Also restores the non-VR WindowAndroid.
+     *
+     * @param windowToRestore The non-VR WindowAndroid to restore.
+     */
+    public void onExitVr(WindowAndroid windowToRestore) {
+        setWindowAndroid(windowToRestore);
+        mCompositorSurfaceManager.shutDown();
+        nativeSetCompositorWindow(mNativeCompositorView, mWindowAndroid);
+        mCompositorSurfaceManager = new CompositorSurfaceManagerImpl(this, this);
+        mCompositorSurfaceManager.requestSurface(getSurfacePixelFormat());
+        nativeSetNeedsComposite(mNativeCompositorView);
+        mCompositorSurfaceManager.setVisibility(getVisibility());
+    }
+
+    private native long nativeInit(boolean lowMemDevice, WindowAndroid windowAndroid,
             LayerTitleCache layerTitleCache, TabContentManager tabContentManager);
     private native void nativeDestroy(long nativeCompositorView);
     private native ResourceManager nativeGetResourceManager(long nativeCompositorView);
@@ -420,4 +451,5 @@ public class CompositorView
     private native void nativeSetLayoutBounds(long nativeCompositorView);
     private native void nativeSetOverlayVideoMode(long nativeCompositorView, boolean enabled);
     private native void nativeSetSceneLayer(long nativeCompositorView, SceneLayer sceneLayer);
+    private native void nativeSetCompositorWindow(long nativeCompositorView, WindowAndroid window);
 }

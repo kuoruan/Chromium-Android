@@ -90,9 +90,9 @@ public class WebappInterceptNavigationDelegate extends InterceptNavigationDelega
                     navigationParams, mActivity.getWebappInfo(), mActivity.scopePolicy())) {
             CustomTabsIntent.Builder intentBuilder = new CustomTabsIntent.Builder();
             intentBuilder.setShowTitle(true);
-            if (mActivity.mWebappInfo.hasValidThemeColor()) {
+            if (mActivity.getWebappInfo().hasValidThemeColor()) {
                 // Need to cast as themeColor is a long to contain possible error results.
-                intentBuilder.setToolbarColor((int) mActivity.mWebappInfo.themeColor());
+                intentBuilder.setToolbarColor((int) mActivity.getWebappInfo().themeColor());
             }
             CustomTabsIntent customTabIntent = intentBuilder.build();
             customTabIntent.intent.setPackage(mActivity.getPackageName());
@@ -101,7 +101,7 @@ public class WebappInterceptNavigationDelegate extends InterceptNavigationDelega
             customTabIntent.intent.putExtra(CustomTabIntentDataProvider.EXTRA_BROWSER_LAUNCH_SOURCE,
                     mActivity.getActivityType());
             customTabIntent.intent.putExtra(
-                    Browser.EXTRA_APPLICATION_ID, mActivity.mWebappInfo.apkPackageName());
+                    Browser.EXTRA_APPLICATION_ID, mActivity.getWebappInfo().apkPackageName());
 
             if (shouldCloseContentsOnOverrideUrlLoadingAndLaunchIntent()) {
                 customTabIntent.intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -128,7 +128,8 @@ public class WebappInterceptNavigationDelegate extends InterceptNavigationDelega
     static boolean shouldOpenInCustomTab(
             NavigationParams navigationParams, WebappInfo info, WebappScopePolicy scopePolicy) {
         return UrlUtilities.isValidForIntentFallbackNavigation(navigationParams.url)
-                && !navigationParams.isPost && !scopePolicy.isUrlInScope(info, navigationParams.url)
+                && !navigationParams.isPost && navigationParams.suggestedFilename == null
+                && !scopePolicy.isUrlInScope(info, navigationParams.url)
                 && scopePolicy.openOffScopeNavsInCct();
     }
 }

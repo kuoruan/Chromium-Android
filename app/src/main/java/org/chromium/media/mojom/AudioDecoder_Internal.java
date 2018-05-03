@@ -19,23 +19,28 @@ class AudioDecoder_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<AudioDecoder, AudioDecoder.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<AudioDecoder, AudioDecoder.Proxy>() {
     
+        @Override
         public String getName() {
             return "media::mojom::AudioDecoder";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, AudioDecoder impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public AudioDecoder[] buildArray(int size) {
           return new AudioDecoder[size];
         }

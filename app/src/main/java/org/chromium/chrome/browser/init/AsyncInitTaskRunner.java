@@ -29,6 +29,7 @@ import java.util.concurrent.Executor;
 public abstract class AsyncInitTaskRunner {
     private boolean mFetchingVariations;
     private boolean mLibraryLoaded;
+    private boolean mAllocateChildConnection;
 
     private LoadTask mLoadTask;
     private FetchSeedTask mFetchSeedTask;
@@ -135,9 +136,11 @@ public abstract class AsyncInitTaskRunner {
             });
         }
 
-        if (allocateChildConnection) {
-            ChildProcessLauncherHelper.warmUp(ContextUtils.getApplicationContext());
-        }
+        // Remember to allocate child connection once library loading completes. We do it after
+        // the loading to reduce stress on the OS caused by running library loading in parallel
+        // with UI inflation, see AsyncInitializationActivity.setContentViewAndLoadLibrary().
+        mAllocateChildConnection = allocateChildConnection;
+
         mLoadTask = new LoadTask();
         mLoadTask.executeOnExecutor(getExecutor());
     }
@@ -152,6 +155,9 @@ public abstract class AsyncInitTaskRunner {
         }
 
         if (mLibraryLoaded && !mFetchingVariations) {
+            if (mAllocateChildConnection) {
+                ChildProcessLauncherHelper.warmUp(ContextUtils.getApplicationContext());
+            }
             onSuccess();
         }
     }

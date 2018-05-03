@@ -15,6 +15,7 @@ import android.text.TextUtils;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.preferences.website.SiteSettingsCategory;
 import org.chromium.chrome.browser.preferences.website.Website;
 import org.chromium.chrome.browser.preferences.website.WebsitePermissionsFetcher;
@@ -80,6 +81,9 @@ public class WebApkUma {
     public static final int WEBAPK_OPEN_LAUNCH_SUCCESS = 0;
     // Obsolete: WEBAPK_OPEN_NO_LAUNCH_INTENT = 1;
     public static final int WEBAPK_OPEN_ACTIVITY_NOT_FOUND = 2;
+
+    private static final String ADJUST_WEBAPK_INSTALLATION_SPACE_PARAM =
+            "webapk_extra_installation_space_mb";
 
     /**
      * Records the time point when a request to update a WebAPK is sent to the WebAPK Server.
@@ -178,7 +182,7 @@ public class WebApkUma {
      * Chrome does not have that permission.
      */
     public static void recordAndroidRuntimePermissionDeniedInWebApk(final String[] permissions) {
-        recordPermissionUma("WebApk.Permission.ChromePermissionDenied", permissions);
+        recordPermissionUma("WebApk.Permission.ChromePermissionDenied2", permissions);
     }
 
     private static void recordPermissionUma(String permissionUmaName, final String[] permissions) {
@@ -244,8 +248,7 @@ public class WebApkUma {
             @Override
             protected Void doInBackground(Void... params) {
                 mAvailableSpaceInByte = getAvailableSpaceAboveLowSpaceLimit();
-                mCacheSizeInByte =
-                        getDirectorySizeInByte(ContextUtils.getApplicationContext().getCacheDir());
+                mCacheSizeInByte = getCacheDirSize();
                 return null;
             }
 
@@ -310,8 +313,12 @@ public class WebApkUma {
         return sizeInByte;
     }
 
+    /**
+     * @return The available space that can be used to install WebAPK. Negative value means there is
+     * less free space available than the system's minimum by the given amount.
+     */
     @SuppressWarnings("deprecation")
-    private static long getAvailableSpaceAboveLowSpaceLimit() {
+    public static long getAvailableSpaceAboveLowSpaceLimit() {
         long partitionAvailableBytes;
         long partitionTotalBytes;
         StatFs partitionStats = new StatFs(Environment.getDataDirectory().getAbsolutePath());
@@ -326,7 +333,19 @@ public class WebApkUma {
         }
         long minimumFreeBytes = getLowSpaceLimitBytes(partitionTotalBytes);
 
-        return partitionAvailableBytes - minimumFreeBytes;
+        long webApkExtraSpaceBytes = ChromeFeatureList.getFieldTrialParamByFeatureAsInt(
+                                             ChromeFeatureList.ADJUST_WEBAPK_INSTALLATION_SPACE,
+                                             ADJUST_WEBAPK_INSTALLATION_SPACE_PARAM, 0)
+                * 1024L * 1024L;
+
+        return partitionAvailableBytes - minimumFreeBytes + webApkExtraSpaceBytes;
+    }
+
+    /**
+     * @return Size of the cache directory.
+     */
+    public static long getCacheDirSize() {
+        return getDirectorySizeInByte(ContextUtils.getApplicationContext().getCacheDir());
     }
 
     /**

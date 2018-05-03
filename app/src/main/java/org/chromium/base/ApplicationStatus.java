@@ -298,7 +298,9 @@ public class ApplicationStatus {
      * Asserts that initialize method has been called.
      */
     private static void assertInitialized() {
-        assert sIsInitialized;
+        if (!sIsInitialized) {
+            throw new IllegalStateException("ApplicationStatus has not been initialized yet.");
+        }
     }
 
     /**
@@ -496,7 +498,9 @@ public class ApplicationStatus {
     @SuppressLint("NewApi")
     public static void registerStateListenerForActivity(ActivityStateListener listener,
             Activity activity) {
-        assert activity != null;
+        if (activity == null) {
+            throw new IllegalStateException("Attempting to register listener on a null activity.");
+        }
         ApplicationStatus.assertInitialized();
 
         ActivityInfo info = sActivityInfo.get(activity);
@@ -508,7 +512,11 @@ public class ApplicationStatus {
             info = new ActivityInfo();
             sActivityInfo.put(activity, info);
         }
-        assert info != null && info.getStatus() != ActivityState.DESTROYED;
+        if (info == null) {
+            throw new IllegalStateException(
+                    "Attempting to register listener on an untracked activity.");
+        }
+        assert info.getStatus() != ActivityState.DESTROYED;
         info.getListeners().addObserver(listener);
     }
 

@@ -101,6 +101,7 @@ public class ContextualSearchFieldTrial {
     private static Boolean sIsAmpAsSeparateTabDisabled;
     private static Boolean sContextualSearchMlTapSuppressionEnabled;
     private static Boolean sContextualSearchSecondTapMlOverrideEnabled;
+    private static Boolean sContextualSearchTapDisableOverrideEnabled;
     private static Boolean sIsSendHomeCountryDisabled;
     private static Boolean sIsPageContentNotificationDisabled;
     private static Boolean sIsUkmRankerLoggingDisabled;
@@ -150,18 +151,13 @@ public class ContextualSearchFieldTrial {
     }
 
     /**
-     * @return Whether the search term resolution is enabled.
+     * @return Whether the search term resolution is disabled.
      */
-    static boolean isSearchTermResolutionEnabled() {
+    static boolean isSearchTermResolutionDisabled() {
         if (sDisableSearchTermResolution == null) {
             sDisableSearchTermResolution = getBooleanParam(DISABLE_SEARCH_TERM_RESOLUTION);
         }
-
-        if (sDisableSearchTermResolution.booleanValue()) {
-            return false;
-        }
-
-        return true;
+        return sDisableSearchTermResolution.booleanValue();
     }
 
     /**
@@ -418,6 +414,17 @@ public class ContextualSearchFieldTrial {
                     ChromeFeatureList.isEnabled(ChromeFeatureList.CONTEXTUAL_SEARCH_SECOND_TAP);
         }
         return sContextualSearchSecondTapMlOverrideEnabled;
+    }
+
+    /**
+     * @return Whether or not to override tap-disable for users that have never opened the panel.
+     */
+    static boolean isContextualSearchTapDisableOverrideEnabled() {
+        if (sContextualSearchTapDisableOverrideEnabled == null) {
+            sContextualSearchTapDisableOverrideEnabled = ChromeFeatureList.isEnabled(
+                    ChromeFeatureList.CONTEXTUAL_SEARCH_TAP_DISABLE_OVERRIDE);
+        }
+        return sContextualSearchTapDisableOverrideEnabled;
     }
 
     // --------------------------------------------------------------------------------------------

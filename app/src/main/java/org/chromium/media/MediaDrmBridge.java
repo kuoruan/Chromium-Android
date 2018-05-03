@@ -10,6 +10,7 @@ import android.media.MediaCrypto;
 import android.media.MediaDrm;
 import android.os.Build;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Callback;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
@@ -71,7 +72,7 @@ public class MediaDrmBridge {
     private static final byte[] DUMMY_KEY_ID = new byte[] {0};
 
     // Special provision response to remove the cert.
-    private static final byte[] UNPROVISION = "unprovision".getBytes();
+    private static final byte[] UNPROVISION = ApiCompatibilityUtils.getBytesUtf8("unprovision");
 
     private MediaDrm mMediaDrm;
     private MediaCrypto mMediaCrypto;

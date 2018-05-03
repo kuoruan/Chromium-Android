@@ -393,6 +393,11 @@ public class IntentUtils {
         }
     }
 
+    private static Intent logInvalidIntent(Intent intent, Exception e) {
+        Log.e(TAG, "Invalid incoming intent.", e);
+        return intent.replaceExtras((Bundle) null);
+    }
+
     /**
      * Sanitizes an intent. In case the intent cannot be unparcelled, all extras will be removed to
      * make it safe to use.
@@ -404,8 +409,12 @@ public class IntentUtils {
             incomingIntent.getBooleanExtra("TriggerUnparcel", false);
             return incomingIntent;
         } catch (BadParcelableException e) {
-            Log.e(TAG, "Invalid incoming intent.", e);
-            return incomingIntent.replaceExtras((Bundle) null);
+            return logInvalidIntent(incomingIntent, e);
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof ClassNotFoundException) {
+                return logInvalidIntent(incomingIntent, e);
+            }
+            throw e;
         }
     }
 }

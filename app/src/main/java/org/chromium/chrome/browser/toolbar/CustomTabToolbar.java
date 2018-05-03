@@ -304,17 +304,17 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
 
     @Override
     public void setTitleToPageTitle() {
-        Tab currentTab = getToolbarDataProvider().getTab();
-        if (currentTab == null || TextUtils.isEmpty(currentTab.getTitle())) {
+        String title = getToolbarDataProvider().getTitle();
+        if (!getToolbarDataProvider().hasTab() || TextUtils.isEmpty(title)) {
             mTitleBar.setText("");
             return;
         }
-        String title = currentTab.getTitle();
 
-        // It takes some time to parse the title of the webcontent, and before that Tab#getTitle
-        // always return the url. We postpone the title animation until the title is authentic.
+        // It takes some time to parse the title of the webcontent, and before that
+        // ToolbarDataProvider#getTitle always returns the url. We postpone the title animation
+        // until the title is authentic.
         if ((mState == STATE_DOMAIN_AND_TITLE || mState == STATE_TITLE_ONLY)
-                && !title.equals(currentTab.getUrl())
+                && !title.equals(getToolbarDataProvider().getCurrentUrl())
                 && !title.equals(ContentUrlConstants.ABOUT_BLANK_DISPLAY_URL)) {
             // Delay the title animation until security icon animation finishes.
             ThreadUtils.postOnUiThreadDelayed(mTitleAnimationStarter, TITLE_ANIM_DELAY_MS);
@@ -347,7 +347,7 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
 
         String url = getCurrentTab().getUrl().trim();
         if (mState == STATE_TITLE_ONLY) {
-            if (!TextUtils.isEmpty(getCurrentTab().getTitle())) setTitleToPageTitle();
+            if (!TextUtils.isEmpty(getToolbarDataProvider().getTitle())) setTitleToPageTitle();
         }
 
         // Don't show anything for Chrome URLs and "about:blank".
@@ -477,8 +477,8 @@ public class CustomTabToolbar extends ToolbarLayout implements LocationBar,
         } else {
             // ImageView#setImageResource is no-op if given resource is the current one.
             mSecurityButton.setImageResource(getToolbarDataProvider().getSecurityIconResource());
-            mSecurityButton.setTint(LocationBarLayout.getColorStateList(getToolbarDataProvider(),
-                    getResources(), false /* omnibox is not opaque */, false));
+            mSecurityButton.setTint(LocationBarLayout.getColorStateList(
+                    getToolbarDataProvider(), getResources(), false));
         }
 
         if (showSecurityButton) {

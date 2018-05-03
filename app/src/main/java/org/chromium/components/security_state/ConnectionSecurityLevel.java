@@ -1,5 +1,5 @@
 
-// Copyright 2017 The Chromium Authors. All rights reserved.
+// Copyright 2018 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -18,7 +18,8 @@ import java.lang.annotation.RetentionPolicy;
 @IntDef({
     ConnectionSecurityLevel.NONE, ConnectionSecurityLevel.HTTP_SHOW_WARNING,
     ConnectionSecurityLevel.EV_SECURE, ConnectionSecurityLevel.SECURE,
-    ConnectionSecurityLevel.SECURE_WITH_POLICY_INSTALLED_CERT, ConnectionSecurityLevel.DANGEROUS
+    ConnectionSecurityLevel.SECURE_WITH_POLICY_INSTALLED_CERT, ConnectionSecurityLevel.DANGEROUS,
+    ConnectionSecurityLevel.SECURITY_LEVEL_COUNT
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface ConnectionSecurityLevel {
@@ -51,4 +52,5 @@ public @interface ConnectionSecurityLevel {
    * page, malware, phishing, or any other serious security issue that could be dangerous.
    */
   int DANGEROUS = 5;
+  int SECURITY_LEVEL_COUNT = 6;
 }

@@ -15,6 +15,7 @@ import org.chromium.base.Callback;
 import org.chromium.base.CollectionUtil;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.chrome.browser.AppHooks;
 import org.chromium.chrome.browser.profiles.Profile;
 
 import java.util.ArrayList;
@@ -74,6 +75,7 @@ public class FeedbackCollector implements Runnable {
 
         // This is the list of all synchronous sources of feedback.  Please add new synchronous
         // entries here.
+        sources.addAll(AppHooks.get().getAdditionalFeedbackSources().getSynchronousSources());
         sources.add(new UrlFeedbackSource(url));
         sources.add(new VariationsFeedbackSource(profile));
         sources.add(new DataReductionProxyFeedbackSource(profile));
@@ -81,6 +83,7 @@ public class FeedbackCollector implements Runnable {
         sources.add(new ChromeHomeFeedbackSource(profile));
         sources.add(new LowEndDeviceFeedbackSource());
         sources.add(new IMEFeedbackSource());
+        sources.add(new PermissionFeedbackSource());
 
         return sources;
     }
@@ -91,6 +94,7 @@ public class FeedbackCollector implements Runnable {
 
         // This is the list of all asynchronous sources of feedback.  Please add new asynchronous
         // entries here.
+        sources.addAll(AppHooks.get().getAdditionalFeedbackSources().getAsynchronousSources());
         sources.add(new ConnectivityFeedbackSource(profile));
         sources.add(new SystemInfoFeedbackSource());
 

@@ -40,6 +40,10 @@ public class TapSuppressionHeuristics extends ContextualSearchHeuristics {
         mHeuristics.add(new BarOverlapTapSuppression(selectionController, y));
         // Second Tap ML Override.
         mHeuristics.add(new SecondTapMlOverride(selectionController, previousTapState, x, y));
+        // Quick Answer that appears in the Caption via the JS API.
+        QuickAnswersHeuristic quickAnswersHeuristic = new QuickAnswersHeuristic();
+        setQuickAnswersHeuristic(quickAnswersHeuristic);
+        mHeuristics.add(quickAnswersHeuristic);
     }
 
     /**

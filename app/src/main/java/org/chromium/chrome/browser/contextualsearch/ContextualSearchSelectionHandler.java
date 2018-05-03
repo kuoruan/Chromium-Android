@@ -69,4 +69,11 @@ interface ContextualSearchSelectionHandler {
      * @param tapHeuristics The set of heuristics that would suppress the Tap.
      */
     public void handleMetricsForWouldSuppressTap(ContextualSearchHeuristics tapHeuristics);
+
+    /**
+     * Logs all the features that we can obtain without accessing heuristics, i.e. from global
+     * state.
+     * @param rankerLogger The {@link ContextualSearchRankerLogger} to log the features to.
+     */
+    public void logNonHeuristicFeatures(ContextualSearchRankerLogger rankerLogger);
 }

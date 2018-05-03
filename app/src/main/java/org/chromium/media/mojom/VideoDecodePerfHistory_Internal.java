@@ -19,23 +19,28 @@ class VideoDecodePerfHistory_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<VideoDecodePerfHistory, VideoDecodePerfHistory.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<VideoDecodePerfHistory, VideoDecodePerfHistory.Proxy>() {
     
+        @Override
         public String getName() {
             return "media::mojom::VideoDecodePerfHistory";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, VideoDecodePerfHistory impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public VideoDecodePerfHistory[] buildArray(int size) {
           return new VideoDecodePerfHistory[size];
         }

@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.contextualsearch;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import org.chromium.chrome.browser.ChromeActivity;
@@ -47,8 +48,7 @@ public class ContextualSearchTranslateController  {
         if (mPolicy.isTranslationDisabled()) return;
 
         // Force translation if not disabled and server controlled or client logic says required.
-        boolean doForceTranslate = !TextUtils.isEmpty(sourceLanguage)
-                && mPolicy.needsTranslation(sourceLanguage, getReadableLanguages());
+        boolean doForceTranslate = needsTranslation(sourceLanguage);
         if (doForceTranslate && searchRequest != null) {
             searchRequest.forceTranslation(
                     sourceLanguage, mPolicy.bestTargetLanguage(getProficientLanguageList()));
@@ -90,6 +90,12 @@ public class ContextualSearchTranslateController  {
 
         getNativeTranslateServiceTargetLanguage();
         getNativeAcceptLanguages();
+    }
+
+    /** @return Whether the given {@code sourceLanguage} needs translation for the current user. */
+    boolean needsTranslation(@Nullable String sourceLanguage) {
+        return !mPolicy.isTranslationDisabled() && !TextUtils.isEmpty(sourceLanguage)
+                && mPolicy.needsTranslation(sourceLanguage, getReadableLanguages());
     }
 
     /**

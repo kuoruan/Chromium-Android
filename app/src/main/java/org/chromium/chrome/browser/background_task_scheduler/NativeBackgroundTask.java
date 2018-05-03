@@ -15,6 +15,7 @@ import org.chromium.chrome.browser.init.BrowserParts;
 import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
 import org.chromium.chrome.browser.init.EmptyBrowserParts;
 import org.chromium.components.background_task_scheduler.BackgroundTask;
+import org.chromium.components.background_task_scheduler.BackgroundTaskSchedulerExternalUma;
 import org.chromium.components.background_task_scheduler.TaskParameters;
 import org.chromium.content.browser.BrowserStartupController;
 
@@ -44,10 +45,15 @@ public abstract class NativeBackgroundTask implements BackgroundTask {
     /** Indicates that the task has already been stopped. Should only be accessed on UI Thread. */
     private boolean mTaskStopped;
 
+    /** The id of the task from {@link TaskParameters} used for metrics logging. */
+    private int mTaskId;
+
     @Override
     public final boolean onStartTask(
             Context context, TaskParameters taskParameters, TaskFinishedCallback callback) {
         ThreadUtils.assertOnUiThread();
+        mTaskId = taskParameters.getTaskId();
+
         @StartBeforeNativeResult
         int beforeNativeResult = onStartTaskBeforeNativeLoaded(context, taskParameters, callback);
 
@@ -109,6 +115,8 @@ public abstract class NativeBackgroundTask implements BackgroundTask {
             public void run() {
                 // If task was stopped before we got here, don't start native initialization.
                 if (mTaskStopped) return;
+
+                BackgroundTaskSchedulerExternalUma.reportTaskStartedNative(mTaskId);
                 try {
                     ChromeBrowserInitializer.getInstance(context).handlePreNativeStartup(parts);
 

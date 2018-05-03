@@ -30,7 +30,6 @@ by a child template that "extends" this file.
       channels use "runtime permission" uses-permission-sdk-23 which provides
       permission on Android M and later without a prompt.
     -->
-        <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <uses-permission-sdk-23 android:name="android.permission.BLUETOOTH"/>
     <uses-permission-sdk-23 android:name="android.permission.BLUETOOTH_ADMIN"/>
     <uses-permission-sdk-23 android:name="android.permission.REORDER_TASKS"/>
@@ -130,7 +129,6 @@ by a child template that "extends" this file.
             android:value="true"/>
 
 
-        <meta-data android:name="com.sec.android.support.multiwindow" android:value="true" />
         <meta-data android:name="android.content.APP_RESTRICTIONS"
             android:resource="@xml/app_restrictions"/>
 
@@ -630,7 +628,6 @@ by a child template that "extends" this file.
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.APP_BROWSER" />
-                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
             </intent-filter>
             <meta-data android:name="android.app.shortcuts"
                 android:resource="@xml/launchershortcuts" />
@@ -693,7 +690,7 @@ by a child template that "extends" this file.
             android:excludeFromRecents="true"
             android:autoRemoveFromRecents="true"
             android:windowSoftInputMode="stateHidden|adjustPan"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize">
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize"
 >
         </activity>
         <activity android:name="org.chromium.chrome.browser.firstrun.FirstRunActivity"
@@ -703,7 +700,8 @@ by a child template that "extends" this file.
             android:excludeFromRecents="true"
             android:autoRemoveFromRecents="true"
             android:windowSoftInputMode="stateHidden|adjustPan"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize">
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize"
+>
         </activity>
         <activity android:name="org.chromium.chrome.browser.firstrun.TabbedModeFirstRunActivity"
             android:theme="@style/TabbedModeFirstRunTheme"
@@ -712,7 +710,7 @@ by a child template that "extends" this file.
             android:excludeFromRecents="true"
             android:autoRemoveFromRecents="true"
             android:windowSoftInputMode="stateHidden|adjustPan"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize">
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize"
 >
         </activity>
         <activity android:name="org.chromium.chrome.browser.vr_shell.VrFirstRunActivity"
@@ -1453,21 +1451,6 @@ by a child template that "extends" this file.
         </activity>
 
         <!-- Activities for Browser Actions -->
-        <activity android:name="org.chromium.chrome.browser.browseractions.BrowserActionActivity"
-            android:theme="@style/FullscreenTransparentActivityTheme"
-            android:exported="true"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize">
-            <intent-filter>
-                <action android:name="androidx.browser.browseractions.browser_action_open" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="http" />
-                <data android:scheme="https" />
-            </intent-filter>
-        </activity>
-
-        <service android:name="org.chromium.chrome.browser.browseractions.BrowserActionsService"
-            android:exported="false">
-        </service>
 
         <!-- Service for Broadcasting a Physical Web URL -->
         <service

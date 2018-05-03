@@ -1,5 +1,5 @@
 
-// Copyright 2017 The Chromium Authors. All rights reserved.
+// Copyright 2018 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -41,7 +41,6 @@ import java.lang.annotation.RetentionPolicy;
     ContentSettingsType.CONTENT_SETTINGS_TYPE_BLUETOOTH_GUARD,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_AUTOPLAY,
-    ContentSettingsType.CONTENT_SETTINGS_TYPE_PROMPT_NO_DECISION_COUNT,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_IMPORTANT_SITE_INFO,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_PERMISSION_AUTOBLOCKER_DATA,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS,
@@ -88,36 +87,32 @@ public @interface ContentSettingsType {
   int CONTENT_SETTINGS_TYPE_BLUETOOTH_GUARD = 21;
   int CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC = 22;
   int CONTENT_SETTINGS_TYPE_AUTOPLAY = 23;
-  /**
-   * TODO(raymes): Deprecated. See crbug.com/681709. Remove after M60.
-   */
-  int CONTENT_SETTINGS_TYPE_PROMPT_NO_DECISION_COUNT = 24;
-  int CONTENT_SETTINGS_TYPE_IMPORTANT_SITE_INFO = 25;
-  int CONTENT_SETTINGS_TYPE_PERMISSION_AUTOBLOCKER_DATA = 26;
-  int CONTENT_SETTINGS_TYPE_ADS = 27;
+  int CONTENT_SETTINGS_TYPE_IMPORTANT_SITE_INFO = 24;
+  int CONTENT_SETTINGS_TYPE_PERMISSION_AUTOBLOCKER_DATA = 25;
+  int CONTENT_SETTINGS_TYPE_ADS = 26;
   /**
    * Website setting which stores metadata for the subresource filter to aid in decisions for
    * whether or not to show the UI.
    */
-  int CONTENT_SETTINGS_TYPE_ADS_DATA = 28;
+  int CONTENT_SETTINGS_TYPE_ADS_DATA = 27;
   /**
    * This is special-cased in the permissions layer to always allow, and as such doesn't have
    * associated prefs data.
    */
-  int CONTENT_SETTINGS_TYPE_MIDI = 29;
+  int CONTENT_SETTINGS_TYPE_MIDI = 28;
   /**
    * This content setting type is for caching password protection service's verdicts of each origin.
    */
-  int CONTENT_SETTINGS_TYPE_PASSWORD_PROTECTION = 30;
+  int CONTENT_SETTINGS_TYPE_PASSWORD_PROTECTION = 29;
   /**
    * Website setting which stores engagement data for media related to a specific origin.
    */
-  int CONTENT_SETTINGS_TYPE_MEDIA_ENGAGEMENT = 31;
+  int CONTENT_SETTINGS_TYPE_MEDIA_ENGAGEMENT = 30;
   /**
    * Content setting which stores whether or not the site can play audible sound. This will not
    * block playback but instead the user will not hear it.
    */
-  int CONTENT_SETTINGS_TYPE_SOUND = 32;
+  int CONTENT_SETTINGS_TYPE_SOUND = 31;
   /**
    * Website setting which stores the list of client hints (and the preference expiration time for
    * each of the client hints) that the origin requested the browser to remember. Spec:
@@ -126,30 +121,30 @@ public @interface ContentSettingsType {
    * expiration times (seconds since epoch). The browser is expected to send all the unexpired
    * client hints in the HTTP request headers for every resource requested from that origin.
    */
-  int CONTENT_SETTINGS_TYPE_CLIENT_HINTS = 33;
+  int CONTENT_SETTINGS_TYPE_CLIENT_HINTS = 32;
   /**
    * Generic Sensor API covering ambient-light-sensor, accelerometer, gyroscope and magnetometer are
    * all mapped to a single content_settings_type. Setting for the Generic Sensor API covering
    * ambient-light-sensor, accelerometer, gyroscope and magnetometer. These are all mapped to a
    * single ContentSettingsType.
    */
-  int CONTENT_SETTINGS_TYPE_SENSORS = 34;
+  int CONTENT_SETTINGS_TYPE_SENSORS = 33;
   /**
    * Content setting which stores whether or not the user has granted the site permission to respond
    * to accessibility events, which can be used to provide a custom accessibility experience.
    * Requires explicit user consent because some users may not want sites to know they're using
    * assistive technology.
    */
-  int CONTENT_SETTINGS_TYPE_ACCESSIBILITY_EVENTS = 35;
+  int CONTENT_SETTINGS_TYPE_ACCESSIBILITY_EVENTS = 34;
   /**
    * Content setting which stores whether or not the user has granted the site full (read/write
    * without a gesture) permission to access the system clipboard.
    */
-  int CONTENT_SETTINGS_TYPE_CLIPBOARD_READ = 36;
+  int CONTENT_SETTINGS_TYPE_CLIPBOARD_READ = 35;
   /**
    * This is special-cased in the permissions layer to always allow, and as such doesn't have
    * associated prefs data.
    */
-  int CONTENT_SETTINGS_TYPE_CLIPBOARD_WRITE = 37;
-  int CONTENT_SETTINGS_NUM_TYPES = 38;
+  int CONTENT_SETTINGS_TYPE_CLIPBOARD_WRITE = 36;
+  int CONTENT_SETTINGS_NUM_TYPES = 37;
 }

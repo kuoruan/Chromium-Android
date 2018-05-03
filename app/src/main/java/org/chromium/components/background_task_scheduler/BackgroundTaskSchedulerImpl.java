@@ -9,6 +9,7 @@ import android.os.Build;
 
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
+import org.chromium.base.TraceEvent;
 
 import java.util.Set;
 
@@ -30,25 +31,31 @@ class BackgroundTaskSchedulerImpl implements BackgroundTaskScheduler {
 
     @Override
     public boolean schedule(Context context, TaskInfo taskInfo) {
+        TraceEvent.begin(
+                "BackgroundTaskScheduler.schedule", Integer.toString(taskInfo.getTaskId()));
         ThreadUtils.assertOnUiThread();
         boolean success = mSchedulerDelegate.schedule(context, taskInfo);
         BackgroundTaskSchedulerUma.getInstance().reportTaskScheduled(taskInfo.getTaskId(), success);
         if (success) {
             BackgroundTaskSchedulerPrefs.addScheduledTask(taskInfo);
         }
+        TraceEvent.end("BackgroundTaskScheduler.schedule");
         return success;
     }
 
     @Override
     public void cancel(Context context, int taskId) {
+        TraceEvent.begin("BackgroundTaskScheduler.cancel", Integer.toString(taskId));
         ThreadUtils.assertOnUiThread();
         BackgroundTaskSchedulerUma.getInstance().reportTaskCanceled(taskId);
         BackgroundTaskSchedulerPrefs.removeScheduledTask(taskId);
         mSchedulerDelegate.cancel(context, taskId);
+        TraceEvent.end("BackgroundTaskScheduler.cancel");
     }
 
     @Override
     public void checkForOSUpgrade(Context context) {
+        TraceEvent.begin("BackgroundTaskScheduler.checkForOSUpgrade");
         int oldSdkInt = BackgroundTaskSchedulerPrefs.getLastSdkVersion();
         int newSdkInt = Build.VERSION.SDK_INT;
 
@@ -75,10 +82,12 @@ class BackgroundTaskSchedulerImpl implements BackgroundTaskScheduler {
         }
 
         reschedule(context);
+        TraceEvent.end("BackgroundTaskScheduler.checkForOSUpgrade");
     }
 
     @Override
     public void reschedule(Context context) {
+        TraceEvent.begin("BackgroundTaskScheduler.reschedule");
         Set<String> scheduledTasksClassNames = BackgroundTaskSchedulerPrefs.getScheduledTasks();
         BackgroundTaskSchedulerPrefs.removeAllTasks();
         for (String className : scheduledTasksClassNames) {
@@ -91,6 +100,7 @@ class BackgroundTaskSchedulerImpl implements BackgroundTaskScheduler {
 
             task.reschedule(context);
         }
+        TraceEvent.end("BackgroundTaskScheduler.reschedule");
     }
 
     private boolean osUpgradeChangesDelegateType(int oldSdkInt, int newSdkInt) {

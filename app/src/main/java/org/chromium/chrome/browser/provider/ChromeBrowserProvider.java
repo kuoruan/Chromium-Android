@@ -32,11 +32,11 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.library_loader.LibraryProcessType;
 import org.chromium.base.library_loader.ProcessInitException;
+import org.chromium.chrome.browser.ChromeApplication;
 import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.database.SQLiteCursor;
 import org.chromium.chrome.browser.externalauth.ExternalAuthUtils;
 import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
-import org.chromium.content.app.ContentApplication;
 import org.chromium.content.browser.BrowserStartupController;
 
 import java.util.ArrayList;
@@ -246,7 +246,7 @@ public class ChromeBrowserProvider extends ContentProvider {
         ThreadUtils.runOnUiThreadBlocking(new Runnable() {
             @Override
             public void run() {
-                ContentApplication.initCommandLine(getContext());
+                ((ChromeApplication) getContext().getApplicationContext()).initCommandLine();
 
                 BrowserStartupController.get(LibraryProcessType.PROCESS_BROWSER)
                         .addStartupCompletedObserver(

@@ -19,23 +19,28 @@ class Connector_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<Connector, Connector.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<Connector, Connector.Proxy>() {
     
+        @Override
         public String getName() {
             return "service_manager::mojom::Connector";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, Connector impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public Connector[] buildArray(int size) {
           return new Connector[size];
         }

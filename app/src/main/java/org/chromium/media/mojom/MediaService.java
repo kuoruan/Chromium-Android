@@ -24,11 +24,6 @@ public interface MediaService extends org.chromium.mojo.bindings.Interface {
     Manager<MediaService, MediaService.Proxy> MANAGER = MediaService_Internal.MANAGER;
 
 
-    void loadCdm(
-org.chromium.mojo.common.mojom.FilePath cdmPath);
-
-
-
     void createInterfaceFactory(
 org.chromium.mojo.bindings.InterfaceRequest<InterfaceFactory> factory, org.chromium.service_manager.mojom.InterfaceProvider hostInterfaces);
 

@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.support.annotation.IntDef;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Log;
 import org.chromium.base.StreamUtil;
 import org.chromium.base.VisibleForTesting;
@@ -313,7 +314,8 @@ public class OmahaBase {
 
             // Prepare the HTTP header.
             urlConnection.setDoOutput(true);
-            urlConnection.setFixedLengthStreamingMode(xml.getBytes().length);
+            urlConnection.setFixedLengthStreamingMode(
+                    ApiCompatibilityUtils.getBytesUtf8(xml).length);
             if (mSendInstallEvent && getBackoffScheduler().getNumFailedAttempts() > 0) {
                 String age = Long.toString(mCurrentRequest.getAgeInSeconds(timestamp));
                 urlConnection.addRequestProperty("X-RequestAge", age);

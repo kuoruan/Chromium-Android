@@ -66,7 +66,8 @@ public class BottomToolbarPhone extends ToolbarPhone {
             // focused, the new content description is read immediately.
             if (hasFocus() && !urlHasFocus()) mBottomSheet.requestFocus();
 
-            mLocationBar.updateLoadingState(true);
+            if (isNativeLibraryReady()) mLocationBar.updateLoadingState(true);
+            updateContentDescription();
         }
 
         @Override
@@ -75,6 +76,7 @@ public class BottomToolbarPhone extends ToolbarPhone {
             updateMenuButtonClickableState();
 
             mLocationBar.updateLoadingState(true);
+            updateContentDescription();
         }
 
         @Override
@@ -213,6 +215,9 @@ public class BottomToolbarPhone extends ToolbarPhone {
 
     /** A handle to the {@link ChromeActivity} this toolbar exists in. */
     private ChromeActivity mActivity;
+
+    /** Whether the toolbar is currently being shown in the NTP. */
+    private boolean mShownInNtp;
 
     /**
      * Constructs a BottomToolbarPhone object.
@@ -371,12 +376,19 @@ public class BottomToolbarPhone extends ToolbarPhone {
             boolean delayAnimation, boolean animate) {
         super.setTabSwitcherMode(inTabSwitcherMode, showToolbar, delayAnimation, animate);
         mExpandButton.setClickable(!inTabSwitcherMode);
+        updateContentDescription();
 
         // Reset top shadow drawable state.
         if (inTabSwitcherMode) {
             mBottomToolbarTopShadowDrawable.getDrawable(0).setAlpha(255);
             mBottomToolbarTopShadowDrawable.getDrawable(1).setAlpha(0);
         }
+    }
+
+    @Override
+    protected void onTabSwitcherTransitionFinished() {
+        super.onTabSwitcherTransitionFinished();
+        updateContentDescription();
     }
 
     @Override
@@ -477,6 +489,8 @@ public class BottomToolbarPhone extends ToolbarPhone {
         mBottomSheet = sheet;
         getLocationBar().setBottomSheet(mBottomSheet);
         mBottomSheet.addObserver(mBottomSheetObserver);
+
+        updateContentDescription();
     }
 
     @Override
@@ -728,6 +742,7 @@ public class BottomToolbarPhone extends ToolbarPhone {
         super.onNativeLibraryReady();
 
         mNewTabButton.setIsModern();
+        if (mBottomSheet != null) mLocationBar.updateLoadingState(true);
     }
 
     @Override
@@ -901,6 +916,16 @@ public class BottomToolbarPhone extends ToolbarPhone {
                 ApiCompatibilityUtils.getPaddingEnd(otherToolbar), otherToolbar.getPaddingBottom());
     }
 
+    /**
+     * @param shownInNtp Whether the toolbar is currently being shown in the NTP.
+     */
+    public void setShownInNtp(boolean shownInNtp) {
+        if (shownInNtp == mShownInNtp) return;
+
+        mShownInNtp = shownInNtp;
+        updateToolbarBackground(mVisualState);
+    }
+
     @Override
     protected void onAccessibilityStatusChanged(boolean enabled) {
         setUseExpandButton();
@@ -1035,6 +1060,13 @@ public class BottomToolbarPhone extends ToolbarPhone {
             return ApiCompatibilityUtils.getColor(getResources(),
                     DeviceClassManager.enableAccessibilityLayout() ? R.color.incognito_primary_color
                                                                    : R.color.modern_primary_color);
+        } else if (visualState == VisualState.NORMAL && mShownInNtp) {
+            // TODO(twellington): Ideally the VisualState would be set to NEW_TAB_NORMAL and that
+            // would be used to set the toolbar background. The VisualState is used for some toolbar
+            // animations that we don't run on BottomToolbarPhone. Those animations need to be
+            // reworked before the VisualState can be set to NEW_TAB_NORMAL when the Chrome Home NTP
+            // is showing.
+            return Color.TRANSPARENT;
         } else if (visualState == VisualState.NORMAL
                 || visualState == VisualState.TAB_SWITCHER_NORMAL) {
             return ApiCompatibilityUtils.getColor(getResources(), R.color.modern_primary_color);
@@ -1143,5 +1175,14 @@ public class BottomToolbarPhone extends ToolbarPhone {
     private void updateMenuButtonClickableState() {
         mMenuButton.setClickable(
                 !urlHasFocus() && (!mBottomSheet.isSheetOpen() || mBottomSheet.isShowingNewTab()));
+    }
+
+    private void updateContentDescription() {
+        if (isInTabSwitcherMode() || mBottomSheet.isSheetOpen()) {
+            setContentDescription(null);
+        } else {
+            setContentDescription(
+                    getResources().getString(R.string.bottom_sheet_accessibility_toolbar));
+        }
     }
 }

@@ -29,7 +29,6 @@ import android.widget.RemoteViews;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import org.chromium.base.BaseChromiumApplication;
 import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
@@ -46,6 +45,7 @@ import org.chromium.chrome.browser.AppHooks;
 import org.chromium.chrome.browser.ChromeApplication;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.IntentHandler;
+import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.WarmupManager;
 import org.chromium.chrome.browser.browserservices.BrowserSessionContentUtils;
 import org.chromium.chrome.browser.browserservices.PostMessageHandler;
@@ -218,7 +218,7 @@ public class CustomTabsConnection {
         super();
         mContext = ContextUtils.getApplicationContext();
         // Command line switch values are used below.
-        BaseChromiumApplication.initCommandLine(mContext);
+        ((ChromeApplication) mContext).initCommandLine();
         mClientManager = new ClientManager(mContext);
         mLogRequests = CommandLine.getInstance().hasSwitch(LOG_SERVICE_REQUESTS);
     }
@@ -466,7 +466,8 @@ public class CustomTabsConnection {
         // Don't do anything for unknown schemes. Not having a scheme is allowed, as we allow
         // "www.example.com".
         String scheme = uri.normalizeScheme().getScheme();
-        boolean allowedScheme = scheme == null || scheme.equals("http") || scheme.equals("https");
+        boolean allowedScheme = scheme == null || scheme.equals(UrlConstants.HTTP_SCHEME)
+                || scheme.equals(UrlConstants.HTTPS_SCHEME);
         if (!allowedScheme) return false;
         return true;
     }

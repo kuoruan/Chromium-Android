@@ -8,6 +8,9 @@ import android.os.SystemClock;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.base.metrics.RecordHistogram;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Utilities to support startup metrics - Android version.
@@ -15,10 +18,15 @@ import org.chromium.base.annotations.JNINamespace;
 @JNINamespace("chrome::android")
 public class UmaUtils {
     private static long sApplicationStartWallClockMs;
-
     private static boolean sRunningApplicationStart;
+
+    // All these values originate from SystemClock.uptimeMillis().
+    private static long sApplicationStartTimeMs;
     private static long sForegroundStartTimeMs;
     private static long sBackgroundTimeMs;
+
+    // Event duration recorded from the |sApplicationStartTimeMs|.
+    private static long sFirstCommitTimeMs;
 
     /**
      * Record the time at which the activity started. This should be called asap after
@@ -30,6 +38,7 @@ public class UmaUtils {
         // then need the start time in the C++ side before we return to Java. As such we
         // save it in a static that the C++ can fetch once it has initialized the JNI.
         sApplicationStartWallClockMs = System.currentTimeMillis();
+        sApplicationStartTimeMs = SystemClock.uptimeMillis();
     }
 
     /**
@@ -52,10 +61,59 @@ public class UmaUtils {
     }
 
     /**
+     * Registers the fact that a navigation has finished. Based on this fact, may discard recording
+     * histograms later.
+     */
+    public static void registerFinishNavigation(boolean isTrackedPage) {
+        if (!isRunningApplicationStart()) return;
+
+        if (isTrackedPage && hasComeToForeground() && !hasComeToBackground()) {
+            sFirstCommitTimeMs = SystemClock.uptimeMillis() - sApplicationStartTimeMs;
+            RecordHistogram.recordLongTimesHistogram100(
+                    "Startup.Android.Experimental.Cold.TimeToFirstNavigationCommit",
+                    sFirstCommitTimeMs, TimeUnit.MILLISECONDS);
+        }
+        setRunningApplicationStart(false);
+    }
+
+    /**
+     * Record the First Contentful Paint time.
+     *
+     * @param firstContentfulPaintMs timestamp in uptime millis.
+     */
+    public static void recordFirstContentfulPaint(long firstContentfulPaintMs) {
+        // First commit time histogram should be recorded before this one. We should discard a
+        // record if the first commit time wasn't recorded.
+        if (sFirstCommitTimeMs == 0) return;
+
+        if (hasComeToForeground() && !hasComeToBackground()) {
+            RecordHistogram.recordLongTimesHistogram100(
+                    "Startup.Android.Experimental.Cold.TimeToFirstContentfulPaint",
+                    firstContentfulPaintMs - sApplicationStartTimeMs, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    /**
      * Determines if Chrome was brought to foreground.
      */
     public static boolean hasComeToForeground() {
         return sForegroundStartTimeMs != 0;
+    }
+
+    /**
+     * Determines if Chrome was brought to background.
+     */
+    public static boolean hasComeToBackground() {
+        return sBackgroundTimeMs != 0;
+    }
+
+    /**
+     * Whether the application is in the early stage since the browser process start. Currently, the
+     * very first finished navigation in the lifetime of the process ends the "application start".
+     * Must only be called on the UI thread.
+     */
+    public static boolean isRunningApplicationStart() {
+        return sRunningApplicationStart;
     }
 
     /**
@@ -88,7 +146,12 @@ public class UmaUtils {
         return sApplicationStartWallClockMs;
     }
 
-    public static long getForegroundStartTime() {
+    @CalledByNative
+    public static long getMainEntryPointTicks() {
+        return sApplicationStartTimeMs;
+    }
+
+    public static long getForegroundStartTicks() {
         assert sForegroundStartTimeMs != 0;
         return sForegroundStartTimeMs;
     }

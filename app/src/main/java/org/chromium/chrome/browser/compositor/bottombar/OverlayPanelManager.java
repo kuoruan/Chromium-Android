@@ -96,7 +96,7 @@ public class OverlayPanelManager {
             // notifyPanelClosed.
             mPendingPanel = panel;
             mPendingReason = reason;
-            mActivePanel.closePanel(StateChangeReason.SUPPRESS, true);
+            mActivePanel.closePanel(StateChangeReason.PANEL_SUPPRESS, true);
 
         } else if (panel.canBeSuppressed()) {
             // If a panel was showing and the requesting panel has a lower priority, suppress it
@@ -117,7 +117,7 @@ public class OverlayPanelManager {
         if (panel == null) return;
 
         // If the reason to close was to suppress, only suppress the panel.
-        if (reason == StateChangeReason.SUPPRESS) {
+        if (reason == StateChangeReason.PANEL_SUPPRESS) {
             if (mActivePanel == panel) {
                 if (mActivePanel.canBeSuppressed()) {
                     mSuppressedPanels.add(mActivePanel);
@@ -133,7 +133,7 @@ public class OverlayPanelManager {
                 mActivePanel = null;
                 if (!mSuppressedPanels.isEmpty()) {
                     mActivePanel = mSuppressedPanels.poll();
-                    mActivePanel.peekPanel(StateChangeReason.UNSUPPRESS);
+                    mActivePanel.peekPanel(StateChangeReason.PANEL_UNSUPPRESS);
                 }
             } else {
                 mSuppressedPanels.remove(panel);

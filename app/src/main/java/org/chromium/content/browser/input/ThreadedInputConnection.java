@@ -79,7 +79,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
         }
     };
 
-    private final ImeAdapter mImeAdapter;
+    private final ImeAdapterImpl mImeAdapter;
     private final Handler mHandler;
     private int mNumNestedBatchEdits;
 
@@ -91,7 +91,7 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
     private int mCurrentExtractedTextRequestToken;
     private boolean mShouldUpdateExtractedText;
 
-    ThreadedInputConnection(View view, ImeAdapter imeAdapter, Handler handler) {
+    ThreadedInputConnection(View view, ImeAdapterImpl imeAdapter, Handler handler) {
         super(view, true);
         if (DEBUG_LOGS) Log.i(TAG, "constructor");
         ImeUtils.checkOnUiThread();
@@ -323,6 +323,23 @@ class ThreadedInputConnection extends BaseInputConnection implements ChromiumBas
     public boolean commitText(final CharSequence text, final int newCursorPosition) {
         if (DEBUG_LOGS) Log.i(TAG, "commitText [%s] [%d]", text, newCursorPosition);
         if (text == null) return false;
+
+        // One WebView app detects Enter in JS by looking at KeyDown (http://crbug/577967).
+        if (TextUtils.equals(text, "\n")) {
+            beginBatchEdit();
+            // Clear the current composition range (the keypress alone wouldn't do this).
+            commitText("", 1);
+            ThreadUtils.postOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mImeAdapter.sendSyntheticKeyPress(KeyEvent.KEYCODE_ENTER,
+                            KeyEvent.FLAG_SOFT_KEYBOARD | KeyEvent.FLAG_KEEP_TOUCH_MODE);
+                }
+            });
+            endBatchEdit();
+            return true;
+        }
+
         ThreadUtils.postOnUiThread(new Runnable() {
             @Override
             public void run() {

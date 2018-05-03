@@ -19,7 +19,6 @@ import android.net.Uri;
 import android.support.annotation.IntDef;
 import android.support.customtabs.browseractions.BrowserActionItem;
 import android.support.customtabs.browseractions.BrowserActionsIntent;
-import android.support.customtabs.browseractions.BrowserActionsIntent.BrowserActionsItemId;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.content.res.AppCompatResources;
 import android.util.Pair;
@@ -44,6 +43,7 @@ import org.chromium.chrome.browser.contextmenu.ContextMenuUi;
 import org.chromium.chrome.browser.contextmenu.PlatformContextMenuUi;
 import org.chromium.chrome.browser.contextmenu.ShareContextMenuItem;
 import org.chromium.chrome.browser.contextmenu.TabularContextMenuUi;
+import org.chromium.chrome.browser.firstrun.FirstRunStatus;
 import org.chromium.ui.base.WindowAndroid.OnCloseContextMenuListener;
 
 import java.lang.annotation.Retention;
@@ -166,11 +166,16 @@ public class BrowserActionsContextMenuHelper implements OnCreateContextMenuListe
         ShareContextMenuItem shareItem = new ShareContextMenuItem(R.drawable.ic_share_white_24dp,
                 R.string.browser_actions_share, R.id.browser_actions_share, true);
         shareItem.setCreatorPackageName(sourcePackageName);
-        mBrowserActionsLinkGroup =
-                Arrays.asList(ChromeContextMenuItem.BROWSER_ACTIONS_OPEN_IN_BACKGROUND,
-                        ChromeContextMenuItem.BROWSER_ACTIONS_OPEN_IN_INCOGNITO_TAB,
-                        ChromeContextMenuItem.BROWSER_ACTION_SAVE_LINK_AS,
-                        ChromeContextMenuItem.BROWSER_ACTIONS_COPY_ADDRESS, shareItem);
+        if (FirstRunStatus.getFirstRunFlowComplete()) {
+            mBrowserActionsLinkGroup =
+                    Arrays.asList(ChromeContextMenuItem.BROWSER_ACTIONS_OPEN_IN_BACKGROUND,
+                            ChromeContextMenuItem.BROWSER_ACTIONS_OPEN_IN_INCOGNITO_TAB,
+                            ChromeContextMenuItem.BROWSER_ACTION_SAVE_LINK_AS,
+                            ChromeContextMenuItem.BROWSER_ACTIONS_COPY_ADDRESS, shareItem);
+        } else {
+            mBrowserActionsLinkGroup =
+                    Arrays.asList(ChromeContextMenuItem.BROWSER_ACTIONS_COPY_ADDRESS, shareItem);
+        }
         mMenuItemDelegate = new BrowserActionsContextMenuItemDelegate(mActivity, sourcePackageName);
         mOnBrowserActionSelectedCallback = onBrowserActionSelectedCallback;
         mProgressDialog = new ProgressDialog(mActivity);
@@ -285,7 +290,7 @@ public class BrowserActionsContextMenuHelper implements OnCreateContextMenuListe
                 "BrowserActions.SelectedOption", itemId, NUM_ACTIONS);
     }
 
-    private void notifyBrowserActionSelected(@BrowserActionsItemId int menuId) {
+    private void notifyBrowserActionSelected(int menuId) {
         if (mOnBrowserActionSelectedCallback == null) return;
         Intent additionalData = new Intent();
         additionalData.setData(Uri.parse(String.valueOf(menuId)));

@@ -4,12 +4,9 @@
 
 package org.chromium.chrome.browser.webapps;
 
-import static org.chromium.webapk.lib.common.WebApkConstants.WEBAPK_PACKAGE_PREFIX;
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.text.TextUtils;
 
 import org.chromium.base.ActivityState;
 import org.chromium.base.ApplicationStatus;
@@ -41,26 +38,21 @@ public class WebApkDisclosureNotificationManager {
     private static Set<String> sVisibleNotifications = new HashSet<>();
 
     /**
-     * If we're showing a WebApk that's not with an expected package, it must be an
-     * "Unbound WebApk" (crbug.com/714735). If we are not in a WebAPK but we have a BrowserSession
-     * then it must be a Trusted Web Activity.
-     *
-     * For the above show a notification that it's running in Chrome.
+     * For Trusted Web Activity show a notification that it's running in Chrome.
      */
     static void maybeShowDisclosure(WebappActivity activity, WebappDataStorage storage) {
         String packageName = activity.getNativeClientPackageName();
-        boolean isUnboundAPK = activity.isVerified() && !TextUtils.isEmpty(packageName)
-                && !packageName.startsWith(WEBAPK_PACKAGE_PREFIX);
+        boolean isTWA = (activity.getActivityType() == WebappActivity.ACTIVITY_TYPE_TWA);
         boolean isNotificationAllowed = !storage.hasDismissedDisclosure()
                 && !sVisibleNotifications.contains(packageName)
                 && !WebappActionsNotificationManager.isEnabled();
-        if (!isUnboundAPK || !isNotificationAllowed) return;
+        if (!isTWA || !isNotificationAllowed) return;
 
         int activityState = ApplicationStatus.getStateForActivity(activity);
         if (activityState == ActivityState.STARTED || activityState == ActivityState.RESUMED
                 || activityState == ActivityState.PAUSED) {
             sVisibleNotifications.add(packageName);
-            WebApkDisclosureNotificationManager.showDisclosure(activity.mWebappInfo);
+            WebApkDisclosureNotificationManager.showDisclosure(activity.getWebappInfo());
         }
     }
 

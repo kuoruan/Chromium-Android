@@ -21,7 +21,15 @@ import org.chromium.chrome.browser.search_engines.TemplateUrlService;
 import org.chromium.chrome.browser.widget.RadioButtonLayout;
 
 /** A {@link Fragment} that presents a set of search engines for the user to choose from. */
-public class DefaultSearchEngineFirstRunFragment extends FirstRunPage {
+public class DefaultSearchEngineFirstRunFragment extends Fragment implements FirstRunFragment {
+    /** FRE page that instantiates this fragment. */
+    public static class Page implements FirstRunPage<DefaultSearchEngineFirstRunFragment> {
+        @Override
+        public DefaultSearchEngineFirstRunFragment instantiateFragment() {
+            return new DefaultSearchEngineFirstRunFragment();
+        }
+    }
+
     @SearchEnginePromoType
     private int mSearchEnginePromoDialoType;
     private boolean mShownRecorded;
@@ -48,7 +56,7 @@ public class DefaultSearchEngineFirstRunFragment extends FirstRunPage {
             Runnable dismissRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    advanceToNextPage();
+                    getPageDelegate().advanceToNextPage();
                 }
             };
             new DefaultSearchEngineDialogHelper(
@@ -67,7 +75,7 @@ public class DefaultSearchEngineFirstRunFragment extends FirstRunPage {
                 ThreadUtils.postOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        advanceToNextPage();
+                        getPageDelegate().advanceToNextPage();
                     }
                 });
             }

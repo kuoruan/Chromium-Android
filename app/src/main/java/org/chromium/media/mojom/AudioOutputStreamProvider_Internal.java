@@ -19,23 +19,28 @@ class AudioOutputStreamProvider_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<AudioOutputStreamProvider, AudioOutputStreamProvider.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<AudioOutputStreamProvider, AudioOutputStreamProvider.Proxy>() {
     
+        @Override
         public String getName() {
             return "media::mojom::AudioOutputStreamProvider";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, AudioOutputStreamProvider impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public AudioOutputStreamProvider[] buildArray(int size) {
           return new AudioOutputStreamProvider[size];
         }

@@ -19,23 +19,28 @@ class MediaLog_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<MediaLog, MediaLog.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<MediaLog, MediaLog.Proxy>() {
     
+        @Override
         public String getName() {
             return "media::mojom::MediaLog";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, MediaLog impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public MediaLog[] buildArray(int size) {
           return new MediaLog[size];
         }

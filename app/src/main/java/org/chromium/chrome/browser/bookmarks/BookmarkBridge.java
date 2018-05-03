@@ -498,6 +498,16 @@ public class BookmarkBridge {
     }
 
     /**
+     * Get the total number of bookmarks in the sub tree of the specified folder.
+     * @param id The {@link BookmarkId} of the folder to be queried.
+     * @return The total number of bookmarks in the folder.
+     */
+    public int getTotalBookmarkCount(BookmarkId id) {
+        assert mIsNativeBookmarkModelLoaded;
+        return nativeGetTotalBookmarkCount(mNativeBookmarkBridge, id.getId(), id.getType());
+    }
+
+    /**
      * Synchronously gets a list of bookmarks that match the specified search query.
      * @param query Keyword used for searching bookmarks.
      * @param maxNumberOfResult Maximum number of result to fetch.
@@ -896,6 +906,7 @@ public class BookmarkBridge {
             boolean getFolders, boolean getBookmarks, List<BookmarkId> bookmarksList);
     private native BookmarkId nativeGetChildAt(long nativeBookmarkBridge, long id, int type,
             int index);
+    private native int nativeGetTotalBookmarkCount(long nativeBookmarkBridge, long id, int type);
     private native void nativeSetBookmarkTitle(long nativeBookmarkBridge, long id, int type,
             String title);
     private native void nativeSetBookmarkUrl(long nativeBookmarkBridge, long id, int type,

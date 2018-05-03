@@ -10,9 +10,9 @@ import android.support.annotation.VisibleForTesting;
 import android.view.textclassifier.TextClassifier;
 
 import org.chromium.chrome.browser.ChromeFeatureList;
-import org.chromium.content.browser.ContentViewCore;
 import org.chromium.content_public.browser.SelectionClient;
 import org.chromium.content_public.browser.SelectionMetricsLogger;
+import org.chromium.content_public.browser.SelectionPopupController;
 import org.chromium.content_public.browser.WebContents;
 
 /**
@@ -40,16 +40,16 @@ public class SelectionClientManager {
     /**
      * Constructs an instance that can return a {@link SelectionClient} that's a mix of an optional
      * Smart Selection client and a transient Contextual Search client.
-     * @param contentViewCore The {@link ContentViewCore} that will show pupups for this client.
+     * @param webContents The {@link WebContents} that will show popups for this client.
      */
-    SelectionClientManager(ContentViewCore contentViewCore) {
+    SelectionClientManager(WebContents webContents) {
         if (ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_SMART_SELECTION)
                 && Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
-            assert contentViewCore != null;
-            WebContents webContents = contentViewCore.getWebContents();
             assert webContents != null;
             mOptionalSelectionClient = SelectionClient.createSmartSelectionClient(webContents);
-            contentViewCore.setSelectionClient(mOptionalSelectionClient);
+            SelectionPopupController controller =
+                    SelectionPopupController.fromWebContents(webContents);
+            controller.setSelectionClient(mOptionalSelectionClient);
         }
         mIsSmartSelectionEnabledInChrome = mOptionalSelectionClient != null;
     }

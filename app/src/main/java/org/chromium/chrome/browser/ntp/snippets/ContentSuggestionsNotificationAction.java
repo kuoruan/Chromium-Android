@@ -1,5 +1,5 @@
 
-// Copyright 2017 The Chromium Authors. All rights reserved.
+// Copyright 2018 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -22,8 +22,7 @@ import java.lang.annotation.RetentionPolicy;
     ContentSuggestionsNotificationAction.HIDE_FRONTMOST,
     ContentSuggestionsNotificationAction.HIDE_DISABLED,
     ContentSuggestionsNotificationAction.HIDE_SHUTDOWN,
-    ContentSuggestionsNotificationAction.OPEN_SETTINGS,
-    ContentSuggestionsNotificationAction.MAX_NOTIFICATION_ACTION
+    ContentSuggestionsNotificationAction.OPEN_SETTINGS, ContentSuggestionsNotificationAction.MAX
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface ContentSuggestionsNotificationAction {
@@ -35,5 +34,5 @@ public @interface ContentSuggestionsNotificationAction {
   int HIDE_DISABLED = 5;
   int HIDE_SHUTDOWN = 6;
   int OPEN_SETTINGS = 7;
-  int MAX_NOTIFICATION_ACTION = 8;
+  int MAX = 8;
 }

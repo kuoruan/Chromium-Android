@@ -36,6 +36,8 @@ public final class WindowOpenDisposition {
 
     public static final int IGNORE_ACTION = OFF_THE_RECORD + 1;
 
+    public static final int SWITCH_TO_TAB = IGNORE_ACTION + 1;
+
 
     private static final boolean IS_EXTENSIBLE = false;
 
@@ -51,6 +53,7 @@ public final class WindowOpenDisposition {
             case 7:
             case 8:
             case 9:
+            case 10:
                 return true;
         }
         return false;

@@ -1,5 +1,5 @@
 
-// Copyright 2017 The Chromium Authors. All rights reserved.
+// Copyright 2018 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -21,7 +21,8 @@ import java.lang.annotation.RetentionPolicy;
     WebTextInputFlags.SPELLCHECK_ON, WebTextInputFlags.SPELLCHECK_OFF,
     WebTextInputFlags.AUTOCAPITALIZE_NONE, WebTextInputFlags.AUTOCAPITALIZE_CHARACTERS,
     WebTextInputFlags.AUTOCAPITALIZE_WORDS, WebTextInputFlags.AUTOCAPITALIZE_SENTENCES,
-    WebTextInputFlags.HAVE_NEXT_FOCUSABLE_ELEMENT, WebTextInputFlags.HAVE_PREVIOUS_FOCUSABLE_ELEMENT
+    WebTextInputFlags.HAVE_NEXT_FOCUSABLE_ELEMENT,
+    WebTextInputFlags.HAVE_PREVIOUS_FOCUSABLE_ELEMENT, WebTextInputFlags.HAS_BEEN_PASSWORD_FIELD
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface WebTextInputFlags {
@@ -38,4 +39,9 @@ public @interface WebTextInputFlags {
   int AUTOCAPITALIZE_SENTENCES = 1 << 9;
   int HAVE_NEXT_FOCUSABLE_ELEMENT = 1 << 10;
   int HAVE_PREVIOUS_FOCUSABLE_ELEMENT = 1 << 11;
+  /**
+   * Whether an input field is or has ever been a password. For such an input type we don't want
+   * autocomplete or a keyboard to memorize the content.
+   */
+  int HAS_BEEN_PASSWORD_FIELD = 1 << 12;
 }

@@ -4,7 +4,9 @@
 
 package org.chromium.chrome.browser.firstrun;
 
+import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
+import org.chromium.chrome.browser.ChromeSwitches;
 
 /**
  * Gets and sets preferences related to the status of the first run experience.
@@ -34,8 +36,12 @@ public class FirstRunStatus {
      * includes ToS and Sign In pages if necessary.
      */
     public static boolean getFirstRunFlowComplete() {
-        return ContextUtils.getAppSharedPreferences()
-                .getBoolean(FIRST_RUN_FLOW_COMPLETE, false);
+        if (ContextUtils.getAppSharedPreferences().getBoolean(FIRST_RUN_FLOW_COMPLETE, false)) {
+            return true;
+        }
+        return CommandLine.isInitialized()
+                && CommandLine.getInstance().hasSwitch(
+                           ChromeSwitches.FORCE_FIRST_RUN_FLOW_COMPLETE_FOR_TESTING);
     }
 
     /**

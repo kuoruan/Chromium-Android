@@ -23,9 +23,6 @@ public final class WebApkMetaDataKeys {
     public static final String THEME_COLOR = "org.chromium.webapk.shell_apk.themeColor";
     public static final String BACKGROUND_COLOR = "org.chromium.webapk.shell_apk.backgroundColor";
     public static final String ICON_ID = "org.chromium.webapk.shell_apk.iconId";
-    // TODO(hanxi): crbug.com/665549. Remove {@link ICON_URL} and {@link ICON_MURMUR2_HASH}.
-    public static final String ICON_URL = "org.chromium.webapk.shell_apk.iconUrl";
-    public static final String ICON_MURMUR2_HASH = "org.chromium.webapk.shell_apk.iconMurmur2Hash";
 
     public static final String ICON_URLS_AND_ICON_MURMUR2_HASHES =
             "org.chromium.webapk.shell_apk.iconUrlsAndIconMurmur2Hashes";

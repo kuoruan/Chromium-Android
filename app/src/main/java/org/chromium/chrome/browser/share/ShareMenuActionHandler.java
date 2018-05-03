@@ -19,6 +19,7 @@ import org.chromium.chrome.browser.physicalweb.PhysicalWebShareActivity;
 import org.chromium.chrome.browser.printing.PrintShareActivity;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.util.ChromeFileProvider;
+import org.chromium.components.ui_metrics.CanonicalURLResult;
 import org.chromium.content_public.browser.ContentBitmapCallback;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.content_public.browser.readback_types.ReadbackResponse;
@@ -35,6 +36,8 @@ public class ShareMenuActionHandler {
     private static ShareMenuActionHandler sInstance;
 
     private final ShareMenuActionDelegate mDelegate;
+
+    static final String CANONICAL_URL_RESULT_HISTOGRAM = "Mobile.CanonicalURLResult";
 
     /**
      * @return The singleton share menu handler.
@@ -92,11 +95,6 @@ public class ShareMenuActionHandler {
         if (webContents.getMainFrame() == null) return false;
         String url = currentTab.getUrl();
         if (TextUtils.isEmpty(url)) return false;
-        // TODO(tedchoc): Can we replace GURLUtils.getScheme with Uri.parse(...).getScheme()
-        //                crbug.com/783819
-        if (!UrlConstants.HTTPS_SCHEME.equals(GURLUtils.getScheme(url))) {
-            return false;
-        }
         if (currentTab.isShowingErrorPage() || currentTab.isShowingInterstitialPage()
                 || currentTab.isShowingSadTab()) {
             return false;
@@ -107,15 +105,47 @@ public class ShareMenuActionHandler {
     @VisibleForTesting
     static String getUrlToShare(String visibleUrl, String canonicalUrl) {
         if (TextUtils.isEmpty(canonicalUrl)) return visibleUrl;
+        // TODO(tedchoc): Can we replace GURLUtils.getScheme with Uri.parse(...).getScheme()
+        //                https://crbug.com/783819
+        if (!UrlConstants.HTTPS_SCHEME.equals(GURLUtils.getScheme(visibleUrl))) {
+            return visibleUrl;
+        }
         String canonicalScheme = GURLUtils.getScheme(canonicalUrl);
         if (!UrlConstants.HTTP_SCHEME.equals(canonicalScheme)
                 && !UrlConstants.HTTPS_SCHEME.equals(canonicalScheme)) {
             return visibleUrl;
         }
-        if (!UrlConstants.HTTPS_SCHEME.equals(GURLUtils.getScheme(visibleUrl))) {
-            return visibleUrl;
-        }
         return canonicalUrl;
+    }
+
+    private void logCanonicalUrlResult(String visibleUrl, String canonicalUrl) {
+        @CanonicalURLResult
+        int result = getCanonicalUrlResult(visibleUrl, canonicalUrl);
+        RecordHistogram.recordEnumeratedHistogram(CANONICAL_URL_RESULT_HISTOGRAM, result,
+                CanonicalURLResult.CANONICAL_URL_RESULT_COUNT);
+    }
+
+    @CanonicalURLResult
+    private int getCanonicalUrlResult(String visibleUrl, String canonicalUrl) {
+        if (!UrlConstants.HTTPS_SCHEME.equals(GURLUtils.getScheme(visibleUrl))) {
+            return CanonicalURLResult.FAILED_VISIBLE_URL_NOT_HTTPS;
+        }
+        if (TextUtils.isEmpty(canonicalUrl)) {
+            return CanonicalURLResult.FAILED_NO_CANONICAL_URL_DEFINED;
+        }
+        String canonicalScheme = GURLUtils.getScheme(canonicalUrl);
+        if (!UrlConstants.HTTPS_SCHEME.equals(canonicalScheme)) {
+            if (!UrlConstants.HTTP_SCHEME.equals(canonicalScheme)) {
+                return CanonicalURLResult.FAILED_CANONICAL_URL_INVALID;
+            } else {
+                return CanonicalURLResult.SUCCESS_CANONICAL_URL_NOT_HTTPS;
+            }
+        }
+        if (TextUtils.equals(visibleUrl, canonicalUrl)) {
+            return CanonicalURLResult.SUCCESS_CANONICAL_URL_SAME_AS_VISIBLE;
+        } else {
+            return CanonicalURLResult.SUCCESS_CANONICAL_URL_DIFFERENT_FROM_VISIBLE;
+        }
     }
 
     private void triggerShare(final Activity activity, final Tab currentTab,
@@ -133,24 +163,26 @@ public class ShareMenuActionHandler {
 
         if (shouldFetchCanonicalUrl(currentTab)) {
             WebContents webContents = currentTab.getWebContents();
+            String title = currentTab.getTitle();
+            String visibleUrl = currentTab.getUrl();
             webContents.getMainFrame().getCanonicalUrlForSharing(new Callback<String>() {
                 @Override
                 public void onResult(String result) {
-                    triggerShareWithCanonicalUrlResolved(
-                            activity, currentTab, result, shareDirectly, isIncognito);
+                    logCanonicalUrlResult(visibleUrl, result);
+
+                    triggerShareWithCanonicalUrlResolved(activity, webContents, title, visibleUrl,
+                            result, shareDirectly, isIncognito);
                 }
             });
         } else {
-            triggerShareWithCanonicalUrlResolved(
-                    activity, currentTab, null, shareDirectly, isIncognito);
+            triggerShareWithCanonicalUrlResolved(activity, currentTab.getWebContents(),
+                    currentTab.getTitle(), currentTab.getUrl(), null, shareDirectly, isIncognito);
         }
     }
 
     private void triggerShareWithCanonicalUrlResolved(final Activity mainActivity,
-            final Tab currentTab, final String canonicalUrl, final boolean shareDirectly,
-            boolean isIncognito) {
-        WebContents webContents = currentTab.getWebContents();
-
+            final WebContents webContents, final String title, final String visibleUrl,
+            final String canonicalUrl, final boolean shareDirectly, boolean isIncognito) {
         // Share an empty blockingUri in place of screenshot file. The file ready notification is
         // sent by onScreenshotReady call below when the file is written.
         final Uri blockingUri = (isIncognito || webContents == null)
@@ -158,8 +190,7 @@ public class ShareMenuActionHandler {
                 : ChromeFileProvider.generateUriAndBlockAccess(mainActivity);
         ShareParams.Builder builder =
                 new ShareParams
-                        .Builder(mainActivity, currentTab.getTitle(),
-                                getUrlToShare(currentTab.getUrl(), canonicalUrl))
+                        .Builder(mainActivity, title, getUrlToShare(visibleUrl, canonicalUrl))
                         .setShareDirectly(shareDirectly)
                         .setSaveLastUsed(!shareDirectly)
                         .setScreenshotUri(blockingUri);

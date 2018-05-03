@@ -6,6 +6,7 @@ package org.chromium.components.offline_items_collection;
 
 import android.os.Handler;
 
+import org.chromium.base.Callback;
 import org.chromium.base.ObserverList;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -75,15 +76,15 @@ public class OfflineContentAggregatorBridge implements OfflineContentProvider {
     }
 
     @Override
-    public OfflineItem getItemById(ContentId id) {
-        if (mNativeOfflineContentAggregatorBridge == 0) return null;
-        return nativeGetItemById(mNativeOfflineContentAggregatorBridge, id.namespace, id.id);
+    public void getItemById(ContentId id, Callback<OfflineItem> callback) {
+        if (mNativeOfflineContentAggregatorBridge == 0) return;
+        nativeGetItemById(mNativeOfflineContentAggregatorBridge, id.namespace, id.id, callback);
     }
 
     @Override
-    public ArrayList<OfflineItem> getAllItems() {
-        if (mNativeOfflineContentAggregatorBridge == 0) return null;
-        return nativeGetAllItems(mNativeOfflineContentAggregatorBridge);
+    public void getAllItems(Callback<ArrayList<OfflineItem>> callback) {
+        if (mNativeOfflineContentAggregatorBridge == 0) return;
+        nativeGetAllItems(mNativeOfflineContentAggregatorBridge, callback);
     }
 
     @Override
@@ -189,10 +190,10 @@ public class OfflineContentAggregatorBridge implements OfflineContentProvider {
             long nativeOfflineContentAggregatorBridge, String nameSpace, String id);
     private native void nativeResumeDownload(long nativeOfflineContentAggregatorBridge,
             String nameSpace, String id, boolean hasUserGesture);
-    private native OfflineItem nativeGetItemById(
-            long nativeOfflineContentAggregatorBridge, String nameSpace, String id);
-    private native ArrayList<OfflineItem> nativeGetAllItems(
-            long nativeOfflineContentAggregatorBridge);
+    private native void nativeGetItemById(long nativeOfflineContentAggregatorBridge,
+            String nameSpace, String id, Callback<OfflineItem> callback);
+    private native void nativeGetAllItems(
+            long nativeOfflineContentAggregatorBridge, Callback<ArrayList<OfflineItem>> callback);
     private native void nativeGetVisualsForItem(long nativeOfflineContentAggregatorBridge,
             String nameSpace, String id, VisualsCallback callback);
 }

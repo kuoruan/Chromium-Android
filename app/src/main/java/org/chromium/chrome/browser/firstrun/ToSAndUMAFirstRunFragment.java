@@ -4,7 +4,7 @@
 
 package org.chromium.chrome.browser.firstrun;
 
-import android.content.Context;
+import android.app.Fragment;
 import android.os.Bundle;
 import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
@@ -27,7 +27,20 @@ import org.chromium.ui.text.SpanApplier.SpanInfo;
  * Privacy Notice, and to opt-in to the usage statistics and crash reports collection ("UMA",
  * User Metrics Analysis) as defined in the Chrome Privacy Notice.
  */
-public class ToSAndUMAFirstRunFragment extends FirstRunPage {
+public class ToSAndUMAFirstRunFragment extends Fragment implements FirstRunFragment {
+    /** FRE page that instantiates this fragment. */
+    public static class Page implements FirstRunPage<ToSAndUMAFirstRunFragment> {
+        @Override
+        public boolean shouldSkipPageOnCreate() {
+            return FirstRunStatus.shouldSkipWelcomePage();
+        }
+
+        @Override
+        public ToSAndUMAFirstRunFragment instantiateFragment() {
+            return new ToSAndUMAFirstRunFragment();
+        }
+    }
+
     private Button mAcceptButton;
     private CheckBox mSendReportCheckBox;
     private TextView mTosAndPrivacy;
@@ -101,7 +114,8 @@ public class ToSAndUMAFirstRunFragment extends FirstRunPage {
         };
 
         final CharSequence tosAndPrivacyText;
-        if (getProperties().getBoolean(AccountFirstRunFragment.IS_CHILD_ACCOUNT)) {
+        Bundle freProperties = getPageDelegate().getProperties();
+        if (freProperties.getBoolean(AccountFirstRunFragment.IS_CHILD_ACCOUNT)) {
             tosAndPrivacyText =
                     SpanApplier.applySpans(getString(R.string.fre_tos_and_privacy_child_account),
                             new SpanInfo("<LINK1>", "</LINK1>", clickableTermsSpan),
@@ -147,20 +161,7 @@ public class ToSAndUMAFirstRunFragment extends FirstRunPage {
     }
 
     @Override
-    public boolean shouldSkipPageOnCreate(Context appContext) {
-        return FirstRunStatus.shouldSkipWelcomePage();
-    }
-
-    @Override
-    public boolean shouldRecreatePageOnDataChange() {
-        // Specify that this page shouldn't be re-created on notifyDataSetChanged(), so
-        // that state like mTriggerAcceptAfterNativeInit can be preserved on the instance
-        // when native is initialized.
-        return false;
-    }
-
-    @Override
-    protected void onNativeInitialized() {
+    public void onNativeInitialized() {
         assert !mNativeInitialized;
 
         mNativeInitialized = true;
@@ -179,7 +180,7 @@ public class ToSAndUMAFirstRunFragment extends FirstRunPage {
     }
 
     private void setSpinnerVisible(boolean spinnerVisible) {
-        // When the progress spinner is visibile, we hide the other UI elements so that
+        // When the progress spinner is visible, we hide the other UI elements so that
         // the user can't interact with them.
         int otherElementsVisible = spinnerVisible ? View.INVISIBLE : View.VISIBLE;
         mTitle.setVisibility(otherElementsVisible);

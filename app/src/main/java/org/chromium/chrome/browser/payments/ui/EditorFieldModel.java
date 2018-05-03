@@ -13,6 +13,7 @@ import org.chromium.base.ContextUtils;
 import org.chromium.chrome.browser.preferences.autofill.AutofillProfileBridge.DropdownKeyValue;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -117,6 +118,10 @@ public class EditorFieldModel {
     @Nullable private List<Integer> mIconResourceIds;
     @Nullable private List<Integer> mIconDescriptionsForAccessibility;
     @Nullable private List<DropdownKeyValue> mDropdownKeyValues;
+    @Nullable
+    private HashMap<String, CharSequence> mDropdownKeyToValueMap;
+    @Nullable
+    private HashMap<CharSequence, String> mDropdownValueToKeyMap;
     @Nullable private Set<String> mDropdownKeys;
     @Nullable private List<CharSequence> mSuggestions;
     @Nullable
@@ -137,6 +142,7 @@ public class EditorFieldModel {
     private int mActionIconResourceId;
     private int mActionIconDescriptionForAccessibility;
     private boolean mIsFullLine = true;
+    private boolean mPlusIconIsDisplayed = false;
 
     /**
      * Constructs a label to show in the editor. This can be, for example, description of a server
@@ -401,15 +407,68 @@ public class EditorFieldModel {
         return mDropdownKeys;
     }
 
+    /**
+     * In the dropdown list, finds the key that corresponds to the value.
+     * If the value is not in the list, returns null.
+     * This assumes a one-to-one relation between keys and values.
+     *
+     * @param value The value to lookup.
+     * @return The key that corresponds to the value.
+     */
+    @Nullable
+    public String getDropdownKeyByValue(@Nullable CharSequence value) {
+        assert mInputTypeHint == INPUT_TYPE_HINT_DROPDOWN;
+        return mDropdownValueToKeyMap.get(value);
+    }
+
+    /**
+     * In the dropdown list, finds the value that corresponds to the key.
+     * If the key is not in the list, returns null.
+     * This assumes a one-to-one relation between keys and values.
+     *
+     * @param key The key to lookup.
+     * @return The value that corresponds to the key.
+     */
+    @Nullable
+    public CharSequence getDropdownValueByKey(@Nullable String key) {
+        assert mInputTypeHint == INPUT_TYPE_HINT_DROPDOWN;
+        return mDropdownKeyToValueMap.get(key);
+    }
+
     /** Updates the dropdown key values. */
     public void setDropdownKeyValues(List<DropdownKeyValue> dropdownKeyValues) {
         assert mInputTypeHint == INPUT_TYPE_HINT_DROPDOWN;
         mDropdownKeyValues = dropdownKeyValues;
         mDropdownKeys = new HashSet<>();
+        mDropdownKeyToValueMap = new HashMap<>();
+        mDropdownValueToKeyMap = new HashMap<>();
         for (int i = 0; i < mDropdownKeyValues.size(); i++) {
             mDropdownKeys.add(mDropdownKeyValues.get(i).getKey());
+            mDropdownValueToKeyMap.put(
+                    mDropdownKeyValues.get(i).getValue(), mDropdownKeyValues.get(i).getKey());
+            mDropdownKeyToValueMap.put(
+                    mDropdownKeyValues.get(i).getKey(), mDropdownKeyValues.get(i).getValue());
         }
         assert mDropdownKeyValues.size() == mDropdownKeys.size();
+    }
+
+    /**
+     * @return True if the last visible item on the dropdown list, needs a '+' icon on the right.
+     */
+    public boolean isDisplayPlusIcon() {
+        assert mInputTypeHint == INPUT_TYPE_HINT_DROPDOWN;
+        return mPlusIconIsDisplayed;
+    }
+
+    /**
+     * Sets whether the last item of this dropdown list needs a '+' icon on the right. By
+     * default, the item doesn't need that.
+     *
+     * @param plusIconIsDisplayed Whether the last item of the this dropdown list needs a '+' icon.
+     */
+    public void setDisplayPlusIcon(boolean plusIconIsDisplayed) {
+        assert mInputTypeHint == INPUT_TYPE_HINT_DROPDOWN;
+        mPlusIconIsDisplayed = plusIconIsDisplayed;
     }
 
     /** @return The human-readable label for this field. */
@@ -483,8 +542,12 @@ public class EditorFieldModel {
      * @param key      The new dropdown key.
      * @param callback The callback to invoke when the change has been processed.
      */
-    public void setDropdownKey(String key, Runnable callback) {
+    public void setDropdownKey(@Nullable String key, Runnable callback) {
         assert mInputTypeHint == INPUT_TYPE_HINT_DROPDOWN;
+        // The mValue can only be set to null if there is a hint.
+        if (key == null && mHint == null) {
+            return;
+        }
         mValue = key;
         if (mDropdownCallback != null) {
             mDropdownCallback.onResult(new Pair<String, Runnable>(key, callback));

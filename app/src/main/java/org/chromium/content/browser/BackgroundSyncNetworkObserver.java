@@ -47,6 +47,9 @@ class BackgroundSyncNetworkObserver implements NetworkChangeNotifierAutoDetect.O
     // List of native observers. These are each called when the network state changes.
     private List<Long> mNativePtrs;
 
+    private int mLastBroadcastConnectionType;
+    private boolean mHasBroadcastConnectionType;
+
     private BackgroundSyncNetworkObserver() {
         ThreadUtils.assertOnUiThread();
         mNativePtrs = new ArrayList<Long>();
@@ -100,22 +103,47 @@ class BackgroundSyncNetworkObserver implements NetworkChangeNotifierAutoDetect.O
         }
     }
 
-    @Override
-    public void onConnectionTypeChanged(int newConnectionType) {
-        ThreadUtils.assertOnUiThread();
+    private void broadcastNetworkChangeIfNecessary(int newConnectionType) {
+        if (mHasBroadcastConnectionType && newConnectionType == mLastBroadcastConnectionType)
+            return;
+
+        mHasBroadcastConnectionType = true;
+        mLastBroadcastConnectionType = newConnectionType;
         for (Long nativePtr : mNativePtrs) {
             nativeNotifyConnectionTypeChanged(nativePtr, newConnectionType);
         }
     }
 
     @Override
-    public void onConnectionSubtypeChanged(int newConnectionSubtype) {}
+    public void onConnectionTypeChanged(int newConnectionType) {
+        ThreadUtils.assertOnUiThread();
+        broadcastNetworkChangeIfNecessary(newConnectionType);
+    }
+
     @Override
-    public void onNetworkConnect(long netId, int connectionType) {}
+    public void onConnectionSubtypeChanged(int newConnectionSubtype) {}
+
+    @Override
+    public void onNetworkConnect(long netId, int connectionType) {
+        ThreadUtils.assertOnUiThread();
+        // If we're in doze mode (N+ devices), onConnectionTypeChanged may not
+        // be called, but this function should. So update the connection type
+        // if necessary.
+        broadcastNetworkChangeIfNecessary(mNotifier.getCurrentNetworkState().getConnectionType());
+    }
+
     @Override
     public void onNetworkSoonToDisconnect(long netId) {}
+
     @Override
-    public void onNetworkDisconnect(long netId) {}
+    public void onNetworkDisconnect(long netId) {
+        ThreadUtils.assertOnUiThread();
+        // If we're in doze mode (N+ devices), onConnectionTypeChanged may not
+        // be called, but this function should. So update the connection type
+        // if necessary.
+        broadcastNetworkChangeIfNecessary(mNotifier.getCurrentNetworkState().getConnectionType());
+    }
+
     @Override
     public void purgeActiveNetworkList(long[] activeNetIds) {}
 

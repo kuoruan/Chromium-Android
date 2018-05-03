@@ -17,6 +17,9 @@ import java.lang.reflect.Method;
 /** Helper class for captive portal related methods on Android. */
 @JNINamespace("chrome::android")
 public class CaptivePortalHelper {
+    private static final String DEFAULT_PORTAL_CHECK_URL =
+            "http://connectivitycheck.gstatic.com/generate_204";
+
     public static void setCaptivePortalCertificateForTesting(String spkiHash) {
         nativeSetCaptivePortalCertificateForTesting(spkiHash);
     }
@@ -39,9 +42,13 @@ public class CaptivePortalHelper {
             Method getCaptivePortalServerUrlMethod =
                     connectivityManager.getClass().getMethod("getCaptivePortalServerUrl");
             return (String) getCaptivePortalServerUrlMethod.invoke(connectivityManager);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+        } catch (NoSuchMethodException e) {
             // To avoid crashing, return the default portal check URL on Android.
-            return "http://connectivitycheck.gstatic.com/generate_204";
+            return DEFAULT_PORTAL_CHECK_URL;
+        } catch (IllegalAccessException e) {
+            return DEFAULT_PORTAL_CHECK_URL;
+        } catch (InvocationTargetException e) {
+            return DEFAULT_PORTAL_CHECK_URL;
         }
     }
 

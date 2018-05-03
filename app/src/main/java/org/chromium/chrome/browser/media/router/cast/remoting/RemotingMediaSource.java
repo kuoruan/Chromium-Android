@@ -9,6 +9,7 @@ import android.util.Base64;
 import com.google.android.gms.cast.CastMediaControlIntent;
 
 import org.chromium.base.Log;
+import org.chromium.chrome.browser.media.router.cast.MediaSource;
 
 import java.io.UnsupportedEncodingException;
 
@@ -17,7 +18,7 @@ import javax.annotation.Nullable;
 /**
  * Abstracts parsing the Cast application id and other parameters from the source id.
  */
-public class RemotingMediaSource {
+public class RemotingMediaSource implements MediaSource {
     private static final String TAG = "MediaRemoting";
 
     // Need to be in sync with third_party/WebKit/Source/modules/remoteplayback/RemotePlayback.cpp.
@@ -71,6 +72,7 @@ public class RemotingMediaSource {
      *
      * @return an initialized route selector or null.
      */
+    @Override
     public MediaRouteSelector buildRouteSelector() {
         return new MediaRouteSelector.Builder()
                 .addControlCategory(CastMediaControlIntent.categoryForCast(mApplicationId))
@@ -80,6 +82,7 @@ public class RemotingMediaSource {
     /**
      * @return the Cast application id corresponding to the source. Can be overridden downstream.
      */
+    @Override
     public String getApplicationId() {
         return mApplicationId;
     }
@@ -87,6 +90,7 @@ public class RemotingMediaSource {
     /**
      * @return the id identifying the media source
      */
+    @Override
     public String getSourceId() {
         return mSourceId;
     }

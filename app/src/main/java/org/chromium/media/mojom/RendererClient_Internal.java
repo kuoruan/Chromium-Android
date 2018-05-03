@@ -19,23 +19,28 @@ class RendererClient_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<RendererClient, RendererClient.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<RendererClient, RendererClient.Proxy>() {
     
+        @Override
         public String getName() {
             return "media::mojom::RendererClient";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, RendererClient impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public RendererClient[] buildArray(int size) {
           return new RendererClient[size];
         }

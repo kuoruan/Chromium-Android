@@ -99,7 +99,7 @@ public interface CastSession {
 
     /**
      * Stops the application. The methods tells the Cast SDK to stop the application and on
-     * response, it will notify all the clients through the message ahndler.
+     * response, it will notify all the clients through the message handler.
      */
     void stopApplication();
 

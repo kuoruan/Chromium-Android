@@ -13,18 +13,18 @@ public interface ImeEventObserver {
     /**
      * Called to notify the delegate about synthetic/real key events before sending to renderer.
      */
-    void onImeEvent();
+    default void onImeEvent() {}
 
     /**
      * Called when the focused node attribute is updated.
      * @param editable {@code true} if the node becomes editable; else {@code false}.
      * @param password indicates the node is of type password if {@code true}.
      */
-    void onNodeAttributeUpdated(boolean editable, boolean password);
+    default void onNodeAttributeUpdated(boolean editable, boolean password) {}
 
     /**
      * Called to notify the delegate that an IME called InputConnection#sendKeyEvent().
      * @param event The event passed to InputConnection#sendKeyEvent().
      */
-    void onBeforeSendKeyEvent(KeyEvent event);
+    default void onBeforeSendKeyEvent(KeyEvent event) {}
 }

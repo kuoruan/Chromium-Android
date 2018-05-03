@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.offlinepages;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -146,6 +147,8 @@ public class OfflinePageOrigin {
      * @return a sorted list of strings representing the signatures of an app.
      *          Null if the app name is invalid or cannot be found.
      */
+    @SuppressLint("PackageManagerGetSignatures")
+    // https://stackoverflow.com/questions/39192844/android-studio-warning-when-using-packagemanager-get-signatures
     private static String[] getAppSignaturesFor(Context context, String appName) {
         if (TextUtils.isEmpty(appName)) return null;
         try {

@@ -99,8 +99,9 @@ public final class DefaultBrowserInfo {
                         ResolveInfo info = getResolveInfoForViewIntent(pm);
 
                         // Caches whether Chrome is set as a default browser on the device.
-                        boolean isDefault = (info != null && info.match != 0
-                                && context.getPackageName().equals(info.activityInfo.packageName));
+                        boolean isDefault = info != null && info.match != 0
+                                && TextUtils.equals(
+                                           context.getPackageName(), info.activityInfo.packageName);
                         ChromePreferenceManager.getInstance().setCachedChromeDefaultBrowser(
                                 isDefault);
 

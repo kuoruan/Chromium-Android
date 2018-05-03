@@ -6,11 +6,11 @@ package org.chromium.chrome.browser;
 
 class ChromeVersionConstants {
     static final String PRODUCT_NAME = "Chromium";
-    static final String PRODUCT_VERSION = "64.0.3282.186";
+    static final String PRODUCT_VERSION = "65.0.3325.230";
     @SuppressWarnings({"ComplexBooleanConstant", "IdentityBinaryExpression"})
     static final boolean IS_OFFICIAL_BUILD = 1 == 1;
 
-    static final int PRODUCT_MAJOR_VERSION = 64;
+    static final int PRODUCT_MAJOR_VERSION = 65;
 
     static final int CHANNEL_DEFAULT = 0;
     static final int CHANNEL_CANARY = 1;
@@ -18,5 +18,5 @@ class ChromeVersionConstants {
     static final int CHANNEL_BETA = 3;
     static final int CHANNEL_STABLE = 4;
     static final int CHANNEL_WORK = 5;
-    static final int CHANNEL = CHANNEL_DEFAULT;
+    static final int CHANNEL = CHANNEL_STABLE;
 }

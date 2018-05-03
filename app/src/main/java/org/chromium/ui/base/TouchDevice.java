@@ -82,9 +82,6 @@ public class TouchDevice {
                     || hasSource(sources, InputDevice.SOURCE_TOUCHPAD)
                     || hasSource(sources, InputDevice.SOURCE_TRACKBALL)) {
                 result[1] |= HoverType.HOVER;
-            } else if (hasSource(sources, InputDevice.SOURCE_STYLUS)
-                    || hasSource(sources, InputDevice.SOURCE_TOUCHSCREEN)) {
-                result[1] |= HoverType.NONE;
             }
 
             // Remaining InputDevice sources: SOURCE_DPAD, SOURCE_GAMEPAD, SOURCE_JOYSTICK,

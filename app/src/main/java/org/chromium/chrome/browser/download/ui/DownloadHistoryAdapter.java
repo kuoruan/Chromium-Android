@@ -263,7 +263,7 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
 
         if (wrapper.hasBeenExternallyRemoved()) {
             sDeletedFileTracker.add(wrapper);
-            wrapper.remove();
+            wrapper.removePermanently();
             mFilePathsToItemsMap.removeItem(wrapper);
             RecordUserAction.record("Android.DownloadManager.Item.ExternallyDeleted");
             return true;
@@ -738,15 +738,16 @@ public class DownloadHistoryAdapter extends DateDividedAdapter
 
     @Override
     public void onItemsAvailable() {
-        List<OfflineItem> offlineItems = getOfflineContentProvider().getAllItems();
-        for (OfflineItem item : offlineItems) {
-            if (item.isTransient) continue;
-            DownloadHistoryItemWrapper wrapper = createDownloadHistoryItemWrapper(item);
-            addDownloadHistoryItemWrapper(wrapper);
-        }
+        getOfflineContentProvider().getAllItems(offlineItems -> {
+            for (OfflineItem item : offlineItems) {
+                if (item.isTransient) continue;
+                DownloadHistoryItemWrapper wrapper = createDownloadHistoryItemWrapper(item);
+                addDownloadHistoryItemWrapper(wrapper);
+            }
 
-        recordOfflineItemCountHistograms();
-        onItemsRetrieved(LoadingStateDelegate.OFFLINE_ITEMS);
+            recordOfflineItemCountHistograms();
+            onItemsRetrieved(LoadingStateDelegate.OFFLINE_ITEMS);
+        });
     }
 
     private void recordOfflineItemCountHistograms() {

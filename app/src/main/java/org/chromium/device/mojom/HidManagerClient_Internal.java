@@ -19,23 +19,28 @@ class HidManagerClient_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<HidManagerClient, HidManagerClient.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<HidManagerClient, HidManagerClient.Proxy>() {
     
+        @Override
         public String getName() {
             return "device::mojom::HidManagerClient";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, HidManagerClient impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public HidManagerClient[] buildArray(int size) {
           return new HidManagerClient[size];
         }

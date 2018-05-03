@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.PointF;
 import android.graphics.drawable.Drawable;
+import android.support.annotation.IdRes;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -29,6 +30,7 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.ApplicationStatus.ActivityStateListener;
 import org.chromium.base.ContextUtils;
+import org.chromium.base.StrictModeContext;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.library_loader.LibraryProcessType;
 import org.chromium.chrome.R;
@@ -38,6 +40,7 @@ import org.chromium.chrome.browser.bookmarks.BookmarkSheetContent;
 import org.chromium.chrome.browser.download.DownloadSheetContent;
 import org.chromium.chrome.browser.history.HistorySheetContent;
 import org.chromium.chrome.browser.ntp.IncognitoBottomSheetContent;
+import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;
 import org.chromium.chrome.browser.suggestions.SuggestionsBottomSheetContent;
 import org.chromium.chrome.browser.tabmodel.EmptyTabModelSelectorObserver;
@@ -51,6 +54,7 @@ import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.BottomSheetCon
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.StateChangeReason;
 import org.chromium.chrome.browser.widget.bottomsheet.base.BottomNavigationView;
 import org.chromium.chrome.browser.widget.bottomsheet.base.BottomNavigationView.OnNavigationItemSelectedListener;
+import org.chromium.chrome.browser.widget.textbubble.ViewAnchoredTextBubble;
 import org.chromium.content.browser.BrowserStartupController;
 import org.chromium.ui.UiUtils;
 
@@ -110,7 +114,7 @@ public class BottomSheetContentController
                 float offsetY = mBottomSheet.getSheetHeightForState(mBottomSheet.isSmallScreen()
                                                 ? BottomSheet.SHEET_STATE_FULL
                                                 : BottomSheet.SHEET_STATE_HALF)
-                        - mBottomSheet.getSheetOffsetFromBottom();
+                        - mBottomSheet.getCurrentOffsetPx();
                 setTranslationY(Math.max(offsetY, 0f));
 
                 if (mBottomSheet.getTargetSheetState() != BottomSheet.SHEET_STATE_PEEK
@@ -148,7 +152,11 @@ public class BottomSheetContentController
         public void onSheetClosed(@StateChangeReason int reason) {
             removeIcons();
 
-            if (ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_DESTROY_SUGGESTIONS)) {
+            if (ChromeFeatureList.isInitialized()
+                    && ChromeFeatureList.isEnabled(
+                               ChromeFeatureList.CHROME_HOME_DESTROY_SUGGESTIONS)
+                    && !ChromeFeatureList.isEnabled(
+                               ChromeFeatureList.CONTEXTUAL_SUGGESTIONS_ABOVE_ARTICLES)) {
                 // TODO(bauerb): Implement support for destroying the home sheet after a delay.
                 mSelectedItemId = NO_CONTENT_ID;
                 mBottomSheet.showContent(null);
@@ -175,8 +183,12 @@ public class BottomSheetContentController
 
             if (mShouldOpenSheetOnNextContentChange) {
                 mShouldOpenSheetOnNextContentChange = false;
-                if (mBottomSheet.getSheetState() != BottomSheet.SHEET_STATE_FULL) {
-                    mBottomSheet.setSheetState(BottomSheet.SHEET_STATE_FULL, true);
+                @BottomSheet.SheetState
+                int targetState = mShouldOpenSheetToHalfOnNextContentChange
+                        ? BottomSheet.SHEET_STATE_HALF
+                        : BottomSheet.SHEET_STATE_FULL;
+                if (mBottomSheet.getSheetState() != targetState) {
+                    mBottomSheet.setSheetState(targetState, true);
                 }
                 return;
             }
@@ -198,6 +210,7 @@ public class BottomSheetContentController
     private int mSelectedItemId;
     private ChromeActivity mActivity;
     private boolean mShouldOpenSheetOnNextContentChange;
+    private boolean mShouldOpenSheetToHalfOnNextContentChange;
     private boolean mShouldClearContentsOnNextContentChange;
     private PlaceholderSheetContent mPlaceholderContent;
     private boolean mOmniboxHasFocus;
@@ -233,11 +246,13 @@ public class BottomSheetContentController
 
     @Override
     public void onFinishInflate() {
+        super.onFinishInflate();
         BrowserStartupController.get(LibraryProcessType.PROCESS_BROWSER)
                 .addStartupCompletedObserver(new BrowserStartupController.StartupCallback() {
                     @Override
                     public void onSuccess(boolean alreadyStarted) {
                         initBottomNavMenu();
+                        setIconsEnabled(true);
                     }
 
                     @Override
@@ -257,6 +272,7 @@ public class BottomSheetContentController
         mBottomSheet.addObserver(mBottomSheetObserver);
         mActivity = activity;
         mTabModelSelector = tabModelSelector;
+        setIconsEnabled(mActivity.didFinishNativeInitialization());
 
         mTabModelSelectorObserver = new EmptyTabModelSelectorObserver() {
             @Override
@@ -577,6 +593,12 @@ public class BottomSheetContentController
         getMenu().findItem(R.id.action_history).setIcon(null);
     }
 
+    private void setIconsEnabled(boolean enabled) {
+        getMenu().findItem(R.id.action_downloads).setEnabled(enabled);
+        getMenu().findItem(R.id.action_bookmarks).setEnabled(enabled);
+        getMenu().findItem(R.id.action_history).setEnabled(enabled);
+    }
+
     /**
      * Get the background color resource ID for the bottom navigation menu based on whether
      * we're in incognito mode.
@@ -753,5 +775,66 @@ public class BottomSheetContentController
 
             animator.start();
         }
+    }
+
+    /**
+     * Record a menu item click and open the bottom sheet to the specified content. This method
+     * assumes that Chrome Home is enabled.
+     * @param navId The bottom sheet navigation id to open.
+     */
+    public void openBottomSheetForMenuItem(@IdRes int navId) {
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
+            ChromePreferenceManager.getInstance().incrementChromeHomeMenuItemClickCount();
+        }
+
+        mShouldOpenSheetToHalfOnNextContentChange = true;
+        final View highlightedView = findViewById(navId);
+
+        int stringId = 0;
+        if (navId == R.id.action_bookmarks) {
+            stringId = R.string.chrome_home_menu_bookmarks_help_bubble;
+        } else if (navId == R.id.action_downloads) {
+            stringId = R.string.chrome_home_menu_downloads_help_bubble;
+        } else if (navId == R.id.action_history) {
+            stringId = R.string.chrome_home_menu_history_help_bubble;
+        } else {
+            throw new RuntimeException("Attempting to show invalid content in bottom sheet.");
+        }
+
+        final ViewAnchoredTextBubble helpBubble =
+                new ViewAnchoredTextBubble(getContext(), mBottomSheet, stringId, stringId);
+        helpBubble.setDismissOnTouchInteraction(true);
+
+        mBottomSheet.addObserver(new EmptyBottomSheetObserver() {
+            /** Whether the help bubble has been shown. */
+            private boolean mHelpBubbleShown;
+
+            @Override
+            public void onSheetContentChanged(BottomSheet.BottomSheetContent newContent) {
+                if (getSheetContentForId(navId) == newContent) return;
+                post(() -> {
+                    ViewHighlighter.turnOffHighlight(highlightedView);
+                    mBottomSheet.removeObserver(this);
+                });
+            }
+
+            @Override
+            public void onSheetOpened(@StateChangeReason int reason) {
+                ViewHighlighter.turnOnHighlight(highlightedView, false);
+                mShouldOpenSheetToHalfOnNextContentChange = false;
+            }
+
+            @Override
+            public void onSheetStateChanged(@BottomSheet.SheetState int state) {
+                if (state != BottomSheet.SHEET_STATE_HALF || mHelpBubbleShown) return;
+                int inset = getContext().getResources().getDimensionPixelSize(
+                        R.dimen.bottom_sheet_help_bubble_inset);
+                helpBubble.setInsetPx(0, inset, 0, inset);
+                helpBubble.show();
+                mHelpBubbleShown = true;
+            }
+        });
+
+        showContentAndOpenSheet(navId);
     }
 }

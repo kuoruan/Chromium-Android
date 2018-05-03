@@ -25,7 +25,7 @@ public interface ServiceFactory extends org.chromium.mojo.bindings.Interface {
 
 
     void createService(
-org.chromium.mojo.bindings.InterfaceRequest<Service> service, String name);
+org.chromium.mojo.bindings.InterfaceRequest<Service> service, String name, PidReceiver pidReceiver);
 
 
 }

@@ -17,7 +17,7 @@ public enum ContentSetting {
     SESSION_ONLY(ContentSettingValues.SESSION_ONLY),
     DETECT_IMPORTANT_CONTENT(ContentSettingValues.DETECT_IMPORTANT_CONTENT);
 
-    private int mValue;
+    private final int mValue;
 
     /**
      * Converts the enum value to int. The integer value should be used when dealing with native

@@ -6,12 +6,7 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/content"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginStart="@dimen/list_item_default_margin"
-    android:paddingTop="@dimen/list_item_top_bottom_padding"
-    android:paddingBottom="@dimen/list_item_top_bottom_padding"
-    android:orientation="horizontal" >
+    style="@style/ListItemContainer" >
 
     <include layout="@layout/modern_list_item_view" />
 

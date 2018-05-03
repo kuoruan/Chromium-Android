@@ -12,6 +12,7 @@ import org.chromium.base.Callback;
 import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.payments.AddressEditor;
 import org.chromium.chrome.browser.payments.AutofillAddress;
+import org.chromium.chrome.browser.payments.SettingsAutofillAndPaymentsObserver;
 import org.chromium.chrome.browser.payments.ui.EditorDialog;
 import org.chromium.chrome.browser.payments.ui.EditorObserverForTest;
 
@@ -64,6 +65,8 @@ public class AutofillProfileEditorPreference extends Preference {
             public void onResult(AutofillAddress address) {
                 if (address != null) {
                     PersonalDataManager.getInstance().setProfile(address.getProfile());
+                    SettingsAutofillAndPaymentsObserver.getInstance().notifyOnAddressUpdated(
+                            address);
                 }
                 if (mObserverForTest != null) {
                     mObserverForTest.onEditorReadyToEdit();
@@ -83,6 +86,8 @@ public class AutofillProfileEditorPreference extends Preference {
                 public void run() {
                     if (mGUID != null) {
                         PersonalDataManager.getInstance().deleteProfile(mGUID);
+                        SettingsAutofillAndPaymentsObserver.getInstance().notifyOnAddressDeleted(
+                                mGUID);
                     }
                     if (mObserverForTest != null) {
                         mObserverForTest.onEditorReadyToEdit();

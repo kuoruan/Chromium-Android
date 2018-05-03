@@ -20,18 +20,23 @@ import org.chromium.ui.base.WindowAndroid;
 import java.lang.reflect.Method;
 
 /**
- * A wrapper for DaydreamApi. Note that we have to recreate the DaydreamApi instance each time we
- * use it, or API calls begin to silently fail.
+ * A wrapper for DaydreamApi.
  */
 public class VrDaydreamApiImpl implements VrDaydreamApi {
+    public static final String VR_BOOT_SYSTEM_PROPERTY = "ro.boot.vr";
+
     private final Context mContext;
 
+    private DaydreamApi mDaydreamApi;
     private Boolean mBootsToVr = null;
-
-    public static final String VR_BOOT_SYSTEM_PROPERTY = "ro.boot.vr";
 
     public VrDaydreamApiImpl(Context context) {
         mContext = context;
+    }
+
+    private DaydreamApi getDaydreamApi() {
+        if (mDaydreamApi == null) mDaydreamApi = DaydreamApi.create(mContext);
+        return mDaydreamApi;
     }
 
     @Override
@@ -41,19 +46,17 @@ public class VrDaydreamApiImpl implements VrDaydreamApi {
 
     @Override
     public boolean registerDaydreamIntent(final PendingIntent pendingIntent) {
-        DaydreamApi daydreamApi = DaydreamApi.create(mContext);
+        DaydreamApi daydreamApi = getDaydreamApi();
         if (daydreamApi == null) return false;
         daydreamApi.registerDaydreamIntent(pendingIntent);
-        daydreamApi.close();
         return true;
     }
 
     @Override
     public boolean unregisterDaydreamIntent() {
-        DaydreamApi daydreamApi = DaydreamApi.create(mContext);
+        DaydreamApi daydreamApi = getDaydreamApi();
         if (daydreamApi == null) return false;
         daydreamApi.unregisterDaydreamIntent();
-        daydreamApi.close();
         return true;
     }
 
@@ -64,19 +67,17 @@ public class VrDaydreamApiImpl implements VrDaydreamApi {
 
     @Override
     public boolean launchInVr(final PendingIntent pendingIntent) {
-        DaydreamApi daydreamApi = DaydreamApi.create(mContext);
+        DaydreamApi daydreamApi = getDaydreamApi();
         if (daydreamApi == null) return false;
         daydreamApi.launchInVr(pendingIntent);
-        daydreamApi.close();
         return true;
     }
 
     @Override
     public boolean launchInVr(final Intent intent) {
-        DaydreamApi daydreamApi = DaydreamApi.create(mContext);
+        DaydreamApi daydreamApi = getDaydreamApi();
         if (daydreamApi == null) return false;
         daydreamApi.launchInVr(intent);
-        daydreamApi.close();
         return true;
     }
 
@@ -86,16 +87,15 @@ public class VrDaydreamApiImpl implements VrDaydreamApi {
         if (activity == null) {
             throw new IllegalStateException("Activity is null");
         }
-        DaydreamApi daydreamApi = DaydreamApi.create(activity);
+        DaydreamApi daydreamApi = getDaydreamApi();
         if (daydreamApi == null) return false;
         daydreamApi.exitFromVr(activity, requestCode, intent);
-        daydreamApi.close();
         return true;
     }
 
     @Override
     public Boolean isDaydreamCurrentViewer() {
-        DaydreamApi daydreamApi = DaydreamApi.create(mContext);
+        DaydreamApi daydreamApi = getDaydreamApi();
         if (daydreamApi == null) return false;
         // If this is the first time any app reads the daydream config file, daydream may create its
         // config directory... crbug.com/686104
@@ -106,16 +106,14 @@ public class VrDaydreamApiImpl implements VrDaydreamApi {
         } finally {
             StrictMode.setThreadPolicy(oldPolicy);
         }
-        daydreamApi.close();
         return type == GvrApi.ViewerType.DAYDREAM;
     }
 
     @Override
     public boolean launchVrHomescreen() {
-        DaydreamApi daydreamApi = DaydreamApi.create(mContext);
+        DaydreamApi daydreamApi = getDaydreamApi();
         if (daydreamApi == null) return false;
         daydreamApi.launchVrHomescreen();
-        daydreamApi.close();
         return true;
     }
 
@@ -129,6 +127,13 @@ public class VrDaydreamApiImpl implements VrDaydreamApi {
             mBootsToVr = getIntSystemProperty(VR_BOOT_SYSTEM_PROPERTY, 0) == 1;
         }
         return mBootsToVr;
+    }
+
+    @Override
+    public void close() {
+        if (mDaydreamApi == null) return;
+        mDaydreamApi.close();
+        mDaydreamApi = null;
     }
 
     private int getIntSystemProperty(String key, int defaultValue) {

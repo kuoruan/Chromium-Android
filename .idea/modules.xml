@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/Chromium.iml" filepath="$PROJECT_DIR$/Chromium.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/components/autofill/autofill.iml" filepath="$PROJECT_DIR$/components/autofill/autofill.iml" />
+      <module fileurl="file://$PROJECT_DIR$/browseractions/browseractions.iml" filepath="$PROJECT_DIR$/browseractions/browseractions.iml" />
       <module fileurl="file://$PROJECT_DIR$/components/components.iml" filepath="$PROJECT_DIR$/components/components.iml" />
       <module fileurl="file://$PROJECT_DIR$/components/components_base/components_base.iml" filepath="$PROJECT_DIR$/components/components_base/components_base.iml" />
       <module fileurl="file://$PROJECT_DIR$/content/content.iml" filepath="$PROJECT_DIR$/content/content.iml" />

@@ -56,15 +56,16 @@ public abstract class FirstRunActivityBase extends AsyncInitializationActivity {
     @Override
     public void onPause() {
         super.onPause();
+        UmaUtils.recordBackgroundTime();
         flushPersistentData();
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
+    public void onResume() {
+        super.onResume();
         // Since the FRE may be shown before any tab is shown, mark that this is the point at
         // which Chrome went to foreground. This is needed as otherwise an assert will be hit
-        // in UmaUtils.getForegroundStartTime() when recording the time taken to load the first
+        // in UmaUtils.getForegroundStartTicks() when recording the time taken to load the first
         // page (which happens after native has been initialized possibly while FRE is still
         // active).
         UmaUtils.recordForegroundStartTime();

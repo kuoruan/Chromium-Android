@@ -12,7 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.webkit.WebSettings;
 
-import org.chromium.content.browser.SelectionPopupController;
+import org.chromium.content.browser.selection.SelectionPopupControllerImpl;
 
 /**
  * Helper class for {@link WebActionMode} encapsulating
@@ -20,6 +20,7 @@ import org.chromium.content.browser.SelectionPopupController;
  * for embedder to provide with the callback instance that interacts with it.
  */
 public abstract class ActionModeCallbackHelper {
+    private static final String TAG = "ActionModeHelper";
 
     /** Google search doesn't support requests slightly larger than this. */
     public static final int MAX_SEARCH_QUERY_LENGTH = 1000;
@@ -37,7 +38,7 @@ public abstract class ActionModeCallbackHelper {
      * @param maxLength maximum length to which the query will be truncated.
      */
     public static String sanitizeQuery(String query, int maxLength) {
-        return SelectionPopupController.sanitizeQuery(query, maxLength);
+        return SelectionPopupControllerImpl.sanitizeQuery(query, maxLength);
     }
 
     /**

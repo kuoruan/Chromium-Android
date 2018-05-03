@@ -4,6 +4,7 @@
 
 package org.chromium.content.browser.input;
 
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.view.View;
@@ -107,8 +108,8 @@ public class ThreadedInputConnectionFactory implements ChromiumBaseInputConnecti
     }
 
     @Override
-    public ThreadedInputConnection initializeAndGet(View view, ImeAdapter imeAdapter, int inputType,
-            int inputFlags, int inputMode, int selectionStart, int selectionEnd,
+    public ThreadedInputConnection initializeAndGet(View view, ImeAdapterImpl imeAdapter,
+            int inputType, int inputFlags, int inputMode, int selectionStart, int selectionEnd,
             EditorInfo outAttrs) {
         ImeUtils.checkOnUiThread();
 
@@ -120,15 +121,17 @@ public class ThreadedInputConnectionFactory implements ChromiumBaseInputConnecti
             Log.i(TAG, "initializeAndGet. outAttr: " + ImeUtils.getEditorInfoDebugString(outAttrs));
         }
 
-        // IMM can internally ignore subsequent activation requests, e.g., by checking
-        // mServedConnecting.
-        if (mCheckInvalidator != null) mCheckInvalidator.invalidate();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            // IMM can internally ignore subsequent activation requests, e.g., by checking
+            // mServedConnecting.
+            if (mCheckInvalidator != null) mCheckInvalidator.invalidate();
 
-        if (shouldTriggerDelayedOnCreateInputConnection()) {
-            triggerDelayedOnCreateInputConnection(view);
-            return null;
+            if (shouldTriggerDelayedOnCreateInputConnection()) {
+                triggerDelayedOnCreateInputConnection(view);
+                return null;
+            }
+            if (DEBUG_LOGS) Log.i(TAG, "initializeAndGet: called from proxy view");
         }
-        if (DEBUG_LOGS) Log.i(TAG, "initializeAndGet: called from proxy view");
 
         if (mThreadedInputConnection == null) {
             if (DEBUG_LOGS) Log.i(TAG, "Creating ThreadedInputConnection...");

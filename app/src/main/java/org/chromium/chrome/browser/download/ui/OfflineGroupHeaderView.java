@@ -41,9 +41,9 @@ public class OfflineGroupHeaderView
     private DownloadHistoryAdapter mAdapter;
     private DownloadItemSelectionDelegate mSelectionDelegate;
 
-    private TextView mDescriptionView;
+    private TextView mDescriptionTextView;
     private ImageView mExpandImage;
-    private TintedImageView mIconView;
+    private TintedImageView mIconImageView;
 
     public OfflineGroupHeaderView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -65,8 +65,8 @@ public class OfflineGroupHeaderView
     protected void onFinishInflate() {
         super.onFinishInflate();
 
-        mIconView = (TintedImageView) findViewById(R.id.icon_view);
-        mDescriptionView = (TextView) findViewById(R.id.description);
+        mIconImageView = (TintedImageView) findViewById(R.id.icon_view);
+        mDescriptionTextView = (TextView) findViewById(R.id.description);
         mExpandImage = (ImageView) findViewById(R.id.expand_icon);
     }
 
@@ -79,6 +79,7 @@ public class OfflineGroupHeaderView
 
     @Override
     public void setChecked(boolean checked) {
+        if (checked == isChecked()) return;
         super.setChecked(checked);
         updateCheckIcon(checked);
     }
@@ -102,9 +103,10 @@ public class OfflineGroupHeaderView
         String description = String.format(Locale.getDefault(), "%s - %s",
                 Formatter.formatFileSize(getContext(), header.getTotalFileSize()),
                 getContext().getString(R.string.download_manager_offline_header_description));
-        mDescriptionView.setText(description);
+        mDescriptionTextView.setText(description);
         updateExpandIcon(header.isExpanded());
         setChecked(mSelectionDelegate.isHeaderSelected(header));
+        updateCheckIcon(isChecked());
     }
 
     private void updateExpandIcon(boolean expanded) {
@@ -117,26 +119,27 @@ public class OfflineGroupHeaderView
     private void updateCheckIcon(boolean checked) {
         if (checked) {
             if (FeatureUtilities.isChromeHomeEnabled()) {
-                mIconView.setBackgroundResource(mIconBackgroundResId);
-                mIconView.getBackground().setLevel(
+                mIconImageView.setBackgroundResource(mIconBackgroundResId);
+                mIconImageView.getBackground().setLevel(
                         getResources().getInteger(R.integer.list_item_level_selected));
             } else {
-                mIconView.setBackgroundColor(mIconBackgroundColorSelected);
+                mIconImageView.setBackgroundColor(mIconBackgroundColorSelected);
             }
 
-            mIconView.setImageResource(R.drawable.ic_check_googblue_24dp);
-            mIconView.setTint(mCheckedIconForegroundColorList);
+            mIconImageView.setImageDrawable(mCheckDrawable);
+            mIconImageView.setTint(mCheckedIconForegroundColorList);
+            mCheckDrawable.start();
         } else {
             if (FeatureUtilities.isChromeHomeEnabled()) {
-                mIconView.setBackgroundResource(mIconBackgroundResId);
-                mIconView.getBackground().setLevel(
+                mIconImageView.setBackgroundResource(mIconBackgroundResId);
+                mIconImageView.getBackground().setLevel(
                         getResources().getInteger(R.integer.list_item_level_default));
             } else {
-                mIconView.setBackgroundColor(mIconBackgroundColor);
+                mIconImageView.setBackgroundColor(mIconBackgroundColor);
             }
 
-            mIconView.setImageResource(R.drawable.ic_chrome);
-            mIconView.setTint(mIconForegroundColorList);
+            mIconImageView.setImageResource(R.drawable.ic_chrome);
+            mIconImageView.setTint(mIconForegroundColorList);
         }
     }
 

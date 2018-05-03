@@ -7,6 +7,7 @@ package org.chromium.components.sync;
 import com.google.ipc.invalidation.external.client.types.ObjectId;
 import com.google.protos.ipc.invalidation.Types;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.JNINamespace;
 
@@ -72,7 +73,8 @@ public class ModelTypeHelper {
      */
     private static ObjectId toObjectId(String notificationType) {
         String objectIdString = isInvalidationType(notificationType) ? notificationType : "NULL";
-        return ObjectId.newInstance(Types.ObjectSource.CHROME_SYNC, objectIdString.getBytes());
+        return ObjectId.newInstance(
+                Types.ObjectSource.CHROME_SYNC, ApiCompatibilityUtils.getBytesUtf8(objectIdString));
     }
 
     @VisibleForTesting

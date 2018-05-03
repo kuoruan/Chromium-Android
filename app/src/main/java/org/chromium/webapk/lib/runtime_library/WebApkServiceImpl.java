@@ -5,13 +5,16 @@
 package org.chromium.webapk.lib.runtime_library;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.RemoteException;
 import android.support.v4.app.NotificationManagerCompat;
+import android.util.Log;
 
 /**
  * Implements services offered by the WebAPK to Chrome.
@@ -21,7 +24,7 @@ public class WebApkServiceImpl extends IWebApkApi.Stub {
     public static final String KEY_SMALL_ICON_ID = "small_icon_id";
     public static final String KEY_HOST_BROWSER_UID = "host_browser_uid";
 
-    private static final String TAG = "WebApkServiceImpl";
+    private static final String TAG = "cr_WebApkServiceImpl";
 
     private final Context mContext;
 
@@ -65,7 +68,9 @@ public class WebApkServiceImpl extends IWebApkApi.Stub {
 
     @Override
     public void notifyNotification(String platformTag, int platformID, Notification notification) {
-        getNotificationManager().notify(platformTag, platformID, notification);
+        Log.w(TAG,
+                "Should NOT reach WebApkServiceImpl#notifyNotification(String, int,"
+                        + " Notification).");
     }
 
     @Override
@@ -76,6 +81,20 @@ public class WebApkServiceImpl extends IWebApkApi.Stub {
     @Override
     public boolean notificationPermissionEnabled() {
         return NotificationManagerCompat.from(mContext).areNotificationsEnabled();
+    }
+
+    @SuppressWarnings("NewApi")
+    @Override
+    public void notifyNotificationWithChannel(
+            String platformTag, int platformID, Notification notification, String channelName) {
+        NotificationManager notificationManager = getNotificationManager();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notification.getChannelId() != null) {
+            NotificationChannel channel = new NotificationChannel(notification.getChannelId(),
+                    channelName, NotificationManager.IMPORTANCE_DEFAULT);
+            notificationManager.createNotificationChannel(channel);
+        }
+
+        notificationManager.notify(platformTag, platformID, notification);
     }
 
     private NotificationManager getNotificationManager() {

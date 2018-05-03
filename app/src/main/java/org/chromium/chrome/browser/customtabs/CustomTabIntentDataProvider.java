@@ -60,8 +60,8 @@ public class CustomTabIntentDataProvider extends BrowserSessionDataProvider {
     public static final int CUSTOM_TABS_UI_TYPE_MINIMAL_UI_WEBAPP = 5;
 
     /**
-     * Herb: Extra that indicates whether or not the Custom Tab is being launched by an Intent fired
-     * by Chrome itself.
+     * Extra that indicates whether or not the Custom Tab is being launched by an Intent fired by
+     * Chrome itself.
      */
     public static final String EXTRA_IS_OPENED_BY_CHROME =
             "org.chromium.chrome.browser.customtabs.IS_OPENED_BY_CHROME";
@@ -133,7 +133,7 @@ public class CustomTabIntentDataProvider extends BrowserSessionDataProvider {
     // OnFinished listener for PendingIntents. Used for testing only.
     private PendingIntent.OnFinished mOnFinished;
 
-    /** Herb: Whether this CustomTabActivity was explicitly started by another Chrome Activity. */
+    /** Whether this CustomTabActivity was explicitly started by another Chrome Activity. */
     private boolean mIsOpenedByChrome;
 
     /**

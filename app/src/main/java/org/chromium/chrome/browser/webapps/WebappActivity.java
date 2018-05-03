@@ -104,7 +104,7 @@ public class WebappActivity extends SingleTabActivity {
     private final WebappActionsNotificationManager mNotificationManager;
     private final WebappDirectoryManager mDirectoryManager;
 
-    protected WebappInfo mWebappInfo;
+    private WebappInfo mWebappInfo;
 
     private WebappSplashScreenController mSplashController;
 
@@ -163,7 +163,12 @@ public class WebappActivity extends SingleTabActivity {
         void verifyRelationship() {
             mOriginVerifier = new OriginVerifier(mTrustedWebContentProvider,
                     getNativeClientPackageName(), CustomTabsService.RELATION_HANDLE_ALL_URLS);
-            mOriginVerifier.start(mWebappInfo.uri());
+            // Split path from the url to get only the origin.
+            Uri origin = new Uri.Builder()
+                                 .scheme(mWebappInfo.uri().getScheme())
+                                 .authority(mWebappInfo.uri().getHost())
+                                 .build();
+            mOriginVerifier.start(origin);
         }
 
         @Override
@@ -555,7 +560,7 @@ public class WebappActivity extends SingleTabActivity {
      * @return Structure containing data about the webapp currently displayed.
      *         The return value should not be cached.
      */
-    WebappInfo getWebappInfo() {
+    public WebappInfo getWebappInfo() {
         return mWebappInfo;
     }
 

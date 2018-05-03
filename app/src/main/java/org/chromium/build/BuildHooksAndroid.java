@@ -51,6 +51,14 @@ public abstract class BuildHooksAndroid {
 
     protected abstract Context createConfigurationContextImpl(Context context);
 
+    public static int getIdentifier(
+            Resources resources, String name, String defType, String defPackage) {
+        return sInstance.getIdentifierImpl(resources, name, defType, defPackage);
+    }
+
+    protected abstract int getIdentifierImpl(
+            Resources resources, String name, String defType, String defPackage);
+
     public static boolean isEnabled() {
         return sInstance.isEnabledImpl();
     }

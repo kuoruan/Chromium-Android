@@ -20,9 +20,11 @@ import android.view.View.OnClickListener;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
+import org.chromium.base.StrictModeContext;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.ShortcutHelper;
 import org.chromium.chrome.browser.UrlConstants;
@@ -31,6 +33,7 @@ import org.chromium.chrome.browser.bookmarks.BookmarkBridge;
 import org.chromium.chrome.browser.download.DownloadUtils;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.omaha.UpdateMenuItemHelper;
+import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
 import org.chromium.chrome.browser.preferences.ManagedPreferencesUtils;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.share.ShareHelper;
@@ -46,6 +49,24 @@ import java.util.concurrent.TimeUnit;
  * App Menu helper that handles hiding and showing menu items based on activity state.
  */
 public class AppMenuPropertiesDelegate {
+    /**
+     * The param name for the "ChromeHomeMenuItemsExpandSheet" experiment. This specifies the number
+     * of times a menu item can be tapped before being hidden.
+     */
+    private static final String CHROME_HOME_MENU_ITEM_TAP_PARAM_NAME = "max_taps";
+
+    /**
+     * The number of times that bookmarks, downloads, and history can be triggered from the overflow
+     * menu in Chrome Home before they are hidden.
+     */
+    private static final int CHROME_HOME_MENU_ITEM_TAP_MAX = 10;
+
+    /**
+     * Whether or not the Chrome Home menu items should be hidden because they have been tapped the
+     * maximum number of times.
+     */
+    private static boolean sHideChromeHomeMenuItems;
+
     protected MenuItem mReloadMenuItem;
 
     protected final ChromeActivity mActivity;
@@ -212,7 +233,7 @@ public class AppMenuPropertiesDelegate {
             menu.findItem(R.id.enter_vr_id).setVisible(
                     CommandLine.getInstance().hasSwitch(ChromeSwitches.ENABLE_VR_SHELL_DEV));
 
-            if (FeatureUtilities.isChromeHomeEnabled()) {
+            if (!shouldShowNavMenuItems()) {
                 // History, downloads, and bookmarks are shown in the Chrome Home bottom sheet.
                 menu.findItem(R.id.open_history_menu_id).setVisible(false);
                 menu.findItem(R.id.downloads_menu_id).setVisible(false);
@@ -454,5 +475,33 @@ public class AppMenuPropertiesDelegate {
         requestMenuLabel.setTitleCondensed(requestMenuLabel.isChecked()
                         ? mActivity.getString(R.string.menu_request_desktop_site_on)
                         : mActivity.getString(R.string.menu_request_desktop_site_off));
+    }
+
+    /**
+     * @return Whether bookmarks, downloads, and history should be shown in the menu.
+     */
+    public static boolean shouldShowNavMenuItems() {
+        if (!FeatureUtilities.isChromeHomeEnabled()) return true;
+
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
+            int maxTapCount = ChromeFeatureList.getFieldTrialParamByFeatureAsInt(
+                    ChromeFeatureList.CHROME_HOME_MENU_ITEMS_EXPAND_SHEET,
+                    CHROME_HOME_MENU_ITEM_TAP_PARAM_NAME, CHROME_HOME_MENU_ITEM_TAP_MAX);
+
+            sHideChromeHomeMenuItems = sHideChromeHomeMenuItems
+                    || ChromePreferenceManager.getInstance().getChromeHomeMenuItemClickCount()
+                            >= maxTapCount;
+        }
+
+        boolean chromeHomeMenuItemFlagEnabled = ChromeFeatureList.isInitialized()
+                && ChromeFeatureList.isEnabled(
+                           ChromeFeatureList.CHROME_HOME_MENU_ITEMS_EXPAND_SHEET);
+
+        // If Chrome Home or the menu item feature is disabled, clear the menu tap preference.
+        if (!chromeHomeMenuItemFlagEnabled) {
+            ChromePreferenceManager.getInstance().clearChromeHomeMenuItemClickCount();
+        }
+
+        return chromeHomeMenuItemFlagEnabled && !sHideChromeHomeMenuItems;
     }
 }

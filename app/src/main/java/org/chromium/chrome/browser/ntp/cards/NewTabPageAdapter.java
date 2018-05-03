@@ -24,6 +24,7 @@ import org.chromium.chrome.browser.ntp.snippets.SnippetArticleViewHolder;
 import org.chromium.chrome.browser.ntp.snippets.SnippetsBridge;
 import org.chromium.chrome.browser.ntp.snippets.SuggestionsSource;
 import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
+import org.chromium.chrome.browser.suggestions.ContextualSuggestionsSection;
 import org.chromium.chrome.browser.suggestions.DestructionObserver;
 import org.chromium.chrome.browser.suggestions.LogoItem;
 import org.chromium.chrome.browser.suggestions.SiteSection;
@@ -60,8 +61,9 @@ public class NewTabPageAdapter extends Adapter<NewTabPageViewHolder> implements 
     private final @Nullable LogoItem mLogo;
     private final @Nullable SiteSection mSiteSection;
     private final SuggestionsCarousel mSuggestionsCarousel;
+    private final ContextualSuggestionsSection mContextualSuggestions;
     private final SectionList mSections;
-    private final SignInPromo mSigninPromo;
+    private final @Nullable SignInPromo mSigninPromo;
     private final AllDismissedItem mAllDismissed;
     private final Footer mFooter;
     private final SpacingItem mBottomSpacer;
@@ -86,6 +88,33 @@ public class NewTabPageAdapter extends Adapter<NewTabPageViewHolder> implements 
             @Nullable LogoView logoView, UiConfig uiConfig, OfflinePageBridge offlinePageBridge,
             ContextMenuManager contextMenuManager, @Nullable TileGroup.Delegate tileGroupDelegate,
             @Nullable SuggestionsCarousel suggestionsCarousel) {
+        this(uiDelegate, aboveTheFoldView, logoView, uiConfig, offlinePageBridge,
+                contextMenuManager, tileGroupDelegate, suggestionsCarousel, null);
+    }
+
+    /**
+     * Creates the adapter that will manage all the cards to display on the NTP.
+     * @param uiDelegate used to interact with the rest of the system.
+     * @param aboveTheFoldView the layout encapsulating all the above-the-fold elements
+     *         (logo, search box, most visited tiles), or null if only suggestions should
+     *         be displayed.
+     * @param logoView the view for the logo, which may be provided when {@code aboveTheFoldView} is
+     *         null. They are not expected to be both non-null as that would lead to showing the
+     *         logo twice.
+     * @param uiConfig the NTP UI configuration, to be passed to created views.
+     * @param offlinePageBridge used to determine if articles are available.
+     * @param contextMenuManager used to build context menus.
+     * @param tileGroupDelegate if not null this is used to build a {@link SiteSection}.
+     * @param suggestionsCarousel if not null this is used to build a carousel showing contextual
+     *         suggestions.
+     * @param suggestionsSection if not null this is used to build a section showing contextual
+     *         suggestions.
+     */
+    public NewTabPageAdapter(SuggestionsUiDelegate uiDelegate, @Nullable View aboveTheFoldView,
+            @Nullable LogoView logoView, UiConfig uiConfig, OfflinePageBridge offlinePageBridge,
+            ContextMenuManager contextMenuManager, @Nullable TileGroup.Delegate tileGroupDelegate,
+            @Nullable SuggestionsCarousel suggestionsCarousel,
+            @Nullable ContextualSuggestionsSection suggestionsSection) {
         assert !(aboveTheFoldView != null && logoView != null);
 
         mUiDelegate = uiDelegate;
@@ -96,7 +125,7 @@ public class NewTabPageAdapter extends Adapter<NewTabPageViewHolder> implements 
         mUiConfig = uiConfig;
         mRoot = new InnerNode();
         mSections = new SectionList(mUiDelegate, offlinePageBridge);
-        mSigninPromo = new SignInPromo(mUiDelegate);
+        mSigninPromo = SignInPromo.maybeCreatePromo(mUiDelegate);
         mAllDismissed = new AllDismissedItem();
 
         if (mAboveTheFoldView == null) {
@@ -113,13 +142,14 @@ public class NewTabPageAdapter extends Adapter<NewTabPageViewHolder> implements 
             mRoot.addChild(mLogo);
         }
 
+        mContextualSuggestions = suggestionsSection;
         mSuggestionsCarousel = suggestionsCarousel;
         if (suggestionsCarousel != null) {
             assert ChromeFeatureList.isEnabled(ChromeFeatureList.CONTEXTUAL_SUGGESTIONS_CAROUSEL);
             mRoot.addChild(mSuggestionsCarousel);
         }
 
-        if (tileGroupDelegate == null) {
+        if (tileGroupDelegate == null || mContextualSuggestions != null) {
             mSiteSection = null;
         } else {
             mSiteSection = new SiteSection(uiDelegate, mContextMenuManager, tileGroupDelegate,
@@ -128,9 +158,21 @@ public class NewTabPageAdapter extends Adapter<NewTabPageViewHolder> implements 
         }
 
         if (FeatureUtilities.isChromeHomeEnabled()) {
-            mRoot.addChildren(mSigninPromo, mAllDismissed, mSections);
+            if (mSigninPromo != null) mRoot.addChild(mSigninPromo);
+            mRoot.addChildren(mAllDismissed);
+
+            if (mContextualSuggestions != null) {
+                assert ChromeFeatureList.isEnabled(
+                        ChromeFeatureList.CONTEXTUAL_SUGGESTIONS_ABOVE_ARTICLES);
+                mRoot.addChildren(mContextualSuggestions);
+                mSections.setHasExternalSections(true);
+            }
+
+            mRoot.addChildren(mSections);
         } else {
-            mRoot.addChildren(mSections, mSigninPromo, mAllDismissed);
+            mRoot.addChild(mSections);
+            if (mSigninPromo != null) mRoot.addChild(mSigninPromo);
+            mRoot.addChild(mAllDismissed);
         }
 
         mFooter = new Footer();
@@ -397,7 +439,7 @@ public class NewTabPageAdapter extends Adapter<NewTabPageViewHolder> implements 
     }
 
     private boolean hasAllBeenDismissed() {
-        if (mSigninPromo.isVisible()) return false;
+        if (mSigninPromo != null && mSigninPromo.isVisible()) return false;
 
         if (!FeatureUtilities.isChromeHomeEnabled()) return mSections.isEmpty();
 

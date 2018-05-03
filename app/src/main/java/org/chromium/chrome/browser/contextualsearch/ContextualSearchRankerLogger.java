@@ -13,6 +13,9 @@ import org.chromium.content_public.browser.WebContents;
  */
 public interface ContextualSearchRankerLogger {
     // TODO(donnd): consider changing this enum to an IntDef.
+    // NOTE: this list needs to be kept in sync with the white list in
+    // predictor_config_definitions.cc, the names list in ContextualSearchRankerLoggerImpl.java
+    // and with ukm.xml!
     enum Feature {
         UNKNOWN,
         // Outcome labels:
@@ -37,7 +40,10 @@ public interface ContextualSearchRankerLogger {
         IS_ENTITY,
         TAP_DURATION_MS,
         // UKM CS v3 features (see go/ukm-cs-3).
-        IS_SECOND_TAP_OVERRIDE
+        IS_SECOND_TAP_OVERRIDE,
+        IS_HTTP,
+        IS_ENTITY_ELIGIBLE,
+        IS_LANGUAGE_MISMATCH
     }
 
     /**
@@ -53,6 +59,11 @@ public interface ContextualSearchRankerLogger {
      * @param value The value to log, which is associated with the given key.
      */
     void logFeature(Feature feature, Object value);
+
+    /**
+     * Returns whether or not AssistRanker query is enabled.
+     */
+    boolean isQueryEnabled();
 
     /**
      * Logs an outcome value at training time that indicates an ML label as a key/value pair.

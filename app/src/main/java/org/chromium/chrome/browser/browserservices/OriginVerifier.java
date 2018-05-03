@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.browserservices;
 
+import android.annotation.SuppressLint;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -231,6 +232,8 @@ public class OriginVerifier {
      * @param packageName The package name to query the signature for.
      * @return The SHA256 certificate for the package name.
      */
+    @SuppressLint("PackageManagerGetSignatures")
+    // https://stackoverflow.com/questions/39192844/android-studio-warning-when-using-packagemanager-get-signatures
     static String getCertificateSHA256FingerprintForPackage(String packageName) {
         PackageInfo packageInfo = getPackageInfo(packageName);
         if (packageInfo == null) return null;

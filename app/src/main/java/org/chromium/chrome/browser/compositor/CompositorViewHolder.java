@@ -47,6 +47,7 @@ import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tab.TabObserver;
 import org.chromium.chrome.browser.tabmodel.EmptyTabModelSelectorObserver;
 import org.chromium.chrome.browser.tabmodel.TabCreatorManager;
+import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.TabModelSelectorObserver;
 import org.chromium.chrome.browser.util.ColorUtils;
@@ -56,7 +57,6 @@ import org.chromium.content.browser.ContentView;
 import org.chromium.content.browser.ContentViewCore;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.UiUtils;
-import org.chromium.ui.base.DeviceFormFactor;
 import org.chromium.ui.base.SPenSupport;
 import org.chromium.ui.base.WindowAndroid;
 import org.chromium.ui.resources.ResourceManager;
@@ -111,7 +111,6 @@ public class CompositorViewHolder extends FrameLayout
 
     private TabModelSelectorObserver mTabModelSelectorObserver;
     private TabObserver mTabObserver;
-    private boolean mEnableCompositorTabStrip;
 
     // Cache objects that should not be created frequently.
     private final RectF mCacheViewport = new RectF();
@@ -220,8 +219,6 @@ public class CompositorViewHolder extends FrameLayout
                 initializeTab(tab);
             }
         };
-
-        mEnableCompositorTabStrip = DeviceFormFactor.isTablet();
 
         addOnLayoutChangeListener(new OnLayoutChangeListener() {
             @Override
@@ -459,7 +456,15 @@ public class CompositorViewHolder extends FrameLayout
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        setSize(getActiveWebContents(), getActiveView(), w, h);
+        if (mTabModelSelector == null) return;
+
+        for (TabModel tabModel : mTabModelSelector.getModels()) {
+            for (int i = 0; i < tabModel.getCount(); ++i) {
+                Tab tab = tabModel.getTabAt(i);
+                if (tab == null) continue;
+                setSize(tab.getWebContents(), tab.getContentView(), w, h);
+            }
+        }
     }
 
     /**
@@ -588,16 +593,7 @@ public class CompositorViewHolder extends FrameLayout
         TraceEvent.begin("CompositorViewHolder:layout");
         if (mLayoutManager != null) {
             mLayoutManager.onUpdate();
-
-            if (!DeviceFormFactor.isTablet() && mControlContainer != null) {
-                if (mProgressBarDrawingInfo == null) mProgressBarDrawingInfo = new DrawingInfo();
-                mControlContainer.getProgressBarDrawingInfo(mProgressBarDrawingInfo);
-            } else {
-                assert mProgressBarDrawingInfo == null;
-            }
-
-            mCompositorView.finalizeLayers(mLayoutManager, false,
-                    mProgressBarDrawingInfo);
+            mCompositorView.finalizeLayers(mLayoutManager, false);
         }
 
         TraceEvent.end("CompositorViewHolder:layout");

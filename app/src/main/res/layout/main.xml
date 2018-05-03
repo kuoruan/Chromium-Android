@@ -54,6 +54,19 @@
                 android:inflatedId="@+id/bottombar"
                 android:layout="@layout/custom_tabs_bottombar" />
 
+            <ViewStub
+                android:id="@+id/tab_modal_dialog_container_stub"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:inflatedId="@+id/tab_modal_dialog_container" />
+
+            <!-- Please do not add anything in between tab_modal_dialog_container_stub and
+                 tab_modal_dialog_container_sibling_view. -->
+            <ViewStub
+                android:id="@+id/tab_modal_dialog_container_sibling_view"
+                android:layout_width="0dp"
+                android:layout_height="0dp" />
+
             <org.chromium.chrome.browser.widget.FadingBackgroundView
                 android:id="@+id/fading_focus_target"
                 android:layout_width="match_parent"

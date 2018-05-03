@@ -8,12 +8,13 @@
 <org.chromium.chrome.browser.widget.ListMenuButton
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/more"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
     android:paddingStart="@dimen/selectable_list_layout_row_padding"
     android:paddingEnd="@dimen/selectable_list_layout_row_padding"
-    android:contentDescription="@string/accessibility_list_menu_button"
     android:background="@null"
     android:src="@drawable/ic_more_vert_black_24dp"
-    chrome:chrometint="@color/dark_mode_tint" />
+    chrome:chrometint="@color/dark_mode_tint"
+    tools:ignore="ContentDescription" />

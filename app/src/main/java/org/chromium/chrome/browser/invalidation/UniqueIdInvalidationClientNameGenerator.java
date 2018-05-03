@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.invalidation;
 
 import android.content.Context;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.browser.identity.UniqueIdentificationGenerator;
 import org.chromium.chrome.browser.identity.UuidBasedUniqueIdentificationGenerator;
 import org.chromium.components.sync.notifier.InvalidationClientNameGenerator;
@@ -42,6 +43,6 @@ public class UniqueIdInvalidationClientNameGenerator implements InvalidationClie
 
     @Override
     public byte[] generateInvalidatorClientName() {
-        return mGenerator.getUniqueId(null).getBytes();
+        return ApiCompatibilityUtils.getBytesUtf8(mGenerator.getUniqueId(null));
     }
 }

@@ -4,88 +4,29 @@
 
 package org.chromium.chrome.browser.feedback;
 
-import android.os.AsyncTask;
-import android.os.AsyncTask.Status;
+import android.content.Context;
 import android.os.Environment;
 import android.os.StatFs;
 import android.util.Pair;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.CollectionUtil;
+import org.chromium.base.LocaleUtils;
 import org.chromium.base.annotations.JNINamespace;
 
 import java.io.File;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 /** Grabs feedback about the current system. */
 @JNINamespace("chrome::android")
-public class SystemInfoFeedbackSource implements AsyncFeedbackSource {
-    private StorageTask mStorageTask;
-
-    private static class StorageTask extends AsyncTask<Void, Void, StatFs> {
-        private Runnable mCallback;
-
-        public StorageTask(Runnable callback) {
-            mCallback = callback;
-        }
-
-        Long getAvailableSpaceMB() {
-            if (getStatus() != Status.FINISHED) return null;
-
-            try {
-                StatFs statFs = get();
-                if (statFs == null) return null;
-                long blockSize = ApiCompatibilityUtils.getBlockSize(statFs);
-                return ApiCompatibilityUtils.getAvailableBlocks(statFs) * blockSize / 1024 / 1024;
-            } catch (ExecutionException | InterruptedException e) {
-                return null;
-            }
-        }
-
-        Long getTotalSpaceMB() {
-            if (getStatus() != Status.FINISHED) return null;
-
-            try {
-                StatFs statFs = get();
-                if (statFs == null) return null;
-                long blockSize = ApiCompatibilityUtils.getBlockSize(statFs);
-                return ApiCompatibilityUtils.getBlockCount(statFs) * blockSize / 1024 / 1024;
-            } catch (ExecutionException | InterruptedException e) {
-                return null;
-            }
-        }
-
-        // AsyncTask implementation.
-        @Override
-        protected StatFs doInBackground(Void... params) {
-            File directory = Environment.getDataDirectory();
-
-            if (!directory.exists()) return null;
-
-            return new StatFs(directory.getPath());
-        }
-
-        @Override
-        protected void onPostExecute(StatFs result) {
-            super.onPostExecute(result);
-            mCallback.run();
-        }
-    }
-
-    SystemInfoFeedbackSource() {}
-
-    // AsyncFeedbackSource implementation.
+public class SystemInfoFeedbackSource extends AsyncFeedbackSourceAdapter<StatFs> {
+    // AsyncFeedbackSourceAdapter implementation.
     @Override
-    public boolean isReady() {
-        return mStorageTask != null && mStorageTask.getStatus() == Status.FINISHED;
-    }
+    protected StatFs doInBackground(Context context) {
+        File directory = Environment.getDataDirectory();
+        if (!directory.exists()) return null;
 
-    @Override
-    public void start(Runnable callback) {
-        if (mStorageTask != null) return;
-        mStorageTask = new StorageTask(callback);
-        mStorageTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        return new StatFs(directory.getPath());
     }
 
     @Override
@@ -96,14 +37,18 @@ public class SystemInfoFeedbackSource implements AsyncFeedbackSource {
                         "Available Memory (MB)", Integer.toString(nativeGetAvailableMemoryMB())),
                 Pair.create("Total Memory (MB)", Integer.toString(nativeGetTotalMemoryMB())),
                 Pair.create("GPU Vendor", nativeGetGpuVendor()),
-                Pair.create("GPU Model", nativeGetGpuModel()));
+                Pair.create("GPU Model", nativeGetGpuModel()),
+                Pair.create("UI Locale", LocaleUtils.getDefaultLocaleString()));
 
-        if (isReady()) {
-            Long availSpace = mStorageTask.getAvailableSpaceMB();
-            Long totalSpace = mStorageTask.getTotalSpaceMB();
+        StatFs statFs = getResult();
+        if (statFs != null) {
+            long blockSize = ApiCompatibilityUtils.getBlockSize(statFs);
+            long availSpace =
+                    ApiCompatibilityUtils.getAvailableBlocks(statFs) * blockSize / 1024 / 1024;
+            long totalSpace = ApiCompatibilityUtils.getBlockCount(statFs) * blockSize / 1024 / 1024;
 
-            if (availSpace != null) feedback.put("Available Storage (MB)", availSpace.toString());
-            if (totalSpace != null) feedback.put("Total Storage (MB)", totalSpace.toString());
+            feedback.put("Available Storage (MB)", Long.toString(availSpace));
+            feedback.put("Total Storage (MB)", Long.toString(totalSpace));
         }
 
         return feedback;

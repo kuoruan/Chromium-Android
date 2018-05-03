@@ -107,6 +107,7 @@ public class ToolbarProgressBarAnimatingView extends ImageView {
     public ToolbarProgressBarAnimatingView(Context context, LayoutParams layoutParams) {
         super(context);
         setLayoutParams(layoutParams);
+        mIsCanceled = true;
         mIsRtl = LocalizationUtils.isLayoutRtl();
         mDpToPx = getResources().getDisplayMetrics().density;
 
@@ -241,7 +242,7 @@ public class ToolbarProgressBarAnimatingView extends ImageView {
      * @return True if the animation is running.
      */
     public boolean isRunning() {
-        return mAnimatorSet.isStarted();
+        return !mIsCanceled;
     }
 
     /**

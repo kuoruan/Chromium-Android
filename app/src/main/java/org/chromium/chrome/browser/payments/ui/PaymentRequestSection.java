@@ -1400,6 +1400,11 @@ public abstract class PaymentRequestSection extends LinearLayout implements View
                 builder.append(item.getTertiaryLabel());
             }
 
+            if (!TextUtils.isEmpty(item.getPromoMessage())) {
+                if (builder.length() > 0) builder.append(labelSeparator);
+                builder.append(item.getPromoMessage());
+            }
+
             if (!item.isComplete() && !TextUtils.isEmpty(item.getEditMessage())) {
                 if (builder.length() > 0) builder.append(labelSeparator);
                 String editMessage = item.getEditMessage();

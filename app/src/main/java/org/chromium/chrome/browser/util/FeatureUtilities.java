@@ -8,7 +8,6 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Build;
@@ -16,12 +15,8 @@ import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.UserManager;
 import android.speech.RecognizerIntent;
-import android.text.TextUtils;
 
 import org.chromium.base.CommandLine;
-import org.chromium.base.ContextUtils;
-import org.chromium.base.FieldTrialList;
-import org.chromium.base.Log;
 import org.chromium.base.StrictModeContext;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
@@ -33,7 +28,6 @@ import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.firstrun.FirstRunUtils;
 import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.metrics.UmaSessionStats;
-import org.chromium.chrome.browser.omnibox.OmniboxPlaceholderFieldTrial;
 import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.tabmodel.DocumentModeAssassin;
@@ -48,14 +42,10 @@ import java.util.List;
  */
 public class FeatureUtilities {
     private static final String TAG = "FeatureUtilities";
-    private static final String HERB_EXPERIMENT_NAME = "TabManagementExperiment";
-    private static final String HERB_EXPERIMENT_FLAVOR_PARAM = "type";
 
     private static final String SYNTHETIC_CHROME_HOME_EXPERIMENT_NAME = "SyntheticChromeHome";
     private static final String ENABLED_EXPERIMENT_GROUP = "Enabled";
     private static final String DISABLED_EXPERIMENT_GROUP = "Disabled";
-
-    private static final long CHROME_HOME_MAX_ENABLED_TIME_MS = 60000; // 60 seconds.
 
     private static Boolean sHasGoogleAccountAuthenticator;
     private static Boolean sHasRecognitionIntentHandler;
@@ -63,9 +53,7 @@ public class FeatureUtilities {
     private static boolean sChromeHomeNeedsUpdate;
     private static String sChromeHomeSwipeLogicType;
 
-    private static String sCachedHerbFlavor;
-    private static boolean sIsHerbFlavorCached;
-
+    private static Boolean sIsSoleEnabled;
     /**
      * Determines whether or not the {@link RecognizerIntent#ACTION_WEB_SEARCH} {@link Intent}
      * is handled by any {@link android.app.Activity}s in the system.  The result will be cached for
@@ -162,44 +150,13 @@ public class FeatureUtilities {
         nativeSetIsInMultiWindowMode(isInMultiWindowMode);
     }
 
-    private static boolean isHerbDisallowed(Context context) {
-        return isDocumentMode(context);
-    }
-
-    /**
-     * @return Which flavor of Herb is being tested.
-     *         See {@link ChromeSwitches#HERB_FLAVOR_ELDERBERRY} and its related switches.
-     */
-    public static String getHerbFlavor() {
-        Context context = ContextUtils.getApplicationContext();
-        if (isHerbDisallowed(context)) return ChromeSwitches.HERB_FLAVOR_DISABLED;
-
-        if (!sIsHerbFlavorCached) {
-            sCachedHerbFlavor = null;
-
-            // Allowing disk access for preferences while prototyping.
-            StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-            try {
-                sCachedHerbFlavor = ChromePreferenceManager.getInstance().getCachedHerbFlavor();
-            } finally {
-                StrictMode.setThreadPolicy(oldPolicy);
-            }
-
-            sIsHerbFlavorCached = true;
-            Log.d(TAG, "Retrieved cached Herb flavor: " + sCachedHerbFlavor);
-        }
-
-        return sCachedHerbFlavor;
-    }
-
     /**
      * Caches flags that must take effect on startup but are set via native code.
      */
     public static void cacheNativeFlags() {
-        cacheHerbFlavor();
         cacheChromeHomeEnabled();
+        cacheSoleEnabled();
         FirstRunUtils.cacheFirstRunPrefs();
-        OmniboxPlaceholderFieldTrial.cacheOmniboxPlaceholderGroup();
 
         // Propagate DONT_PREFETCH_LIBRARIES feature value to LibraryLoader. This can't
         // be done in LibraryLoader itself because it lives in //base and can't depend
@@ -223,41 +180,6 @@ public class FeatureUtilities {
             cacheChromeHomeEnabled();
             notifyChromeHomeStatusChanged(isChromeHomeEnabled());
             sChromeHomeNeedsUpdate = false;
-        }
-    }
-
-    /**
-     * Caches which flavor of Herb the user prefers from native.
-     */
-    private static void cacheHerbFlavor() {
-        Context context = ContextUtils.getApplicationContext();
-        if (isHerbDisallowed(context)) return;
-
-        String oldFlavor = getHerbFlavor();
-
-        // Check the experiment value before the command line to put the user in the correct group.
-        // The first clause does the null checks so so we can freely use the startsWith() function.
-        String newFlavor = FieldTrialList.findFullName(HERB_EXPERIMENT_NAME);
-        Log.d(TAG, "Experiment flavor: " + newFlavor);
-        if (!TextUtils.isEmpty(newFlavor)
-                && newFlavor.startsWith(ChromeSwitches.HERB_FLAVOR_ELDERBERRY)) {
-            newFlavor = ChromeSwitches.HERB_FLAVOR_ELDERBERRY;
-        } else {
-            newFlavor = ChromeSwitches.HERB_FLAVOR_DISABLED;
-        }
-
-        CommandLine instance = CommandLine.getInstance();
-        if (instance.hasSwitch(ChromeSwitches.HERB_FLAVOR_DISABLED_SWITCH)) {
-            newFlavor = ChromeSwitches.HERB_FLAVOR_DISABLED;
-        } else if (instance.hasSwitch(ChromeSwitches.HERB_FLAVOR_ELDERBERRY_SWITCH)) {
-            newFlavor = ChromeSwitches.HERB_FLAVOR_ELDERBERRY;
-        }
-
-        Log.d(TAG, "Caching flavor: " + newFlavor);
-        sCachedHerbFlavor = newFlavor;
-
-        if (!TextUtils.equals(oldFlavor, newFlavor)) {
-            ChromePreferenceManager.getInstance().setCachedHerbFlavor(newFlavor);
         }
     }
 
@@ -288,6 +210,9 @@ public class FeatureUtilities {
 
         if (!ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_PROMO)
                 && manager.isChromeHomeUserPreferenceSet()) {
+            // If we showed the user the old promo, set the info promo preference so that it is not
+            // presented when the opt-in/out promo is turned off.
+            manager.setChromeHomeInfoPromoShown();
             manager.clearChromeHomeUserPreference();
         }
 
@@ -387,27 +312,25 @@ public class FeatureUtilities {
     public static boolean shouldShowChromeHomePromoForStartup() {
         if (DeviceFormFactor.isTablet()) return false;
 
+        ChromePreferenceManager prefManager = ChromePreferenceManager.getInstance();
+
+        if (!ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_PROMO_INFO_ONLY)
+                && isChromeHomeEnabled()) {
+            prefManager.setChromeHomeInfoPromoShown();
+        }
+
         // The preference will be set if the promo has been seen before. If that is the case, do not
         // show it again.
-        ChromePreferenceManager prefManager = ChromePreferenceManager.getInstance();
         boolean isChromeHomePrefSet = prefManager.isChromeHomeUserPreferenceSet();
         if (isChromeHomePrefSet) return false;
 
         if (isChromeHomeEnabled()
                 && ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_PROMO_INFO_ONLY)) {
-            long chromeHomeEnabledDate = System.currentTimeMillis();
-
+            boolean promoShown;
             try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
-                SharedPreferences sharedPreferences = ContextUtils.getAppSharedPreferences();
-                chromeHomeEnabledDate = sharedPreferences.getLong(
-                        ChromePreferenceManager.CHROME_HOME_SHARED_PREFERENCES_KEY,
-                        chromeHomeEnabledDate);
+                promoShown = ChromePreferenceManager.getInstance().hasChromeHomeInfoPromoShown();
             }
-
-            long timeDeadlineForPromo = chromeHomeEnabledDate + CHROME_HOME_MAX_ENABLED_TIME_MS;
-
-            // If Chrome Home has been enabled for < 60 seconds, show the info dialog.
-            return System.currentTimeMillis() < timeDeadlineForPromo;
+            return !promoShown;
         } else if (!isChromeHomeEnabled()
                 && ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_PROMO)
                 && ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_PROMO_ON_STARTUP)) {
@@ -415,6 +338,33 @@ public class FeatureUtilities {
         }
 
         return false;
+    }
+
+    /**
+     * Cache whether or not Sole integration is enabled.
+     */
+    public static void cacheSoleEnabled() {
+        boolean featureEnabled = ChromeFeatureList.isEnabled(ChromeFeatureList.SOLE_INTEGRATION);
+        ChromePreferenceManager prefManager = ChromePreferenceManager.getInstance();
+        boolean prefEnabled = prefManager.isSoleEnabled();
+        if (featureEnabled == prefEnabled) return;
+
+        prefManager.setSoleEnabled(featureEnabled);
+    }
+
+    /**
+     * @return Whether or not Sole integration is enabled.
+     */
+    public static boolean isSoleEnabled() {
+        if (sIsSoleEnabled == null) {
+            ChromePreferenceManager prefManager = ChromePreferenceManager.getInstance();
+
+            // Allow disk access for preferences while Sole is in experimentation.
+            try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
+                sIsSoleEnabled = prefManager.isSoleEnabled();
+            }
+        }
+        return sIsSoleEnabled;
     }
 
     private static native void nativeSetCustomTabVisible(boolean visible);

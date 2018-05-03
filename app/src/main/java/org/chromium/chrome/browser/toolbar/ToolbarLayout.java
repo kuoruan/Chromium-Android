@@ -180,6 +180,11 @@ public abstract class ToolbarLayout extends FrameLayout implements Toolbar {
             }
 
             @Override
+            public String getTitle() {
+                return "";
+            }
+
+            @Override
             public NewTabPage getNewTabPageForCurrentTab() {
                 return null;
             }

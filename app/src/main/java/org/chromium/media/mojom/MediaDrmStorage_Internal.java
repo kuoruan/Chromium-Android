@@ -19,23 +19,28 @@ class MediaDrmStorage_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<MediaDrmStorage, MediaDrmStorage.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<MediaDrmStorage, MediaDrmStorage.Proxy>() {
     
+        @Override
         public String getName() {
             return "media::mojom::MediaDrmStorage";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, MediaDrmStorage impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public MediaDrmStorage[] buildArray(int size) {
           return new MediaDrmStorage[size];
         }

@@ -560,10 +560,15 @@ public class TabWebContentsDelegateAndroid extends WebContentsDelegateAndroid {
         };
     }
 
+    public void showFramebustBlockInfobarForTesting(String url) {
+        nativeShowFramebustBlockInfoBar(mTab.getWebContents(), url);
+    }
+
     private static native void nativeOnRendererUnresponsive(WebContents webContents);
     private static native void nativeOnRendererResponsive(WebContents webContents);
     private static native boolean nativeIsCapturingAudio(WebContents webContents);
     private static native boolean nativeIsCapturingVideo(WebContents webContents);
     private static native boolean nativeIsCapturingScreen(WebContents webContents);
     private static native void nativeNotifyStopped(WebContents webContents);
+    private static native void nativeShowFramebustBlockInfoBar(WebContents webContents, String url);
 }

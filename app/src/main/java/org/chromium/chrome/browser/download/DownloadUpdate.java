@@ -14,12 +14,30 @@ import org.chromium.components.offline_items_collection.OfflineItem.Progress;
  * TODO(jming): Consolidate with other downloads-related objects (http://crbug.com/746692).
  */
 public final class DownloadUpdate {
+    /**
+     * Used to indicate reason download is pending, if any.
+     */
+    public enum PendingState {
+        // Download is not pending.
+        NOT_PENDING,
+
+        // Download is pending due to no network connection.
+        PENDING_NETWORK,
+
+        // Download is pending because another download is currently being downloaded.
+        PENDING_ANOTHER_DOWNLOAD,
+
+        // Download is pending due to an unspecified reason.
+        // TODO(cmsy): Remove once implementation for descriptive pending status text for offline
+        // pages is complete.
+        PENDING_REASON_UNKNOWN,
+    }
+
     private final ContentId mContentId;
     private final String mFileName;
     private final String mFilePath;
     private final Bitmap mIcon;
     private final int mIconId;
-    private final boolean mIsDownloadPending;
     private final boolean mIsOffTheRecord;
     private final boolean mIsOpenable;
     private final boolean mIsSupportedMimeType;
@@ -31,6 +49,7 @@ public final class DownloadUpdate {
     private final long mStartTime;
     private final long mSystemDownloadId;
     private final long mTimeRemainingInMillis;
+    private final PendingState mPendingState;
 
     private DownloadUpdate(Builder builder) {
         this.mContentId = builder.mContentId;
@@ -38,7 +57,6 @@ public final class DownloadUpdate {
         this.mFilePath = builder.mFilePath;
         this.mIcon = builder.mIcon;
         this.mIconId = builder.mIconId;
-        this.mIsDownloadPending = builder.mIsDownloadPending;
         this.mIsOffTheRecord = builder.mIsOffTheRecord;
         this.mIsOpenable = builder.mIsOpenable;
         this.mIsSupportedMimeType = builder.mIsSupportedMimeType;
@@ -50,6 +68,7 @@ public final class DownloadUpdate {
         this.mStartTime = builder.mStartTime;
         this.mSystemDownloadId = builder.mSystemDownloadId;
         this.mTimeRemainingInMillis = builder.mTimeRemainingInMillis;
+        this.mPendingState = builder.mPendingState;
     }
 
     public ContentId getContentId() {
@@ -73,7 +92,7 @@ public final class DownloadUpdate {
     }
 
     public boolean getIsDownloadPending() {
-        return mIsDownloadPending;
+        return getPendingState() != PendingState.NOT_PENDING;
     }
 
     public boolean getIsOffTheRecord() {
@@ -120,6 +139,10 @@ public final class DownloadUpdate {
         return mTimeRemainingInMillis;
     }
 
+    public PendingState getPendingState() {
+        return mPendingState;
+    }
+
     /**
      * Helper class for building the DownloadUpdate object.
      */
@@ -129,7 +152,6 @@ public final class DownloadUpdate {
         private String mFilePath;
         private Bitmap mIcon;
         private int mIconId = -1;
-        private boolean mIsDownloadPending;
         private boolean mIsOffTheRecord;
         private boolean mIsOpenable;
         private boolean mIsSupportedMimeType;
@@ -141,6 +163,7 @@ public final class DownloadUpdate {
         private long mStartTime;
         private long mSystemDownloadId = -1;
         private long mTimeRemainingInMillis;
+        private PendingState mPendingState;
 
         public Builder setContentId(ContentId contentId) {
             this.mContentId = contentId;
@@ -164,11 +187,6 @@ public final class DownloadUpdate {
 
         public Builder setIconId(int iconId) {
             this.mIconId = iconId;
-            return this;
-        }
-
-        public Builder setIsDownloadPending(boolean isDownloadPending) {
-            this.mIsDownloadPending = isDownloadPending;
             return this;
         }
 
@@ -224,6 +242,11 @@ public final class DownloadUpdate {
 
         public Builder setTimeRemainingInMillis(long timeRemainingInMillis) {
             this.mTimeRemainingInMillis = timeRemainingInMillis;
+            return this;
+        }
+
+        public Builder setPendingState(PendingState pendingState) {
+            this.mPendingState = pendingState;
             return this;
         }
 

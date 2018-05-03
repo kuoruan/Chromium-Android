@@ -24,14 +24,23 @@ public class PageLoadMetrics {
     public static final String CONNECT_START = "connectStart";
     public static final String CONNECT_END = "connectEnd";
     public static final String REQUEST_START = "requestStart";
-    public static final String RESPONSE_START = "responseStart";
-    public static final String RESPONSE_END = "responseEnd";
+    public static final String SEND_START = "sendStart";
+    public static final String SEND_END = "sendEnd";
     public static final String EFFECTIVE_CONNECTION_TYPE = "effectiveConnectionType";
     public static final String HTTP_RTT = "httpRtt";
     public static final String TRANSPORT_RTT = "transportRtt";
 
     /** Observer for page load metrics. */
     public interface Observer {
+        /**
+         * Called when the new navigation is started. It's guaranteed to be called before any other
+         * function with the same navigationId.
+         *
+         * @param webContents the WebContents this metrics is related to.
+         * @param navigationId the unique id of a navigation this metrics is related to.
+         */
+        public void onNewNavigation(WebContents webContents, long navigationId);
+
         /**
          * Called when Network Quality Estimate is available, once per page load, when the
          * load is started. This is guaranteed to be called before any other metric event
@@ -40,46 +49,50 @@ public class PageLoadMetrics {
          * probably similar to what the ConnectivityManager reports.
          *
          * @param webContents the WebContents this metrics is related to.
+         * @param navigationId the unique id of a navigation this metrics is related to.
          * @param effectiveConnectionType the effective connection type, see
          *     net::EffectiveConnectionType.
          * @param httpRttMs an estimate of HTTP RTT, in milliseconds. Will be zero if unknown.
          * @param transportRttMs an estimate of transport RTT, in milliseconds. Will be zero
          *     if unknown.
          */
-        public void onNetworkQualityEstimate(WebContents webContents, int effectiveConnectionType,
-                long httpRttMs, long transportRttMs);
+        public void onNetworkQualityEstimate(WebContents webContents, long navigationId,
+                int effectiveConnectionType, long httpRttMs, long transportRttMs);
 
         /**
          * Called when the first contentful paint page load metric is available.
          *
          * @param webContents the WebContents this metrics is related to.
+         * @param navigationId the unique id of a navigation this metrics is related to.
          * @param navigationStartTick Absolute navigation start time, as TimeTicks.
          * @param firstContentfulPaintMs Time to first contentful paint from navigation start.
          */
-        public void onFirstContentfulPaint(
-                WebContents webContents, long navigationStartTick, long firstContentfulPaintMs);
+        public void onFirstContentfulPaint(WebContents webContents, long navigationId,
+                long navigationStartTick, long firstContentfulPaintMs);
 
         /**
          * Called when the load event start metric is available.
          *
          * @param webContents the WebContents this metrics is related to.
+         * @param navigationId the unique id of a navigation this metrics is related to.
          * @param navigationStartTick Absolute navigation start time, as TimeTicks.
          * @param loadEventStartMs Time to load event start from navigation start.
          */
-        public void onLoadEventStart(
-                WebContents webContents, long navigationStartTick, long loadEventStartMs);
+        public void onLoadEventStart(WebContents webContents, long navigationId,
+                long navigationStartTick, long loadEventStartMs);
 
         /**
          * Called when the main resource is loaded.
          *
          * @param webContents the WebContents this metrics is related to.
+         * @param navigationId the unique id of a navigation this metrics is related to.
          *
          * Remaining parameters are timing information in milliseconds from a common
          * arbitrary point (such as, but not guaranteed to be, system start).
          */
-        public void onLoadedMainResource(WebContents webContents, long dnsStartMs, long dnsEndMs,
-                long connectStartMs, long connectEndMs, long requestStartMs, long sendStartMs,
-                long sendEndMs);
+        public void onLoadedMainResource(WebContents webContents, long navigationId,
+                long dnsStartMs, long dnsEndMs, long connectStartMs, long connectEndMs,
+                long requestStartMs, long sendStartMs, long sendEndMs);
     }
 
     private static ObserverList<Observer> sObservers;
@@ -99,46 +112,56 @@ public class PageLoadMetrics {
     }
 
     @CalledByNative
-    static void onNetworkQualityEstimate(WebContents webContents, int effectiveConnectionType,
-            long httpRttMs, long transportRttMs) {
+    static void onNewNavigation(WebContents webContents, long navigationId) {
+        ThreadUtils.assertOnUiThread();
+        if (sObservers == null) return;
+        for (Observer observer : sObservers) {
+            observer.onNewNavigation(webContents, navigationId);
+        }
+    }
+
+    @CalledByNative
+    static void onNetworkQualityEstimate(WebContents webContents, long navigationId,
+            int effectiveConnectionType, long httpRttMs, long transportRttMs) {
         ThreadUtils.assertOnUiThread();
         if (sObservers == null) return;
         for (Observer observer : sObservers) {
             observer.onNetworkQualityEstimate(
-                    webContents, effectiveConnectionType, httpRttMs, transportRttMs);
+                    webContents, navigationId, effectiveConnectionType, httpRttMs, transportRttMs);
         }
     }
 
     @CalledByNative
-    static void onFirstContentfulPaint(
-            WebContents webContents, long navigationStartTick, long firstContentfulPaintMs) {
+    static void onFirstContentfulPaint(WebContents webContents, long navigationId,
+            long navigationStartTick, long firstContentfulPaintMs) {
         ThreadUtils.assertOnUiThread();
         if (sObservers == null) return;
         for (Observer observer : sObservers) {
             observer.onFirstContentfulPaint(
-                    webContents, navigationStartTick, firstContentfulPaintMs);
+                    webContents, navigationId, navigationStartTick, firstContentfulPaintMs);
         }
     }
 
     @CalledByNative
-    static void onLoadEventStart(
-            WebContents webContents, long navigationStartTick, long loadEventStartMs) {
+    static void onLoadEventStart(WebContents webContents, long navigationId,
+            long navigationStartTick, long loadEventStartMs) {
         ThreadUtils.assertOnUiThread();
         if (sObservers == null) return;
         for (Observer observer : sObservers) {
-            observer.onLoadEventStart(webContents, navigationStartTick, loadEventStartMs);
+            observer.onLoadEventStart(
+                    webContents, navigationId, navigationStartTick, loadEventStartMs);
         }
     }
 
     @CalledByNative
-    static void onLoadedMainResource(WebContents webContents, long dnsStartMs, long dnsEndMs,
-            long connectStartMs, long connectEndMs, long requestStartMs, long sendStartMs,
-            long sendEndMs) {
+    static void onLoadedMainResource(WebContents webContents, long navigationId, long dnsStartMs,
+            long dnsEndMs, long connectStartMs, long connectEndMs, long requestStartMs,
+            long sendStartMs, long sendEndMs) {
         ThreadUtils.assertOnUiThread();
         if (sObservers == null) return;
         for (Observer observer : sObservers) {
-            observer.onLoadedMainResource(webContents, dnsStartMs, dnsEndMs, connectStartMs,
-                    connectEndMs, requestStartMs, sendStartMs, sendEndMs);
+            observer.onLoadedMainResource(webContents, navigationId, dnsStartMs, dnsEndMs,
+                    connectStartMs, connectEndMs, requestStartMs, sendStartMs, sendEndMs);
         }
     }
 

@@ -90,6 +90,26 @@ reply.writeNoException();
 reply.writeInt(((_result)?(1):(0)));
 return true;
 }
+case TRANSACTION_notifyNotificationWithChannel:
+{
+data.enforceInterface(DESCRIPTOR);
+java.lang.String _arg0;
+_arg0 = data.readString();
+int _arg1;
+_arg1 = data.readInt();
+android.app.Notification _arg2;
+if ((0!=data.readInt())) {
+_arg2 = android.app.Notification.CREATOR.createFromParcel(data);
+}
+else {
+_arg2 = null;
+}
+java.lang.String _arg3;
+_arg3 = data.readString();
+this.notifyNotificationWithChannel(_arg0, _arg1, _arg2, _arg3);
+reply.writeNoException();
+return true;
+}
 }
 return super.onTransact(code, data, reply, flags);
 }
@@ -126,6 +146,7 @@ _data.recycle();
 return _result;
 }
 // Display a notification.
+// DEPRECATED: Use notifyNotificationWithChannel.
 
 @Override public void notifyNotification(java.lang.String platformTag, int platformID, android.app.Notification notification) throws android.os.RemoteException
 {
@@ -187,14 +208,42 @@ _data.recycle();
 }
 return _result;
 }
+// Display a notification with a specified channel name.
+
+@Override public void notifyNotificationWithChannel(java.lang.String platformTag, int platformID, android.app.Notification notification, java.lang.String channelName) throws android.os.RemoteException
+{
+android.os.Parcel _data = android.os.Parcel.obtain();
+android.os.Parcel _reply = android.os.Parcel.obtain();
+try {
+_data.writeInterfaceToken(DESCRIPTOR);
+_data.writeString(platformTag);
+_data.writeInt(platformID);
+if ((notification!=null)) {
+_data.writeInt(1);
+notification.writeToParcel(_data, 0);
+}
+else {
+_data.writeInt(0);
+}
+_data.writeString(channelName);
+mRemote.transact(Stub.TRANSACTION_notifyNotificationWithChannel, _data, _reply, 0);
+_reply.readException();
+}
+finally {
+_reply.recycle();
+_data.recycle();
+}
+}
 }
 static final int TRANSACTION_getSmallIconId = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
 static final int TRANSACTION_notifyNotification = (android.os.IBinder.FIRST_CALL_TRANSACTION + 1);
 static final int TRANSACTION_cancelNotification = (android.os.IBinder.FIRST_CALL_TRANSACTION + 2);
 static final int TRANSACTION_notificationPermissionEnabled = (android.os.IBinder.FIRST_CALL_TRANSACTION + 3);
+static final int TRANSACTION_notifyNotificationWithChannel = (android.os.IBinder.FIRST_CALL_TRANSACTION + 4);
 }
 public int getSmallIconId() throws android.os.RemoteException;
 // Display a notification.
+// DEPRECATED: Use notifyNotificationWithChannel.
 
 public void notifyNotification(java.lang.String platformTag, int platformID, android.app.Notification notification) throws android.os.RemoteException;
 // Cancel a notification.
@@ -203,4 +252,7 @@ public void cancelNotification(java.lang.String platformTag, int platformID) thr
 // Get if notification permission is enabled.
 
 public boolean notificationPermissionEnabled() throws android.os.RemoteException;
+// Display a notification with a specified channel name.
+
+public void notifyNotificationWithChannel(java.lang.String platformTag, int platformID, android.app.Notification notification, java.lang.String channelName) throws android.os.RemoteException;
 }

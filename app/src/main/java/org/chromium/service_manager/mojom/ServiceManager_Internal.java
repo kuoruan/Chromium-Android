@@ -19,23 +19,28 @@ class ServiceManager_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<ServiceManager, ServiceManager.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<ServiceManager, ServiceManager.Proxy>() {
     
+        @Override
         public String getName() {
             return "service_manager::mojom::ServiceManager";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, ServiceManager impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public ServiceManager[] buildArray(int size) {
           return new ServiceManager[size];
         }

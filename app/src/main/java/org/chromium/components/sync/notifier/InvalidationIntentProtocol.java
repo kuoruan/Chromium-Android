@@ -10,6 +10,7 @@ import android.content.Intent;
 import com.google.ipc.invalidation.external.client.types.ObjectId;
 import com.google.protos.ipc.invalidation.Types;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.CollectionUtil;
 import org.chromium.components.sync.ModelTypeHelper;
 
@@ -125,8 +126,8 @@ public class InvalidationIntentProtocol {
         }
         Set<ObjectId> objectIds = new HashSet<ObjectId>(objectSources.size());
         for (int i = 0; i < objectSources.size(); i++) {
-            objectIds.add(
-                    ObjectId.newInstance(objectSources.get(i), objectNames.get(i).getBytes()));
+            objectIds.add(ObjectId.newInstance(
+                    objectSources.get(i), ApiCompatibilityUtils.getBytesUtf8(objectNames.get(i))));
         }
         return objectIds;
     }

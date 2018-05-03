@@ -19,23 +19,28 @@ class WakeLockProvider_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<WakeLockProvider, WakeLockProvider.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<WakeLockProvider, WakeLockProvider.Proxy>() {
     
+        @Override
         public String getName() {
             return "device::mojom::WakeLockProvider";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, WakeLockProvider impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public WakeLockProvider[] buildArray(int size) {
           return new WakeLockProvider[size];
         }

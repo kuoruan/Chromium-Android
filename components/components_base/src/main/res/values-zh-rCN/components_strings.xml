@@ -23,7 +23,7 @@
 <string name="autofill_card_unmask_expiration_date_separator">"/"</string>
 <string name="autofill_card_unmask_new_card_link">"要使用新信用卡吗？"</string>
 <string name="autofill_wallet_management_link_text">"修改"</string>
-<string name="autofill_from_google_account_long">"来自 Google Payments"</string>
+<string name="autofill_from_google_account_long">"来自 Google Pay"</string>
 <string name="http_post_warning">"您所查找的网页要使用已输入的信息。返回此页可能需要重复已进行的所有操作。是否要继续操作？"</string>
 <string name="http_post_warning_resend">"继续"</string>
 <string name="login_dialog_title">"需要进行身份验证"</string>
@@ -54,8 +54,6 @@
           &lt;li&gt;您的雇主或您所在的学校
           &lt;li&gt;您的互联网服务提供商
         &lt;/ul&gt;"</string>
-<string name="snippets_disabled_signed_out_instructions">"要获取 Google 推荐的个性化内容，请登录 Chrome。"</string>
-<string name="snippets_disabled_generic_prompt">"获取个性化内容"</string>
 <string name="ntp_title_no_suggestions">"暂无新内容"</string>
 <string name="page_info_permission_ads_subtitle">"网站常常会展示侵扰性广告"</string>
 <string name="payments_method_of_payment_label">"付款方式"</string>

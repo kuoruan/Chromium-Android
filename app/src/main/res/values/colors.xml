@@ -39,6 +39,7 @@
 
     <!-- New list of common text colors -->
     <color name="black_alpha_20">#33000000</color>
+    <color name="black_alpha_24">#3D000000</color>
     <color name="black_alpha_30">#4D000000</color>
     <color name="black_alpha_40">#66000000</color>
 
@@ -88,6 +89,7 @@
 
     <!-- Preferences Colors -->
     <color name="pref_accent_color">@color/light_active_color</color>
+    <color name="pref_dragged_row_background">@color/white_alpha_90</color>
 
     <!-- Data Saver Colors -->
     <color name="data_reduction_compressed_color">@color/pref_accent_color</color>
@@ -150,7 +152,7 @@
     <color name="locationbar_light_selection_color">#CC5595FE</color>
     <color name="locationbar_status_color">@color/black_alpha_54</color>
     <color name="locationbar_status_color_light">@android:color/white</color>
-    <color name="locationbar_status_separator_color">#3D000000</color>
+    <color name="locationbar_status_separator_color">@color/black_alpha_24</color>
     <color name="locationbar_status_separator_color_light">#3DFFFFFF</color>
     <color name="omnibox_focused_fading_background_color">@color/black_alpha_65</color>
 

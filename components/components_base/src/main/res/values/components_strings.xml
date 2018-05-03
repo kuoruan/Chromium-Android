@@ -23,7 +23,7 @@
 <string name="autofill_card_unmask_expiration_date_separator">"/"</string>
 <string name="autofill_card_unmask_new_card_link">"New card?"</string>
 <string name="autofill_wallet_management_link_text">"Edit"</string>
-<string name="autofill_from_google_account_long">"From Google Payments"</string>
+<string name="autofill_from_google_account_long">"From Google Pay"</string>
 <string name="http_post_warning">"The page that you\'re looking for used information that you entered. Returning to that page might cause any action you took to be repeated. Do you want to continue?"</string>
 <string name="http_post_warning_resend">"Continue"</string>
 <string name="login_dialog_title">"Authentication required"</string>
@@ -54,8 +54,6 @@
           &lt;li&gt;Your employer or school
           &lt;li&gt;Your internet service provider
         &lt;/ul&gt;"</string>
-<string name="snippets_disabled_signed_out_instructions">"To get personalized content suggested by Google, sign in to Chrome."</string>
-<string name="snippets_disabled_generic_prompt">"Get personalized content"</string>
 <string name="ntp_title_no_suggestions">"That’s all for now"</string>
 <string name="page_info_permission_ads_subtitle">"Site tends to show intrusive ads"</string>
 <string name="payments_method_of_payment_label">"Payment method"</string>

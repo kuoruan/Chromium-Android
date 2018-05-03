@@ -19,23 +19,28 @@ class FrameResourceReleaser_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<FrameResourceReleaser, FrameResourceReleaser.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<FrameResourceReleaser, FrameResourceReleaser.Proxy>() {
     
+        @Override
         public String getName() {
             return "media::mojom::FrameResourceReleaser";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, FrameResourceReleaser impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public FrameResourceReleaser[] buildArray(int size) {
           return new FrameResourceReleaser[size];
         }

@@ -1,5 +1,5 @@
 
-// Copyright 2017 The Chromium Authors. All rights reserved.
+// Copyright 2018 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -38,7 +38,8 @@ import java.lang.annotation.RetentionPolicy;
     WebInputEventType.TOUCH_SCROLL_STARTED, WebInputEventType.TOUCH_TYPE_LAST,
     WebInputEventType.POINTER_DOWN, WebInputEventType.POINTER_TYPE_FIRST,
     WebInputEventType.POINTER_UP, WebInputEventType.POINTER_MOVE, WebInputEventType.POINTER_CANCEL,
-    WebInputEventType.POINTER_TYPE_LAST, WebInputEventType.TYPE_LAST
+    WebInputEventType.POINTER_CAUSED_UA_ACTION, WebInputEventType.POINTER_TYPE_LAST,
+    WebInputEventType.TYPE_LAST
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface WebInputEventType {
@@ -150,6 +151,9 @@ public @interface WebInputEventType {
   int TOUCH_MOVE = 29;
   int TOUCH_END = 30;
   int TOUCH_CANCEL = 31;
+  /**
+   * TODO(nzolghadr): This event should be replaced with kPointerCausedUaAction
+   */
   int TOUCH_SCROLL_STARTED = 32;
   int TOUCH_TYPE_LAST = 32;
   /**
@@ -160,6 +164,7 @@ public @interface WebInputEventType {
   int POINTER_UP = 34;
   int POINTER_MOVE = 35;
   int POINTER_CANCEL = 36;
-  int POINTER_TYPE_LAST = 36;
+  int POINTER_CAUSED_UA_ACTION = 37;
+  int POINTER_TYPE_LAST = 37;
   int TYPE_LAST = 32;
 }

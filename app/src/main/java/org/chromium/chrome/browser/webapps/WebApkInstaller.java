@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.webapps;
 
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.os.AsyncTask;
 
 import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
@@ -123,6 +124,29 @@ public class WebApkInstaller {
         mInstallDelegate.updateAsync(packageName, version, title, token, callback);
     }
 
+    @CalledByNative
+    private void checkFreeSpace() {
+        new AsyncTask<Void, Void, Integer>() {
+            @Override
+            protected Integer doInBackground(Void... params) {
+                long availableSpaceInBytes = WebApkUma.getAvailableSpaceAboveLowSpaceLimit();
+
+                if (availableSpaceInBytes > 0) return SpaceStatus.ENOUGH_SPACE;
+
+                long cacheSizeInBytes = WebApkUma.getCacheDirSize();
+                if (cacheSizeInBytes + availableSpaceInBytes > 0) {
+                    return SpaceStatus.ENOUGH_SPACE_AFTER_FREE_UP_CACHE;
+                }
+                return SpaceStatus.NOT_ENOUGH_SPACE;
+            }
+
+            @Override
+            protected void onPostExecute(Integer result) {
+                nativeOnGotSpaceStatus(mNativePointer, result);
+            }
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    }
+
     private boolean isWebApkInstalled(String packageName) {
         PackageManager packageManager = ContextUtils.getApplicationContext().getPackageManager();
         return InstallerDelegate.isInstalled(packageManager, packageName);
@@ -130,4 +154,5 @@ public class WebApkInstaller {
 
     private native void nativeOnInstallFinished(
             long nativeWebApkInstaller, @WebApkInstallResult int result);
+    private native void nativeOnGotSpaceStatus(long nativeWebApkInstaller, int status);
 }

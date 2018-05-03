@@ -102,7 +102,7 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
     }
 
     @Override
-    public void openSnippet(int windowOpenDisposition, SnippetArticle article) {
+    public void openSnippet(final int windowOpenDisposition, final SnippetArticle article) {
         NewTabPageUma.recordAction(NewTabPageUma.ACTION_OPENED_SNIPPET);
 
         if (article.isAssetDownload()) {
@@ -122,7 +122,6 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
             return;
         }
 
-        LoadUrlParams loadUrlParams;
         // We explicitly open an offline page only for offline page downloads. For all other
         // sections the URL is opened and it is up to Offline Pages whether to open its offline
         // page (e.g. when offline).
@@ -131,14 +130,19 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
             assert windowOpenDisposition == WindowOpenDisposition.CURRENT_TAB
                     || windowOpenDisposition == WindowOpenDisposition.NEW_WINDOW
                     || windowOpenDisposition == WindowOpenDisposition.NEW_BACKGROUND_TAB;
-            loadUrlParams = OfflinePageUtils.getLoadUrlParamsForOpeningOfflineVersion(
-                    article.mUrl, article.getOfflinePageOfflineId());
-            // Extra headers are not read in loadUrl, but verbatim headers are.
-            loadUrlParams.setVerbatimHeaders(loadUrlParams.getExtraHeadersString());
-        } else {
-            loadUrlParams = new LoadUrlParams(article.mUrl, PageTransition.AUTO_BOOKMARK);
+            OfflinePageUtils.getLoadUrlParamsForOpeningOfflineVersion(
+                    article.mUrl, article.getOfflinePageOfflineId(), (loadUrlParams) -> {
+                        // Extra headers are not read in loadUrl, but verbatim headers are.
+                        loadUrlParams.setVerbatimHeaders(loadUrlParams.getExtraHeadersString());
+                        openDownloadSuggestion(windowOpenDisposition, article, loadUrlParams);
+                    });
+
+            return;
         }
 
+        LoadUrlParams loadUrlParams =
+                new LoadUrlParams(article.mUrl, PageTransition.AUTO_BOOKMARK);
+        
         // For article suggestions, we set the referrer. This is exploited
         // to filter out these history entries for NTP tiles.
         // TODO(mastiz): Extend this with support for other categories.
@@ -147,6 +151,12 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
                     WebReferrerPolicy.ALWAYS));
         }
 
+        Tab loadingTab = openUrl(windowOpenDisposition, loadUrlParams);
+        if (loadingTab != null) SuggestionsMetrics.recordVisit(loadingTab, article);
+    }
+
+    private void openDownloadSuggestion(
+            int windowOpenDisposition, SnippetArticle article, LoadUrlParams loadUrlParams) {
         Tab loadingTab = openUrl(windowOpenDisposition, loadUrlParams);
         if (loadingTab != null) SuggestionsMetrics.recordVisit(loadingTab, article);
     }

@@ -8,13 +8,8 @@
 
     <org.chromium.chrome.browser.preferences.languages.LanguageListPreference
         android:key="preferred_languages"
-        android:layout="@layout/custom_preference"
+        android:layout="@layout/languages_preference"
         android:widgetLayout="@layout/accept_languages_list" />
-
-    <Preference
-        android:fragment="org.chromium.chrome.browser.preferences.languages.LanguageSelectionPreferences"
-        android:key="add_language"
-        android:title="@string/prefs_add_language" />
 
     <org.chromium.chrome.browser.preferences.ChromeSwitchPreference
         android:key="translate_switch"

@@ -81,6 +81,7 @@
             android:drawablePadding="@dimen/ntp_search_box_logo_padding"
             android:ellipsize="end"
             android:focusableInTouchMode="false"
+            android:focusable="false"
             android:gravity="center_vertical"
             android:inputType="text"
             android:singleLine="true"

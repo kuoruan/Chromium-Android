@@ -6,6 +6,8 @@ package org.chromium.chrome.browser.physicalweb;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import org.chromium.base.ApiCompatibilityUtils;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,7 +54,7 @@ class JsonObjectHttpRequest extends HttpRequest<JSONObject> {
         urlConnection.setRequestProperty("Accept", "application/json");
         urlConnection.setRequestMethod("POST");
         OutputStream os = urlConnection.getOutputStream();
-        os.write(mJsonObject.toString().getBytes("UTF-8"));
+        os.write(ApiCompatibilityUtils.getBytesUtf8(mJsonObject.toString()));
         os.close();
     }
 

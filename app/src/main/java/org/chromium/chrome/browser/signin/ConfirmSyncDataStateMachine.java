@@ -112,17 +112,18 @@ public class ConfirmSyncDataStateMachine
 
     /**
      * Cancels this state machine, dismissing any dialogs being shown.
-     * @param dismissDialogs whether all shown dialogs should dismissed. Should be false if
-     *         enclosing activity is being destroyed (all dialogs will be dismissed anyway).
+     * @param isBeingDestroyed whether state machine is being cancelled because enclosing UI object
+     *         is being destroyed. This state machine will not invoke callbacks or dismiss dialogs
+     *         if isBeingDestroyed is true.
      */
-    public void cancel(boolean dismissDialogs) {
+    public void cancel(boolean isBeingDestroyed) {
         ThreadUtils.assertOnUiThread();
 
         cancelTimeout();
         mState = DONE;
-        mCallback.onCancel();
 
-        if (!dismissDialogs) return;
+        if (isBeingDestroyed) return;
+        mCallback.onCancel();
         mDelegate.dismissAllDialogs();
         dismissDialog(ConfirmImportSyncDataDialog.CONFIRM_IMPORT_SYNC_DATA_DIALOG_TAG);
         dismissDialog(ConfirmManagedSyncDataDialog.CONFIRM_IMPORT_SYNC_DATA_DIALOG_TAG);
@@ -272,7 +273,7 @@ public class ConfirmSyncDataStateMachine
     // ConfirmImportSyncDataDialog.Listener & ConfirmManagedSyncDataDialog.Listener implementation.
     @Override
     public void onCancel() {
-        cancel(true);
+        cancel(false);
     }
 }
 

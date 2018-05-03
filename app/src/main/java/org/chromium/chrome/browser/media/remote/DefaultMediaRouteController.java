@@ -27,6 +27,7 @@ import org.chromium.base.ApplicationStatus;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.RemovableInRelease;
 import org.chromium.base.annotations.UsedByReflection;
+import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.media.remote.RemoteVideoInfo.PlayerState;
 
 import java.net.URI;
@@ -147,7 +148,8 @@ public class DefaultMediaRouteController extends AbstractMediaRouteController {
         try {
             String scheme = new URI(sourceUrl).getScheme();
             if (scheme == null) return false;
-            return scheme.equals("http") || scheme.equals("https");
+            return scheme.equals(UrlConstants.HTTP_SCHEME)
+                    || scheme.equals(UrlConstants.HTTPS_SCHEME);
         } catch (URISyntaxException e) {
             return false;
         }

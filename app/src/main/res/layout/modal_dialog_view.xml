@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2017 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+
+<!-- TODO(huayinz): rename menu_bg or change the dialog background to the desired one. -->
+<org.chromium.chrome.browser.widget.BoundedLinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/menu_bg"
+    chrome:maxWidth="@dimen/dialog_max_width">
+
+    <android.support.v7.widget.DialogTitle
+        android:id="@+id/title"
+        android:textAppearance="@style/BlackHeadline2"
+        style="@style/AlertDialogContent" />
+
+    <ScrollView
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        style="@style/AlertDialogContent">
+
+        <org.chromium.ui.widget.TextViewWithLeading
+            android:id="@+id/message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/BlackBody"
+            chrome:leading="20sp" />
+
+    </ScrollView>
+
+    <FrameLayout
+        android:id="@+id/custom"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <android.support.v7.widget.ButtonBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="?attr/buttonBarStyle" >
+
+        <Button
+            android:id="@+id/negative_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="?attr/buttonBarNegativeButtonStyle" />
+
+        <Button
+            android:id="@+id/positive_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="?attr/buttonBarPositiveButtonStyle" />
+
+    </android.support.v7.widget.ButtonBarLayout>
+
+</org.chromium.chrome.browser.widget.BoundedLinearLayout>

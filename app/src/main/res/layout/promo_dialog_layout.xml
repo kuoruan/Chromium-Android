@@ -19,7 +19,7 @@
             android:layout_gravity="center"
             android:orientation="vertical"
             android:background="@drawable/menu_bg"
-            chrome:maxWidth="@dimen/promo_dialog_max_width" >
+            chrome:maxWidth="@dimen/dialog_max_width" >
 
         <org.chromium.chrome.browser.widget.FadingEdgeScrollView
                 android:id="@+id/promo_container"

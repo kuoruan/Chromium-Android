@@ -42,6 +42,8 @@ public class SectionList
     private final SuggestionsUiDelegate mUiDelegate;
     private final OfflinePageBridge mOfflinePageBridge;
 
+    private boolean mHasExternalSections;
+
     public SectionList(SuggestionsUiDelegate uiDelegate, OfflinePageBridge offlinePageBridge) {
         mUiDelegate = uiDelegate;
         mUiDelegate.getSuggestionsSource().addObserver(this);
@@ -331,12 +333,20 @@ public class SectionList
     /** Hides the header for the {@link KnownCategories#ARTICLES} section when necessary. */
     private void maybeHideArticlesHeader() {
         // If there is more than a section we want to show the headers for disambiguation purposes.
-        if (mSections.size() != 1) return;
+        if (mSections.size() != 1 || mHasExternalSections) return;
 
         SuggestionsSection articlesSection = mSections.get(KnownCategories.ARTICLES);
         if (articlesSection == null) return;
 
         articlesSection.setHeaderVisibility(false);
+    }
+
+    /**
+     * Sets whether there are external sections shown above or below the section list.
+     * Only intended for use in a rough contextual suggestions prototype.
+     */
+    void setHasExternalSections(boolean hasExternalSections) {
+        mHasExternalSections = hasExternalSections;
     }
 
     /**

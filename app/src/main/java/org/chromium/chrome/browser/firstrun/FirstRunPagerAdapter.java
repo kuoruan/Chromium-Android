@@ -6,29 +6,23 @@ package org.chromium.chrome.browser.firstrun;
 
 import android.app.Fragment;
 import android.app.FragmentManager;
-import android.os.Bundle;
 import android.support.v13.app.FragmentStatePagerAdapter;
 
 import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * Adapter used to provide First Run pages to the FirstRunActivity ViewPager.
  */
 class FirstRunPagerAdapter extends FragmentStatePagerAdapter {
-    private final List<Callable<FirstRunPage>> mPages;
-    private final Bundle mFreProperties;
+    private final List<FirstRunPage> mPages;
 
     private boolean mStopAtTheFirstPage;
 
-    public FirstRunPagerAdapter(FragmentManager fragmentManager,
-            List<Callable<FirstRunPage>> pages, Bundle freProperties) {
+    public FirstRunPagerAdapter(FragmentManager fragmentManager, List<FirstRunPage> pages) {
         super(fragmentManager);
         assert pages != null;
         assert pages.size() > 0;
-        assert freProperties != null;
         mPages = pages;
-        mFreProperties = freProperties;
     }
 
     /**
@@ -45,34 +39,12 @@ class FirstRunPagerAdapter extends FragmentStatePagerAdapter {
     @Override
     public Fragment getItem(int position) {
         assert position >= 0 && position < mPages.size();
-        FirstRunPage result = null;
-        try {
-            result = mPages.get(position).call();
-        } catch (Exception e) {
-            // We can always return null and it will be properly handled at the caller level.
-        }
-        if (result == null) return null;
-
-        Bundle props = new Bundle();
-        props.putAll(mFreProperties);
-        result.setArguments(props);
-
-        return result;
+        return mPages.get(position).instantiateFragment();
     }
 
     @Override
     public int getCount() {
         if (mStopAtTheFirstPage) return 1;
         return mPages.size();
-    }
-
-    @Override
-    public int getItemPosition(Object object) {
-        // Each page can specify whether it should be re-created or not on a notifyDataSetChanged.
-        if (object instanceof FirstRunPage) {
-            FirstRunPage page = (FirstRunPage) object;
-            return page.shouldRecreatePageOnDataChange() ? POSITION_NONE : POSITION_UNCHANGED;
-        }
-        return POSITION_NONE;
     }
 }

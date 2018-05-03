@@ -36,6 +36,12 @@ public class BuildHooksAndroidImpl extends BuildHooksAndroid {
     }
 
     @Override
+    protected int getIdentifierImpl(
+            Resources resources, String name, String defType, String defPackage) {
+        return resources.getIdentifier(name, defType, defPackage);
+    }
+
+    @Override
     protected boolean isEnabledImpl() {
         return false;
     }

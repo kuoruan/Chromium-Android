@@ -86,7 +86,7 @@ public class VrIntentUtils {
                 int supportLevel =
                         VrShellDelegate.getVrSupportLevel(wrapper.createVrDaydreamApi(context),
                                 wrapper.createVrCoreVersionChecker(), null);
-                return supportLevel == VrShellDelegate.VR_DAYDREAM;
+                return supportLevel == VrSupportLevel.VR_DAYDREAM;
             }
         };
     }

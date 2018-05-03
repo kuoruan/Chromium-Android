@@ -12,7 +12,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.content.pm.Signature;
 import android.os.StrictMode;
@@ -134,8 +133,17 @@ public class WebApkValidator {
             selector.addCategory(Intent.CATEGORY_BROWSABLE);
             selector.setComponent(null);
         }
-        return context.getPackageManager().queryIntentActivities(
-                intent, PackageManager.GET_RESOLVED_FILTER);
+        List<ResolveInfo> resolveInfoList;
+        try {
+            resolveInfoList = context.getPackageManager().queryIntentActivities(
+                    intent, PackageManager.GET_RESOLVED_FILTER);
+        } catch (Exception e) {
+            // We used to catch only java.util.MissingResourceException, but we need to catch more
+            // exceptions to handle "Package manager has died" exception.
+            // http://crbug.com/794363
+            resolveInfoList = new LinkedList<>();
+        }
+        return resolveInfoList;
     }
 
     /**
@@ -171,7 +179,7 @@ public class WebApkValidator {
         try {
             packageInfo = context.getPackageManager().getPackageInfo(webappPackageName,
                     PackageManager.GET_SIGNATURES | PackageManager.GET_META_DATA);
-        } catch (NameNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             Log.d(TAG, "WebApk not found");
             return false;

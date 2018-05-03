@@ -118,7 +118,7 @@
     <dimen name="contextual_search_end_button_width">48dp</dimen>
     <dimen name="contextual_search_divider_line_width">1dp</dimen>
     <dimen name="contextual_search_divider_line_height">24dp</dimen>
-    <dimen name="contextual_search_bubble_y_inset">14dp</dimen>
+    <dimen name="contextual_search_bubble_y_inset">-3dp</dimen>
 
     <!-- Overlay panel dimensions -->
     <dimen name="overlay_panel_bar_height">56dp</dimen>
@@ -139,7 +139,6 @@
     <dimen name="promo_dialog_illustration_margin">24dp</dimen>
     <dimen name="promo_dialog_illustration_width">150dp</dimen>
     <dimen name="promo_dialog_padding">16dp</dimen>
-    <dimen name="promo_dialog_max_width">600dp</dimen>
     <dimen name="promo_dialog_max_content_width">320dp</dimen>
     <dimen name="promo_dialog_min_scrollable_height">100dp</dimen>
     <dimen name="promo_dialog_title_text_size">23sp</dimen>
@@ -190,6 +189,12 @@
     <!-- Alert dialog -->
     <dimen name="dialog_padding_top">@dimen/abc_dialog_padding_top_material</dimen>
     <dimen name="dialog_padding_sides">@dimen/abc_dialog_padding_material</dimen>
+    <dimen name="dialog_max_width">600dp</dimen>
+
+    <!-- ModalDialogView dimensions -->
+    <dimen name="modal_dialog_control_padding_vertical">4dp</dimen>
+    <dimen name="modal_dialog_control_padding_horizontal">12dp</dimen>
+    <dimen name="tab_modal_scrim_vertical_margin">16dp</dimen>
 
     <!-- Tab Strip Dimensions -->
     <dimen name="tab_strip_height">0dp</dimen>
@@ -459,7 +464,10 @@
     <dimen name="pref_icon_padding">4.6dp</dimen>
     <dimen name="pref_spinner_padding_end">8dp</dimen>
 
+    <dimen name="pref_languages_padding">16dp</dimen>
+    <dimen name="pref_languages_add_button_padding">24dp</dimen>
     <dimen name="pref_languages_item_popup_width">260dp</dimen>
+    <dimen name="pref_languages_item_dragged_elevation">6dp</dimen>
 
     <!-- Dialog dimensions.
          https://www.google.com/design/spec/components/dialogs.html#dialogs-simple-dialogs -->
@@ -469,10 +477,9 @@
     <dimen name="separator_height">1dp</dimen>
 
     <!-- Modern List Item dimensions -->
-    <dimen name="list_item_min_height">60dp</dimen>
+    <dimen name="list_item_min_height">64dp</dimen>
     <dimen name="list_item_default_margin">16dp</dimen>
     <dimen name="list_item_subsection_margin">40dp</dimen>
-    <dimen name="list_item_top_bottom_padding">10dp</dimen>
     <dimen name="list_item_start_icon_right_margin">20dp</dimen>
     <dimen name="list_item_start_icon_width">36dp</dimen>
     <dimen name="list_item_start_icon_corner_radius">18dp</dimen>
@@ -517,7 +524,7 @@
     <dimen name="action_bar_shadow_height">10dp</dimen>
     <dimen name="card_corner_radius">2dp</dimen>
     <dimen name="clear_text_button_end_padding">8dp</dimen>
-    <dimen name="signin_and_sync_view_padding">16dp</dimen>
+    <dimen name="sync_promo_view_padding">16dp</dimen>
     <dimen name="sad_tab_bullet_gap">12dp</dimen>
     <dimen name="sad_tab_bullet_leading_offset">1dp</dimen>
 

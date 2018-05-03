@@ -13,6 +13,7 @@ import android.content.SharedPreferences;
 import android.os.ParcelFileDescriptor;
 import android.support.annotation.IntDef;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.PathUtils;
@@ -242,8 +243,8 @@ public class ChromeBackupAgent extends BackupAgent {
 
         // Finally add the user id.
         backupNames.add(ANDROID_DEFAULT_PREFIX + ChromeSigninController.SIGNED_IN_ACCOUNT_KEY);
-        backupValues.add(
-                sharedPrefs.getString(ChromeSigninController.SIGNED_IN_ACCOUNT_KEY, "").getBytes());
+        backupValues.add(ApiCompatibilityUtils.getBytesUtf8(
+                sharedPrefs.getString(ChromeSigninController.SIGNED_IN_ACCOUNT_KEY, "")));
 
         BackupState newBackupState = new BackupState(backupNames, backupValues);
 

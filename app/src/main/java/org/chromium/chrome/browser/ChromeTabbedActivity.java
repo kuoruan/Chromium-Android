@@ -12,6 +12,7 @@ import android.app.ActivityManager.AppTask;
 import android.app.ActivityManager.RecentTaskInfo;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ShortcutManager;
 import android.graphics.Color;
@@ -46,6 +47,7 @@ import org.chromium.base.TraceEvent;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.library_loader.LibraryLoader;
 import org.chromium.base.metrics.CachedMetrics.BooleanHistogramSample;
+import org.chromium.base.metrics.CachedMetrics.EnumeratedHistogramSample;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
@@ -76,6 +78,7 @@ import org.chromium.chrome.browser.firstrun.FirstRunStatus;
 import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager;
 import org.chromium.chrome.browser.fullscreen.ComposedBrowserControlsVisibilityDelegate;
 import org.chromium.chrome.browser.incognito.IncognitoNotificationManager;
+import org.chromium.chrome.browser.incognito.IncognitoTabSnapshotController;
 import org.chromium.chrome.browser.infobar.DataReductionPromoInfoBar;
 import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.metrics.ActivityStopMetrics;
@@ -83,6 +86,8 @@ import org.chromium.chrome.browser.metrics.LaunchMetrics;
 import org.chromium.chrome.browser.metrics.MainIntentBehaviorMetrics;
 import org.chromium.chrome.browser.metrics.StartupMetrics;
 import org.chromium.chrome.browser.metrics.UmaUtils;
+import org.chromium.chrome.browser.modaldialog.ModalDialogManager;
+import org.chromium.chrome.browser.modaldialog.TabModalLifetimeHandler;
 import org.chromium.chrome.browser.multiwindow.MultiInstanceChromeTabbedActivity;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
@@ -148,6 +153,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -236,6 +242,10 @@ public class ChromeTabbedActivity
     private static final BooleanHistogramSample sExplicitMainViewIntentDispatchedOnNewIntent =
             new BooleanHistogramSample(
                     "Android.MainActivity.ExplicitMainViewIntentDispatched.OnNewIntent");
+    private static final EnumeratedHistogramSample sUndispatchedExplicitMainViewIntentSource =
+            new EnumeratedHistogramSample(
+                    "Android.MainActivity.UndispatchedExplicitMainViewIntentSource",
+                    IntentHandler.ExternalAppId.INDEX_BOUNDARY.ordinal());
 
     private final ActivityStopMetrics mActivityStopMetrics;
     private final MainIntentBehaviorMetrics mMainIntentMetrics;
@@ -253,6 +263,8 @@ public class ChromeTabbedActivity
     private TabModelSelectorTabModelObserver mTabModelObserver;
 
     private ScreenshotMonitor mScreenshotMonitor;
+
+    private TabModalLifetimeHandler mTabModalHandler;
 
     private boolean mUIInitialized;
 
@@ -435,6 +447,34 @@ public class ChromeTabbedActivity
             @LaunchIntentDispatcher.Action
             int action = LaunchIntentDispatcher.dispatchToCustomTabActivity(this, intent);
             dispatchedHistogram.record(action != LaunchIntentDispatcher.Action.CONTINUE);
+            if (action == LaunchIntentDispatcher.Action.CONTINUE) {
+                // Intent was not dispatched, record its source.
+                IntentHandler.ExternalAppId externalId =
+                        IntentHandler.determineExternalIntentSource(getPackageName(), intent);
+                sUndispatchedExplicitMainViewIntentSource.record(externalId.ordinal());
+
+                // Crash if intent came from us, but only in debug builds and only if we weren't
+                // explicitly told not to. Hopefully we'll get enough reports to find where
+                // these intents come from.
+                if (externalId == IntentHandler.ExternalAppId.CHROME
+                        && 0 != (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE)
+                        && CommandLine.isInitialized()
+                        && !CommandLine.getInstance().hasSwitch(
+                                   ChromeSwitches.DONT_CRASH_ON_VIEW_MAIN_INTENTS)) {
+                    String intentInfo = intent.toString();
+                    Bundle extras = intent.getExtras();
+                    if (extras != null) {
+                        intentInfo +=
+                                ", extras.keySet = [" + TextUtils.join(", ", extras.keySet()) + "]";
+                    }
+                    String message = String.format((Locale) null,
+                            "VIEW intent sent to .Main activity alias was not dispatched. PLEASE "
+                                    + "report the following info to crbug.com/789732: \"%s\". Use "
+                                    + "--%s flag to disable this check.",
+                            intentInfo, ChromeSwitches.DONT_CRASH_ON_VIEW_MAIN_INTENTS);
+                    throw new IllegalStateException(message);
+                }
+            }
             return action;
         }
         return LaunchIntentDispatcher.Action.CONTINUE;
@@ -857,6 +897,12 @@ public class ChromeTabbedActivity
             }
 
             mScreenshotMonitor = ScreenshotMonitor.create(ChromeTabbedActivity.this);
+
+            if (!CommandLine.getInstance().hasSwitch(
+                        ChromeSwitches.ENABLE_INCOGNITO_SNAPSHOTS_IN_ANDROID_RECENTS)) {
+                IncognitoTabSnapshotController.createIncognitoTabSnapshotController(
+                        getWindow(), mLayoutManager, mTabModelSelectorImpl);
+            }
 
             mUIInitialized = true;
         } finally {
@@ -1663,7 +1709,8 @@ public class ChromeTabbedActivity
                 // Return early if the conditions aren't right to show the Chrome Home IPH menu
                 // header.
                 if (mControlContainer.getVisibility() != View.VISIBLE
-                        || getBottomSheet().isSheetOpen() || !isPageMenu) {
+                        || getBottomSheet().isSheetOpen() || !isPageMenu
+                        || AppMenuPropertiesDelegate.shouldShowNavMenuItems()) {
                     return null;
                 }
 
@@ -1804,7 +1851,7 @@ public class ChromeTabbedActivity
             if (currentTab != null) {
                 getCompositorViewHolder().hideKeyboard(() -> {
                     StartupMetrics.getInstance().recordOpenedBookmarks();
-                    BookmarkUtils.showBookmarkManager(ChromeTabbedActivity.this);
+                    BookmarkUtils.showBookmarkManager(ChromeTabbedActivity.this, true);
                 });
                 if (currentTabIsNtp) {
                     NewTabPageUma.recordAction(NewTabPageUma.ACTION_OPENED_BOOKMARKS_MANAGER);
@@ -1843,7 +1890,7 @@ public class ChromeTabbedActivity
                 getToolbarManager().setUrlBarFocus(true);
             }
         } else if (id == R.id.downloads_menu_id) {
-            DownloadUtils.showDownloadManager(this, currentTab);
+            DownloadUtils.showDownloadManager(this, currentTab, true);
             if (currentTabIsNtp) {
                 NewTabPageUma.recordAction(NewTabPageUma.ACTION_OPENED_DOWNLOADS_MANAGER);
             }
@@ -1865,6 +1912,8 @@ public class ChromeTabbedActivity
         super.onOmniboxFocusChanged(hasFocus);
 
         mMainIntentMetrics.onOmniboxFocused();
+
+        mTabModalHandler.onOmniboxFocusChanged(hasFocus);
     }
 
     private void recordBackPressedUma(String logMessage, @BackPressedResult int action) {
@@ -1896,7 +1945,9 @@ public class ChromeTabbedActivity
 
     @Override
     public boolean handleBackPressed() {
-        if (!mUIInitialized) return false;
+        // BottomSheet can be opened before native is initialized.
+        if (!mUIInitialized) return getBottomSheet() != null && getBottomSheet().handleBackPress();
+
         final Tab currentTab = getActivityTab();
 
         if (exitFullscreenIfShowing()) {
@@ -1905,6 +1956,8 @@ public class ChromeTabbedActivity
         }
 
         if (getBottomSheet() != null && getBottomSheet().handleBackPress()) return true;
+
+        if (mTabModalHandler.handleBackPress()) return true;
 
         if (currentTab == null) {
             recordBackPressedUma("currentTab is null", BACK_PRESSED_TAB_IS_NULL);
@@ -2122,6 +2175,11 @@ public class ChromeTabbedActivity
             mUndoBarPopupController = null;
         }
 
+        if (mTabModalHandler != null) {
+            mTabModalHandler.destroy();
+            mTabModalHandler = null;
+        }
+
         super.onDestroyInternal();
 
         FeatureUtilities.finalizePendingFeatures();
@@ -2174,6 +2232,13 @@ public class ChromeTabbedActivity
     @VisibleForTesting
     public Layout getOverviewListLayout() {
         return getLayoutManager().getOverviewListLayout();
+    }
+
+    @Override
+    protected ModalDialogManager createModalDialogManager() {
+        ModalDialogManager manager = super.createModalDialogManager();
+        mTabModalHandler = new TabModalLifetimeHandler(this, manager);
+        return manager;
     }
 
     // App Menu related code -----------------------------------------------------------------------

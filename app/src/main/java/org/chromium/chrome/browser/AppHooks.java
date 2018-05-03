@@ -19,7 +19,11 @@ import org.chromium.chrome.browser.banners.AppDetailsDelegate;
 import org.chromium.chrome.browser.customtabs.CustomTabsConnection;
 import org.chromium.chrome.browser.datausage.ExternalDataUseObserver;
 import org.chromium.chrome.browser.externalauth.ExternalAuthUtils;
+import org.chromium.chrome.browser.feedback.AsyncFeedbackSource;
+import org.chromium.chrome.browser.feedback.FeedbackCollector;
 import org.chromium.chrome.browser.feedback.FeedbackReporter;
+import org.chromium.chrome.browser.feedback.FeedbackSource;
+import org.chromium.chrome.browser.feedback.FeedbackSourceProvider;
 import org.chromium.chrome.browser.gsa.GSAHelper;
 import org.chromium.chrome.browser.help.HelpAndFeedback;
 import org.chromium.chrome.browser.historyreport.AppIndexingReporter;
@@ -330,5 +334,13 @@ public abstract class AppHooks {
      */
     public PartnerBrowserCustomizations.Provider getCustomizationProvider() {
         return new PartnerBrowserCustomizations.ProviderPackage();
+    }
+
+    /**
+     * @return A {@link FeedbackSourceProvider} that can provide additional {@link FeedbackSource}s
+     * and {@link AsyncFeedbackSource}s to be used by a {@link FeedbackCollector}.
+     */
+    public FeedbackSourceProvider getAdditionalFeedbackSources() {
+        return new FeedbackSourceProvider() {};
     }
 }

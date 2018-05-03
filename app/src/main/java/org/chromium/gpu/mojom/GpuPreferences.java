@@ -16,26 +16,27 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 24;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+    private static final int STRUCT_SIZE = 40;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public boolean singleProcess;
     public boolean inProcessGpu;
     public boolean disableAcceleratedVideoDecode;
+    public boolean disableAcceleratedVideoEncode;
     public boolean gpuStartupDialog;
     public boolean disableGpuWatchdog;
     public boolean gpuSandboxStartEarly;
-    public boolean disableVaapiAcceleratedVideoEncode;
     public boolean disableWebRtcHwEncoding;
     public int enableAcceleratedVpxDecode;
     public boolean enableLowLatencyDxva;
     public boolean enableZeroCopyDxgiVideo;
     public boolean enableNv12DxgiVideo;
     public boolean enableMediaFoundationVeaOnWindows7;
+    public boolean disableSoftwareRasterizer;
+    public boolean logGpuControlListDecisions;
     public boolean compileShaderAlwaysSucceeds;
     public boolean disableGlErrorLimit;
     public boolean disableGlslTranslator;
-    public boolean disableGpuDriverBugWorkarounds;
     public boolean disableShaderNameHashing;
     public boolean enableGpuCommandLogging;
     public boolean enableGpuDebugging;
@@ -53,6 +54,10 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
     public boolean enableGpuServiceLogging;
     public boolean enableGpuServiceTracing;
     public boolean usePassthroughCmdDecoder;
+    public boolean disableBiplanarGpuMemoryBuffersForVideoFrames;
+    public org.chromium.gfx.mojom.BufferUsageAndFormat[] textureTargetExceptionList;
+    public boolean disableGpuDriverBugWorkarounds;
+    public boolean ignoreGpuBlacklist;
 
     private GpuPreferences(int version) {
         super(STRUCT_SIZE, version);
@@ -103,19 +108,19 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.gpuStartupDialog = decoder0.readBoolean(8, 3);
+                result.disableAcceleratedVideoEncode = decoder0.readBoolean(8, 3);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.disableGpuWatchdog = decoder0.readBoolean(8, 4);
+                result.gpuStartupDialog = decoder0.readBoolean(8, 4);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.gpuSandboxStartEarly = decoder0.readBoolean(8, 5);
+                result.disableGpuWatchdog = decoder0.readBoolean(8, 5);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.disableVaapiAcceleratedVideoEncode = decoder0.readBoolean(8, 6);
+                result.gpuSandboxStartEarly = decoder0.readBoolean(8, 6);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
@@ -139,79 +144,83 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.compileShaderAlwaysSucceeds = decoder0.readBoolean(9, 4);
+                result.disableSoftwareRasterizer = decoder0.readBoolean(9, 4);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.disableGlErrorLimit = decoder0.readBoolean(9, 5);
+                result.logGpuControlListDecisions = decoder0.readBoolean(9, 5);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.disableGlslTranslator = decoder0.readBoolean(9, 6);
+                result.compileShaderAlwaysSucceeds = decoder0.readBoolean(9, 6);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.disableGpuDriverBugWorkarounds = decoder0.readBoolean(9, 7);
+                result.disableGlErrorLimit = decoder0.readBoolean(9, 7);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.disableShaderNameHashing = decoder0.readBoolean(10, 0);
+                result.disableGlslTranslator = decoder0.readBoolean(10, 0);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.enableGpuCommandLogging = decoder0.readBoolean(10, 1);
+                result.disableShaderNameHashing = decoder0.readBoolean(10, 1);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.enableGpuDebugging = decoder0.readBoolean(10, 2);
+                result.enableGpuCommandLogging = decoder0.readBoolean(10, 2);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.enableGpuServiceLoggingGpu = decoder0.readBoolean(10, 3);
+                result.enableGpuDebugging = decoder0.readBoolean(10, 3);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.enableGpuDriverDebugLogging = decoder0.readBoolean(10, 4);
+                result.enableGpuServiceLoggingGpu = decoder0.readBoolean(10, 4);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.disableGpuProgramCache = decoder0.readBoolean(10, 5);
+                result.enableGpuDriverDebugLogging = decoder0.readBoolean(10, 5);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.enforceGlMinimums = decoder0.readBoolean(10, 6);
+                result.disableGpuProgramCache = decoder0.readBoolean(10, 6);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.disableGpuShaderDiskCache = decoder0.readBoolean(10, 7);
+                result.enforceGlMinimums = decoder0.readBoolean(10, 7);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.enableThreadedTextureMailboxes = decoder0.readBoolean(11, 0);
+                result.disableGpuShaderDiskCache = decoder0.readBoolean(11, 0);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.glShaderIntermOutput = decoder0.readBoolean(11, 1);
+                result.enableThreadedTextureMailboxes = decoder0.readBoolean(11, 1);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.emulateShaderPrecision = decoder0.readBoolean(11, 2);
+                result.glShaderIntermOutput = decoder0.readBoolean(11, 2);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.enableRasterDecoder = decoder0.readBoolean(11, 3);
+                result.emulateShaderPrecision = decoder0.readBoolean(11, 3);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.enableGpuServiceLogging = decoder0.readBoolean(11, 4);
+                result.enableRasterDecoder = decoder0.readBoolean(11, 4);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.enableGpuServiceTracing = decoder0.readBoolean(11, 5);
+                result.enableGpuServiceLogging = decoder0.readBoolean(11, 5);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.usePassthroughCmdDecoder = decoder0.readBoolean(11, 6);
+                result.enableGpuServiceTracing = decoder0.readBoolean(11, 6);
+            }
+            if (mainDataHeader.elementsOrVersion >= 0) {
+                
+                result.usePassthroughCmdDecoder = decoder0.readBoolean(11, 7);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
@@ -225,6 +234,31 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
                 result.gpuProgramCacheSize = decoder0.readInt(20);
+            }
+            if (mainDataHeader.elementsOrVersion >= 0) {
+                
+                result.disableBiplanarGpuMemoryBuffersForVideoFrames = decoder0.readBoolean(24, 0);
+            }
+            if (mainDataHeader.elementsOrVersion >= 0) {
+                
+                result.disableGpuDriverBugWorkarounds = decoder0.readBoolean(24, 1);
+            }
+            if (mainDataHeader.elementsOrVersion >= 0) {
+                
+                result.ignoreGpuBlacklist = decoder0.readBoolean(24, 2);
+            }
+            if (mainDataHeader.elementsOrVersion >= 0) {
+                
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, false);
+                {
+                    org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                    result.textureTargetExceptionList = new org.chromium.gfx.mojom.BufferUsageAndFormat[si1.elementsOrVersion];
+                    for (int i1 = 0; i1 < si1.elementsOrVersion; ++i1) {
+                        
+                        org.chromium.mojo.bindings.Decoder decoder2 = decoder1.readPointer(org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i1, false);
+                        result.textureTargetExceptionList[i1] = org.chromium.gfx.mojom.BufferUsageAndFormat.decode(decoder2);
+                    }
+                }
             }
         } finally {
             decoder0.decreaseStackDepth();
@@ -243,13 +277,13 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.disableAcceleratedVideoDecode, 8, 2);
         
-        encoder0.encode(this.gpuStartupDialog, 8, 3);
+        encoder0.encode(this.disableAcceleratedVideoEncode, 8, 3);
         
-        encoder0.encode(this.disableGpuWatchdog, 8, 4);
+        encoder0.encode(this.gpuStartupDialog, 8, 4);
         
-        encoder0.encode(this.gpuSandboxStartEarly, 8, 5);
+        encoder0.encode(this.disableGpuWatchdog, 8, 5);
         
-        encoder0.encode(this.disableVaapiAcceleratedVideoEncode, 8, 6);
+        encoder0.encode(this.gpuSandboxStartEarly, 8, 6);
         
         encoder0.encode(this.disableWebRtcHwEncoding, 8, 7);
         
@@ -261,49 +295,67 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.enableMediaFoundationVeaOnWindows7, 9, 3);
         
-        encoder0.encode(this.compileShaderAlwaysSucceeds, 9, 4);
+        encoder0.encode(this.disableSoftwareRasterizer, 9, 4);
         
-        encoder0.encode(this.disableGlErrorLimit, 9, 5);
+        encoder0.encode(this.logGpuControlListDecisions, 9, 5);
         
-        encoder0.encode(this.disableGlslTranslator, 9, 6);
+        encoder0.encode(this.compileShaderAlwaysSucceeds, 9, 6);
         
-        encoder0.encode(this.disableGpuDriverBugWorkarounds, 9, 7);
+        encoder0.encode(this.disableGlErrorLimit, 9, 7);
         
-        encoder0.encode(this.disableShaderNameHashing, 10, 0);
+        encoder0.encode(this.disableGlslTranslator, 10, 0);
         
-        encoder0.encode(this.enableGpuCommandLogging, 10, 1);
+        encoder0.encode(this.disableShaderNameHashing, 10, 1);
         
-        encoder0.encode(this.enableGpuDebugging, 10, 2);
+        encoder0.encode(this.enableGpuCommandLogging, 10, 2);
         
-        encoder0.encode(this.enableGpuServiceLoggingGpu, 10, 3);
+        encoder0.encode(this.enableGpuDebugging, 10, 3);
         
-        encoder0.encode(this.enableGpuDriverDebugLogging, 10, 4);
+        encoder0.encode(this.enableGpuServiceLoggingGpu, 10, 4);
         
-        encoder0.encode(this.disableGpuProgramCache, 10, 5);
+        encoder0.encode(this.enableGpuDriverDebugLogging, 10, 5);
         
-        encoder0.encode(this.enforceGlMinimums, 10, 6);
+        encoder0.encode(this.disableGpuProgramCache, 10, 6);
         
-        encoder0.encode(this.disableGpuShaderDiskCache, 10, 7);
+        encoder0.encode(this.enforceGlMinimums, 10, 7);
         
-        encoder0.encode(this.enableThreadedTextureMailboxes, 11, 0);
+        encoder0.encode(this.disableGpuShaderDiskCache, 11, 0);
         
-        encoder0.encode(this.glShaderIntermOutput, 11, 1);
+        encoder0.encode(this.enableThreadedTextureMailboxes, 11, 1);
         
-        encoder0.encode(this.emulateShaderPrecision, 11, 2);
+        encoder0.encode(this.glShaderIntermOutput, 11, 2);
         
-        encoder0.encode(this.enableRasterDecoder, 11, 3);
+        encoder0.encode(this.emulateShaderPrecision, 11, 3);
         
-        encoder0.encode(this.enableGpuServiceLogging, 11, 4);
+        encoder0.encode(this.enableRasterDecoder, 11, 4);
         
-        encoder0.encode(this.enableGpuServiceTracing, 11, 5);
+        encoder0.encode(this.enableGpuServiceLogging, 11, 5);
         
-        encoder0.encode(this.usePassthroughCmdDecoder, 11, 6);
+        encoder0.encode(this.enableGpuServiceTracing, 11, 6);
+        
+        encoder0.encode(this.usePassthroughCmdDecoder, 11, 7);
         
         encoder0.encode(this.enableAcceleratedVpxDecode, 12);
         
         encoder0.encode(this.forceGpuMemAvailable, 16);
         
         encoder0.encode(this.gpuProgramCacheSize, 20);
+        
+        encoder0.encode(this.disableBiplanarGpuMemoryBuffersForVideoFrames, 24, 0);
+        
+        encoder0.encode(this.disableGpuDriverBugWorkarounds, 24, 1);
+        
+        encoder0.encode(this.ignoreGpuBlacklist, 24, 2);
+        
+        if (this.textureTargetExceptionList == null) {
+            encoder0.encodeNullPointer(32, false);
+        } else {
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.textureTargetExceptionList.length, 32, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            for (int i0 = 0; i0 < this.textureTargetExceptionList.length; ++i0) {
+                
+                encoder1.encode(this.textureTargetExceptionList[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+            }
+        }
     }
 
     /**
@@ -324,13 +376,13 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
             return false;
         if (this.disableAcceleratedVideoDecode!= other.disableAcceleratedVideoDecode)
             return false;
+        if (this.disableAcceleratedVideoEncode!= other.disableAcceleratedVideoEncode)
+            return false;
         if (this.gpuStartupDialog!= other.gpuStartupDialog)
             return false;
         if (this.disableGpuWatchdog!= other.disableGpuWatchdog)
             return false;
         if (this.gpuSandboxStartEarly!= other.gpuSandboxStartEarly)
-            return false;
-        if (this.disableVaapiAcceleratedVideoEncode!= other.disableVaapiAcceleratedVideoEncode)
             return false;
         if (this.disableWebRtcHwEncoding!= other.disableWebRtcHwEncoding)
             return false;
@@ -344,13 +396,15 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
             return false;
         if (this.enableMediaFoundationVeaOnWindows7!= other.enableMediaFoundationVeaOnWindows7)
             return false;
+        if (this.disableSoftwareRasterizer!= other.disableSoftwareRasterizer)
+            return false;
+        if (this.logGpuControlListDecisions!= other.logGpuControlListDecisions)
+            return false;
         if (this.compileShaderAlwaysSucceeds!= other.compileShaderAlwaysSucceeds)
             return false;
         if (this.disableGlErrorLimit!= other.disableGlErrorLimit)
             return false;
         if (this.disableGlslTranslator!= other.disableGlslTranslator)
-            return false;
-        if (this.disableGpuDriverBugWorkarounds!= other.disableGpuDriverBugWorkarounds)
             return false;
         if (this.disableShaderNameHashing!= other.disableShaderNameHashing)
             return false;
@@ -386,6 +440,14 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
             return false;
         if (this.usePassthroughCmdDecoder!= other.usePassthroughCmdDecoder)
             return false;
+        if (this.disableBiplanarGpuMemoryBuffersForVideoFrames!= other.disableBiplanarGpuMemoryBuffersForVideoFrames)
+            return false;
+        if (!java.util.Arrays.deepEquals(this.textureTargetExceptionList, other.textureTargetExceptionList))
+            return false;
+        if (this.disableGpuDriverBugWorkarounds!= other.disableGpuDriverBugWorkarounds)
+            return false;
+        if (this.ignoreGpuBlacklist!= other.ignoreGpuBlacklist)
+            return false;
         return true;
     }
 
@@ -399,20 +461,21 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.singleProcess);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.inProcessGpu);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableAcceleratedVideoDecode);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableAcceleratedVideoEncode);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.gpuStartupDialog);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableGpuWatchdog);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.gpuSandboxStartEarly);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableVaapiAcceleratedVideoEncode);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableWebRtcHwEncoding);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableAcceleratedVpxDecode);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableLowLatencyDxva);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableZeroCopyDxgiVideo);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableNv12DxgiVideo);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableMediaFoundationVeaOnWindows7);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableSoftwareRasterizer);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.logGpuControlListDecisions);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.compileShaderAlwaysSucceeds);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableGlErrorLimit);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableGlslTranslator);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableGpuDriverBugWorkarounds);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableShaderNameHashing);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableGpuCommandLogging);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableGpuDebugging);
@@ -430,6 +493,10 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableGpuServiceLogging);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enableGpuServiceTracing);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.usePassthroughCmdDecoder);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableBiplanarGpuMemoryBuffersForVideoFrames);
+        result = prime * result + java.util.Arrays.deepHashCode(this.textureTargetExceptionList);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disableGpuDriverBugWorkarounds);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.ignoreGpuBlacklist);
         return result;
     }
 }

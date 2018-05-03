@@ -9,7 +9,7 @@ import android.graphics.RectF;
 import android.view.animation.Interpolator;
 
 import org.chromium.chrome.browser.compositor.LayerTitleCache;
-import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animatable;
+import org.chromium.chrome.browser.compositor.animation.CompositorAnimator;
 import org.chromium.chrome.browser.compositor.layouts.Layout;
 import org.chromium.chrome.browser.compositor.layouts.LayoutRenderHost;
 import org.chromium.chrome.browser.compositor.layouts.LayoutUpdateHost;
@@ -33,12 +33,9 @@ import java.util.LinkedList;
 /**
  * This class handles animating the opening of new tabs.
  */
-public class SimpleAnimationLayout
-        extends Layout implements Animatable<SimpleAnimationLayout.Property> {
-    /**
-     * Animation properties
-     */
-    public enum Property { DISCARD_AMOUNT }
+public class SimpleAnimationLayout extends Layout {
+    /** Animation for discarding a tab. */
+    private CompositorAnimator mDiscardAnimator;
 
     /** Duration of the first step of the background animation: zooming out, rotating in */
     private static final long BACKGROUND_STEP1_DURATION = 300;
@@ -335,9 +332,11 @@ public class SimpleAnimationLayout
 
             forceAnimationToFinish();
             mAnimatedTab = mClosedTab;
-            addToAnimation(this, Property.DISCARD_AMOUNT, 0, getDiscardRange(),
-                    TAB_CLOSED_ANIMATION_DURATION, 0, false,
-                    BakedBezierInterpolator.FADE_OUT_CURVE);
+            mDiscardAnimator = CompositorAnimator.ofFloat(getAnimationHandler(), 0,
+                    getDiscardRange(), TAB_CLOSED_ANIMATION_DURATION,
+                    (CompositorAnimator a) -> setDiscardAmount(a.getAnimatedValue()));
+            mDiscardAnimator.setInterpolator(BakedBezierInterpolator.FADE_OUT_CURVE);
+            mDiscardAnimator.start();
 
             mClosedTab = null;
             if (nextModel != null) {
@@ -377,8 +376,9 @@ public class SimpleAnimationLayout
     }
 
     @Override
-    public boolean onUpdateAnimation(long time, boolean jumpToEnd) {
-        return super.onUpdateAnimation(time, jumpToEnd) && mClosedTab == null;
+    protected void forceAnimationToFinish() {
+        super.forceAnimationToFinish();
+        if (mDiscardAnimator != null) mDiscardAnimator.end();
     }
 
     /**
@@ -389,24 +389,6 @@ public class SimpleAnimationLayout
         mAnimatedTab = null;
         mClosedTab = null;
     }
-
-    /**
-     * Sets a property for an animation.
-     * @param prop The property to update
-     * @param value New value of the property
-     */
-    @Override
-    public void setProperty(Property prop, float value) {
-        switch (prop) {
-            case DISCARD_AMOUNT:
-                setDiscardAmount(value);
-                break;
-            default:
-        }
-    }
-
-    @Override
-    public void onPropertyAnimationFinished(Property prop) {}
 
     @Override
     protected EventFilter getEventFilter() {

@@ -20,6 +20,7 @@ public class PaymentOption implements Completable {
     protected boolean mIsEditable;
     protected String mEditMessage;
     protected String mEditTitle;
+    protected String mPromoMessage;
     private String mId;
     private Drawable mIcon;
     private String[] mLabels = {null, null, null};
@@ -97,6 +98,15 @@ public class PaymentOption implements Completable {
         return mLabels[2];
     }
 
+    /**
+     * The optional promo message of this option.  For example, discount for a payment method, like
+     * "$45".
+     */
+    @Nullable
+    public String getPromoMessage() {
+        return mPromoMessage;
+    }
+
     /** See {@link #updateIdentifierAndLabels(String, String, String, String)}. */
     protected void updateIdentifierAndLabels(String id, String label, @Nullable String sublabel) {
         updateIdentifierAndLabels(id, label, sublabel, null);
@@ -153,6 +163,15 @@ public class PaymentOption implements Completable {
      */
     protected void updateTertiarylabel(@Nullable String tertiarylabel) {
         mLabels[2] = tertiarylabel;
+    }
+
+    /**
+     * Updates the promo message of this option.
+     *
+     * @param message The new message to use.
+     */
+    protected void updatePromoMessage(String message) {
+        mPromoMessage = message;
     }
 
     /** @param icon The new icon to use. */

@@ -1,5 +1,5 @@
 
-// Copyright 2017 The Chromium Authors. All rights reserved.
+// Copyright 2018 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -27,7 +27,8 @@ import java.lang.annotation.RetentionPolicy;
     WebInputEventModifier.SYMBOL_KEY, WebInputEventModifier.SCROLL_LOCK_ON,
     WebInputEventModifier.IS_COMPATIBILITY_EVENT_FOR_TOUCH, WebInputEventModifier.BACK_BUTTON_DOWN,
     WebInputEventModifier.FORWARD_BUTTON_DOWN, WebInputEventModifier.RELATIVE_MOTION_EVENT,
-    WebInputEventModifier.KEY_MODIFIERS, WebInputEventModifier.NO_MODIFIERS
+    WebInputEventModifier.FROM_DEBUGGER, WebInputEventModifier.KEY_MODIFIERS,
+    WebInputEventModifier.NO_MODIFIERS
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface WebInputEventModifier {
@@ -79,6 +80,11 @@ public @interface WebInputEventModifier {
    * movement of the pointer
    */
   int RELATIVE_MOTION_EVENT = 1 << 22;
+  /**
+   * Indication this event was injected by the devtools. TODO(dtapuska): Remove this flag once we
+   * are able to bind callbacks in event sending.
+   */
+  int FROM_DEBUGGER = 1 << 23;
   /**
    * The set of non-stateful modifiers that specifically change the interpretation of the key being
    * pressed. For example; IsLeft, IsRight, IsComposing don't change the meaning of the key being

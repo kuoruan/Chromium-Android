@@ -396,6 +396,12 @@
         android:restrictionType="multi-select"/>
 
     <restriction
+        android:key="ForceBrowserSignin"
+        android:title="@string/ForceBrowserSigninTitle"
+        android:description="@string/ForceBrowserSigninDesc"
+        android:restrictionType="bool"/>
+
+    <restriction
         android:key="SSLVersionMax"
         android:title="@string/SSLVersionMaxTitle"
         android:description="@string/SSLVersionMaxDesc"
@@ -443,6 +449,12 @@
         android:key="WebRtcUdpPortRange"
         android:title="@string/WebRtcUdpPortRangeTitle"
         android:description="@string/WebRtcUdpPortRangeDesc"
+        android:restrictionType="string"/>
+
+    <restriction
+        android:key="RestrictAccountsToPatterns"
+        android:title="@string/RestrictAccountsToPatternsTitle"
+        android:description="@string/RestrictAccountsToPatternsDesc"
         android:restrictionType="string"/>
 
 </restrictions>

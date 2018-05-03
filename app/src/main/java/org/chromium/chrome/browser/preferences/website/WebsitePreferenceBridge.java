@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.preferences.website;
 
 import org.chromium.base.Callback;
 import org.chromium.base.annotations.CalledByNative;
+import org.chromium.chrome.browser.ContentSettingsType;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 
 import java.util.ArrayList;
@@ -169,7 +170,7 @@ public abstract class WebsitePreferenceBridge {
     }
 
     public static List<ContentSettingException> getContentSettingsExceptions(
-            int contentSettingsType) {
+            @ContentSettingsType int contentSettingsType) {
         List<ContentSettingException> exceptions =
                 PrefServiceBridge.getInstance().getContentSettingsExceptions(
                         contentSettingsType);
@@ -218,26 +219,12 @@ public abstract class WebsitePreferenceBridge {
     }
 
     /**
-     * Returns whether the DSE (Default Search Engine) geolocation setting should be used to
-     * determine geolocation access for the given origin.
+     * Returns whether the DSE (Default Search Engine) controls the given permission the given
+     * origin.
      */
-    public static boolean shouldUseDSEGeolocationSetting(
-            String origin, boolean isIncognito) {
-        return nativeShouldUseDSEGeolocationSetting(origin, isIncognito);
-    }
-
-    /**
-     * Returns the DSE (Default Search Engine) geolocation setting.
-     */
-    public static boolean getDSEGeolocationSetting() {
-        return nativeGetDSEGeolocationSetting();
-    }
-
-    /**
-     * Sets the DSE (Default Search Engine) geolocation setting.
-     */
-    public static void setDSEGeolocationSetting(boolean setting) {
-        nativeSetDSEGeolocationSetting(setting);
+    public static boolean isPermissionControlledByDSE(
+            @ContentSettingsType int contentSettingsType, String origin, boolean isIncognito) {
+        return nativeIsPermissionControlledByDSE(contentSettingsType, origin, isIncognito);
     }
 
     /**
@@ -289,9 +276,8 @@ public abstract class WebsitePreferenceBridge {
     static native void nativeGetUsbOrigins(Object list);
     static native void nativeRevokeUsbPermission(String origin, String embedder, String object);
     static native void nativeClearBannerData(String origin);
-    private static native boolean nativeShouldUseDSEGeolocationSetting(
-            String origin, boolean isIncognito);
-    private static native boolean nativeGetDSEGeolocationSetting();
-    private static native void nativeSetDSEGeolocationSetting(boolean setting);
+    private static native boolean nativeIsPermissionControlledByDSE(
+            @ContentSettingsType int contentSettingsType, String origin, boolean isIncognito);
     private static native boolean nativeGetAdBlockingActivated(String origin);
+    static native void nativeResetNotificationsSettingsForTest();
 }

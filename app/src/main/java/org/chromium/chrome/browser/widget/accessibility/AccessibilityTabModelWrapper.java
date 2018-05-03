@@ -52,6 +52,7 @@ public class AccessibilityTabModelWrapper extends LinearLayout {
         @Override
         public void onChange() {
             getAdapter().notifyDataSetChanged();
+            updateVisibilityForLayoutOrStackButton();
         }
 
         @Override
@@ -178,13 +179,10 @@ public class AccessibilityTabModelWrapper extends LinearLayout {
     public void setStateBasedOnModel() {
         if (mTabModelSelector == null) return;
 
-        boolean incognitoEnabled =
-                mTabModelSelector.getModel(true).getComprehensiveModel().getCount() > 0;
-
         boolean incognitoSelected = mTabModelSelector.isIncognitoSelected();
 
+        updateVisibilityForLayoutOrStackButton();
         if (FeatureUtilities.isChromeHomeEnabled()) {
-            mModernLayout.setVisibility(incognitoEnabled ? View.VISIBLE : View.GONE);
             if (incognitoSelected) {
                 setBackgroundColor(ApiCompatibilityUtils.getColor(
                         getResources(), R.color.incognito_primary_color));
@@ -208,7 +206,6 @@ public class AccessibilityTabModelWrapper extends LinearLayout {
                 mModernStandardButton.select();
             }
         } else {
-            mStackButtonWrapper.setVisibility(incognitoEnabled ? View.VISIBLE : View.GONE);
             if (incognitoSelected) {
                 mIncognitoButton.setBackgroundResource(R.drawable.btn_bg_holo_active);
                 mStandardButton.setBackgroundResource(R.drawable.btn_bg_holo);
@@ -250,6 +247,16 @@ public class AccessibilityTabModelWrapper extends LinearLayout {
                 : R.string.accessibility_tab_switcher_standard_stack_selected;
         AccessibilityTabModelWrapper.this.announceForAccessibility(
                 getResources().getString(stackAnnouncementId));
+    }
+
+    private void updateVisibilityForLayoutOrStackButton() {
+        boolean incognitoEnabled =
+                mTabModelSelector.getModel(true).getComprehensiveModel().getCount() > 0;
+        if (FeatureUtilities.isChromeHomeEnabled()) {
+            mModernLayout.setVisibility(incognitoEnabled ? View.VISIBLE : View.GONE);
+        } else {
+            mStackButtonWrapper.setVisibility(incognitoEnabled ? View.VISIBLE : View.GONE);
+        }
     }
 
     @Override

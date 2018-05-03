@@ -7,6 +7,8 @@ package org.chromium.chrome.browser.preferences.password;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.app.KeyguardManager;
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -18,6 +20,9 @@ import org.chromium.base.VisibleForTesting;
  * settings UI.
  */
 public final class ReauthenticationManager {
+    // Used for various ways to override checks provided by this class.
+    public enum OverrideState { NOT_OVERRIDDEN, AVAILABLE, UNAVAILABLE }
+
     // Useful for retrieving the fragment in tests.
     @VisibleForTesting
     public static final String FRAGMENT_TAG = "reauthentication-manager-fragment";
@@ -29,6 +34,14 @@ public final class ReauthenticationManager {
     // means there was no successful reauthentication yet.
     private static long sLastReauthTimeMillis;
 
+    // Used in tests to override the result of checking for screen lock set-up. This allows the
+    // tests to be independent of a particular device configuration.
+    private static OverrideState sScreenLockSetUpOverride = OverrideState.NOT_OVERRIDDEN;
+
+    // Used in tests to override the result of checking for availability of the screen-locking API.
+    // This allows the tests to be independent of a particular device configuration.
+    private static OverrideState sApiOverride = OverrideState.NOT_OVERRIDDEN;
+
     /**
      * Stores the timestamp of last reauthentication of the user.
      */
@@ -36,12 +49,37 @@ public final class ReauthenticationManager {
         sLastReauthTimeMillis = value;
     }
 
+    @VisibleForTesting
+    public static void setScreenLockSetUpOverride(OverrideState screenLockSetUpOverride) {
+        sScreenLockSetUpOverride = screenLockSetUpOverride;
+    }
+
+    @VisibleForTesting
+    public static void setApiOverride(OverrideState apiOverride) {
+        // Ensure that tests don't accidentally try to launch the OS-provided lock screen.
+        if (apiOverride == OverrideState.AVAILABLE) {
+            PasswordReauthenticationFragment.preventLockingForTesting();
+        }
+
+        sApiOverride = apiOverride;
+    }
+
     /**
      * Checks whether reauthentication is available on the device at all.
      * @return The result of the check.
      */
     public static boolean isReauthenticationApiAvailable() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
+        switch (sApiOverride) {
+            case NOT_OVERRIDDEN:
+                return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
+            case AVAILABLE:
+                return true;
+            case UNAVAILABLE:
+                return false;
+        }
+        // This branch is not reachable.
+        assert false;
+        return false;
     }
 
     /**
@@ -75,5 +113,25 @@ public final class ReauthenticationManager {
         return sLastReauthTimeMillis != 0
                 && (System.currentTimeMillis() - sLastReauthTimeMillis)
                 < VALID_REAUTHENTICATION_TIME_INTERVAL_MILLIS;
+    }
+
+    /**
+     * Checks whether the user set up screen lock so that it can be used for reauthentication. Can
+     * be overridden in tests.
+     * @param context The context to retrieve the KeyguardManager to find out.
+     */
+    public static boolean isScreenLockSetUp(Context context) {
+        switch (sScreenLockSetUpOverride) {
+            case NOT_OVERRIDDEN:
+                return ((KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE))
+                        .isKeyguardSecure();
+            case AVAILABLE:
+                return true;
+            case UNAVAILABLE:
+                return false;
+        }
+        // This branch is not reachable.
+        assert false;
+        return false;
     }
 }

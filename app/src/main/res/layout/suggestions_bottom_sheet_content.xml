@@ -14,4 +14,12 @@
         android:layout_height="match_parent"
         android:scrollbars="vertical"
         android:paddingTop="@dimen/chrome_home_suggestions_recycler_view_padding_top" />
+
+    <org.chromium.chrome.browser.widget.LoadingView
+        android:id="@+id/loading_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:paddingTop="@dimen/chrome_home_empty_view_top_padding" />
+
 </FrameLayout>

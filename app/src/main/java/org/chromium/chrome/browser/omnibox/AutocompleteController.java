@@ -147,7 +147,7 @@ public class AutocompleteController {
      * @param profile The profile to use for starting the AutocompleteController.
      * @param omniboxText The text displayed in the omnibox.
      * @param url The url of the currently loaded web page.
-     * @param url The title of the currently loaded web page.
+     * @param title The title of the currently loaded web page.
      * @param focusedFromFakebox Whether the user entered the omnibox by tapping the fakebox on the
      *                           native NTP. This should be false on all other pages.
      */

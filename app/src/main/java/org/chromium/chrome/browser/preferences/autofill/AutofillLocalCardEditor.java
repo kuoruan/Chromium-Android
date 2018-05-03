@@ -19,10 +19,10 @@ import android.widget.Spinner;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeVersionInfo;
-import org.chromium.chrome.browser.autofill.CardType;
 import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.AutofillProfile;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.CreditCard;
+import org.chromium.chrome.browser.payments.SettingsAutofillAndPaymentsObserver;
 import org.chromium.chrome.browser.widget.CompatibilityTextInputLayout;
 
 import java.text.SimpleDateFormat;
@@ -180,15 +180,16 @@ public class AutofillLocalCardEditor extends AutofillCreditCardEditor {
                     R.string.payments_card_number_invalid_validation_message));
             return false;
         }
-        CreditCard card = new CreditCard(mGUID, AutofillAndPaymentsPreferences.SETTINGS_ORIGIN,
-                true /* isLocal */, false /* isCached */, mNameText.getText().toString().trim(),
-                cardNumber, "" /* obfuscatedNumber */,
-                String.valueOf(mExpirationMonth.getSelectedItemPosition() + 1),
-                (String) mExpirationYear.getSelectedItem(), "" /* basicCardPaymentType */,
-                0 /* issuerIconDrawableId */, CardType.UNKNOWN,
-                ((AutofillProfile) mBillingAddress.getSelectedItem()).getGUID() /* billing */,
-                "" /* serverId */);
-        personalDataManager.setCreditCard(card);
+        CreditCard card = personalDataManager.getCreditCardForNumber(cardNumber);
+        card.setGUID(mGUID);
+        card.setOrigin(AutofillAndPaymentsPreferences.SETTINGS_ORIGIN);
+        card.setName(mNameText.getText().toString().trim());
+        card.setMonth(String.valueOf(mExpirationMonth.getSelectedItemPosition() + 1));
+        card.setYear((String) mExpirationYear.getSelectedItem());
+        card.setBillingAddressId(((AutofillProfile) mBillingAddress.getSelectedItem()).getGUID());
+        // Set GUID for adding a new card.
+        card.setGUID(personalDataManager.setCreditCard(card));
+        SettingsAutofillAndPaymentsObserver.getInstance().notifyOnCreditCardUpdated(card);
         return true;
     }
 
@@ -196,6 +197,7 @@ public class AutofillLocalCardEditor extends AutofillCreditCardEditor {
     protected void deleteEntry() {
         if (mGUID != null) {
             PersonalDataManager.getInstance().deleteCreditCard(mGUID);
+            SettingsAutofillAndPaymentsObserver.getInstance().notifyOnCreditCardDeleted(mGUID);
         }
     }
 

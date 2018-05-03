@@ -13,7 +13,7 @@ import org.chromium.chrome.browser.device.DeviceClassManager;
 import org.chromium.chrome.browser.util.AccessibilityUtil;
 import org.chromium.components.dom_distiller.core.DomDistillerUrlUtils;
 import org.chromium.components.security_state.ConnectionSecurityLevel;
-import org.chromium.content.browser.ContentViewCore;
+import org.chromium.content_public.browser.SelectionPopupController;
 import org.chromium.content_public.browser.WebContents;
 
 /**
@@ -145,14 +145,15 @@ public class TabStateBrowserControlsVisibilityDelegate
 
         enableHidingBrowserControls &= !AccessibilityUtil.isAccessibilityEnabled();
 
-        ContentViewCore cvc = mTab.getContentViewCore();
-        enableHidingBrowserControls &= cvc == null || !cvc.isFocusedNodeEditable();
+        enableHidingBrowserControls &=
+                !SelectionPopupController.fromWebContents(webContents).isFocusedNodeEditable();
         enableHidingBrowserControls &= !mTab.isShowingErrorPage();
         enableHidingBrowserControls &= !webContents.isShowingInterstitialPage();
         enableHidingBrowserControls &= !mTab.isRendererUnresponsive();
         enableHidingBrowserControls &= (mTab.getFullscreenManager() != null);
         enableHidingBrowserControls &= DeviceClassManager.enableFullscreen();
         enableHidingBrowserControls &= !mIsFullscreenWaitingForLoad;
+        enableHidingBrowserControls &= !mTab.isShowingTabModalDialog();
 
         return enableHidingBrowserControls;
     }

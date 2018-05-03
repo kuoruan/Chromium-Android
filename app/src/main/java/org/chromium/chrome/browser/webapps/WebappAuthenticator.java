@@ -11,6 +11,7 @@ import android.os.StrictMode;
 import android.os.SystemClock;
 import android.util.Log;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.SecureRandomInitializer;
 import org.chromium.base.metrics.CachedMetrics.TimesHistogramSample;
 
@@ -89,7 +90,7 @@ public class WebappAuthenticator {
         if (mac == null) {
             return null;
         }
-        return mac.doFinal(url.getBytes());
+        return mac.doFinal(ApiCompatibilityUtils.getBytesUtf8(url));
     }
 
     // TODO(palmer): Put this method, and as much of this class as possible, in a utility class.

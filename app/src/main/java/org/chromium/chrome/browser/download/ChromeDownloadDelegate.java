@@ -26,6 +26,8 @@ import org.chromium.ui.base.WindowAndroid;
 import org.chromium.ui.base.WindowAndroid.PermissionCallback;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.HashSet;
 
 /**
  * Chrome implementation of the ContentViewDownloadDelegate interface.
@@ -38,6 +40,12 @@ import java.io.File;
  */
 public class ChromeDownloadDelegate {
     private static final String TAG = "Download";
+
+    // Mime types that Android can't handle when tries to open the file. Chrome may deduct a better
+    // mime type based on file extension.
+    private static final HashSet<String> GENERIC_MIME_TYPES = new HashSet<String>(Arrays.asList(
+            "text/plain", "application/octet-stream", "binary/octet-stream", "octet/stream",
+            "application/download", "application/force-download", "application/unknown"));
 
     // The application context.
     private final Context mContext;
@@ -228,13 +236,7 @@ public class ChromeDownloadDelegate {
     static String remapGenericMimeType(String mimeType, String url, String filename) {
         // If we have one of "generic" MIME types, try to deduce
         // the right MIME type from the file extension (if any):
-        if (mimeType == null || mimeType.isEmpty() || "text/plain".equals(mimeType)
-                || "application/octet-stream".equals(mimeType)
-                || "binary/octet-stream".equals(mimeType)
-                || "octet/stream".equals(mimeType)
-                || "application/force-download".equals(mimeType)
-                || "application/unknown".equals(mimeType)) {
-
+        if (mimeType == null || mimeType.isEmpty() || GENERIC_MIME_TYPES.contains(mimeType)) {
             String extension = getFileExtension(url, filename);
             String newMimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
             if (newMimeType != null) {

@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.infobar.translate;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.support.annotation.NonNull;
@@ -44,6 +45,7 @@ public class TranslateTabLayout extends TabLayout {
     /**
      * Constructor for inflating from XML.
      */
+    @SuppressLint("CustomViewStyleable") // TODO(crbug.com/799070): File bug for author to fix.
     public TranslateTabLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
 

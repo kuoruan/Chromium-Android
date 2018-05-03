@@ -4,6 +4,7 @@
 
 package org.chromium.media;
 
+import android.annotation.SuppressLint;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.TrackInfo;
 import android.net.Uri;
@@ -15,6 +16,7 @@ import android.util.Base64;
 import android.util.Base64InputStream;
 import android.view.Surface;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.StreamUtil;
@@ -242,7 +244,8 @@ public class MediaPlayerBridge {
             try {
                 mTempFile = File.createTempFile("decoded", "mediadata");
                 fos = new FileOutputStream(mTempFile);
-                InputStream stream = new ByteArrayInputStream(mData.getBytes());
+                InputStream stream =
+                        new ByteArrayInputStream(ApiCompatibilityUtils.getBytesUtf8(mData));
                 Base64InputStream decoder = new Base64InputStream(stream, Base64.DEFAULT);
                 byte[] buffer = new byte[1024];
                 int len;
@@ -352,6 +355,7 @@ public class MediaPlayerBridge {
         boolean canSeekForward = true;
         boolean canSeekBackward = true;
         try {
+            @SuppressLint("PrivateApi")
             Method getMetadata = player.getClass().getDeclaredMethod(
                     "getMetadata", boolean.class, boolean.class);
             getMetadata.setAccessible(true);

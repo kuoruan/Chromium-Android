@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.ParcelUuid;
+import android.util.SparseArray;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
@@ -33,6 +34,7 @@ import org.chromium.base.annotations.JNINamespace;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -295,6 +297,14 @@ class Wrappers {
 
         public List<ParcelUuid> getScanRecord_getServiceUuids() {
             return mScanResult.getScanRecord().getServiceUuids();
+        }
+
+        public Map<ParcelUuid, byte[]> getScanRecord_getServiceData() {
+            return mScanResult.getScanRecord().getServiceData();
+        }
+
+        public SparseArray<byte[]> getScanRecord_getManufacturerSpecificData() {
+            return mScanResult.getScanRecord().getManufacturerSpecificData();
         }
 
         public int getScanRecord_getTxPowerLevel() {

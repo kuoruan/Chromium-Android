@@ -32,8 +32,6 @@ public class CastMessageHandler {
 
     // Sequence number used when no sequence number is required or was initially passed.
     static final int INVALID_SEQUENCE_NUMBER = -1;
-    static final String MEDIA_NAMESPACE = "urn:x-cast:com.google.cast.media";
-    static final String GAMES_NAMESPACE = "urn:x-cast:com.google.cast.games";
 
     private static final String MEDIA_MESSAGE_TYPES[] = {
             "PLAY",
@@ -232,7 +230,8 @@ public class CastMessageHandler {
                 messageType = sMediaOverloadedMessageTypes.get(messageType);
                 jsonCastMessage.put("type", messageType);
             }
-            return sendJsonCastMessage(jsonCastMessage, MEDIA_NAMESPACE, clientId, sequenceNumber);
+            return sendJsonCastMessage(
+                    jsonCastMessage, CastSessionUtil.MEDIA_NAMESPACE, clientId, sequenceNumber);
         }
 
         return true;
@@ -343,7 +342,7 @@ public class CastMessageHandler {
         } catch (JSONException e) {
         }
 
-        if (MEDIA_NAMESPACE.equals(namespace)) {
+        if (CastSessionUtil.MEDIA_NAMESPACE.equals(namespace)) {
             onMediaMessage(message, request);
             return;
         }

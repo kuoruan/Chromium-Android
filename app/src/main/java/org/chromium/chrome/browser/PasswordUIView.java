@@ -4,147 +4,77 @@
 
 package org.chromium.chrome.browser;
 
-import org.chromium.base.ObserverList;
 import org.chromium.base.annotations.CalledByNative;
 
 /**
- * Class for retrieving passwords and password exceptions (websites for which Chrome should not save
- * password) from native code.
+ * Production implementation of PasswordManagerHandler, making calls to native C++ code to retrieve
+ * the data.
  */
-public final class PasswordUIView {
-
-    /**
-     * Class representing information about a saved password entry.
-     */
-    public static final class SavedPasswordEntry {
-        private final String mUrl;
-        private final String mName;
-        private final String mPassword;
-
-        private SavedPasswordEntry(String url, String name, String password) {
-            mUrl = url;
-            mName = name;
-            mPassword = password;
-        }
-
-        public String getUrl() {
-            return mUrl;
-        }
-
-        public String getUserName() {
-            return mName;
-        }
-
-        public String getPassword() {
-            return mPassword;
-        }
-    }
-
+public final class PasswordUIView implements PasswordManagerHandler {
     @CalledByNative
     private static SavedPasswordEntry createSavedPasswordEntry(
             String url, String name, String password) {
         return new SavedPasswordEntry(url, name, password);
     }
 
-    /**
-     * Interface which client can use to listen to changes to password and password exception lists.
-     * Clients can register and unregister themselves with addObserver and removeObserver.
-     */
-    public interface PasswordListObserver {
-        /**
-         * Called when passwords list is updated.
-         * @param count Number of entries in the password list.
-         */
-        void passwordListAvailable(int count);
-
-        /**
-         * Called when password exceptions list is updated.
-         * @param count Number of entries in the password exception list.
-         */
-        void passwordExceptionListAvailable(int count);
-    }
-
-    private ObserverList<PasswordListObserver> mObservers =
-            new ObserverList<PasswordListObserver>();
-
     // Pointer to native implementation, set to 0 in destroy().
     private long mNativePasswordUIViewAndroid;
 
+    // This class has exactly one observer, set on construction and expected to last at least as
+    // long as this object (a good candidate is the owner of this object).
+    private final PasswordListObserver mObserver;
+
     /**
      * Constructor creates the native object as well. Callers should call destroy() after usage.
+     * @param PasswordListObserver The only observer.
      */
-    public PasswordUIView() {
+    public PasswordUIView(PasswordListObserver observer) {
         mNativePasswordUIViewAndroid = nativeInit();
+        mObserver = observer;
     }
 
     @CalledByNative
     private void passwordListAvailable(int count) {
-        for (PasswordListObserver observer : mObservers) {
-            observer.passwordListAvailable(count);
-        }
+        mObserver.passwordListAvailable(count);
     }
 
     @CalledByNative
     private void passwordExceptionListAvailable(int count) {
-        for (PasswordListObserver observer : mObservers) {
-            observer.passwordExceptionListAvailable(count);
-        }
+        mObserver.passwordExceptionListAvailable(count);
     }
 
-    public void addObserver(PasswordListObserver observer) {
-        mObservers.addObserver(observer);
-    }
-
-    public void removeObserver(PasswordListObserver observer) {
-        mObservers.removeObserver(observer);
-    }
-
-    /**
-     * Calls native to refresh password and exception lists. Observers are notified when fetch to
-     * passwords is complete.
-     */
+    // Calls native to refresh password and exception lists. The native code calls back into
+    // passwordListAvailable and passwordExceptionListAvailable.
+    @Override
     public void updatePasswordLists() {
         nativeUpdatePasswordLists(mNativePasswordUIViewAndroid);
     }
 
-    /**
-     * Get the saved password entry at index.
-     *
-     * @param index Index of Password.
-     * @return SavedPasswordEntry at index.
-     */
+    @Override
     public SavedPasswordEntry getSavedPasswordEntry(int index) {
         return nativeGetSavedPasswordEntry(mNativePasswordUIViewAndroid, index);
     }
 
-    /**
-     * Get saved password exception at index.
-     *
-     * @param index of exception
-     * @return Origin of password exception.
-     */
+    @Override
     public String getSavedPasswordException(int index) {
         return nativeGetSavedPasswordException(mNativePasswordUIViewAndroid, index);
     }
 
-    /**
-     * Remove saved password entry at index.
-     *
-     * @param index of password entry to remove.
-     */
+    @Override
     public void removeSavedPasswordEntry(int index) {
         nativeHandleRemoveSavedPasswordEntry(mNativePasswordUIViewAndroid, index);
     }
 
-    /**
-     * Remove saved exception entry at index.
-     *
-     * @param index of exception entry.
-     */
+    @Override
     public void removeSavedPasswordException(int index) {
         nativeHandleRemoveSavedPasswordException(mNativePasswordUIViewAndroid, index);
     }
 
+    /**
+     * Returns the URL for the website for managing one's passwords without the need to use Chrome
+     * with the user's profile signed in.
+     * @return The string with the URL.
+     */
     public static String getAccountDashboardURL() {
         return nativeGetAccountDashboardURL();
     }
@@ -157,7 +87,6 @@ public final class PasswordUIView {
             nativeDestroy(mNativePasswordUIViewAndroid);
             mNativePasswordUIViewAndroid = 0;
         }
-        mObservers.clear();
     }
 
     private native long nativeInit();
@@ -165,8 +94,7 @@ public final class PasswordUIView {
     private native void nativeUpdatePasswordLists(long nativePasswordUIViewAndroid);
 
     private native SavedPasswordEntry nativeGetSavedPasswordEntry(
-            long nativePasswordUIViewAndroid,
-            int index);
+            long nativePasswordUIViewAndroid, int index);
 
     private native String nativeGetSavedPasswordException(long nativePasswordUIViewAndroid,
             int index);

@@ -39,6 +39,16 @@ int status);
 
 
 
+    void setAudioDecoderName(
+String name);
+
+
+
+    void setVideoDecoderName(
+String name);
+
+
+
     void updateUnderflowCount(
 int count);
 

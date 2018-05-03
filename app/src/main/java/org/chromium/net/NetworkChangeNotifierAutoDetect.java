@@ -37,6 +37,7 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.util.Arrays;
 
 import javax.annotation.concurrent.GuardedBy;
@@ -283,11 +284,20 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
         protected boolean vpnAccessible(Network network) {
             // Determine if the VPN applies to the current user by seeing if a socket can be bound
             // to the VPN.
+            Socket s = new Socket();
             try {
-                network.getSocketFactory().createSocket().close();
+                // Avoid using network.getSocketFactory().createSocket() because it leaks.
+                // https://crbug.com/805424
+                network.bindSocket(s);
             } catch (IOException e) {
                 // Failed to bind so this VPN isn't for the current user to use.
                 return false;
+            } finally {
+                try {
+                    s.close();
+                } catch (IOException e) {
+                    // Not worth taking action on a failed close.
+                }
             }
             return true;
         }

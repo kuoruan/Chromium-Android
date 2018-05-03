@@ -124,6 +124,29 @@
         <item name="chrometint">@color/dark_mode_tint</item>
     </style>
 
+    <style name="ModalDialogTheme" parent="AlertDialogTheme">
+        <item name="android:windowFrame">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowMinWidthMajor">100%</item>
+        <item name="android:windowMinWidthMinor">100%</item>
+        <item name="buttonBarStyle">@style/ModalDialogButtonBarStyle</item>
+        <item name="buttonBarButtonStyle">@style/ModalDialogButtonStyle</item>
+    </style>
+
+    <style name="ModalDialogButtonBarStyle" parent="Widget.AppCompat.ButtonBar.AlertDialog">
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">bottom|end</item>
+        <item name="android:paddingStart">@dimen/modal_dialog_control_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/modal_dialog_control_padding_horizontal</item>
+        <item name="android:paddingTop">@dimen/modal_dialog_control_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/modal_dialog_control_padding_vertical</item>
+    </style>
+
+    <style name="ModalDialogButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">@color/light_active_color</item>
+    </style>
+
     <style name="SimpleDialog" parent="AlertDialogTheme">
         <item name="windowNoTitle">true</item>
         <item name="windowActionBar">false</item>
@@ -637,10 +660,8 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:minHeight">@dimen/list_item_min_height</item>
         <item name="android:orientation">horizontal</item>
-        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:gravity">center_vertical</item>
         <item name="android:layout_marginStart">@dimen/list_item_default_margin</item>
-        <item name="android:paddingTop">@dimen/list_item_top_bottom_padding</item>
-        <item name="android:paddingBottom">@dimen/list_item_top_bottom_padding</item>
     </style>
     <style name="ListItemStartIcon">
         <item name="android:layout_width">@dimen/list_item_start_icon_width</item>
@@ -678,7 +699,7 @@
         <item name="android:layout_marginBottom">10dp</item>
         <item name="android:layout_marginStart">@dimen/list_item_default_margin</item>
         <item name="android:layout_marginEnd">@dimen/list_item_default_margin</item>
-        <item name="android:textAppearance">@style/BlackDenseListText2</item>
+        <item name="android:textAppearance">@style/BlackBody</item>
     </style>
     <style name="DownloadTitleStyle">
         <item name="android:layout_width">wrap_content</item>
@@ -687,7 +708,7 @@
         <item name="android:layout_alignParentStart">true</item>
         <item name="android:paddingEnd">16dp</item>
         <item name="android:singleLine">true</item>
-        <item name="android:textAppearance">@style/BlackDenseListText1</item>
+        <item name="android:textAppearance">@style/BlackTitle1</item>
     </style>
     <style name="DownloadDescriptionStyle">
         <item name="android:layout_width">wrap_content</item>
@@ -699,7 +720,7 @@
         <item name="android:textAlignment">viewStart</item>
         <item name="android:ellipsize">start</item>
         <item name="android:singleLine">true</item>
-        <item name="android:textAppearance">@style/BlackDenseListText2</item>
+        <item name="android:textAppearance">@style/BlackBody</item>
     </style>
     <style name="DownloadIconView" parent="@style/ListItemStartIcon">
         <item name="android:background">@color/light_active_color</item>

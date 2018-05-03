@@ -19,23 +19,28 @@ class InterfaceFactory_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<InterfaceFactory, InterfaceFactory.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<InterfaceFactory, InterfaceFactory.Proxy>() {
     
+        @Override
         public String getName() {
             return "media::mojom::InterfaceFactory";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, InterfaceFactory impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public InterfaceFactory[] buildArray(int size) {
           return new InterfaceFactory[size];
         }
@@ -49,6 +54,8 @@ class InterfaceFactory_Internal {
     private static final int CREATE_RENDERER_ORDINAL = 2;
 
     private static final int CREATE_CDM_ORDINAL = 3;
+
+    private static final int CREATE_CDM_PROXY_ORDINAL = 4;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements InterfaceFactory.Proxy {
@@ -131,6 +138,25 @@ String keySystem, org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionM
         }
 
 
+        @Override
+        public void createCdmProxy(
+String cdmGuid, org.chromium.mojo.bindings.InterfaceRequest<CdmProxy> cdmProxy) {
+
+            InterfaceFactoryCreateCdmProxyParams _message = new InterfaceFactoryCreateCdmProxyParams();
+
+            _message.cdmGuid = cdmGuid;
+
+            _message.cdmProxy = cdmProxy;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(CREATE_CDM_PROXY_ORDINAL)));
+
+        }
+
+
     }
 
     static final class Stub extends org.chromium.mojo.bindings.Interface.Stub<InterfaceFactory> {
@@ -207,6 +233,19 @@ String keySystem, org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionM
                     }
             
             
+            
+            
+            
+                    case CREATE_CDM_PROXY_ORDINAL: {
+            
+                        InterfaceFactoryCreateCdmProxyParams data =
+                                InterfaceFactoryCreateCdmProxyParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().createCdmProxy(data.cdmGuid, data.cdmProxy);
+                        return true;
+                    }
+            
+            
                     default:
                         return false;
                 }
@@ -230,6 +269,8 @@ String keySystem, org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionM
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), InterfaceFactory_Internal.MANAGER, messageWithHeader, receiver);
+            
+            
             
             
             
@@ -633,6 +674,108 @@ String keySystem, org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionM
             int result = prime + getClass().hashCode();
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.keySystem);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cdm);
+            return result;
+        }
+    }
+
+
+
+    
+    static final class InterfaceFactoryCreateCdmProxyParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public String cdmGuid;
+        public org.chromium.mojo.bindings.InterfaceRequest<CdmProxy> cdmProxy;
+    
+        private InterfaceFactoryCreateCdmProxyParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public InterfaceFactoryCreateCdmProxyParams() {
+            this(0);
+        }
+    
+        public static InterfaceFactoryCreateCdmProxyParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static InterfaceFactoryCreateCdmProxyParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static InterfaceFactoryCreateCdmProxyParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            InterfaceFactoryCreateCdmProxyParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new InterfaceFactoryCreateCdmProxyParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.cdmGuid = decoder0.readString(8, false);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.cdmProxy = decoder0.readInterfaceRequest(16, false);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.cdmGuid, 8, false);
+            
+            encoder0.encode(this.cdmProxy, 16, false);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            InterfaceFactoryCreateCdmProxyParams other = (InterfaceFactoryCreateCdmProxyParams) object;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.cdmGuid, other.cdmGuid))
+                return false;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.cdmProxy, other.cdmProxy))
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cdmGuid);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cdmProxy);
             return result;
         }
     }

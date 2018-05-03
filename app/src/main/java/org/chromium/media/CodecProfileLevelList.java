@@ -10,7 +10,7 @@ import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.annotations.MainDex;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 @JNINamespace("media")
@@ -21,7 +21,7 @@ class CodecProfileLevelList {
     private final List<CodecProfileLevelAdapter> mList;
 
     public CodecProfileLevelList() {
-        mList = new LinkedList<CodecProfileLevelAdapter>();
+        mList = new ArrayList<CodecProfileLevelAdapter>();
     }
 
     public boolean addCodecProfileLevel(String mime, CodecProfileLevel codecProfileLevel) {

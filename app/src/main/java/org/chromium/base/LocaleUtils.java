@@ -32,7 +32,7 @@ public class LocaleUtils {
 
     static {
         // A variation of this mapping also exists in:
-        // build/android/gyp/package_resources.py
+        // build/android/gyp/process_resources.py
         HashMap<String, String> mapForChromium = new HashMap<>();
         mapForChromium.put("iw", "he"); // Hebrew
         mapForChromium.put("ji", "yi"); // Yiddish

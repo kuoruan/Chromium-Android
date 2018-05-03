@@ -95,6 +95,9 @@ public class ChromeHomePromoDialog extends PromoDialog {
         if (DeviceFormFactor.isTablet()) {
             throw new RuntimeException("Promo should not be shown for tablet devices!");
         }
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_PROMO_INFO_ONLY)) {
+            ChromePreferenceManager.getInstance().setChromeHomeInfoPromoShown();
+        }
         super.show();
     }
 

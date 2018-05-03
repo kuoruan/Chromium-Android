@@ -21,7 +21,6 @@ import android.widget.TextView;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.metrics.RecordHistogram;
-import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.favicon.FaviconHelper.FaviconImageCallback;
 import org.chromium.chrome.browser.ntp.ForeignSessionHelper.ForeignSession;
@@ -29,8 +28,7 @@ import org.chromium.chrome.browser.ntp.ForeignSessionHelper.ForeignSessionTab;
 import org.chromium.chrome.browser.ntp.ForeignSessionHelper.ForeignSessionWindow;
 import org.chromium.chrome.browser.signin.PersonalizedSigninPromoView;
 import org.chromium.chrome.browser.signin.SigninAccessPoint;
-import org.chromium.chrome.browser.signin.SigninAndSyncView;
-import org.chromium.components.signin.ChromeSigninController;
+import org.chromium.chrome.browser.signin.SyncPromoView;
 import org.chromium.ui.base.DeviceFormFactor;
 import org.chromium.ui.mojom.WindowOpenDisposition;
 
@@ -48,7 +46,6 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
         NONE,
         DEFAULT_CONTENT,
         PERSONALIZED_SIGNIN_PROMO,
-        GENERIC_SIGNIN_PROMO,
         SYNC_PROMO
     }
 
@@ -393,29 +390,6 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
     }
 
     /**
-     * A group containing the generic signin promo.
-     * TODO(crbug.com/737743): Remove this after rolling out personalized promos.
-     */
-    class GenericSigninPromoGroup extends PromoGroup {
-        @Override
-        public ChildType getChildType() {
-            return ChildType.GENERIC_SIGNIN_PROMO;
-        }
-
-        @Override
-        View getChildView(
-                int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                convertView = SigninAndSyncView.create(parent, null, SigninAccessPoint.RECENT_TABS);
-            }
-            if (!ChromeSigninController.get().isSignedIn()) {
-                RecordUserAction.record("Signin_Impression_FromRecentTabs");
-            }
-            return convertView;
-        }
-    }
-
-    /**
      * A group containing the sync promo.
      */
     class SyncPromoGroup extends PromoGroup {
@@ -428,7 +402,7 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
         View getChildView(
                 int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
             if (convertView == null) {
-                convertView = SigninAndSyncView.create(parent, null, SigninAccessPoint.RECENT_TABS);
+                convertView = SyncPromoView.create(parent, SigninAccessPoint.RECENT_TABS);
             }
             return convertView;
         }
@@ -794,9 +768,6 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
                 break;
             case RecentTabsManager.PromoState.PROMO_SIGNIN_PERSONALIZED:
                 addGroup(new PersonalizedSigninPromoGroup());
-                break;
-            case RecentTabsManager.PromoState.PROMO_SIGNIN_GENERIC:
-                addGroup(new GenericSigninPromoGroup());
                 break;
             case RecentTabsManager.PromoState.PROMO_SYNC:
                 addGroup(new SyncPromoGroup());

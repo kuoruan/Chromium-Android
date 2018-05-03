@@ -78,9 +78,6 @@ public class ReaderModeManager extends TabModelSelectorTabObserver {
     /** The primary means of getting the currently active tab. */
     private TabModelSelector mTabModelSelector;
 
-    /** If Reader Mode is detecting all pages as distillable. */
-    private boolean mIsReaderHeuristicAlwaysTrue;
-
     // Hold on to the InterceptNavigationDelegate that the custom tab uses.
     InterceptNavigationDelegate mCustomTabNavigationDelegate;
 
@@ -89,15 +86,6 @@ public class ReaderModeManager extends TabModelSelectorTabObserver {
         mTabModelSelector = selector;
         mChromeActivity = activity;
         mTabStatusMap = new HashMap<>();
-        mIsReaderHeuristicAlwaysTrue = isDistillerHeuristicAlwaysTrue();
-    }
-
-    /**
-     * This function wraps a method that calls native code and is overridden by tests.
-     * @return True if the heuristic is ALWAYS_TRUE.
-     */
-    protected boolean isDistillerHeuristicAlwaysTrue() {
-        return DomDistillerTabUtils.isHeuristicAlwaysTrue();
     }
 
     /**
@@ -428,7 +416,7 @@ public class ReaderModeManager extends TabModelSelectorTabObserver {
         // ALWAYS_TRUE.
         boolean usingRequestDesktopSite = getBasePageWebContents() != null
                 && getBasePageWebContents().getNavigationController().getUseDesktopUserAgent()
-                && !mIsReaderHeuristicAlwaysTrue;
+                && !DomDistillerTabUtils.isHeuristicAlwaysTrue();
 
         if (!mTabStatusMap.containsKey(currentTabId) || usingRequestDesktopSite
                 || mTabStatusMap.get(currentTabId).getStatus() != POSSIBLE
@@ -515,38 +503,36 @@ public class ReaderModeManager extends TabModelSelectorTabObserver {
             return;
         }
 
-        DistillablePageUtils.setDelegate(currentTab.getWebContents(),
-                new DistillablePageUtils.PageDistillableDelegate() {
-                    @Override
-                    public void onIsPageDistillableResult(boolean isDistillable, boolean isLast) {
-                        if (mTabModelSelector == null) return;
+        DistillablePageUtils.setDelegate(
+                currentTab.getWebContents(), (isDistillable, isLast, isMobileOptimized) -> {
+                    if (mTabModelSelector == null) return;
 
-                        ReaderModeTabInfo tabInfo = mTabStatusMap.get(tabId);
-                        Tab readerTab = mTabModelSelector.getTabById(tabId);
+                    ReaderModeTabInfo tabInfo = mTabStatusMap.get(tabId);
+                    Tab readerTab = mTabModelSelector.getTabById(tabId);
 
-                        // It is possible that the tab was destroyed before this callback happens.
-                        // TODO(wychen/mdjones): Remove the callback when a Tab/WebContents is
-                        // destroyed so that this never happens.
-                        if (readerTab == null || tabInfo == null) return;
+                    // It is possible that the tab was destroyed before this callback happens.
+                    // TODO(wychen/mdjones): Remove the callback when a Tab/WebContents is
+                    // destroyed so that this never happens.
+                    if (readerTab == null || tabInfo == null) return;
 
-                        // Make sure the page didn't navigate while waiting for a response.
-                        if (!readerTab.getUrl().equals(tabInfo.getUrl())) return;
+                    // Make sure the page didn't navigate while waiting for a response.
+                    if (!readerTab.getUrl().equals(tabInfo.getUrl())) return;
 
-                        if (isDistillable) {
-                            tabInfo.setStatus(POSSIBLE);
-                            // The user may have changed tabs.
-                            if (tabId == mTabModelSelector.getCurrentTabId()) {
-                                tryShowingInfoBar();
-                            }
-                        } else {
-                            tabInfo.setStatus(NOT_POSSIBLE);
+                    boolean excludedMobileFriendly =
+                            DomDistillerTabUtils.shouldExcludeMobileFriendly() && isMobileOptimized;
+                    if (isDistillable && !excludedMobileFriendly) {
+                        tabInfo.setStatus(POSSIBLE);
+                        // The user may have changed tabs.
+                        if (tabId == mTabModelSelector.getCurrentTabId()) {
+                            tryShowingInfoBar();
                         }
-                        if (!mIsUmaRecorded && (tabInfo.getStatus() == POSSIBLE || isLast)) {
-                            mIsUmaRecorded = true;
-                            RecordHistogram.recordBooleanHistogram(
-                                    "DomDistiller.PageDistillable",
-                                    tabInfo.getStatus() == POSSIBLE);
-                        }
+                    } else {
+                        tabInfo.setStatus(NOT_POSSIBLE);
+                    }
+                    if (!mIsUmaRecorded && (tabInfo.getStatus() == POSSIBLE || isLast)) {
+                        mIsUmaRecorded = true;
+                        RecordHistogram.recordBooleanHistogram(
+                                "DomDistiller.PageDistillable", tabInfo.getStatus() == POSSIBLE);
                     }
                 });
         mTabStatusMap.get(tabId).setIsCallbackSet(true);

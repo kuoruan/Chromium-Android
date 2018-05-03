@@ -19,23 +19,28 @@ class Fingerprint_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<Fingerprint, Fingerprint.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<Fingerprint, Fingerprint.Proxy>() {
     
+        @Override
         public String getName() {
             return "device::mojom::Fingerprint";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, Fingerprint impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public Fingerprint[] buildArray(int size) {
           return new Fingerprint[size];
         }

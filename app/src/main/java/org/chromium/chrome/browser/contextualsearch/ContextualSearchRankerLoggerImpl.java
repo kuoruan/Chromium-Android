@@ -35,6 +35,8 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
         outcomes.put(Feature.OUTCOME_WAS_CARDS_DATA_SHOWN, "OutcomeWasCardsDataShown");
         OUTCOMES = Collections.unmodifiableMap(outcomes);
 
+        // NOTE: this list needs to be kept in sync with the white list in
+        // predictor_config_definitions.cc and with ukm.xml!
         Map<Feature, String> features = new HashMap<Feature, String>();
         features.put(Feature.DURATION_AFTER_SCROLL_MS, "DurationAfterScrollMs");
         features.put(Feature.SCREEN_TOP_DPS, "ScreenTopDps");
@@ -50,7 +52,11 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
         features.put(Feature.IS_WORD_EDGE, "IsWordEdge");
         features.put(Feature.IS_ENTITY, "IsEntity");
         features.put(Feature.TAP_DURATION_MS, "TapDurationMs");
+        // UKM CS v3 features.
         features.put(Feature.IS_SECOND_TAP_OVERRIDE, "IsSecondTapOverride");
+        features.put(Feature.IS_HTTP, "IsHttp");
+        features.put(Feature.IS_ENTITY_ELIGIBLE, "IsEntityEligible");
+        features.put(Feature.IS_LANGUAGE_MISMATCH, "IsLanguageMismatch");
         FEATURES = Collections.unmodifiableMap(features);
 
         Map<Feature, String> allNames = new HashMap<Feature, String>();
@@ -81,6 +87,7 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
 
     // A for-testing copy of all the features to log setup so that it will survive a {@link #reset}.
     private Map<Feature, Object> mFeaturesLoggedForTesting;
+    private Map<Feature, Object> mOutcomesLoggedForTesting;
 
     /**
      * Constructs a Ranker Logger and associated native implementation to write Contextual Search
@@ -97,6 +104,7 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
      * no longer in use.  The nativeDestroy will call the destructor on the native instance.
      */
     void destroy() {
+        // TODO(donnd): looks like this is never being called.  Fix.
         if (isEnabled()) {
             assert mNativePointer != 0;
             writeLogAndReset();
@@ -111,6 +119,12 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
         mIsLoggingReadyForPage = true;
         mBasePageWebContents = basePageWebContents;
         mHasInferenceOccurred = false;
+        nativeSetupLoggingAndRanker(mNativePointer, basePageWebContents);
+    }
+
+    @Override
+    public boolean isQueryEnabled() {
+        return nativeIsQueryEnabled(mNativePointer);
     }
 
     @Override
@@ -124,27 +138,27 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
 
     @Override
     public void logOutcome(Feature feature, Object value) {
+        assert mIsLoggingReadyForPage;
+        assert mHasInferenceOccurred;
         if (!isEnabled()) return;
 
-        // Since the panel can be closed at any time, we might try to log that outcome immediately.
-        if (!mIsLoggingReadyForPage) return;
-
-        if (mHasInferenceOccurred) logInternal(feature, value);
+        logInternal(feature, value);
     }
 
     @Override
     public @AssistRankerPrediction int runPredictionForTapSuppression() {
         assert mIsLoggingReadyForPage;
+        assert !mHasInferenceOccurred;
         mHasInferenceOccurred = true;
         if (isEnabled() && mBasePageWebContents != null && mFeaturesToLog != null
                 && !mFeaturesToLog.isEmpty()) {
-            nativeSetupLoggingAndRanker(mNativePointer, mBasePageWebContents);
             for (Map.Entry<Feature, Object> entry : mFeaturesToLog.entrySet()) {
                 logObject(entry.getKey(), entry.getValue());
             }
             mFeaturesLoggedForTesting = mFeaturesToLog;
             mFeaturesToLog = new HashMap<Feature, Object>();
             mAssistRankerPrediction = nativeRunInference(mNativePointer);
+            ContextualSearchUma.logRecordedFeaturesToRanker();
         }
         return mAssistRankerPrediction;
     }
@@ -175,7 +189,8 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
                 for (Map.Entry<Feature, Object> entry : mFeaturesToLog.entrySet()) {
                     logObject(entry.getKey(), entry.getValue());
                 }
-                mFeaturesLoggedForTesting = mFeaturesToLog;
+                mOutcomesLoggedForTesting = mFeaturesToLog;
+                ContextualSearchUma.logRecordedOutcomesToRanker();
             }
             nativeWriteLogAndReset(mNativePointer);
         }
@@ -238,14 +253,25 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
     }
 
     /**
-     * Gets the current set of features to log or that have been logged.  Should only be used for
-     * testing purposes!
-     * @return The current set of features to log or that have been logged, or {@code null}.
+     * Gets the current set of features that have been logged.  Should only be used for testing
+     * purposes!
+     * @return The current set of features that have been logged, or {@code null}.
      */
     @VisibleForTesting
     @Nullable
     Map<Feature, Object> getFeaturesLogged() {
         return mFeaturesLoggedForTesting;
+    }
+
+    /**
+     * Gets the current set of outcomes that have been logged.  Should only be used for
+     * testing purposes!
+     * @return The current set of outcomes that have been logged, or {@code null}.
+     */
+    @VisibleForTesting
+    @Nullable
+    Map<Feature, Object> getOutcomesLogged() {
+        return mOutcomesLoggedForTesting;
     }
 
     // ============================================================================================
@@ -260,4 +286,5 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
     // Returns an AssistRankerPrediction integer value.
     private native int nativeRunInference(long nativeContextualSearchRankerLoggerImpl);
     private native void nativeWriteLogAndReset(long nativeContextualSearchRankerLoggerImpl);
+    private native boolean nativeIsQueryEnabled(long nativeContextualSearchRankerLoggerImpl);
 }

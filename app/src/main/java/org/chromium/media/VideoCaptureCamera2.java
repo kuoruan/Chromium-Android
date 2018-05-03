@@ -100,8 +100,12 @@ public class VideoCaptureCamera2 extends VideoCapture {
                             @Override
                             public void onCaptureCompleted(CameraCaptureSession session,
                                     CaptureRequest request, TotalCaptureResult result) {
-                                mLastExposureTimeNs =
+                                // Since |result| is not guaranteed to contain a value for
+                                // key |SENSOR_EXPOSURE_TIME| we have to check for null.
+                                Long exposure_time_value =
                                         result.get(CaptureResult.SENSOR_EXPOSURE_TIME);
+                                if (exposure_time_value == null) return;
+                                mLastExposureTimeNs = exposure_time_value;
                             }
                         }, null);
 
@@ -261,7 +265,7 @@ public class VideoCaptureCamera2 extends VideoCapture {
         }
     };
 
-    private static final double kNanoSecondsToFps = 1.0E-9;
+    private static final double kNanosecondsPerSecond = 1000000000;
     private static final String TAG = "VideoCapture";
 
     // Map of the equivalent color temperature in Kelvin for the White Balance setting. The
@@ -645,17 +649,18 @@ public class VideoCaptureCamera2 extends VideoCapture {
             for (Size size : sizes) {
                 double minFrameRate = 0.0f;
                 if (minFrameDurationAvailable) {
-                    final long minFrameDuration = streamMap.getOutputMinFrameDuration(format, size);
-                    minFrameRate = (minFrameDuration == 0)
+                    final long minFrameDurationInNanoseconds =
+                            streamMap.getOutputMinFrameDuration(format, size);
+                    minFrameRate = (minFrameDurationInNanoseconds == 0)
                             ? 0.0f
-                            : (1.0 / kNanoSecondsToFps * minFrameDuration);
+                            : (kNanosecondsPerSecond / minFrameDurationInNanoseconds);
                 } else {
                     // TODO(mcasas): find out where to get the info from in this case.
                     // Hint: perhaps using SCALER_AVAILABLE_PROCESSED_MIN_DURATIONS.
                     minFrameRate = 0.0;
                 }
                 formatList.add(new VideoCaptureFormat(
-                        size.getWidth(), size.getHeight(), (int) minFrameRate, 0));
+                        size.getWidth(), size.getHeight(), (int) minFrameRate, format));
             }
         }
         return formatList.toArray(new VideoCaptureFormat[formatList.size()]);

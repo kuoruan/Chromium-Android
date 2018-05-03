@@ -15,6 +15,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageView;
 
 import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 
 /**
@@ -32,6 +33,23 @@ public class ClipDrawableProgressBar extends ImageView {
         public int progressBarBackgroundColor;
     }
 
+    /**
+     * An observer for visible progress updates.
+     */
+    @VisibleForTesting
+    interface ProgressBarObserver {
+        /**
+         * A notification that the visible progress has been updated. This may not coincide with
+         * updates from the web page due to animations for the progress bar running.
+         */
+        void onVisibleProgressUpdated();
+
+        /**
+         * A notification that the visibility of the progress bar has changed.
+         */
+        void onVisibilityChanged();
+    }
+
     // ClipDrawable's max is a fixed constant 10000.
     // http://developer.android.com/reference/android/graphics/drawable/ClipDrawable.html
     private static final int CLIP_DRAWABLE_MAX = 10000;
@@ -40,6 +58,9 @@ public class ClipDrawableProgressBar extends ImageView {
     private int mBackgroundColor = Color.TRANSPARENT;
     private float mProgress;
     private int mDesiredVisibility;
+
+    /** An observer of updates to the progress bar. */
+    private ProgressBarObserver mProgressBarObserver;
 
     /**
      * Create the progress bar with a custom height.
@@ -65,6 +86,15 @@ public class ClipDrawableProgressBar extends ImageView {
     }
 
     /**
+     * @param observer An update observer for the progress bar.
+     */
+    @VisibleForTesting
+    void setProgressBarObserver(ProgressBarObserver observer) {
+        assert mProgressBarObserver == null;
+        mProgressBarObserver = observer;
+    }
+
+    /**
      * Get the progress bar's current level of progress.
      *
      * @return The current progress, between 0.0 and 1.0.
@@ -84,6 +114,7 @@ public class ClipDrawableProgressBar extends ImageView {
 
         mProgress = progress;
         getDrawable().setLevel(Math.round(progress * CLIP_DRAWABLE_MAX));
+        if (mProgressBarObserver != null) mProgressBarObserver.onVisibleProgressUpdated();
     }
 
     /**
@@ -132,7 +163,10 @@ public class ClipDrawableProgressBar extends ImageView {
         int oldVisibility = getVisibility();
         int newVisibility = mDesiredVisibility;
         if (getAlpha() == 0 && mDesiredVisibility == VISIBLE) newVisibility = INVISIBLE;
-        if (oldVisibility != newVisibility) super.setVisibility(newVisibility);
+        if (oldVisibility != newVisibility) {
+            super.setVisibility(newVisibility);
+            if (mProgressBarObserver != null) mProgressBarObserver.onVisibilityChanged();
+        }
     }
 
     private int applyAlpha(int color, float alpha) {

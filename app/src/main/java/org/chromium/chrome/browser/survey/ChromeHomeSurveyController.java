@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.survey;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -131,17 +132,8 @@ public class ChromeHomeSurveyController implements InfoBarContainer.InfoBarAnima
         mTabModelSelector = tabModelSelector;
 
         SurveyController surveyController = SurveyController.getInstance();
-        CommandLine commandLine = CommandLine.getInstance();
-        String siteId;
-        if (commandLine.hasSwitch(PARAM_NAME)) {
-            siteId = commandLine.getSwitchValue(PARAM_NAME);
-        } else if (ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_SURVEY)) {
-            siteId = TEST_SITE_ID;
-        } else {
-            siteId = VariationsAssociatedData.getVariationParamValue(
-                    HAPPINESS_SURVEY_TRIAL_NAME, PARAM_NAME);
-        }
 
+        String siteId = getSiteId();
         if (TextUtils.isEmpty(siteId)) return;
 
         Runnable onSuccessRunnable = new Runnable() {
@@ -153,6 +145,18 @@ public class ChromeHomeSurveyController implements InfoBarContainer.InfoBarAnima
         String siteContext =
                 String.format("ChromeHomeEnabled=%s", FeatureUtilities.isChromeHomeEnabled());
         surveyController.downloadSurvey(context, siteId, onSuccessRunnable, siteContext);
+    }
+
+    private String getSiteId() {
+        CommandLine commandLine = CommandLine.getInstance();
+        if (commandLine.hasSwitch(PARAM_NAME)) {
+            return commandLine.getSwitchValue(PARAM_NAME);
+        } else if (ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_SURVEY)) {
+            return TEST_SITE_ID;
+        } else {
+            return VariationsAssociatedData.getVariationParamValue(
+                    HAPPINESS_SURVEY_TRIAL_NAME, PARAM_NAME);
+        }
     }
 
     /** @return Whether the user qualifies for the survey. */
@@ -472,6 +476,7 @@ public class ChromeHomeSurveyController implements InfoBarContainer.InfoBarAnima
 
     static class StartDownloadIfEligibleTask extends AsyncTask<Void, Void, Boolean> {
         final ChromeHomeSurveyController mController;
+        @SuppressLint("StaticFieldLeak") // TODO(crbug.com/799070): Fix.
         final Context mContext;
         final TabModelSelector mSelector;
 
@@ -485,14 +490,19 @@ public class ChromeHomeSurveyController implements InfoBarContainer.InfoBarAnima
         @Override
         protected Boolean doInBackground(Void... params) {
             if (!mController.doesUserQualifyForSurvey()) return false;
-            boolean forceSurveyOn = false;
-            if (CommandLine.getInstance().hasSwitch(ChromeSwitches.CHROME_HOME_FORCE_ENABLE_SURVEY)
-                    || ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_SURVEY)) {
-                forceSurveyOn = true;
-                mController.recordSurveyFilteringResult(
-                        FilteringResult.FORCE_SURVEY_ON_COMMAND_PRESENT);
+            if (SurveyController.getInstance().doesSurveyExist(mController.getSiteId(), mContext)) {
+                return true;
+            } else {
+                boolean forceSurveyOn = false;
+                if (CommandLine.getInstance().hasSwitch(
+                            ChromeSwitches.CHROME_HOME_FORCE_ENABLE_SURVEY)
+                        || ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_SURVEY)) {
+                    forceSurveyOn = true;
+                    mController.recordSurveyFilteringResult(
+                            FilteringResult.FORCE_SURVEY_ON_COMMAND_PRESENT);
+                }
+                return mController.isRandomlySelectedForSurvey() || forceSurveyOn;
             }
-            return mController.isRandomlySelectedForSurvey() || forceSurveyOn;
         }
 
         @Override

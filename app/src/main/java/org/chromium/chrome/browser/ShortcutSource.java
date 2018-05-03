@@ -1,5 +1,5 @@
 
-// Copyright 2017 The Chromium Authors. All rights reserved.
+// Copyright 2018 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -21,7 +21,8 @@ import java.lang.annotation.RetentionPolicy;
     ShortcutSource.NOTIFICATION, ShortcutSource.ADD_TO_HOMESCREEN_PWA,
     ShortcutSource.ADD_TO_HOMESCREEN_STANDALONE, ShortcutSource.ADD_TO_HOMESCREEN_SHORTCUT,
     ShortcutSource.EXTERNAL_INTENT, ShortcutSource.APP_BANNER_WEBAPK, ShortcutSource.WEBAPK_UNKNOWN,
-    ShortcutSource.TRUSTED_WEB_ACTIVITY, ShortcutSource.WEBAPK_SHARE_TARGET, ShortcutSource.COUNT
+    ShortcutSource.TRUSTED_WEB_ACTIVITY, ShortcutSource.WEBAPK_SHARE_TARGET,
+    ShortcutSource.EXTERNAL_INTENT_FROM_CHROME, ShortcutSource.COUNT
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface ShortcutSource {
@@ -50,7 +51,7 @@ public @interface ShortcutSource {
    */
   int ADD_TO_HOMESCREEN_SHORTCUT = 8;
   /**
-   * Used for WebAPKs launched via an external intent.
+   * Used for WebAPKs launched via an external intent and not from Chrome.
    */
   int EXTERNAL_INTENT = 9;
   /**
@@ -69,5 +70,10 @@ public @interface ShortcutSource {
    * Used for WebAPK intents received as a result of share events.
    */
   int WEBAPK_SHARE_TARGET = 13;
-  int COUNT = 14;
+  /**
+   * Used for WebAPKs launched via an external intent from this Chrome APK. WebAPKs launched from a
+   * different Chrome APK (e.g. Chrome Canary) will report EXTERNAL_INTENT.
+   */
+  int EXTERNAL_INTENT_FROM_CHROME = 14;
+  int COUNT = 15;
 }

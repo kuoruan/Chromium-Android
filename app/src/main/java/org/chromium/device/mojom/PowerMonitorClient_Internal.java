@@ -19,23 +19,28 @@ class PowerMonitorClient_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<PowerMonitorClient, PowerMonitorClient.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<PowerMonitorClient, PowerMonitorClient.Proxy>() {
     
+        @Override
         public String getName() {
             return "device::mojom::PowerMonitorClient";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, PowerMonitorClient impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public PowerMonitorClient[] buildArray(int size) {
           return new PowerMonitorClient[size];
         }

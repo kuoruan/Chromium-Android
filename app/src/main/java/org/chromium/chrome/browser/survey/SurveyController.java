@@ -28,6 +28,16 @@ public class SurveyController {
     }
 
     /**
+     * Returns if there already exists a downloaded survey from the provided site id.
+     * @param siteId The id of the site from where the survey should have been downloaded.
+     * @param context The context of the application.
+     * @return If the survey with a matching site id exists.
+     */
+    public boolean doesSurveyExist(String siteId, Context context) {
+        return false;
+    }
+
+    /**
      * Asynchronously downloads the survey using the provided parameters.
      * @param context The context used to register a broadcast receiver.
      * @param siteId The id of the site from where the survey will be downloaded.

@@ -93,6 +93,8 @@ import org.chromium.chrome.browser.metrics.LaunchMetrics;
 import org.chromium.chrome.browser.metrics.StartupMetrics;
 import org.chromium.chrome.browser.metrics.UmaSessionStats;
 import org.chromium.chrome.browser.metrics.WebApkUma;
+import org.chromium.chrome.browser.modaldialog.AppModalPresenter;
+import org.chromium.chrome.browser.modaldialog.ModalDialogManager;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
 import org.chromium.chrome.browser.nfc.BeamController;
@@ -145,6 +147,7 @@ import org.chromium.content.browser.ContentVideoView;
 import org.chromium.content.browser.ContentViewCore;
 import org.chromium.content.common.ContentSwitches;
 import org.chromium.content_public.browser.LoadUrlParams;
+import org.chromium.content_public.browser.SelectionPopupController;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.policy.CombinedPolicyProvider;
 import org.chromium.policy.CombinedPolicyProvider.PolicyChangeListener;
@@ -246,6 +249,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     private ContextualSearchManager mContextualSearchManager;
     protected ReaderModeManager mReaderModeManager;
     private SnackbarManager mSnackbarManager;
+    private ModalDialogManager mModalDialogManager;
     private DataUseSnackbarController mDataUseSnackbarController;
     private DataReductionPromoSnackbarController mDataReductionPromoSnackbarController;
     private AppMenuPropertiesDelegate mAppMenuPropertiesDelegate;
@@ -390,6 +394,8 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
             mBottomSheetContentController.init(mBottomSheet, mTabModelSelector, this);
         }
         ((BottomContainer) findViewById(R.id.bottom_container)).initialize(mFullscreenManager);
+
+        mModalDialogManager = createModalDialogManager();
     }
 
     @Override
@@ -775,16 +781,6 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         UpdateMenuItemHelper.getInstance().onStart();
         ChromeActivitySessionTracker.getInstance().onStartWithNative();
 
-        if (!SysUtils.isLowEndDevice()) {
-            if (GSAState.getInstance(this).isGsaAvailable()) {
-                // GSA connection is not needed on low-end devices because Icing is disabled.
-                GSAAccountChangeListener.getInstance().connect();
-                createContextReporterIfNeeded();
-            } else {
-                ContextReporter.reportStatus(ContextReporter.STATUS_GSA_NOT_AVAILABLE);
-            }
-        }
-
         // postDeferredStartupIfNeeded() is called in TabModelSelectorTabObsever#onLoadStopped(),
         // #onPageLoadFinished() and #onCrash(). If we are not actively loading a tab (e.g.
         // in Android N multi-instance, which is created by re-parenting an existing tab),
@@ -801,15 +797,14 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         maybeRemoveWindowBackground();
 
         Tab tab = getActivityTab();
-        if (tab == null) return;
         if (hasFocus) {
-            tab.onActivityShown();
+            if (tab != null) tab.onActivityShown();
             VrShellDelegate.onActivityShown(this);
         } else {
             boolean stopped = ApplicationStatus.getStateForActivity(this) == ActivityState.STOPPED;
             if (stopped) {
                 VrShellDelegate.onActivityHidden(this);
-                tab.onActivityHidden();
+                if (tab != null) tab.onActivityHidden();
             }
         }
     }
@@ -913,6 +908,8 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
                 mSyncStateChangedListener = null;
             }
         }
+        if (mContextReporter != null) mContextReporter.disable();
+
         super.onStopWithNative();
     }
 
@@ -1001,6 +998,20 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
             if (isActivityDestroyed()) return;
             ForcedSigninProcessor.checkCanSignIn(ChromeActivity.this);
         });
+
+        // GSA connection is not needed on low-end devices because Icing is disabled.
+        if (!SysUtils.isLowEndDevice()) {
+            if (isActivityDestroyed()) return;
+            DeferredStartupHandler.getInstance().addDeferredTask(() -> {
+                if (!GSAState.getInstance(this).isGsaAvailable()) {
+                    ContextReporter.reportStatus(ContextReporter.STATUS_GSA_NOT_AVAILABLE);
+                    return;
+                }
+
+                GSAAccountChangeListener.getInstance().connect();
+                createContextReporterIfNeeded();
+            });
+        }
     }
 
     /**
@@ -1031,7 +1042,6 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
             mCompositorViewHolder.prepareForTabReparenting();
         }
         super.onStart();
-        if (mContextReporter != null) mContextReporter.enable();
 
         if (mPartnerBrowserRefreshNeeded) {
             mPartnerBrowserRefreshNeeded = false;
@@ -1064,7 +1074,6 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     @Override
     public void onStop() {
         super.onStop();
-        if (mContextReporter != null) mContextReporter.disable();
 
         // We want to refresh partner browser provider every onStart().
         mPartnerBrowserRefreshNeeded = true;
@@ -1179,6 +1188,21 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     @Override
     public SnackbarManager getSnackbarManager() {
         return mSnackbarManager;
+    }
+
+    /**
+     * @return The {@link ModalDialogManager} created for this class.
+     */
+    protected ModalDialogManager createModalDialogManager() {
+        return new ModalDialogManager(new AppModalPresenter(this), ModalDialogManager.APP_MODAL);
+    }
+
+    /**
+     * @return The {@link ModalDialogManager} that manages the display of modal dialogs (e.g.
+     *         JavaScript dialogs).
+     */
+    public ModalDialogManager getModalDialogManager() {
+        return mModalDialogManager;
     }
 
     protected Drawable getBackgroundDrawable() {
@@ -1693,18 +1717,25 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
      */
     @Override
     public void onMultiWindowModeChanged(boolean isInMultiWindowMode) {
-        recordMultiWindowModeChangedUserAction(isInMultiWindowMode);
+        // If native is not initialized, the multi-window user action will be recorded in
+        // #onDeferredStartupForMultiWindowMode() and FeatureUtilities#setIsInMultiWindowMode()
+        // will be called in #onResumeWithNative(). Both of these methods require native to be
+        // initialized, so do not call here to avoid crashing. See https://crbug.com/797921.
+        if (mNativeInitialized) {
+            recordMultiWindowModeChangedUserAction(isInMultiWindowMode);
 
-        if (!isInMultiWindowMode
-                && ApplicationStatus.getStateForActivity(this) == ActivityState.RESUMED) {
-            // Start a new UMA session when exiting multi-window mode if the activity is currently
-            // resumed. When entering multi-window Android recents gains focus, so ChromeActivity
-            // will get a call to onPauseWithNative(), ending the current UMA session. When exiting
-            // multi-window, however, if ChromeActivity is resumed it stays in that state.
-            markSessionEnd();
-            markSessionResume();
-            FeatureUtilities.setIsInMultiWindowMode(
-                    MultiWindowUtils.getInstance().isInMultiWindowMode(this));
+            if (!isInMultiWindowMode
+                    && ApplicationStatus.getStateForActivity(this) == ActivityState.RESUMED) {
+                // Start a new UMA session when exiting multi-window mode if the activity is
+                // currently resumed. When entering multi-window Android recents gains focus, so
+                // ChromeActivity will get a call to onPauseWithNative(), ending the current UMA
+                // session. When exiting multi-window, however, if ChromeActivity is resumed it
+                // stays in that state.
+                markSessionEnd();
+                markSessionResume();
+                FeatureUtilities.setIsInMultiWindowMode(
+                        MultiWindowUtils.getInstance().isInMultiWindowMode(this));
+            }
         }
 
         VrShellDelegate.onMultiWindowModeChanged(isInMultiWindowMode);
@@ -1735,9 +1766,9 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
             if (layoutManager != null && layoutManager.onBackPressed()) return;
         }
 
-        ContentViewCore contentViewCore = getContentViewCore();
-        if (contentViewCore != null && contentViewCore.isSelectActionBarShowing()) {
-            contentViewCore.clearSelection();
+        SelectionPopupController controller = getSelectionPopupController();
+        if (controller != null && controller.isSelectActionBarShowing()) {
+            controller.clearSelection();
             return;
         }
 
@@ -1764,6 +1795,17 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         Tab tab = getActivityTab();
         if (tab == null) return null;
         return tab.getContentViewCore();
+    }
+
+    private WebContents getWebContents() {
+        Tab tab = getActivityTab();
+        if (tab == null) return null;
+        return tab.getWebContents();
+    }
+
+    private SelectionPopupController getSelectionPopupController() {
+        WebContents webContents = getWebContents();
+        return webContents != null ? SelectionPopupController.fromWebContents(webContents) : null;
     }
 
     @Override
@@ -1886,7 +1928,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
                 NewTabPageUma.recordAction(NewTabPageUma.ACTION_OPENED_HISTORY_MANAGER);
             }
             RecordUserAction.record("MobileMenuHistory");
-            HistoryManagerUtils.showHistoryManager(this, currentTab);
+            HistoryManagerUtils.showHistoryManager(this, currentTab, true);
             StartupMetrics.getInstance().recordOpenedHistory();
         } else if (id == R.id.share_menu_id || id == R.id.direct_share_menu_id) {
             onShareMenuItemSelected(id == R.id.direct_share_menu_id,

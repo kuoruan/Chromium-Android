@@ -7,7 +7,6 @@ package org.chromium.chrome.browser.signin;
 import android.app.Activity;
 import android.text.TextUtils;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.ChromeVersionInfo;
@@ -78,9 +77,9 @@ public class SigninPromoUtil {
         // Promo can be shown at most once every 2 Chrome major versions.
         if (currentMajorVersion < lastPromoMajorVersion + 2) return false;
 
-        // Don't show if account list hasn't changed since the last time promo was shown.
+        // Don't show if no new accounts have been added after the last time promo was shown.
         Set<String> previousAccountNames = preferenceManager.getSigninPromoLastAccountNames();
-        return !ApiCompatibilityUtils.objectEquals(previousAccountNames, accountNames);
+        return previousAccountNames == null || !previousAccountNames.containsAll(accountNames);
     }
 
     /**

@@ -19,23 +19,28 @@ class ContentDecryptionModule_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<ContentDecryptionModule, ContentDecryptionModule.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<ContentDecryptionModule, ContentDecryptionModule.Proxy>() {
     
+        @Override
         public String getName() {
             return "media::mojom::ContentDecryptionModule";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, ContentDecryptionModule impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public ContentDecryptionModule[] buildArray(int size) {
           return new ContentDecryptionModule[size];
         }

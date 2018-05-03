@@ -25,7 +25,7 @@ public interface VideoDecoder extends org.chromium.mojo.bindings.Interface {
 
 
     void construct(
-org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client, org.chromium.mojo.bindings.AssociatedInterfaceNotSupported mediaLog, org.chromium.mojo.system.DataPipe.ConsumerHandle decoderBufferPipe, CommandBufferId commandBufferId);
+org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client, org.chromium.mojo.bindings.AssociatedInterfaceNotSupported mediaLog, org.chromium.mojo.bindings.InterfaceRequest<VideoFrameHandleReleaser> videoFrameHandleReleaser, org.chromium.mojo.system.DataPipe.ConsumerHandle decoderBufferPipe, CommandBufferId commandBufferId);
 
 
 
@@ -50,11 +50,6 @@ DecodeResponse callback);
 ResetResponse callback);
 
     interface ResetResponse extends org.chromium.mojo.bindings.Callbacks.Callback0 { }
-
-
-
-    void onReleaseMailbox(
-org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.mojom.SyncToken releaseSyncToken);
 
 
 

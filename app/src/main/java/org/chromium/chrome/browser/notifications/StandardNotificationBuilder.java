@@ -14,8 +14,8 @@ import android.os.Build;
 public class StandardNotificationBuilder extends NotificationBuilderBase {
     private final Context mContext;
 
-    public StandardNotificationBuilder(Context context, String channelId) {
-        super(context.getResources(), channelId);
+    public StandardNotificationBuilder(Context context) {
+        super(context.getResources());
         mContext = context;
     }
 

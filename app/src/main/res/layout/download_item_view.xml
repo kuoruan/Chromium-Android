@@ -37,6 +37,8 @@
                     android:layout_below="@+id/filename_completed_view" />
         </RelativeLayout>
 
+        <include layout="@layout/list_menu_button" />
+
         <!-- Shown for downloads that haven't been completed. -->
         <RelativeLayout
                 android:id="@+id/progress_layout"
@@ -54,7 +56,7 @@
                     android:layout_toStartOf="@+id/pause_button"
                     android:minHeight="18dp"
                     android:singleLine="true"
-                    android:textAppearance="@style/BlackDenseListText1" />
+                    android:textAppearance="@style/BlackTitle1" />
 
             <org.chromium.chrome.browser.widget.MaterialProgressBar
                     android:id="@+id/download_progress_view"
@@ -109,6 +111,7 @@
                     android:layout_alignParentBottom="true"
                     android:layout_alignParentEnd="true"
                     android:padding="8dp"
+                    android:paddingEnd="@dimen/selectable_list_layout_row_padding"
                     android:background="?attr/selectableItemBackground"
                     android:contentDescription="@string/download_notification_cancel_button"
                     android:src="@drawable/btn_close"

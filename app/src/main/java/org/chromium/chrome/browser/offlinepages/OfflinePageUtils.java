@@ -377,19 +377,32 @@ public class OfflinePageUtils {
     }
 
     /**
-     * A load url parameters to open offline version of the offline page (i.e. to ensure no
-     * automatic redirection based on the connection status).
+     * A load url parameters to open offline version of the offline page. If the offline page is
+     * trusted, the URL (http/https) of the offline page is to be opened. Otherwise, the file URL
+     * pointing to the archive file is to be opened. In both cases, a custom header is passed with
+     * the URL to ensure loading a specific version of offline page.
      * @param url       The url of the offline page to open.
      * @param offlineId The ID of the offline page to open.
-     * @return The LoadUrlParams with a special header.
+     * @param callback  The callback to pass back the LoadUrlParams for launching an URL.
      */
-    public static LoadUrlParams getLoadUrlParamsForOpeningOfflineVersion(
-            String url, long offlineId) {
-        LoadUrlParams params = new LoadUrlParams(url);
-        Map<String, String> headers = new HashMap<String, String>();
-        headers.put("X-Chrome-offline", "persist=1 reason=download id=" + Long.toString(offlineId));
-        params.setExtraHeaders(headers);
-        return params;
+    public static void getLoadUrlParamsForOpeningOfflineVersion(
+            final String url, long offlineId, Callback<LoadUrlParams> callback) {
+        OfflinePageBridge offlinePageBridge =
+                getInstance().getOfflinePageBridge(Profile.getLastUsedProfile());
+        if (offlinePageBridge == null) {
+            callback.onResult(null);
+            return;
+        }
+
+        offlinePageBridge.getLaunchUrlByOfflineId(offlineId, (launchUrl) -> {
+            if (launchUrl == null) callback.onResult(null);
+            LoadUrlParams params = new LoadUrlParams(launchUrl);
+            Map<String, String> headers = new HashMap<String, String>();
+            headers.put(
+                    "X-Chrome-offline", "persist=1 reason=download id=" + Long.toString(offlineId));
+            params.setExtraHeaders(headers);
+            callback.onResult(params);
+        });
     }
 
     /**
@@ -432,21 +445,6 @@ public class OfflinePageUtils {
         LoadUrlParams params =
                 new LoadUrlParams(tab.getOriginalUrl(), PageTransition.RELOAD);
         params.setVerbatimHeaders(getOfflinePageHeaderForReload(tab));
-        tab.loadUrl(params);
-    }
-
-    /**
-     * Navigates the given tab to the saved local snapshot of the offline page identified by the URL
-     * and the offline ID. No automatic redirection is happening based on the connection status.
-     * @param url       The URL of the offine page.
-     * @param offlineId The ID of the offline page.
-     * @param tab       The tab to navigate to the page.
-     */
-    public static void openInExistingTab(String url, long offlineId, Tab tab) {
-        LoadUrlParams params =
-                OfflinePageUtils.getLoadUrlParamsForOpeningOfflineVersion(url, offlineId);
-        // Extra headers are not read in loadUrl, but verbatim headers are.
-        params.setVerbatimHeaders(params.getExtraHeadersString());
         tab.loadUrl(params);
     }
 

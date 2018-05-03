@@ -6,121 +6,165 @@ package org.chromium.chrome.browser.preferences.languages;
 
 import android.content.Context;
 import android.preference.Preference;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.accessibility.AccessibilityManager;
 import android.widget.TextView;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
+import org.chromium.chrome.browser.util.AccessibilityUtil;
 import org.chromium.chrome.browser.widget.ListMenuButton;
 import org.chromium.chrome.browser.widget.ListMenuButton.Item;
-import org.chromium.chrome.browser.widget.TintedImageView;
+import org.chromium.chrome.browser.widget.TintedDrawable;
 
-import java.util.List;
+import java.util.ArrayList;
 
 /**
  * A preference that displays the current accept language list.
  */
 public class LanguageListPreference extends Preference {
+    private static class LanguageListAdapter
+            extends LanguageListBaseAdapter implements LanguagesManager.AcceptLanguageObserver {
+
+        LanguageListAdapter(Context context) {
+            super(context);
+        }
+
+        @Override
+        public void onBindViewHolder(
+                LanguageListBaseAdapter.LanguageRowViewHolder holder, int position) {
+            super.onBindViewHolder(holder, position);
+
+            showDragIndicatorInRow(holder, R.drawable.ic_drag_handle_grey600_24dp);
+
+            final LanguageItem info = getItemByPosition(position);
+            holder.setMenuButtonDelegate(new ListMenuButton.Delegate() {
+                @Override
+                public Item[] getItems() {
+                    ArrayList<Item> menuItems = new ArrayList<>();
+
+                    // Show "Offer to translate" option if "Chrome Translate" is enabled.
+                    if (PrefServiceBridge.getInstance().isTranslateEnabled()) {
+                        // Set this row checked if the language is unblocked.
+                        int endIconResId =
+                                PrefServiceBridge.getInstance().isBlockedLanguage(info.getCode())
+                                ? 0
+                                : R.drawable.ic_check_googblue_24dp;
+                        // Add checked icon at the end.
+                        menuItems.add(new Item(mContext,
+                                R.string.languages_item_option_offer_to_translate, endIconResId,
+                                info.isSupported()));
+                    }
+
+                    // Enable "Remove" option if there are multiple accept languages.
+                    menuItems.add(new Item(mContext, R.string.remove, getItemCount() > 1));
+
+                    return menuItems.toArray(new Item[menuItems.size()]);
+                }
+
+                @Override
+                public void onItemSelected(Item item) {
+                    if (item.getTextId() == R.string.languages_item_option_offer_to_translate) {
+                        // Toggle current blocked state of this language.
+                        boolean state = (item.getEndIconId() == 0);
+                        PrefServiceBridge.getInstance().setLanguageBlockedState(
+                                info.getCode(), !state);
+                        LanguagesManager.recordAction(
+                                state ? LanguagesManager.ACTION_ENABLE_TRANSLATE_FOR_SINGLE_LANGUAGE
+                                      : LanguagesManager
+                                                .ACTION_DISABLE_TRANSLATE_FOR_SINGLE_LANGUAGE);
+                    } else if (item.getTextId() == R.string.remove) {
+                        LanguagesManager.getInstance().removeFromAcceptLanguages(info.getCode());
+                        LanguagesManager.recordAction(LanguagesManager.ACTION_LANGUAGE_REMOVED);
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void onDataUpdated() {
+            reload(LanguagesManager.getInstance().getUserAcceptLanguageItems());
+        }
+    }
+
+    private View mView;
+    private TextView mAddLanguageButton;
+    private RecyclerView mRecyclerView;
+    private LanguageListAdapter mAdapter;
+
+    private AddLanguageFragment.Launcher mLauncher;
+
     public LanguageListPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
+        mAdapter = new LanguageListAdapter(context);
+    }
+
+    @Override
+    public View onCreateView(ViewGroup parent) {
+        assert mLauncher != null;
+
+        if (mView != null) return mView;
+
+        mView = super.onCreateView(parent);
+
+        mAddLanguageButton = (TextView) mView.findViewById(R.id.add_language);
+        ApiCompatibilityUtils.setCompoundDrawablesRelativeWithIntrinsicBounds(mAddLanguageButton,
+                TintedDrawable.constructTintedDrawable(
+                        getContext().getResources(), R.drawable.plus, R.color.pref_accent_color),
+                null, null, null);
+        mAddLanguageButton.setOnClickListener(view -> {
+            mLauncher.launchAddLanguage();
+            LanguagesManager.recordAction(LanguagesManager.ACTION_CLICK_ON_ADD_LANGUAGE);
+        });
+
+        mRecyclerView = (RecyclerView) mView.findViewById(R.id.language_list);
+        LinearLayoutManager layoutMangager = new LinearLayoutManager(getContext());
+        mRecyclerView.setLayoutManager(layoutMangager);
+        mRecyclerView.addItemDecoration(
+                new DividerItemDecoration(getContext(), layoutMangager.getOrientation()));
+
+        // Due to a known native bug (crbug/640763), the list order written into Preference Service
+        // might be different from the order shown after it's adjusted by dragging.
+        if (!AccessibilityUtil.isAccessibilityEnabled()) mAdapter.enableDrag(mRecyclerView);
+        AccessibilityManager manager =
+                (AccessibilityManager) getContext().getSystemService(Context.ACCESSIBILITY_SERVICE);
+        manager.addAccessibilityStateChangeListener(enabled -> {
+            if (enabled) {
+                mAdapter.disableDrag();
+            } else {
+                mAdapter.enableDrag(mRecyclerView);
+            }
+            mAdapter.notifyDataSetChanged();
+        });
+
+        return mView;
     }
 
     @Override
     protected void onBindView(View view) {
         super.onBindView(view);
 
-        RecyclerView listView = (RecyclerView) view.findViewById(R.id.language_list);
-        listView.setLayoutManager(new LinearLayoutManager(getContext()));
-
-        // Get accepted language list from native.
-        List<String> languageList = PrefServiceBridge.getInstance().getChromeLanguageList();
-
-        listView.setAdapter(new LanguageListAdapter(languageList));
-    }
-
-    // TODO(crbug/783049): Pull all the inner classes below out and make the item in the list
-    // drag-able.
-    private static class LanguageListAdapter extends RecyclerView.Adapter<LanguageItemViewHolder> {
-        private List<String> mLanguageList;
-
-        LanguageListAdapter(List<String> languageList) {
-            mLanguageList = languageList;
-        }
-
-        @Override
-        public LanguageItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View languageItem = LayoutInflater.from(parent.getContext())
-                                        .inflate(R.layout.accept_languages_item, parent, false);
-            return new LanguageItemViewHolder(languageItem);
-        }
-
-        @Override
-        public void onBindViewHolder(LanguageItemViewHolder holder, int position) {
-            String code = mLanguageList.get(position);
-            // TODO(crbug/783049): Get language name by code and Locale from LocalizationUtils.
-            // displayLocale = context.getResources().getConfiguration().locale;
-            holder.setupUI(code);
-        }
-
-        @Override
-        public int getItemCount() {
-            return mLanguageList.size();
+        // We do not want the RecyclerView to be announced by screen readers every time
+        // the view is bound.
+        if (mRecyclerView.getAdapter() != mAdapter) {
+            mRecyclerView.setAdapter(mAdapter);
+            LanguagesManager.getInstance().setAcceptLanguageObserver(mAdapter);
+            // Initialize accept language list.
+            mAdapter.reload(LanguagesManager.getInstance().getUserAcceptLanguageItems());
         }
     }
 
-    private static class LanguageItemViewHolder
-            extends RecyclerView.ViewHolder implements ListMenuButton.Delegate {
-        private static final int OFFER_TRANSLATE_POSITION = 0;
-
-        // Menu items definition.
-        private final Item[] mItems;
-
-        private Context mContext;
-        private View mRow;
-        private TextView mTitle;
-        private TintedImageView mStartIcon;
-        private ListMenuButton mMoreButton;
-
-        LanguageItemViewHolder(View view) {
-            super(view);
-            mContext = view.getContext();
-            mRow = view;
-            mTitle = (TextView) view.findViewById(R.id.title);
-            mStartIcon = (TintedImageView) view.findViewById(R.id.icon_view);
-            mMoreButton = (ListMenuButton) view.findViewById(R.id.more);
-
-            // TODO(crbug/783049): Set "enabled" based on whether Chrome supports to translate this
-            // language.
-            mItems = new Item[] {
-                    new Item(mContext, R.string.languages_item_option_offer_to_translate,
-                            R.drawable.ic_check_googblue_24dp, true),
-                    new Item(mContext, R.string.remove, true)};
-        }
-
-        private void setupUI(String title) {
-            mTitle.setText(title);
-            mStartIcon.setImageResource(R.drawable.ic_drag_handle_grey600_24dp);
-            mMoreButton.setDelegate(this);
-        }
-
-        // ListMenuButton.Delegate implementation.
-        @Override
-        public Item[] getItems() {
-            return mItems;
-        }
-
-        @Override
-        public void onItemSelected(Item item) {
-            if (item.getTextId() == R.string.languages_item_option_offer_to_translate) {
-                // TODO(crbug/783049): Handle "offer to translate" event.
-            } else if (item.getTextId() == R.string.remove) {
-                // TODO(crbug/783049): Handle "remove" event.
-            }
-        }
+    /**
+     * Register a launcher for AddLanguageFragment. Preference's host fragment should call
+     * this in its onCreate().
+     */
+    void registerActivityLauncher(AddLanguageFragment.Launcher launcher) {
+        mLauncher = launcher;
     }
 }

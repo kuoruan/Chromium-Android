@@ -67,7 +67,7 @@ public class ContentViewRenderView extends FrameLayout {
         assert !mSurfaceView.getHolder().getSurface().isValid() :
                 "Surface created before native library loaded.";
         assert rootWindow != null;
-        mNativeContentViewRenderView = nativeInit(rootWindow.getNativePointer());
+        mNativeContentViewRenderView = nativeInit(rootWindow);
         assert mNativeContentViewRenderView != 0;
         mWindowAndroid = rootWindow;
         mSurfaceCallback = new SurfaceHolder.Callback() {
@@ -219,7 +219,7 @@ public class ContentViewRenderView extends FrameLayout {
         }
     }
 
-    private native long nativeInit(long rootWindowNativePointer);
+    private native long nativeInit(WindowAndroid rootWindow);
     private native void nativeDestroy(long nativeContentViewRenderView);
     private native void nativeSetCurrentWebContents(
             long nativeContentViewRenderView, WebContents webContents);

@@ -178,7 +178,9 @@ public class SuggestionsBinder {
         mThumbnailView.setBackground(null);
         if (SuggestionsConfig.useModernLayout()
                 && ChromeFeatureList.isEnabled(
-                           ChromeFeatureList.CONTENT_SUGGESTIONS_THUMBNAIL_DOMINANT_COLOR)) {
+                           ChromeFeatureList.CONTENT_SUGGESTIONS_THUMBNAIL_DOMINANT_COLOR)
+                && !ChromeFeatureList.isEnabled(
+                           ChromeFeatureList.CONTEXTUAL_SUGGESTIONS_ABOVE_ARTICLES)) {
             ColorDrawable colorDrawable =
                     new ColorDrawable(mSuggestion.getThumbnailDominantColor() != null
                                     ? mSuggestion.getThumbnailDominantColor()

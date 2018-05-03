@@ -18,7 +18,6 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.metrics.ImpressionTracker;
 import org.chromium.chrome.browser.metrics.OneShotImpressionListener;
 import org.chromium.chrome.browser.signin.AccountSigninActivity.AccessPoint;
@@ -67,13 +66,6 @@ public class SigninPromoController {
     private final @StringRes int mDescriptionStringId;
     private boolean mWasDisplayed;
     private boolean mWasUsed;
-
-    /**
-     * @return Whether the personalized promos experiment is enabled or not.
-     */
-    public static boolean arePersonalizedPromosEnabled() {
-        return ChromeFeatureList.isEnabled(ChromeFeatureList.ANDROID_SIGNIN_PROMOS);
-    }
 
     /**
      * Determines whether the impression limit has been reached for the given access point.

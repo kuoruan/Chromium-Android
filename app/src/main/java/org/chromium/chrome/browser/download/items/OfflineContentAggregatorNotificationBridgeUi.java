@@ -8,6 +8,7 @@ import org.chromium.chrome.browser.download.DownloadInfo;
 import org.chromium.chrome.browser.download.DownloadItem;
 import org.chromium.chrome.browser.download.DownloadNotifier;
 import org.chromium.chrome.browser.download.DownloadServiceDelegate;
+import org.chromium.chrome.browser.download.DownloadUpdate.PendingState;
 import org.chromium.components.offline_items_collection.ContentId;
 import org.chromium.components.offline_items_collection.OfflineContentProvider;
 import org.chromium.components.offline_items_collection.OfflineItem;
@@ -163,7 +164,8 @@ public class OfflineContentAggregatorNotificationBridgeUi
                 break;
             case OfflineItemState.INTERRUPTED:
                 // TODO(dtrainor): Push the correct value for auto resume.
-                mUi.notifyDownloadInterrupted(info, true);
+                // TODO(cmsy): Pass in correct PendingState.
+                mUi.notifyDownloadInterrupted(info, true, PendingState.PENDING_REASON_UNKNOWN);
                 break;
             case OfflineItemState.PAUSED:
                 mUi.notifyDownloadPaused(info);

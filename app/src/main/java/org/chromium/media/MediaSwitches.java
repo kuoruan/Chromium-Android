@@ -8,10 +8,9 @@ package org.chromium.media;
  * Contains command line switches that are specific to the media layer.
  */
 public abstract class MediaSwitches {
-    // Ignores all autoplay restrictions. It will ignore the current autoplay policy and all
-    // restrictions such as playback in a background tab. It should only be enabled for testing.
-    public static final String IGNORE_AUTOPLAY_RESTRICTIONS_FOR_TESTS =
-            "ignore-autoplay-restrictions";
+    // Set the autoplay policy to ignore user gesture requirements
+    public static final String AUTOPLAY_NO_GESTURE_REQUIRED_POLICY =
+            "autoplay-policy=no-user-gesture-required";
 
     // Prevents instantiation.
     private MediaSwitches() {}

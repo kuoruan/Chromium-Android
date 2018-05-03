@@ -34,14 +34,13 @@ class BookmarkItemsAdapter
      * Specifies the view types that the bookmark manager screen can contain.
      */
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({ViewType.PERSONALIZED_SIGNIN_PROMO, ViewType.GENERIC_SIGNIN_PROMO, ViewType.SYNC_PROMO,
-            ViewType.FOLDER, ViewType.BOOKMARK})
+    @IntDef({ViewType.PERSONALIZED_SIGNIN_PROMO, ViewType.SYNC_PROMO, ViewType.FOLDER,
+            ViewType.BOOKMARK})
     private @interface ViewType {
         int PERSONALIZED_SIGNIN_PROMO = 0;
-        int GENERIC_SIGNIN_PROMO = 1;
-        int SYNC_PROMO = 2;
-        int FOLDER = 3;
-        int BOOKMARK = 4;
+        int SYNC_PROMO = 1;
+        int FOLDER = 2;
+        int BOOKMARK = 3;
     }
 
     private static final int MAXIMUM_NUMBER_OF_SEARCH_RESULTS = 500;
@@ -213,8 +212,6 @@ class BookmarkItemsAdapter
         switch (viewType) {
             case ViewType.PERSONALIZED_SIGNIN_PROMO:
                 return mPromoHeaderManager.createPersonalizedSigninPromoHolder(parent);
-            case ViewType.GENERIC_SIGNIN_PROMO:
-                return mPromoHeaderManager.createGenericSigninPromoHolder(parent);
             case ViewType.SYNC_PROMO:
                 return mPromoHeaderManager.createSyncPromoHolder(parent);
             case ViewType.FOLDER:
@@ -240,7 +237,6 @@ class BookmarkItemsAdapter
                 PersonalizedSigninPromoView view = (PersonalizedSigninPromoView) holder.itemView;
                 mPromoHeaderManager.setupPersonalizedSigninPromo(view);
                 break;
-            case ViewType.GENERIC_SIGNIN_PROMO:
             case ViewType.SYNC_PROMO:
                 break;
             case ViewType.FOLDER:
@@ -376,9 +372,6 @@ class BookmarkItemsAdapter
                 return;
             case BookmarkPromoHeader.PromoState.PROMO_SIGNIN_PERSONALIZED:
                 mPromoHeaderSection.add(ViewType.PERSONALIZED_SIGNIN_PROMO);
-                return;
-            case BookmarkPromoHeader.PromoState.PROMO_SIGNIN_GENERIC:
-                mPromoHeaderSection.add(ViewType.GENERIC_SIGNIN_PROMO);
                 return;
             case BookmarkPromoHeader.PromoState.PROMO_SYNC:
                 mPromoHeaderSection.add(ViewType.SYNC_PROMO);

@@ -6,6 +6,7 @@ package org.chromium.components.sync.notifier;
 
 import android.util.Base64;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.annotations.MainDex;
 
 import java.util.Random;
@@ -38,6 +39,6 @@ class RandomizedInvalidationClientNameGenerator implements InvalidationClientNam
         RANDOM.nextBytes(randomBytes);
         String encoded = Base64.encodeToString(randomBytes, 0, randomBytes.length, Base64.NO_WRAP);
         String idString = "BadID" + encoded;
-        return idString.getBytes();
+        return ApiCompatibilityUtils.getBytesUtf8(idString);
     }
 }

@@ -46,6 +46,11 @@ class SearchBoxDataProvider implements ToolbarDataProvider {
     }
 
     @Override
+    public String getTitle() {
+        return "";
+    }
+
+    @Override
     public Tab getTab() {
         return mTab;
     }

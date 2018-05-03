@@ -37,13 +37,16 @@ public final class DistillablePageUtils {
     /**
      * Delegate to receive distillability updates.
      */
-    public static interface PageDistillableDelegate {
+    public interface PageDistillableDelegate {
         /**
          * Called when the distillability status changes.
          * @param isDistillable Whether the page is distillable.
          * @param isLast Whether the update is the last one for this page.
+         * @param isMobileOptimized Whether the page is optimized for mobile. Only valid when
+         *                         the heuristics is ADABOOST_MODEL or ALL_ARTICLES.
          */
-        public void onIsPageDistillableResult(boolean isDistillable, boolean isLast);
+        void onIsPageDistillableResult(
+                boolean isDistillable, boolean isLast, boolean isMobileOptimized);
     }
 
     public static void setDelegate(WebContents webContents,
@@ -52,10 +55,10 @@ public final class DistillablePageUtils {
     }
 
     @CalledByNative
-    private static void callOnIsPageDistillableUpdate(
-            PageDistillableDelegate delegate, boolean isDistillable, boolean isLast) {
+    private static void callOnIsPageDistillableUpdate(PageDistillableDelegate delegate,
+            boolean isDistillable, boolean isLast, boolean isMobileOptimized) {
         if (delegate != null) {
-            delegate.onIsPageDistillableResult(isDistillable, isLast);
+            delegate.onIsPageDistillableResult(isDistillable, isLast, isMobileOptimized);
         }
     }
 

@@ -1,5 +1,5 @@
 
-// Copyright 2017 The Chromium Authors. All rights reserved.
+// Copyright 2018 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -17,11 +17,11 @@ import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
     ContentSuggestionsNotificationOptOut.IMPLICIT, ContentSuggestionsNotificationOptOut.EXPLICIT,
-    ContentSuggestionsNotificationOptOut.MAX_NOTIFICATION_OPT_OUT
+    ContentSuggestionsNotificationOptOut.MAX
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface ContentSuggestionsNotificationOptOut {
   int IMPLICIT = 0;
   int EXPLICIT = 1;
-  int MAX_NOTIFICATION_OPT_OUT = 2;
+  int MAX = 2;
 }

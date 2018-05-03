@@ -30,6 +30,13 @@ public interface ContextualSearchInternalStateHandler {
     void showContextualSearchLongpressUi();
 
     /**
+     * The first state in the Tap-gesture processing pipeline where we know we're processing
+     * a Tap-gesture that won't be converted into something else.  Starts the processing pipeline.
+     * @see ContextualSearchInternalStateController.InternalState#TAP_GESTURE_COMMIT
+     */
+    void tapGestureCommit();
+
+    /**
      * Gathers text surrounding the current selection, which may have been created by either a Tap
      * or a Long-press gesture.
      * @see ContextualSearchInternalStateController.InternalState#GATHERING_SURROUNDINGS

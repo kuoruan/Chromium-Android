@@ -6,7 +6,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.1'
+        classpath 'com.android.tools.build:gradle:3.1.2'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -31,9 +31,9 @@ ext {
     targetSdkVersion = 27
 
     versionCode = 10
-    versionName = "64.0.3282.186"
+    versionName = "65.0.3325.230"
 
-    supportLibraryVersion = "27.1.0"
+    supportLibraryVersion = "27.1.1"
     playServicesVersion = "11.8.0"
     espressoVersion = "2.2.2"
     runnerVersion = "1.0.1"

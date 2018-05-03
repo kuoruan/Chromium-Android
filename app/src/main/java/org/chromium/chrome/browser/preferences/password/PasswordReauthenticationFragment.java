@@ -14,6 +14,8 @@ import android.os.Build;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 
+import org.chromium.base.VisibleForTesting;
+
 /** Show the lock screen confirmation and lock the screen. */
 public class PasswordReauthenticationFragment extends Fragment {
     // The key for the description argument, which is used to retrieve an explanation of the
@@ -30,7 +32,8 @@ public class PasswordReauthenticationFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mFragmentManager = getFragmentManager();
-        if (!sPreventLockDevice) {
+        boolean isFirstTime = savedInstanceState == null;
+        if (!sPreventLockDevice && isFirstTime) {
             lockDevice();
         }
     }
@@ -41,14 +44,15 @@ public class PasswordReauthenticationFragment extends Fragment {
         if (requestCode == CONFIRM_DEVICE_CREDENTIAL_REQUEST_CODE) {
             if (resultCode == getActivity().RESULT_OK) {
                 ReauthenticationManager.setLastReauthTimeMillis(System.currentTimeMillis());
-                mFragmentManager.popBackStack();
             }
+            mFragmentManager.popBackStack();
         }
     }
 
     /**
      * Prevent calling the {@link #lockDevice} method in {@link #onCreate}.
      */
+    @VisibleForTesting
     public static void preventLockingForTesting() {
         sPreventLockDevice = true;
     }

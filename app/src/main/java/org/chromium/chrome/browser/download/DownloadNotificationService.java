@@ -38,6 +38,7 @@ import org.chromium.base.ApplicationStatus;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.ObserverList;
+import org.chromium.base.StrictModeContext;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.library_loader.LibraryProcessType;
 import org.chromium.base.library_loader.ProcessInitException;
@@ -48,6 +49,7 @@ import org.chromium.chrome.browser.download.items.OfflineContentAggregatorNotifi
 import org.chromium.chrome.browser.init.BrowserParts;
 import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
 import org.chromium.chrome.browser.init.EmptyBrowserParts;
+import org.chromium.chrome.browser.media.MediaViewerUtils;
 import org.chromium.chrome.browser.notifications.ChromeNotificationBuilder;
 import org.chromium.chrome.browser.notifications.NotificationBuilderFactory;
 import org.chromium.chrome.browser.notifications.NotificationConstants;
@@ -964,7 +966,8 @@ public class DownloadNotificationService extends Service {
                 intent.putExtra(EXTRA_DOWNLOAD_CONTENTID_ID, id.id);
                 intent.putExtra(EXTRA_DOWNLOAD_CONTENTID_NAMESPACE, id.namespace);
                 intent.putExtra(NotificationConstants.EXTRA_NOTIFICATION_ID, notificationId);
-                DownloadUtils.setOriginalUrlAndReferralExtraToIntent(intent, originalUrl, referrer);
+                MediaViewerUtils.setOriginalUrlAndReferralExtraToIntent(
+                        intent, originalUrl, referrer);
             } else {
                 intent = buildActionIntent(mContext, ACTION_DOWNLOAD_OPEN, id, false);
             }
@@ -1130,7 +1133,8 @@ public class DownloadNotificationService extends Service {
         if (entry == null
                 && !(id != null && LegacyHelpers.isLegacyOfflinePage(id)
                            && TextUtils.equals(intent.getAction(), ACTION_DOWNLOAD_OPEN))
-                && !(TextUtils.equals(intent.getAction(), ACTION_NOTIFICATION_CLICKED))) {
+                && !(TextUtils.equals(intent.getAction(), ACTION_NOTIFICATION_CLICKED))
+                && !(TextUtils.equals(intent.getAction(), ACTION_DOWNLOAD_RESUME_ALL))) {
             handleDownloadOperationForMissingNotification(intent);
             hideSummaryNotificationIfNecessary(-1);
             return;
@@ -1318,7 +1322,10 @@ public class DownloadNotificationService extends Service {
 
     @VisibleForTesting
     void updateNotification(int id, Notification notification) {
-        mNotificationManager.notify(NOTIFICATION_NAMESPACE, id, notification);
+        // Disabling StrictMode to avoid violations (crbug.com/809864).
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
+            mNotificationManager.notify(NOTIFICATION_NAMESPACE, id, notification);
+        }
     }
 
     private void updateNotification(int notificationId, Notification notification, ContentId id,

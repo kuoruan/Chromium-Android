@@ -132,10 +132,14 @@ public class DownloadManagerDelegate {
     /**
      * Removes a download from Android DownloadManager.
      * @param downloadGuid The GUID of the download.
+     * @param externallyRemoved If download is externally removed in other application.
      */
-    void removeCompletedDownload(String downloadGuid) {
+    void removeCompletedDownload(String downloadGuid, boolean externallyRemoved) {
         long downloadId = removeDownloadIdMapping(downloadGuid);
-        if (downloadId != INVALID_SYSTEM_DOWNLOAD_ID) {
+
+        // Let Android DownloadManager to remove download only if the user removed the file in
+        // Chrome. If the user renamed or moved the file, Chrome should keep it intact.
+        if (downloadId != INVALID_SYSTEM_DOWNLOAD_ID && !externallyRemoved) {
             DownloadManager manager =
                     (DownloadManager) mContext.getSystemService(Context.DOWNLOAD_SERVICE);
             manager.remove(downloadId);

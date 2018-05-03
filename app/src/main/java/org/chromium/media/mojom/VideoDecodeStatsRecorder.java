@@ -24,11 +24,6 @@ public interface VideoDecodeStatsRecorder extends org.chromium.mojo.bindings.Int
     Manager<VideoDecodeStatsRecorder, VideoDecodeStatsRecorder.Proxy> MANAGER = VideoDecodeStatsRecorder_Internal.MANAGER;
 
 
-    void setPageInfo(
-org.chromium.url.mojom.Origin untrustedTopFrameOrigin, boolean isTopFrame);
-
-
-
     void startNewRecord(
 int profile, org.chromium.gfx.mojom.Size videoSize, int framesPerSec);
 

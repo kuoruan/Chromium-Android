@@ -19,23 +19,28 @@ class SensorProvider_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<SensorProvider, SensorProvider.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<SensorProvider, SensorProvider.Proxy>() {
     
+        @Override
         public String getName() {
             return "device::mojom::SensorProvider";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, SensorProvider impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public SensorProvider[] buildArray(int size) {
           return new SensorProvider[size];
         }
@@ -55,14 +60,12 @@ class SensorProvider_Internal {
 
         @Override
         public void getSensor(
-int type, org.chromium.mojo.bindings.InterfaceRequest<Sensor> sensorRequest, 
+int type, 
 GetSensorResponse callback) {
 
             SensorProviderGetSensorParams _message = new SensorProviderGetSensorParams();
 
             _message.type = type;
-
-            _message.sensorRequest = sensorRequest;
 
 
             getProxyHandler().getMessageReceiver().acceptWithResponder(
@@ -138,7 +141,7 @@ GetSensorResponse callback) {
                         SensorProviderGetSensorParams data =
                                 SensorProviderGetSensorParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().getSensor(data.type, data.sensorRequest, new SensorProviderGetSensorResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        getImpl().getSensor(data.type, new SensorProviderGetSensorResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
             
@@ -161,7 +164,6 @@ GetSensorResponse callback) {
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int type;
-        public org.chromium.mojo.bindings.InterfaceRequest<Sensor> sensorRequest;
     
         private SensorProviderGetSensorParams(int version) {
             super(STRUCT_SIZE, version);
@@ -203,10 +205,6 @@ GetSensorResponse callback) {
                     result.type = decoder0.readInt(8);
                         SensorType.validate(result.type);
                 }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.sensorRequest = decoder0.readInterfaceRequest(12, false);
-                }
             } finally {
                 decoder0.decreaseStackDepth();
             }
@@ -219,8 +217,6 @@ GetSensorResponse callback) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.type, 8);
-            
-            encoder0.encode(this.sensorRequest, 12, false);
         }
     
         /**
@@ -237,8 +233,6 @@ GetSensorResponse callback) {
             SensorProviderGetSensorParams other = (SensorProviderGetSensorParams) object;
             if (this.type!= other.type)
                 return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sensorRequest, other.sensorRequest))
-                return false;
             return true;
         }
     
@@ -250,7 +244,6 @@ GetSensorResponse callback) {
             final int prime = 31;
             int result = prime + getClass().hashCode();
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.type);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sensorRequest);
             return result;
         }
     }
@@ -260,11 +253,10 @@ GetSensorResponse callback) {
     
     static final class SensorProviderGetSensorResponseParams extends org.chromium.mojo.bindings.Struct {
     
-        private static final int STRUCT_SIZE = 24;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public SensorInitParams initParams;
-        public org.chromium.mojo.bindings.InterfaceRequest<SensorClient> clientRequest;
     
         private SensorProviderGetSensorResponseParams(int version) {
             super(STRUCT_SIZE, version);
@@ -306,10 +298,6 @@ GetSensorResponse callback) {
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, true);
                     result.initParams = SensorInitParams.decode(decoder1);
                 }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.clientRequest = decoder0.readInterfaceRequest(16, true);
-                }
             } finally {
                 decoder0.decreaseStackDepth();
             }
@@ -322,8 +310,6 @@ GetSensorResponse callback) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.initParams, 8, true);
-            
-            encoder0.encode(this.clientRequest, 16, true);
         }
     
         /**
@@ -340,8 +326,6 @@ GetSensorResponse callback) {
             SensorProviderGetSensorResponseParams other = (SensorProviderGetSensorResponseParams) object;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.initParams, other.initParams))
                 return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.clientRequest, other.clientRequest))
-                return false;
             return true;
         }
     
@@ -353,7 +337,6 @@ GetSensorResponse callback) {
             final int prime = 31;
             int result = prime + getClass().hashCode();
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.initParams);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.clientRequest);
             return result;
         }
     }
@@ -379,7 +362,7 @@ GetSensorResponse callback) {
 
                 SensorProviderGetSensorResponseParams response = SensorProviderGetSensorResponseParams.deserialize(messageWithHeader.getPayload());
 
-                mCallback.call(response.initParams, response.clientRequest);
+                mCallback.call(response.initParams);
                 return true;
             } catch (org.chromium.mojo.bindings.DeserializationException e) {
                 return false;
@@ -403,12 +386,10 @@ GetSensorResponse callback) {
         }
 
         @Override
-        public void call(SensorInitParams initParams, org.chromium.mojo.bindings.InterfaceRequest<SensorClient> clientRequest) {
+        public void call(SensorInitParams initParams) {
             SensorProviderGetSensorResponseParams _response = new SensorProviderGetSensorResponseParams();
 
             _response.initParams = initParams;
-
-            _response.clientRequest = clientRequest;
 
             org.chromium.mojo.bindings.ServiceMessage _message =
                     _response.serializeWithHeader(

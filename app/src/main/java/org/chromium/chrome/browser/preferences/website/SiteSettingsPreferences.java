@@ -147,6 +147,11 @@ public class SiteSettingsPreferences extends PreferenceFragment
             if (!ChromeFeatureList.isEnabled(ChromeFeatureList.SOUND_CONTENT_SETTING)) {
                 getPreferenceScreen().removePreference(findPreference(SOUND_KEY));
             }
+            // The new Languages Preference *feature* is an advanced version of this translate
+            // preference. Once Languages Preference is enabled, remove this setting.
+            if (ChromeFeatureList.isEnabled(ChromeFeatureList.LANGUAGES_PREFERENCE)) {
+                getPreferenceScreen().removePreference(findPreference(TRANSLATE_KEY));
+            }
         }
     }
 

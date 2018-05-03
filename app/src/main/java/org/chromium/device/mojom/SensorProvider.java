@@ -25,10 +25,10 @@ public interface SensorProvider extends org.chromium.mojo.bindings.Interface {
 
 
     void getSensor(
-int type, org.chromium.mojo.bindings.InterfaceRequest<Sensor> sensorRequest, 
+int type, 
 GetSensorResponse callback);
 
-    interface GetSensorResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<SensorInitParams, org.chromium.mojo.bindings.InterfaceRequest<SensorClient>> { }
+    interface GetSensorResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<SensorInitParams> { }
 
 
 }

@@ -160,8 +160,11 @@ public class CustomTabActivity extends ChromeActivity {
         }
 
         @Override
-        public void onNetworkQualityEstimate(WebContents webContents, int effectiveConnectionType,
-                long httpRttMs, long transportRttMs) {
+        public void onNewNavigation(WebContents webContents, long navigationId) {}
+
+        @Override
+        public void onNetworkQualityEstimate(WebContents webContents, long navigationId,
+                int effectiveConnectionType, long httpRttMs, long transportRttMs) {
             if (webContents != mWebContents) return;
 
             Bundle args = new Bundle();
@@ -172,8 +175,8 @@ public class CustomTabActivity extends ChromeActivity {
         }
 
         @Override
-        public void onFirstContentfulPaint(
-                WebContents webContents, long navigationStartTick, long firstContentfulPaintMs) {
+        public void onFirstContentfulPaint(WebContents webContents, long navigationId,
+                long navigationStartTick, long firstContentfulPaintMs) {
             if (webContents != mWebContents) return;
 
             mConnection.notifySinglePageLoadMetric(mSession, PageLoadMetrics.FIRST_CONTENTFUL_PAINT,
@@ -181,17 +184,17 @@ public class CustomTabActivity extends ChromeActivity {
         }
 
         @Override
-        public void onLoadEventStart(
-                WebContents webContents, long navigationStartTick, long loadEventStartMs) {
+        public void onLoadEventStart(WebContents webContents, long navigationId,
+                long navigationStartTick, long loadEventStartMs) {
             if (webContents != mWebContents) return;
             mConnection.notifySinglePageLoadMetric(mSession, PageLoadMetrics.LOAD_EVENT_START,
                     navigationStartTick, loadEventStartMs);
         }
 
         @Override
-        public void onLoadedMainResource(WebContents webContents, long dnsStartMs, long dnsEndMs,
-                long connectStartMs, long connectEndMs, long requestStartMs, long sendStartMs,
-                long sendEndMs) {
+        public void onLoadedMainResource(WebContents webContents, long navigationId,
+                long dnsStartMs, long dnsEndMs, long connectStartMs, long connectEndMs,
+                long requestStartMs, long sendStartMs, long sendEndMs) {
             if (webContents != mWebContents) return;
 
             Bundle args = new Bundle();
@@ -200,8 +203,8 @@ public class CustomTabActivity extends ChromeActivity {
             args.putLong(PageLoadMetrics.CONNECT_START, connectStartMs);
             args.putLong(PageLoadMetrics.CONNECT_END, connectEndMs);
             args.putLong(PageLoadMetrics.REQUEST_START, requestStartMs);
-            args.putLong(PageLoadMetrics.RESPONSE_START, sendStartMs);
-            args.putLong(PageLoadMetrics.RESPONSE_END, sendEndMs);
+            args.putLong(PageLoadMetrics.SEND_START, sendStartMs);
+            args.putLong(PageLoadMetrics.SEND_END, sendEndMs);
             mConnection.notifyPageLoadMetrics(mSession, args);
         }
     }
@@ -1159,7 +1162,7 @@ public class CustomTabActivity extends ChromeActivity {
 
                 // Blink has rendered the page by this point, but we need to wait for the compositor
                 // frame swap to avoid flash of white content.
-                getCompositorViewHolder().getCompositorView().surfaceRedrawNeededAsync(null, () -> {
+                getCompositorViewHolder().getCompositorView().surfaceRedrawNeededAsync(() -> {
                     if (!tab.isInitialized() || isActivityDestroyed()) return;
                     tab.getView().setBackgroundResource(0);
                 });
@@ -1193,7 +1196,7 @@ public class CustomTabActivity extends ChromeActivity {
         customTabIntent.intent.setData(Uri.parse(url));
 
         Intent intent = LaunchIntentDispatcher.createCustomTabActivityIntent(
-                context, customTabIntent.intent, false);
+                context, customTabIntent.intent);
         intent.setPackage(context.getPackageName());
         intent.putExtra(CustomTabIntentDataProvider.EXTRA_UI_TYPE, CUSTOM_TABS_UI_TYPE_INFO_PAGE);
         intent.putExtra(Browser.EXTRA_APPLICATION_ID, context.getPackageName());

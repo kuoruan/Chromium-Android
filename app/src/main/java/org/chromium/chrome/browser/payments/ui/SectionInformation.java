@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser.payments.ui;
 
+import android.text.TextUtils;
+
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 
@@ -162,6 +164,56 @@ public class SectionInformation {
         if (mItems == null) mItems = new ArrayList<>();
         mItems.add(0, item);
         mSelectedItem = 0;
+    }
+
+    /**
+     * Adds the given item at the head of the list if it doesn't exist and selects it if it is
+     * complete, otherwise updates the corresponding item and unselect it if it is incomplete.
+     *
+     * @param item The item to add or update.
+     */
+    public void addAndSelectOrUpdateItem(PaymentOption item) {
+        if (mItems == null) mItems = new ArrayList<>();
+        int i = 0;
+        for (; i < mItems.size(); i++) {
+            if (TextUtils.equals(mItems.get(i).getIdentifier(), item.getIdentifier())) {
+                break;
+            }
+        }
+        if (i < mItems.size()) {
+            mItems.set(i, item);
+            if (mSelectedItem == i && !item.isComplete()) mSelectedItem = NO_SELECTION;
+            return;
+        }
+
+        mItems.add(0, item);
+        if (item.isComplete()) {
+            mSelectedItem = 0;
+        } else {
+            mSelectedItem = NO_SELECTION;
+        }
+    }
+
+    /**
+     * Remove the given item and unselect it if it is the selected item. Sets selected item to
+     * INVALID_SELECTION if there is no item in this section.
+     *
+     * @param identifier The identifier of the removed item.
+     */
+    public void removeAndUnselectItem(String identifier) {
+        for (int i = 0; i < mItems.size(); i++) {
+            if (TextUtils.equals(mItems.get(i).getIdentifier(), identifier)) {
+                if (mSelectedItem == i) {
+                    mSelectedItem = NO_SELECTION;
+                } else if (mSelectedItem > 0) {
+                    // Update the selected item index.
+                    mSelectedItem -= mSelectedItem > i ? 1 : 0;
+                }
+                mItems.remove(i);
+                if (mItems.size() == 0) mSelectedItem = INVALID_SELECTION;
+                break;
+            }
+        }
     }
 
     /**

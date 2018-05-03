@@ -4,6 +4,7 @@
 
 package org.chromium.content.browser;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -61,6 +62,7 @@ public class ChildProcessLauncherHelper {
             sSandboxedChildConnectionAllocatorMap = new HashMap<>();
 
     // Map from PID to ChildProcessLauncherHelper.
+    @SuppressLint("UseSparseArrays") // TODO(crbug.com/799070): Fix this.
     private static final Map<Integer, ChildProcessLauncherHelper> sLauncherByPid = new HashMap<>();
 
     // Allocator used for non-sandboxed services.
@@ -111,8 +113,10 @@ public class ChildProcessLauncherHelper {
                             ContentChildProcessConstants.EXTRA_CPU_COUNT, CpuFeatures.getCount());
                     connectionBundle.putLong(
                             ContentChildProcessConstants.EXTRA_CPU_FEATURES, CpuFeatures.getMask());
-                    connectionBundle.putBundle(Linker.EXTRA_LINKER_SHARED_RELROS,
-                            Linker.getInstance().getSharedRelros());
+                    if (Linker.isUsed()) {
+                        connectionBundle.putBundle(Linker.EXTRA_LINKER_SHARED_RELROS,
+                                Linker.getInstance().getSharedRelros());
+                    }
                 }
 
                 @Override
@@ -192,6 +196,12 @@ public class ChildProcessLauncherHelper {
             } else {
                 // We only support sandboxed utility processes now.
                 assert ContentSwitches.SWITCH_UTILITY_PROCESS.equals(processType);
+
+                // Remove sandbox restriction on network service process.
+                if (ContentSwitches.NETWORK_SANDBOX_TYPE.equals(ContentSwitches.getSwitchValue(
+                            commandLine, ContentSwitches.SWITCH_SERVICE_SANDBOX_TYPE))) {
+                    sandboxed = false;
+                }
             }
         }
 
@@ -577,8 +587,7 @@ public class ChildProcessLauncherHelper {
         if (Linker.areTestsEnabled()) {
             Linker linker = Linker.getInstance();
             return new ChromiumLinkerParams(sLinkerLoadAddress, waitForSharedRelros,
-                    linker.getTestRunnerClassNameForTesting(),
-                    linker.getImplementationForTesting());
+                    linker.getTestRunnerClassNameForTesting());
         } else {
             return new ChromiumLinkerParams(sLinkerLoadAddress, waitForSharedRelros);
         }

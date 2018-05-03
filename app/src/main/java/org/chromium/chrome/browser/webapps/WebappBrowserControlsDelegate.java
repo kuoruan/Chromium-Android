@@ -67,11 +67,11 @@ class WebappBrowserControlsDelegate extends TabStateBrowserControlsVisibilityDel
      */
     static boolean shouldShowToolbarCloseButton(WebappActivity activity) {
         // Show if we're on the URL requiring browser controls, i.e. off-scope.
-        return shouldShowBrowserControlsForUrl(activity.scopePolicy(), activity.mWebappInfo,
+        return shouldShowBrowserControlsForUrl(activity.scopePolicy(), activity.getWebappInfo(),
                        activity.getActivityTab().getUrl())
                 // Also keep shown if toolbar is not visible, so that during the in and off-scope
                 // transitions we avoid button flickering when toolbar is appearing/disappearing.
-                || !shouldShowBrowserControls(activity.scopePolicy(), activity.mWebappInfo,
+                || !shouldShowBrowserControls(activity.scopePolicy(), activity.getWebappInfo(),
                            activity.getActivityTab().getUrl(),
                            activity.getActivityTab().getSecurityLevel(),
                            activity.getBrowserSession() != null && activity.didVerificationFail());

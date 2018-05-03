@@ -146,6 +146,12 @@ class BackgroundTaskSchedulerUma {
         cacheEvent("Android.BackgroundTaskScheduler.TaskStopped", toUmaEnumValueFromTaskId(taskId));
     }
 
+    /** Reports metrics for when a NativeBackgroundTask loads the native library. */
+    public void reportTaskStartedNative(int taskId) {
+        cacheEvent("Android.BackgroundTaskScheduler.TaskLoadedNative",
+                toUmaEnumValueFromTaskId(taskId));
+    }
+
     /** Method that actually invokes histogram recording. Extracted for testing. */
     @VisibleForTesting
     void recordEnumeratedHistogram(String histogram, int value, int maxCount) {

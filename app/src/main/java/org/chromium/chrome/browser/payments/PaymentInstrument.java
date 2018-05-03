@@ -72,7 +72,7 @@ public abstract class PaymentInstrument extends PaymentOption {
      * @param modifiedTotal The new modified total to use.
      */
     public void setModifiedTotal(@Nullable String modifiedTotal) {
-        updateTertiarylabel(modifiedTotal);
+        updatePromoMessage(modifiedTotal);
     }
 
     /**

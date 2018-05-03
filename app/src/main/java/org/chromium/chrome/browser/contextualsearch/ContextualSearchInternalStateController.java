@@ -77,6 +77,11 @@ class ContextualSearchInternalStateController {
          * within the waiting period we'll advance.
          */
         WAITING_FOR_POSSIBLE_TAP_ON_TAP_SELECTION,
+        /** The first state in the Tap-gesture processing pipeline where we know we're processing
+         * a Tap-gesture that won't be converted into a long-press (from tap on tap-selection).  It
+         * may later be suppressed or ignored due to being on an invalid character.
+         */
+        TAP_GESTURE_COMMIT,
         /** Gathers text surrounding the selection. */
         GATHERING_SURROUNDINGS,
         /** Decides if the gesture should trigger the UX or be suppressed. */
@@ -221,14 +226,13 @@ class ContextualSearchInternalStateController {
      *        or known.  Only needed when we enter the IDLE state.
      */
     private void startWorkingOn(InternalState state, @Nullable StateChangeReason reason) {
+        // All transitional states should be listed here, but not start states.
         switch (state) {
             case IDLE:
                 assert reason != null;
                 mStateHandler.hideContextualSearchUi(reason);
                 break;
 
-            case LONG_PRESS_RECOGNIZED:
-                break;
             case SHOWING_LONGPRESS_SEARCH:
                 mStateHandler.showContextualSearchLongpressUi();
                 break;
@@ -236,10 +240,11 @@ class ContextualSearchInternalStateController {
             case WAITING_FOR_POSSIBLE_TAP_NEAR_PREVIOUS:
                 mStateHandler.waitForPossibleTapNearPrevious();
                 break;
-            case TAP_RECOGNIZED:
-                break;
             case WAITING_FOR_POSSIBLE_TAP_ON_TAP_SELECTION:
                 mStateHandler.waitForPossibleTapOnTapSelection();
+                break;
+            case TAP_GESTURE_COMMIT:
+                mStateHandler.tapGestureCommit();
                 break;
             case GATHERING_SURROUNDINGS:
                 mStateHandler.gatherSurroundingText();
@@ -304,10 +309,13 @@ class ContextualSearchInternalStateController {
                 if (mPreviousState != null && mPreviousState != InternalState.IDLE) {
                     transitionTo(InternalState.WAITING_FOR_POSSIBLE_TAP_ON_TAP_SELECTION);
                 } else {
-                    transitionTo(InternalState.GATHERING_SURROUNDINGS);
+                    transitionTo(InternalState.TAP_GESTURE_COMMIT);
                 }
                 break;
             case WAITING_FOR_POSSIBLE_TAP_ON_TAP_SELECTION:
+                transitionTo(InternalState.TAP_GESTURE_COMMIT);
+                break;
+            case TAP_GESTURE_COMMIT:
                 transitionTo(InternalState.GATHERING_SURROUNDINGS);
                 break;
             case GATHERING_SURROUNDINGS:

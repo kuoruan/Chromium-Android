@@ -43,4 +43,9 @@ String audioDeviceId, org.chromium.mojo.bindings.InterfaceRequest<Renderer> rend
 String keySystem, org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionModule> cdm);
 
 
+
+    void createCdmProxy(
+String cdmGuid, org.chromium.mojo.bindings.InterfaceRequest<CdmProxy> cdmProxy);
+
+
 }

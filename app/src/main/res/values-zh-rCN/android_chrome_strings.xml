@@ -3,6 +3,7 @@
 <string name="deleted">"已删除"</string>
 <string name="ok">"确定"</string>
 <string name="ok_got_it">"知道了"</string>
+<string name="got_it">"知道了"</string>
 <string name="cancel">"取消"</string>
 <string name="save">"保存"</string>
 <string name="details_link">"详细信息"</string>
@@ -58,8 +59,11 @@
 <string name="sign_in_google_activity_controls_message_child_account">"控制 Google 如何使用您的浏览记录对 Google 搜索和其他 Google 服务进行个性化设置。"</string>
 <string name="sign_in_sync_error_widget">"同步时出现错误，点按可了解详情。"</string>
 <string name="prefs_search_engine">"搜索引擎"</string>
+<string name="search_engine_location_and_notifications_allowed">"允许使用位置信息以及显示通知"</string>
 <string name="search_engine_location_allowed">"允许访问位置信息"</string>
-<string name="search_engine_location_blocked">"禁止访问位置信息"</string>
+<string name="search_engine_notifications_allowed">"允许显示通知"</string>
+<string name="search_engine_notifications_allowed_system_location_disabled">"允许显示通知。但此设备的位置信息功能已关闭。"</string>
+<string name="search_engine_system_location_disabled">"位置信息功能现处于关闭状态；请在 &lt;link&gt;Android 设置&lt;/link&gt;中开启此项功能。"</string>
 <string name="search_engine_recently_visited">"最近用过的搜索引擎"</string>
 <string name="search_engine_dialog_title">"选择您的搜索引擎"</string>
 <string name="search_engine_dialog_footer">"以后，您可以在“设置”中更改此设置。"</string>
@@ -121,11 +125,14 @@
 <string name="password_entry_editor_site_copied_into_clipboard">"已复制网站"</string>
 <string name="password_entry_editor_password_copied_into_clipboard">"已复制密码"</string>
 <string name="password_entry_editor_set_lock_screen">"要想在此处查看或复制您的密码，请在此设备上设置屏幕锁定。"</string>
+<string name="password_export_set_lock_screen">"需在“设置”部分中开启屏幕锁定功能，才能从此设备中导出您的密码"</string>
 <string name="password_generation_popup_content_description">"目前显示的是密码生成弹出式窗口"</string>
 <string name="save_password_preferences_export_action_title">"导出密码…"</string>
 <string name="save_password_preferences_export_action_description">"导出存储在 Chrome 中的密码"</string>
+<string name="settings_passwords_export_description">"所有能查看此导出文件的人员都能看到您的密码。"</string>
 <string name="lockscreen_description_copy">"需解锁才能复制您的密码"</string>
 <string name="lockscreen_description_view">"需解锁才能查看您的密码"</string>
+<string name="lockscreen_description_export">"需解锁才能导出您的密码"</string>
 <string name="options_homepage_edit_title">"修改主页"</string>
 <string name="options_homepage_edit_label">"打开此网页"</string>
 <string name="prefs_notifications">"通知"</string>
@@ -200,7 +207,7 @@
 <string name="force_enable_zoom_title">"强制启用缩放功能"</string>
 <string name="force_enable_zoom_summary">"覆盖网站的请求，以防止放大"</string>
 <string name="reader_for_accessibility_title">"简化版视图"</string>
-<string name="reader_for_accessibility_summary">"为所有文章启用简化版视图"</string>
+<string name="reader_for_accessibility_summary">"询问是否使用简化版视图显示受支持的文章"</string>
 <string name="prefs_site_settings">"网站设置"</string>
 <string name="all_sites">"所有网站"</string>
 <string name="intrusive_ads_information">"此网站常常会展示侵扰性广告"</string>
@@ -276,11 +283,10 @@
 <string name="languages_item_option_offer_to_translate">"提供翻译"</string>
 <string name="website_settings_device_location">"位置"</string>
 <string name="geolocation_permission_title">"位置信息使用权"</string>
-<string name="android_location_off">"在 &lt;link&gt;Android 设置&lt;/link&gt;部分开启位置信息服务。"</string>
 <string name="android_permission_off_plural">"在 &lt;link&gt;Android 设置&lt;/link&gt;中为 Chrome 启用这些权限。"</string>
 <string name="android_permission_off">"在 &lt;link&gt;Android 设置&lt;/link&gt;中为 Chrome 启用这项权限。"</string>
-<string name="android_location_off_globally">"&lt;link&gt;此设备的位置信息使用权已被停用&lt;/link&gt;。"</string>
-<string name="android_location_also_off_globally">"&lt;link&gt;此设备的位置信息使用权也已被停用&lt;/link&gt;。"</string>
+<string name="android_location_off_globally">"此设备的位置信息使用权已关闭；若想开启这项权限，请转到 &lt;link&gt;Android 设置&lt;/link&gt;。"</string>
+<string name="android_location_also_off_globally">"此设备的位置信息使用权也已关闭；若想开启这项权限，请转到 &lt;link&gt;Android 设置&lt;/link&gt;。"</string>
 <string name="website_settings_use_camera">"摄像头"</string>
 <string name="website_settings_use_mic">"麦克风"</string>
 <string name="camera_permission_title">"使用您的摄像头"</string>
@@ -336,6 +342,9 @@
 <string name="data_reduction_promo_snackbar_text_mb">"Chrome 已为您保存的数据量：%1$d MB"</string>
 <string name="data_reduction_promo_snackbar_text_gb">"Chrome 已为您保存的数据量：%1$d GB"</string>
 <string name="data_reduction_promo_snackbar_button">"视图"</string>
+<string name="download_location_title">"位置"</string>
+<string name="downloads_primary_storage">"主要存储空间"</string>
+<string name="downloads_secondary_storage">"辅助存储空间"</string>
 <string name="prefs_about_chrome">"关于 Chrome"</string>
 <string name="legal_information_summary">"版权所有 %1$d Google Inc. 保留所有权利。"</string>
 <string name="application_version_title">"应用版本"</string>
@@ -406,7 +415,7 @@
 <string name="sync_passwords">"密码"</string>
 <string name="sync_recent_tabs">"目前打开的标签页"</string>
 <string name="sync_settings">"设置"</string>
-<string name="payments_integration">"Google Payments 中存储的卡片和地址信息"</string>
+<string name="payments_integration">"Google Pay 中存储的卡片和地址信息"</string>
 <string name="sync_encryption">"加密"</string>
 <string name="sync_manage_data">"管理已同步的数据"</string>
 <string name="sync_passphrase_type_title">"加密"</string>
@@ -595,6 +604,8 @@
 <string name="download_notification_failed">"下载失败"</string>
 <string name="download_notification_paused">"已暂停下载"</string>
 <string name="download_notification_pending">"正在等待下载…"</string>
+<string name="download_notification_pending_network">"正在等待连接到网络…"</string>
+<string name="download_notification_pending_another_download">"正在等待完成另一项下载…"</string>
 <string name="download_cant_open_file">"无法打开文件"</string>
 <string name="download_notification_pause_button">"暂停"</string>
 <string name="download_notification_resume_button">"继续"</string>
@@ -742,6 +753,7 @@
 <string name="ntp_suggestions_fetch_failed">"无法获取建议"</string>
 <string name="ntp_suggestions_fetch_no_new_suggestions">"没有新建议"</string>
 <string name="ntp_all_dismissed_refresh">"刷新"</string>
+<string name="contextual_suggestions_title">"其他人还查看了以下文章："</string>
 <string name="open_tabs">"目前打开的标签页"</string>
 <string name="button_new_tab">"打开新的标签页"</string>
 <string name="button_new_incognito_tab">"打开新的无痕式标签页"</string>
@@ -808,9 +820,6 @@
 <string name="accessible_find_in_page_count">"第 %1$d 条结果，共 %2$d 条"</string>
 <string name="accessible_find_in_page_no_results">"找不到结果"</string>
 <string name="location_bar_verbose_status_offline">"离线"</string>
-<string name="search_or_type_web_address">"搜索或输入网址"</string>
-<string name="type_what_you_are_looking_for">"输入您要寻找的内容"</string>
-<string name="find_news_recipes_weather">"查找新闻、食谱、天气…"</string>
 <string name="voice_search_error">"无法启用语音搜索功能"</string>
 <string name="open_in_new_tab_toast">"标签页已在后台打开。"</string>
 <string name="menu_open_in_chrome">"在 Chrome 中打开"</string>
@@ -820,7 +829,7 @@
 <string name="reader_view_text_alt">"显示简化版视图"</string>
 <string name="content_provider_search_description">"书签和网络历史记录"</string>
 <string name="url_copied">"已复制网址。"</string>
-<string name="chrome_home_survey_prompt">"欢迎帮助我们改进 Chrome。&lt;LINK&gt;参与调查&lt;/LINK&gt;。"</string>
+<string name="chrome_home_survey_prompt">"欢迎帮助我们改进 Chrome。&lt;LINK&gt;参与调查&lt;/LINK&gt;"</string>
 <string name="accessibility_toolbar_btn_forward">"前进"</string>
 <string name="accessibility_toolbar_btn_back">"返回"</string>
 <string name="accessibility_toolbar_btn_menu">"更多选项"</string>
@@ -854,7 +863,7 @@
 <string name="accessibility_cancel_selection">"取消选择"</string>
 <string name="accessibility_drawer_toggle_btn_open">"打开抽屉式导航栏"</string>
 <string name="accessibility_drawer_toggle_btn_close">"关闭抽屉式导航栏"</string>
-<string name="accessibility_list_menu_button">"选项"</string>
+<string name="accessibility_list_menu_button">"%1$s选项"</string>
 <string name="accessibility_toolbar_screen_position">"选项位于屏幕顶部附近"</string>
 <plurals name="accessibility_share_selected_items">
   <item quantity="one">"分享 1 个所选项"</item>
@@ -945,6 +954,7 @@
 <string name="webapp_tap_to_copy_url">"点按即可复制该应用的网址"</string>
 <string name="webapp_twa_offline_dialog">"若想使用“%1$s”，请连接到互联网。"</string>
 <string name="webapk_offline_dialog">"如果您是首次使用%1$s，则需连接到互联网。"</string>
+<string name="webapk_notification_channel_name">"常规"</string>
 <string name="webapp_cannot_connect_to_site">"无法连接到该网站"</string>
 <string name="webapp_network_error_message_tunnel_connection_failed">"未能成功通过代理服务器建立隧道"</string>
 <string name="keyboard_shortcut_open_new_tab">"打开新标签页"</string>
@@ -1006,6 +1016,9 @@
 <string name="bottom_sheet_history_tab">"已选择“历史记录”标签页"</string>
 <string name="bottom_sheet_home_tab">"已选择“首页”标签页"</string>
 <string name="bottom_sheet_app_menu_iph">"下载内容、书签和历史记录在哪里？"</string>
+<string name="chrome_home_menu_bookmarks_help_bubble">"“书签”的位置即将变更。下次只需上拉地址栏即可查看书签。"</string>
+<string name="chrome_home_menu_downloads_help_bubble">"“下载内容”的位置即将变更。下次只需上拉地址栏即可查看下载内容。"</string>
+<string name="chrome_home_menu_history_help_bubble">"“历史记录”的位置即将变更。下次只需上拉地址栏即可查看历史记录。"</string>
 <string name="chrome_home_promo_dialog_message">"向上滑动即可轻松浏览热门网站和文章，查看各项下载内容等等"</string>
 <string name="chrome_home_promo_dialog_message_accessibility">"从屏幕底部向上滑动手指或点按“展开”按钮，即可轻松浏览热门网站和文章，查看各项下载内容等等"</string>
 <string name="chrome_home_promo_dialog_not_yet">"目前还不可以"</string>
@@ -1015,11 +1028,12 @@
 <string name="chrome_home_opt_out_menu_item">"您目前使用的是新版 Chrome"</string>
 <string name="chrome_home_opt_out_snackbar_text">"请告诉我们您为何停用新版 Chrome"</string>
 <string name="chrome_home_opt_out_snackbar_action">"参与调查"</string>
+<string name="bottom_sheet_accessibility_toolbar">"地址栏。向上滑动即可查看下载内容、书签和历史记录。"</string>
 <string name="photo_picker_select_images">"选择图片"</string>
 <string name="photo_picker_camera">"摄像头"</string>
 <string name="photo_picker_browse">"浏览"</string>
 <string name="updating_chrome">"正在更新 Chrome…"</string>
-<string name="redirect_blocked_message">"Chrome 已阻止此网站将您重定向至"</string>
+<string name="redirect_blocked_message">"已阻止重定向到以下网站："</string>
 <string name="redirect_blocked_short_message">"已阻止重定向。"</string>
 <string name="near_oom_intervention_message">"此网页占用的内存过多，因此 Chrome 已将其暂停。"</string>
 <string name="near_oom_intervention_decline">"继续"</string>

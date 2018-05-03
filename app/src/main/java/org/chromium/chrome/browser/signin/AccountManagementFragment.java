@@ -135,8 +135,7 @@ public class AccountManagementFragment extends PreferenceFragment
             badgeConfig = new ProfileDataCache.BadgeConfig(
                     badge, new Point(badgePositionX, badgePositionY), badgeBorderSize);
         }
-        mProfileDataCache =
-                new ProfileDataCache(getActivity(), mProfile, avatarImageSize, badgeConfig);
+        mProfileDataCache = new ProfileDataCache(getActivity(), avatarImageSize, badgeConfig);
     }
 
     @Override

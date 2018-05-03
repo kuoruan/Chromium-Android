@@ -328,8 +328,8 @@ public class StackLayout extends Layout implements Animatable<StackLayout.Proper
     @Override
     public void setTabModelSelector(TabModelSelector modelSelector, TabContentManager manager) {
         super.setTabModelSelector(modelSelector, manager);
-        mStacks[0].setTabModel(modelSelector.getModel(false));
-        mStacks[1].setTabModel(modelSelector.getModel(true));
+        mStacks[0].setTabList(modelSelector.getModel(false));
+        mStacks[1].setTabList(modelSelector.getModel(true));
         resetScrollData();
     }
 

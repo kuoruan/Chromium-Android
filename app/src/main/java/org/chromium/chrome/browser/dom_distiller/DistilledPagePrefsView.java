@@ -109,9 +109,15 @@ public class DistilledPagePrefsView extends LinearLayout
     }
 
     private void initFontFamilySpinner() {
-        ArrayAdapter<CharSequence> adapter = new ArrayAdapter<CharSequence>(getContext(),
-                android.R.layout.simple_spinner_item, getResources().getStringArray(
-                        R.array.distiller_mode_font_family_values)) {
+        // These must be kept in sync (and in-order) with
+        // components/dom_distiller/core/font_family_list.h
+        // TODO(wychen): fix getStringArray issue (https://crbug/803117#c2)
+        String[] fonts = {
+                getResources().getString(R.string.sans_serif),
+                getResources().getString(R.string.serif),
+                getResources().getString(R.string.monospace)};
+        ArrayAdapter<CharSequence> adapter = new ArrayAdapter<CharSequence>(
+                getContext(), android.R.layout.simple_spinner_item, fonts) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);

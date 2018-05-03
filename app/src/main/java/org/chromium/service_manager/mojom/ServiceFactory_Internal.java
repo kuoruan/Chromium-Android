@@ -19,23 +19,28 @@ class ServiceFactory_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<ServiceFactory, ServiceFactory.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<ServiceFactory, ServiceFactory.Proxy>() {
     
+        @Override
         public String getName() {
             return "service_manager::mojom::ServiceFactory";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, ServiceFactory impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public ServiceFactory[] buildArray(int size) {
           return new ServiceFactory[size];
         }
@@ -55,13 +60,15 @@ class ServiceFactory_Internal {
 
         @Override
         public void createService(
-org.chromium.mojo.bindings.InterfaceRequest<Service> service, String name) {
+org.chromium.mojo.bindings.InterfaceRequest<Service> service, String name, PidReceiver pidReceiver) {
 
             ServiceFactoryCreateServiceParams _message = new ServiceFactoryCreateServiceParams();
 
             _message.service = service;
 
             _message.name = name;
+
+            _message.pidReceiver = pidReceiver;
 
 
             getProxyHandler().getMessageReceiver().accept(
@@ -104,7 +111,7 @@ org.chromium.mojo.bindings.InterfaceRequest<Service> service, String name) {
                         ServiceFactoryCreateServiceParams data =
                                 ServiceFactoryCreateServiceParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().createService(data.service, data.name);
+                        getImpl().createService(data.service, data.name, data.pidReceiver);
                         return true;
                     }
             
@@ -150,11 +157,12 @@ org.chromium.mojo.bindings.InterfaceRequest<Service> service, String name) {
     
     static final class ServiceFactoryCreateServiceParams extends org.chromium.mojo.bindings.Struct {
     
-        private static final int STRUCT_SIZE = 24;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final int STRUCT_SIZE = 32;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.mojo.bindings.InterfaceRequest<Service> service;
         public String name;
+        public PidReceiver pidReceiver;
     
         private ServiceFactoryCreateServiceParams(int version) {
             super(STRUCT_SIZE, version);
@@ -199,6 +207,10 @@ org.chromium.mojo.bindings.InterfaceRequest<Service> service, String name) {
                     
                     result.name = decoder0.readString(16, false);
                 }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.pidReceiver = decoder0.readServiceInterface(24, false, PidReceiver.MANAGER);
+                }
             } finally {
                 decoder0.decreaseStackDepth();
             }
@@ -213,6 +225,8 @@ org.chromium.mojo.bindings.InterfaceRequest<Service> service, String name) {
             encoder0.encode(this.service, 8, false);
             
             encoder0.encode(this.name, 16, false);
+            
+            encoder0.encode(this.pidReceiver, 24, false, PidReceiver.MANAGER);
         }
     
         /**
@@ -231,6 +245,8 @@ org.chromium.mojo.bindings.InterfaceRequest<Service> service, String name) {
                 return false;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.name, other.name))
                 return false;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.pidReceiver, other.pidReceiver))
+                return false;
             return true;
         }
     
@@ -243,6 +259,7 @@ org.chromium.mojo.bindings.InterfaceRequest<Service> service, String name) {
             int result = prime + getClass().hashCode();
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.service);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.name);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pidReceiver);
             return result;
         }
     }

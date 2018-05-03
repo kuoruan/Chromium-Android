@@ -15,6 +15,7 @@ import org.chromium.base.annotations.JNINamespace;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.ui.UiUtils;
+import org.chromium.ui.base.WindowAndroid;
 
 import javax.annotation.Nullable;
 
@@ -91,9 +92,8 @@ final class ScreenshotTask implements ScreenshotSource {
 
         Rect rect = new Rect();
         activity.getWindow().getDecorView().getRootView().getWindowVisibleDisplayFrame(rect);
-        nativeGrabWindowSnapshotAsync(this,
-                ((ChromeActivity) activity).getWindowAndroid().getNativePointer(), rect.width(),
-                rect.height());
+        nativeGrabWindowSnapshotAsync(
+                this, ((ChromeActivity) activity).getWindowAndroid(), rect.width(), rect.height());
 
         return true;
     }
@@ -135,5 +135,5 @@ final class ScreenshotTask implements ScreenshotSource {
     }
 
     private static native void nativeGrabWindowSnapshotAsync(
-            ScreenshotTask callback, long nativeWindowAndroid, int width, int height);
+            ScreenshotTask callback, WindowAndroid window, int width, int height);
 }

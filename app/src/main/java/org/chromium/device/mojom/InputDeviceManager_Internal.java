@@ -19,23 +19,28 @@ class InputDeviceManager_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<InputDeviceManager, InputDeviceManager.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<InputDeviceManager, InputDeviceManager.Proxy>() {
     
+        @Override
         public String getName() {
             return "device::mojom::InputDeviceManager";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, InputDeviceManager impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public InputDeviceManager[] buildArray(int size) {
           return new InputDeviceManager[size];
         }

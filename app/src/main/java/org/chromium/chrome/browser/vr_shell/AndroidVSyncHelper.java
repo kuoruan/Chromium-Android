@@ -4,8 +4,11 @@
 
 package org.chromium.chrome.browser.vr_shell;
 
+import android.content.Context;
 import android.view.Choreographer;
+import android.view.WindowManager;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 
@@ -41,6 +44,14 @@ public class AndroidVSyncHelper {
     @CalledByNative
     private void cancelVSyncRequest() {
         Choreographer.getInstance().removeFrameCallback(mCallback);
+    }
+
+    @CalledByNative
+    private float getRefreshRate() {
+        Context context = ContextUtils.getApplicationContext();
+        WindowManager windowManager =
+                (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        return windowManager.getDefaultDisplay().getRefreshRate();
     }
 
     private native void nativeOnVSync(long nativeAndroidVSyncHelper, long frameTimeNanos);

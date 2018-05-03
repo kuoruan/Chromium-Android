@@ -16,7 +16,6 @@ import android.view.View;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.firstrun.FirstRunSignInProcessor;
-import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.signin.AccountManagementFragment;
 import org.chromium.chrome.browser.signin.AccountSigninActivity;
 import org.chromium.chrome.browser.signin.DisplayableProfileData;
@@ -57,7 +56,7 @@ public class SignInPreference
         super(context, attrs);
 
         int imageSize = context.getResources().getDimensionPixelSize(R.dimen.user_picture_size);
-        mProfileDataCache = new ProfileDataCache(context, Profile.getLastUsedProfile(), imageSize);
+        mProfileDataCache = new ProfileDataCache(context, imageSize);
 
         setOnPreferenceClickListener(preference
                 -> AccountSigninActivity.startIfAllowed(getContext(), SigninAccessPoint.SETTINGS));
@@ -132,8 +131,7 @@ public class SignInPreference
             return;
         }
 
-        if (SigninPromoController.hasNotReachedImpressionLimit(SigninAccessPoint.SETTINGS)
-                && SigninPromoController.arePersonalizedPromosEnabled()) {
+        if (SigninPromoController.hasNotReachedImpressionLimit(SigninAccessPoint.SETTINGS)) {
             setupPersonalizedPromo();
             return;
         }

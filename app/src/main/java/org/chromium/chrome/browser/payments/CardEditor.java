@@ -671,6 +671,7 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
         mBillingAddressField = EditorFieldModel.createDropdown(
                 mContext.getString(R.string.autofill_credit_card_editor_billing_address),
                 billingAddresses, mContext.getString(R.string.select));
+        mBillingAddressField.setDisplayPlusIcon(true);
 
         // The billing address is required.
         mBillingAddressField.setRequiredErrorMessage(

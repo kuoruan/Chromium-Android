@@ -10,6 +10,7 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.download.DownloadInfo;
 import org.chromium.chrome.browser.download.DownloadManagerService;
 import org.chromium.chrome.browser.download.DownloadNotifier;
+import org.chromium.chrome.browser.download.DownloadUpdate.PendingState;
 import org.chromium.components.offline_items_collection.LegacyHelpers;
 import org.chromium.ui.widget.Toast;
 
@@ -122,7 +123,8 @@ public class OfflinePageNotificationBridge {
                                             .setIsResumable(true)
                                             .build();
 
-        notifier.notifyDownloadInterrupted(downloadInfo, true);
+        // TODO(cmsy): Pass in correct PendingState.
+        notifier.notifyDownloadInterrupted(downloadInfo, true, PendingState.PENDING_REASON_UNKNOWN);
     }
 
     /**

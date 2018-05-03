@@ -19,23 +19,28 @@ class VideoEncodeAcceleratorProvider_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<VideoEncodeAcceleratorProvider, VideoEncodeAcceleratorProvider.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<VideoEncodeAcceleratorProvider, VideoEncodeAcceleratorProvider.Proxy>() {
     
+        @Override
         public String getName() {
             return "media::mojom::VideoEncodeAcceleratorProvider";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, VideoEncodeAcceleratorProvider impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public VideoEncodeAcceleratorProvider[] buildArray(int size) {
           return new VideoEncodeAcceleratorProvider[size];
         }

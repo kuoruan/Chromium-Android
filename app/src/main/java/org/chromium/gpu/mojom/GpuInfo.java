@@ -46,6 +46,7 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
     public int processCrashCount;
     public boolean inProcessGpu;
     public boolean passthroughCmdDecoder;
+    public boolean directComposition;
     public boolean supportsOverlays;
     public boolean canSupportThreadedTextureMailbox;
     public int basicInfoState;
@@ -128,15 +129,19 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.supportsOverlays = decoder0.readBoolean(16, 7);
+                result.directComposition = decoder0.readBoolean(16, 7);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.canSupportThreadedTextureMailbox = decoder0.readBoolean(17, 0);
+                result.supportsOverlays = decoder0.readBoolean(17, 0);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.jpegDecodeAcceleratorSupported = decoder0.readBoolean(17, 1);
+                result.canSupportThreadedTextureMailbox = decoder0.readBoolean(17, 1);
+            }
+            if (mainDataHeader.elementsOrVersion >= 0) {
+                
+                result.jpegDecodeAcceleratorSupported = decoder0.readBoolean(17, 2);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
@@ -297,11 +302,13 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.passthroughCmdDecoder, 16, 6);
         
-        encoder0.encode(this.supportsOverlays, 16, 7);
+        encoder0.encode(this.directComposition, 16, 7);
         
-        encoder0.encode(this.canSupportThreadedTextureMailbox, 17, 0);
+        encoder0.encode(this.supportsOverlays, 17, 0);
         
-        encoder0.encode(this.jpegDecodeAcceleratorSupported, 17, 1);
+        encoder0.encode(this.canSupportThreadedTextureMailbox, 17, 1);
+        
+        encoder0.encode(this.jpegDecodeAcceleratorSupported, 17, 2);
         
         encoder0.encode(this.glResetNotificationStrategy, 20);
         
@@ -440,6 +447,8 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
             return false;
         if (this.passthroughCmdDecoder!= other.passthroughCmdDecoder)
             return false;
+        if (this.directComposition!= other.directComposition)
+            return false;
         if (this.supportsOverlays!= other.supportsOverlays)
             return false;
         if (this.canSupportThreadedTextureMailbox!= other.canSupportThreadedTextureMailbox)
@@ -499,6 +508,7 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.processCrashCount);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.inProcessGpu);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.passthroughCmdDecoder);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.directComposition);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.supportsOverlays);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.canSupportThreadedTextureMailbox);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.basicInfoState);

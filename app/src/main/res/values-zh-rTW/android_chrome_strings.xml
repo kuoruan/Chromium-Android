@@ -3,6 +3,7 @@
 <string name="deleted">"已刪除"</string>
 <string name="ok">"確定"</string>
 <string name="ok_got_it">"好，我知道了"</string>
+<string name="got_it">"我瞭解了"</string>
 <string name="cancel">"取消"</string>
 <string name="save">"儲存"</string>
 <string name="details_link">"詳細資訊"</string>
@@ -58,8 +59,11 @@
 <string name="sign_in_google_activity_controls_message_child_account">"控制 Google 如何使用您的瀏覽紀錄，為您提供個人化的搜尋服務和其他各項 Google 服務。"</string>
 <string name="sign_in_sync_error_widget">"發生同步處理錯誤，輕觸即可取得詳細資料。"</string>
 <string name="prefs_search_engine">"搜尋引擎"</string>
+<string name="search_engine_location_and_notifications_allowed">"允許分享位置資訊和顯示通知"</string>
 <string name="search_engine_location_allowed">"禁止存取位置資訊"</string>
-<string name="search_engine_location_blocked">"位置資訊遭到封鎖"</string>
+<string name="search_engine_notifications_allowed">"允許顯示通知"</string>
+<string name="search_engine_notifications_allowed_system_location_disabled">"允許顯示通知。這部裝置的定位功能已關閉。"</string>
+<string name="search_engine_system_location_disabled">"定位功能已關閉，請在 &lt;link&gt;Android 設定&lt;/link&gt;中開啟這項功能。"</string>
 <string name="search_engine_recently_visited">"最近造訪過"</string>
 <string name="search_engine_dialog_title">"選擇搜尋引擎"</string>
 <string name="search_engine_dialog_footer">"日後可前往設定頁面進行變更"</string>
@@ -121,11 +125,14 @@
 <string name="password_entry_editor_site_copied_into_clipboard">"已複製網站"</string>
 <string name="password_entry_editor_password_copied_into_clipboard">"已複製密碼"</string>
 <string name="password_entry_editor_set_lock_screen">"如要在這裡查看或複製你的密碼，請為這個裝置設定螢幕鎖定功能。"</string>
+<string name="password_export_set_lock_screen">"在「設定」中開啟螢幕鎖定，即可從這部裝置匯出你的密碼"</string>
 <string name="password_generation_popup_content_description">"目前顯示的是密碼產生彈出式視窗"</string>
 <string name="save_password_preferences_export_action_title">"匯出密碼…"</string>
 <string name="save_password_preferences_export_action_description">"將使用 Chrome 儲存的密碼匯出"</string>
+<string name="settings_passwords_export_description">"凡是可查看匯出的檔案的使用者都能看到你的密碼。"</string>
 <string name="lockscreen_description_copy">"解鎖即可複製你的密碼"</string>
 <string name="lockscreen_description_view">"解鎖即可查看你的密碼"</string>
+<string name="lockscreen_description_export">"解鎖即可匯出你的密碼"</string>
 <string name="options_homepage_edit_title">"編輯首頁"</string>
 <string name="options_homepage_edit_label">"開啟以下網頁"</string>
 <string name="prefs_notifications">"通知"</string>
@@ -200,7 +207,7 @@
 <string name="force_enable_zoom_title">"強制啟用縮放功能"</string>
 <string name="force_enable_zoom_summary">"覆寫網站禁止放大的要求"</string>
 <string name="reader_for_accessibility_title">"簡易檢視"</string>
-<string name="reader_for_accessibility_summary">"為所有文章啟用「簡易檢視」模式"</string>
+<string name="reader_for_accessibility_summary">"詢問是否以簡易模式顯示支援這項功能的文章"</string>
 <string name="prefs_site_settings">"網站設定"</string>
 <string name="all_sites">"所有網站"</string>
 <string name="intrusive_ads_information">"這個網站經常顯示侵入式廣告"</string>
@@ -276,11 +283,10 @@
 <string name="languages_item_option_offer_to_translate">"提供翻譯"</string>
 <string name="website_settings_device_location">"位置"</string>
 <string name="geolocation_permission_title">"位置資訊存取權"</string>
-<string name="android_location_off">"前往 &lt;link&gt;Android 設定&lt;/link&gt;開啟位置資訊設定。"</string>
 <string name="android_permission_off_plural">"請在 &lt;link&gt;Android 設定&lt;/link&gt;中為 Chrome 啟用這些權限。"</string>
 <string name="android_permission_off">"請在 &lt;link&gt;Android 設定&lt;/link&gt;中為 Chrome 啟用這項權限。"</string>
-<string name="android_location_off_globally">"這個裝置的&lt;link&gt;位置資訊存取功能已關閉&lt;/link&gt;。"</string>
-<string name="android_location_also_off_globally">"這個裝置的&lt;link&gt;位置資訊存取功能已一併關閉&lt;/link&gt;。"</string>
+<string name="android_location_off_globally">"這部裝置的位置資訊存取權已關閉。請在 &lt;link&gt;Android 設定&lt;/link&gt;中予以開啟。"</string>
+<string name="android_location_also_off_globally">"此外，這部裝置的位置資訊存取權已關閉。請在 &lt;link&gt;Android 設定&lt;/link&gt;中予以開啟。"</string>
 <string name="website_settings_use_camera">"攝影機"</string>
 <string name="website_settings_use_mic">"麥克風"</string>
 <string name="camera_permission_title">"存取您的攝影機"</string>
@@ -336,6 +342,9 @@
 <string name="data_reduction_promo_snackbar_text_mb">"Chrome 為你節省了 %1$d MB"</string>
 <string name="data_reduction_promo_snackbar_text_gb">"Chrome 為你節省了 %1$d GB"</string>
 <string name="data_reduction_promo_snackbar_button">"檢視"</string>
+<string name="download_location_title">"位置"</string>
+<string name="downloads_primary_storage">"主要儲存空間"</string>
+<string name="downloads_secondary_storage">"次要儲存空間"</string>
 <string name="prefs_about_chrome">"關於 Chrome"</string>
 <string name="legal_information_summary">"Copyright %1$d Google Inc. 版權所有。"</string>
 <string name="application_version_title">"應用程式版本"</string>
@@ -406,7 +415,7 @@
 <string name="sync_passwords">"密碼"</string>
 <string name="sync_recent_tabs">"開啟分頁"</string>
 <string name="sync_settings">"設定"</string>
-<string name="payments_integration">"使用 Google Payments 儲存的卡片和地址資訊"</string>
+<string name="payments_integration">"使用 Google Pay 儲存的卡片和地址資訊"</string>
 <string name="sync_encryption">"加密"</string>
 <string name="sync_manage_data">"管理同步資料"</string>
 <string name="sync_passphrase_type_title">"加密"</string>
@@ -595,6 +604,8 @@
 <string name="download_notification_failed">"下載失敗"</string>
 <string name="download_notification_paused">"已暫停下載"</string>
 <string name="download_notification_pending">"正在等候下載…"</string>
+<string name="download_notification_pending_network">"正在等待網路連線…"</string>
+<string name="download_notification_pending_another_download">"正在等待其他下載程序完成…"</string>
 <string name="download_cant_open_file">"無法開啟檔案"</string>
 <string name="download_notification_pause_button">"暫停"</string>
 <string name="download_notification_resume_button">"繼續"</string>
@@ -742,6 +753,7 @@
 <string name="ntp_suggestions_fetch_failed">"無法取得建議"</string>
 <string name="ntp_suggestions_fetch_no_new_suggestions">"沒有新的建議"</string>
 <string name="ntp_all_dismissed_refresh">"重新整理"</string>
+<string name="contextual_suggestions_title">"其他人也看過以下文章"</string>
 <string name="open_tabs">"開啟分頁"</string>
 <string name="button_new_tab">"新增分頁"</string>
 <string name="button_new_incognito_tab">"新增無痕式分頁"</string>
@@ -808,9 +820,6 @@
 <string name="accessible_find_in_page_count">"第 %1$d 個結果，共 %2$d 個"</string>
 <string name="accessible_find_in_page_no_results">"沒有結果"</string>
 <string name="location_bar_verbose_status_offline">"離線"</string>
-<string name="search_or_type_web_address">"搜尋或輸入網址"</string>
-<string name="type_what_you_are_looking_for">"輸入你要尋找的項目"</string>
-<string name="find_news_recipes_weather">"尋找新聞、食譜、氣象資訊…"</string>
 <string name="voice_search_error">"沒有可用的語音搜尋功能"</string>
 <string name="open_in_new_tab_toast">"已在背景開啟分頁。"</string>
 <string name="menu_open_in_chrome">"在 Chrome 中開啟"</string>
@@ -854,7 +863,7 @@
 <string name="accessibility_cancel_selection">"全部取消選取"</string>
 <string name="accessibility_drawer_toggle_btn_open">"開啟導覽匣"</string>
 <string name="accessibility_drawer_toggle_btn_close">"關閉導覽匣"</string>
-<string name="accessibility_list_menu_button">"選項"</string>
+<string name="accessibility_list_menu_button">"%1$s選項"</string>
 <string name="accessibility_toolbar_screen_position">"選項位於畫面頂端"</string>
 <plurals name="accessibility_share_selected_items">
   <item quantity="one">"分享 1 個選取的項目"</item>
@@ -945,6 +954,7 @@
 <string name="webapp_tap_to_copy_url">"輕觸即可複製這個應用程式的網址"</string>
 <string name="webapp_twa_offline_dialog">"如要使用「%1$s」，請連上網際網路。"</string>
 <string name="webapk_offline_dialog">"初次使用「%1$s」時請連線至網際網路。"</string>
+<string name="webapk_notification_channel_name">"一般"</string>
 <string name="webapp_cannot_connect_to_site">"無法連線至網站"</string>
 <string name="webapp_network_error_message_tunnel_connection_failed">"無法透過 Proxy 伺服器建立通道"</string>
 <string name="keyboard_shortcut_open_new_tab">"開啟新分頁"</string>
@@ -1006,6 +1016,9 @@
 <string name="bottom_sheet_history_tab">"已選取 [歷史紀錄] 標籤"</string>
 <string name="bottom_sheet_home_tab">"已選取 [首頁] 標籤"</string>
 <string name="bottom_sheet_app_menu_iph">"下載內容、書籤和歷史紀錄在哪裡？"</string>
+<string name="chrome_home_menu_bookmarks_help_bubble">"[書籤] 的位置即將變更，下次直接從網址列往上拉即可。"</string>
+<string name="chrome_home_menu_downloads_help_bubble">"[下載] 的位置即將變更，下次直接從網址列往上拉即可。"</string>
+<string name="chrome_home_menu_history_help_bubble">"[歷史紀錄] 的位置即將變更，下次直接從網址列往上拉即可。"</string>
 <string name="chrome_home_promo_dialog_message">"向上滑動即可輕鬆瀏覽熱門網站和文章、下載項目等內容"</string>
 <string name="chrome_home_promo_dialog_message_accessibility">"從畫面底部向上滑動或輕觸展開按鈕，即可輕鬆瀏覽熱門網站和文章，並查看各項下載內容等等"</string>
 <string name="chrome_home_promo_dialog_not_yet">"暫時不要"</string>
@@ -1015,11 +1028,12 @@
 <string name="chrome_home_opt_out_menu_item">"你目前使用的是新版 Chrome"</string>
 <string name="chrome_home_opt_out_snackbar_text">"請告訴我們您為何不想使用新版 Chrome"</string>
 <string name="chrome_home_opt_out_snackbar_action">"填寫問卷"</string>
+<string name="bottom_sheet_accessibility_toolbar">"網址列。往上滑動即可查看下載內容、書籤和歷史紀錄。"</string>
 <string name="photo_picker_select_images">"選取圖片"</string>
 <string name="photo_picker_camera">"攝影機"</string>
 <string name="photo_picker_browse">"瀏覽"</string>
 <string name="updating_chrome">"正在更新 Chrome…"</string>
-<string name="redirect_blocked_message">"Chrome 已禁止這個網站將你導向至"</string>
+<string name="redirect_blocked_message">"已禁止重新導向至下列網站："</string>
 <string name="redirect_blocked_short_message">"已禁止重新導向。"</string>
 <string name="near_oom_intervention_message">"這個網頁使用了過多記憶體，因此遭到 Chrome 暫停。"</string>
 <string name="near_oom_intervention_decline">"繼續"</string>

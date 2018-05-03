@@ -94,7 +94,7 @@ public class DeferredStartupHandler {
         if (UmaUtils.hasComeToForeground()) {
             RecordHistogram.recordLongTimesHistogram(
                     "UMA.Debug.EnableCrashUpload.DeferredStartUpCompleteTime",
-                    SystemClock.uptimeMillis() - UmaUtils.getForegroundStartTime(),
+                    SystemClock.uptimeMillis() - UmaUtils.getForegroundStartTicks(),
                     TimeUnit.MILLISECONDS);
         }
     }

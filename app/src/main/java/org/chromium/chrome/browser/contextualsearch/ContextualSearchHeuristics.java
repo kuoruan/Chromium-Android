@@ -12,6 +12,7 @@ import java.util.Set;
  */
 public class ContextualSearchHeuristics {
     protected Set<ContextualSearchHeuristic> mHeuristics;
+    private QuickAnswersHeuristic mQuickAnswersHeuristic;
 
     /**
      * Manages a set of heuristics.
@@ -95,5 +96,21 @@ public class ContextualSearchHeuristics {
         for (ContextualSearchHeuristic heuristic : mHeuristics) {
             heuristic.logRankerTapSuppressionOutcome(logger);
         }
+    }
+
+    /**
+     * Sets the {@link QuickAnswersHeuristic} so that it can be accessed externally by
+     * {@link #getQuickAnswersHeuristic}.
+     * @param quickAnswersHeuristic The active {@link QuickAnswersHeuristic}.
+     */
+    public void setQuickAnswersHeuristic(QuickAnswersHeuristic quickAnswersHeuristic) {
+        mQuickAnswersHeuristic = quickAnswersHeuristic;
+    }
+
+    /**
+     * @return The active {@link QuickAnswersHeuristic}.
+     */
+    public QuickAnswersHeuristic getQuickAnswersHeuristic() {
+        return mQuickAnswersHeuristic;
     }
 }

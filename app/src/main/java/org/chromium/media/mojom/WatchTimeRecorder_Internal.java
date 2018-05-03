@@ -19,23 +19,28 @@ class WatchTimeRecorder_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<WatchTimeRecorder, WatchTimeRecorder.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<WatchTimeRecorder, WatchTimeRecorder.Proxy>() {
     
+        @Override
         public String getName() {
             return "media::mojom::WatchTimeRecorder";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, WatchTimeRecorder impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public WatchTimeRecorder[] buildArray(int size) {
           return new WatchTimeRecorder[size];
         }
@@ -48,7 +53,11 @@ class WatchTimeRecorder_Internal {
 
     private static final int ON_ERROR_ORDINAL = 2;
 
-    private static final int UPDATE_UNDERFLOW_COUNT_ORDINAL = 3;
+    private static final int SET_AUDIO_DECODER_NAME_ORDINAL = 3;
+
+    private static final int SET_VIDEO_DECODER_NAME_ORDINAL = 4;
+
+    private static final int UPDATE_UNDERFLOW_COUNT_ORDINAL = 5;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements WatchTimeRecorder.Proxy {
@@ -108,6 +117,40 @@ int status) {
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
                             new org.chromium.mojo.bindings.MessageHeader(ON_ERROR_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void setAudioDecoderName(
+String name) {
+
+            WatchTimeRecorderSetAudioDecoderNameParams _message = new WatchTimeRecorderSetAudioDecoderNameParams();
+
+            _message.name = name;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(SET_AUDIO_DECODER_NAME_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void setVideoDecoderName(
+String name) {
+
+            WatchTimeRecorderSetVideoDecoderNameParams _message = new WatchTimeRecorderSetVideoDecoderNameParams();
+
+            _message.name = name;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(SET_VIDEO_DECODER_NAME_ORDINAL)));
 
         }
 
@@ -195,6 +238,32 @@ int count) {
             
             
             
+                    case SET_AUDIO_DECODER_NAME_ORDINAL: {
+            
+                        WatchTimeRecorderSetAudioDecoderNameParams data =
+                                WatchTimeRecorderSetAudioDecoderNameParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().setAudioDecoderName(data.name);
+                        return true;
+                    }
+            
+            
+            
+            
+            
+                    case SET_VIDEO_DECODER_NAME_ORDINAL: {
+            
+                        WatchTimeRecorderSetVideoDecoderNameParams data =
+                                WatchTimeRecorderSetVideoDecoderNameParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().setVideoDecoderName(data.name);
+                        return true;
+                    }
+            
+            
+            
+            
+            
                     case UPDATE_UNDERFLOW_COUNT_ORDINAL: {
             
                         WatchTimeRecorderUpdateUnderflowCountParams data =
@@ -228,6 +297,10 @@ int count) {
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), WatchTimeRecorder_Internal.MANAGER, messageWithHeader, receiver);
+            
+            
+            
+            
             
             
             
@@ -537,6 +610,190 @@ int count) {
             final int prime = 31;
             int result = prime + getClass().hashCode();
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.status);
+            return result;
+        }
+    }
+
+
+
+    
+    static final class WatchTimeRecorderSetAudioDecoderNameParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public String name;
+    
+        private WatchTimeRecorderSetAudioDecoderNameParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public WatchTimeRecorderSetAudioDecoderNameParams() {
+            this(0);
+        }
+    
+        public static WatchTimeRecorderSetAudioDecoderNameParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static WatchTimeRecorderSetAudioDecoderNameParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static WatchTimeRecorderSetAudioDecoderNameParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            WatchTimeRecorderSetAudioDecoderNameParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new WatchTimeRecorderSetAudioDecoderNameParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.name = decoder0.readString(8, false);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.name, 8, false);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            WatchTimeRecorderSetAudioDecoderNameParams other = (WatchTimeRecorderSetAudioDecoderNameParams) object;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.name, other.name))
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.name);
+            return result;
+        }
+    }
+
+
+
+    
+    static final class WatchTimeRecorderSetVideoDecoderNameParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public String name;
+    
+        private WatchTimeRecorderSetVideoDecoderNameParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public WatchTimeRecorderSetVideoDecoderNameParams() {
+            this(0);
+        }
+    
+        public static WatchTimeRecorderSetVideoDecoderNameParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static WatchTimeRecorderSetVideoDecoderNameParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static WatchTimeRecorderSetVideoDecoderNameParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            WatchTimeRecorderSetVideoDecoderNameParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new WatchTimeRecorderSetVideoDecoderNameParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.name = decoder0.readString(8, false);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.name, 8, false);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            WatchTimeRecorderSetVideoDecoderNameParams other = (WatchTimeRecorderSetVideoDecoderNameParams) object;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.name, other.name))
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.name);
             return result;
         }
     }

@@ -19,23 +19,28 @@ class VideoDecoder_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<VideoDecoder, VideoDecoder.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<VideoDecoder, VideoDecoder.Proxy>() {
     
+        @Override
         public String getName() {
             return "media::mojom::VideoDecoder";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, VideoDecoder impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public VideoDecoder[] buildArray(int size) {
           return new VideoDecoder[size];
         }
@@ -50,9 +55,7 @@ class VideoDecoder_Internal {
 
     private static final int RESET_ORDINAL = 3;
 
-    private static final int ON_RELEASE_MAILBOX_ORDINAL = 4;
-
-    private static final int ON_OVERLAY_INFO_CHANGED_ORDINAL = 5;
+    private static final int ON_OVERLAY_INFO_CHANGED_ORDINAL = 4;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements VideoDecoder.Proxy {
@@ -65,13 +68,15 @@ class VideoDecoder_Internal {
 
         @Override
         public void construct(
-org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client, org.chromium.mojo.bindings.AssociatedInterfaceNotSupported mediaLog, org.chromium.mojo.system.DataPipe.ConsumerHandle decoderBufferPipe, CommandBufferId commandBufferId) {
+org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client, org.chromium.mojo.bindings.AssociatedInterfaceNotSupported mediaLog, org.chromium.mojo.bindings.InterfaceRequest<VideoFrameHandleReleaser> videoFrameHandleReleaser, org.chromium.mojo.system.DataPipe.ConsumerHandle decoderBufferPipe, CommandBufferId commandBufferId) {
 
             VideoDecoderConstructParams _message = new VideoDecoderConstructParams();
 
             _message.client = client;
 
             _message.mediaLog = mediaLog;
+
+            _message.videoFrameHandleReleaser = videoFrameHandleReleaser;
 
             _message.decoderBufferPipe = decoderBufferPipe;
 
@@ -155,25 +160,6 @@ ResetResponse callback) {
 
 
         @Override
-        public void onReleaseMailbox(
-org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.mojom.SyncToken releaseSyncToken) {
-
-            VideoDecoderOnReleaseMailboxParams _message = new VideoDecoderOnReleaseMailboxParams();
-
-            _message.releaseToken = releaseToken;
-
-            _message.releaseSyncToken = releaseSyncToken;
-
-
-            getProxyHandler().getMessageReceiver().accept(
-                    _message.serializeWithHeader(
-                            getProxyHandler().getCore(),
-                            new org.chromium.mojo.bindings.MessageHeader(ON_RELEASE_MAILBOX_ORDINAL)));
-
-        }
-
-
-        @Override
         public void onOverlayInfoChanged(
 OverlayInfo overlayInfo) {
 
@@ -222,7 +208,7 @@ OverlayInfo overlayInfo) {
                         VideoDecoderConstructParams data =
                                 VideoDecoderConstructParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().construct(data.client, data.mediaLog, data.decoderBufferPipe, data.commandBufferId);
+                        getImpl().construct(data.client, data.mediaLog, data.videoFrameHandleReleaser, data.decoderBufferPipe, data.commandBufferId);
                         return true;
                     }
             
@@ -231,19 +217,6 @@ OverlayInfo overlayInfo) {
             
             
             
-            
-            
-            
-            
-            
-                    case ON_RELEASE_MAILBOX_ORDINAL: {
-            
-                        VideoDecoderOnReleaseMailboxParams data =
-                                VideoDecoderOnReleaseMailboxParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().onReleaseMailbox(data.releaseToken, data.releaseSyncToken);
-                        return true;
-                    }
             
             
             
@@ -332,8 +305,6 @@ OverlayInfo overlayInfo) {
             
             
             
-            
-            
                     default:
                         return false;
                 }
@@ -353,6 +324,7 @@ OverlayInfo overlayInfo) {
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client;
         public org.chromium.mojo.bindings.AssociatedInterfaceNotSupported mediaLog;
+        public org.chromium.mojo.bindings.InterfaceRequest<VideoFrameHandleReleaser> videoFrameHandleReleaser;
         public org.chromium.mojo.system.DataPipe.ConsumerHandle decoderBufferPipe;
         public CommandBufferId commandBufferId;
     
@@ -402,7 +374,11 @@ OverlayInfo overlayInfo) {
                 }
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
-                    result.decoderBufferPipe = decoder0.readConsumerHandle(24, false);
+                    result.videoFrameHandleReleaser = decoder0.readInterfaceRequest(24, false);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.decoderBufferPipe = decoder0.readConsumerHandle(28, false);
                 }
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
@@ -424,7 +400,9 @@ OverlayInfo overlayInfo) {
             
             encoder0.encode(this.mediaLog, 16, false);
             
-            encoder0.encode(this.decoderBufferPipe, 24, false);
+            encoder0.encode(this.videoFrameHandleReleaser, 24, false);
+            
+            encoder0.encode(this.decoderBufferPipe, 28, false);
             
             encoder0.encode(this.commandBufferId, 32, true);
         }
@@ -445,6 +423,8 @@ OverlayInfo overlayInfo) {
                 return false;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.mediaLog, other.mediaLog))
                 return false;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.videoFrameHandleReleaser, other.videoFrameHandleReleaser))
+                return false;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.decoderBufferPipe, other.decoderBufferPipe))
                 return false;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.commandBufferId, other.commandBufferId))
@@ -461,6 +441,7 @@ OverlayInfo overlayInfo) {
             int result = prime + getClass().hashCode();
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.client);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mediaLog);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoFrameHandleReleaser);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.decoderBufferPipe);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.commandBufferId);
             return result;
@@ -1220,110 +1201,6 @@ OverlayInfo overlayInfo) {
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
                                     mRequestId));
             mMessageReceiver.accept(_message);
-        }
-    }
-
-
-
-    
-    static final class VideoDecoderOnReleaseMailboxParams extends org.chromium.mojo.bindings.Struct {
-    
-        private static final int STRUCT_SIZE = 24;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
-        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public org.chromium.mojo.common.mojom.UnguessableToken releaseToken;
-        public org.chromium.gpu.mojom.SyncToken releaseSyncToken;
-    
-        private VideoDecoderOnReleaseMailboxParams(int version) {
-            super(STRUCT_SIZE, version);
-        }
-    
-        public VideoDecoderOnReleaseMailboxParams() {
-            this(0);
-        }
-    
-        public static VideoDecoderOnReleaseMailboxParams deserialize(org.chromium.mojo.bindings.Message message) {
-            return decode(new org.chromium.mojo.bindings.Decoder(message));
-        }
-    
-        /**
-         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
-         *
-         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
-         */
-        public static VideoDecoderOnReleaseMailboxParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
-            return deserialize(new org.chromium.mojo.bindings.Message(
-                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
-        }
-    
-        @SuppressWarnings("unchecked")
-        public static VideoDecoderOnReleaseMailboxParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
-            if (decoder0 == null) {
-                return null;
-            }
-            decoder0.increaseStackDepth();
-            VideoDecoderOnReleaseMailboxParams result;
-            try {
-                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new VideoDecoderOnReleaseMailboxParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                    result.releaseToken = org.chromium.mojo.common.mojom.UnguessableToken.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
-                    result.releaseSyncToken = org.chromium.gpu.mojom.SyncToken.decode(decoder1);
-                }
-            } finally {
-                decoder0.decreaseStackDepth();
-            }
-            return result;
-        }
-    
-        @SuppressWarnings("unchecked")
-        @Override
-        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
-            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-            
-            encoder0.encode(this.releaseToken, 8, false);
-            
-            encoder0.encode(this.releaseSyncToken, 16, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            VideoDecoderOnReleaseMailboxParams other = (VideoDecoderOnReleaseMailboxParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.releaseToken, other.releaseToken))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.releaseSyncToken, other.releaseSyncToken))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.releaseToken);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.releaseSyncToken);
-            return result;
         }
     }
 

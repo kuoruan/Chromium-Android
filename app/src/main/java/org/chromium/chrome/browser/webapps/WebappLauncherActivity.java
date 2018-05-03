@@ -192,7 +192,7 @@ public class WebappLauncherActivity extends Activity {
                     continue;
                 }
                 WebappActivity webappActivity = (WebappActivity) activity;
-                if (!TextUtils.equals(webappActivity.mWebappInfo.id(), info.id())) {
+                if (!TextUtils.equals(webappActivity.getWebappInfo().id(), info.id())) {
                     activity.finish();
                 }
                 break;

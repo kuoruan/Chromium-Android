@@ -36,11 +36,11 @@ android {
     sourceSets {
         main {
             java.filter.exclude(
-                    "com/google/protobuf/*.java",
-                    "com/google/protobuf/micro/*.java",
-                    "com/google/protobuf/nano/*.java",
-                    "com/google/protobuf/nano/android/*.java",
-                    "org/chromium/chrome/browser/offlinepages/evaluation/*.java"
+                "com/google/protobuf/*.java",
+                "com/google/protobuf/micro/*.java",
+                "com/google/protobuf/nano/*.java",
+                "com/google/protobuf/nano/android/*.java",
+                "org/chromium/chrome/browser/offlinepages/evaluation/*.java"
             )
         }
     }
@@ -83,6 +83,7 @@ dependencies {
     implementation project(':data_chart')
     implementation project(':media')
     implementation project(':ui')
+    implementation project(':browseractions')
     androidTestImplementation "com.android.support.test:runner:$rootProject.ext.runnerVersion"
     androidTestImplementation "com.android.support.test.espresso:espresso-core:$rootProject.ext.espressoVersion"
     testImplementation "junit:junit:$rootProject.ext.junitVersion"

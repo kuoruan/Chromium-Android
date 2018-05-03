@@ -63,6 +63,10 @@ For channels that should be created on first launch of the app, some extra steps
 - Increment `CHANNELS_VERSION` in `ChannelDefinitions.java`
 - Update startup channel tests in `ChannelsInitializerTest.java` and `ChannelsUpdaterTest.java`.
 
+Note: An optional 'description' field exists for notification channels.
+While we don't currently have any descriptions for the existing ones, it's encouraged to add them
+for newly created channels, where appropriate. See [the setDescription documentation](https://developer.android.com/reference/android/app/NotificationChannel.html#setDescription(java.lang.String)) for details.
+
 ## Testing
 
 > **Important**: As of October 2017, instrumented channel tests are not run on trybots because

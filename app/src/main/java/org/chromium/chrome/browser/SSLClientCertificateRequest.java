@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -57,6 +58,7 @@ public class SSLClientCertificateRequest {
         // Pointer to the native certificate request needed to return the results.
         private final long mNativePtr;
 
+        @SuppressLint("StaticFieldLeak") // TODO(crbug.com/799070): Fix.
         final Context mContext;
         final String mAlias;
 

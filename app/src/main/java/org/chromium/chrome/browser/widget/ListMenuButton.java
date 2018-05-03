@@ -109,6 +109,17 @@ public class ListMenuButton extends TintedImageButton {
     }
 
     /**
+     * Text that represents the item this menu button is related to.  This will affect the content
+     * description of the view {@see #setContentDescription(CharSequence)}.
+     * @param context The string representation of the list item this button represents.
+     */
+    public void setContentDescriptionContext(String context) {
+        if (context == null) context = "";
+        setContentDescription(getContext().getResources().getString(
+                R.string.accessibility_list_menu_button, context));
+    }
+
+    /**
      * Sets the delegate this menu will rely on for populating the popup menu and handling selection
      * responses.  The menu will not show or work without it.
      *
@@ -129,6 +140,7 @@ public class ListMenuButton extends TintedImageButton {
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
+        setContentDescriptionContext("");
         setOnClickListener((view) -> showMenu());
     }
 

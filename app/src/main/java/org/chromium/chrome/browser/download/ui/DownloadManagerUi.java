@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.annotation.IntDef;
 import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -17,6 +18,7 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import org.chromium.base.CollectionUtil;
 import org.chromium.base.DiscardableReferencePool;
 import org.chromium.base.FileUtils;
 import org.chromium.base.ObserverList;
@@ -56,7 +58,8 @@ import java.util.Set;
 
 public class DownloadManagerUi
         implements OnMenuItemClickListener, SearchDelegate,
-                   SelectableBottomSheetContentManager<DownloadHistoryItemWrapper> {
+                   SelectableBottomSheetContentManager<DownloadHistoryItemWrapper>,
+                   BackendProvider.UIDelegate {
     /**
      * Interface to observe the changes in the download manager ui. This should be implemented by
      * the ui components that is shown, in order to let them get proper notifications.
@@ -74,14 +77,17 @@ public class DownloadManagerUi
     }
 
     private static class DownloadBackendProvider implements BackendProvider {
-        private SelectionDelegate<DownloadHistoryItemWrapper> mSelectionDelegate;
+        private final SelectionDelegate<DownloadHistoryItemWrapper> mSelectionDelegate;
+        private final UIDelegate mUIDelegate;
         private ThumbnailProvider mThumbnailProvider;
 
-        DownloadBackendProvider(DiscardableReferencePool referencePool) {
+        DownloadBackendProvider(DiscardableReferencePool referencePool, UIDelegate uiDelegate) {
             mSelectionDelegate = new DownloadItemSelectionDelegate();
             mThumbnailProvider = new ThumbnailProviderImpl(referencePool);
+            mUIDelegate = uiDelegate;
         }
 
+        // BackendProvider implementation.
         @Override
         public DownloadDelegate getDownloadDelegate() {
             return DownloadManagerService.getDownloadManagerService();
@@ -101,6 +107,11 @@ public class DownloadManagerUi
         @Override
         public SelectionDelegate<DownloadHistoryItemWrapper> getSelectionDelegate() {
             return mSelectionDelegate;
+        }
+
+        @Override
+        public UIDelegate getUIDelegate() {
+            return mUIDelegate;
         }
 
         @Override
@@ -134,7 +145,7 @@ public class DownloadManagerUi
             // is called. Determine which files are not deleted by the #remove() call.
             for (int i = 0; i < items.size(); i++) {
                 DownloadHistoryItemWrapper wrappedItem  = items.get(i);
-                if (!wrappedItem.remove()) filesToDelete.add(wrappedItem.getFile());
+                if (!wrappedItem.removePermanently()) filesToDelete.add(wrappedItem.getFile());
             }
 
             // Delete the files associated with the download items (if necessary) using a single
@@ -154,6 +165,20 @@ public class DownloadManagerUi
             RecordUserAction.record("Android.DownloadManager.Delete");
         }
     }
+
+    // Please treat this list as append only and keep it in sync with
+    // Android.DownloadManager.Menu.Actions in enums.xml.
+    @IntDef({MENU_ACTION_CLOSE, MENU_ACTION_MULTI_DELETE, MENU_ACTION_MULTI_SHARE,
+            MENU_ACTION_SHOW_INFO, MENU_ACTION_HIDE_INFO, MENU_ACTION_SEARCH})
+    public @interface MenuAction {}
+
+    private static final int MENU_ACTION_CLOSE = 0;
+    private static final int MENU_ACTION_MULTI_DELETE = 1;
+    private static final int MENU_ACTION_MULTI_SHARE = 2;
+    private static final int MENU_ACTION_SHOW_INFO = 3;
+    private static final int MENU_ACTION_HIDE_INFO = 4;
+    private static final int MENU_ACTION_SEARCH = 5;
+    private static final int MENU_ACTION_BOUNDARY = 6;
 
     private static BackendProvider sProviderForTests;
 
@@ -190,7 +215,7 @@ public class DownloadManagerUi
         mActivity = activity;
         ChromeApplication application = (ChromeApplication) activity.getApplication();
         mBackendProvider = sProviderForTests == null
-                ? new DownloadBackendProvider(application.getReferencePool())
+                ? new DownloadBackendProvider(application.getReferencePool(), this)
                 : sProviderForTests;
         mSnackbarManager = snackbarManager;
 
@@ -249,6 +274,17 @@ public class DownloadManagerUi
      */
     public void setBasicNativePage(BasicNativePage delegate) {
         mNativePage = delegate;
+    }
+
+    // BackendProvider.UIDelegate implementation.
+    @Override
+    public void deleteItem(DownloadHistoryItemWrapper item) {
+        deleteItems(CollectionUtil.newArrayList(item));
+    }
+
+    @Override
+    public void shareItem(DownloadHistoryItemWrapper item) {
+        startShareIntent(DownloadUtils.createShareIntent(CollectionUtil.newArrayList(item)));
     }
 
     /**
@@ -312,18 +348,41 @@ public class DownloadManagerUi
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         if (item.getItemId() == R.id.close_menu_id && mIsSeparateActivity) {
+            recordMenuActionHistogram(MENU_ACTION_CLOSE);
             mActivity.finish();
             return true;
         } else if (item.getItemId() == R.id.selection_mode_delete_menu_id) {
-            deleteSelectedItems();
+            List<DownloadHistoryItemWrapper> items =
+                    mBackendProvider.getSelectionDelegate().getSelectedItems();
+            mBackendProvider.getSelectionDelegate().clearSelection();
+
+            recordMenuActionHistogram(MENU_ACTION_MULTI_DELETE);
+            RecordHistogram.recordCount100Histogram(
+                    "Android.DownloadManager.Menu.Delete.SelectedCount", items.size());
+
+            deleteItems(items);
             return true;
         } else if (item.getItemId() == R.id.selection_mode_share_menu_id) {
-            shareSelectedItems();
+            List<DownloadHistoryItemWrapper> items =
+                    mBackendProvider.getSelectionDelegate().getSelectedItems();
+            // TODO(twellington): ideally the intent chooser would be started with
+            //                    startActivityForResult() and the selection would only be cleared
+            //                    after receiving an OK response. See crbug.com/638916.
+            mBackendProvider.getSelectionDelegate().clearSelection();
+
+            recordMenuActionHistogram(MENU_ACTION_MULTI_SHARE);
+            RecordHistogram.recordCount100Histogram(
+                    "Android.DownloadManager.Menu.Share.SelectedCount", items.size());
+
+            startShareIntent(DownloadUtils.createShareIntent(items));
             return true;
         } else if (item.getItemId() == R.id.info_menu_id) {
-            enableStorageInfoHeader(!mHistoryAdapter.shouldShowStorageInfoHeader());
+            boolean showInfo = !mHistoryAdapter.shouldShowStorageInfoHeader();
+            recordMenuActionHistogram(showInfo ? MENU_ACTION_SHOW_INFO : MENU_ACTION_HIDE_INFO);
+            enableStorageInfoHeader(showInfo);
             return true;
         } else if (item.getItemId() == R.id.search_menu_id) {
+            recordMenuActionHistogram(MENU_ACTION_SEARCH);
             // The header should be removed as soon as a search is started. It will be added back in
             // DownloadHistoryAdatper#filter() when the search is ended.
             mHistoryAdapter.removeHeader();
@@ -392,20 +451,6 @@ public class DownloadManagerUi
         mHistoryAdapter.onEndSearch();
     }
 
-    private void shareSelectedItems() {
-        List<DownloadHistoryItemWrapper> selectedItems =
-                mBackendProvider.getSelectionDelegate().getSelectedItems();
-        assert selectedItems.size() > 0;
-
-        mActivity.startActivity(Intent.createChooser(createShareIntent(),
-                mActivity.getString(R.string.share_link_chooser_title)));
-
-        // TODO(twellington): ideally the intent chooser would be started with
-        //                    startActivityForResult() and the selection would only be cleared after
-        //                    receiving an OK response. See crbug.com/638916.
-        mBackendProvider.getSelectionDelegate().clearSelection();
-    }
-
     private void enableStorageInfoHeader(boolean show) {
         // Finish any running or pending animations right away.
         if (mRecyclerView.getItemAnimator() != null) {
@@ -416,30 +461,33 @@ public class DownloadManagerUi
         mToolbar.updateInfoMenuItem(true, show);
     }
 
-    /**
-     * @return An Intent to share the selected items.
-     */
-    @VisibleForTesting
-    public Intent createShareIntent() {
-        List<DownloadHistoryItemWrapper> selectedItems =
-                mBackendProvider.getSelectionDelegate().getSelectedItems();
-        return DownloadUtils.createShareIntent(selectedItems);
+    private void startShareIntent(Intent intent) {
+        mActivity.startActivity(Intent.createChooser(
+                intent, mActivity.getString(R.string.share_link_chooser_title)));
     }
 
-    private void deleteSelectedItems() {
-        List<DownloadHistoryItemWrapper> selectedItems =
-                mBackendProvider.getSelectionDelegate().getSelectedItems();
-        final List<DownloadHistoryItemWrapper> itemsToDelete = getItemsForDeletion();
+    private void deleteItems(List<DownloadHistoryItemWrapper> items) {
+        // Build a full list of items to remove for the selected items.
+        List<DownloadHistoryItemWrapper> itemsToDelete = new ArrayList<>();
 
-        mBackendProvider.getSelectionDelegate().clearSelection();
+        Set<String> filePathsToRemove = new HashSet<>();
+        CollectionUtil.forEach(items, item -> {
+            if (!filePathsToRemove.contains(item.getFilePath())) {
+                Set<DownloadHistoryItemWrapper> itemsForFilePath =
+                        mHistoryAdapter.getItemsForFilePath(item.getFilePath());
+                if (itemsForFilePath != null) itemsToDelete.addAll(itemsForFilePath);
+                filePathsToRemove.add(item.getFilePath());
+            }
+        });
 
         if (itemsToDelete.isEmpty()) return;
 
         mHistoryAdapter.markItemsForDeletion(itemsToDelete);
 
-        boolean singleItemDeleted = selectedItems.size() == 1;
-        String snackbarText = singleItemDeleted ? selectedItems.get(0).getDisplayFileName() :
-                String.format(Locale.getDefault(), "%d", selectedItems.size());
+        boolean singleItemDeleted = items.size() == 1;
+        String snackbarText = singleItemDeleted
+                ? items.get(0).getDisplayFileName()
+                : String.format(Locale.getDefault(), "%d", items.size());
         int snackbarTemplateId = singleItemDeleted ? R.string.undo_bar_delete_message
                 : R.string.undo_bar_multiple_downloads_delete_message;
 
@@ -449,26 +497,6 @@ public class DownloadManagerUi
         snackbar.setTemplateText(mActivity.getString(snackbarTemplateId));
 
         mSnackbarManager.showSnackbar(snackbar);
-    }
-
-    private List<DownloadHistoryItemWrapper> getItemsForDeletion() {
-        List<DownloadHistoryItemWrapper> selectedItems =
-                mBackendProvider.getSelectionDelegate().getSelectedItems();
-        List<DownloadHistoryItemWrapper> itemsToRemove = new ArrayList<>();
-        Set<String> filePathsToRemove = new HashSet<>();
-
-        for (DownloadHistoryItemWrapper item : selectedItems) {
-            if (!filePathsToRemove.contains(item.getFilePath())) {
-                Set<DownloadHistoryItemWrapper> itemsForFilePath =
-                        mHistoryAdapter.getItemsForFilePath(item.getFilePath());
-                if (itemsForFilePath != null) {
-                    itemsToRemove.addAll(itemsForFilePath);
-                }
-                filePathsToRemove.add(item.getFilePath());
-            }
-        }
-
-        return itemsToRemove;
     }
 
     private void dismissUndoDeletionSnackbars() {
@@ -514,5 +542,10 @@ public class DownloadManagerUi
     @VisibleForTesting
     public static void setProviderForTests(BackendProvider provider) {
         sProviderForTests = provider;
+    }
+
+    private static void recordMenuActionHistogram(@MenuAction int action) {
+        RecordHistogram.recordEnumeratedHistogram(
+                "Android.DownloadManager.Menu.Action", action, MENU_ACTION_BOUNDARY);
     }
 }

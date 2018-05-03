@@ -156,7 +156,7 @@ public class PostMessageHandler
      *         not necessarily that the postMessage was successful.
      */
     public int postMessageFromClientApp(final String message) {
-        if (mChannel == null || !mChannel[0].isReady() || mChannel[0].isClosed()) {
+        if (mChannel == null || mChannel[0].isClosed()) {
             return CustomTabsService.RESULT_FAILURE_MESSAGING_ERROR;
         }
         if (mWebContents == null || mWebContents.isDestroyed()) {

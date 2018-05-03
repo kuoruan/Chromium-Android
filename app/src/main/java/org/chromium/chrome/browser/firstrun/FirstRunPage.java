@@ -5,79 +5,22 @@
 package org.chromium.chrome.browser.firstrun;
 
 import android.app.Fragment;
-import android.content.Context;
-import android.os.Bundle;
 
 /**
- * A first run page shown in the First Run ViewPager.
+ * Represents first run page shown during the First Run. Actual page implementation is created
+ * lazily by {@link #instantiateFragment()}.
+ * @param <T> the type of the fragment that displays this FRE page.
  */
-public class FirstRunPage extends Fragment {
-    private Bundle mProperties = new Bundle();
-
+public interface FirstRunPage<T extends Fragment & FirstRunFragment> {
     /**
      * @return Whether this page should be skipped on the FRE creation.
-     * @param appContext An application context.
      */
-    public boolean shouldSkipPageOnCreate(Context appContext) {
-        return false;
-    }
-
-    // Fragment:
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (savedInstanceState != null) {
-            mProperties = savedInstanceState;
-        } else if (getArguments() != null) {
-            mProperties = getArguments();
-        } else {
-            mProperties = new Bundle();
-        }
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putAll(mProperties);
-    }
-
-    /**
-     * @return Whether the back button press was handled by this page.
-     */
-    public boolean interceptBackPressed() {
+    default boolean shouldSkipPageOnCreate() {
         return false;
     }
 
     /**
-     * @return Whether the page should be re-created when notifyDataSetChanged() fires.
+     * Creates fragment that implements this FRE page.
      */
-    public boolean shouldRecreatePageOnDataChange() {
-        return true;
-    }
-
-    /**
-     * @return Passed arguments if any, or saved instance state if any, or an empty bundle.
-     */
-    protected Bundle getProperties() {
-        return mProperties;
-    }
-
-    /**
-     * @return The interface to the host.
-     */
-    protected FirstRunPageDelegate getPageDelegate() {
-        return (FirstRunPageDelegate) getActivity();
-    }
-
-    /**
-     * Advances to the next FRE page.
-     */
-    protected void advanceToNextPage() {
-        getPageDelegate().advanceToNextPage();
-    }
-
-    /**
-     * Notifies this page that native has been initialized.
-     */
-    protected void onNativeInitialized() {}
+    T instantiateFragment();
 }

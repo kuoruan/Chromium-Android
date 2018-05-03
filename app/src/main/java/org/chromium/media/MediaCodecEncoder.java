@@ -9,7 +9,6 @@ import android.util.SparseArray;
 
 import org.chromium.base.Log;
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.media.MediaCodecUtil.BitrateAdjustmentTypes;
 
 import java.nio.ByteBuffer;
 
@@ -29,9 +28,8 @@ class MediaCodecEncoder extends MediaCodecBridge {
     // SPS and PPS NALs (Config frame).
     private ByteBuffer mConfigData = null;
 
-    protected MediaCodecEncoder(MediaCodec mediaCodec, String mime,
-            boolean adaptivePlaybackSupported, BitrateAdjustmentTypes bitrateAdjustmentType) {
-        super(mediaCodec, mime, adaptivePlaybackSupported, bitrateAdjustmentType);
+    protected MediaCodecEncoder(MediaCodec mediaCodec, BitrateAdjuster bitrateAdjuster) {
+        super(mediaCodec, bitrateAdjuster);
     }
 
     @Override
@@ -76,7 +74,7 @@ class MediaCodecEncoder extends MediaCodecBridge {
                         spsData.append(Integer.toHexString(mConfigData.get(i) & 0xff)).append(" ");
                     }
                     Log.i(TAG, "spsData: %s", spsData.toString());
-                    mConfigData.rewind();
+
                     // Release buffer back.
                     mMediaCodec.releaseOutputBuffer(indexOrStatus, false);
                     // Query next output.
@@ -100,6 +98,7 @@ class MediaCodecEncoder extends MediaCodecBridge {
                             mConfigData.capacity(), info.size);
                     // For encoded key frame append SPS and PPS NALs at the start.
                     frameBuffer = ByteBuffer.allocateDirect(mConfigData.capacity() + info.size);
+                    mConfigData.rewind();
                     frameBuffer.put(mConfigData);
                     frameBuffer.put(codecOutputBuffer);
                     frameBuffer.rewind();

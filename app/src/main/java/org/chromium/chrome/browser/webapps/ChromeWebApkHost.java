@@ -11,7 +11,6 @@ import org.chromium.base.ApplicationStatus;
 import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.ThreadUtils;
-import org.chromium.base.library_loader.LibraryLoader;
 import org.chromium.chrome.browser.ChromeVersionInfo;
 import org.chromium.webapk.lib.client.WebApkIdentityServiceClient;
 import org.chromium.webapk.lib.client.WebApkValidator;
@@ -30,11 +29,6 @@ public class ChromeWebApkHost {
             // Tell the WebApkValidator to work for all WebAPKs.
             WebApkValidator.disableValidationForTesting();
         }
-    }
-
-    /* Returns whether launching renderer in WebAPK process is enabled by Chrome. */
-    public static boolean canLaunchRendererInWebApkProcess() {
-        return LibraryLoader.isInitialized() && nativeCanLaunchRendererInWebApkProcess();
     }
 
     /**
@@ -68,6 +62,4 @@ public class ChromeWebApkHost {
         WebApkIdentityServiceClient.getInstance().checkBrowserBacksWebApkAsync(
                 ContextUtils.getApplicationContext(), webApkPackageName, callback);
     }
-
-    private static native boolean nativeCanLaunchRendererInWebApkProcess();
 }

@@ -14,7 +14,7 @@ import android.widget.FrameLayout;
 
 import org.chromium.chrome.browser.compositor.layouts.phone.stack.StackAnimation.OverviewAnimationType;
 import org.chromium.chrome.browser.tab.Tab;
-import org.chromium.chrome.browser.tabmodel.TabModel;
+import org.chromium.chrome.browser.tabmodel.TabList;
 import org.chromium.ui.base.LocalizationUtils;
 import org.chromium.ui.interpolators.BakedBezierInterpolator;
 
@@ -47,18 +47,18 @@ public class StackViewAnimation {
      *                   method is called.
      * @param tabs       The tabs that make up the current stack.
      * @param container  The {@link ViewGroup} that {@link View}s can be added to/removed from.
-     * @param model      The {@link TabModel} that this animation will influence.
+     * @param list       The {@link TabList} that this animation will influence.
      * @param focusIndex The index of the tab that is the focus of this animation.
      * @return           The resulting {@link Animator} that will animate the Android views.
      */
     public Animator createAnimatorForType(OverviewAnimationType type, StackTab[] tabs,
-            ViewGroup container, TabModel model, int focusIndex) {
+            ViewGroup container, TabList list, int focusIndex) {
         Animator animator = null;
 
-        if (model != null) {
+        if (list != null) {
             switch (type) {
                 case NEW_TAB_OPENED:
-                    animator = createNewTabOpenedAnimator(tabs, container, model, focusIndex);
+                    animator = createNewTabOpenedAnimator(tabs, container, list, focusIndex);
                     break;
                 default:
                     break;
@@ -69,8 +69,8 @@ public class StackViewAnimation {
     }
 
     private Animator createNewTabOpenedAnimator(
-            StackTab[] tabs, ViewGroup container, TabModel model, int focusIndex) {
-        Tab tab = model.getTabAt(focusIndex);
+            StackTab[] tabs, ViewGroup container, TabList list, int focusIndex) {
+        Tab tab = list.getTabAt(focusIndex);
         if (tab == null || !tab.isNativePage()) return null;
 
         View view = tab.getView();

@@ -63,6 +63,16 @@ public final class StrictModeContext implements Closeable {
         return new StrictModeContext(oldPolicy);
     }
 
+    /**
+     * Convenience method for disabling StrictMode for slow calls with try-with-resources.
+     */
+    public static StrictModeContext allowSlowCalls() {
+        StrictMode.ThreadPolicy oldPolicy = StrictMode.getThreadPolicy();
+        StrictMode.setThreadPolicy(
+                new StrictMode.ThreadPolicy.Builder(oldPolicy).permitCustomSlowCalls().build());
+        return new StrictModeContext(oldPolicy);
+    }
+
     @Override
     public void close() {
         if (mThreadPolicy != null) {

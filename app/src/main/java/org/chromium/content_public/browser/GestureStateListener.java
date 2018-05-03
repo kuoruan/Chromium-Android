@@ -81,6 +81,11 @@ public interface GestureStateListener {
     default public void onWindowFocusChanged(boolean hasWindowFocus) {}
 
     /**
+     * Called when a long press gesture event was processed by the rendereer.
+     */
+    default public void onLongPress() {}
+
+    /**
      * Called when the gesture source is being destroyed.
      */
     default public void onDestroyed() {}

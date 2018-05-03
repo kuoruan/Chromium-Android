@@ -79,8 +79,8 @@ public class CustomNotificationBuilder extends NotificationBuilderBase {
 
     private final Context mContext;
 
-    public CustomNotificationBuilder(Context context, String channelId) {
-        super(context.getResources(), channelId);
+    public CustomNotificationBuilder(Context context) {
+        super(context.getResources());
         mContext = context;
     }
 

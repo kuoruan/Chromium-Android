@@ -19,23 +19,28 @@ class ProvisionFetcher_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<ProvisionFetcher, ProvisionFetcher.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<ProvisionFetcher, ProvisionFetcher.Proxy>() {
     
+        @Override
         public String getName() {
             return "media::mojom::ProvisionFetcher";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, ProvisionFetcher impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public ProvisionFetcher[] buildArray(int size) {
           return new ProvisionFetcher[size];
         }

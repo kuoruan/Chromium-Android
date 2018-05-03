@@ -1314,6 +1314,25 @@ public class ContextualSearchUma {
         }
     }
 
+    /** Logs that Ranker recorded a set of features for training or inference. */
+    public static void logRecordedFeaturesToRanker() {
+        logRecordedToRanker(false);
+    }
+
+    /** Logs that Ranker recorded a set of outcomes for training or inference. */
+    public static void logRecordedOutcomesToRanker() {
+        logRecordedToRanker(true);
+    }
+
+    /**
+     * Logs that Ranker recorded some data for training or inference.
+     * @param areOutcomes Whether the data are outcomes.
+     */
+    private static void logRecordedToRanker(boolean areOutcomes) {
+        RecordHistogram.recordBooleanHistogram(
+                "Search.ContextualSearch.Ranker.Recorded", areOutcomes);
+    }
+
     /**
      * Gets the state-change code for the given parameters by doing a lookup in the given map.
      * @param state The panel state.

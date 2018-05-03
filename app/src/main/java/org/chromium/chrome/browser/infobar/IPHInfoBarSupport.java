@@ -149,9 +149,7 @@ class IPHInfoBarSupport implements OnDismissListener, InfoBarContainer.InfoBarAn
     // PopupWindow.OnDismissListener implementation.
     @Override
     public void onDismiss() {
-        // Helper for crbug.com/786916 to catch why we are getting two dismiss calls in a row.
         if (mCurrentState == null) return;
-        assert mCurrentState != null;
         mDelegate.onPopupDismissed(mCurrentState);
         mCurrentState = null;
     }

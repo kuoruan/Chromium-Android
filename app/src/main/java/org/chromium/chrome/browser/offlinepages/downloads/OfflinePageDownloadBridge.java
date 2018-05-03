@@ -18,7 +18,6 @@ import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
 import org.chromium.chrome.browser.tabmodel.document.AsyncTabCreationParams;
 import org.chromium.chrome.browser.tabmodel.document.TabDelegate;
-import org.chromium.content_public.browser.LoadUrlParams;
 
 /**
  * Serves as an interface between Download Home UI and offline page related items that are to be
@@ -67,14 +66,15 @@ public class OfflinePageDownloadBridge {
      */
     @CalledByNative
     private static void openItem(String url, long offlineId) {
-        LoadUrlParams params =
-                OfflinePageUtils.getLoadUrlParamsForOpeningOfflineVersion(url, offlineId);
-        ComponentName componentName = getComponentName();
-        AsyncTabCreationParams asyncParams = componentName == null
-                ? new AsyncTabCreationParams(params)
-                : new AsyncTabCreationParams(params, componentName);
-        final TabDelegate tabDelegate = new TabDelegate(false);
-        tabDelegate.createNewTab(asyncParams, TabLaunchType.FROM_CHROME_UI, Tab.INVALID_TAB_ID);
+        OfflinePageUtils.getLoadUrlParamsForOpeningOfflineVersion(url, offlineId, (params) -> {
+            if (params == null) return;
+            ComponentName componentName = getComponentName();
+            AsyncTabCreationParams asyncParams = componentName == null
+                    ? new AsyncTabCreationParams(params)
+                    : new AsyncTabCreationParams(params, componentName);
+            final TabDelegate tabDelegate = new TabDelegate(false);
+            tabDelegate.createNewTab(asyncParams, TabLaunchType.FROM_CHROME_UI, Tab.INVALID_TAB_ID);
+        });
     }
 
     /**

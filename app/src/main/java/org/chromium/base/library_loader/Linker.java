@@ -10,7 +10,6 @@ import android.os.Parcel;
 import android.os.ParcelFileDescriptor;
 import android.os.Parcelable;
 
-import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.AccessedByNative;
 
@@ -153,7 +152,7 @@ public abstract class Linker {
     private static final String LINKER_JNI_LIBRARY = "chromium_android_linker";
 
     // Constants used to control the behaviour of the browser process with
-    // regards to the shared RELRO section. Not applicable to ModernLinker.
+    // regards to the shared RELRO section.
     //   NEVER        -> The browser never uses it itself.
     //   LOW_RAM_ONLY -> It is only used on devices with low RAM.
     //   ALWAYS       -> It is always used.
@@ -164,13 +163,12 @@ public abstract class Linker {
 
     // Configuration variable used to control how the browser process uses the
     // shared RELRO. Only change this while debugging linker-related issues.
-    // Not used by ModernLinker.
     // NOTE: This variable's name is known and expected by the Linker test scripts.
     public static final int BROWSER_SHARED_RELRO_CONFIG =
             BROWSER_SHARED_RELRO_CONFIG_LOW_RAM_ONLY;
 
     // Constants used to control the memory device config. Can be set explicitly
-    // by setMemoryDeviceConfigForTesting(). Not applicable to ModernLinker.
+    // by setMemoryDeviceConfigForTesting().
     //   INIT         -> Value is undetermined (will check at runtime).
     //   LOW          -> This is a low-memory device.
     //   NORMAL       -> This is not a low-memory device.
@@ -181,7 +179,6 @@ public abstract class Linker {
     // Indicates if this is a low-memory device or not. The default is to
     // determine this by probing the system at runtime, but this can be forced
     // for testing by calling setMemoryDeviceConfigForTesting().
-    // Not used by ModernLinker.
     protected int mMemoryDeviceConfig = MEMORY_DEVICE_CONFIG_INIT;
 
     // Set to true to enable debug logs.
@@ -208,13 +205,6 @@ public abstract class Linker {
     // ensure that we don't try to load outside the area originally requested.
     protected static final int ADDRESS_SPACE_RESERVATION = 192 * 1024 * 1024;
 
-    // Constants used to indicate a given Linker implementation, for testing.
-    //   LEGACY       -> Always uses the LegacyLinker implementation.
-    //   MODERN       -> Always uses the ModernLinker implementation.
-    // NOTE: These names are known and expected by the Linker test scripts.
-    public static final int LINKER_IMPLEMENTATION_LEGACY = 1;
-    public static final int LINKER_IMPLEMENTATION_MODERN = 2;
-
     // Singleton.
     private static Linker sSingleton;
     private static Object sSingletonLock = new Object();
@@ -223,35 +213,26 @@ public abstract class Linker {
     protected Linker() { }
 
     /**
-     * Get singleton instance. Returns either a LegacyLinker or a ModernLinker.
+     * Get singleton instance. Returns a LegacyLinker.
      *
-     * Returns a ModernLinker if running on Android M or later, otherwise returns
-     * a LegacyLinker.
+     * On N+ Monochrome is selected by Play Store. With Monochrome this code is not used, instead
+     * Chrome asks the WebView to provide the library (and the shared RELRO). If the WebView fails
+     * to provide the library, the system linker is used as a fallback.
      *
-     * ModernLinker requires OS features from Android M and later: a system linker
-     * that handles packed relocations and load from APK, and android_dlopen_ext()
-     * for shared RELRO support. It cannot run on Android releases earlier than M.
-     *
-     * LegacyLinker runs on all Android releases but it is slower and more complex
-     * than ModernLinker, so ModernLinker is preferred for Android M and later.
+     * LegacyLinker runs on all Android releases, but is incompatible with GVR library on N+.
+     * LegacyLinker is preferred on M- because it does not write the shared RELRO to disk at
+     * almost every cold startup.
      *
      * @return the Linker implementation instance.
      */
     public static final Linker getInstance() {
+        // TODO(pasko): The linker is created dynamically for historical reasons. Formerly there was
+        // a runtime choice between LegacyLinker and ModernLinker. To simplify, move the
+        // LegacyLinker logic into the Linker.
         synchronized (sSingletonLock) {
             if (sSingleton == null) {
-                // With incremental install, it's important to fall back to the "normal"
-                // library loading path in order for the libraries to be found.
-                String appClass =
-                        ContextUtils.getApplicationContext().getApplicationInfo().className;
-                boolean isIncrementalInstall =
-                        appClass != null && appClass.contains("incrementalinstall");
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !isIncrementalInstall) {
-                    sSingleton = ModernLinker.create();
-                } else {
-                    sSingleton = LegacyLinker.create();
-                }
-                Log.i(TAG, "Using linker: " + sSingleton.getClass().getName());
+                sSingleton = LegacyLinker.create();
+                Log.i(TAG, "Using linker: LegacyLinker");
             }
             return sSingleton;
         }
@@ -289,56 +270,6 @@ public abstract class Linker {
     private static void assertLinkerTestsAreEnabled() {
         if (!NativeLibraries.sEnableLinkerTests) {
             throw new AssertionError("Testing method called in non-testing context");
-        }
-    }
-
-    /**
-     * Set Linker implementation type.
-     * For testing. Sets either a LegacyLinker or a ModernLinker. Must be called
-     * before getInstance().
-     *
-     * @param type LINKER_IMPLEMENTATION_LEGACY or LINKER_IMPLEMENTATION_MODERN
-     */
-    public static final void setImplementationForTesting(int type) {
-        // Sanity check. This method may only be called during tests.
-        assertLinkerTestsAreEnabled();
-        assertForTesting(type == LINKER_IMPLEMENTATION_LEGACY
-                         || type == LINKER_IMPLEMENTATION_MODERN);
-
-        synchronized (sSingletonLock) {
-            assertForTesting(sSingleton == null);
-
-            if (type == LINKER_IMPLEMENTATION_MODERN) {
-                sSingleton = ModernLinker.create();
-            } else if (type == LINKER_IMPLEMENTATION_LEGACY) {
-                sSingleton = LegacyLinker.create();
-            }
-            Log.i(TAG, "Forced linker: " + sSingleton.getClass().getName());
-        }
-    }
-
-    /**
-     * Get Linker implementation type.
-     * For testing.
-     *
-     * @return LINKER_IMPLEMENTATION_LEGACY or LINKER_IMPLEMENTATION_MODERN
-     */
-    public final int getImplementationForTesting() {
-        // Sanity check. This method may only be called during tests.
-        assertLinkerTestsAreEnabled();
-
-        synchronized (sSingletonLock) {
-            assertForTesting(sSingleton == this);
-
-            if (sSingleton instanceof ModernLinker) {
-                return LINKER_IMPLEMENTATION_MODERN;
-            } else if (sSingleton instanceof LegacyLinker) {
-                return LINKER_IMPLEMENTATION_LEGACY;
-            } else {
-                Log.wtf(TAG, "Invalid linker: " + sSingleton.getClass().getName());
-                assertForTesting(false);
-            }
-            return 0;
         }
     }
 
@@ -397,32 +328,30 @@ public abstract class Linker {
     }
 
     /**
-     * Set up the Linker for a test.
-     * Convenience function that calls setImplementationForTesting() to force an
-     * implementation, and then setTestRunnerClassNameForTesting() to set the test
-     * class name.
+     * Sets the test class name.
      *
-     * On first call, instantiates a Linker of the requested type and sets its test
-     * runner class name. On subsequent calls, checks that the singleton produced by
-     * the first call matches the requested type and test runner class name.
+     * On the first call, instantiates a Linker and sets its test runner class name. On subsequent
+     * calls, checks that the singleton produced by the first call matches the test runner class
+     * name.
      */
-    public static final void setupForTesting(int type, String testRunnerClassName) {
+    public static final void setupForTesting(String testRunnerClassName) {
         if (DEBUG) {
-            Log.i(TAG, "setupForTesting(" + type + ", " + testRunnerClassName + ") called");
+            Log.i(TAG, "setupForTesting(" + testRunnerClassName + ") called");
         }
         // Sanity check. This method may only be called during tests.
         assertLinkerTestsAreEnabled();
 
         synchronized (sSingletonLock) {
-            // If this is the first call, configure the Linker to the given type and test class.
+            // If this is the first call, instantiate the Linker and the test class.
             if (sSingleton == null) {
-                setImplementationForTesting(type);
+                assertLinkerTestsAreEnabled();
+                assertForTesting(sSingleton == null);
+                sSingleton = LegacyLinker.create();
                 sSingleton.setTestRunnerClassNameForTesting(testRunnerClassName);
                 return;
             }
 
             // If not the first call, check that the Linker configuration matches this request.
-            assertForTesting(sSingleton.getImplementationForTesting() == type);
             String ourTestRunnerClassName = sSingleton.getTestRunnerClassNameForTesting();
             if (testRunnerClassName == null) {
                 assertForTesting(ourTestRunnerClassName == null);
@@ -518,6 +447,7 @@ public abstract class Linker {
      * Load the Linker JNI library. Throws UnsatisfiedLinkError on error.
      */
     protected static void loadLinkerJniLibrary() {
+        LibraryLoader.setEnvForNative();
         String libName = "lib" + LINKER_JNI_LIBRARY + ".so";
         if (DEBUG) {
             Log.i(TAG, "Loading " + libName);
@@ -596,7 +526,7 @@ public abstract class Linker {
      */
     public static boolean isInZipFile() {
         // The auto-generated NativeLibraries.sUseLibraryInZipFile variable will be true
-        // if the library remains embedded in the APK zip file on the target.
+        // iff the library remains embedded in the APK zip file on the target.
         return NativeLibraries.sUseLibraryInZipFile;
     }
 
@@ -606,6 +536,19 @@ public abstract class Linker {
      * libraries instead.
      */
     public static boolean isUsed() {
+        // A non-monochrome APK (such as ChromePublic.apk or ChromeModernPublic.apk) on N+ cannot
+        // use the LegacyLinker because the latter is incompatible with the GVR library. Fall back
+        // to using System.loadLibrary() or System.load() at the cost of no RELRO sharing.
+        //
+        // A non-monochrome APK (such as ChromePublic.apk) can be installed on N+ in these
+        // circumstances:
+        // * installing APK manually
+        // * after OTA from M to N
+        // * side-installing Chrome (possibly from another release channel)
+        // * Play Store bugs leading to incorrect APK flavor being installed
+        //
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) return false;
+
         // The auto-generated NativeLibraries.sUseLinker variable will be true if the
         // build has not explicitly disabled Linker features.
         return NativeLibraries.sUseLinker;

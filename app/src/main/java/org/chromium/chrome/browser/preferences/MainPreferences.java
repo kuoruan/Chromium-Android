@@ -39,6 +39,7 @@ public class MainPreferences extends PreferenceFragment
     public static final String PREF_DATA_REDUCTION = "data_reduction";
     public static final String PREF_NOTIFICATIONS = "notifications";
     public static final String PREF_LANGUAGES = "languages";
+    public static final String PREF_DOWNLOADS = "downloads";
 
     private final ManagedPreferenceDelegate mManagedPreferenceDelegate;
     private final Map<String, Preference> mAllPreferences = new HashMap<>();
@@ -130,6 +131,11 @@ public class MainPreferences extends PreferenceFragment
         if (!TemplateUrlService.getInstance().isLoaded()) {
             TemplateUrlService.getInstance().registerLoadListener(this);
             TemplateUrlService.getInstance().load();
+        }
+
+        // This checks whether the flag for Downloads Preferences is enabled.
+        if (!ChromeFeatureList.isEnabled(ChromeFeatureList.DOWNLOADS_LOCATION_CHANGE)) {
+            getPreferenceScreen().removePreference(findPreference(PREF_DOWNLOADS));
         }
     }
 

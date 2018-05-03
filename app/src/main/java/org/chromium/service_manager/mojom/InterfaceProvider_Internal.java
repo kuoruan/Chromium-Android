@@ -19,23 +19,28 @@ class InterfaceProvider_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<InterfaceProvider, InterfaceProvider.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<InterfaceProvider, InterfaceProvider.Proxy>() {
     
+        @Override
         public String getName() {
             return "service_manager::mojom::InterfaceProvider";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, InterfaceProvider impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public InterfaceProvider[] buildArray(int size) {
           return new InterfaceProvider[size];
         }

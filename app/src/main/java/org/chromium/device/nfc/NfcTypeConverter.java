@@ -9,6 +9,7 @@ import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.os.Build;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Log;
 import org.chromium.device.mojom.NfcMessage;
 import org.chromium.device.mojom.NfcRecord;
@@ -42,7 +43,8 @@ public final class NfcTypeConverter {
             for (int i = 0; i < message.data.length; ++i) {
                 records.add(toNdefRecord(message.data[i]));
             }
-            records.add(NdefRecord.createExternal(DOMAIN, TYPE, message.url.getBytes("UTF-8")));
+            records.add(NdefRecord.createExternal(
+                    DOMAIN, TYPE, ApiCompatibilityUtils.getBytesUtf8(message.url)));
             NdefRecord[] ndefRecords = new NdefRecord[records.size()];
             records.toArray(ndefRecords);
             return new NdefMessage(ndefRecords);
@@ -63,7 +65,8 @@ public final class NfcTypeConverter {
 
         for (int i = 0; i < ndefRecords.length; i++) {
             if ((ndefRecords[i].getTnf() == NdefRecord.TNF_EXTERNAL_TYPE)
-                    && (Arrays.equals(ndefRecords[i].getType(), WEBNFC_URN.getBytes("UTF-8")))) {
+                    && (Arrays.equals(ndefRecords[i].getType(),
+                               ApiCompatibilityUtils.getBytesUtf8(WEBNFC_URN)))) {
                 nfcMessage.url = new String(ndefRecords[i].getPayload(), "UTF-8");
                 continue;
             }
@@ -165,7 +168,7 @@ public final class NfcTypeConverter {
         NfcRecord nfcRecord = new NfcRecord();
         nfcRecord.recordType = NfcRecordType.URL;
         nfcRecord.mediaType = TEXT_MIME;
-        nfcRecord.data = uri.toString().getBytes();
+        nfcRecord.data = ApiCompatibilityUtils.getBytesUtf8(uri.toString());
         return nfcRecord;
     }
 

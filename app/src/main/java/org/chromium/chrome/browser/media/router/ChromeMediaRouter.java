@@ -46,8 +46,9 @@ public class ChromeMediaRouter implements MediaRouteManager {
                 }
             };
 
-    // The pointer to the native object. Can be null only during tests.
-    private final long mNativeMediaRouterAndroidBridge;
+    // The pointer to the native object. Can be null during tests, or when the
+    // native object has been destroyed.
+    private long mNativeMediaRouterAndroidBridge;
     private final List<MediaRouteProvider> mRouteProviders = new ArrayList<MediaRouteProvider>();
     private final Map<String, MediaRouteProvider> mRouteIdsToProviders =
             new HashMap<String, MediaRouteProvider>();
@@ -173,12 +174,16 @@ public class ChromeMediaRouter implements MediaRouteManager {
 
     @Override
     public void onMessageSentResult(boolean success, int callbackId) {
-        nativeOnMessageSentResult(mNativeMediaRouterAndroidBridge, success, callbackId);
+        if (mNativeMediaRouterAndroidBridge != 0) {
+            nativeOnMessageSentResult(mNativeMediaRouterAndroidBridge, success, callbackId);
+        }
     }
 
     @Override
     public void onMessage(String mediaRouteId, String message) {
-        nativeOnMessage(mNativeMediaRouterAndroidBridge, mediaRouteId, message);
+        if (mNativeMediaRouterAndroidBridge != 0) {
+            nativeOnMessage(mNativeMediaRouterAndroidBridge, mediaRouteId, message);
+        }
     }
 
     /**
@@ -354,6 +359,15 @@ public class ChromeMediaRouter implements MediaRouteManager {
     @VisibleForTesting
     protected ChromeMediaRouter(long nativeMediaRouterAndroidBridge) {
         mNativeMediaRouterAndroidBridge = nativeMediaRouterAndroidBridge;
+    }
+
+    /**
+     * Called when the native object is being destroyed.
+     */
+    @CalledByNative
+    public void teardown() {
+        // The native object has been destroyed.
+        mNativeMediaRouterAndroidBridge = 0;
     }
 
     private MediaSink getSink(String sourceId, int index) {

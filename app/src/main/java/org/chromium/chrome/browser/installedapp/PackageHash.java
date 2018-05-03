@@ -4,11 +4,11 @@
 
 package org.chromium.chrome.browser.installedapp;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.content.browser.crypto.ByteArrayGenerator;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -52,13 +52,7 @@ class PackageHash {
             throw new RuntimeException(e);
         }
 
-        byte[] packageNameBytes;
-        try {
-            packageNameBytes = packageName.getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            // Should never happen.
-            throw new RuntimeException(e);
-        }
+        byte[] packageNameBytes = ApiCompatibilityUtils.getBytesUtf8(packageName);
 
         Key key = new SecretKeySpec(salt, "HmacSHA256");
         try {

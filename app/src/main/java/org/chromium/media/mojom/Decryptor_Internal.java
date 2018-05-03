@@ -19,23 +19,28 @@ class Decryptor_Internal {
     public static final org.chromium.mojo.bindings.Interface.Manager<Decryptor, Decryptor.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<Decryptor, Decryptor.Proxy>() {
     
+        @Override
         public String getName() {
             return "media::mojom::Decryptor";
         }
     
+        @Override
         public int getVersion() {
           return 0;
         }
     
+        @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
     
+        @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, Decryptor impl) {
             return new Stub(core, impl);
         }
     
+        @Override
         public Decryptor[] buildArray(int size) {
           return new Decryptor[size];
         }

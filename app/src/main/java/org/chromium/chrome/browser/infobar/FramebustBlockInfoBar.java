@@ -27,7 +27,7 @@ public class FramebustBlockInfoBar extends InfoBar {
 
     @VisibleForTesting
     public FramebustBlockInfoBar(String blockedUrl) {
-        super(R.drawable.infobar_redirect_blocked, null, null);
+        super(R.drawable.infobar_chrome, null, null);
         mBlockedUrl = blockedUrl;
     }
 
@@ -61,7 +61,7 @@ public class FramebustBlockInfoBar extends InfoBar {
         ellipsizerView.setOnClickListener(view -> onLinkClicked());
 
         control.addView(ellipsizerView);
-        layout.setButtons(getContext().getResources().getString(R.string.ok), null);
+        layout.setButtons(getContext().getResources().getString(R.string.got_it), null);
     }
 
     @Override
@@ -86,6 +86,11 @@ public class FramebustBlockInfoBar extends InfoBar {
         }
 
         super.onLinkClicked();
+    }
+
+    @VisibleForTesting
+    public String getBlockedUrl() {
+        return mBlockedUrl;
     }
 
     private String getString(@StringRes int stringResId) {
