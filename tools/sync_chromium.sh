@@ -2,7 +2,7 @@
 
 set -e
 
-PRO_DIR="$(pwd)/Project"
+PRO_DIR="$(pwd)/Chromium"
 BASE_DIR="/root/build/src"
 RELEASE_DIR="${BASE_DIR}/out/Release"
 APP_DIR="${PRO_DIR}/app"
@@ -106,6 +106,21 @@ sync_media() {
 		"${MODULES_DIR}/media/src/main/res"
 }
 
+sync_customtabs() {
+	mkdir -p ${MODULES_DIR}/browseractions/src/main/res
+
+	cp -r ${BASE_DIR}/third_party/custom_tabs_client/src/customtabs/src/* \
+		"${APP_DIR}/src/main/java"
+
+	cp -r ${BASE_DIR}/third_party/custom_tabs_client/src/customtabs/res/* \
+		"${MODULES_DIR}/browseractions/src/main/res"
+
+	local custom_tabs_aidl="${APP_DIR}/src/main/aidl/android/support/customtabs"
+	mkdir -p "$custom_tabs_aidl"
+	mv -f ${APP_DIR}/src/main/java/android/support/customtabs/*.aidl \
+		"$custom_tabs_aidl"
+}
+
 sync_chrome() {
 	mkdir -p ${APP_DIR}/{src/main/{java,res,aidl},libs}
 	local src_dir="${APP_DIR}/src/main/java"
@@ -150,7 +165,6 @@ sync_chrome() {
 		${BASE_DIR}/third_party/android_protobuf/src/java/src/main/java/* \
 		${BASE_DIR}/third_party/android_swipe_refresh/java/src/* \
 		${BASE_DIR}/third_party/cacheinvalidation/src/java/* \
-		${BASE_DIR}/third_party/custom_tabs_client/src/customtabs/src/* \
 		${BASE_DIR}/third_party/gif_player/src/* \
 		"$src_dir"
 
@@ -175,11 +189,6 @@ sync_chrome() {
 		${RELEASE_DIR}/gen/base/base_build_config_gen/java_cpp_template/* \
 		${RELEASE_DIR}/gen/net/android/net_errors_java/java_cpp_template/* \
 		"$src_dir"
-
-	local custom_tabs_aidl="${APP_DIR}/src/main/aidl/android/support/customtabs"
-	mkdir -p "$custom_tabs_aidl"
-	mv -f ${APP_DIR}/src/main/java/android/support/customtabs/*.aidl \
-		"$custom_tabs_aidl"
 }
 
 sync_assets() {
@@ -243,6 +252,7 @@ do_sync() {
 	sync_data_chart
 	sync_components
 	sync_content
+	sync_customtabs
 
 	sync_assets
 	sync_libs
