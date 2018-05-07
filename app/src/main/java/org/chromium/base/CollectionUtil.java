@@ -4,6 +4,7 @@
 
 package org.chromium.base;
 
+import android.support.annotation.NonNull;
 import android.util.Pair;
 
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -53,6 +55,22 @@ public final class CollectionUtil {
             map.put(entry.first, entry.second);
         }
         return map;
+    }
+
+    public static int[] integerListToIntArray(@NonNull List<Integer> list) {
+        int[] array = new int[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            array[i] = list.get(i);
+        }
+        return array;
+    }
+
+    public static long[] longListToLongArray(@NonNull List<Long> list) {
+        long[] array = new long[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            array[i] = list.get(i);
+        }
+        return array;
     }
 
     // This is a utility helper method that adds functionality available in API 24 (see

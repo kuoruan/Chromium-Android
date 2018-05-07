@@ -227,6 +227,14 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
     }
 
     /**
+     * Releases cached title texture resources for the {@link LayoutTab}.
+     * @param layoutTab The {@link LayoutTab} to release resources for.
+     */
+    public void releaseResourcesForTab(LayoutTab layoutTab) {
+        mUpdateHost.releaseResourcesForTab(layoutTab.getId());
+    }
+
+    /**
      * Update the animation and give chance to cascade the changes.
      * @param time The current time of the app in ms.
      * @param dt   The delta time between update frames in ms.

@@ -4,7 +4,7 @@
 
 package org.chromium.components.payments;
 
-/** Java equivalent of components/payments/content/web_app_manifest_section.h */
+/** Java equivalent of components/payments/content/web_app_manifest.h:WebAppManifestSection */
 public final class WebAppManifestSection {
     /**
      * Constructor that does not set the fingerprints. They have to be set after the object is

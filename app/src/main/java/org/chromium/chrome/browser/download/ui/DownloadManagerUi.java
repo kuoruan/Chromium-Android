@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.annotation.IntDef;
 import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v7.widget.LinearLayoutManager;
@@ -22,6 +23,7 @@ import org.chromium.base.CollectionUtil;
 import org.chromium.base.DiscardableReferencePool;
 import org.chromium.base.FileUtils;
 import org.chromium.base.ObserverList;
+import org.chromium.base.TraceEvent;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
@@ -35,7 +37,6 @@ import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.snackbar.Snackbar;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;
 import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarController;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.ThumbnailProvider;
 import org.chromium.chrome.browser.widget.ThumbnailProviderImpl;
 import org.chromium.chrome.browser.widget.selection.SelectableBottomSheetContent.SelectableBottomSheetContentManager;
@@ -180,6 +181,8 @@ public class DownloadManagerUi
     private static final int MENU_ACTION_SEARCH = 5;
     private static final int MENU_ACTION_BOUNDARY = 6;
 
+    private static final int PREFETCH_BUNDLE_OPEN_DELAY_MS = 500;
+
     private static BackendProvider sProviderForTests;
 
     private final DownloadHistoryAdapter mHistoryAdapter;
@@ -212,6 +215,7 @@ public class DownloadManagerUi
     public DownloadManagerUi(Activity activity, boolean isOffTheRecord,
             ComponentName parentComponent, boolean isSeparateActivity,
             SnackbarManager snackbarManager) {
+        TraceEvent.startAsync("DownloadManagerUi shown", hashCode());
         mActivity = activity;
         ChromeApplication application = (ChromeApplication) activity.getApplication();
         mBackendProvider = sProviderForTests == null
@@ -249,9 +253,7 @@ public class DownloadManagerUi
         mToolbar = (DownloadManagerToolbar) mSelectableListLayout.initializeToolbar(
                 R.layout.download_manager_toolbar, mBackendProvider.getSelectionDelegate(), 0, null,
                 R.id.normal_menu_group, R.id.selection_mode_menu_group,
-                FeatureUtilities.isChromeHomeEnabled() ? R.color.modern_toolbar_bg
-                                                       : R.color.modern_primary_color,
-                this, true);
+                R.color.modern_primary_color, this, true);
         mToolbar.setManager(this);
         mToolbar.initializeFilterSpinner(mFilterAdapter);
         mToolbar.initializeSearchView(this, R.string.download_manager_search, R.id.search_menu_id);
@@ -302,6 +304,7 @@ public class DownloadManagerUi
         mBackendProvider.destroy();
 
         mSelectableListLayout.onDestroyed();
+        TraceEvent.finishAsync("DownloadManagerUi shown", hashCode());
     }
 
     /**
@@ -343,6 +346,15 @@ public class DownloadManagerUi
     public void updateForUrl(String url) {
         int filter = DownloadFilter.getFilterFromUrl(url);
         onFilterChanged(filter);
+    }
+
+    /**
+     * Performs an animated expansion of the prefetch section.
+     */
+    public void expandPrefetchSection() {
+        new Handler().postDelayed(() -> {
+            mHistoryAdapter.setPrefetchSectionExpanded(true);
+        }, PREFETCH_BUNDLE_OPEN_DELAY_MS);
     }
 
     @Override
@@ -424,7 +436,7 @@ public class DownloadManagerUi
     }
 
     /** Called when the filter has been changed by the user. */
-    void onFilterChanged(int filter) {
+    void onFilterChanged(@DownloadFilter.Type int filter) {
         mBackendProvider.getSelectionDelegate().clearSelection();
         mToolbar.hideSearchView();
 

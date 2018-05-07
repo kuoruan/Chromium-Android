@@ -134,6 +134,8 @@ public class WebsitePermissionsFetcher {
         queue.add(new AutoplayExceptionInfoFetcher());
         // USB device permission is per-origin and per-embedder.
         queue.add(new UsbInfoFetcher());
+        // Clipboard info is per-origin.
+        queue.add(new ClipboardInfoFetcher());
 
         queue.add(new PermissionsAvailableCallbackRunner());
 
@@ -198,6 +200,9 @@ public class WebsitePermissionsFetcher {
         } else if (category.showUsbDevices()) {
             // USB device permission is per-origin.
             queue.add(new UsbInfoFetcher());
+        } else if (category.showClipboardSites()) {
+            // Clipboard permission is per-origin.
+            queue.add(new ClipboardInfoFetcher());
         }
         queue.add(new PermissionsAvailableCallbackRunner());
         queue.next();
@@ -283,6 +288,18 @@ public class WebsitePermissionsFetcher {
         @Override
         public void run() {
             setException(ContentSettingsType.CONTENT_SETTINGS_TYPE_AUTOPLAY);
+        }
+    }
+
+    private class ClipboardInfoFetcher extends Task {
+        @Override
+        public void run() {
+            for (ClipboardInfo info : WebsitePreferenceBridge.getClipboardInfo()) {
+                WebsiteAddress origin = WebsiteAddress.create(info.getOrigin());
+                if (origin == null) continue;
+                WebsiteAddress embedder = WebsiteAddress.create(info.getEmbedder());
+                findOrCreateSite(origin, embedder).setClipboardInfo(info);
+            }
         }
     }
 

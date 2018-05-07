@@ -9,11 +9,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content" >
 
-<!-- TODO(twellington): remove start/end margin when new assets with
-                        correct built in padding are available. The end
-                        padding is set programatically so margin is used
-                        rather than padding to achieve the correct visual
-                        effect. -->
     <LinearLayout
         android:id="@+id/content"
         style="@style/ListItemContainer" >
@@ -22,10 +17,10 @@
 
         <org.chromium.chrome.browser.widget.TintedImageButton
             android:id="@+id/remove"
-            style="@style/ListItemEndIcon"
+            style="@style/ListItemEndIconSmall"
             android:contentDescription="@string/remove"
-            android:src="@drawable/btn_trash"
-            chrome:chrometint="@color/dark_mode_tint" />
+            android:src="@drawable/btn_delete_24dp"
+            chrome:chrometint="@color/black_alpha_38" />
     </LinearLayout>
 
 </org.chromium.chrome.browser.history.HistoryItemView>

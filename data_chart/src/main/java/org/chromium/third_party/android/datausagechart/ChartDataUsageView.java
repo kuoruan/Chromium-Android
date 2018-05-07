@@ -331,8 +331,8 @@ public class ChartDataUsageView extends ChartView {
             if (LOG_SCALE) {
                 // derived polynomial fit to make lower values more visible
                 final double normalized = ((double) value - mMin) / (mMax - mMin);
-                final double fraction = Math.pow(10,
-                        0.36884343106175121463 * Math.log10(normalized) + -0.04328199452018252624);
+                final double fraction = Math.pow(
+                        10, 0.3688434310617512 * Math.log10(normalized) + -0.043281994520182526);
                 return (float) (fraction * mSize);
             } else {
                 return (mSize * (value - mMin)) / (mMax - mMin);
@@ -343,8 +343,8 @@ public class ChartDataUsageView extends ChartView {
         public long convertToValue(float point) {
             if (LOG_SCALE) {
                 final double normalized = point / mSize;
-                final double fraction = 1.3102228476089056629
-                        * Math.pow(normalized, 2.7111774693164631640);
+                final double fraction =
+                        1.3102228476089057 * Math.pow(normalized, 2.711177469316463);
                 return (long) (mMin + (fraction * (mMax - mMin)));
             } else {
                 return (long) (mMin + ((point * (mMax - mMin)) / mSize));

@@ -11,6 +11,7 @@ import android.support.annotation.IdRes;
 import android.support.annotation.StringRes;
 import android.support.v7.content.res.AppCompatResources;
 
+import org.chromium.base.Callback;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.DefaultBrowserInfo;
 import org.chromium.chrome.browser.search_engines.TemplateUrlService;
@@ -123,24 +124,19 @@ public enum ChromeContextMenuItem implements ContextMenuItem {
         return context.getString(mStringId);
     }
 
-    /**
-     * Returns the drawable and the content description associated with the context menu. If no
-     * drawable is associated with the icon, null is returned for the drawable and the
-     * iconDescription.
-     */
     @Override
-    public Drawable getDrawable(Context context) {
+    public void getDrawableAsync(Context context, Callback<Drawable> callback) {
+        Drawable drawable = null;
         if (mIconId == R.drawable.context_menu_new_tab
                 || mIconId == R.drawable.context_menu_add_to_contacts
                 || mIconId == R.drawable.context_menu_load_image
                 || mIconId == R.drawable.ic_content_copy_black) {
-            return AppCompatResources.getDrawable(context, mIconId);
-        } else if (mIconId == 0) {
-            return null;
-        } else {
-            return TintedDrawable.constructTintedDrawable(
+            drawable = AppCompatResources.getDrawable(context, mIconId);
+        } else if (mIconId != 0) {
+            drawable = TintedDrawable.constructTintedDrawable(
                     context.getResources(), mIconId, R.color.light_normal_color);
         }
+        callback.onResult(drawable);
     }
 
     @Override

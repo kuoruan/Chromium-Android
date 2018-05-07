@@ -12,12 +12,12 @@ import org.chromium.chrome.browser.tab.Tab;
  * Abstracts away the VrShell class, which may or may not be present at runtime depending on
  * compile flags.
  */
-public interface VrShell {
+public interface VrShell extends VrDialogManager {
     /**
      * Performs native VrShell initialization.
      */
-    void initializeNative(Tab currentTab, boolean forWebVr, boolean webVrAutopresentationExpected,
-            boolean inCct, boolean browsingDisabled);
+    void initializeNative(
+            Tab currentTab, boolean forWebVr, boolean webVrAutopresentationExpected, boolean inCct);
 
     /**
      * Pauses VrShell.
@@ -72,12 +72,6 @@ public interface VrShell {
     void requestToExitVr(@UiUnsupportedMode int reason);
 
     /**
-     * Gives VrShell a chance to clean up any view-dependent state before removing
-     * VrShell from the view hierarchy.
-     */
-    void onBeforeWindowDetached();
-
-    /**
      *  Triggers VrShell to navigate forward.
      */
     void navigateForward();
@@ -86,4 +80,14 @@ public interface VrShell {
      *  Triggers VrShell to navigate backward.
      */
     void navigateBack();
+
+    /**
+     * Simulates a user accepting the currently visible DOFF prompt.
+     */
+    void acceptDoffPromptForTesting();
+
+    /**
+     * @param topContentOffset The content offset (usually applied by the omnibox).
+     */
+    void rawTopContentOffsetChanged(float topContentOffset);
 }

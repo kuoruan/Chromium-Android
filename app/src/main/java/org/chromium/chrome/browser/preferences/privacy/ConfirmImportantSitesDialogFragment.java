@@ -29,6 +29,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 
 import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.base.CollectionUtil;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
@@ -260,14 +261,6 @@ public class ConfirmImportantSitesDialogFragment extends DialogFragment {
         }
     }
 
-    private int[] toIntArray(List<Integer> boxedList) {
-        int[] result = new int[boxedList.size()];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = boxedList.get(i);
-        }
-        return result;
-    }
-
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         // We check the domains and urls as well due to crbug.com/622879.
@@ -312,10 +305,11 @@ public class ConfirmImportantSitesDialogFragment extends DialogFragment {
                         }
                     }
                     data.putExtra(DESELECTED_DOMAINS_TAG, deselectedDomains.toArray(new String[0]));
-                    data.putExtra(
-                            DESELECTED_DOMAIN_REASONS_TAG, toIntArray(deselectedDomainReasons));
+                    data.putExtra(DESELECTED_DOMAIN_REASONS_TAG,
+                            CollectionUtil.integerListToIntArray(deselectedDomainReasons));
                     data.putExtra(IGNORED_DOMAINS_TAG, ignoredDomains.toArray(new String[0]));
-                    data.putExtra(IGNORED_DOMAIN_REASONS_TAG, toIntArray(ignoredDomainReasons));
+                    data.putExtra(IGNORED_DOMAIN_REASONS_TAG,
+                            CollectionUtil.integerListToIntArray(ignoredDomainReasons));
                     getTargetFragment().onActivityResult(
                             getTargetRequestCode(), Activity.RESULT_OK, data);
                 } else {

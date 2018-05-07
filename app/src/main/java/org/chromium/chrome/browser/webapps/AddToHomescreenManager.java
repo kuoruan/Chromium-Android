@@ -13,30 +13,14 @@ import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.content_public.browser.WebContents;
 
 /**
- * Manages the add-to-homescreen process.
+ * Manages the add to home screen process. Coordinates the native-side data fetching, and owns
+ * a dialog prompting the user to confirm the action (and potentially supply a title).
  */
-public class AddToHomescreenManager {
+public class AddToHomescreenManager implements AddToHomescreenDialog.Delegate {
+    protected final Activity mActivity;
+    protected final Tab mTab;
 
-    /** Interface for tracking fetch of add-to-homescreen data. */
-    public interface Observer {
-        /**
-         * Called when the homescreen icon title (and possibly information from the web manifest) is
-         * available.
-         */
-        void onUserTitleAvailable(String title, String url, boolean isTitleEditable);
-
-        /**
-         * Called once native has finished fetching the homescreen shortcut's data (like the Web
-         * Manifest) and is ready for {@link AddToHomescreenManager#addShortcut} to be called.
-         * @param icon Icon to use in the launcher.
-         */
-        void onReadyToAdd(Bitmap icon);
-    }
-
-    private final Activity mActivity;
-    private final Tab mTab;
-
-    private Observer mObserver;
+    protected AddToHomescreenDialog mDialog;
     private long mNativeAddToHomescreenManager;
 
     public AddToHomescreenManager(Activity activity, Tab tab) {
@@ -44,7 +28,11 @@ public class AddToHomescreenManager {
         mTab = tab;
     }
 
-    /** Starts add-to-homescreen process. */
+    /**
+     * Starts the add to home screen process. Creates the C++ AddToHomescreenManager, which fetches
+     * the data needed for add to home screen, and informs this object when data is available and
+     * when the dialog can be shown.
+     */
     public void start() {
         // Don't start if we've already started or if there is no visible URL to add.
         if (mNativeAddToHomescreenManager != 0 || TextUtils.isEmpty(mTab.getUrl())) return;
@@ -52,16 +40,11 @@ public class AddToHomescreenManager {
         mNativeAddToHomescreenManager = nativeInitializeAndStart(mTab.getWebContents());
     }
 
-    /** Sets the add-to-homescreen observer tracking the add-to-homescreen data fetch. */
-    public void setObserver(Observer observer) {
-        mObserver = observer;
-    }
-
     /**
      * Puts the object in a state where it is safe to be destroyed.
      */
     public void destroy() {
-        mObserver = null;
+        mDialog = null;
         if (mNativeAddToHomescreenManager == 0) return;
 
         nativeDestroy(mNativeAddToHomescreenManager);
@@ -72,10 +55,30 @@ public class AddToHomescreenManager {
      * Adds a shortcut for the current Tab. Must not be called unless start() has been called.
      * @param userRequestedTitle Title of the shortcut displayed on the homescreen.
      */
-    public void addShortcut(String userRequestedTitle) {
+    @Override
+    public void addToHomescreen(String userRequestedTitle) {
         assert mNativeAddToHomescreenManager != 0;
 
-        nativeAddShortcut(mNativeAddToHomescreenManager, userRequestedTitle);
+        nativeAddToHomescreen(mNativeAddToHomescreenManager, userRequestedTitle);
+    }
+
+    @Override
+    public void onDialogCancelled() {
+        // Do nothing.
+    }
+
+    @Override
+    public void onNativeAppDetailsRequested() {
+        // This should never be called.
+        assert false;
+    }
+
+    @Override
+    /**
+     * Destroys this object once the dialog has been dismissed.
+     */
+    public void onDialogDismissed() {
+        destroy();
     }
 
     /**
@@ -83,23 +86,24 @@ public class AddToHomescreenManager {
      */
     @CalledByNative
     public void showDialog() {
-        AddToHomescreenDialog dialog = new AddToHomescreenDialog(this);
-        dialog.show(mActivity);
-        setObserver(dialog);
+        mDialog = new AddToHomescreenDialog(mActivity, this);
+        mDialog.show();
     }
 
     @CalledByNative
-    private void onUserTitleAvailable(String title, String url, boolean isTitleEditable) {
-        mObserver.onUserTitleAvailable(title, url, isTitleEditable);
+    private void onUserTitleAvailable(String title, String url, boolean isWebapp) {
+        // Users may edit the title of bookmark shortcuts, but we respect web app names and do not
+        // let users change them.
+        mDialog.onUserTitleAvailable(title, url, isWebapp);
     }
 
     @CalledByNative
-    private void onReadyToAdd(Bitmap icon) {
-        mObserver.onReadyToAdd(icon);
+    private void onIconAvailable(Bitmap icon) {
+        mDialog.onIconAvailable(icon);
     }
 
     private native long nativeInitializeAndStart(WebContents webContents);
-    private native void nativeAddShortcut(
+    private native void nativeAddToHomescreen(
             long nativeAddToHomescreenManager, String userRequestedTitle);
     private native void nativeDestroy(long nativeAddToHomescreenManager);
 }

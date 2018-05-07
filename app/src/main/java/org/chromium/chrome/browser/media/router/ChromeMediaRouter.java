@@ -8,6 +8,7 @@ import android.support.v7.media.MediaRouter;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
+import org.chromium.base.StrictModeContext;
 import org.chromium.base.SysUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
@@ -98,7 +99,10 @@ public class ChromeMediaRouter implements MediaRouteManager {
     @Nullable
     public static MediaRouter getAndroidMediaRouter() {
         if (sAndroidMediaRouterSetForTest) return sAndroidMediaRouterForTest;
-        try {
+
+        // Some manufacturers have an implementation that causes StrictMode
+        // violations. See https://crbug.com/818325.
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
             // Pre-MR1 versions of JB do not have the complete MediaRouter APIs,
             // so getting the MediaRouter instance will throw an exception.
             return MediaRouter.getInstance(ContextUtils.getApplicationContext());

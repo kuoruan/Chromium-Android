@@ -25,8 +25,10 @@
     <color name="google_grey_400">#BDBDBD</color>
     <color name="google_grey_500">#9E9E9E</color>
     <color name="google_grey_600">#757575</color>
+    <color name="google_grey_800">#3C4043</color>
     <color name="grey_alpha_90">#E6505050</color>
     <color name="black_alpha_11">#1D000000</color>
+    <color name="black_alpha_12">#1F000000</color>
     <color name="white_alpha_50">#80FFFFFF</color>
     <color name="white_alpha_54">#8AFFFFFF</color>
     <color name="black_alpha_65">#A6000000</color>
@@ -34,7 +36,6 @@
     <color name="light_grey">#CCCCCC</color>
     <color name="modal_dialog_scrim_color">#7F000000</color>
 
-    <color name="modern_grey_300">#DFE1E5</color>
     <color name="modern_light_grey">#F1F3F4</color>
 
     <!-- New list of common text colors -->
@@ -74,7 +75,8 @@
     <color name="url_emphasis_light_default_text">@android:color/white</color>
 
     <!-- Omnibox Suggestion colors -->
-    <color name="suggestion_url_dark">@color/google_blue_500</color>
+    <color name="suggestion_url_dark_modern">@color/google_blue_500</color>
+    <color name="suggestion_url_light_modern">@color/google_blue_300</color>
     <color name="suggestion_url_light">#5595FE</color>
     <color name="answers_description_text_negative">@color/google_red_700</color>
     <color name="answers_description_text_positive">@color/google_green_700</color>
@@ -113,7 +115,6 @@
     <!-- NTP and Home sheet colors. Also used on the bookmarks and recent tabs pages. -->
     <color name="ntp_bg">@color/default_primary_color</color>
     <color name="ntp_bg_incognito">#222222</color>
-    <color name="ntp_search_box_hint">@color/black_alpha_54</color>
     <color name="ntp_list_header_subtext">#969696</color>
     <color name="snippets_publisher_name_color">#646464</color>
     <color name="snippets_text_color">#646464</color>
@@ -142,12 +143,13 @@
 
     <!-- Theme colors. Also used for toolbar background -->
     <color name="incognito_primary_color">#505050</color>
+    <color name="incognito_modern_primary_color">@color/google_grey_800</color>
     <color name="incognito_primary_color_home_bottom_nav">@color/grey_alpha_90</color>
     <color name="modern_primary_color">@android:color/white</color>
     <color name="primary_color_home_bottom_nav">@color/white_alpha_90</color>
 
     <!-- LocationBar colors -->
-    <color name="locationbar_dark_hint_text">@color/black_alpha_54</color>
+    <color name="locationbar_dark_hint_text">@color/search_box_hint</color>
     <color name="locationbar_light_hint_text">@color/white_alpha_70</color>
     <color name="locationbar_light_selection_color">#CC5595FE</color>
     <color name="locationbar_status_color">@color/black_alpha_54</color>
@@ -205,9 +207,10 @@
     <!-- Other colors -->
     <color name="media_viewer_bg">#000000</color>
     <color name="image_viewer_bg">#0E0E0E</color>
-    <color name="modern_toolbar_bg">@color/white_alpha_90</color>
     <color name="google_blue_500_alpha_38_opaque">#B7D1FB</color>
     <color name="toolbar_shadow_color">@color/black_alpha_11</color>
     <color name="bottom_system_nav_color">@android:color/white</color>
+    <color name="bottom_system_nav_divider_color">@color/black_alpha_12</color>
+    <color name="search_box_hint">@color/black_alpha_54</color>
 
 </resources>

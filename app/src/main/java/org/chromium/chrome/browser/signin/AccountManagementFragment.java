@@ -149,7 +149,7 @@ public class AccountManagementFragment extends PreferenceFragment
     @Override
     public void onResume() {
         super.onResume();
-        SigninManager.get(getActivity()).addSignInStateObserver(this);
+        SigninManager.get().addSignInStateObserver(this);
         mProfileDataCache.addObserver(this);
         ProfileSyncService syncService = ProfileSyncService.get();
         if (syncService != null) {
@@ -163,7 +163,7 @@ public class AccountManagementFragment extends PreferenceFragment
     @Override
     public void onPause() {
         super.onPause();
-        SigninManager.get(getActivity()).removeSignInStateObserver(this);
+        SigninManager.get().removeSignInStateObserver(this);
         mProfileDataCache.removeObserver(this);
         ProfileSyncService syncService = ProfileSyncService.get();
         if (syncService != null) {
@@ -233,8 +233,7 @@ public class AccountManagementFragment extends PreferenceFragment
                     AccountManagementScreenHelper.logEvent(
                             ProfileAccountManagementMetrics.TOGGLE_SIGNOUT, mGaiaServiceType);
 
-                    String managementDomain =
-                            SigninManager.get(getActivity()).getManagementDomain();
+                    String managementDomain = SigninManager.get().getManagementDomain();
                     if (managementDomain != null) {
                         // Show the 'You are signing out of a managed account' dialog.
                         ConfirmManagedSyncDataDialog.showSignOutFromManagedAccountDialog(
@@ -435,7 +434,7 @@ public class AccountManagementFragment extends PreferenceFragment
 
         final Activity activity = getActivity();
         final DialogFragment clearDataProgressDialog = new ClearDataProgressDialog();
-        SigninManager.get(activity).signOut(null, new SigninManager.WipeDataHooks() {
+        SigninManager.get().signOut(null, new SigninManager.WipeDataHooks() {
             @Override
             public void preWipeData() {
                 clearDataProgressDialog.show(

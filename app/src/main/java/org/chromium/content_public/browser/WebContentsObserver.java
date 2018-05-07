@@ -16,7 +16,7 @@ public abstract class WebContentsObserver {
     // TODO(jdduke): Remove the destroy method and hold observer embedders
     // responsible for explicit observer detachment.
     // Using a weak reference avoids cycles that might prevent GC of WebView's WebContents.
-    private WeakReference<WebContents> mWebContents;
+    protected WeakReference<WebContents> mWebContents;
 
     public WebContentsObserver(WebContents webContents) {
         mWebContents = new WeakReference<WebContents>(webContents);
@@ -133,6 +133,11 @@ public abstract class WebContentsObserver {
      * Notifies that a navigation entry has been committed.
      */
     public void navigationEntryCommitted() {}
+
+    /**
+     * Called when navigation entries were removed.
+     */
+    public void navigationEntriesDeleted() {}
 
     /**
      * Called when an interstitial page gets attached to the tab content.

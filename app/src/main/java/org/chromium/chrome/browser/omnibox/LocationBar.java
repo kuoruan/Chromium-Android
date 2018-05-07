@@ -182,4 +182,9 @@ public interface LocationBar extends UrlBarDelegate {
      * @return Whether suggestions are being shown for the location bar.
      */
     boolean isSuggestionsListShown();
+
+    /**
+     * @return Whether the location bar is allowed to use Chrome modern design.
+     */
+    boolean useModernDesign();
 }

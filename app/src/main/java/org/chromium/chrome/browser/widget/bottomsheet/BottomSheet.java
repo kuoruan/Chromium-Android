@@ -40,14 +40,10 @@ import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.compositor.layouts.LayoutManagerChrome;
 import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager;
 import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager.FullscreenListener;
-import org.chromium.chrome.browser.ntp.NativePageFactory;
-import org.chromium.chrome.browser.ntp.NewTabPage;
 import org.chromium.chrome.browser.tab.Tab;
-import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.toolbar.ActionModeController.ActionBarDelegate;
-import org.chromium.chrome.browser.toolbar.BottomToolbarPhone;
 import org.chromium.chrome.browser.toolbar.ViewShiftingActionBarDelegate;
 import org.chromium.chrome.browser.util.AccessibilityUtil;
 import org.chromium.chrome.browser.util.FeatureUtilities;
@@ -209,9 +205,6 @@ public class BottomSheet
     /** The {@link BottomSheetMetrics} used to record user actions and histograms. */
     private final BottomSheetMetrics mMetrics;
 
-    /** The {@link BottomSheetNewTabController} used to present the new tab UI. */
-    private BottomSheetNewTabController mNtpController;
-
     /** For detecting scroll and fling events on the bottom sheet. */
     private BottomSheetSwipeDetector mGestureDetector;
 
@@ -239,17 +232,14 @@ public class BottomSheet
     private int mTargetState = SHEET_STATE_NONE;
 
     /** Used for getting the current tab. */
-    private TabModelSelector mTabModelSelector;
+    protected TabModelSelector mTabModelSelector;
 
     /** The fullscreen manager for information about toolbar offsets. */
     private ChromeFullscreenManager mFullscreenManager;
 
     /** A handle to the content being shown by the sheet. */
     @Nullable
-    private BottomSheetContent mSheetContent;
-
-    /** A handle to the toolbar control container. */
-    private View mControlContainer;
+    protected BottomSheetContent mSheetContent;
 
     /** A handle to the find-in-page toolbar. */
     private View mFindInPageView;
@@ -270,7 +260,7 @@ public class BottomSheet
      * The default toolbar view. This is shown when the current bottom sheet content doesn't have
      * its own toolbar and when the bottom sheet is closed.
      */
-    private BottomToolbarPhone mDefaultToolbarView;
+    protected View mDefaultToolbarView;
 
     /** Whether the {@link BottomSheet} and its children should react to touch events. */
     private boolean mIsTouchEnabled;
@@ -279,7 +269,7 @@ public class BottomSheet
     private boolean mIsSheetOpen;
 
     /** The activity displaying the bottom sheet. */
-    private ChromeActivity mActivity;
+    protected ChromeActivity mActivity;
 
     /** A delegate for when the action bar starts showing. */
     private ViewShiftingActionBarDelegate mActionBarDelegate;
@@ -649,26 +639,16 @@ public class BottomSheet
     }
 
     /**
-     * Defocus the omnibox.
-     */
-    public void defocusOmnibox() {
-        if (mDefaultToolbarView == null) return;
-        mDefaultToolbarView.getLocationBar().setUrlBarFocus(false);
-    }
-
-    /**
      * @param tabModelSelector A TabModelSelector for getting the current tab and activity.
      */
     public void setTabModelSelector(TabModelSelector tabModelSelector) {
         mTabModelSelector = tabModelSelector;
-        mNtpController.setTabModelSelector(tabModelSelector);
     }
 
     /**
      * @param layoutManager The {@link LayoutManagerChrome} used to show and hide overview mode.
      */
     public void setLayoutManagerChrome(LayoutManagerChrome layoutManager) {
-        mNtpController.setLayoutManagerChrome(layoutManager);
         getIphBubbleController().setLayoutManagerChrome(layoutManager);
     }
 
@@ -686,7 +666,7 @@ public class BottomSheet
     @VisibleForTesting
     public boolean isToolbarAndroidViewHidden() {
         return mFullscreenManager == null || mFullscreenManager.getBottomControlOffset() > 0
-                || mControlContainer.getVisibility() != VISIBLE;
+                || mToolbarHolder.getVisibility() != VISIBLE;
     }
 
     @Override
@@ -702,12 +682,14 @@ public class BottomSheet
      * heights of the root view and control container are important as they are used in many of the
      * calculations in this class.
      * @param root The container of the bottom sheet.
-     * @param controlContainer The container for the toolbar.
      * @param activity The activity displaying the bottom sheet.
      */
-    public void init(View root, View controlContainer, ChromeActivity activity) {
-        mControlContainer = controlContainer;
-        mToolbarHeight = mControlContainer.getHeight();
+    public void init(View root, ChromeActivity activity) {
+        mToolbarHolder =
+                (TouchRestrictingFrameLayout) findViewById(R.id.bottom_sheet_toolbar_container);
+        mDefaultToolbarView = mToolbarHolder.findViewById(R.id.bottom_sheet_toolbar);
+        mToolbarHeight = mDefaultToolbarView.getHeight();
+
         mActivity = activity;
         mActionBarDelegate = new ViewShiftingActionBarDelegate(mActivity, this);
 
@@ -793,7 +775,7 @@ public class BottomSheet
         });
 
         // Listen to height changes on the toolbar.
-        controlContainer.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+        mToolbarHolder.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
             @Override
             public void onLayoutChange(View v, int left, int top, int right, int bottom,
                     int oldLeft, int oldTop, int oldRight, int oldBottom) {
@@ -820,14 +802,6 @@ public class BottomSheet
                 }
             }
         });
-
-        mToolbarHolder =
-                (TouchRestrictingFrameLayout) mControlContainer.findViewById(R.id.toolbar_holder);
-        mToolbarHolder.setBottomSheet(this);
-        mDefaultToolbarView = (BottomToolbarPhone) mControlContainer.findViewById(R.id.toolbar);
-        mDefaultToolbarView.setActivity(mActivity);
-
-        mNtpController = new BottomSheetNewTabController(this, mDefaultToolbarView, mActivity);
 
         mActivity.getFullscreenManager().addListener(new FullscreenListener() {
             @Override
@@ -857,56 +831,22 @@ public class BottomSheet
         if (hasWindowFocus) requestLayout();
     }
 
-    /**
-     * Set the color of the pull handle used by the toolbar.
-     */
-    public void updateHandleTint() {
-        boolean isLightToolbarTheme = mDefaultToolbarView.isLightTheme();
-
-        // If the current sheet content's toolbar is using a special theme, use that.
-        if (mSheetContent != null && mSheetContent.getToolbarView() != null) {
-            isLightToolbarTheme = mSheetContent.isUsingLightToolbarTheme();
-        }
-
-        // A light toolbar theme means the handle should be dark.
-        mDefaultToolbarView.updateHandleTint(!isLightToolbarTheme);
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-            // A layout is requested so that the toolbar contents don't disappear under certain
-            // scenarios on Android J. See crbug.com/769611.
-            mControlContainer.requestLayout();
-        }
-    }
-
     @Override
     public int loadUrl(LoadUrlParams params, boolean incognito) {
-        if (NewTabPage.isNTPUrl(params.getUrl())) {
-            displayNewTabUi(incognito);
-            return TabLoadStatus.PAGE_LOAD_FAILED;
-        }
-
         // Load chrome://bookmarks, downloads, and history in the bottom sheet.
         if (handleNativePageUrl(params.getUrl())) return TabLoadStatus.PAGE_LOAD_FAILED;
 
-        boolean isShowingNtp = isShowingNewTab();
         for (BottomSheetObserver o : mObservers) o.onLoadUrl(params.getUrl());
-
-        // Native page URLs in this context do not need to communicate with the tab.
-        if (NativePageFactory.isNativePageUrl(params.getUrl(), incognito) && !isShowingNtp) {
-            return TabLoadStatus.PAGE_LOAD_FAILED;
-        }
 
         assert mTabModelSelector != null;
 
-        int tabLoadStatus = TabLoadStatus.DEFAULT_PAGE_LOAD;
+        int tabLoadStatus;
 
-        // First try to get the tab behind the sheet.
-        if (!isShowingNtp && getActiveTab() != null && getActiveTab().isIncognito() == incognito) {
+        if (getActiveTab() != null && getActiveTab().isIncognito() == incognito) {
             tabLoadStatus = getActiveTab().loadUrl(params);
         } else {
-            // If no compatible tab is active behind the sheet, open a new one.
-            mTabModelSelector.openNewTab(
-                    params, TabModel.TabLaunchType.FROM_CHROME_UI, getActiveTab(), incognito);
+            // Do nothing if there is no available tab to load in.
+            return TabLoadStatus.PAGE_LOAD_FAILED;
         }
 
         // In all non-native cases, minimize the sheet.
@@ -946,17 +886,6 @@ public class BottomSheet
         return true;
     }
 
-    /**
-     * Load a non-native URL in a new tab. This should be used when the new tab UI controlled by
-     * {@link BottomSheetContentController} is showing.
-     * @param params The params describing the URL to be loaded.
-     */
-    public void loadUrlInNewTab(LoadUrlParams params) {
-        assert isShowingNewTab();
-
-        loadUrl(params, mTabModelSelector.isIncognitoSelected());
-    }
-
     @Override
     public boolean isIncognito() {
         if (getActiveTab() == null) return false;
@@ -970,12 +899,7 @@ public class BottomSheet
 
     @Override
     public Tab getActiveTab() {
-        if (mTabModelSelector == null) return null;
-        if (mNtpController.isShowingNewTabUi() && isVisible()
-                && getTargetSheetState() != SHEET_STATE_PEEK) {
-            return null;
-        }
-        return mTabModelSelector.getCurrentTab();
+        return mTabModelSelector != null ? mTabModelSelector.getCurrentTab() : null;
     }
 
     @Override
@@ -1006,13 +930,6 @@ public class BottomSheet
     @Override
     public float getContainerHeightPx() {
         return mContainerHeight;
-    }
-
-    /**
-     * @return The {@link BottomSheetNewTabController} used to present the new tab UI.
-     */
-    public BottomSheetNewTabController getNewTabController() {
-        return mNtpController;
     }
 
     /**
@@ -1093,8 +1010,7 @@ public class BottomSheet
 
         // If the existing content is null or the tab switcher assets are showing, end the animation
         // immediately.
-        if (mSheetContent == null || mDefaultToolbarView.isInTabSwitcherMode()
-                || SysUtils.isLowEndDevice()) {
+        if (mSheetContent == null || isInOverviewMode() || SysUtils.isLowEndDevice()) {
             mContentSwapAnimatorSet.end();
         }
     }
@@ -1249,7 +1165,7 @@ public class BottomSheet
         // the correct toolbar height and container height are not know until those views are
         // inflated. The other views are a specific DP distance from the top and bottom and are
         // also updated.
-        mStateRatios[0] = mToolbarHeight / mContainerHeight;
+        mStateRatios[0] = (mToolbarHeight + mToolbarShadowHeight) / mContainerHeight;
         mStateRatios[1] = HALF_HEIGHT_RATIO;
         // The max height ratio will be greater than 1 to account for the toolbar shadow.
         mStateRatios[2] = (mContainerHeight + mToolbarShadowHeight) / mContainerHeight;
@@ -1643,31 +1559,6 @@ public class BottomSheet
     public void onFadingViewVisibilityChanged(boolean visible) {}
 
     /**
-     * @return Whether the {@link BottomSheetNewTabController} is showing the new tab UI. This
-     *         returns true if a normal or incognito new tab is showing.
-     */
-    public boolean isShowingNewTab() {
-        return mNtpController.isShowingNewTabUi();
-    }
-
-    /**
-     * Tells {@link BottomSheetNewTabController} to display the new tab UI.
-     * @param isIncognito Whether to display the incognito new tab UI.
-     */
-    public void displayNewTabUi(boolean isIncognito) {
-        mNtpController.displayNewTabUi(isIncognito);
-    }
-
-    /**
-     * Tells {@link BottomSheetNewTabController} to display the specified content in a new tab.
-     * @param isIncognito Whether to display the incognito new tab UI.
-     * @param actionId The action id of the bottom sheet content to be displayed.
-     */
-    public void displayNewTabUi(boolean isIncognito, int actionId) {
-        mNtpController.displayNewTabUi(isIncognito, actionId);
-    }
-
-    /**
      * Show the in-product help bubble for the {@link BottomSheet} if it has not already been shown.
      * This method must be called after the toolbar has had at least one layout pass.
      */
@@ -1690,8 +1581,8 @@ public class BottomSheet
     /** Gets the IPH bubble controller, creating it if necessary. */
     private ChromeHomeIphBubbleController getIphBubbleController() {
         if (mIPHBubbleController == null) {
-            mIPHBubbleController = new ChromeHomeIphBubbleController(
-                    getContext(), mDefaultToolbarView, mControlContainer, this);
+            mIPHBubbleController =
+                    new ChromeHomeIphBubbleController(getContext(), mToolbarHolder, this);
         }
 
         return mIPHBubbleController;
@@ -1730,16 +1621,9 @@ public class BottomSheet
     }
 
     /**
-     * @return Whether or not the bottom sheet's toolbar is using the expand button.
-     */
-    public boolean isUsingExpandButton() {
-        return mDefaultToolbarView.isUsingExpandButton();
-    }
-
-    /**
      * @return Whether or not the browser is in overview mode.
      */
-    private boolean isInOverviewMode() {
+    protected boolean isInOverviewMode() {
         return mActivity != null && mActivity.isInOverviewMode();
     }
 
@@ -1747,26 +1631,23 @@ public class BottomSheet
      * Checks whether the sheet can be moved. It cannot be moved when the activity is in overview
      * mode, when "find in page" is visible, or when the toolbar is hidden.
      */
-    private boolean canMoveSheet() {
+    protected boolean canMoveSheet() {
         if (mFindInPageView == null) mFindInPageView = findViewById(R.id.find_toolbar);
         boolean isFindInPageVisible =
                 mFindInPageView != null && mFindInPageView.getVisibility() == View.VISIBLE;
 
-        return !isToolbarAndroidViewHidden()
-                && (!isInOverviewMode() || mNtpController.isShowingNewTabUi())
-                && !isFindInPageVisible;
+        return !isToolbarAndroidViewHidden() && !isFindInPageVisible;
     }
 
     /**
      * Called when the sheet content has changed, to update dependent state and notify observers.
      * @param content The new sheet content, or null if the sheet has no content.
      */
-    private void onSheetContentChanged(@Nullable final BottomSheetContent content) {
+    protected void onSheetContentChanged(@Nullable final BottomSheetContent content) {
         mSheetContent = content;
         for (BottomSheetObserver o : mObservers) {
             o.onSheetContentChanged(content);
         }
-        updateHandleTint();
         mToolbarHolder.setBackgroundColor(Color.TRANSPARENT);
     }
 
@@ -1776,5 +1657,31 @@ public class BottomSheet
     @VisibleForTesting
     public @Nullable TextBubble getHelpBubbleForTests() {
         return getIphBubbleController().getHelpBubbleForTests();
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // TODO(mdjones): Remove the methods below once bottom-toolbar Chrome Home is no longer
+    //                supported.
+    // ---------------------------------------------------------------------------------------------
+
+    /**
+     * @return Whether or not the bottom sheet's toolbar is using the expand button.
+     */
+    public boolean isUsingExpandButton() {
+        return false;
+    }
+
+    /**
+     * Defocus the omnibox.
+     */
+    public void defocusOmnibox() {
+        throw new RuntimeException("This functionality is not supported in the base sheet.");
+    }
+
+    /**
+     * Set the color of the pull handle used by the toolbar.
+     */
+    public void updateHandleTint() {
+        throw new RuntimeException("This functionality is not supported in the base sheet.");
     }
 }

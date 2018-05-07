@@ -420,6 +420,7 @@ int cryptoSessionId, byte[] keyId) {
         public int status;
         public int protocol;
         public int cryptoSessionId;
+        public int cdmId;
     
         private CdmProxyInitializeResponseParams(int version) {
             super(STRUCT_SIZE, version);
@@ -470,6 +471,10 @@ int cryptoSessionId, byte[] keyId) {
                     
                     result.cryptoSessionId = decoder0.readInt(16);
                 }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.cdmId = decoder0.readInt(20);
+                }
             } finally {
                 decoder0.decreaseStackDepth();
             }
@@ -486,6 +491,8 @@ int cryptoSessionId, byte[] keyId) {
             encoder0.encode(this.protocol, 12);
             
             encoder0.encode(this.cryptoSessionId, 16);
+            
+            encoder0.encode(this.cdmId, 20);
         }
     
         /**
@@ -506,6 +513,8 @@ int cryptoSessionId, byte[] keyId) {
                 return false;
             if (this.cryptoSessionId!= other.cryptoSessionId)
                 return false;
+            if (this.cdmId!= other.cdmId)
+                return false;
             return true;
         }
     
@@ -519,6 +528,7 @@ int cryptoSessionId, byte[] keyId) {
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.status);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.protocol);
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cryptoSessionId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cdmId);
             return result;
         }
     }
@@ -544,7 +554,7 @@ int cryptoSessionId, byte[] keyId) {
 
                 CdmProxyInitializeResponseParams response = CdmProxyInitializeResponseParams.deserialize(messageWithHeader.getPayload());
 
-                mCallback.call(response.status, response.protocol, response.cryptoSessionId);
+                mCallback.call(response.status, response.protocol, response.cryptoSessionId, response.cdmId);
                 return true;
             } catch (org.chromium.mojo.bindings.DeserializationException e) {
                 return false;
@@ -568,7 +578,7 @@ int cryptoSessionId, byte[] keyId) {
         }
 
         @Override
-        public void call(Integer status, Integer protocol, Integer cryptoSessionId) {
+        public void call(Integer status, Integer protocol, Integer cryptoSessionId, Integer cdmId) {
             CdmProxyInitializeResponseParams _response = new CdmProxyInitializeResponseParams();
 
             _response.status = status;
@@ -576,6 +586,8 @@ int cryptoSessionId, byte[] keyId) {
             _response.protocol = protocol;
 
             _response.cryptoSessionId = cryptoSessionId;
+
+            _response.cdmId = cdmId;
 
             org.chromium.mojo.bindings.ServiceMessage _message =
                     _response.serializeWithHeader(

@@ -33,7 +33,7 @@
 <string name="hide_info">"隐藏信息"</string>
 <string name="copy_link">"复制链接"</string>
 <string name="copied">"已复制"</string>
-<string name="retry">"重试"</string>
+<string name="try_again">"重试"</string>
 <string name="preferences">"设置"</string>
 <string name="menu_help">"帮助和反馈"</string>
 <string name="managed_by_your_administrator">"由您的管理员管理"</string>
@@ -103,10 +103,10 @@
   <item quantity="one">"%1$s\u2026以及另外 %2$s 个联系人"</item>
   <item quantity="other">"%1$s\u2026以及另外 %2$s 个联系人"</item>
 </plurals>
+<string name="prefs_saved_passwords_title">"密码"</string>
 <string name="prefs_saved_passwords">"保存密码"</string>
 <string name="passwords_auto_signin_title">"自动登录"</string>
 <string name="passwords_auto_signin_description">"使用存储的凭据自动登录网站。当该功能处于停用状态时，系统会在您每次登录网站之前要求您进行验证。"</string>
-<string name="section_saved_passwords">"密码"</string>
 <string name="section_saved_passwords_exceptions">"一律不保存"</string>
 <string name="manage_passwords_text">"通过 &lt;link&gt;passwords.google.com&lt;/link&gt; 查看和管理已保存的密码"</string>
 <string name="saved_passwords_none_text">"已保存的密码将显示在这里。"</string>
@@ -130,9 +130,16 @@
 <string name="save_password_preferences_export_action_title">"导出密码…"</string>
 <string name="save_password_preferences_export_action_description">"导出存储在 Chrome 中的密码"</string>
 <string name="settings_passwords_export_description">"所有能查看此导出文件的人员都能看到您的密码。"</string>
+<string name="settings_passwords_preparing_export">"正在准备密码…"</string>
+<string name="save_password_preferences_export_error_title">"无法导出密码"</string>
+<string name="save_password_preferences_export_learn_google_drive">"了解如何使用 Google 云端硬盘"</string>
+<string name="save_password_preferences_export_no_app">"您的设备上没有可以存储密码文件的应用。"</string>
+<string name="save_password_preferences_export_tips">"请尝试按以下提示操作：确保您的设备上有足够的空间，然后重新尝试导出。"</string>
+<string name="save_password_preferences_export_error_details">"错误详情：%1$s"</string>
 <string name="lockscreen_description_copy">"需解锁才能复制您的密码"</string>
 <string name="lockscreen_description_view">"需解锁才能查看您的密码"</string>
 <string name="lockscreen_description_export">"需解锁才能导出您的密码"</string>
+<string name="save_password_preferences_export_subject">"Chrome 密码"</string>
 <string name="options_homepage_edit_title">"修改主页"</string>
 <string name="options_homepage_edit_label">"打开此网页"</string>
 <string name="prefs_notifications">"通知"</string>
@@ -221,6 +228,7 @@
 <string name="popup_permission_title">"弹出式窗口"</string>
 <string name="push_notifications_permission_title">"通知"</string>
 <string name="sound_permission_title">"声音"</string>
+<string name="clipboard_permission_title">"剪贴板"</string>
 <string name="enable_notifications_vibrate_title">"振动"</string>
 <string name="enable_notifications_vibrate_summary">"收到通知时设备会振动"</string>
 <string name="midi_sysex_permission_title">"允许全面控制 MIDI 设备"</string>
@@ -254,6 +262,9 @@
 <string name="website_settings_category_autoplay_allowed">"允许网站自动播放静音的视频（推荐）"</string>
 <string name="website_settings_category_autoplay_disabled_data_saver">"在流量节省程序处于开启状态时不可用"</string>
 <string name="website_settings_category_javascript_allowed">"允许网站运行 JavaScript（推荐）"</string>
+<string name="website_settings_category_clipboard_ask">"在允许网站读取剪贴板中的文字和图片前询问您（推荐）"</string>
+<string name="website_settings_category_clipboard_blocked">"阻止网站读取剪贴板中的文字和图片"</string>
+<string name="website_settings_category_clipboard_blocked_list">"已阻止读取剪贴板中的内容"</string>
 <string name="website_settings_category_sound_allowed">"允许网站播放声音（推荐）"</string>
 <string name="website_settings_category_sound_blocked">"将播放声音的网站静音"</string>
 <string name="website_settings_category_sound_blocked_list">"已静音的网站"</string>
@@ -281,6 +292,9 @@
 <string name="languages_list_prefs_description">"网站将尽可能以您的首选语言显示文字。"</string>
 <string name="languages_offer_translate_switch">"显示翻译界面以翻译其他语言的网页"</string>
 <string name="languages_item_option_offer_to_translate">"提供翻译"</string>
+<string name="languages_item_option_move_up">"上移"</string>
+<string name="languages_item_option_move_down">"下移"</string>
+<string name="languages_item_option_move_to_top">"移至顶部"</string>
 <string name="website_settings_device_location">"位置"</string>
 <string name="geolocation_permission_title">"位置信息使用权"</string>
 <string name="android_permission_off_plural">"在 &lt;link&gt;Android 设置&lt;/link&gt;中为 Chrome 启用这些权限。"</string>
@@ -327,9 +341,6 @@
 <string name="data_reduction_usage_reset_statistics_confirmation_button">"重置"</string>
 <string name="safe_browsing_description">"Chrome 的安全浏览系统也将用于检测恶意网页，保护您免受网上诱骗、恶意软件和有害下载内容的侵害。"</string>
 <string name="data_reduction_caveats_description">"此功能可能会导致您无法使用运营商提供的付费数据网络服务。"</string>
-<string name="data_reduction_stats_title">"数据流量节省情况"</string>
-<string name="data_reduction_original_size_label">"原始大小"</string>
-<string name="data_reduction_compressed_size_label">"压缩后"</string>
 <string name="data_reduction_promo_title">"节省数据流量，加快浏览速度"</string>
 <string name="data_reduction_promo_summary">"最多可减少 60% 的数据用量，并加快网页加载速度。Google 服务器会对您访问的网页进行优化。"</string>
 <string name="data_reduction_enable_button">"启用流量节省程序"</string>
@@ -343,8 +354,12 @@
 <string name="data_reduction_promo_snackbar_text_gb">"Chrome 已为您保存的数据量：%1$d GB"</string>
 <string name="data_reduction_promo_snackbar_button">"视图"</string>
 <string name="download_location_title">"位置"</string>
-<string name="downloads_primary_storage">"主要存储空间"</string>
-<string name="downloads_secondary_storage">"辅助存储空间"</string>
+<string name="downloads_location_selector_title">"下载内容保存位置"</string>
+<string name="downloads_location_sd_card">"SD 卡"</string>
+<string name="downloads_location_sd_card_number">"SD 卡 %1$d"</string>
+<string name="download_location_prompt_enabled_title">"下载前询问每个文件的保存位置"</string>
+<string name="download_location_dialog_title">"下载文件"</string>
+<string name="download_location_dialog_checkbox">"不再显示"</string>
 <string name="prefs_about_chrome">"关于 Chrome"</string>
 <string name="legal_information_summary">"版权所有 %1$d Google Inc. 保留所有权利。"</string>
 <string name="application_version_title">"应用版本"</string>
@@ -384,7 +399,6 @@
 <string name="signout_message">"对您的书签、历史记录、密码和其他设置所做的更改将不再同步到您的 Google 帐号。但是，您的现有数据将继续存储在您的 Google 帐号中。"</string>
 <string name="signout_managed_account_message">"您要退出某个由 %1$s 管理的帐号。这会导致系统删除此设备上存储的 Chrome 数据，但这些数据仍会保留在您的 Google 帐号中。"</string>
 <string name="signout_dialog_positive_button">"退出"</string>
-<string name="sign_in_button">"登录"</string>
 <string name="sign_in_getting_account_management_policy">"正在连接到 Google，请稍等片刻…"</string>
 <string name="sign_in_timeout_title">"无法登录"</string>
 <string name="sign_in_timeout_message">"Google 的响应速度太慢"</string>
@@ -396,8 +410,6 @@
 <string name="accept_and_sign_out">"接受并退出"</string>
 <string name="accept_and_switch_accounts">"接受并切换帐号"</string>
 <string name="sync_your_bookmarks">"同步您的书签"</string>
-<string name="bookmark_sign_in_promo_description">"要将您的书签同步到您所有的设备上，请登录 Chrome。"</string>
-<string name="recent_tabs_sign_in_promo_description">"要在您的其他设备上访问您的标签页，请登录 Chrome。"</string>
 <string name="enable_sync_button">"打开“设置”"</string>
 <string name="open_settings_button">"打开“设置”"</string>
 <string name="bookmarks_sync_promo_enable_sync">"您在其他设备上保存的书签将列在此处。"</string>
@@ -485,22 +497,9 @@
 <string name="duplicate_download_infobar_text">"要重新下载“^1”吗？"</string>
 <string name="duplicate_download_request_infobar_text">"要重新开始下载 ^1 吗？"</string>
 <string name="duplicate_download_infobar_download_button">"下载"</string>
-<string name="translate_infobar_text">"这是^1网页，要将其翻译成^2吗？"</string>
-<string name="translate_infobar_change_languages">"更改语言"</string>
-<string name="translate_infobar_translation_done">"已翻译成%1$s。"</string>
-<string name="translate_infobar_translating">"正在将网页翻译成%1$s…"</string>
 <string name="translate_infobar_error">"糟糕，此网页内容无法翻译。"</string>
-<string name="translate_always_text">"一律翻译%1$s"</string>
-<string name="translate_never_translate_message_text">"下次访问这个网站时，您希望 Google Chrome 翻译此网站的%1$s网页吗？"</string>
 <string name="translate_button">"翻译"</string>
-<string name="translate_nope">"否"</string>
-<string name="translate_show_original">"显示原始网页"</string>
-<string name="translate_retry">"重试"</string>
-<string name="translate_options_source_hint">"网页语言："</string>
-<string name="translate_options_target_hint">"翻译语言："</string>
-<string name="translate_button_done">"完成"</string>
 <string name="translate_never_translate_site">"一律不翻译此网站"</string>
-<string name="translate_never_translate_language">"一律不翻译%1$s"</string>
 <string name="translate_option_always_translate">"一律翻译%1$s网页"</string>
 <string name="translate_option_never_translate">"一律不翻译源语言为%1$s的网页"</string>
 <string name="translate_option_more_language">"更多语言"</string>
@@ -590,6 +589,8 @@
 <string name="page_info_android_permission_blocked">"已在 Android 设置中停用"</string>
 <string name="page_info_android_location_blocked">"已对此设备停用"</string>
 <string name="page_info_connection_offline">"您目前浏览的是此网页的离线副本（创建时间：%1$s）"</string>
+<string name="page_info_offline_page_not_trusted_with_date">"此网页是在 %1$s创建的，可能与在线版本有所不同。"</string>
+<string name="page_info_offline_page_not_trusted_without_date">"此网页可能与在线版本有所不同。"</string>
 <string name="page_info_domain_hidden">"此内容来自 %1$s（由 Google 提供）。"</string>
 <string name="page_info_open_online_button">"在线打开"</string>
 <string name="sad_tab_suggestions">"如果您频繁遇到此问题，请尝试按这些&lt;link&gt;建议&lt;/link&gt;操作。"</string>
@@ -617,6 +618,7 @@
 <string name="download_failed_reason_storage_not_found">"未能成功下载 %1$s，因为找不到 SD 卡。"</string>
 <string name="download_failed_reason_unknown_error">"出现未知错误，未能下载 %1$s。"</string>
 <string name="download_started">"即将开始下载…"</string>
+<string name="prefetch_badge_new">"新建"</string>
 <string name="download_succeeded_message">"已在 %2$s 中下载 %1$s"</string>
 <string name="download_succeeded_message_default">"%1$s 已下载完毕"</string>
 <string name="file_size_downloaded_kb">"已下载 %1$.1f KB"</string>
@@ -666,9 +668,8 @@
 <string name="download_manager_search">"搜索您的下载内容"</string>
 <string name="download_manager_no_results">"未找到任何下载内容"</string>
 <string name="download_manager_offline_header_title">"Chrome 中的热门网页"</string>
-<string name="download_manager_offline_header_description">"定期更新的页面"</string>
-<string name="accessibility_expand_offline_pages">"点按即可展开"</string>
-<string name="accessibility_collapse_offline_pages">"点按即可收起"</string>
+<string name="download_manager_offline_header_description">"%1$s - 更新时间：%2$s"</string>
+<string name="download_manager_list_item_description">"%1$s - %2$s"</string>
 <string name="history_manager_empty">"此处没有任何历史记录"</string>
 <string name="history_manager_no_results">"未找到任何记录"</string>
 <string name="history_manager_search">"搜索您的历史记录"</string>
@@ -680,7 +681,6 @@
 <string name="incompatible_libraries">"Chrome 的组件互不兼容。Chrome 可能正在升级，请过几分钟后重试。如果问题仍然存在，请尝试卸载并重新安装 Chrome。"</string>
 <string name="native_startup_failed">"由于出现意外错误，Chrome 启动失败。"</string>
 <string name="fre_activity_label">"Chrome 首次运行体验"</string>
-<string name="fre_skip_text">"不用了，谢谢"</string>
 <string name="fre_tos_and_privacy">"使用此应用即表示您同意遵守 Chrome 的&lt;LINK1&gt;服务条款&lt;/LINK1&gt;和&lt;LINK2&gt;隐私权声明&lt;/LINK2&gt;。"</string>
 <string name="fre_tos_and_privacy_child_account">"使用此应用即表示您同意 Chrome 的&lt;LINK1&gt;服务条款&lt;/LINK1&gt;和&lt;LINK2&gt;隐私权声明&lt;/LINK2&gt;，以及&lt;LINK3&gt;针对通过 Family Link 管理的 Google 帐号的隐私权声明&lt;/LINK3&gt;。"</string>
 <string name="lightweight_fre_associated_app_tos_and_privacy">"%1$s将在 Chrome 中打开。继续操作即表示您同意 Chrome 的&lt;LINK1&gt;服务条款&lt;/LINK1&gt;和&lt;LINK2&gt;隐私权声明&lt;/LINK2&gt;。"</string>
@@ -735,8 +735,6 @@
   <item quantity="other">"%d 天前"</item>
 </plurals>
 <string name="just_now">"刚刚"</string>
-<string name="ntp_recent_tabs_accessibility_collapsed_group">"已收起 - 点击即可展开"</string>
-<string name="ntp_recent_tabs_accessibility_expanded_group">"已展开 - 点击即可收起"</string>
 <string name="recent_tabs_open_all_menu_option">"全部打开"</string>
 <string name="recent_tabs_hide_menu_option">"暂时隐藏"</string>
 <string name="recently_closed">"最近关闭的标签页"</string>
@@ -744,12 +742,10 @@
 <string name="remove_all">"全部删除"</string>
 <string name="accessibility_ntp_offline_badge">"可离线使用"</string>
 <string name="accessibility_suggestion_with_video_badge">"包含视频"</string>
-<string name="ntp_chrome_home_promo">"体验&lt;link&gt;更轻松的浏览方式&lt;/link&gt;"</string>
 <string name="ntp_learn_more_about_suggested_content">"&lt;link&gt;详细了解&lt;/link&gt;推荐内容"</string>
 <string name="ntp_all_dismissed_body_text_morning">"我们很快将会为您奉上更多文章，伴您度过美好的晨间时光！"</string>
 <string name="ntp_all_dismissed_body_text_afternoon">"我们很快将会为您奉上更多文章，伴您度过美好的午后时光！"</string>
 <string name="ntp_all_dismissed_body_text_evening">"我们很快将会为您奉上更多文章，伴您度过美好的夜晚时光！"</string>
-<string name="ntp_all_dismissed_body_text_modern">"点按“更多”即可获取相关文章"</string>
 <string name="ntp_suggestions_fetch_failed">"无法获取建议"</string>
 <string name="ntp_suggestions_fetch_no_new_suggestions">"没有新建议"</string>
 <string name="ntp_all_dismissed_refresh">"刷新"</string>
@@ -864,7 +860,8 @@
 <string name="accessibility_drawer_toggle_btn_open">"打开抽屉式导航栏"</string>
 <string name="accessibility_drawer_toggle_btn_close">"关闭抽屉式导航栏"</string>
 <string name="accessibility_list_menu_button">"%1$s选项"</string>
-<string name="accessibility_toolbar_screen_position">"选项位于屏幕顶部附近"</string>
+<string name="accessibility_toolbar_screen_position">"已选择 %1$s 项。选项位于屏幕顶部附近"</string>
+<string name="accessibility_toolbar_multi_select">"已选择 %1$s 项"</string>
 <plurals name="accessibility_share_selected_items">
   <item quantity="one">"分享 1 个所选项"</item>
   <item quantity="other">"分享 %d 个所选项"</item>
@@ -873,6 +870,8 @@
   <item quantity="one">"移除 1 个所选项"</item>
   <item quantity="other">"移除 %d 个所选项"</item>
 </plurals>
+<string name="accessibility_expand_section_header">"点按即可展开"</string>
+<string name="accessibility_collapse_section_header">"点按即可收起"</string>
 <plurals name="selected_items">
   <item quantity="one">"已选择 1 项"</item>
   <item quantity="other">"已选择 %d 项"</item>
@@ -1005,7 +1004,6 @@
 <string name="bottom_sheet_help_bubble_message">"上拉即可查看书签及更多内容"</string>
 <string name="bottom_sheet_pull_to_refresh_help_bubble_message">"前往此处的地址栏"</string>
 <string name="bottom_sheet_pull_to_refresh_help_bubble_accessibility_message">"前往屏幕底部的地址栏"</string>
-<string name="bottom_sheet_accessibility_expand_button_help_bubble_message">"点按即可查看“下载内容”、“书签”和“历史记录”"</string>
 <string name="bottom_sheet_expand_button_accessibility">"访问“下载内容”、“书签”和“历史记录”。"</string>
 <string name="bottom_sheet_accessibility_description">"导航面板。向下滑动手指即可关闭。"</string>
 <string name="bottom_sheet_opened_half">"已半屏打开导航面板"</string>
@@ -1019,15 +1017,6 @@
 <string name="chrome_home_menu_bookmarks_help_bubble">"“书签”的位置即将变更。下次只需上拉地址栏即可查看书签。"</string>
 <string name="chrome_home_menu_downloads_help_bubble">"“下载内容”的位置即将变更。下次只需上拉地址栏即可查看下载内容。"</string>
 <string name="chrome_home_menu_history_help_bubble">"“历史记录”的位置即将变更。下次只需上拉地址栏即可查看历史记录。"</string>
-<string name="chrome_home_promo_dialog_message">"向上滑动即可轻松浏览热门网站和文章，查看各项下载内容等等"</string>
-<string name="chrome_home_promo_dialog_message_accessibility">"从屏幕底部向上滑动手指或点按“展开”按钮，即可轻松浏览热门网站和文章，查看各项下载内容等等"</string>
-<string name="chrome_home_promo_dialog_not_yet">"目前还不可以"</string>
-<string name="chrome_home_promo_dialog_title">"欢迎使用新版 Chrome"</string>
-<string name="chrome_home_promo_dialog_try_it">"试用一下"</string>
-<string name="chrome_home_promo_dialog_turn_off">"关闭"</string>
-<string name="chrome_home_opt_out_menu_item">"您目前使用的是新版 Chrome"</string>
-<string name="chrome_home_opt_out_snackbar_text">"请告诉我们您为何停用新版 Chrome"</string>
-<string name="chrome_home_opt_out_snackbar_action">"参与调查"</string>
 <string name="bottom_sheet_accessibility_toolbar">"地址栏。向上滑动即可查看下载内容、书签和历史记录。"</string>
 <string name="photo_picker_select_images">"选择图片"</string>
 <string name="photo_picker_camera">"摄像头"</string>

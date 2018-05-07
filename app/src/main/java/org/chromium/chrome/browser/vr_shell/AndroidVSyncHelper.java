@@ -15,7 +15,7 @@ import org.chromium.base.annotations.JNINamespace;
 /**
  * Helper class for interfacing with the Android Choreographer from native code.
  */
-@JNINamespace("vr_shell")
+@JNINamespace("vr")
 public class AndroidVSyncHelper {
     private final long mNativeAndroidVSyncHelper;
 

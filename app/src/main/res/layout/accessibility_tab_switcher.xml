@@ -18,12 +18,22 @@
     android:divider="@drawable/accessibility_tab_switcher_divider"
     android:showDividers="middle">
 
+    <org.chromium.chrome.browser.widget.accessibility.AccessibilityTabModelListView
+        android:id="@+id/list_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:contentDescription="@string/accessibility_tab_switcher_standard_stack" />
+
+    <!-- TabLayout doesn't support indicator at the top. Setting scaleY here as a workaround to
+         bring the indicator to the top. -->
     <LinearLayout
         android:id="@+id/tab_wrapper"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:visibility="gone">
+        android:visibility="gone"
+        android:scaleY="-1">
 
         <android.support.design.widget.TabLayout
             android:id="@+id/tab_layout"
@@ -37,13 +47,6 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/accessibility_tab_switcher_top_padding" />
     </LinearLayout>
-
-    <org.chromium.chrome.browser.widget.accessibility.AccessibilityTabModelListView
-        android:id="@+id/list_view"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:contentDescription="@string/accessibility_tab_switcher_standard_stack" />
 
     <LinearLayout
         android:layout_width="match_parent"

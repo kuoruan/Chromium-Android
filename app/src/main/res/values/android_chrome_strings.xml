@@ -33,7 +33,7 @@
 <string name="hide_info">"Hide Info"</string>
 <string name="copy_link">"Copy link"</string>
 <string name="copied">"Copied"</string>
-<string name="retry">"Retry"</string>
+<string name="try_again">"Try again"</string>
 <string name="preferences">"Settings"</string>
 <string name="menu_help">"Help &amp; feedback"</string>
 <string name="managed_by_your_administrator">"Managed by your administrator"</string>
@@ -103,10 +103,10 @@
   <item quantity="one">"%1$s\u2026 and %2$s more"</item>
   <item quantity="other">"%1$s\u2026 and %2$s more"</item>
 </plurals>
+<string name="prefs_saved_passwords_title">"Passwords"</string>
 <string name="prefs_saved_passwords">"Save passwords"</string>
 <string name="passwords_auto_signin_title">"Auto Sign-in"</string>
 <string name="passwords_auto_signin_description">"Automatically sign in to websites using stored credentials. When the feature is off, you’ll be asked for verification every time before signing in to a website."</string>
-<string name="section_saved_passwords">"Passwords"</string>
 <string name="section_saved_passwords_exceptions">"Never saved"</string>
 <string name="manage_passwords_text">"View and manage saved passwords at &lt;link&gt;passwords.google.com&lt;/link&gt;"</string>
 <string name="saved_passwords_none_text">"Saved passwords will appear here."</string>
@@ -130,9 +130,16 @@
 <string name="save_password_preferences_export_action_title">"Export passwords…"</string>
 <string name="save_password_preferences_export_action_description">"Export passwords stored with Chrome"</string>
 <string name="settings_passwords_export_description">"Your passwords will be visible to anyone who can see the exported file."</string>
+<string name="settings_passwords_preparing_export">"Preparing passwords…"</string>
+<string name="save_password_preferences_export_error_title">"Can’t export passwords"</string>
+<string name="save_password_preferences_export_learn_google_drive">"Learn how to use Google Drive"</string>
+<string name="save_password_preferences_export_no_app">"Your device doesn’t have an app to store the passwords file."</string>
+<string name="save_password_preferences_export_tips">"Try the following tips: make sure there is enough space on your device, try to export again."</string>
+<string name="save_password_preferences_export_error_details">"Details: %1$s"</string>
 <string name="lockscreen_description_copy">"Unlock to copy your password"</string>
 <string name="lockscreen_description_view">"Unlock to view your password"</string>
 <string name="lockscreen_description_export">"Unlock to export your passwords"</string>
+<string name="save_password_preferences_export_subject">"Chrome Passwords"</string>
 <string name="options_homepage_edit_title">"Edit home page"</string>
 <string name="options_homepage_edit_label">"Open this page"</string>
 <string name="prefs_notifications">"Notifications"</string>
@@ -221,6 +228,7 @@ Your Google account may have other forms of browsing history like searches and a
 <string name="popup_permission_title">"Pop-ups"</string>
 <string name="push_notifications_permission_title">"Notifications"</string>
 <string name="sound_permission_title">"Sound"</string>
+<string name="clipboard_permission_title">"Clipboard"</string>
 <string name="enable_notifications_vibrate_title">"Vibrate"</string>
 <string name="enable_notifications_vibrate_summary">"Notifications may vibrate the device"</string>
 <string name="midi_sysex_permission_title">"Allow full control of MIDI devices"</string>
@@ -254,6 +262,9 @@ Your Google account may have other forms of browsing history like searches and a
 <string name="website_settings_category_autoplay_allowed">"Allow sites to automatically play muted videos (recommended)"</string>
 <string name="website_settings_category_autoplay_disabled_data_saver">"Unavailable when Data Saver is turned on"</string>
 <string name="website_settings_category_javascript_allowed">"Allow sites to run JavaScript (recommended)"</string>
+<string name="website_settings_category_clipboard_ask">"Ask before allowing sites to read text and images from the clipboard (recommended)"</string>
+<string name="website_settings_category_clipboard_blocked">"Block sites from reading text and images from the clipboard"</string>
+<string name="website_settings_category_clipboard_blocked_list">"Blocked from reading clipboard"</string>
 <string name="website_settings_category_sound_allowed">"Allow sites to play sound (recommended)"</string>
 <string name="website_settings_category_sound_blocked">"Mute sites that play sound"</string>
 <string name="website_settings_category_sound_blocked_list">"Muted"</string>
@@ -281,6 +292,9 @@ Your Google account may have other forms of browsing history like searches and a
 <string name="languages_list_prefs_description">"Websites will show text in your preferred language, when possible."</string>
 <string name="languages_offer_translate_switch">"Offer to translate pages in other languages"</string>
 <string name="languages_item_option_offer_to_translate">"Offer to translate"</string>
+<string name="languages_item_option_move_up">"Move up"</string>
+<string name="languages_item_option_move_down">"Move down"</string>
+<string name="languages_item_option_move_to_top">"Move to top"</string>
 <string name="website_settings_device_location">"Location"</string>
 <string name="geolocation_permission_title">"Location access"</string>
 <string name="android_permission_off_plural">"Turn on permissions for Chrome in &lt;link&gt;Android Settings&lt;/link&gt;."</string>
@@ -327,9 +341,6 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="data_reduction_usage_reset_statistics_confirmation_button">"Reset"</string>
 <string name="safe_browsing_description">"Chrome’s Safe Browsing system will also be used to detect malicious pages and protect you from phishing, malware, and harmful downloads."</string>
 <string name="data_reduction_caveats_description">"This feature may interfere with access to premium data services provided by your carrier."</string>
-<string name="data_reduction_stats_title">"Data savings"</string>
-<string name="data_reduction_original_size_label">"Original size"</string>
-<string name="data_reduction_compressed_size_label">"After compression"</string>
 <string name="data_reduction_promo_title">"Save data and browse faster"</string>
 <string name="data_reduction_promo_summary">"Use up to 60% less data and speed up the web. Google servers will optimize the pages you visit."</string>
 <string name="data_reduction_enable_button">"Turn on Data Saver"</string>
@@ -343,8 +354,12 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="data_reduction_promo_snackbar_text_gb">"Chrome has saved you %1$d GB"</string>
 <string name="data_reduction_promo_snackbar_button">"View"</string>
 <string name="download_location_title">"Location"</string>
-<string name="downloads_primary_storage">"Primary storage"</string>
-<string name="downloads_secondary_storage">"Secondary storage"</string>
+<string name="downloads_location_selector_title">"Download location"</string>
+<string name="downloads_location_sd_card">"SD Card"</string>
+<string name="downloads_location_sd_card_number">"SD Card %1$d"</string>
+<string name="download_location_prompt_enabled_title">"Ask where to save each file before downloading"</string>
+<string name="download_location_dialog_title">"Download file"</string>
+<string name="download_location_dialog_checkbox">"Don‘t show again"</string>
 <string name="prefs_about_chrome">"About Chrome"</string>
 <string name="legal_information_summary">"Copyright %1$d Google Inc. All rights reserved."</string>
 <string name="application_version_title">"Application version"</string>
@@ -384,7 +399,6 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="signout_message">"Changes to your bookmarks, history, passwords, and other settings will no longer be synced to your Google Account. However, your existing data will remain stored in your Google account."</string>
 <string name="signout_managed_account_message">"You are signing out of an account managed by %1$s. This will delete the Chrome data stored on this device, but the data will remain in your Google Account."</string>
 <string name="signout_dialog_positive_button">"Sign out"</string>
-<string name="sign_in_button">"Sign in"</string>
 <string name="sign_in_getting_account_management_policy">"Contacting Google. This may take a minute…"</string>
 <string name="sign_in_timeout_title">"Can’t sign in"</string>
 <string name="sign_in_timeout_message">"Google took too long to respond"</string>
@@ -396,8 +410,6 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="accept_and_sign_out">"Accept and sign out"</string>
 <string name="accept_and_switch_accounts">"Accept and switch accounts"</string>
 <string name="sync_your_bookmarks">"Sync your bookmarks"</string>
-<string name="bookmark_sign_in_promo_description">"To get your bookmarks on all your devices, sign in to Chrome."</string>
-<string name="recent_tabs_sign_in_promo_description">"To get your tabs from your other devices, sign in to Chrome."</string>
 <string name="enable_sync_button">"Open settings"</string>
 <string name="open_settings_button">"Open settings"</string>
 <string name="bookmarks_sync_promo_enable_sync">"Bookmarks saved on your other devices will appear here."</string>
@@ -485,22 +497,9 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="duplicate_download_infobar_text">"Do you want to download ^1 again?"</string>
 <string name="duplicate_download_request_infobar_text">"Do you want to start downloading ^1 again?"</string>
 <string name="duplicate_download_infobar_download_button">"Download"</string>
-<string name="translate_infobar_text">"This page is in ^1. Translate it to ^2?"</string>
-<string name="translate_infobar_change_languages">"Change languages"</string>
-<string name="translate_infobar_translation_done">"Translated to %1$s."</string>
-<string name="translate_infobar_translating">"Translating page to %1$s…"</string>
 <string name="translate_infobar_error">"Oops. This page could not be translated."</string>
-<string name="translate_always_text">"Always translate %1$s"</string>
-<string name="translate_never_translate_message_text">"Would you like Google Chrome to offer to translate %1$s pages from this site next time?"</string>
 <string name="translate_button">"Translate"</string>
-<string name="translate_nope">"Nope"</string>
-<string name="translate_show_original">"Show original"</string>
-<string name="translate_retry">"Try again"</string>
-<string name="translate_options_source_hint">"Page Language:"</string>
-<string name="translate_options_target_hint">"Translation Language:"</string>
-<string name="translate_button_done">"Done"</string>
 <string name="translate_never_translate_site">"Never translate this site"</string>
-<string name="translate_never_translate_language">"Never translate %1$s"</string>
 <string name="translate_option_always_translate">"Always translate pages in %1$s"</string>
 <string name="translate_option_never_translate">"Never translate pages in %1$s"</string>
 <string name="translate_option_more_language">"More languages"</string>
@@ -590,6 +589,8 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="page_info_android_permission_blocked">"Turned off in Android Settings"</string>
 <string name="page_info_android_location_blocked">"Turned off for this device"</string>
 <string name="page_info_connection_offline">"You are viewing an offline copy of this page from %1$s"</string>
+<string name="page_info_offline_page_not_trusted_with_date">"This page is from %1$s and may differ from the online version."</string>
+<string name="page_info_offline_page_not_trusted_without_date">"This page may differ from the online version."</string>
 <string name="page_info_domain_hidden">"This content is from %1$s, delivered by Google."</string>
 <string name="page_info_open_online_button">"Open Online"</string>
 <string name="sad_tab_suggestions">"If you’re seeing this frequently, try these &lt;link&gt;suggestions&lt;/link&gt;."</string>
@@ -617,6 +618,7 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="download_failed_reason_storage_not_found">"%1$s download failed due to missing SD Card."</string>
 <string name="download_failed_reason_unknown_error">"%1$s download failed due to an unknown error."</string>
 <string name="download_started">"Downloading…"</string>
+<string name="prefetch_badge_new">"New"</string>
 <string name="download_succeeded_message">"%1$s downloaded in %2$s"</string>
 <string name="download_succeeded_message_default">"%1$s downloaded"</string>
 <string name="file_size_downloaded_kb">"Downloaded %1$.1f KB"</string>
@@ -666,9 +668,8 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="download_manager_search">"Search your downloads"</string>
 <string name="download_manager_no_results">"No downloads found"</string>
 <string name="download_manager_offline_header_title">"Popular pages from Chrome"</string>
-<string name="download_manager_offline_header_description">"Pages updated regularly"</string>
-<string name="accessibility_expand_offline_pages">"Tap to expand"</string>
-<string name="accessibility_collapse_offline_pages">"Tap to collapse"</string>
+<string name="download_manager_offline_header_description">"%1$s - Updated %2$s"</string>
+<string name="download_manager_list_item_description">"%1$s - %2$s"</string>
 <string name="history_manager_empty">"No history here"</string>
 <string name="history_manager_no_results">"No history found"</string>
 <string name="history_manager_search">"Search your history"</string>
@@ -680,7 +681,6 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="incompatible_libraries">"Chrome’s components are incompatible with one another. Chrome may be upgrading, please try again in a few minutes. If the problem continues, try uninstalling and re-installing Chrome."</string>
 <string name="native_startup_failed">"Chrome failed during startup with an unexpected error."</string>
 <string name="fre_activity_label">"Chrome First Run Experience"</string>
-<string name="fre_skip_text">"No thanks"</string>
 <string name="fre_tos_and_privacy">"By using this application, you agree to Chrome’s &lt;LINK1&gt;Terms of Service&lt;/LINK1&gt; and &lt;LINK2&gt;Privacy Notice&lt;/LINK2&gt;."</string>
 <string name="fre_tos_and_privacy_child_account">"By using this application, you agree to Chrome’s &lt;LINK1&gt;Terms of Service&lt;/LINK1&gt; and &lt;LINK2&gt;Privacy Notice&lt;/LINK2&gt;, and the &lt;LINK3&gt;Privacy Notice for Google Accounts Managed with Family Link&lt;/LINK3&gt;."</string>
 <string name="lightweight_fre_associated_app_tos_and_privacy">"%1$s will open in Chrome. By continuing, you agree to Chrome’s &lt;LINK1&gt;Terms of Service&lt;/LINK1&gt; and &lt;LINK2&gt;Privacy Notice&lt;/LINK2&gt;."</string>
@@ -735,8 +735,6 @@ To obtain new licenses, connect to the internet and play your downloaded content
   <item quantity="other">"%d days ago"</item>
 </plurals>
 <string name="just_now">"just now"</string>
-<string name="ntp_recent_tabs_accessibility_collapsed_group">"Collapsed - Click to expand"</string>
-<string name="ntp_recent_tabs_accessibility_expanded_group">"Expanded - Click to collapse"</string>
 <string name="recent_tabs_open_all_menu_option">"Open all"</string>
 <string name="recent_tabs_hide_menu_option">"Hide for now"</string>
 <string name="recently_closed">"Recently closed"</string>
@@ -744,12 +742,10 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="remove_all">"Remove all"</string>
 <string name="accessibility_ntp_offline_badge">"Available offline"</string>
 <string name="accessibility_suggestion_with_video_badge">"With video"</string>
-<string name="ntp_chrome_home_promo">"Try an &lt;link&gt;easier way to browse&lt;/link&gt;"</string>
 <string name="ntp_learn_more_about_suggested_content">"&lt;link&gt;Learn more&lt;/link&gt; about suggested content"</string>
 <string name="ntp_all_dismissed_body_text_morning">"More articles will appear soon. Enjoy your morning!"</string>
 <string name="ntp_all_dismissed_body_text_afternoon">"More articles will appear soon. Enjoy your afternoon!"</string>
 <string name="ntp_all_dismissed_body_text_evening">"More articles will appear soon. Enjoy your evening!"</string>
-<string name="ntp_all_dismissed_body_text_modern">"Tap More to get articles"</string>
 <string name="ntp_suggestions_fetch_failed">"Can’t get suggestions"</string>
 <string name="ntp_suggestions_fetch_no_new_suggestions">"No new suggestions"</string>
 <string name="ntp_all_dismissed_refresh">"Refresh"</string>
@@ -864,7 +860,8 @@ To obtain new licenses, connect to the internet and play your downloaded content
 <string name="accessibility_drawer_toggle_btn_open">"Open navigation drawer"</string>
 <string name="accessibility_drawer_toggle_btn_close">"Close navigation drawer"</string>
 <string name="accessibility_list_menu_button">"%1$s Options"</string>
-<string name="accessibility_toolbar_screen_position">"Options available near top of the screen"</string>
+<string name="accessibility_toolbar_screen_position">"%1$s selected.  Options available near top of the screen"</string>
+<string name="accessibility_toolbar_multi_select">"%1$s selected"</string>
 <plurals name="accessibility_share_selected_items">
   <item quantity="one">"Share 1 selected item"</item>
   <item quantity="other">"Share %d selected items"</item>
@@ -873,6 +870,8 @@ To obtain new licenses, connect to the internet and play your downloaded content
   <item quantity="one">"Remove 1 selected item"</item>
   <item quantity="other">"Remove %d selected items"</item>
 </plurals>
+<string name="accessibility_expand_section_header">"Tap to expand"</string>
+<string name="accessibility_collapse_section_header">"Tap to collapse"</string>
 <plurals name="selected_items">
   <item quantity="one">"1 selected"</item>
   <item quantity="other">"%d selected"</item>
@@ -1005,7 +1004,6 @@ You must have Bluetooth and Location turned on in order to use the Physical Web.
 <string name="bottom_sheet_help_bubble_message">"Pull up to see bookmarks and more"</string>
 <string name="bottom_sheet_pull_to_refresh_help_bubble_message">"Access the address bar here"</string>
 <string name="bottom_sheet_pull_to_refresh_help_bubble_accessibility_message">"Access the address bar at the bottom of your screen"</string>
-<string name="bottom_sheet_accessibility_expand_button_help_bubble_message">"Tap to see downloads, bookmarks, and history"</string>
 <string name="bottom_sheet_expand_button_accessibility">"access downloads, bookmarks, and history."</string>
 <string name="bottom_sheet_accessibility_description">"Navigation panel. Swipe down to close."</string>
 <string name="bottom_sheet_opened_half">"Navigation panel opened at half height"</string>
@@ -1019,15 +1017,6 @@ You must have Bluetooth and Location turned on in order to use the Physical Web.
 <string name="chrome_home_menu_bookmarks_help_bubble">"“Bookmarks” is moving. Next time, pull the address bar up."</string>
 <string name="chrome_home_menu_downloads_help_bubble">"“Downloads” is moving. Next time, pull the address bar up."</string>
 <string name="chrome_home_menu_history_help_bubble">"“History” is moving. Next time, pull the address bar up."</string>
-<string name="chrome_home_promo_dialog_message">"Swipe up for easy access to popular sites and articles, downloads, and more"</string>
-<string name="chrome_home_promo_dialog_message_accessibility">"Swipe up from the bottom of the screen or tap the expand button for easy access to popular sites and articles, downloads, and more"</string>
-<string name="chrome_home_promo_dialog_not_yet">"Not yet"</string>
-<string name="chrome_home_promo_dialog_title">"Introducing the new Chrome"</string>
-<string name="chrome_home_promo_dialog_try_it">"Try it"</string>
-<string name="chrome_home_promo_dialog_turn_off">"Turn off"</string>
-<string name="chrome_home_opt_out_menu_item">"You’re using the new Chrome"</string>
-<string name="chrome_home_opt_out_snackbar_text">"Tell us why you turned off the new Chrome"</string>
-<string name="chrome_home_opt_out_snackbar_action">"Take survey"</string>
 <string name="bottom_sheet_accessibility_toolbar">"Address bar. Swipe up to see downloads, bookmarks, and history."</string>
 <string name="photo_picker_select_images">"Select images"</string>
 <string name="photo_picker_camera">"Camera"</string>

@@ -6,10 +6,8 @@ package org.chromium.content.browser.accessibility;
 
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.annotation.TargetApi;
-import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import org.chromium.base.annotations.JNINamespace;
@@ -20,23 +18,28 @@ import org.chromium.content_public.browser.WebContents;
  */
 @JNINamespace("content")
 @TargetApi(Build.VERSION_CODES.KITKAT)
-public class KitKatWebContentsAccessibility extends WebContentsAccessibility {
+public class KitKatWebContentsAccessibility extends WebContentsAccessibilityImpl {
     private String mSupportedHtmlElementTypes;
 
-    KitKatWebContentsAccessibility(Context context, ViewGroup containerView,
-            WebContents webContents, boolean shouldFocusOnPageLoad) {
-        super(context, containerView, webContents, shouldFocusOnPageLoad);
+    KitKatWebContentsAccessibility(WebContents webContents) {
+        super(webContents);
+    }
+
+    @Override
+    protected void onNativeInit() {
+        super.onNativeInit();
         mSupportedHtmlElementTypes = nativeGetSupportedHtmlElementTypes(mNativeObj);
     }
 
     @Override
     protected void setAccessibilityNodeInfoKitKatAttributes(AccessibilityNodeInfo node,
             boolean isRoot, boolean isEditableText, String role, String roleDescription,
-            String hint, int selectionStartIndex, int selectionEndIndex) {
+            String hint, int selectionStartIndex, int selectionEndIndex, boolean hasImage) {
         Bundle bundle = node.getExtras();
         bundle.putCharSequence("AccessibilityNodeInfo.chromeRole", role);
         bundle.putCharSequence("AccessibilityNodeInfo.roleDescription", roleDescription);
         bundle.putCharSequence("AccessibilityNodeInfo.hint", hint);
+        if (hasImage) bundle.putCharSequence("AccessibilityNodeInfo.hasImage", "true");
         if (isRoot) {
             bundle.putCharSequence(
                     "ACTION_ARGUMENT_HTML_ELEMENT_STRING_VALUES", mSupportedHtmlElementTypes);

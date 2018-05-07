@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
+import android.provider.Settings;
 
 import org.chromium.base.BuildInfo;
 import org.chromium.base.VisibleForTesting;
@@ -65,8 +66,8 @@ public class MainPreferences extends PreferenceFragment
     @Override
     public void onStart() {
         super.onStart();
-        if (SigninManager.get(getActivity()).isSigninSupported()) {
-            SigninManager.get(getActivity()).addSignInStateObserver(this);
+        if (SigninManager.get().isSigninSupported()) {
+            SigninManager.get().addSignInStateObserver(this);
             mSignInPreference.registerForUpdates();
         }
     }
@@ -74,8 +75,8 @@ public class MainPreferences extends PreferenceFragment
     @Override
     public void onStop() {
         super.onStop();
-        if (SigninManager.get(getActivity()).isSigninSupported()) {
-            SigninManager.get(getActivity()).removeSignInStateObserver(this);
+        if (SigninManager.get().isSigninSupported()) {
+            SigninManager.get().removeSignInStateObserver(this);
             mSignInPreference.unregisterForUpdates();
         }
     }
@@ -100,10 +101,9 @@ public class MainPreferences extends PreferenceFragment
             // Settings notifications page, not to Chrome's notifications settings page.
             Preference notifications = findPreference(PREF_NOTIFICATIONS);
             notifications.setOnPreferenceClickListener(preference -> {
-                // TODO(crbug.com/707804): Use Android O constants.
                 Intent intent = new Intent();
-                intent.setAction("android.settings.APP_NOTIFICATION_SETTINGS");
-                intent.putExtra("android.provider.extra.APP_PACKAGE", BuildInfo.getPackageName());
+                intent.setAction(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+                intent.putExtra(Settings.EXTRA_APP_PACKAGE, BuildInfo.getPackageName());
                 startActivity(intent);
                 // We handle the click so the default action (opening NotificationsPreference)
                 // isn't triggered.
@@ -158,7 +158,7 @@ public class MainPreferences extends PreferenceFragment
     }
 
     private void updatePreferences() {
-        if (SigninManager.get(getActivity()).isSigninSupported()) {
+        if (SigninManager.get().isSigninSupported()) {
             addPreferenceIfAbsent(PREF_SIGN_IN);
         } else {
             removePreferenceIfPresent(PREF_SIGN_IN);

@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.compositor.scene_layer;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.RectF;
 
 import org.chromium.base.annotations.JNINamespace;
@@ -18,6 +19,9 @@ import org.chromium.chrome.browser.compositor.layouts.eventfilter.EventFilter;
 import org.chromium.chrome.browser.compositor.overlays.SceneOverlay;
 import org.chromium.chrome.browser.device.DeviceClassManager;
 import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager;
+import org.chromium.chrome.browser.ntp.NewTabPage;
+import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.util.ColorUtils;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.ClipDrawableProgressBar.DrawingInfo;
 import org.chromium.chrome.browser.widget.ControlContainer;
@@ -78,8 +82,7 @@ public class ToolbarSceneLayer extends SceneOverlayLayer implements SceneOverlay
 
         if (fullscreenManager == null) return;
         ControlContainer toolbarContainer = fullscreenManager.getControlContainer();
-        if (!isTablet && toolbarContainer != null
-                && !fullscreenManager.areBrowserControlsAtBottom()) {
+        if (!isTablet && toolbarContainer != null) {
             if (mProgressBarDrawingInfo == null) mProgressBarDrawingInfo = new DrawingInfo();
             toolbarContainer.getProgressBarDrawingInfo(mProgressBarDrawingInfo);
         } else {
@@ -92,15 +95,28 @@ public class ToolbarSceneLayer extends SceneOverlayLayer implements SceneOverlay
         boolean showShadow = fullscreenManager.drawControlsAsTexture()
                 || forceHideAndroidBrowserControls;
 
-        // Use either top or bottom offset depending on the browser controls state.
-        float controlsOffset = fullscreenManager.areBrowserControlsAtBottom()
-                ? fullscreenManager.getBottomControlOffset()
-                : fullscreenManager.getTopControlOffset();
+        int textBoxColor = Color.WHITE;
+        int textBoxResourceId = R.drawable.card_single;
+
+        boolean isNtp = false;
+        boolean useModern = false;
+        Tab currentTab = fullscreenManager.getTab();
+        if (currentTab != null) {
+            isNtp = currentTab != null ? NewTabPage.isNTPUrl(currentTab.getUrl()) : false;
+            useModern = currentTab.getActivity().supportsModernDesign()
+                    && FeatureUtilities.isChromeModernDesignEnabled();
+        }
+
+        if (useModern) {
+            textBoxColor = ColorUtils.getTextBoxColorForToolbarBackground(
+                    mContext.getResources(), isNtp, browserControlsBackgroundColor, true);
+            textBoxResourceId = R.drawable.modern_location_bar;
+        }
 
         nativeUpdateToolbarLayer(mNativePtr, resourceManager, R.id.control_container,
-                browserControlsBackgroundColor, R.drawable.card_single,
-                browserControlsUrlBarAlpha, controlsOffset, windowHeight, useTexture, showShadow,
-                fullscreenManager.areBrowserControlsAtBottom());
+                browserControlsBackgroundColor, textBoxResourceId, browserControlsUrlBarAlpha,
+                textBoxColor, fullscreenManager.getTopControlOffset(), windowHeight, useTexture,
+                showShadow, useModern);
 
         if (mProgressBarDrawingInfo == null) return;
         nativeUpdateProgressBar(mNativePtr, mProgressBarDrawingInfo.progressBarRect.left,
@@ -146,20 +162,13 @@ public class ToolbarSceneLayer extends SceneOverlayLayer implements SceneOverlay
                 mLayoutProvider.getActiveLayout().forceHideBrowserControlsAndroidView();
         ViewportMode viewportMode = mLayoutProvider.getActiveLayout().getViewportMode();
 
-        // TODO(mdjones): Create a "theme provider" to handle cases like this.
-        int color = mRenderHost.getBrowserControlsBackgroundColor();
+        // In Chrome modern design, the url bar is always opaque since it is drawn in the
+        // compositor.
         float alpha = mRenderHost.getBrowserControlsUrlBarAlpha();
-        ChromeFullscreenManager fullscreenManager = mLayoutProvider.getFullscreenManager();
-        if (fullscreenManager.areBrowserControlsAtBottom() && fullscreenManager.getTab() != null) {
-            color = fullscreenManager.getTab().getDefaultThemeColor();
-            if (!fullscreenManager.getTab().isIncognito()) alpha = 1f;
-        }
+        if (FeatureUtilities.isChromeModernDesignEnabled()) alpha = 1;
 
-        // In Chrome Home, the url bar is always drawn in the Java layer rather than the
-        // compositor layer.
-        if (FeatureUtilities.isChromeHomeEnabled()) alpha = 0;
-
-        update(color, alpha, mLayoutProvider.getFullscreenManager(), resourceManager,
+        update(mRenderHost.getBrowserControlsBackgroundColor(), alpha,
+                mLayoutProvider.getFullscreenManager(), resourceManager,
                 forceHideBrowserControlsAndroidView, viewportMode, DeviceFormFactor.isTablet(),
                 viewport.height());
 
@@ -257,6 +266,7 @@ public class ToolbarSceneLayer extends SceneOverlayLayer implements SceneOverlay
             int toolbarBackgroundColor,
             int urlBarResourceId,
             float urlBarAlpha,
+            int urlBarColor,
             float topOffset,
             float viewHeight,
             boolean visible,

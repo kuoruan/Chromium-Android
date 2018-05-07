@@ -85,6 +85,11 @@ public class FeedbackCollector implements Runnable {
         sources.add(new IMEFeedbackSource());
         sources.add(new PermissionFeedbackSource());
 
+        // Sanity check in case a source is added to the wrong list.
+        for (FeedbackSource source : sources) {
+            assert !(source instanceof AsyncFeedbackSource);
+        }
+
         return sources;
     }
 
@@ -97,6 +102,7 @@ public class FeedbackCollector implements Runnable {
         sources.addAll(AppHooks.get().getAdditionalFeedbackSources().getAsynchronousSources());
         sources.add(new ConnectivityFeedbackSource(profile));
         sources.add(new SystemInfoFeedbackSource());
+        sources.add(new ProcessIdFeedbackSource());
 
         return sources;
     }

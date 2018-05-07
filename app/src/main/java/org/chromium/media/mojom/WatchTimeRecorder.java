@@ -49,6 +49,11 @@ String name);
 
 
 
+    void setAutoplayInitiated(
+boolean value);
+
+
+
     void updateUnderflowCount(
 int count);
 

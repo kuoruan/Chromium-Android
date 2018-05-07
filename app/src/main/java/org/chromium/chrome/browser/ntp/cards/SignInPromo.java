@@ -74,7 +74,7 @@ public class SignInPromo extends OptionalLeaf {
     private SignInPromo(SuggestionsUiDelegate uiDelegate) {
         Context context = ContextUtils.getApplicationContext();
         SuggestionsSource suggestionsSource = uiDelegate.getSuggestionsSource();
-        SigninManager signinManager = SigninManager.get(context);
+        SigninManager signinManager = SigninManager.get();
 
         mCanSignIn = signinManager.isSignInAllowed() && !signinManager.isSignedInOnNative();
         mCanShowPersonalizedSuggestions = suggestionsSource.areRemoteSuggestionsEnabled();
@@ -282,7 +282,7 @@ public class SignInPromo extends OptionalLeaf {
                             ? R.layout.personalized_signin_promo_view_modern_content_suggestions
                             : R.layout.personalized_signin_promo_view_ntp_content_suggestions,
                     parent, config, contextMenuManager);
-            if (!FeatureUtilities.isChromeHomeEnabled()) {
+            if (!FeatureUtilities.isChromeModernDesignEnabled()) {
                 getParams().topMargin = parent.getResources().getDimensionPixelSize(
                         R.dimen.ntp_sign_in_promo_margin_top);
             }

@@ -11,6 +11,7 @@ import android.os.Build;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
+import org.chromium.base.annotations.JNIAdditionalImport;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.metrics.RecordHistogram;
 
@@ -23,6 +24,7 @@ import java.util.HashMap;
  * Lifetime is controlled by device::BluetoothDeviceAndroid.
  */
 @JNINamespace("device")
+@JNIAdditionalImport(Wrappers.class)
 @TargetApi(Build.VERSION_CODES.M)
 final class ChromeBluetoothDevice {
     private static final String TAG = "Bluetooth";
@@ -65,13 +67,10 @@ final class ChromeBluetoothDevice {
     // BluetoothDeviceAndroid methods implemented in java:
 
     // Implements BluetoothDeviceAndroid::Create.
-    // 'Object' type must be used because inner class Wrappers.BluetoothDeviceWrapper reference is
-    // not handled by jni_generator.py JavaToJni. http://crbug.com/505554
     @CalledByNative
     private static ChromeBluetoothDevice create(
-            long nativeBluetoothDeviceAndroid, Object deviceWrapper) {
-        return new ChromeBluetoothDevice(
-                nativeBluetoothDeviceAndroid, (Wrappers.BluetoothDeviceWrapper) deviceWrapper);
+            long nativeBluetoothDeviceAndroid, Wrappers.BluetoothDeviceWrapper deviceWrapper) {
+        return new ChromeBluetoothDevice(nativeBluetoothDeviceAndroid, deviceWrapper);
     }
 
     // Implements BluetoothDeviceAndroid::GetBluetoothClass.
@@ -313,9 +312,8 @@ final class ChromeBluetoothDevice {
             long nativeBluetoothDeviceAndroid, int status, boolean connected);
 
     // Binds to BluetoothDeviceAndroid::CreateGattRemoteService.
-    // TODO(http://crbug.com/505554): Replace 'Object' with specific type when JNI fixed.
     private native void nativeCreateGattRemoteService(long nativeBluetoothDeviceAndroid,
-            String instanceId, Object bluetoothGattServiceWrapper);
+            String instanceId, Wrappers.BluetoothGattServiceWrapper serviceWrapper);
 
     // Binds to BluetoothDeviceAndroid::GattServicesDiscovered.
     private native void nativeOnGattServicesDiscovered(long nativeBluetoothDeviceAndroid);

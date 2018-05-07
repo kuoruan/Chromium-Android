@@ -86,7 +86,7 @@ public class TileRenderer {
     }
 
     private static boolean useDecreasedMinSize() {
-        return FeatureUtilities.isChromeHomeEnabled();
+        return FeatureUtilities.isChromeModernDesignEnabled();
     }
 
     /**

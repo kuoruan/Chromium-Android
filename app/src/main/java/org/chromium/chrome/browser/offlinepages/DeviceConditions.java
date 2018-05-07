@@ -93,7 +93,7 @@ public class DeviceConditions {
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private static boolean getInPowerSaveModeLollipop(Context context) {
-        PowerManager powerManager = (PowerManager) context.getSystemService(context.POWER_SERVICE);
+        PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         return powerManager.isPowerSaveMode();
     }
 

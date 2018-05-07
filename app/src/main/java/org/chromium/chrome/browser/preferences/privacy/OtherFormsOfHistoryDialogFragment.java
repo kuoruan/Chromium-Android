@@ -7,7 +7,6 @@ package org.chromium.chrome.browser.preferences.privacy;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -109,7 +108,7 @@ public class OtherFormsOfHistoryDialogFragment extends DialogFragment implements
     /**
      * @return Whether the dialog has already been shown to the user before.
      */
-    static boolean wasDialogShown(Context context) {
+    static boolean wasDialogShown() {
         return ContextUtils.getAppSharedPreferences().getBoolean(
                 PREF_OTHER_FORMS_OF_HISTORY_DIALOG_SHOWN, false);
     }

@@ -19,7 +19,6 @@
         android:id="@+id/loading_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:paddingTop="@dimen/chrome_home_empty_view_top_padding" />
+        android:layout_gravity="center_horizontal" />
 
 </FrameLayout>

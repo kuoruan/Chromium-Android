@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.preferences.website;
 
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.browser.ContentSettingsType;
+import org.chromium.chrome.browser.preferences.website.WebsitePreferenceBridge.StorageInfoClearedCallback;
 import org.chromium.chrome.browser.util.MathUtils;
 
 import java.io.Serializable;
@@ -32,6 +33,7 @@ public class Website implements Serializable {
     private ContentSettingException mAutoplayExceptionInfo;
     private ContentSettingException mBackgroundSyncExceptionInfo;
     private CameraInfo mCameraInfo;
+    private ClipboardInfo mClipboardInfo;
     private ContentSettingException mCookieException;
     private GeolocationInfo mGeolocationInfo;
     private ContentSettingException mJavaScriptException;
@@ -212,6 +214,31 @@ public class Website implements Serializable {
      */
     public void setCameraPermission(ContentSetting value) {
         if (mCameraInfo != null) mCameraInfo.setContentSetting(value);
+    }
+
+    /**
+     * Sets the ClipboardInfo object for this Website.
+     */
+    public void setClipboardInfo(ClipboardInfo info) {
+        mClipboardInfo = info;
+    }
+
+    public ClipboardInfo getClipboardInfo() {
+        return mClipboardInfo;
+    }
+
+    /**
+     * Returns what permission governs Clipboard access.
+     */
+    public ContentSetting getClipboardPermission() {
+        return mClipboardInfo != null ? mClipboardInfo.getContentSetting() : null;
+    }
+
+    /**
+     * Configure Clipboard permission access setting for this site.
+     */
+    public void setClipboardPermission(ContentSetting value) {
+        if (mClipboardInfo != null) mClipboardInfo.setContentSetting(value);
     }
 
     /**
@@ -492,24 +519,21 @@ public class Website implements Serializable {
     }
 
     public void clearAllStoredData(final StoredDataClearedCallback callback) {
+        // Wait for callbacks from each mStorageInfo and another callback from mLocalStorageInfo.
+        mStorageInfoCallbacksLeft = mStorageInfo.size() + 1;
+        StorageInfoClearedCallback clearedCallback = () -> {
+            if (--mStorageInfoCallbacksLeft == 0) callback.onStoredDataCleared();
+        };
         if (mLocalStorageInfo != null) {
-            mLocalStorageInfo.clear();
+            mLocalStorageInfo.clear(clearedCallback);
             mLocalStorageInfo = null;
-        }
-        mStorageInfoCallbacksLeft = mStorageInfo.size();
-        if (mStorageInfoCallbacksLeft > 0) {
-            for (StorageInfo info : mStorageInfo) {
-                info.clear(new WebsitePreferenceBridge.StorageInfoClearedCallback() {
-                    @Override
-                    public void onStorageInfoCleared() {
-                        if (--mStorageInfoCallbacksLeft == 0) callback.onStoredDataCleared();
-                    }
-                });
-            }
-            mStorageInfo.clear();
         } else {
-            callback.onStoredDataCleared();
+            clearedCallback.onStorageInfoCleared();
         }
+        for (StorageInfo info : mStorageInfo) {
+            info.clear(clearedCallback);
+        }
+        mStorageInfo.clear();
     }
 
     /**

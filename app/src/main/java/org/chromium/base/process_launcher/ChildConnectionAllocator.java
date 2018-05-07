@@ -82,17 +82,14 @@ public class ChildConnectionAllocator {
      * AndroidManifest.xml.
      */
     public static ChildConnectionAllocator create(Context context, Handler launcherHandler,
-            String packageName, String serviceClassNameManifestKey,
-            String numChildServicesManifestKey, boolean bindToCaller, boolean bindAsExternalService,
-            boolean useStrongBinding) {
-        String serviceClassName = null;
+            String packageName, String serviceClassName, String numChildServicesManifestKey,
+            boolean bindToCaller, boolean bindAsExternalService, boolean useStrongBinding) {
         int numServices = -1;
         PackageManager packageManager = context.getPackageManager();
         try {
             ApplicationInfo appInfo =
                     packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
             if (appInfo.metaData != null) {
-                serviceClassName = appInfo.metaData.getString(serviceClassNameManifestKey);
                 numServices = appInfo.metaData.getInt(numChildServicesManifestKey, -1);
             }
         } catch (PackageManager.NameNotFoundException e) {

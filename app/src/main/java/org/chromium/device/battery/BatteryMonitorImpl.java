@@ -11,7 +11,7 @@ import org.chromium.mojo.system.MojoException;
 
 /**
  * Android implementation of the battery monitor interface defined in
- * services/device/public/interfaces/battery_monitor.mojom.
+ * services/device/public/mojom/battery_monitor.mojom.
  */
 public class BatteryMonitorImpl implements BatteryMonitor {
     private static final String TAG = "BatteryMonitorImpl";

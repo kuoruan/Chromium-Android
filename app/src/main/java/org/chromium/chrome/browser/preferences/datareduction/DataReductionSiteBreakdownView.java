@@ -208,8 +208,8 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
         mTableLayout.removeViews(1, mTableLayout.getChildCount() - 1);
 
         int numRemainingSites = 0;
-        int everythingElseDataUsage = 0;
-        int everythingElseDataSavings = 0;
+        long everythingElseDataUsage = 0;
+        long everythingElseDataSavings = 0;
 
         for (int i = 0; i < mDataUseItems.size(); i++) {
             if (i < mNumDataUseItemsToDisplay) {

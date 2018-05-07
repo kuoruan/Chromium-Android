@@ -21,7 +21,7 @@ public class OriginSecurityChecker {
     }
 
     /**
-     * Returns true for a valid URL with a cryptographic scheme, e.g., HTTPS, HTTPS-SO, WSS.
+     * Returns true for a valid URL with a cryptographic scheme, e.g., HTTPS, WSS.
      *
      * @param url The URL to check.
      * @return Whether the scheme of the URL is cryptographic.

@@ -31,42 +31,11 @@ public abstract class AsyncInitTaskRunner {
     private boolean mLibraryLoaded;
     private boolean mAllocateChildConnection;
 
-    private LoadTask mLoadTask;
     private FetchSeedTask mFetchSeedTask;
 
     @VisibleForTesting
     boolean shouldFetchVariationsSeedDuringFirstRun() {
         return ChromeVersionInfo.isOfficialBuild();
-    }
-
-    private class LoadTask extends AsyncTask<Void, Void, Boolean> {
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            try {
-                LibraryLoader libraryLoader = LibraryLoader.get(LibraryProcessType.PROCESS_BROWSER);
-                libraryLoader.ensureInitialized();
-                // The prefetch is done after the library load for two reasons:
-                // - It is easier to know the library location after it has
-                // been loaded.
-                // - Testing has shown that this gives the best compromise,
-                // by avoiding performance regression on any tested
-                // device, and providing performance improvement on
-                // some. Doing it earlier delays UI inflation and more
-                // generally startup on some devices, most likely by
-                // competing for IO.
-                // For experimental results, see http://crbug.com/460438.
-                libraryLoader.asyncPrefetchLibrariesToMemory();
-            } catch (ProcessInitException e) {
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean result) {
-            mLibraryLoaded = result;
-            tasksPossiblyComplete(mLibraryLoaded);
-        }
     }
 
     private class FetchSeedTask extends AsyncTask<Void, Void, Void> {
@@ -118,7 +87,6 @@ public abstract class AsyncInitTaskRunner {
      */
     public void startBackgroundTasks(boolean allocateChildConnection, boolean fetchVariationSeed) {
         ThreadUtils.assertOnUiThread();
-        assert mLoadTask == null;
         if (fetchVariationSeed && shouldFetchVariationsSeedDuringFirstRun()) {
             mFetchingVariations = true;
 
@@ -131,7 +99,7 @@ public abstract class AsyncInitTaskRunner {
                 @Override
                 public void onResult(String restrictMode) {
                     mFetchSeedTask = new FetchSeedTask(restrictMode);
-                    mFetchSeedTask.executeOnExecutor(getExecutor());
+                    mFetchSeedTask.executeOnExecutor(getFetchSeedExecutor());
                 }
             });
         }
@@ -141,15 +109,48 @@ public abstract class AsyncInitTaskRunner {
         // with UI inflation, see AsyncInitializationActivity.setContentViewAndLoadLibrary().
         mAllocateChildConnection = allocateChildConnection;
 
-        mLoadTask = new LoadTask();
-        mLoadTask.executeOnExecutor(getExecutor());
+        // Load the library on a background thread. Using a plain Thread instead of AsyncTask
+        // because the latter would be throttled, and this task is on the critical path of the
+        // browser initialization.
+        getTaskPerThreadExecutor().execute(() -> {
+            final boolean libraryLoaded = loadNativeLibrary();
+            ThreadUtils.postOnUiThread(() -> {
+                mLibraryLoaded = libraryLoaded;
+                tasksPossiblyComplete(mLibraryLoaded);
+            });
+        });
+    }
+
+    /**
+     * Loads the native library. Can be run on any thread.
+     *
+     * @return true iff loading succeeded.
+     */
+    private static boolean loadNativeLibrary() {
+        try {
+            LibraryLoader libraryLoader = LibraryLoader.get(LibraryProcessType.PROCESS_BROWSER);
+            libraryLoader.ensureInitialized();
+            // The prefetch is done after the library load for two reasons:
+            // - It is easier to know the library location after it has
+            // been loaded.
+            // - Testing has shown that this gives the best compromise,
+            // by avoiding performance regression on any tested
+            // device, and providing performance improvement on
+            // some. Doing it earlier delays UI inflation and more
+            // generally startup on some devices, most likely by
+            // competing for IO.
+            // For experimental results, see http://crbug.com/460438.
+            libraryLoader.asyncPrefetchLibrariesToMemory();
+        } catch (ProcessInitException e) {
+            return false;
+        }
+        return true;
     }
 
     private void tasksPossiblyComplete(boolean result) {
         ThreadUtils.assertOnUiThread();
 
         if (!result) {
-            mLoadTask.cancel(true);
             if (mFetchSeedTask != null) mFetchSeedTask.cancel(true);
             onFailure();
         }
@@ -163,8 +164,13 @@ public abstract class AsyncInitTaskRunner {
     }
 
     @VisibleForTesting
-    protected Executor getExecutor() {
+    protected Executor getFetchSeedExecutor() {
         return AsyncTask.THREAD_POOL_EXECUTOR;
+    }
+
+    @VisibleForTesting
+    protected Executor getTaskPerThreadExecutor() {
+        return runnable -> new Thread(runnable).start();
     }
 
     /**

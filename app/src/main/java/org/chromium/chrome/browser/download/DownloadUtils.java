@@ -29,7 +29,6 @@ import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ChromeTabbedActivity;
 import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.UrlConstants;
-import org.chromium.chrome.browser.download.DownloadUpdate.PendingState;
 import org.chromium.chrome.browser.download.ui.BackendProvider;
 import org.chromium.chrome.browser.download.ui.BackendProvider.DownloadDelegate;
 import org.chromium.chrome.browser.download.ui.DownloadFilter;
@@ -46,16 +45,16 @@ import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
 import org.chromium.chrome.browser.tabmodel.document.TabDelegate;
 import org.chromium.chrome.browser.util.ConversionUtils;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.IntentUtils;
+import org.chromium.components.download.DownloadState;
 import org.chromium.components.feature_engagement.EventConstants;
 import org.chromium.components.feature_engagement.Tracker;
 import org.chromium.components.offline_items_collection.OfflineItem;
 import org.chromium.components.offline_items_collection.OfflineItem.Progress;
 import org.chromium.components.offline_items_collection.OfflineItemProgressUnit;
 import org.chromium.components.offline_items_collection.OfflineItemState;
+import org.chromium.components.offline_items_collection.PendingState;
 import org.chromium.content.browser.BrowserStartupController;
-import org.chromium.content_public.browser.DownloadState;
 import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.ui.base.DeviceFormFactor;
 import org.chromium.ui.widget.Toast;
@@ -63,7 +62,6 @@ import org.chromium.ui.widget.Toast;
 import java.io.File;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.ref.WeakReference;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -93,6 +91,8 @@ public class DownloadUtils {
 
     private static final String EXTRA_IS_OFF_THE_RECORD =
             "org.chromium.chrome.browser.download.IS_OFF_THE_RECORD";
+    public static final String EXTRA_SHOW_PREFETCHED_CONTENT =
+            "org.chromium.chrome.browser.download.SHOW_PREFETCHED_CONTENT";
 
     @VisibleForTesting
     static final long SECONDS_PER_MINUTE = TimeUnit.MINUTES.toSeconds(1);
@@ -128,15 +128,14 @@ public class DownloadUtils {
      * Displays the download manager UI. Note the UI is different on tablets and on phones.
      * @param activity The current activity is available.
      * @param tab The current tab if it exists.
-     * @param fromMenu Whether the manager was triggered from the overflow menu.
+     * @param showPrefetchedContent Whether the manager should start with prefetched content section
+     * expanded.
      * @return Whether the UI was shown.
      */
     public static boolean showDownloadManager(
-            @Nullable Activity activity, @Nullable Tab tab, boolean fromMenu) {
+            @Nullable Activity activity, @Nullable Tab tab, boolean showPrefetchedContent) {
         // Figure out what tab was last being viewed by the user.
         if (activity == null) activity = ApplicationStatus.getLastTrackedFocusedActivity();
-
-        if (openDownloadsManagerInBottomSheet(activity, fromMenu)) return true;
 
         if (tab == null && activity instanceof ChromeTabbedActivity) {
             tab = ((ChromeTabbedActivity) activity).getActivityTab();
@@ -167,6 +166,7 @@ public class DownloadUtils {
             // Download Home shows up as a new Activity on phones.
             Intent intent = new Intent();
             intent.setClass(appContext, DownloadActivity.class);
+            intent.putExtra(EXTRA_SHOW_PREFETCHED_CONTENT, showPrefetchedContent);
             if (tab != null) intent.putExtra(EXTRA_IS_OFF_THE_RECORD, tab.isIncognito());
             if (activity == null) {
                 // Stands alone in its own task.
@@ -192,54 +192,19 @@ public class DownloadUtils {
     }
 
     /**
-     * @param activity The activity the download manager should be displayed in if applicable or
-     *                 the last tracked focused activity.
-     * @param fromMenu Whether downloads was triggered from the overflow menu.
-     * @return Whether the downloads manager was opened in the Chrome Home bottom sheet.
-     */
-    private static boolean openDownloadsManagerInBottomSheet(Activity activity, boolean fromMenu) {
-        if (!FeatureUtilities.isChromeHomeEnabled()) return false;
-
-        Context appContext = ContextUtils.getApplicationContext();
-
-        ChromeTabbedActivity tabbedActivity = null;
-        if (activity instanceof ChromeTabbedActivity) {
-            tabbedActivity = (ChromeTabbedActivity) activity;
-        } else {
-            // Iterate through all activities looking for an instance of ChromeTabbedActivity.
-            List<WeakReference<Activity>> list = ApplicationStatus.getRunningActivities();
-            for (WeakReference<Activity> ref : list) {
-                Activity currentActivity = ref.get();
-                if (currentActivity instanceof ChromeTabbedActivity) {
-                    tabbedActivity = (ChromeTabbedActivity) currentActivity;
-                }
-            }
-        }
-
-        if (tabbedActivity == null) return false;
-
-        if (fromMenu) {
-            tabbedActivity.getBottomSheetContentController().openBottomSheetForMenuItem(
-                    R.id.action_downloads);
-        } else {
-            tabbedActivity.getBottomSheetContentController().showContentAndOpenSheet(
-                    R.id.action_downloads);
-
-            // Bring the ChromeTabbedActivity to the front.
-            Intent intent = new Intent(appContext, tabbedActivity.getClass());
-            intent.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            appContext.startActivity(intent);
-        }
-        return true;
-    }
-
-    /**
      * @return Whether or not the Intent corresponds to a DownloadActivity that should show off the
      *         record downloads.
      */
     public static boolean shouldShowOffTheRecordDownloads(Intent intent) {
         return IntentUtils.safeGetBooleanExtra(intent, EXTRA_IS_OFF_THE_RECORD, false);
+    }
+
+    /**
+     * @return Whether or not the prefetched content section should be expanded on launch of the
+     * DownloadActivity.
+     */
+    public static boolean shouldShowPrefetchContent(Intent intent) {
+        return IntentUtils.safeGetBooleanExtra(intent, EXTRA_SHOW_PREFETCHED_CONTENT, false);
     }
 
     /**
@@ -346,6 +311,7 @@ public class DownloadUtils {
         String intentAction;
         ArrayList<Uri> itemUris = new ArrayList<Uri>();
         StringBuilder offlinePagesString = new StringBuilder();
+        @DownloadFilter.Type
         int selectedItemsFilterType = items.get(0).getFilterType();
 
         String intentMimeType = "";
@@ -354,7 +320,7 @@ public class DownloadUtils {
         for (int i = 0; i < items.size(); i++) {
             DownloadHistoryItemWrapper wrappedItem  = items.get(i);
 
-            if (wrappedItem.isOfflinePage()) {
+            if (wrappedItem.isOfflinePage() && !OfflinePageBridge.isPageSharingEnabled()) {
                 if (offlinePagesString.length() != 0) {
                     offlinePagesString.append("\n");
                 }
@@ -418,7 +384,7 @@ public class DownloadUtils {
         }
 
         if (itemUris.size() == 1 && offlinePagesString.length() == 0) {
-            // Sharing a DownloadItem.
+            // Sharing a downloaded item or an offline page.
             shareIntent.putExtra(Intent.EXTRA_STREAM, getUriForItem(items.get(0).getFile()));
         } else {
             shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, itemUris);
@@ -644,7 +610,7 @@ public class DownloadUtils {
             case OfflineItemState.COMPLETE:
                 return context.getString(R.string.download_notification_completed);
             case OfflineItemState.PENDING:
-                return context.getString(R.string.download_notification_pending);
+                return getPendingStatusString(item.pendingState);
             case OfflineItemState.PAUSED:
                 return context.getString(R.string.download_notification_paused);
             case OfflineItemState.IN_PROGRESS: // intentional fall through
@@ -680,13 +646,7 @@ public class DownloadUtils {
             return context.getString(R.string.download_notification_completed);
         }
 
-        DownloadSharedPreferenceHelper helper = DownloadSharedPreferenceHelper.getInstance();
-        DownloadSharedPreferenceEntry entry =
-                helper.getDownloadSharedPreferenceEntry(item.getContentId());
-        boolean isDownloadPending =
-                entry != null && state == DownloadState.INTERRUPTED && entry.isAutoResumable;
-
-        if (isDownloadPending) {
+        if (isDownloadPending(item)) {
             // All pending, non-offline page downloads are by default waiting for network.
             // The other pending reason (i.e. waiting for another download to complete) applies
             // only to offline page requests because offline pages download one at a time.
@@ -715,7 +675,7 @@ public class DownloadUtils {
      * @param pendingState Reason download is pending.
      * @return String representing the current download status.
      */
-    public static String getPendingStatusString(PendingState pendingState) {
+    public static String getPendingStatusString(@PendingState int pendingState) {
         Context context = ContextUtils.getApplicationContext();
         // When foreground service restarts and there is no connection to native, use the default
         // pending status. The status will be replaced when connected to native.
@@ -724,12 +684,11 @@ public class DownloadUtils {
                 && ChromeFeatureList.isEnabled(
                            ChromeFeatureList.OFFLINE_PAGES_DESCRIPTIVE_PENDING_STATUS)) {
             switch (pendingState) {
-                case PENDING_NETWORK:
+                case PendingState.PENDING_NETWORK:
                     return context.getString(R.string.download_notification_pending_network);
-                case PENDING_ANOTHER_DOWNLOAD:
+                case PendingState.PENDING_ANOTHER_DOWNLOAD:
                     return context.getString(
                             R.string.download_notification_pending_another_download);
-                case PENDING_REASON_UNKNOWN: // Intentional fallthrough.
                 default:
                     return context.getString(R.string.download_notification_pending);
             }
@@ -763,6 +722,19 @@ public class DownloadUtils {
                 return item.getDownloadInfo().state() == DownloadState.INTERRUPTED;
             }
         }
+    }
+
+    /**
+     * Return whether a download is pending.
+     * @param item Download to check the status of.
+     * @return Whether the download is pending or not.
+     */
+    public static boolean isDownloadPending(DownloadItem item) {
+        DownloadSharedPreferenceHelper helper = DownloadSharedPreferenceHelper.getInstance();
+        DownloadSharedPreferenceEntry entry =
+                helper.getDownloadSharedPreferenceEntry(item.getContentId());
+        return entry != null && item.getDownloadInfo().state() == DownloadState.INTERRUPTED
+                && entry.isAutoResumable;
     }
 
     /**

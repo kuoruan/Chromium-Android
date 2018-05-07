@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser;
 
+import android.os.AsyncTask;
 import android.os.Build;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
@@ -15,6 +16,7 @@ import org.chromium.base.annotations.CalledByNative;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -64,7 +66,7 @@ class TtsPlatformImpl {
     private long mNativeTtsPlatformImplAndroid;
     protected final TextToSpeech mTextToSpeech;
     private boolean mInitialized;
-    private ArrayList<TtsVoice> mVoices;
+    private List<TtsVoice> mVoices;
     private String mCurrentLanguage;
     private PendingUtterance mPendingUtterance;
 
@@ -262,49 +264,52 @@ class TtsPlatformImpl {
      * we can call nativeVoicesChanged directly.
      */
     private void initialize() {
-        assert mNativeTtsPlatformImplAndroid != 0;
-
         TraceEvent.begin("TtsPlatformImpl:initialize");
 
-        // Note: Android supports multiple speech engines, but querying the
-        // metadata about all of them is expensive. So we deliberately only
-        // support the default speech engine, and expose the different
-        // supported languages for the default engine as different voices.
-        String defaultEngineName = mTextToSpeech.getDefaultEngine();
-        String engineLabel = defaultEngineName;
-        for (TextToSpeech.EngineInfo info : mTextToSpeech.getEngines()) {
-            if (info.name.equals(defaultEngineName)) engineLabel = info.label;
-        }
-        Locale[] locales = Locale.getAvailableLocales();
-        mVoices = new ArrayList<TtsVoice>();
-        for (int i = 0; i < locales.length; ++i) {
-            if (!locales[i].getVariant().isEmpty()) continue;
+        new AsyncTask<Void, Void, List<TtsVoice>>() {
+            @Override
+            protected List<TtsVoice> doInBackground(Void... unused) {
+                assert mNativeTtsPlatformImplAndroid != 0;
 
-            try {
-                if (mTextToSpeech.isLanguageAvailable(locales[i]) > 0) {
-                    String name = locales[i].getDisplayLanguage();
-                    if (!locales[i].getCountry().isEmpty()) {
-                        name += " " + locales[i].getDisplayCountry();
+                try (TraceEvent te = TraceEvent.scoped("TtsPlatformImpl:initialize.async_task")) {
+                    Locale[] locales = Locale.getAvailableLocales();
+                    final List<TtsVoice> voices = new ArrayList<>();
+                    for (Locale locale : locales) {
+                        if (!locale.getVariant().isEmpty()) continue;
+                        try {
+                            if (mTextToSpeech.isLanguageAvailable(locale) > 0) {
+                                String name = locale.getDisplayLanguage();
+                                if (!locale.getCountry().isEmpty()) {
+                                    name += " " + locale.getDisplayCountry();
+                                }
+                                TtsVoice voice = new TtsVoice(name, locale.toString());
+                                voices.add(voice);
+                            }
+                        } catch (Exception e) {
+                            // Just skip the locale if it's invalid.
+                            //
+                            // We used to catch only java.util.MissingResourceException,
+                            // but we need to catch more exceptions to work around a bug
+                            // in Google TTS when we query "bn".
+                            // http://crbug.com/792856
+                        }
                     }
-                    TtsVoice voice = new TtsVoice(name, locales[i].toString());
-                    mVoices.add(voice);
+                    return voices;
                 }
-            } catch (Exception e) {
-                // Just skip the locale if it's invalid.
-                //
-                // We used to catch only java.util.MissingResourceException,
-                // but we need to catch more exceptions to work around a bug
-                // in Google TTS when we query "bn".
-                // http://crbug.com/792856
             }
-        }
 
-        mInitialized = true;
-        nativeVoicesChanged(mNativeTtsPlatformImplAndroid);
+            @Override
+            protected void onPostExecute(List<TtsVoice> voices) {
+                mVoices = voices;
+                mInitialized = true;
 
-        if (mPendingUtterance != null) mPendingUtterance.speak();
+                nativeVoicesChanged(mNativeTtsPlatformImplAndroid);
 
-        TraceEvent.end("TtsPlatformImpl:initialize");
+                if (mPendingUtterance != null) mPendingUtterance.speak();
+
+                TraceEvent.end("TtsPlatformImpl:initialize");
+            }
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     private native void nativeVoicesChanged(long nativeTtsPlatformImplAndroid);

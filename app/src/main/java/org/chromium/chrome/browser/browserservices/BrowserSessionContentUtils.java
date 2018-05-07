@@ -111,6 +111,15 @@ public class BrowserSessionContentUtils {
     }
 
     /**
+     * @return The pending url for the page about to be displayed using the current {@link
+     * BrowserSessionContentHandler}.
+     */
+    public static String getPendingUrlForActiveBrowserSession() {
+        if (sActiveContentHandler == null) return null;
+        return sActiveContentHandler.getPendingUrl();
+    }
+
+    /**
      * Checks whether the active {@link BrowserSessionContentHandler} belongs to the given session,
      * and if true, update toolbar's custom button.
      * @param session     The {@link IBinder} that the calling client represents.

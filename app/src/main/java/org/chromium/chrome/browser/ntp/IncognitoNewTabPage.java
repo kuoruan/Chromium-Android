@@ -21,8 +21,9 @@ import org.chromium.chrome.browser.compositor.layouts.content.InvalidationAwareT
 import org.chromium.chrome.browser.help.HelpAndFeedback;
 import org.chromium.chrome.browser.ntp.IncognitoNewTabPageView.IncognitoNewTabPageManager;
 import org.chromium.chrome.browser.profiles.Profile;
+import org.chromium.chrome.browser.util.ColorUtils;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.vr_shell.OnExitVrRequestListener;
-import org.chromium.chrome.browser.vr_shell.UiUnsupportedMode;
 import org.chromium.chrome.browser.vr_shell.VrShellDelegate;
 
 /**
@@ -54,7 +55,7 @@ public class IncognitoNewTabPage implements NativePage, InvalidationAwareThumbna
 
                     @Override
                     public void onDenied() {}
-                }, UiUnsupportedMode.UNHANDLED_CODE_POINT);
+                });
                 return;
             }
 
@@ -83,8 +84,8 @@ public class IncognitoNewTabPage implements NativePage, InvalidationAwareThumbna
         mTitle = activity.getResources().getString(R.string.button_new_tab);
         mBackgroundColor =
                 ApiCompatibilityUtils.getColor(activity.getResources(), R.color.ntp_bg_incognito);
-        mThemeColor = ApiCompatibilityUtils.getColor(activity.getResources(),
-                R.color.incognito_primary_color);
+        mThemeColor = ColorUtils.getDefaultThemeColor(
+                activity.getResources(), FeatureUtilities.isChromeModernDesignEnabled(), true);
 
         LayoutInflater inflater = LayoutInflater.from(activity);
         mIncognitoNewTabPageView =

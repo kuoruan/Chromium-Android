@@ -777,9 +777,6 @@ public class StackLayout extends Layout implements Animatable<StackLayout.Proper
     private SwipeMode computeInputMode(long time, float x, float y, float dx, float dy) {
         if (!mStacks[1].isDisplayable()) return SwipeMode.SEND_TO_STACK;
         int currentIndex = getTabStackIndex();
-        if (currentIndex != getViewportParameters().getStackIndexAt(x, y)) {
-            return SwipeMode.SWITCH_STACK;
-        }
         float relativeX = mLastOnDownX - (x + dx);
         float relativeY = mLastOnDownY - (y + dy);
         float distanceToDownSqr = dx * dx + dy * dy;
@@ -797,12 +794,11 @@ public class StackLayout extends Layout implements Animatable<StackLayout.Proper
                     ^ (getOrientation() == Orientation.PORTRAIT
                               && LocalizationUtils.isLayoutRtl())) {
                 return SwipeMode.SEND_TO_STACK;
+            } else {
+                return SwipeMode.SWITCH_STACK;
             }
         }
-        if (isDraggingStackInWrongDirection(
-                    mLastOnDownX, mLastOnDownY, x, y, dx, dy, getOrientation(), currentIndex)) {
-            return SwipeMode.SWITCH_STACK;
-        }
+
         // Not moving the finger
         if (time - mLastOnDownTimeStamp > THRESHOLD_TIME_TO_SWITCH_STACK_INPUT_MODE) {
             return SwipeMode.SEND_TO_STACK;
@@ -946,48 +942,17 @@ public class StackLayout extends Layout implements Animatable<StackLayout.Proper
         }
     }
 
-    /**
-     * Check if we are dragging stack in a wrong direction.
-     *
-     * @param downX The X coordinate on the last down event.
-     * @param downY The Y coordinate on the last down event.
-     * @param x The current X coordinate.
-     * @param y The current Y coordinate.
-     * @param dx The amount of change in X coordinate.
-     * @param dy The amount of change in Y coordinate.
-     * @param orientation The device orientation (portrait / landscape).
-     * @param stackIndex The index of stack tab.
-     * @return True iff we are dragging stack in a wrong direction.
-     */
-    @VisibleForTesting
-    public static boolean isDraggingStackInWrongDirection(float downX, float downY, float x,
-            float y, float dx, float dy, int orientation, int stackIndex) {
-        float switchDelta = orientation == Orientation.PORTRAIT ? x - downX : y - downY;
-
-        // Should not prevent scrolling even when switchDelta is in a wrong direction.
-        if (Math.abs(dx) < Math.abs(dy)) {
-            return false;
-        }
-        return (stackIndex == 0 && switchDelta < 0) || (stackIndex == 1 && switchDelta > 0);
-    }
-
     private void scrollStacks(float delta) {
         cancelAnimation(this, Property.STACK_SNAP);
         float fullDistance = getFullScrollDistance();
         mScrollIndexOffset += MathUtils.flipSignIf(delta / fullDistance,
                 getOrientation() == Orientation.PORTRAIT && LocalizationUtils.isLayoutRtl());
-        if (canScrollLinearly(getTabStackIndex())) {
-            mRenderedScrollOffset = mScrollIndexOffset;
-        } else {
-            mRenderedScrollOffset = (int) MathUtils.clamp(
-                    mScrollIndexOffset, 0, mStacks[1].isDisplayable() ? -1 : 0);
-        }
+        mRenderedScrollOffset = MathUtils.clamp(mScrollIndexOffset, 0, -1);
         requestStackUpdate();
     }
 
     private void flingStacks(boolean toIncognito) {
         // velocityX is measured in pixel per second.
-        if (!canScrollLinearly(toIncognito ? 0 : 1)) return;
         setActiveStackState(toIncognito);
         finishScrollStacks();
         requestStackUpdate();
@@ -1129,22 +1094,6 @@ public class StackLayout extends Layout implements Animatable<StackLayout.Proper
     private void resetScrollData() {
         mScrollIndexOffset = -getTabStackIndex();
         mRenderedScrollOffset = mScrollIndexOffset;
-    }
-
-    /**
-     *  Based on the current position, determine if we will map mScrollDistance linearly to
-     *  mRenderedScrollDistance. The logic is, if there is only stack, we will not map linearly;
-     *  if we are scrolling two the boundary of either of the stacks, we will not map linearly;
-     *  otherwise yes.
-     */
-    private boolean canScrollLinearly(int fromStackIndex) {
-        int count = mStacks.length;
-        if (!(mScrollIndexOffset <= 0 && -mScrollIndexOffset <= (count - 1))) {
-            return false;
-        }
-        // since we only have two stacks now, we have a shortcut to calculate
-        // empty stacks
-        return mStacks[fromStackIndex ^ 0x01].isDisplayable();
     }
 
     private float getFullScrollDistance() {
@@ -1330,11 +1279,6 @@ public class StackLayout extends Layout implements Animatable<StackLayout.Proper
             ResourceManager resourceManager, ChromeFullscreenManager fullscreenManager) {
         super.updateSceneLayer(viewport, contentViewport, layerTitleCache, tabContentManager,
                 resourceManager, fullscreenManager);
-        // If the browser controls are at the bottom make sure to use theme colors for this layout
-        // specifically.
-        if (fullscreenManager.areBrowserControlsAtBottom() && mLayoutTabs != null) {
-            for (LayoutTab t : mLayoutTabs) t.setForceDefaultThemeColor(false);
-        }
         assert mSceneLayer != null;
 
         mSceneLayer.pushLayers(getContext(), viewport, contentViewport, this, layerTitleCache,

@@ -13,14 +13,15 @@ import org.chromium.content.browser.MotionEventSynthesizer;
 /**
  * Forwards events for Java native UI pages to MotionEventSynthesizer.
  */
-@JNINamespace("vr_shell")
+@JNINamespace("vr")
 public class AndroidUiGestureTarget {
     private final MotionEventSynthesizer mMotionEventSynthesizer;
     private final long mNativePointer;
 
-    public AndroidUiGestureTarget(View target, float scaleFactor, float scrollRatio) {
+    public AndroidUiGestureTarget(
+            View target, float scaleFactor, float scrollRatio, int touchSlop) {
         mMotionEventSynthesizer = new MotionEventSynthesizer(target);
-        mNativePointer = nativeInit(scaleFactor, scrollRatio);
+        mNativePointer = nativeInit(scaleFactor, scrollRatio, touchSlop);
     }
 
     @CalledByNative
@@ -38,5 +39,5 @@ public class AndroidUiGestureTarget {
         return mNativePointer;
     }
 
-    private native long nativeInit(float scaleFactor, float scrollRatio);
+    private native long nativeInit(float scaleFactor, float scrollRatio, int touchSlop);
 }

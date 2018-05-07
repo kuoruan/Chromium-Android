@@ -64,8 +64,7 @@ public class WebApkInfo extends WebappInfo {
         int source = sourceFromIntent(intent);
 
         if (source == ShortcutSource.EXTERNAL_INTENT) {
-            if (IntentHandler.determineExternalIntentSource(
-                        ContextUtils.getApplicationContext().getPackageName(), intent)
+            if (IntentHandler.determineExternalIntentSource(intent)
                     == IntentHandler.ExternalAppId.CHROME) {
                 source = ShortcutSource.EXTERNAL_INTENT_FROM_CHROME;
             }

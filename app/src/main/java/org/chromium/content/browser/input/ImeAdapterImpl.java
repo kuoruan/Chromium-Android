@@ -5,6 +5,7 @@
 package org.chromium.content.browser.input;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Rect;
@@ -37,11 +38,13 @@ import org.chromium.blink_public.web.WebFocusType;
 import org.chromium.blink_public.web.WebInputEventModifier;
 import org.chromium.blink_public.web.WebInputEventType;
 import org.chromium.blink_public.web.WebTextInputMode;
+import org.chromium.content.browser.WindowEventObserver;
 import org.chromium.content.browser.picker.InputDialogContainer;
 import org.chromium.content.browser.webcontents.WebContentsUserData;
 import org.chromium.content.browser.webcontents.WebContentsUserData.UserDataFactory;
 import org.chromium.content_public.browser.ImeAdapter;
 import org.chromium.content_public.browser.ImeEventObserver;
+import org.chromium.content_public.browser.InputMethodManagerWrapper;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.base.ViewUtils;
 import org.chromium.ui.base.ime.TextInputType;
@@ -75,7 +78,7 @@ import java.util.List;
  * lifetime of the object.
  */
 @JNINamespace("content")
-public class ImeAdapterImpl implements ImeAdapter {
+public class ImeAdapterImpl implements ImeAdapter, WindowEventObserver {
     private static final String TAG = "cr_Ime";
     private static final boolean DEBUG_LOGS = false;
 
@@ -192,6 +195,14 @@ public class ImeAdapterImpl implements ImeAdapter {
     }
 
     /**
+     * Returns an instance of the default {@link InputMethodManagerWrapper}
+     */
+    public static InputMethodManagerWrapper createDefaultInputMethodManagerWrapper(
+            Context context) {
+        return new InputMethodManagerWrapperImpl(context);
+    }
+
+    /**
      * Create {@link ImeAdapterImpl} instance.
      * @param webContents WebContents instance.
      */
@@ -243,6 +254,11 @@ public class ImeAdapterImpl implements ImeAdapter {
     }
 
     @Override
+    public InputConnection getActiveInputConnection() {
+        return mInputConnection;
+    }
+
+    @Override
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
         boolean allowKeyboardLearning = mWebContents != null && !mWebContents.isIncognito();
         return onCreateInputConnection(outAttrs, allowKeyboardLearning);
@@ -251,6 +267,10 @@ public class ImeAdapterImpl implements ImeAdapter {
     @Override
     public boolean onCheckIsTextEditor() {
         return isTextInputType(mTextInputType);
+    }
+
+    private boolean isHardwareKeyboardAttached() {
+        return mCurrentConfig.keyboard != Configuration.KEYBOARD_NOKEYS;
     }
 
     /**
@@ -266,6 +286,10 @@ public class ImeAdapterImpl implements ImeAdapter {
         mEventObservers.add(eventObserver);
     }
 
+    public void removeEventObserver(ImeEventObserver eventObserver) {
+        mEventObservers.remove(eventObserver);
+    }
+
     private void createInputConnectionFactory() {
         if (mInputConnectionFactory != null) return;
         mInputConnectionFactory = new ThreadedInputConnectionFactory(mInputMethodManagerWrapper);
@@ -276,6 +300,18 @@ public class ImeAdapterImpl implements ImeAdapter {
     // ThreadedInputConnection from Android framework after ImeAdapter.destroy() is called.
     private boolean isValid() {
         return mNativeImeAdapterAndroid != 0 && mIsConnected;
+    }
+
+    // Whether the focused node allows the soft keyboard to be displayed. A content editable
+    // region is editable but may disallow the soft keyboard from being displayed. Composition
+    // should still be allowed with a physical keyboard so mInputConnection will be non-null.
+    private boolean focusedNodeAllowsSoftKeyboard() {
+        return mTextInputType != TextInputType.NONE && mTextInputMode != WebTextInputMode.NONE;
+    }
+
+    // Whether the focused node is editable or not.
+    private boolean focusedNodeEditable() {
+        return mTextInputType != TextInputType.NONE;
     }
 
     /**
@@ -295,7 +331,7 @@ public class ImeAdapterImpl implements ImeAdapter {
         // Without this line, some third-party IMEs will try to compose text even when
         // not on an editable node. Even when we return null here, key events can still go
         // through ImeAdapter#dispatchKeyEvent().
-        if (mTextInputType == TextInputType.NONE) {
+        if (!focusedNodeEditable()) {
             setInputConnection(null);
             if (DEBUG_LOGS) Log.i(TAG, "onCreateInputConnection returns null.");
             return null;
@@ -325,10 +361,10 @@ public class ImeAdapterImpl implements ImeAdapter {
     }
 
     @Override
-    public void setInputMethodManagerWrapperForTest(InputMethodManagerWrapper immw) {
+    public void setInputMethodManagerWrapper(InputMethodManagerWrapper immw) {
         mInputMethodManagerWrapper = immw;
         if (mCursorAnchorInfoController != null) {
-            mCursorAnchorInfoController.setInputMethodManagerWrapperForTest(immw);
+            mCursorAnchorInfoController.setInputMethodManagerWrapper(immw);
         }
     }
 
@@ -397,10 +433,11 @@ public class ImeAdapterImpl implements ImeAdapter {
         TraceEvent.begin("ImeAdapter.updateState");
         try {
             if (DEBUG_LOGS) {
-                Log.i(TAG, "updateState: type [%d->%d], flags [%d], show [%b], ", mTextInputType,
-                        textInputType, textInputFlags, showIfNeeded);
+                Log.i(TAG, "updateState: type [%d->%d], flags [%d], mode[%d], show [%b], ",
+                        mTextInputType, textInputType, textInputFlags, textInputMode, showIfNeeded);
             }
             boolean needsRestart = false;
+            boolean hide = false;
             if (mRestartInputOnNextStateUpdate) {
                 needsRestart = true;
                 mRestartInputOnNextStateUpdate = false;
@@ -409,21 +446,26 @@ public class ImeAdapterImpl implements ImeAdapter {
             mTextInputFlags = textInputFlags;
             if (mTextInputMode != textInputMode) {
                 mTextInputMode = textInputMode;
+                hide = textInputMode == WebTextInputMode.NONE && !isHardwareKeyboardAttached();
                 needsRestart = true;
             }
             if (mTextInputType != textInputType) {
                 mTextInputType = textInputType;
-                needsRestart = true;
-
-                boolean editable = textInputType != TextInputType.NONE;
-                boolean password = textInputType == TextInputType.PASSWORD;
-                if (mNodeEditable != editable || mNodePassword != password) {
-                    for (ImeEventObserver observer : mEventObservers) {
-                        observer.onNodeAttributeUpdated(editable, password);
-                    }
-                    mNodeEditable = editable;
-                    mNodePassword = password;
+                if (textInputType == TextInputType.NONE) {
+                    hide = true;
+                } else {
+                    needsRestart = true;
                 }
+            }
+
+            boolean editable = focusedNodeEditable();
+            boolean password = textInputType == TextInputType.PASSWORD;
+            if (mNodeEditable != editable || mNodePassword != password) {
+                for (ImeEventObserver observer : mEventObservers) {
+                    observer.onNodeAttributeUpdated(editable, password);
+                }
+                mNodeEditable = editable;
+                mNodePassword = password;
             }
             if (mCursorAnchorInfoController != null
                     && (!TextUtils.equals(mLastText, text) || mLastSelectionStart != selectionStart
@@ -438,14 +480,16 @@ public class ImeAdapterImpl implements ImeAdapter {
             mLastCompositionStart = compositionStart;
             mLastCompositionEnd = compositionEnd;
 
-            if (textInputType == TextInputType.NONE) {
+            if (hide) {
                 hideKeyboard();
             } else {
                 if (needsRestart) restartInput();
-                // There is no API for us to get notified of user's dismissal of keyboard.
-                // Therefore, we should try to show keyboard even when text input type hasn't
-                // changed.
-                if (showIfNeeded) showSoftKeyboard();
+                if (showIfNeeded && focusedNodeAllowsSoftKeyboard()) {
+                    // There is no API for us to get notified of user's dismissal of keyboard.
+                    // Therefore, we should try to show keyboard even when text input type hasn't
+                    // changed.
+                    showSoftKeyboard();
+                }
             }
 
             if (mInputConnection != null) {
@@ -536,7 +580,7 @@ public class ImeAdapterImpl implements ImeAdapter {
             mInputMethodManagerWrapper.hideSoftInputFromWindow(view.getWindowToken(), 0, null);
         }
         // Detach input connection by returning null from onCreateInputConnection().
-        if (mTextInputType == TextInputType.NONE && mInputConnection != null) {
+        if (!focusedNodeEditable() && mInputConnection != null) {
             ChromiumBaseInputConnection inputConnection = mInputConnection;
             restartInput(); // resets mInputConnection
             // crbug.com/666982: Restart input may not happen if view is detached from window, but
@@ -563,38 +607,42 @@ public class ImeAdapterImpl implements ImeAdapter {
         if (DEBUG_LOGS) {
             Log.i(TAG, "onKeyboardConfigurationChanged: mTextInputType [%d]", mTextInputType);
         }
-        if (mTextInputType != TextInputType.NONE) {
+        if (focusedNodeAllowsSoftKeyboard()) {
             restartInput();
             // By default, we show soft keyboard on keyboard changes. This is useful
             // when the user switches from hardware keyboard to software keyboard.
             // TODO(changwan): check if we can skip this for hardware keyboard configurations.
             showSoftKeyboard();
+        } else if (focusedNodeEditable()) {
+            // The focused node is editable but disllows the virtual keyboard. We may need to
+            // show soft keyboard (for IME composition window only) if a hardware keyboard is
+            // present.
+            restartInput();
+            if (!isHardwareKeyboardAttached())
+                hideKeyboard();
+            else
+                showSoftKeyboard();
         }
     }
 
-    /**
-     * Call this when window's focus has changed.
-     * @param gainFocus True if we're gaining focus.
-     */
+    // WindowEventObserver
+
+    @Override
     public void onWindowFocusChanged(boolean gainFocus) {
         if (mInputConnectionFactory != null) {
             mInputConnectionFactory.onWindowFocusChanged(gainFocus);
         }
     }
 
-    /**
-     * Call this when view is attached to window.
-     */
-    public void onViewAttachedToWindow() {
+    @Override
+    public void onAttachedToWindow() {
         if (mInputConnectionFactory != null) {
             mInputConnectionFactory.onViewAttachedToWindow();
         }
     }
 
-    /**
-     * Call this when view is detached from window.
-     */
-    public void onViewDetachedFromWindow() {
+    @Override
+    public void onDetachedFromWindow() {
         resetAndHideKeyboard();
         if (mInputConnectionFactory != null) {
             mInputConnectionFactory.onViewDetachedFromWindow();

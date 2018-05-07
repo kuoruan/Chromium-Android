@@ -29,8 +29,8 @@ public class UmaUtils {
     private static long sFirstCommitTimeMs;
 
     /**
-     * Record the time at which the activity started. This should be called asap after
-     * the start of the activity's onCreate function.
+     * Record the time in the application lifecycle at which Chrome code first runs
+     * (Application.attachBaseContext()).
      */
     public static void recordMainEntryPointTime() {
         // We can't simply pass this down through a JNI call, since the JNI for chrome

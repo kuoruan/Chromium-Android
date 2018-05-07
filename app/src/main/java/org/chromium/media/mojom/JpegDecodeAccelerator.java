@@ -40,6 +40,14 @@ DecodeResponse callback);
 
 
 
+    void decodeWithFd(
+int bufferId, org.chromium.mojo.system.UntypedHandle inputFd, int inputBufferSize, int codedSizeWidth, int codedSizeHeight, org.chromium.mojo.system.UntypedHandle outputFd, int outputBufferSize, 
+DecodeWithFdResponse callback);
+
+    interface DecodeWithFdResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<Integer, Integer> { }
+
+
+
     void uninitialize(
 );
 

@@ -17,6 +17,7 @@ import android.util.SparseArray;
 
 import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
+import org.chromium.base.annotations.JNIAdditionalImport;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.components.location.LocationUtils;
 
@@ -31,6 +32,7 @@ import java.util.Map;
  * Lifetime is controlled by device::BluetoothAdapterAndroid.
  */
 @JNINamespace("device")
+@JNIAdditionalImport(Wrappers.class)
 @TargetApi(Build.VERSION_CODES.M)
 final class ChromeBluetoothAdapter extends BroadcastReceiver {
     private static final String TAG = "Bluetooth";
@@ -77,14 +79,10 @@ final class ChromeBluetoothAdapter extends BroadcastReceiver {
     // BluetoothAdapterAndroid methods implemented in java:
 
     // Implements BluetoothAdapterAndroid::Create.
-    // 'Object' type must be used for |adapterWrapper| because inner class
-    // Wrappers.BluetoothAdapterWrapper reference is not handled by jni_generator.py JavaToJni.
-    // http://crbug.com/505554
     @CalledByNative
     private static ChromeBluetoothAdapter create(
-            long nativeBluetoothAdapterAndroid, Object adapterWrapper) {
-        return new ChromeBluetoothAdapter(
-                nativeBluetoothAdapterAndroid, (Wrappers.BluetoothAdapterWrapper) adapterWrapper);
+            long nativeBluetoothAdapterAndroid, Wrappers.BluetoothAdapterWrapper adapterWrapper) {
+        return new ChromeBluetoothAdapter(nativeBluetoothAdapterAndroid, adapterWrapper);
     }
 
     // Implements BluetoothAdapterAndroid::GetAddress.
@@ -350,13 +348,11 @@ final class ChromeBluetoothAdapter extends BroadcastReceiver {
     private native void nativeOnScanFailed(long nativeBluetoothAdapterAndroid);
 
     // Binds to BluetoothAdapterAndroid::CreateOrUpdateDeviceOnScan.
-    // 'Object' type must be used for |bluetoothDeviceWrapper| because inner class
-    // Wrappers.BluetoothDeviceWrapper reference is not handled by jni_generator.py JavaToJni.
-    // http://crbug.com/505554
     private native void nativeCreateOrUpdateDeviceOnScan(long nativeBluetoothAdapterAndroid,
-            String address, Object bluetoothDeviceWrapper, int rssi, String[] advertisedUuids,
-            int txPower, String[] serviceDataKeys, Object[] serviceDataValues,
-            int[] manufacturerDataKeys, Object[] manufacturerDataValues);
+            String address, Wrappers.BluetoothDeviceWrapper deviceWrapper, int rssi,
+            String[] advertisedUuids, int txPower, String[] serviceDataKeys,
+            Object[] serviceDataValues, int[] manufacturerDataKeys,
+            Object[] manufacturerDataValues);
 
     // Binds to BluetoothAdapterAndroid::nativeOnAdapterStateChanged
     private native void nativeOnAdapterStateChanged(

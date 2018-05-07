@@ -29,8 +29,8 @@ org.chromium.mojo.common.mojom.FilePath cdmPath);
 
 
 
-    void createInterfaceFactory(
-org.chromium.mojo.bindings.InterfaceRequest<InterfaceFactory> factory, org.chromium.service_manager.mojom.InterfaceProvider hostInterfaces);
+    void createCdmFactory(
+org.chromium.mojo.bindings.InterfaceRequest<CdmFactory> factory, org.chromium.service_manager.mojom.InterfaceProvider hostInterfaces);
 
 
 }

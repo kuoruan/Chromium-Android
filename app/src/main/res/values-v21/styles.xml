@@ -45,22 +45,6 @@
     </style>
     <style name="PreferenceLayout" parent="PreferenceLayoutBase" />
 
-    <!-- Cast and media playback notifications -->
-    <style name="MediaNotificationTitle"
-        parent="@android:style/TextAppearance.Material.Notification.Title">
-    </style>
-    <style name="MediaNotificationText"
-        parent="@android:style/TextAppearance.Material.Notification"/>
-    <style name="RemoteNotificationTitle"
-        parent="@android:style/TextAppearance.Material.Notification.Title">
-        <item name="android:layout_marginBottom">4dp</item>
-    </style>
-    <style name="RemoteNotificationText"
-        parent="@android:style/TextAppearance.Material.Notification.Line2"/>
-    <style name="RemoteNotificationProgressBar" parent="@android:style/Widget.ProgressBar.Horizontal">
-        <item name="android:minHeight">5dp</item>
-    </style>
-
     <!-- Web Notifications -->
     <style name="WebNotificationTitle"
         parent="@android:style/TextAppearance.Material.Notification.Title"/>
@@ -113,9 +97,6 @@
         drawable from Android support library, where it's used to simulate
         material design on earlier Android versions.
     -->
-    <style name="PopupWindow.LowEnd" parent="android:Widget.Material.Light.PopupWindow">
-        <item name="android:popupBackground">@drawable/popup_background_shadow</item>
-    </style>
     <style name="ListPopupWindow.LowEnd" parent="android:Widget.Material.Light.ListPopupWindow">
         <item name="android:popupBackground">@drawable/popup_background_shadow</item>
     </style>

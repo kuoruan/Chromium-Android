@@ -4,6 +4,7 @@
 
 package org.chromium.webapk.lib.client;
 
+import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -13,9 +14,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Each WebAPK has several services. This class manages static global connections between the
@@ -28,6 +27,7 @@ public class WebApkServiceConnectionManager {
     public interface ConnectionCallback {
         /**
          * Called once Chrome is connected to the WebAPK service.
+         *
          * @param service The WebAPK service.
          */
         void onConnected(IBinder service);
@@ -39,9 +39,9 @@ public class WebApkServiceConnectionManager {
         private WebApkServiceConnectionManager mConnectionManager;
 
         /** Callbacks to call once the connection is established. */
-        private ArrayList<ConnectionCallback> mCallbacks = new ArrayList<ConnectionCallback>();
+        private ArrayList<ConnectionCallback> mCallbacks = new ArrayList<>();
 
-        /** WebAPK IBinder interface.*/
+        /** WebAPK IBinder interface. */
         private IBinder mBinder;
 
         public IBinder getService() {
@@ -81,7 +81,7 @@ public class WebApkServiceConnectionManager {
     /** The action of the service to connect to. */
     private String mAction;
 
-    /** Mapping of WebAPK package to WebAPK service connection.*/
+    /** Mapping of WebAPK package to WebAPK service connection. */
     private HashMap<String, Connection> mConnections = new HashMap<>();
 
     /** Called when a WebAPK service connection is disconnected. */
@@ -91,10 +91,12 @@ public class WebApkServiceConnectionManager {
 
     /**
      * Connects Chrome application to WebAPK service. Can be called from any thread.
+     *
      * @param appContext Application context.
      * @param webApkPackage WebAPK package to create connection for.
      * @param callback Callback to call after connection has been established. Called synchronously
      */
+    @SuppressLint("StaticFieldLeak")
     public void connect(final Context appContext, final String webApkPackage,
             final ConnectionCallback callback) {
         Connection connection = mConnections.get(webApkPackage);
@@ -140,19 +142,19 @@ public class WebApkServiceConnectionManager {
 
     /**
      * Disconnect from all of the WebAPK services. Can be called from any thread.
+     *
      * @param appContext The application context.
      */
+    @SuppressLint("StaticFieldLeak")
     public void disconnectAll(final Context appContext) {
         if (mConnections.isEmpty()) return;
 
-        List<Connection> values = new ArrayList<>();
-        values.addAll(mConnections.values());
+        Connection[] values = mConnections.values().toArray(new Connection[mConnections.size()]);
         mConnections.clear();
 
-        new AsyncTask<Collection<Connection>, Void, Void>() {
+        new AsyncTask<Connection, Void, Void>() {
             @Override
-            protected Void doInBackground(Collection<Connection>... collections) {
-                Collection<Connection> values = collections[0];
+            protected final Void doInBackground(Connection... values) {
                 for (Connection connection : values) {
                     if (connection.getService() != null) {
                         appContext.unbindService(connection);
@@ -170,6 +172,7 @@ public class WebApkServiceConnectionManager {
 
     /**
      * Creates intent to connect to WebAPK service.
+     *
      * @param webApkPackage The package name of the WebAPK to connect to.
      */
     private Intent createConnectIntent(String webApkPackage) {

@@ -182,7 +182,8 @@ public class VrIntentUtils {
         // WebVR page is being loaded because the animation is somehow cancelled when we try to
         // enter VR (I don't know what's cancelling it). To hide the 2D UI, we resort to the black
         // overlay view added in {@link startWithVrIntentPreNative}.
-        return ActivityOptions.makeCustomAnimation(context, R.anim.stay_hidden, 0).toBundle();
+        int animation = VrShellDelegate.USE_HIDE_ANIMATION ? R.anim.stay_hidden : 0;
+        return ActivityOptions.makeCustomAnimation(context, animation, 0).toBundle();
     }
 
     /**

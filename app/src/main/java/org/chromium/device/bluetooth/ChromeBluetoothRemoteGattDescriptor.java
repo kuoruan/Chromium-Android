@@ -6,6 +6,7 @@ package org.chromium.device.bluetooth;
 
 import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
+import org.chromium.base.annotations.JNIAdditionalImport;
 import org.chromium.base.annotations.JNINamespace;
 
 /**
@@ -15,6 +16,7 @@ import org.chromium.base.annotations.JNINamespace;
  * Lifetime is controlled by device::BluetoothRemoteGattDescriptorAndroid.
  */
 @JNINamespace("device")
+@JNIAdditionalImport(Wrappers.class)
 final class ChromeBluetoothRemoteGattDescriptor {
     private static final String TAG = "Bluetooth";
 
@@ -65,14 +67,13 @@ final class ChromeBluetoothRemoteGattDescriptor {
     // BluetoothRemoteGattDescriptorAndroid methods implemented in java:
 
     // Implements BluetoothRemoteGattDescriptorAndroid::Create.
-    // TODO(http://crbug.com/505554): Replace 'Object' with specific type when JNI fixed.
     @CalledByNative
     private static ChromeBluetoothRemoteGattDescriptor create(
-            long nativeBluetoothRemoteGattDescriptorAndroid, Object bluetoothGattDescriptorWrapper,
+            long nativeBluetoothRemoteGattDescriptorAndroid,
+            Wrappers.BluetoothGattDescriptorWrapper descriptorWrapper,
             ChromeBluetoothDevice chromeDevice) {
-        return new ChromeBluetoothRemoteGattDescriptor(nativeBluetoothRemoteGattDescriptorAndroid,
-                (Wrappers.BluetoothGattDescriptorWrapper) bluetoothGattDescriptorWrapper,
-                chromeDevice);
+        return new ChromeBluetoothRemoteGattDescriptor(
+                nativeBluetoothRemoteGattDescriptorAndroid, descriptorWrapper, chromeDevice);
     }
 
     // Implements BluetoothRemoteGattDescriptorAndroid::GetUUID.

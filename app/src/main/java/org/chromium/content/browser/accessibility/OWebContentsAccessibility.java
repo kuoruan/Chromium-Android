@@ -9,12 +9,10 @@ import static android.view.accessibility.AccessibilityNodeInfo.EXTRA_DATA_TEXT_C
 import static android.view.accessibility.AccessibilityNodeInfo.EXTRA_DATA_TEXT_CHARACTER_LOCATION_KEY;
 
 import android.annotation.TargetApi;
-import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import org.chromium.base.annotations.JNINamespace;
@@ -28,9 +26,8 @@ import java.util.Arrays;
 @JNINamespace("content")
 @TargetApi(Build.VERSION_CODES.O)
 public class OWebContentsAccessibility extends LollipopWebContentsAccessibility {
-    OWebContentsAccessibility(Context context, ViewGroup containerView, WebContents webContents,
-            boolean shouldFocusOnPageLoad) {
-        super(context, containerView, webContents, shouldFocusOnPageLoad);
+    OWebContentsAccessibility(WebContents webContents) {
+        super(webContents);
     }
 
     @Override
@@ -44,9 +41,9 @@ public class OWebContentsAccessibility extends LollipopWebContentsAccessibility 
     @Override
     protected void setAccessibilityNodeInfoKitKatAttributes(AccessibilityNodeInfo node,
             boolean isRoot, boolean isEditableText, String role, String roleDescription,
-            String hint, int selectionStartIndex, int selectionEndIndex) {
+            String hint, int selectionStartIndex, int selectionEndIndex, boolean hasImage) {
         super.setAccessibilityNodeInfoKitKatAttributes(node, isRoot, isEditableText, role,
-                roleDescription, hint, selectionStartIndex, selectionEndIndex);
+                roleDescription, hint, selectionStartIndex, selectionEndIndex, hasImage);
         node.setHintText(hint);
     }
 

@@ -14,7 +14,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.SynchronousInitializationActivity;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkItem;
@@ -159,11 +158,15 @@ public class BookmarkAddEditFolderActivity extends SynchronousInitializationActi
 
         mParentTextView.setText(mModel.getBookmarkTitle(mParentId));
 
-        if (!FeatureUtilities.isChromeHomeEnabled()) {
-            findViewById(R.id.shadow).setVisibility(View.VISIBLE);
+        View shadow = findViewById(R.id.shadow);
+        if (!FeatureUtilities.isChromeModernDesignEnabled()) {
+            shadow.setVisibility(View.VISIBLE);
             toolbar.setTitleTextAppearance(toolbar.getContext(), R.style.BlackHeadline2);
-            toolbar.setBackgroundColor(
-                    ApiCompatibilityUtils.getColor(getResources(), R.color.modern_primary_color));
+        } else {
+            View scrollView = findViewById(R.id.scroll_view);
+            scrollView.getViewTreeObserver().addOnScrollChangedListener(() -> {
+                shadow.setVisibility(scrollView.getScrollY() > 0 ? View.VISIBLE : View.GONE);
+            });
         }
     }
 
@@ -187,9 +190,9 @@ public class BookmarkAddEditFolderActivity extends SynchronousInitializationActi
                     .setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         } else {
             mDeleteButton = menu.add(R.string.bookmark_action_bar_delete)
-                    .setIcon(TintedDrawable.constructTintedDrawable(
-                            getResources(), R.drawable.btn_trash))
-                    .setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+                                    .setIcon(TintedDrawable.constructTintedDrawable(
+                                            getResources(), R.drawable.ic_delete_white_24dp))
+                                    .setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         }
 
         return super.onCreateOptionsMenu(menu);

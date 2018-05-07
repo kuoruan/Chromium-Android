@@ -39,7 +39,7 @@ public class PageLoadMetrics {
          * @param webContents the WebContents this metrics is related to.
          * @param navigationId the unique id of a navigation this metrics is related to.
          */
-        public void onNewNavigation(WebContents webContents, long navigationId);
+        default void onNewNavigation(WebContents webContents, long navigationId) {}
 
         /**
          * Called when Network Quality Estimate is available, once per page load, when the
@@ -56,8 +56,8 @@ public class PageLoadMetrics {
          * @param transportRttMs an estimate of transport RTT, in milliseconds. Will be zero
          *     if unknown.
          */
-        public void onNetworkQualityEstimate(WebContents webContents, long navigationId,
-                int effectiveConnectionType, long httpRttMs, long transportRttMs);
+        default void onNetworkQualityEstimate(WebContents webContents, long navigationId,
+                int effectiveConnectionType, long httpRttMs, long transportRttMs) {}
 
         /**
          * Called when the first contentful paint page load metric is available.
@@ -67,8 +67,20 @@ public class PageLoadMetrics {
          * @param navigationStartTick Absolute navigation start time, as TimeTicks.
          * @param firstContentfulPaintMs Time to first contentful paint from navigation start.
          */
-        public void onFirstContentfulPaint(WebContents webContents, long navigationId,
-                long navigationStartTick, long firstContentfulPaintMs);
+        default void onFirstContentfulPaint(WebContents webContents, long navigationId,
+                long navigationStartTick, long firstContentfulPaintMs) {}
+
+        /**
+         * Called when the first meaningful paint page load metric is available. See
+         * FirstMeaningfulPaintDetector.cpp
+         *
+         * @param webContents the WebContents this metrics is related to.
+         * @param navigationId the unique id of a navigation this metrics is related to.
+         * @param navigationStartTick Absolute navigation start time, as TimeTicks.
+         * @param firstMeaningfulPaintMs Time to first meaningful paint from navigation start.
+         */
+        default void onFirstMeaningfulPaint(WebContents webContents, long navigationId,
+                long navigationStartTick, long firstMeaningfulPaintMs) {}
 
         /**
          * Called when the load event start metric is available.
@@ -78,8 +90,8 @@ public class PageLoadMetrics {
          * @param navigationStartTick Absolute navigation start time, as TimeTicks.
          * @param loadEventStartMs Time to load event start from navigation start.
          */
-        public void onLoadEventStart(WebContents webContents, long navigationId,
-                long navigationStartTick, long loadEventStartMs);
+        default void onLoadEventStart(WebContents webContents, long navigationId,
+                long navigationStartTick, long loadEventStartMs) {}
 
         /**
          * Called when the main resource is loaded.
@@ -90,9 +102,9 @@ public class PageLoadMetrics {
          * Remaining parameters are timing information in milliseconds from a common
          * arbitrary point (such as, but not guaranteed to be, system start).
          */
-        public void onLoadedMainResource(WebContents webContents, long navigationId,
+        default void onLoadedMainResource(WebContents webContents, long navigationId,
                 long dnsStartMs, long dnsEndMs, long connectStartMs, long connectEndMs,
-                long requestStartMs, long sendStartMs, long sendEndMs);
+                long requestStartMs, long sendStartMs, long sendEndMs) {}
     }
 
     private static ObserverList<Observer> sObservers;
@@ -139,6 +151,17 @@ public class PageLoadMetrics {
         for (Observer observer : sObservers) {
             observer.onFirstContentfulPaint(
                     webContents, navigationId, navigationStartTick, firstContentfulPaintMs);
+        }
+    }
+
+    @CalledByNative
+    static void onFirstMeaningfulPaint(WebContents webContents, long navigationId,
+            long navigationStartTick, long firstMeaningfulPaintMs) {
+        ThreadUtils.assertOnUiThread();
+        if (sObservers == null) return;
+        for (Observer observer : sObservers) {
+            observer.onFirstMeaningfulPaint(
+                    webContents, navigationId, navigationStartTick, firstMeaningfulPaintMs);
         }
     }
 

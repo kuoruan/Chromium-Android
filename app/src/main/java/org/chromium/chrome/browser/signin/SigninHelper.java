@@ -119,7 +119,7 @@ public class SigninHelper {
     private SigninHelper(Context context) {
         mContext = context;
         mProfileSyncService = ProfileSyncService.get();
-        mSigninManager = SigninManager.get(mContext);
+        mSigninManager = SigninManager.get();
         mAccountTrackerService = AccountTrackerService.get();
         mOAuth2TokenService = OAuth2TokenService.getForProfile(Profile.getLastUsedProfile());
         mChromeSigninController = ChromeSigninController.get();

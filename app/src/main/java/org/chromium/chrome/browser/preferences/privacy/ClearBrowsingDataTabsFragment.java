@@ -64,10 +64,14 @@ public class ClearBrowsingDataTabsFragment extends Fragment {
         // Inflate the layout for this fragment.
         View view = inflater.inflate(R.layout.clear_browsing_data_tabs, container, false);
 
+        ClearBrowsingDataFetcher fetcher = new ClearBrowsingDataFetcher();
+        fetcher.fetchImportantSites();
+        fetcher.requestInfoAboutOtherFormsOfBrowsingHistory();
+
         // Get the ViewPager and set its PagerAdapter so that it can display items.
         ViewPager viewPager = (ViewPager) view.findViewById(R.id.clear_browsing_data_viewpager);
         viewPager.setAdapter(
-                new ClearBrowsingDataPagerAdapter(getFragmentManager(), getActivity()));
+                new ClearBrowsingDataPagerAdapter(fetcher, getFragmentManager(), getActivity()));
 
         // Give the TabLayout the ViewPager.
         TabLayout tabLayout = (TabLayout) view.findViewById(R.id.clear_browsing_data_tabs);
@@ -88,10 +92,13 @@ public class ClearBrowsingDataTabsFragment extends Fragment {
     }
 
     private static class ClearBrowsingDataPagerAdapter extends FragmentPagerAdapter {
+        private final ClearBrowsingDataFetcher mFetcher;
         private final Context mContext;
 
-        ClearBrowsingDataPagerAdapter(FragmentManager fm, Context context) {
+        ClearBrowsingDataPagerAdapter(
+                ClearBrowsingDataFetcher fetcher, FragmentManager fm, Context context) {
             super(fm);
+            mFetcher = fetcher;
             mContext = context;
         }
 
@@ -103,14 +110,19 @@ public class ClearBrowsingDataTabsFragment extends Fragment {
         @Override
         public Fragment getItem(int position) {
             position = adjustIndexForDirectionality(position);
+            ClearBrowsingDataPreferences fragment;
             switch (position) {
                 case 0:
-                    return new ClearBrowsingDataPreferencesBasic();
+                    fragment = new ClearBrowsingDataPreferencesBasic();
+                    break;
                 case 1:
-                    return new ClearBrowsingDataPreferencesAdvanced();
+                    fragment = new ClearBrowsingDataPreferencesAdvanced();
+                    break;
                 default:
                     throw new RuntimeException("invalid position: " + position);
             }
+            fragment.setClearBrowsingDataFetcher(mFetcher);
+            return fragment;
         }
 
         @Override

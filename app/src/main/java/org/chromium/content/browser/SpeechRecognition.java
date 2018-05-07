@@ -228,6 +228,7 @@ public class SpeechRecognition {
     // This function destroys everything when recognition is done, taking care to properly tear
     // down by calling On{Sound,Audio}End if corresponding On{Audio,Sound}Start were called.
     private void terminate(int error) {
+        if (mNativeSpeechRecognizerImplAndroid == 0) return;
 
         if (mState != STATE_IDLE) {
             if (mState == STATE_CAPTURING_SPEECH) {

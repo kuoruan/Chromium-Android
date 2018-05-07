@@ -11,6 +11,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.SwitchCompat;
 import android.text.method.LinkMovementMethod;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -291,6 +292,34 @@ public final class InfoBarControlLayout extends ViewGroup {
     }
 
     /**
+     * Adds an icon with a descriptive message to the Title.
+     *
+     * -----------------------------------------------------
+     * | ICON | TITLE MESSAGE                              |
+     * -----------------------------------------------------
+     * If an icon is not provided, the ImageView that would normally show it is hidden.
+     *
+     * @param iconResourceId   ID of the drawable to use for the icon.
+     * @param titleMessage     Message to display on Infobar title.
+     */
+    public View addIconTitle(int iconResourceId, CharSequence titleMessage) {
+        LinearLayout layout =
+                (LinearLayout) LayoutInflater.from(getContext())
+                        .inflate(R.layout.infobar_control_icon_with_description, this, false);
+        addView(layout, new ControlLayoutParams());
+
+        ImageView iconView = (ImageView) layout.findViewById(R.id.control_icon);
+        iconView.setImageResource(iconResourceId);
+
+        TextView titleView = (TextView) layout.findViewById(R.id.control_message);
+        titleView.setText(titleMessage);
+        titleView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                getContext().getResources().getDimension(R.dimen.infobar_text_size));
+
+        return layout;
+    }
+
+    /**
      * Adds an icon with a descriptive message to the layout.
      *
      * -----------------------------------------------------
@@ -305,6 +334,27 @@ public final class InfoBarControlLayout extends ViewGroup {
      */
     public View addIcon(int iconResourceId, int iconColorId, CharSequence primaryMessage,
             CharSequence secondaryMessage) {
+        return addIcon(iconResourceId, iconColorId, primaryMessage, secondaryMessage,
+                R.dimen.infobar_text_size);
+    }
+
+    /**
+     * Adds an icon with a descriptive message to the layout.
+     *
+     * -----------------------------------------------------
+     * | ICON | PRIMARY MESSAGE SECONDARY MESSAGE          |
+     * -----------------------------------------------------
+     * If an icon is not provided, the ImageView that would normally show it is hidden.
+     *
+     * @param iconResourceId   ID of the drawable to use for the icon.
+     * @param iconColorId      ID of the tint color for the icon, or 0 for default.
+     * @param primaryMessage   Message to display for the toggle.
+     * @param secondaryMessage Additional descriptive text for the toggle.  May be null.
+     * @param resourceId       Size of resource id to be applied to primaryMessage
+     *                         and secondaryMessage.
+     */
+    public View addIcon(int iconResourceId, int iconColorId, CharSequence primaryMessage,
+            CharSequence secondaryMessage, int resourceId) {
         LinearLayout layout = (LinearLayout) LayoutInflater.from(getContext()).inflate(
                 R.layout.infobar_control_icon_with_description, this, false);
         addView(layout, new ControlLayoutParams());
@@ -318,6 +368,8 @@ public final class InfoBarControlLayout extends ViewGroup {
         // The primary message text is always displayed.
         TextView primaryView = (TextView) layout.findViewById(R.id.control_message);
         primaryView.setText(primaryMessage);
+        primaryView.setTextSize(
+                TypedValue.COMPLEX_UNIT_PX, getContext().getResources().getDimension(resourceId));
 
         // The secondary message text is optional.
         TextView secondaryView =
@@ -326,6 +378,8 @@ public final class InfoBarControlLayout extends ViewGroup {
             layout.removeView(secondaryView);
         } else {
             secondaryView.setText(secondaryMessage);
+            secondaryView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                    getContext().getResources().getDimension(resourceId));
         }
 
         return layout;

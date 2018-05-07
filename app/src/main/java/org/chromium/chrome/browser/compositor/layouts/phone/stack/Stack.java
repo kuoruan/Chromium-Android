@@ -529,7 +529,7 @@ public class Stack {
                 // state of the tab switcher and the OverviewAnimationType specified.
                 mTabAnimations =
                         mAnimationFactory.createAnimatorSetForType(type, mStackTabs, focusIndex,
-                                sourceIndex, mSpacing, mScrollOffset, mWarpSize, getDiscardRange());
+                                sourceIndex, mSpacing, mWarpSize, getDiscardRange());
             }
 
             if (mTabAnimations != null) mTabAnimations.start();
@@ -1693,6 +1693,7 @@ public class Stack {
                 // If the tab is completed covered, don't bother drawing it at all.
                 layoutTab.setVisible(false);
                 layoutTab.setDrawDecoration(true);
+                mLayout.releaseResourcesForTab(layoutTab);
             } else {
                 // Fade the tab as it gets too close to the next one. This helps
                 // prevent overlapping shadows from becoming too dark.

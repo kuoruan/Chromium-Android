@@ -17,11 +17,12 @@ import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
     SpaceStatus.ENOUGH_SPACE, SpaceStatus.ENOUGH_SPACE_AFTER_FREE_UP_CACHE,
-    SpaceStatus.NOT_ENOUGH_SPACE
+    SpaceStatus.NOT_ENOUGH_SPACE, SpaceStatus.COUNT
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface SpaceStatus {
   int ENOUGH_SPACE = 0;
   int ENOUGH_SPACE_AFTER_FREE_UP_CACHE = 1;
   int NOT_ENOUGH_SPACE = 2;
+  int COUNT = 3;
 }

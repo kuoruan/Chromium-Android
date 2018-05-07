@@ -59,7 +59,6 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
     private final int mItemDividerHeight;
     private final int mVerticalFadeDistance;
     private final int mNegativeSoftwareVerticalOffset;
-    private final int mNegativeVerticalOffsetNotTopAnchored;
     private final int[] mTempLocation;
     private final boolean mTranslateMenuItemsOnShow;
 
@@ -99,8 +98,6 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
         mNegativeSoftwareVerticalOffset =
                 res.getDimensionPixelSize(R.dimen.menu_negative_software_vertical_offset);
         mVerticalFadeDistance = res.getDimensionPixelSize(R.dimen.menu_vertical_fade_distance);
-        mNegativeVerticalOffsetNotTopAnchored =
-                res.getDimensionPixelSize(R.dimen.menu_negative_vertical_offset_not_top_anchored);
 
         mTempLocation = new int[2];
         mTranslateMenuItemsOnShow = translateMenuItemsOnShow;
@@ -171,7 +168,6 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
             @IdRes int footerResourceId, View headerView, Integer highlightedItemId) {
         mPopup = new PopupWindow(context);
         mPopup.setFocusable(true);
-        if (!isByPermanentButton) mPopup.setClippingEnabled(false);
         mPopup.setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -179,7 +175,6 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
             mPopup.setWindowLayoutType(WindowManager.LayoutParams.TYPE_APPLICATION_SUB_PANEL);
         }
 
-        boolean anchorAtBottom = isAnchorAtBottom(anchorView, visibleDisplayFrame);
         mPopup.setOnDismissListener(() -> {
             if (anchorView instanceof ImageButton) {
                 ((ImageButton) anchorView).setSelected(false);
@@ -208,12 +203,9 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
             mPopup.setBackgroundDrawable(
                     ApiCompatibilityUtils.getDrawable(context.getResources(), R.drawable.menu_bg));
         } else {
-            mPopup.setBackgroundDrawable(ApiCompatibilityUtils.getDrawable(context.getResources(),
-                    isAnchorAtTop(anchorView, visibleDisplayFrame)
-                            ? R.drawable.edge_menu_bg
-                            : R.drawable.bottom_anchor_edge_menu_bg));
-            mPopup.setAnimationStyle(
-                    anchorAtBottom ? R.style.OverflowMenuAnimBottom : R.style.OverflowMenuAnim);
+            mPopup.setBackgroundDrawable(ApiCompatibilityUtils.getDrawable(
+                    context.getResources(), R.drawable.edge_menu_bg));
+            mPopup.setAnimationStyle(R.style.OverflowMenuAnim);
         }
 
         // Turn off window animations for low end devices.
@@ -268,7 +260,7 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
         int popupHeight = setMenuHeight(menuItems.size(), visibleDisplayFrame, screenHeight,
                 sizingPadding, footerHeight, headerHeight, anchorView);
         int[] popupPosition = getPopupPosition(mCurrentScreenRotation, visibleDisplayFrame,
-                sizingPadding, anchorView, anchorAtBottom, popupWidth, popupHeight);
+                sizingPadding, anchorView, popupWidth, popupHeight);
 
         mPopup.setContentView(contentView);
         mPopup.showAtLocation(
@@ -306,18 +298,8 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
         return mFooterView;
     }
 
-    private boolean isAnchorAtBottom(View anchorView, Rect visibleDisplayFrame) {
-        anchorView.getLocationOnScreen(mTempLocation);
-        return (mTempLocation[1] + anchorView.getHeight()) >= visibleDisplayFrame.bottom;
-    }
-
-    private boolean isAnchorAtTop(View anchorView, Rect visibleDisplayFrame) {
-        anchorView.getLocationOnScreen(mTempLocation);
-        return mTempLocation[1] == visibleDisplayFrame.top;
-    }
-
     private int[] getPopupPosition(int screenRotation, Rect appRect, Rect padding, View anchorView,
-            boolean anchorAtBottom, int popupWidth, int popupHeight) {
+            int popupWidth, int popupHeight) {
         anchorView.getLocationInWindow(mTempLocation);
         int anchorViewX = mTempLocation[0];
         int anchorViewY = mTempLocation[1];
@@ -347,21 +329,6 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
             offsets[1] = -padding.bottom;
         } else {
             offsets[1] = -mNegativeSoftwareVerticalOffset;
-
-            // If the anchor is at the bottom of the screen, align the popup with the bottom of the
-            // anchor. The anchor may not be fully visible, so
-            // (appRect.bottom - anchorViewLocationOnScreenY) is used to determine the visible
-            // bottom edge of the anchor view.
-            if (anchorAtBottom) {
-                anchorView.getLocationOnScreen(mTempLocation);
-                int anchorViewLocationOnScreenY = mTempLocation[1];
-                offsets[1] += appRect.bottom - anchorViewLocationOnScreenY - popupHeight;
-                if (!mIsByPermanentButton) offsets[1] += padding.bottom;
-            }
-
-            if (!isAnchorAtTop(anchorView, appRect)) {
-                offsets[1] -= mNegativeVerticalOffsetNotTopAnchored;
-            }
 
             if (!ApiCompatibilityUtils.isLayoutRtl(anchorView.getRootView())) {
                 offsets[0] = anchorView.getWidth() - popupWidth;
@@ -488,8 +455,6 @@ public class AppMenu implements OnItemClickListener, OnKeyListener {
         int menuHeight;
         anchorView.getLocationOnScreen(mTempLocation);
         int anchorViewY = mTempLocation[1] - appDimensions.top;
-
-        if (isAnchorAtBottom(anchorView, appDimensions)) anchorViewY += anchorView.getHeight();
 
         int anchorViewImpactHeight = mIsByPermanentButton ? anchorView.getHeight() : 0;
 

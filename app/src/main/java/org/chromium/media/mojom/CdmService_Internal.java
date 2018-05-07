@@ -49,7 +49,7 @@ class CdmService_Internal {
 
     private static final int LOAD_CDM_ORDINAL = 0;
 
-    private static final int CREATE_INTERFACE_FACTORY_ORDINAL = 1;
+    private static final int CREATE_CDM_FACTORY_ORDINAL = 1;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements CdmService.Proxy {
@@ -78,10 +78,10 @@ org.chromium.mojo.common.mojom.FilePath cdmPath) {
 
 
         @Override
-        public void createInterfaceFactory(
-org.chromium.mojo.bindings.InterfaceRequest<InterfaceFactory> factory, org.chromium.service_manager.mojom.InterfaceProvider hostInterfaces) {
+        public void createCdmFactory(
+org.chromium.mojo.bindings.InterfaceRequest<CdmFactory> factory, org.chromium.service_manager.mojom.InterfaceProvider hostInterfaces) {
 
-            CdmServiceCreateInterfaceFactoryParams _message = new CdmServiceCreateInterfaceFactoryParams();
+            CdmServiceCreateCdmFactoryParams _message = new CdmServiceCreateCdmFactoryParams();
 
             _message.factory = factory;
 
@@ -91,7 +91,7 @@ org.chromium.mojo.bindings.InterfaceRequest<InterfaceFactory> factory, org.chrom
             getProxyHandler().getMessageReceiver().accept(
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
-                            new org.chromium.mojo.bindings.MessageHeader(CREATE_INTERFACE_FACTORY_ORDINAL)));
+                            new org.chromium.mojo.bindings.MessageHeader(CREATE_CDM_FACTORY_ORDINAL)));
 
         }
 
@@ -136,12 +136,12 @@ org.chromium.mojo.bindings.InterfaceRequest<InterfaceFactory> factory, org.chrom
             
             
             
-                    case CREATE_INTERFACE_FACTORY_ORDINAL: {
+                    case CREATE_CDM_FACTORY_ORDINAL: {
             
-                        CdmServiceCreateInterfaceFactoryParams data =
-                                CdmServiceCreateInterfaceFactoryParams.deserialize(messageWithHeader.getPayload());
+                        CdmServiceCreateCdmFactoryParams data =
+                                CdmServiceCreateCdmFactoryParams.deserialize(messageWithHeader.getPayload());
             
-                        getImpl().createInterfaceFactory(data.factory, data.hostInterfaces);
+                        getImpl().createCdmFactory(data.factory, data.hostInterfaces);
                         return true;
                     }
             
@@ -280,23 +280,23 @@ org.chromium.mojo.bindings.InterfaceRequest<InterfaceFactory> factory, org.chrom
 
 
     
-    static final class CdmServiceCreateInterfaceFactoryParams extends org.chromium.mojo.bindings.Struct {
+    static final class CdmServiceCreateCdmFactoryParams extends org.chromium.mojo.bindings.Struct {
     
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public org.chromium.mojo.bindings.InterfaceRequest<InterfaceFactory> factory;
+        public org.chromium.mojo.bindings.InterfaceRequest<CdmFactory> factory;
         public org.chromium.service_manager.mojom.InterfaceProvider hostInterfaces;
     
-        private CdmServiceCreateInterfaceFactoryParams(int version) {
+        private CdmServiceCreateCdmFactoryParams(int version) {
             super(STRUCT_SIZE, version);
         }
     
-        public CdmServiceCreateInterfaceFactoryParams() {
+        public CdmServiceCreateCdmFactoryParams() {
             this(0);
         }
     
-        public static CdmServiceCreateInterfaceFactoryParams deserialize(org.chromium.mojo.bindings.Message message) {
+        public static CdmServiceCreateCdmFactoryParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
     
@@ -305,7 +305,7 @@ org.chromium.mojo.bindings.InterfaceRequest<InterfaceFactory> factory, org.chrom
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
-        public static CdmServiceCreateInterfaceFactoryParams deserialize(java.nio.ByteBuffer data) {
+        public static CdmServiceCreateCdmFactoryParams deserialize(java.nio.ByteBuffer data) {
             if (data == null)
                 return null;
     
@@ -314,15 +314,15 @@ org.chromium.mojo.bindings.InterfaceRequest<InterfaceFactory> factory, org.chrom
         }
     
         @SuppressWarnings("unchecked")
-        public static CdmServiceCreateInterfaceFactoryParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+        public static CdmServiceCreateCdmFactoryParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
                 return null;
             }
             decoder0.increaseStackDepth();
-            CdmServiceCreateInterfaceFactoryParams result;
+            CdmServiceCreateCdmFactoryParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CdmServiceCreateInterfaceFactoryParams(mainDataHeader.elementsOrVersion);
+                result = new CdmServiceCreateCdmFactoryParams(mainDataHeader.elementsOrVersion);
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
                     result.factory = decoder0.readInterfaceRequest(8, false);
@@ -358,7 +358,7 @@ org.chromium.mojo.bindings.InterfaceRequest<InterfaceFactory> factory, org.chrom
                 return false;
             if (getClass() != object.getClass())
                 return false;
-            CdmServiceCreateInterfaceFactoryParams other = (CdmServiceCreateInterfaceFactoryParams) object;
+            CdmServiceCreateCdmFactoryParams other = (CdmServiceCreateCdmFactoryParams) object;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.factory, other.factory))
                 return false;
             if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.hostInterfaces, other.hostInterfaces))

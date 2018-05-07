@@ -40,6 +40,7 @@ public class SiteSettingsPreferences extends PreferenceFragment
     static final String AUTOPLAY_KEY = "autoplay";
     static final String BACKGROUND_SYNC_KEY = "background_sync";
     static final String CAMERA_KEY = "camera";
+    static final String CLIPBOARD_KEY = "clipboard";
     static final String COOKIES_KEY = "cookies";
     static final String JAVASCRIPT_KEY = "javascript";
     static final String LOCATION_KEY = "device_location";
@@ -89,6 +90,8 @@ public class SiteSettingsPreferences extends PreferenceFragment
             return ContentSettingsType.CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC;
         } else if (CAMERA_KEY.equals(key)) {
             return ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA;
+        } else if (CLIPBOARD_KEY.equals(key)) {
+            return ContentSettingsType.CONTENT_SETTINGS_TYPE_CLIPBOARD_READ;
         } else if (COOKIES_KEY.equals(key)) {
             return ContentSettingsType.CONTENT_SETTINGS_TYPE_COOKIES;
         } else if (JAVASCRIPT_KEY.equals(key)) {
@@ -117,6 +120,7 @@ public class SiteSettingsPreferences extends PreferenceFragment
             getPreferenceScreen().removePreference(findPreference(ADS_KEY));
             getPreferenceScreen().removePreference(findPreference(BACKGROUND_SYNC_KEY));
             getPreferenceScreen().removePreference(findPreference(CAMERA_KEY));
+            getPreferenceScreen().removePreference(findPreference(CLIPBOARD_KEY));
             getPreferenceScreen().removePreference(findPreference(COOKIES_KEY));
             getPreferenceScreen().removePreference(findPreference(JAVASCRIPT_KEY));
             getPreferenceScreen().removePreference(findPreference(LOCATION_KEY));
@@ -146,6 +150,9 @@ public class SiteSettingsPreferences extends PreferenceFragment
             }
             if (!ChromeFeatureList.isEnabled(ChromeFeatureList.SOUND_CONTENT_SETTING)) {
                 getPreferenceScreen().removePreference(findPreference(SOUND_KEY));
+            }
+            if (!ChromeFeatureList.isEnabled(ChromeFeatureList.CLIPBOARD_CONTENT_SETTING)) {
+                getPreferenceScreen().removePreference(findPreference(CLIPBOARD_KEY));
             }
             // The new Languages Preference *feature* is an advanced version of this translate
             // preference. Once Languages Preference is enabled, remove this setting.
@@ -178,6 +185,9 @@ public class SiteSettingsPreferences extends PreferenceFragment
             if (!mProtectedContentMenuAvailable) websitePrefs.add(AUTOPLAY_KEY);
             websitePrefs.add(BACKGROUND_SYNC_KEY);
             websitePrefs.add(CAMERA_KEY);
+            if (ChromeFeatureList.isEnabled(ChromeFeatureList.CLIPBOARD_CONTENT_SETTING)) {
+                websitePrefs.add(CLIPBOARD_KEY);
+            }
             websitePrefs.add(COOKIES_KEY);
             websitePrefs.add(JAVASCRIPT_KEY);
             websitePrefs.add(LOCATION_KEY);
@@ -202,6 +212,8 @@ public class SiteSettingsPreferences extends PreferenceFragment
                 checked = PrefServiceBridge.getInstance().isBackgroundSyncAllowed();
             } else if (CAMERA_KEY.equals(prefName)) {
                 checked = PrefServiceBridge.getInstance().isCameraEnabled();
+            } else if (CLIPBOARD_KEY.equals(prefName)) {
+                checked = PrefServiceBridge.getInstance().isClipboardEnabled();
             } else if (COOKIES_KEY.equals(prefName)) {
                 checked = PrefServiceBridge.getInstance().isAcceptCookiesEnabled();
             } else if (JAVASCRIPT_KEY.equals(prefName)) {
@@ -232,6 +244,8 @@ public class SiteSettingsPreferences extends PreferenceFragment
             } else if (COOKIES_KEY.equals(prefName) && checked
                     && prefServiceBridge.isBlockThirdPartyCookiesEnabled()) {
                 p.setSummary(ContentSettingsResources.getCookieAllowedExceptThirdPartySummary());
+            } else if (CLIPBOARD_KEY.equals(prefName) && !checked) {
+                p.setSummary(ContentSettingsResources.getClipboardBlockedListSummary());
             } else if (LOCATION_KEY.equals(prefName) && checked
                     && prefServiceBridge.isLocationAllowedByPolicy()) {
                 p.setSummary(ContentSettingsResources.getGeolocationAllowedSummary());

@@ -60,7 +60,7 @@ class FilterAdapter
                 getTextViewFromResource(convertView, R.layout.download_manager_spinner);
         labelView.setText(position == 0 ? R.string.menu_downloads
                                         : DownloadFilter.getStringIdForFilter(position));
-        if (!FeatureUtilities.isChromeHomeEnabled()) {
+        if (!FeatureUtilities.isChromeModernDesignEnabled()) {
             ApiCompatibilityUtils.setTextAppearance(labelView, R.style.BlackHeadline2);
         }
         return labelView;

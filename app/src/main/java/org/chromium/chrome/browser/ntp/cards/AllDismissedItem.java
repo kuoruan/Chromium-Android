@@ -64,20 +64,16 @@ public class AllDismissedItem extends OptionalLeaf {
             super(LayoutInflater.from(root.getContext()).inflate(getLayout(), root, false));
             mBodyTextView = itemView.findViewById(R.id.body_text);
 
-            if (!FeatureUtilities.isChromeHomeEnabled()) {
-                itemView.findViewById(R.id.action_button).setOnClickListener(v -> {
-                    NewTabPageUma.recordAction(NewTabPageUma.ACTION_CLICKED_ALL_DISMISSED_REFRESH);
-                    sections.restoreDismissedSections();
-                });
-            }
+            itemView.findViewById(R.id.action_button).setOnClickListener(v -> {
+                NewTabPageUma.recordAction(NewTabPageUma.ACTION_CLICKED_ALL_DISMISSED_REFRESH);
+                sections.restoreDismissedSections();
+            });
         }
 
         public void onBindViewHolder(int hourOfDay, Listener listener) {
             @StringRes
             final int messageId;
-            if (SuggestionsConfig.useModernLayout()) {
-                messageId = R.string.ntp_all_dismissed_body_text_modern;
-            } else if (hourOfDay >= 0 && hourOfDay < 12) {
+            if (hourOfDay >= 0 && hourOfDay < 12) {
                 messageId = R.string.ntp_all_dismissed_body_text_morning;
             } else if (hourOfDay >= 12 && hourOfDay < 17) {
                 messageId = R.string.ntp_all_dismissed_body_text_afternoon;

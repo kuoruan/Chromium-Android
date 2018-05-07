@@ -95,7 +95,7 @@ class BookmarkPromoHeader implements AndroidSyncSettingsObserver, SignInStateObs
             mSigninPromoController = null;
         }
 
-        mSignInManager = SigninManager.get(mContext);
+        mSignInManager = SigninManager.get();
         mSignInManager.addSignInStateObserver(this);
 
         mPromoState = calculatePromoState();
@@ -175,7 +175,7 @@ class BookmarkPromoHeader implements AndroidSyncSettingsObserver, SignInStateObs
      * Detaches the previously configured {@link PersonalizedSigninPromoView}.
      */
     void detachPersonalizePromoView() {
-        mSigninPromoController.detach();
+        if (mSigninPromoController != null) mSigninPromoController.detach();
     }
 
     /**
@@ -187,7 +187,7 @@ class BookmarkPromoHeader implements AndroidSyncSettingsObserver, SignInStateObs
         sharedPreferencesEditor.putBoolean(PREF_PERSONALIZED_SIGNIN_PROMO_DECLINED, true);
         sharedPreferencesEditor.apply();
         mPromoState = calculatePromoState();
-        mPromoHeaderChangeAction.run();
+        triggerPromoUpdate();
     }
 
     /**
@@ -230,31 +230,36 @@ class BookmarkPromoHeader implements AndroidSyncSettingsObserver, SignInStateObs
     @Override
     public void androidSyncSettingsChanged() {
         mPromoState = calculatePromoState();
-        mPromoHeaderChangeAction.run();
+        triggerPromoUpdate();
     }
 
     // SignInStateObserver implementation.
     @Override
     public void onSignedIn() {
         mPromoState = calculatePromoState();
-        mPromoHeaderChangeAction.run();
+        triggerPromoUpdate();
     }
 
     @Override
     public void onSignedOut() {
         mPromoState = calculatePromoState();
-        mPromoHeaderChangeAction.run();
+        triggerPromoUpdate();
     }
 
     // ProfileDataCache.Observer implementation.
     @Override
     public void onProfileDataUpdated(String accountId) {
-        mPromoHeaderChangeAction.run();
+        triggerPromoUpdate();
     }
 
     // AccountsChangeObserver implementation.
     @Override
     public void onAccountsChanged() {
+        triggerPromoUpdate();
+    }
+
+    private void triggerPromoUpdate() {
+        detachPersonalizePromoView();
         mPromoHeaderChangeAction.run();
     }
 

@@ -285,12 +285,6 @@ See https://developers.google.com/safe-browsing for more info on SafeBrowsing.</
   <string name="EditBookmarksEnabledDesc">If you enable this setting, bookmarks can be added, removed or modified. This is the default also when this policy is not set.
 
 If you disable this setting, bookmarks can not be added, removed or modified. Existing bookmarks are still available.</string>
-  <string name="EnableCommonNameFallbackForLocalAnchorsTitle">Whether to allow certificates issued by local trust anchors that are missing the subjectAlternativeName extension</string>
-  <string name="EnableCommonNameFallbackForLocalAnchorsDesc">When this setting is enabled, Chromium will use the commonName of a server certificate to match a hostname if the certificate is missing a subjectAlternativeName extension, as long as it successfully validates and chains to a locally-installed CA certificates.
-
-Note that this is not recommended, as this may allow bypassing the nameConstraints extension that restricts the hostnames that a given certificate can be authorized for.
-
-If this policy is not set, or is set to false, server certificates that lack a subjectAlternativeName extension containing either a DNS name or IP address will not be trusted.</string>
   <string name="EnableDeprecatedWebPlatformFeaturesTitle">Enable deprecated web platform features for a limited time</string>
   <string name="EnableDeprecatedWebPlatformFeaturesDesc">Specify a list of deprecated web platform features to re-enable temporarily.
 
@@ -316,6 +310,14 @@ If this policy set to false, Google Cast will be disabled.</string>
 Note that this policy depends on the operating system certificate verification stack allowing SHA-1 signatures. If an OS update changes the OS handling of SHA-1 certificates, this policy may no longer have effect.  Further, this policy is intended as a temporary workaround to give enterprises more time to move away from SHA-1.  This policy will be removed on or around January 1st 2019.
 
 If this policy is not set, or it is set to false, then Chromium follows the publicly announced SHA-1 deprecation schedule.</string>
+  <string name="EnableSymantecLegacyInfrastructureTitle">Whether to enable trust in Symantec Corporation\'s Legacy PKI Infrastructure</string>
+  <string name="EnableSymantecLegacyInfrastructureDesc">When this setting is enabled, Chromium allows certificates issued by Symantec Corporation\'s Legacy PKI operations to be trusted if they otherwise successfully validate and chain to a recognized CA certificate.
+
+Note that this policy depends on the operating system still recognizing certificates from Symantec\'s legacy infrastructure. If an OS update changes the OS handling of such certificates, this policy no longer has effect.  Further, this policy is intended as a temporary workaround to give enterprises more time to transition away from legacy Symantec certificates.  This policy will be removed on or around January 1st 2019.
+
+If this policy is not set, or it is set to false, then Chromium follows the publicly announced deprecation schedule.
+
+See https://g.co/chrome/symantecpkicerts for more details on this deprecation.</string>
   <string name="ForceBrowserSigninTitle">Enables force sign in for Chromium</string>
   <string name="ForceBrowserSigninDesc">If this policy is set to true, user has to sign in to Chromium with their profile before using the browser. And the default value of BrowserGuestModeEnabled will be set to false. Note that existing unsigned profiles will be locked and inaccessible after enabling this policy. For more information, see help center article.
 
@@ -416,7 +418,7 @@ If this policy is left not set, network prediction will be enabled but the user 
 
 All recent versions of Samba and Windows servers support NTLMv2. This should only be disabled for backwards compatibility and reduces the security of authentication.
 
-The default value when this policy is not defined is currently false for backwards compatibility, but will change to true in the future.</string>
+If this policy is not set, the default is true and NTLMv2 is enabled.</string>
   <string name="PasswordManagerEnabledTitle">Enable saving passwords to the password manager</string>
   <string name="PasswordManagerEnabledDesc">If this setting is enabled, users can have Chromium memorize passwords and provide them automatically the next time they log in to a site.
 
@@ -501,11 +503,11 @@ https://www.chromium.org/developers/design-documents/network-settings#TOC-Comman
   <string name="RestrictAccountsToPatternsTitle">Restrict accounts that are visible in Chromium</string>
   <string name="RestrictAccountsToPatternsDesc">Contains a list of patterns which are used to control the visiblity of accounts in Chromium.
 
-Account on the device will be visible in Chromium if its name matches any pattern from the list. Otherwise account will be filtered out and hidden.
+Each Google account on the device will be compared to patterns stored in this policy to determine the account visibility in Chromium. The account will be visible if its name matches any pattern on the list. Otherwise, the account will be hidden.
 
-The wildcard character \'*\' can be used to match zero or more arbitrary characters. The escape character is \'\\\', so to match actual \'*\' or \'\\\' characters, you can put a \'\\\' in front of them.
+Use the wildcard character \'*\' to match zero or more arbitrary characters. The escape character is \'\\\', so to match actual \'*\' or \'\\\' characters, put a \'\\\' in front of them.
 
-If this policy is left not set then all Google accounts on the device will be visible in Chromium.</string>
+If this policy is not set, all Google accounts on the device will be visible in Chromium.</string>
   <string name="SSLErrorOverrideAllowedTitle">Allow proceeding from the SSL warning page</string>
   <string name="SSLErrorOverrideAllowedDesc">Chrome shows a warning page when users navigate to sites that have SSL errors. By default or when this policy is set to true, users are allowed to click through these warning pages.
 Setting this policy to false disallows users to click through any warning page.</string>
@@ -523,6 +525,20 @@ Otherwise it may be set to one of the following values: \\&quot;tls1.2\\&quot; o
     <item>tls1.2</item>
     <item>tls1.3</item>
   </string-array>
+  <string name="SSLVersionMinTitle">Minimum SSL version enabled</string>
+  <string name="SSLVersionMinDesc">If this policy is not configured then Chromium uses a default minimum version which is TLS 1.0.
+
+Otherwise it may be set to one of the following values: \\&quot;tls1\\&quot;, \\&quot;tls1.1\\&quot; or \\&quot;tls1.2\\&quot;. When set, Chromium will not use SSL/TLS versions less than the specified version. An unrecognized value will be ignored.</string>
+  <string-array name="SSLVersionMinEntries">
+    <item>TLS 1.0</item>
+    <item>TLS 1.1</item>
+    <item>TLS 1.2</item>
+  </string-array>
+  <string-array name="SSLVersionMinValues">
+    <item>tls1</item>
+    <item>tls1.1</item>
+    <item>tls1.2</item>
+  </string-array>
   <string name="SafeBrowsingEnabledTitle">Enable Safe Browsing</string>
   <string name="SafeBrowsingEnabledDesc">Enables Chromium\'s Safe Browsing feature and prevents users from changing this setting.
 
@@ -534,7 +550,9 @@ If you enable or disable this setting, users cannot change or override the \\&qu
 
 If this policy is left not set, this will be enabled but the user will be able to change it.
 
-See https://developers.google.com/safe-browsing for more info on SafeBrowsing.</string>
+See https://developers.google.com/safe-browsing for more info on SafeBrowsing.
+
+This policy is not available on Windows instances that are not joined to a Microsoft® Active Directory® domain.</string>
   <string name="SavingBrowserHistoryDisabledTitle">Disable saving browser history</string>
   <string name="SavingBrowserHistoryDisabledDesc">Disables saving browser history in Chromium and prevents users from changing this setting.
 

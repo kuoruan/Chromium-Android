@@ -24,8 +24,7 @@ public class PrefetchBackgroundTaskScheduler {
 
     /**
      * Schedules the default 'NWake' task for the prefetching service. This task will normally be
-     * scheduled on a good network type. But if limitless prefetching is enabled delays are reduced
-     * and network restrictions are loosen.
+     * scheduled on a good network type.
      * TODO(dewittj): Handle skipping work if the battery percentage is too low.
      */
     @CalledByNative
@@ -34,10 +33,8 @@ public class PrefetchBackgroundTaskScheduler {
     }
 
     /**
-     * Schedules the default 'NWake' task for the prefetching service. This task will normally be
-     * scheduled on a good network type. But if limitless prefetching is enabled delays are reduced
-     * and network restrictions are loosen.
-     * TODO(dewittj): Handle skipping work if the battery percentage is too low.
+     * Schedules the limitless version of the 'NWake' task for the prefetching service. with reduced
+     * delays and no network restrictions (device needs only to be online).
      */
     @CalledByNative
     public static void scheduleTaskLimitless(int additionalDelaySeconds) {

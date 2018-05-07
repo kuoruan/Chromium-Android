@@ -13,6 +13,7 @@ import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.AppHooks;
+import org.chromium.chrome.browser.util.ViewUtils;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -26,6 +27,7 @@ import javax.annotation.concurrent.GuardedBy;
 public class PartnerBookmarksReader {
     private static final String TAG = "PartnerBMReader";
     private static Set<FaviconUpdateObserver> sFaviconUpdateObservers = new HashSet<>();
+    private static final float DESIRED_FAVICON_SIZE_DP = 16.0f;
 
     static final String LAST_EMPTY_READ_PREFS_NAME = "PartnerBookmarksReader.last_empty_read";
 
@@ -173,7 +175,8 @@ public class PartnerBookmarksReader {
         };
         return nativeAddPartnerBookmark(mNativePartnerBookmarksReader, url, title, isFolder,
                 parentId, favicon, touchicon,
-                mFaviconThrottle.shouldFetchFromServerIfNecessary(url), callback);
+                mFaviconThrottle.shouldFetchFromServerIfNecessary(url),
+                ViewUtils.dpToPx(mContext, DESIRED_FAVICON_SIZE_DP), callback);
     }
 
     /**
@@ -397,7 +400,8 @@ public class PartnerBookmarksReader {
     private native void nativeDestroy(long nativePartnerBookmarksReader);
     private native long nativeAddPartnerBookmark(long nativePartnerBookmarksReader, String url,
             String title, boolean isFolder, long parentId, byte[] favicon, byte[] touchicon,
-            boolean fetchUncachedFaviconsFromServer, FetchFaviconCallback callback);
+            boolean fetchUncachedFaviconsFromServer, int desiredFaviconSizePx,
+            FetchFaviconCallback callback);
     private native void nativePartnerBookmarksCreationComplete(long nativePartnerBookmarksReader);
     private static native String nativeGetNativeUrlString(String url);
     private static native void nativeDisablePartnerBookmarksEditing();

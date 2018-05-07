@@ -26,6 +26,7 @@ import android.graphics.drawable.TransitionDrawable;
 import android.os.Build;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -238,6 +239,7 @@ public class ToolbarPhone extends ToolbarLayout
     protected final Point mNtpSearchBoxTranslation = new Point();
 
     protected final int mToolbarSidePadding;
+    private final int mModernLocationBarLateralInset;
     protected int mLocationBarBackgroundCornerRadius;
     protected int mLocationBarVerticalMargin;
 
@@ -259,6 +261,18 @@ public class ToolbarPhone extends ToolbarLayout
 
     /** Token held when the TabSwitcherCallout is displayed to prevent the Toolbar from hiding. */
     private int mFullscreenCalloutToken = FullscreenManager.INVALID_TOKEN;
+
+    /** The height of the location bar background when the modern UI is enabled. */
+    private float mModernLocationBarBackgroundHeight;
+
+    /**
+     * The extra margin to apply to the start side of the location bar when it is focused and the
+     * modern UI is enabled.
+     */
+    private int mModernLocationBarExtraFocusedStartMargin;
+
+    /** The current color of the location bar. */
+    private int mCurrentLocationBarColor;
 
     /**
      * Used to specify the visual state of the toolbar.
@@ -325,6 +339,8 @@ public class ToolbarPhone extends ToolbarLayout
                 ApiCompatibilityUtils.getColor(getResources(), R.color.light_mode_tint);
         mDarkModeDefaultColor =
                 ApiCompatibilityUtils.getColor(getResources(), R.color.dark_mode_tint);
+        mModernLocationBarLateralInset = getResources().getDimensionPixelOffset(
+                R.dimen.modern_toolbar_background_lateral_inset);
     }
 
     @Override
@@ -360,17 +376,65 @@ public class ToolbarPhone extends ToolbarLayout
      * Initializes the background, padding, margins, etc. for the location bar background.
      */
     protected void initLocationBarBackground() {
-        mLocationBarVerticalMargin =
-                getResources().getDimensionPixelOffset(R.dimen.location_bar_vertical_margin);
-        mLocationBarBackgroundCornerRadius =
-                getResources().getDimensionPixelOffset(R.dimen.location_bar_corner_radius);
+        if (mLocationBar.useModernDesign()) {
+            Resources res = getResources();
+            mModernLocationBarBackgroundHeight =
+                    res.getDimensionPixelSize(R.dimen.modern_toolbar_background_size);
+            mLocationBarBackground = createModernLocationBarBackground();
+            mLocationBarBackground.getPadding(mLocationBarBackgroundPadding);
+            mLocationBarBackground.mutate();
+            mLocationBar.setPadding(mLocationBarBackgroundPadding.left,
+                    mLocationBarBackgroundPadding.top, mLocationBarBackgroundPadding.right,
+                    mLocationBarBackgroundPadding.bottom);
 
-        mLocationBarBackground =
-                ApiCompatibilityUtils.getDrawable(getResources(), R.drawable.card_single);
-        mLocationBarBackground.getPadding(mLocationBarBackgroundPadding);
-        mLocationBar.setPadding(mLocationBarBackgroundPadding.left,
-                mLocationBarBackgroundPadding.top, mLocationBarBackgroundPadding.right,
-                mLocationBarBackgroundPadding.bottom);
+            mModernLocationBarExtraFocusedStartMargin = getResources().getDimensionPixelSize(
+                    R.dimen.bottom_toolbar_background_focused_left_margin);
+            mLocationBarBackgroundCornerRadius = 0;
+        } else {
+            mLocationBarVerticalMargin =
+                    getResources().getDimensionPixelOffset(R.dimen.location_bar_vertical_margin);
+            mLocationBarBackgroundCornerRadius =
+                    getResources().getDimensionPixelOffset(R.dimen.location_bar_corner_radius);
+
+            mLocationBarBackground =
+                    ApiCompatibilityUtils.getDrawable(getResources(), R.drawable.card_single);
+            mLocationBarBackground.getPadding(mLocationBarBackgroundPadding);
+            mLocationBar.setPadding(mLocationBarBackgroundPadding.left,
+                    mLocationBarBackgroundPadding.top, mLocationBarBackgroundPadding.right,
+                    mLocationBarBackgroundPadding.bottom);
+        }
+    }
+
+    /**
+     * @return The drawable for the modern location bar background.
+     */
+    public Drawable createModernLocationBarBackground() {
+        Drawable drawable = ApiCompatibilityUtils.getDrawable(
+                getResources(), R.drawable.modern_toolbar_background_white);
+        drawable.mutate();
+        drawable.setColorFilter(
+                ApiCompatibilityUtils.getColor(getResources(), R.color.modern_light_grey),
+                PorterDuff.Mode.SRC_IN);
+        return drawable;
+    }
+
+    /**
+     * Set the background color of the location bar to appropriately match the theme color.
+     */
+    private void updateModernLocationBarColor(int color) {
+        if (mCurrentLocationBarColor == color) return;
+        mCurrentLocationBarColor = color;
+        mLocationBarBackground.setColorFilter(color, PorterDuff.Mode.SRC_IN);
+    }
+
+    /**
+     * Get the corresponding location bar color for a toolbar color.
+     * @param toolbarColor The color of the toolbar.
+     * @return The location bar color.
+     */
+    private int getLocationBarColorForToolbarColor(int toolbarColor) {
+        return ColorUtils.getTextBoxColorForToolbarBackground(
+                getResources(), false, toolbarColor, mLocationBar.useModernDesign());
     }
 
     private void inflateTabSwitchingResources() {
@@ -436,6 +500,7 @@ public class ToolbarPhone extends ToolbarLayout
     @Override
     public void onNativeLibraryReady() {
         super.onNativeLibraryReady();
+
         getLocationBar().onNativeLibraryReady();
 
         enableTabSwitchingResources();
@@ -459,6 +524,8 @@ public class ToolbarPhone extends ToolbarLayout
             }
         });
         onHomeButtonUpdate(HomepageManager.isHomepageEnabled());
+
+        if (mLocationBar.useModernDesign()) mNewTabButton.setIsModern();
 
         updateVisualsForToolbarState();
     }
@@ -667,7 +734,14 @@ public class ToolbarPhone extends ToolbarLayout
      * @return The width of the location bar when it has focus.
      */
     protected int getFocusedLocationBarWidth(int containerWidth, int priorVisibleWidth) {
-        return containerWidth - (2 * mToolbarSidePadding) + priorVisibleWidth;
+        int width = containerWidth - (2 * mToolbarSidePadding) + priorVisibleWidth;
+
+        if (mLocationBar.useModernDesign()) {
+            width = width - mModernLocationBarExtraFocusedStartMargin
+                    - mLocationBarBackgroundPadding.left - mLocationBarBackgroundPadding.right;
+        }
+
+        return width;
     }
 
     /**
@@ -675,6 +749,15 @@ public class ToolbarPhone extends ToolbarLayout
      * @return The left margin of the location bar when it has focus.
      */
     protected int getFocusedLocationBarLeftMargin(int priorVisibleWidth) {
+        if (mLocationBar.useModernDesign()) {
+            int baseMargin = mToolbarSidePadding + mLocationBarBackgroundPadding.left;
+            if (ApiCompatibilityUtils.isLayoutRtl(mLocationBar)) {
+                return baseMargin;
+            } else {
+                return baseMargin - priorVisibleWidth + mModernLocationBarExtraFocusedStartMargin;
+            }
+        }
+
         if (ApiCompatibilityUtils.isLayoutRtl(mLocationBar)) {
             return mToolbarSidePadding;
         } else {
@@ -691,7 +774,7 @@ public class ToolbarPhone extends ToolbarLayout
         // Uses getMeasuredWidth()s instead of getLeft() because this is called in onMeasure
         // and the layout values have not yet been set.
         if (visualState == VisualState.NEW_TAB_NORMAL) {
-            return 0;
+            return mLocationBar.useModernDesign() ? mToolbarSidePadding : 0;
         } else if (ApiCompatibilityUtils.isLayoutRtl(this)) {
             return getBoundsAfterAccountingForRightButtons();
         } else {
@@ -719,7 +802,7 @@ public class ToolbarPhone extends ToolbarLayout
         // Uses getMeasuredWidth()s instead of getRight() because this is called in onMeasure
         // and the layout values have not yet been set.
         if (visualState == VisualState.NEW_TAB_NORMAL) {
-            return getMeasuredWidth();
+            return getMeasuredWidth() - (mLocationBar.useModernDesign() ? mToolbarSidePadding : 0);
         } else if (ApiCompatibilityUtils.isLayoutRtl(this)) {
             return getMeasuredWidth() - getBoundsAfterAccountingForLeftButton();
         } else {
@@ -747,15 +830,31 @@ public class ToolbarPhone extends ToolbarLayout
         Resources res = getResources();
         switch (visualState) {
             case NEW_TAB_NORMAL:
+                if (mLocationBar.useModernDesign() && mUrlExpansionPercent == 1.f) {
+                    // When the location bar reaches the top of the screen, the background needs
+                    // to change back to the default, solid color so that the NTP content is
+                    // not visible beneath the toolbar.
+                    return ColorUtils.getDefaultThemeColor(
+                            getResources(), mLocationBar.useModernDesign(), false);
+                }
                 return Color.TRANSPARENT;
             case NORMAL:
-                return ApiCompatibilityUtils.getColor(res, R.color.default_primary_color);
+                return ColorUtils.getDefaultThemeColor(
+                        getResources(), mLocationBar.useModernDesign(), false);
             case INCOGNITO:
-                return ApiCompatibilityUtils.getColor(res, R.color.incognito_primary_color);
+                return ColorUtils.getDefaultThemeColor(
+                        getResources(), mLocationBar.useModernDesign(), true);
             case BRAND_COLOR:
                 return getToolbarDataProvider().getPrimaryColor();
             case TAB_SWITCHER_NORMAL:
             case TAB_SWITCHER_INCOGNITO:
+                if (mLocationBar.useModernDesign()) {
+                    if (!DeviceClassManager.enableAccessibilityLayout()) return Color.TRANSPARENT;
+                    int colorId = visualState == VisualState.TAB_SWITCHER_NORMAL
+                            ? R.color.modern_primary_color
+                            : R.color.incognito_modern_primary_color;
+                    return ApiCompatibilityUtils.getColor(res, colorId);
+                }
                 return ApiCompatibilityUtils.getColor(res, R.color.tab_switcher_background);
             default:
                 assert false;
@@ -850,6 +949,10 @@ public class ToolbarPhone extends ToolbarLayout
      *         clip the background.
      */
     protected int getLocationBarBackgroundVerticalMargin(float expansion) {
+        if (mLocationBar.useModernDesign()) {
+            return (int) ((mLocationBar.getHeight() - mModernLocationBarBackgroundHeight) / 2);
+        }
+
         return (int) MathUtils.interpolate(mLocationBarVerticalMargin, 0, expansion);
     }
 
@@ -870,6 +973,7 @@ public class ToolbarPhone extends ToolbarLayout
      *         has focus.
      */
     protected int getFocusedLeftPositionOfLocationBarBackground() {
+        if (mLocationBar.useModernDesign()) return mToolbarSidePadding;
         return -mLocationBarBackgroundCornerRadius;
     }
 
@@ -891,6 +995,7 @@ public class ToolbarPhone extends ToolbarLayout
      *         has focus.
      */
     protected int getFocusedRightPositionOfLocationBarBackground() {
+        if (mLocationBar.useModernDesign()) return getWidth() - mToolbarSidePadding;
         return getWidth() + mLocationBarBackgroundCornerRadius;
     }
 
@@ -954,16 +1059,19 @@ public class ToolbarPhone extends ToolbarLayout
         if (isLocationBarRtl) {
             locationBarBaseTranslationX += mUnfocusedLocationBarLayoutWidth - currentWidth;
         }
+
         locationBarBaseTranslationX *= 1f - mUrlExpansionPercent;
 
         mLocationBarBackgroundNtpOffset.setEmpty();
         mLocationBarNtpOffsetLeft = 0;
         mLocationBarNtpOffsetRight = 0;
 
+        boolean isNtp = false;
         Tab currentTab = getToolbarDataProvider().getTab();
         if (currentTab != null) {
             NewTabPage ntp = getToolbarDataProvider().getNewTabPageForCurrentTab();
             if (ntp != null) {
+                isNtp = true;
                 ntp.setUrlFocusChangeAnimationPercent(mUrlFocusChangePercent);
             }
 
@@ -991,6 +1099,21 @@ public class ToolbarPhone extends ToolbarLayout
         mUrlActionContainer.setTranslationX(getUrlActionsTranslationXForExpansionAnimation(
                 isLocationBarRtl, locationBarBaseTranslationX));
         mLocationBar.setUrlFocusChangePercent(mUrlExpansionPercent);
+
+        // Only transition theme colors if in static tab mode that is not the NTP. In practice this
+        // only runs when you focus the omnibox on a web page.
+        if (mLocationBar.useModernDesign() && !isNtp && mTabSwitcherState == STATIC_TAB) {
+            int defaultColor = ColorUtils.getDefaultThemeColor(getResources(), true, isIncognito());
+            int defaultLocationBarColor = getLocationBarColorForToolbarColor(defaultColor);
+            int primaryColor = getToolbarDataProvider().getPrimaryColor();
+            int themedLocationBarColor = getLocationBarColorForToolbarColor(primaryColor);
+
+            updateToolbarBackground(ColorUtils.getColorWithOverlay(
+                    primaryColor, defaultColor, mUrlFocusChangePercent));
+
+            updateModernLocationBarColor(ColorUtils.getColorWithOverlay(
+                    themedLocationBarColor, defaultLocationBarColor, mUrlFocusChangePercent));
+        }
 
         // Force an invalidation of the location bar to properly handle the clipping of the URL
         // bar text as a result of the URL action container translations.
@@ -1038,7 +1161,13 @@ public class ToolbarPhone extends ToolbarLayout
             mToolbarButtonsContainer.setTranslationY(0);
             if (mHomeButton != null) mHomeButton.setTranslationY(0);
         }
-        if (!mToolbarShadowPermanentlyHidden) mToolbarShadow.setAlpha(1f);
+
+        if (!mToolbarShadowPermanentlyHidden
+                && !(mLocationBar.useModernDesign() && mUrlFocusChangeInProgress)) {
+            mToolbarShadow.setAlpha(
+                    mLocationBar.useModernDesign() && mUrlBar.hasFocus() ? 0.f : 1.f);
+        }
+
         mLocationBar.setAlpha(1);
         mForceDrawLocationBarBackground = false;
         mLocationBarBackgroundAlpha = 255;
@@ -1047,6 +1176,7 @@ public class ToolbarPhone extends ToolbarLayout
                         && !mLocationBar.hasFocus())) {
             mLocationBarBackgroundAlpha = LOCATION_BAR_TRANSPARENT_BACKGROUND_ALPHA;
         }
+
         setAncestorsShouldClipChildren(true);
         mNtpSearchBoxScrollPercent = UNINITIALIZED_PERCENT;
         updateUrlExpansionPercent();
@@ -1061,13 +1191,22 @@ public class ToolbarPhone extends ToolbarLayout
         if (mTabSwitcherState == TAB_SWITCHER || mTabSwitcherState == ENTERING_TAB_SWITCHER) return;
 
         setAncestorsShouldClipChildren(mUrlExpansionPercent == 0f);
-        if (!mToolbarShadowPermanentlyHidden) mToolbarShadow.setAlpha(0f);
+        if (!mToolbarShadowPermanentlyHidden
+                && !(mLocationBar.useModernDesign() && mUrlFocusChangeInProgress)) {
+            float alpha = 0.f;
+            if (mLocationBar.useModernDesign() && !mUrlBar.hasFocus()
+                    && mNtpSearchBoxScrollPercent == 1.f) {
+                alpha = 1.f;
+            }
+            mToolbarShadow.setAlpha(alpha);
+        }
 
         NewTabPage ntp = getToolbarDataProvider().getNewTabPageForCurrentTab();
         ntp.getSearchBoxBounds(mNtpSearchBoxBounds, mNtpSearchBoxTranslation);
         int locationBarTranslationY =
                 Math.max(0, (mNtpSearchBoxBounds.top - mLocationBar.getTop()));
         mLocationBar.setTranslationY(locationBarTranslationY);
+
         updateButtonsTranslationY();
 
         // Linearly interpolate between the bounds of the search box on the NTP and the omnibox
@@ -1099,6 +1238,8 @@ public class ToolbarPhone extends ToolbarLayout
 
         // The search box on the NTP is visible if our omnibox is invisible, and vice-versa.
         ntp.setSearchBoxAlpha(1f - relativeAlpha);
+
+        updateToolbarBackground(mVisualState);
     }
 
     /**
@@ -1330,6 +1471,12 @@ public class ToolbarPhone extends ToolbarLayout
             } else {
                 backgroundAlpha = mLocationBarBackgroundAlpha;
             }
+
+            // If modern is enabled the location bar background is opaque.
+            // TODO(mdjones): The location bar background should always be opaque. We have the
+            // capability to determine the foreground color without alpha and it reduces the amount
+            // of state that this class tracks.
+            if (mLocationBar.useModernDesign()) backgroundAlpha = 255;
             mLocationBarBackground.setAlpha(backgroundAlpha);
 
             if (shouldDrawLocationBarBackground()) {
@@ -1405,10 +1552,26 @@ public class ToolbarPhone extends ToolbarLayout
 
         // This is a workaround for http://crbug.com/574928. Since Jelly Bean is the lowest version
         // we support now and the next deprecation target, we decided to simply workaround.
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN) {
-            mToolbarShadow.setImageDrawable(
-                    ApiCompatibilityUtils.getDrawable(getResources(), R.drawable.toolbar_shadow));
+        // The drawable also has to be set here when using modern design.
+        // TODO(twellington): Update XML for modern and remove || check after modern launches.
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN
+                || mLocationBar.useModernDesign()) {
+            mToolbarShadow.setImageDrawable(getToolbarShadowDrawable());
         }
+        if (mLocationBar.useModernDesign()) {
+            mToolbarShadow.getLayoutParams().height =
+                    getResources().getDimensionPixelSize(R.dimen.toolbar_shadow_height);
+            mToolbarShadow.setScaleType(ImageView.ScaleType.FIT_XY);
+        }
+    }
+
+    /**
+     * @return The {@link Drawable} to use for the toolbar shadow.
+     */
+    private Drawable getToolbarShadowDrawable() {
+        return ApiCompatibilityUtils.getDrawable(getResources(),
+                mLocationBar.useModernDesign() ? R.drawable.modern_toolbar_shadow
+                                               : R.drawable.toolbar_shadow);
     }
 
     @Override
@@ -1489,6 +1652,17 @@ public class ToolbarPhone extends ToolbarLayout
     @Override
     public void getLocationBarContentRect(Rect outRect) {
         updateLocationBarBackgroundBounds(outRect, VisualState.NORMAL);
+        if (mLocationBar.useModernDesign()) {
+            // Remove the insets for the composited version.
+            // TODO(mdjones): The image asset used to render the location bar in java is different
+            // from the one used in the compositor. The java asset has padding applied to both sides
+            // while the compositor one does not. The value manipulation here is to account for that
+            // difference. Instead we should just remove the padding from the toolbar asset, but
+            // there is much more overhead in updating the animations. Fix this once modern is the
+            // new default.
+            outRect.left -= mModernLocationBarLateralInset;
+            outRect.right += mModernLocationBarLateralInset;
+        }
     }
 
     @Override
@@ -1858,6 +2032,13 @@ public class ToolbarPhone extends ToolbarLayout
             animator.setInterpolator(BakedBezierInterpolator.FADE_OUT_CURVE);
             animators.add(animator);
         }
+
+        if (mLocationBar.useModernDesign()) {
+            animator = ObjectAnimator.ofFloat(mToolbarShadow, ALPHA, 0);
+            animator.setDuration(URL_FOCUS_CHANGE_ANIMATION_DURATION_MS);
+            animator.setInterpolator(BakedBezierInterpolator.TRANSFORM_CURVE);
+            animators.add(animator);
+        }
     }
 
     private void populateUrlClearFocusingAnimatorSet(List<Animator> animators) {
@@ -1929,6 +2110,13 @@ public class ToolbarPhone extends ToolbarLayout
                 animators.add(animator);
             }
         }
+
+        if (mLocationBar.useModernDesign()) {
+            animator = ObjectAnimator.ofFloat(mToolbarShadow, ALPHA, 1);
+            animator.setDuration(URL_FOCUS_CHANGE_ANIMATION_DURATION_MS);
+            animator.setInterpolator(BakedBezierInterpolator.TRANSFORM_CURVE);
+            animators.add(animator);
+        }
     }
 
     @Override
@@ -1937,15 +2125,9 @@ public class ToolbarPhone extends ToolbarLayout
 
         triggerUrlFocusAnimation(hasFocus);
 
-        if (mToolbarShadowPermanentlyHidden) return;
+        if (hasFocus) dismissTabSwitcherCallout();
 
-        TransitionDrawable shadowDrawable = (TransitionDrawable) mToolbarShadow.getDrawable();
-        if (hasFocus) {
-            dismissTabSwitcherCallout();
-            shadowDrawable.startTransition(URL_FOCUS_CHANGE_ANIMATION_DURATION_MS);
-        } else {
-            shadowDrawable.reverseTransition(URL_FOCUS_CHANGE_ANIMATION_DURATION_MS);
-        }
+        transitionShadowDrawable(hasFocus);
     }
 
     protected void triggerUrlFocusAnimation(final boolean hasFocus) {
@@ -2083,6 +2265,9 @@ public class ToolbarPhone extends ToolbarLayout
         final int finalColor = getToolbarDataProvider().getPrimaryColor();
         if (initialColor == finalColor) return;
 
+        final int initialLocationBarColor = getLocationBarColorForToolbarColor(initialColor);
+        final int finalLocationBarColor = getLocationBarColorForToolbarColor(finalColor);
+
         if (!isVisualStateValidForBrandColorTransition(mVisualState)) return;
 
         if (!shouldAnimate) {
@@ -2108,6 +2293,10 @@ public class ToolbarPhone extends ToolbarLayout
                 }
                 updateToolbarBackground(
                         ColorUtils.getColorWithOverlay(initialColor, finalColor, fraction));
+                if (mLocationBar.useModernDesign()) {
+                    updateModernLocationBarColor(ColorUtils.getColorWithOverlay(
+                            initialLocationBarColor, finalLocationBarColor, fraction));
+                }
             }
         });
         mBrandColorTransitionAnimation.addListener(new AnimatorListenerAdapter() {
@@ -2170,10 +2359,24 @@ public class ToolbarPhone extends ToolbarLayout
     protected void handleFindToolbarStateChange(boolean showing) {
         setVisibility(showing ? View.GONE : View.VISIBLE);
 
+        transitionShadowDrawable(showing);
+    }
+
+    /**
+     * Transition the shadow drawable, if a transition drawable is being used.
+     * @param startTransition Whether the transition, showing the second layer on top of the first,
+     *                        should begin. See {@link TransitionDrawable#startTransition(int)}.
+     *                        If false, the transition will be reversed.
+     *                        See {@link TransitionDrawable#reverseTransition(int)}.
+     */
+    private void transitionShadowDrawable(boolean startTransition) {
         if (mToolbarShadowPermanentlyHidden) return;
 
+        // Modern does not use a transition drawable for the shadow.
+        if (mLocationBar.useModernDesign()) return;
+
         TransitionDrawable shadowDrawable = (TransitionDrawable) mToolbarShadow.getDrawable();
-        if (showing) {
+        if (startTransition) {
             shadowDrawable.startTransition(URL_FOCUS_CHANGE_ANIMATION_DURATION_MS);
         } else {
             shadowDrawable.reverseTransition(URL_FOCUS_CHANGE_ANIMATION_DURATION_MS);
@@ -2297,8 +2500,10 @@ public class ToolbarPhone extends ToolbarLayout
         if (inOrEnteringTabSwitcher) {
             assert mVisualState == VisualState.TAB_SWITCHER_NORMAL
                     || mVisualState == VisualState.TAB_SWITCHER_INCOGNITO;
-            mUseLightToolbarDrawables = ColorUtils.shouldUseLightForegroundOnBackground(
-                    getToolbarColorForVisualState(mVisualState));
+            int colorForVisualState = getToolbarColorForVisualState(mVisualState);
+            mUseLightToolbarDrawables =
+                    ColorUtils.shouldUseLightForegroundOnBackground(colorForVisualState)
+                    && colorForVisualState != Color.TRANSPARENT;
             mLocationBarBackgroundAlpha = LOCATION_BAR_TRANSPARENT_BACKGROUND_ALPHA;
             getProgressBar().setBackgroundColor(mProgressBackBackgroundColorWhite);
             getProgressBar().setForegroundColor(ApiCompatibilityUtils.getColor(getResources(),
@@ -2326,6 +2531,9 @@ public class ToolbarPhone extends ToolbarLayout
         }
 
         mMenuButton.setTint(mUseLightToolbarDrawables ? mLightModeTint : mDarkModeTint);
+        if (mLocationBar.useModernDesign()) {
+            updateModernLocationBarColor(getLocationBarColorForToolbarColor(currentPrimaryColor));
+        }
 
         setMenuButtonHighlightDrawable(mHighlightingMenu);
         if (mShowMenuBadge && inOrEnteringStaticTab) {
@@ -2363,6 +2571,13 @@ public class ToolbarPhone extends ToolbarLayout
         }
 
         getMenuButtonWrapper().setVisibility(View.VISIBLE);
+
+        if (mLocationBar.useModernDesign()) {
+            DrawableCompat.setTint(mLocationBarBackground,
+                    isIncognito() ? Color.WHITE
+                                  : ApiCompatibilityUtils.getColor(
+                                            getResources(), R.color.modern_light_grey));
+        }
     }
 
     @Override

@@ -65,7 +65,8 @@ import java.lang.annotation.RetentionPolicy;
     InfoBarIdentifier.AUTOMATION_INFOBAR_DELEGATE, InfoBarIdentifier.VR_SERVICES_UPGRADE_ANDROID,
     InfoBarIdentifier.READER_MODE_INFOBAR_ANDROID, InfoBarIdentifier.VR_FEEDBACK_INFOBAR_ANDROID,
     InfoBarIdentifier.FRAMEBUST_BLOCK_INFOBAR_ANDROID, InfoBarIdentifier.SURVEY_INFOBAR_ANDROID,
-    InfoBarIdentifier.NEAR_OOM_INFOBAR_ANDROID
+    InfoBarIdentifier.NEAR_OOM_INFOBAR_ANDROID,
+    InfoBarIdentifier.INSTALLABLE_AMBIENT_BADGE_INFOBAR_DELEGATE
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface InfoBarIdentifier {
@@ -171,4 +172,5 @@ public @interface InfoBarIdentifier {
   int FRAMEBUST_BLOCK_INFOBAR_ANDROID = 77;
   int SURVEY_INFOBAR_ANDROID = 78;
   int NEAR_OOM_INFOBAR_ANDROID = 79;
+  int INSTALLABLE_AMBIENT_BADGE_INFOBAR_DELEGATE = 80;
 }

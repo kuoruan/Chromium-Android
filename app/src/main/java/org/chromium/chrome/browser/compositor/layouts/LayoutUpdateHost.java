@@ -82,6 +82,14 @@ public interface LayoutUpdateHost {
     void releaseTabLayout(int id);
 
     /**
+     * Releases the cached title textures associated with the {@link LayoutTab}.
+     *
+     * @param tabId The id of the reference tab in the
+     *              {@link org.chromium.chrome.browser.tabmodel.TabModel}.
+     */
+    void releaseResourcesForTab(int tabId);
+
+    /**
      * Get the handler responsible for running the compositor's animations.
      * @return The {@link CompositorAnimationHandler}.
      */

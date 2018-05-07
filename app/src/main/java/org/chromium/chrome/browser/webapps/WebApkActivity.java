@@ -105,7 +105,7 @@ public class WebApkActivity extends WebappActivity {
     protected void onUpdatedLastUsedTime(
             WebappDataStorage storage, boolean previouslyLaunched, long previousUsageTimestamp) {
         if (previouslyLaunched) {
-            WebApkUma.recordLaunchInterval(storage.getLastUsedTime() - previousUsageTimestamp);
+            WebApkUma.recordLaunchInterval(storage.getLastUsedTimeMs() - previousUsageTimestamp);
         }
     }
 

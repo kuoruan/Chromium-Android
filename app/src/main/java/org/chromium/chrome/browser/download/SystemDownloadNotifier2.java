@@ -6,8 +6,8 @@ package org.chromium.chrome.browser.download;
 
 import android.content.Context;
 
-import org.chromium.chrome.browser.download.DownloadUpdate.PendingState;
 import org.chromium.components.offline_items_collection.ContentId;
+import org.chromium.components.offline_items_collection.PendingState;
 
 /**
  * DownloadNotifier implementation that creates and updates download notifications.
@@ -70,7 +70,7 @@ public class SystemDownloadNotifier2 implements DownloadNotifier {
 
     @Override
     public void notifyDownloadInterrupted(
-            DownloadInfo info, boolean isAutoResumable, PendingState pendingState) {
+            DownloadInfo info, boolean isAutoResumable, @PendingState int pendingState) {
         mDownloadNotificationService.notifyDownloadPaused(info.getContentId(), info.getFileName(),
                 info.isResumable(), isAutoResumable, info.isOffTheRecord(), info.getIsTransient(),
                 info.getIcon(), false, false, pendingState);

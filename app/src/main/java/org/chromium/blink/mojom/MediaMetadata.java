@@ -19,9 +19,9 @@ public final class MediaMetadata extends org.chromium.mojo.bindings.Struct {
     private static final int STRUCT_SIZE = 40;
     private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    public org.chromium.mojo.common.mojom.String16 title;
-    public org.chromium.mojo.common.mojom.String16 artist;
-    public org.chromium.mojo.common.mojom.String16 album;
+    public org.chromium.mojo_base.mojom.String16 title;
+    public org.chromium.mojo_base.mojom.String16 artist;
+    public org.chromium.mojo_base.mojom.String16 album;
     public MediaImage[] artwork;
 
     private MediaMetadata(int version) {
@@ -62,17 +62,17 @@ public final class MediaMetadata extends org.chromium.mojo.bindings.Struct {
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                result.title = org.chromium.mojo.common.mojom.String16.decode(decoder1);
+                result.title = org.chromium.mojo_base.mojom.String16.decode(decoder1);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
-                result.artist = org.chromium.mojo.common.mojom.String16.decode(decoder1);
+                result.artist = org.chromium.mojo_base.mojom.String16.decode(decoder1);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
-                result.album = org.chromium.mojo.common.mojom.String16.decode(decoder1);
+                result.album = org.chromium.mojo_base.mojom.String16.decode(decoder1);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 

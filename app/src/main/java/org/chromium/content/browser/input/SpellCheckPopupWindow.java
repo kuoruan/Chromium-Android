@@ -8,7 +8,7 @@ import android.content.Context;
 import android.text.SpannableString;
 import android.view.View;
 
-import org.chromium.content.browser.WindowAndroidProvider;
+import org.chromium.ui.base.WindowAndroid;
 
 /**
  * A subclass of SuggestionsPopupWindow to be used for showing suggestions from a spell check
@@ -20,12 +20,12 @@ public class SpellCheckPopupWindow extends SuggestionsPopupWindow {
     /**
      * @param context Android context to use.
      * @param textSuggestionHost TextSuggestionHost instance (used to communicate with Blink).
+     * @param windowAndroid The current WindowAndroid instance.
      * @param parentView The view used to attach the PopupWindow.
-     * @param windowAndroidProvider A WindowAndroidProvider instance used to get the window size.
      */
     public SpellCheckPopupWindow(Context context, TextSuggestionHost textSuggestionHost,
-            View parentView, WindowAndroidProvider windowAndroidProvider) {
-        super(context, textSuggestionHost, parentView, windowAndroidProvider);
+            WindowAndroid windowAndroid, View parentView) {
+        super(context, textSuggestionHost, windowAndroid, parentView);
     }
 
     /**

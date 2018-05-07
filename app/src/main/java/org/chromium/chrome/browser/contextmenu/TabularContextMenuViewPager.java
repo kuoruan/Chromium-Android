@@ -104,7 +104,6 @@ public class TabularContextMenuViewPager extends ViewPager {
             heightMeasureSpec = MeasureSpec.makeMeasureSpec(
                     Math.max(mOldHeight, fullHeight), MeasureSpec.EXACTLY);
         }
-
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         mPreviousChildIndex = currentChildIndex;
         // The animation only runs when switching to a tab with a different height.
@@ -141,24 +140,14 @@ public class TabularContextMenuViewPager extends ViewPager {
     }
 
     @Override
-    public void onDraw(Canvas canvas) {
+    public void draw(Canvas canvas) {
         mCanvasWidth = canvas.getWidth();
         int backgroundOffsetX = getScrollX();
         mBackgroundDrawable.setBounds(
                 backgroundOffsetX, 0, canvas.getWidth() + backgroundOffsetX, mClipHeight);
         mBackgroundDrawable.draw(canvas);
 
-        boolean clipped = false;
-        if (mClipHeight != 0) {
-            canvas.save();
-            canvas.clipRect(0, 0, mCanvasWidth, mClipHeight);
-            clipped = true;
-        }
-
-        super.onDraw(canvas);
-
-        if (clipped) {
-            canvas.restore();
-        }
+        canvas.clipRect(backgroundOffsetX, 0, mCanvasWidth + backgroundOffsetX, mClipHeight);
+        super.draw(canvas);
     }
 }

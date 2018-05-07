@@ -20,7 +20,7 @@ import java.lang.annotation.RetentionPolicy;
     VideoCaptureApi.WIN_DIRECT_SHOW, VideoCaptureApi.MACOSX_AVFOUNDATION,
     VideoCaptureApi.MACOSX_DECKLINK, VideoCaptureApi.ANDROID_API1,
     VideoCaptureApi.ANDROID_API2_LEGACY, VideoCaptureApi.ANDROID_API2_FULL,
-    VideoCaptureApi.ANDROID_API2_LIMITED, VideoCaptureApi.ANDROID_TANGO, VideoCaptureApi.UNKNOWN
+    VideoCaptureApi.ANDROID_API2_LIMITED, VideoCaptureApi.UNKNOWN
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface VideoCaptureApi {
@@ -33,6 +33,5 @@ public @interface VideoCaptureApi {
   int ANDROID_API2_LEGACY = 6;
   int ANDROID_API2_FULL = 7;
   int ANDROID_API2_LIMITED = 8;
-  int ANDROID_TANGO = 9;
-  int UNKNOWN = 10;
+  int UNKNOWN = 9;
 }

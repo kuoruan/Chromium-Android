@@ -15,6 +15,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.StrictMode;
 import android.os.SystemClock;
+import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.v4.text.BidiFormatter;
 import android.text.Editable;
@@ -97,7 +98,7 @@ public class UrlBar extends AutocompleteEditText {
     private MotionEvent mSuppressedTouchDownEvent;
     private boolean mAllowFocus = true;
 
-    private boolean mPendingScrollTLD;
+    private boolean mPendingScroll;
     private int mPreviousWidth;
     private String mPreviousTldScrollText;
     private int mPreviousTldScrollViewWidth;
@@ -126,6 +127,14 @@ public class UrlBar extends AutocompleteEditText {
 
     /** The location of this view on the last ACTION_DOWN event. */
     private float mDownEventViewTop;
+
+    /** What scrolling action should be taken after the URL bar text changes. **/
+    @IntDef({NO_SCROLL, SCROLL_TO_TLD, SCROLL_TO_BEGINNING})
+    public @interface ScrollType {}
+
+    public static final int NO_SCROLL = 0;
+    public static final int SCROLL_TO_TLD = 1;
+    public static final int SCROLL_TO_BEGINNING = 2;
 
     /**
      * Implement this to get updates when the direction of the text in the URL bar changes.
@@ -171,6 +180,17 @@ public class UrlBar extends AutocompleteEditText {
          * Called to notify that back key has been pressed while the URL bar has focus.
          */
         void backKeyPressed();
+
+        /**
+         * @return Whether or not we should force LTR text on the URL bar when unfocused.
+         */
+        boolean shouldForceLTR();
+
+        /**
+         * @return What scrolling action should be performed after the URL text is modified.
+         */
+        @ScrollType
+        int getScrollType();
     }
 
     public UrlBar(Context context, AttributeSet attrs) {
@@ -309,7 +329,7 @@ public class UrlBar extends AutocompleteEditText {
 
         if (focused) {
             StartupMetrics.getInstance().recordFocusedOmnibox();
-            mPendingScrollTLD = false;
+            mPendingScroll = false;
         }
 
         fixupTextDirection();
@@ -346,7 +366,7 @@ public class UrlBar extends AutocompleteEditText {
         // normally (to allow users to make non-URL searches and to avoid showing Android's split
         // insertion point when an RTL user enters RTL text). Also render text normally when the
         // text field is empty (because then it displays an instruction that is not a URL).
-        if (mFocused || length() == 0) {
+        if (mFocused || length() == 0 || !mUrlBarDelegate.shouldForceLTR()) {
             ApiCompatibilityUtils.setTextDirection(this, TEXT_DIRECTION_INHERIT);
         } else {
             ApiCompatibilityUtils.setTextDirection(this, TEXT_DIRECTION_LTR);
@@ -585,6 +605,20 @@ public class UrlBar extends AutocompleteEditText {
 
         // If we are copying/cutting the full previously formatted URL, reset the URL
         // text before initiating the TextViews handling of the context menu.
+        //
+        // Example:
+        //    Original display text: www.example.com
+        //    Original URL:          http://www.example.com
+        //
+        // Editing State:
+        //    www.example.com/blah/foo
+        //    |<--- Selection --->|
+        //
+        // Resulting clipboard text should be:
+        //    http://www.example.com/blah/
+        //
+        // As long as the full original text was selected, it will replace that with the original
+        // URL and keep any further modifications by the user.
         String currentText = getText().toString();
         if (selectedStartIndex == 0
                 && (id == android.R.id.cut || id == android.R.id.copy)
@@ -615,18 +649,16 @@ public class UrlBar extends AutocompleteEditText {
     /**
      * Sets the text content of the URL bar.
      *
-     * @param url The original URL (or generic text) that can be used for copy/cut/paste.
-     * @param formattedUrl Formatted URL for user display. Null if there isn't one.
+     * @param pageUrl The original URL (or generic text) that can be used for copy/cut/paste.
+     * @param displayText Formatted URL or alternate text for user display. Null if there isn't one.
      * @return Whether the visible text has changed.
      */
-    public boolean setUrl(String url, String formattedUrl) {
-        if (!TextUtils.isEmpty(formattedUrl)) {
+    public boolean setUrl(String pageUrl, String displayText) {
+        if (!TextUtils.isEmpty(displayText)) {
             try {
-                URL javaUrl = new URL(url);
-                mFormattedUrlLocation =
-                        getUrlContentsPrePath(formattedUrl, javaUrl.getHost());
-                mOriginalUrlLocation =
-                        getUrlContentsPrePath(url, javaUrl.getHost());
+                URL javaUrl = new URL(pageUrl);
+                mFormattedUrlLocation = getUrlContentsPrePath(displayText, javaUrl.getHost());
+                mOriginalUrlLocation = getUrlContentsPrePath(pageUrl, javaUrl.getHost());
             } catch (MalformedURLException mue) {
                 mOriginalUrlLocation = null;
                 mFormattedUrlLocation = null;
@@ -634,29 +666,49 @@ public class UrlBar extends AutocompleteEditText {
         } else {
             mOriginalUrlLocation = null;
             mFormattedUrlLocation = null;
-            formattedUrl = url;
+            displayText = pageUrl;
         }
 
         Editable previousText = getEditableText();
-        setText(formattedUrl);
+        setText(displayText);
 
         boolean textChanged = !TextUtils.equals(previousText, getEditableText());
-        if (textChanged && !isFocused()) scrollToTLD();
+        if (textChanged && !isFocused()) scrollDisplayText();
         return textChanged;
     }
 
-    /**
-     * Scroll to ensure the TLD is visible.
-     */
-    public void scrollToTLD() {
+    public void scrollDisplayText() {
         if (isLayoutRequested()) {
-            mPendingScrollTLD = true;
+            if (mUrlBarDelegate.getScrollType() == NO_SCROLL) return;
+            mPendingScroll = true;
         } else {
-            scrollToTLDInternal();
+            scrollDisplayTextInternal();
         }
     }
 
-    private void scrollToTLDInternal() {
+    public void scrollDisplayTextInternal() {
+        switch (mUrlBarDelegate.getScrollType()) {
+            case SCROLL_TO_TLD:
+                scrollToTLD();
+                break;
+            case SCROLL_TO_BEGINNING:
+                scrollToBeginning();
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void scrollToBeginning() {
+        int scrollX = 0;
+        if (BidiFormatter.getInstance().isRtl(getTextWithAutocomplete())) {
+            int textWidth = (int) getLayout().getPaint().measureText(getTextWithAutocomplete());
+            scrollX = textWidth - getMeasuredWidth();
+        }
+        scrollTo(scrollX, getScrollY());
+    }
+
+    public void scrollToTLD() {
         if (mFocused) return;
 
         // Ensure any selection from the focus state is cleared.
@@ -740,11 +792,11 @@ public class UrlBar extends AutocompleteEditText {
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
 
-        if (mPendingScrollTLD) {
-            scrollToTLDInternal();
-            mPendingScrollTLD = false;
+        if (mPendingScroll) {
+            scrollDisplayTextInternal();
+            mPendingScroll = false;
         } else if (mPreviousWidth != (right - left)) {
-            scrollToTLDInternal();
+            scrollDisplayTextInternal();
             mPreviousWidth = right - left;
         }
     }
@@ -754,7 +806,7 @@ public class UrlBar extends AutocompleteEditText {
         // TextView internally attempts to keep the selection visible, but in the unfocused state
         // this class ensures that the TLD is visible.
         if (!mFocused) return false;
-        assert !mPendingScrollTLD;
+        assert !mPendingScroll;
 
         return super.bringPointIntoView(offset);
     }

@@ -4,7 +4,10 @@
 
 package org.chromium.chrome.browser.vr;
 
+import android.os.Bundle;
+
 import org.chromium.chrome.browser.document.ChromeLauncherActivity;
+import org.chromium.chrome.browser.vr_shell.VrShellDelegate;
 
 /**
  * This is the VR equivalent of {@link ChromeLauncherActivity}. It exists only because the Android
@@ -18,4 +21,12 @@ import org.chromium.chrome.browser.document.ChromeLauncherActivity;
  * result in a screen brightness flicker. Both of these sound minor but look jarring from a VR
  * headset.
  */
-public class VrMainActivity extends ChromeLauncherActivity {}
+public class VrMainActivity extends ChromeLauncherActivity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        // This Launcher may be launched through an alias, which leads to vrmode not being correctly
+        // set, so we need to set it here as a fallback. b/65271215
+        VrShellDelegate.setVrModeEnabled(this);
+        super.onCreate(savedInstanceState);
+    }
+}

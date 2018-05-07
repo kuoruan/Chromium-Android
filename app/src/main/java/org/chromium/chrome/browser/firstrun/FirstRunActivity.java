@@ -254,6 +254,10 @@ public class FirstRunActivity extends FirstRunActivityBase implements FirstRunPa
         TemplateUrlService.getInstance().runWhenLoaded(onNativeFinished);
     }
 
+    public boolean isNativeSideIsInitializedForTest() {
+        return mNativeSideIsInitialized;
+    }
+
     private void onNativeDependenciesFullyInitialized() {
         mNativeSideIsInitialized = true;
         if (mDeferredCompleteFRE) {
@@ -391,15 +395,22 @@ public class FirstRunActivity extends FirstRunActivityBase implements FirstRunPa
         if (!sendPendingIntentIfNecessary(true)) {
             finish();
         } else {
-            ApplicationStatus.registerStateListenerForActivity(new ActivityStateListener() {
+            ApplicationStatus.registerStateListenerForAllActivities(new ActivityStateListener() {
                 @Override
                 public void onActivityStateChange(Activity activity, int newState) {
-                    if (newState == ActivityState.STOPPED || newState == ActivityState.DESTROYED) {
+                    boolean shouldFinish = false;
+                    if (activity == FirstRunActivity.this) {
+                        shouldFinish = (newState == ActivityState.STOPPED
+                                || newState == ActivityState.DESTROYED);
+                    } else {
+                        shouldFinish = newState == ActivityState.RESUMED;
+                    }
+                    if (shouldFinish) {
                         finish();
                         ApplicationStatus.unregisterActivityStateListener(this);
                     }
                 }
-            }, this);
+            });
         }
     }
 

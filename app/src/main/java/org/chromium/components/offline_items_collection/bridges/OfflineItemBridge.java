@@ -10,6 +10,7 @@ import org.chromium.components.offline_items_collection.OfflineItem;
 import org.chromium.components.offline_items_collection.OfflineItemFilter;
 import org.chromium.components.offline_items_collection.OfflineItemProgressUnit;
 import org.chromium.components.offline_items_collection.OfflineItemState;
+import org.chromium.components.offline_items_collection.PendingState;
 
 import java.util.ArrayList;
 
@@ -47,8 +48,9 @@ public final class OfflineItemBridge {
             long totalSizeBytes, boolean externallyRemoved, long creationTimeMs,
             long lastAccessedTimeMs, boolean isOpenable, String filePath, String mimeType,
             String pageUrl, String originalUrl, boolean isOffTheRecord, @OfflineItemState int state,
-            boolean isResumable, boolean allowMetered, long receivedBytes, long progressValue,
-            long progressMax, @OfflineItemProgressUnit int progressUnit, long timeRemainingMs) {
+            @PendingState int pendingState, boolean isResumable, boolean allowMetered,
+            long receivedBytes, long progressValue, long progressMax,
+            @OfflineItemProgressUnit int progressUnit, long timeRemainingMs) {
         OfflineItem item = new OfflineItem();
         item.id.namespace = nameSpace;
         item.id.id = id;
@@ -68,6 +70,7 @@ public final class OfflineItemBridge {
         item.originalUrl = originalUrl;
         item.isOffTheRecord = isOffTheRecord;
         item.state = state;
+        item.pendingState = pendingState;
         item.isResumable = isResumable;
         item.allowMetered = allowMetered;
         item.receivedBytes = receivedBytes;

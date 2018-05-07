@@ -241,7 +241,7 @@ public class SuggestionsBinder {
         mThumbnailView.setTint(null);
     }
 
-    private void setThumbnailFromFileType(int fileType) {
+    private void setThumbnailFromFileType(@DownloadFilter.Type int fileType) {
         int iconBackgroundColor = DownloadUtils.getIconBackgroundColor(mThumbnailView.getContext());
         ColorStateList iconForegroundColorList =
                 DownloadUtils.getIconForegroundColorList(mThumbnailView.getContext());

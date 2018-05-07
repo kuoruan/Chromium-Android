@@ -109,7 +109,7 @@ public class SyncController implements ProfileSyncService.SyncStateChangedListen
             mProfileSyncService.addSyncStateChangedListener(gmsCoreSyncListener);
         }
 
-        SigninManager.get(mContext).addSignInStateObserver(new SigninManager.SignInStateObserver() {
+        SigninManager.get().addSignInStateObserver(new SigninManager.SignInStateObserver() {
             @Override
             public void onSignedIn() {
                 mProfileSyncService.requestStart();

@@ -35,7 +35,7 @@ public class ConfirmInfoBar extends InfoBar {
     @Override
     public void createContent(InfoBarLayout layout) {
         setButtons(layout, mPrimaryButtonText, mSecondaryButtonText);
-        if (mLinkText != null) layout.appendMessageLinkText(mLinkText);
+        if (mLinkText != null && !mLinkText.isEmpty()) layout.appendMessageLinkText(mLinkText);
     }
 
     /**

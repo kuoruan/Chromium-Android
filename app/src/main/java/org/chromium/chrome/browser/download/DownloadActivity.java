@@ -49,6 +49,7 @@ public class DownloadActivity extends SnackbarActivity {
         // Loads offline pages and prefetch downloads.
         OfflineContentAggregatorNotificationBridgeUiFactory.instance();
         boolean isOffTheRecord = DownloadUtils.shouldShowOffTheRecordDownloads(getIntent());
+        boolean showPrefetchContent = DownloadUtils.shouldShowPrefetchContent(getIntent());
         ComponentName parentComponent = IntentUtils.safeGetParcelableExtra(
                 getIntent(), IntentHandler.EXTRA_PARENT_COMPONENT);
         mDownloadManagerUi = new DownloadManagerUi(
@@ -58,6 +59,7 @@ public class DownloadActivity extends SnackbarActivity {
         mDownloadManagerUi.addObserver(mUiObserver);
         // Call updateForUrl() to align with how DownloadPage interacts with DownloadManagerUi.
         mDownloadManagerUi.updateForUrl(UrlConstants.DOWNLOADS_URL);
+        if (showPrefetchContent) mDownloadManagerUi.expandPrefetchSection();
     }
 
     @Override

@@ -6,7 +6,10 @@ package org.chromium.chrome.browser.tabmodel;
 
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
-import org.chromium.content.browser.ContentViewCore;
+import org.chromium.content_public.browser.ContentViewCore;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A set of convenience methods used for interacting with {@link TabList}s and {@link TabModel}s.
@@ -151,4 +154,22 @@ public class TabModelUtils {
         model.setIndex(index, TabSelectionType.FROM_USER);
     }
 
+    /**
+     * Returns all the Tabs in the specified TabList that were opened from the Tab with the
+     * specified ID. The returned Tabs are in the same order as in the TabList.
+     * @param model The {@link TabModel} to act on.
+     * @param tabId The ID of the Tab whose children should be returned.
+     */
+    public static List<Tab> getChildTabs(TabList model, int tabId) {
+        Tab tab = model.getTabAt(tabId);
+
+        ArrayList<Tab> childTabs = new ArrayList<Tab>();
+        for (int i = 0; i < model.getCount(); i++) {
+            if (model.getTabAt(i).getParentId() == tabId) {
+                childTabs.add(model.getTabAt(i));
+            }
+        }
+
+        return childTabs;
+    }
 }

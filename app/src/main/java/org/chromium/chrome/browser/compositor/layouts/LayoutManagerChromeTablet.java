@@ -89,9 +89,7 @@ public class LayoutManagerChromeTablet extends LayoutManagerChrome {
             // internal tab to show and not start hiding until we're done calling finalizeShowing().
             // This prevents a flicker because we properly build and set the internal
             // {@link LayoutTab} before actually showing the {@link TabView}.
-            if (getActiveLayout() != null) {
-                getActiveLayout().onTabSelected(time(), tabId, prevId, incognito);
-            }
+            super.tabSelected(tabId, prevId, incognito);
             if (getActiveLayout() != null) getActiveLayout().onTabSelecting(time(), tabId);
         }
     }

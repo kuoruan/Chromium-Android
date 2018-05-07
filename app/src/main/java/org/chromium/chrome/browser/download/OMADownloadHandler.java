@@ -882,7 +882,8 @@ public class OMADownloadHandler extends BroadcastReceiver
      */
     static void storeDownloadInfo(
             SharedPreferences sharedPrefs, String type, Set<String> downloadInfo) {
-        DownloadManagerService.storeDownloadInfo(sharedPrefs, type, downloadInfo);
+        DownloadManagerService.storeDownloadInfo(
+                sharedPrefs, type, downloadInfo, false /* forceCommit */);
     }
 
     /**

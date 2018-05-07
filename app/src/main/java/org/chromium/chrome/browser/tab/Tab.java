@@ -96,7 +96,7 @@ import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.vr_shell.VrShellDelegate;
 import org.chromium.chrome.browser.widget.PulseDrawable;
 import org.chromium.chrome.browser.widget.textbubble.TextBubble;
-import org.chromium.chrome.browser.widget.textbubble.ViewAnchoredTextBubble;
+import org.chromium.components.content_view.ContentView;
 import org.chromium.components.dom_distiller.core.DomDistillerUrlUtils;
 import org.chromium.components.feature_engagement.EventConstants;
 import org.chromium.components.feature_engagement.FeatureConstants;
@@ -104,10 +104,9 @@ import org.chromium.components.feature_engagement.Tracker;
 import org.chromium.components.navigation_interception.InterceptNavigationDelegate;
 import org.chromium.components.security_state.ConnectionSecurityLevel;
 import org.chromium.components.sync.SyncConstants;
-import org.chromium.content.browser.ContentView;
-import org.chromium.content.browser.ContentViewCore;
 import org.chromium.content.browser.crypto.CipherFactory;
 import org.chromium.content_public.browser.ChildProcessImportance;
+import org.chromium.content_public.browser.ContentViewCore;
 import org.chromium.content_public.browser.GestureListenerManager;
 import org.chromium.content_public.browser.GestureStateListener;
 import org.chromium.content_public.browser.ImeAdapter;
@@ -115,6 +114,7 @@ import org.chromium.content_public.browser.ImeEventObserver;
 import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.content_public.browser.SelectionPopupController;
 import org.chromium.content_public.browser.WebContents;
+import org.chromium.content_public.browser.WebContentsAccessibility;
 import org.chromium.content_public.common.BrowserControlsState;
 import org.chromium.content_public.common.Referrer;
 import org.chromium.content_public.common.ResourceRequestBody;
@@ -125,6 +125,8 @@ import org.chromium.ui.base.LocalizationUtils;
 import org.chromium.ui.base.PageTransition;
 import org.chromium.ui.base.WindowAndroid;
 import org.chromium.ui.mojom.WindowOpenDisposition;
+import org.chromium.ui.widget.AnchoredPopupWindow;
+import org.chromium.ui.widget.ViewRectProvider;
 
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
@@ -632,7 +634,8 @@ public class Tab
     }
 
     private int calculateDefaultThemeColor() {
-        boolean useModernDesign = getActivity() != null && getActivity().getBottomSheet() != null;
+        boolean useModernDesign = getActivity() != null && getActivity().supportsModernDesign()
+                && FeatureUtilities.isChromeModernDesignEnabled();
         Resources resources = mThemedApplicationContext.getResources();
         return ColorUtils.getDefaultThemeColor(resources, useModernDesign, mIncognito);
     }
@@ -1730,10 +1733,11 @@ public class Tab
 
         if (!(getActivity() instanceof ChromeTabbedActivity)) return;
 
-        ViewAnchoredTextBubble textBubble = new ViewAnchoredTextBubble(getActivity(),
-                getActivity().getToolbarManager().getMenuButton(),
-                R.string.iph_data_saver_detail_text,
-                R.string.iph_data_saver_detail_accessibility_text);
+        View anchorView = getActivity().getToolbarManager().getMenuButton();
+        ViewRectProvider rectProvider = new ViewRectProvider(anchorView);
+        TextBubble textBubble =
+                new TextBubble(getActivity(), anchorView, R.string.iph_data_saver_detail_text,
+                        R.string.iph_data_saver_detail_accessibility_text, rectProvider);
         textBubble.setDismissOnTouchInteraction(true);
         getActivity().getAppMenuHandler().setMenuHighlight(R.id.app_menu_footer);
         textBubble.addOnDismissListener(new OnDismissListener() {
@@ -1750,7 +1754,7 @@ public class Tab
         });
         int yInsetPx = mThemedApplicationContext.getResources().getDimensionPixelOffset(
                 R.dimen.text_bubble_menu_anchor_y_inset);
-        textBubble.setInsetPx(0, FeatureUtilities.isChromeHomeEnabled() ? yInsetPx : 0, 0,
+        rectProvider.setInsetPx(0, FeatureUtilities.isChromeHomeEnabled() ? yInsetPx : 0, 0,
                 FeatureUtilities.isChromeHomeEnabled() ? 0 : yInsetPx);
         textBubble.show();
     }
@@ -1820,9 +1824,10 @@ public class Tab
             mNativePage = null;
             destroyNativePageInternal(previousNativePage);
 
-            if (mContentViewCore != null) {
-                mContentViewCore.setObscuredByAnotherView(false);
-                mContentViewCore.getWebContents().setImportance(ChildProcessImportance.NORMAL);
+            WebContents oldWebContents = getWebContents();
+            if (oldWebContents != null) {
+                oldWebContents.setImportance(ChildProcessImportance.NORMAL);
+                getWebContentsAccessibility(oldWebContents).setObscuredByAnotherView(false);
             }
 
             mContentViewCore = cvc;
@@ -1868,7 +1873,7 @@ public class Tab
             // For browser tabs, we want to set accessibility focus to the page
             // when it loads. This is not the default behavior for embedded
             // web views.
-            mContentViewCore.setShouldSetAccessibilityFocusOnPageLoad(true);
+            getWebContentsAccessibility(getWebContents()).setShouldFocusOnPageLoad(true);
 
             ImeAdapter.fromWebContents(mContentViewCore.getWebContents())
                     .addEventObserver(new ImeEventObserver() {
@@ -1907,6 +1912,10 @@ public class Tab
             mGestureStateListener = createGestureStateListener();
         }
         GestureListenerManager.fromWebContents(webContents).addListener(mGestureStateListener);
+    }
+
+    private static WebContentsAccessibility getWebContentsAccessibility(WebContents webContents) {
+        return webContents != null ? WebContentsAccessibility.fromWebContents(webContents) : null;
     }
 
     /**
@@ -2020,6 +2029,16 @@ public class Tab
     public void reloadSadTabForTesting() {
         removeSadTabIfPresent();
         showSadTab();
+    }
+
+    /**
+     * @return The ID of the renderer process that backs this tab or
+     *         {@link #INVALID_RENDER_PROCESS_PID} if there is none.
+     */
+    @VisibleForTesting
+    public int getCurrentRenderProcessIdForTesting() {
+        assert mNativeTabAndroid != 0;
+        return nativeGetCurrentRenderProcessId(mNativeTabAndroid);
     }
 
     /**
@@ -2525,6 +2544,14 @@ public class Tab
     @CalledByNative
     private void onNavEntryChanged() {
         mIsTabStateDirty = true;
+    }
+
+    /**
+     * Called when navigation entries were removed.
+     */
+    void notifyNavigationEntriesDeleted() {
+        mIsTabStateDirty = true;
+        for (TabObserver observer : mObservers) observer.onNavigationEntriesDeleted(this);
     }
 
     /**
@@ -3165,11 +3192,11 @@ public class Tab
             }
         }
 
-        ContentViewCore cvc = getContentViewCore();
-        if (cvc != null) {
+        WebContentsAccessibility wcax = getWebContentsAccessibility(getWebContents());
+        if (wcax != null) {
             boolean isWebContentObscured = isObscuredByAnotherViewForAccessibility()
                     || isShowingSadTab();
-            cvc.setObscuredByAnotherView(isWebContentObscured);
+            wcax.setObscuredByAnotherView(isWebContentObscured);
         }
     }
 
@@ -3353,6 +3380,15 @@ public class Tab
     }
 
     /**
+     * Configures web preferences for enabling Picture-in-Picture.
+     * @param enabled Whether Picture-in-Picture should be enabled.
+     */
+    public void setPictureInPictureEnabled(boolean enabled) {
+        if (mNativeTabAndroid == 0) return;
+        nativeSetPictureInPictureEnabled(mNativeTabAndroid, enabled);
+    }
+
+    /**
      * Configures web preferences for viewing downloaded media.
      * @param enabled Whether embedded media experience should be enabled.
      */
@@ -3381,6 +3417,8 @@ public class Tab
 
     @CalledByNative
     private void showMediaDownloadInProductHelp(int x, int y, int width, int height) {
+        Rect rect = new Rect(x, y, x + width, y + height);
+
         // If we are not currently showing the widget, ask the tracker if we can show it.
         if (mDownloadIPHBubble == null) {
             Tracker tracker = TrackerFactory.getTrackerForProfile(Profile.getLastUsedProfile());
@@ -3394,7 +3432,7 @@ public class Tab
 
             mDownloadIPHBubble = new TextBubble(getApplicationContext(),
                     mContentViewCore.getContainerView(), R.string.iph_media_download_text,
-                    R.string.iph_media_download_accessibility_text);
+                    R.string.iph_media_download_accessibility_text, rect);
             mDownloadIPHBubble.setDismissOnTouchInteraction(true);
             mDownloadIPHBubble.addOnDismissListener(new OnDismissListener() {
                 @Override
@@ -3409,9 +3447,8 @@ public class Tab
             });
         }
 
-        Rect rect = new Rect(x, y, x + width, y + height);
-        mDownloadIPHBubble.setAnchorRect(rect);
-        mDownloadIPHBubble.setPreferredOrientation(TextBubble.Orientation.BELOW);
+        mDownloadIPHBubble.setPreferredVerticalOrientation(
+                AnchoredPopupWindow.VERTICAL_ORIENTATION_BELOW);
         mDownloadIPHBubble.show();
         createPulse(rect);
     }
@@ -3487,7 +3524,9 @@ public class Tab
     private native void nativeClearThumbnailPlaceholder(long nativeTabAndroid);
     private native boolean nativeHasPrerenderedUrl(long nativeTabAndroid, String url);
     private native void nativeSetWebappManifestScope(long nativeTabAndroid, String scope);
+    private native void nativeSetPictureInPictureEnabled(long nativeTabAndroid, boolean enabled);
     private native void nativeEnableEmbeddedMediaExperience(long nativeTabAndroid, boolean enabled);
     private native void nativeAttachDetachedTab(long nativeTabAndroid);
     private native void nativeMediaDownloadInProductHelpDismissed(long nativeTabAndroid);
+    private native int nativeGetCurrentRenderProcessId(long nativeTabAndroid);
 }

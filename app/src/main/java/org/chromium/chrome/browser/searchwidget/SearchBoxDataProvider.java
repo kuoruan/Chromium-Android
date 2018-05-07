@@ -86,6 +86,11 @@ class SearchBoxDataProvider implements ToolbarDataProvider {
     }
 
     @Override
+    public boolean isShowingUntrustedOfflinePage() {
+        return false;
+    }
+
+    @Override
     public boolean shouldShowSecurityIcon() {
         return false;
     }
@@ -103,5 +108,10 @@ class SearchBoxDataProvider implements ToolbarDataProvider {
     @Override
     public int getSecurityIconResource() {
         return 0;
+    }
+
+    @Override
+    public boolean isDisplayingQueryTerms() {
+        return false;
     }
 }

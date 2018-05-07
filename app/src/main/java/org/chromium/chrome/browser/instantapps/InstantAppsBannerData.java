@@ -23,19 +23,6 @@ public class InstantAppsBannerData {
     private final String mPrimaryActionLabel;
     private final boolean mInstantAppIsDefault;
 
-    @Deprecated
-    public InstantAppsBannerData(String appName, Bitmap icon, String url, Uri referrer,
-            Intent intent, String primaryActionLabel, WebContents webContents) {
-        mAppName = appName;
-        mAppIcon = icon;
-        mUrl = url;
-        mIntent = intent;
-        mPrimaryActionLabel = primaryActionLabel;
-        mWebContents = webContents;
-        mReferrer = referrer;
-        mInstantAppIsDefault = false;
-    }
-
     public InstantAppsBannerData(String appName, Bitmap icon, String url, Uri referrer,
             Intent intent, String primaryActionLabel, WebContents webContents,
             boolean instantAppIsDefault) {

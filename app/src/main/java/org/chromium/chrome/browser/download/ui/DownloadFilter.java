@@ -4,11 +4,13 @@
 
 package org.chromium.chrome.browser.download.ui;
 
+import android.support.annotation.IntDef;
 import android.text.TextUtils;
 
 import org.chromium.base.Log;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.UrlConstants;
+import org.chromium.chrome.browser.preferences.download.DownloadDirectoryList;
 
 import java.util.Locale;
 
@@ -19,6 +21,10 @@ import java.util.Locale;
 public class DownloadFilter {
     // These statics are used for UMA logging. Please update the AndroidDownloadFilterType enum in
     // histograms.xml if these change.
+    @IntDef({FILTER_ALL, FILTER_PAGE, FILTER_VIDEO, FILTER_AUDIO, FILTER_IMAGE, FILTER_DOCUMENT,
+            FILTER_OTHER, FILTER_BOUNDARY})
+    public @interface Type {}
+
     public static final int FILTER_ALL = 0;
     public static final int FILTER_PAGE = 1;
     public static final int FILTER_VIDEO = 2;
@@ -37,7 +43,8 @@ public class DownloadFilter {
      * Icons and labels for each filter in the menu.
      *
      * Changing the ordering of these items requires changing the FILTER_* values in
-     * {@link DownloadHistoryAdapter}.
+     * {@link DownloadHistoryAdapter} and the values in mCanonicalDirectoryPairs in
+     * {@link DownloadDirectoryList}.
      */
     static final int[][] FILTER_LIST = new int[][] {
             {R.drawable.ic_file_download_24dp, R.string.download_manager_ui_all_downloads},
@@ -60,21 +67,21 @@ public class DownloadFilter {
     /**
      * @return The drawable id representing the given filter.
      */
-    static int getDrawableForFilter(int filter) {
+    public static int getDrawableForFilter(@Type int filter) {
         return FILTER_LIST[filter][0];
     }
 
     /**
      * @return The resource id of the title representing the given filter.
      */
-    static int getStringIdForFilter(int filter) {
+    public static int getStringIdForFilter(@Type int filter) {
         return FILTER_LIST[filter][1];
     }
 
     /**
      * @return The URL representing the filter.
      */
-    public static String getUrlForFilter(int filter) {
+    public static String getUrlForFilter(@Type int filter) {
         if (filter == FILTER_ALL) {
             return UrlConstants.DOWNLOADS_URL;
         }
@@ -84,7 +91,7 @@ public class DownloadFilter {
     /**
      * @return The filter that the given URL represents.
      */
-    public static int getFilterFromUrl(String url) {
+    public static @Type int getFilterFromUrl(String url) {
         if (TextUtils.isEmpty(url) || UrlConstants.DOWNLOADS_HOST.equals(url)) return FILTER_ALL;
         int result = FILTER_ALL;
         if (url.startsWith(UrlConstants.DOWNLOADS_FILTER_URL)) {
@@ -99,7 +106,7 @@ public class DownloadFilter {
     }
 
     /** Identifies the type of file represented by the given MIME type string. */
-    public static int fromMimeType(String mimeType) {
+    public static @Type int fromMimeType(String mimeType) {
         if (TextUtils.isEmpty(mimeType)) return DownloadFilter.FILTER_OTHER;
 
         String[] pieces = mimeType.toLowerCase(Locale.getDefault()).split("/");

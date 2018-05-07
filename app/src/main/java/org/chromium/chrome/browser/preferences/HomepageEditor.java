@@ -17,7 +17,6 @@ import android.widget.EditText;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.partnercustomizations.HomepageManager;
 import org.chromium.chrome.browser.partnercustomizations.PartnerBrowserCustomizations;
-import org.chromium.chrome.browser.widget.FloatLabelLayout;
 import org.chromium.components.url_formatter.UrlFormatter;
 
 /**
@@ -37,14 +36,12 @@ public class HomepageEditor extends Fragment implements TextWatcher {
         getActivity().setTitle(R.string.options_homepage_edit_title);
         View v = inflater.inflate(R.layout.homepage_editor, container, false);
 
-        FloatLabelLayout homepageUrl = (FloatLabelLayout) v.findViewById(R.id.homepage_url);
-        homepageUrl.focusWithoutAnimation();
-
         mHomepageUrlEdit = (EditText) v.findViewById(R.id.homepage_url_edit);
         mHomepageUrlEdit.setText((mHomepageManager.getPrefHomepageUseDefaultUri()
                 ? PartnerBrowserCustomizations.getHomePageUrl()
                 : mHomepageManager.getPrefHomepageCustomUri()));
         mHomepageUrlEdit.addTextChangedListener(this);
+        mHomepageUrlEdit.requestFocus();
 
         initializeSaveCancelResetButtons(v);
         return v;

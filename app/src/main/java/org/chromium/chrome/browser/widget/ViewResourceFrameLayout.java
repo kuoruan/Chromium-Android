@@ -4,10 +4,9 @@
 
 package org.chromium.chrome.browser.widget;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Canvas;
 import android.graphics.Rect;
-import android.os.Build;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewParent;
@@ -21,6 +20,7 @@ import org.chromium.ui.resources.dynamics.ViewResourceAdapter;
  */
 public class ViewResourceFrameLayout extends FrameLayout {
     private ViewResourceAdapter mResourceAdapter;
+    private Rect mTempRect;
 
     /**
      * Constructs a ViewResourceFrameLayout.
@@ -62,12 +62,16 @@ public class ViewResourceFrameLayout extends FrameLayout {
         return true;
     }
 
+    @SuppressLint("NewApi") // Used on O+, invalidateChildInParent used for previous versions.
     @Override
-    protected void dispatchDraw(Canvas canvas) {
-        super.dispatchDraw(canvas);
-        // TODO(tedchoc): Switch to a better API when available. crbug.com/681877
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isReadyForCapture()) {
-            mResourceAdapter.invalidate(null);
+    public void onDescendantInvalidated(View child, View target) {
+        super.onDescendantInvalidated(child, target);
+        if (isReadyForCapture()) {
+            if (mTempRect == null) mTempRect = new Rect();
+            int x = (int) Math.floor(child.getX());
+            int y = (int) Math.floor(child.getY());
+            mTempRect.set(x, y, x + child.getWidth(), y + child.getHeight());
+            mResourceAdapter.invalidate(mTempRect);
         }
     }
 

@@ -18,7 +18,9 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeFeatureList;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.TintedDrawable;
+import org.chromium.ui.base.DeviceFormFactor;
 
 import java.util.Locale;
 
@@ -44,7 +46,10 @@ public class TabSwitcherDrawable extends TintedDrawable {
      */
     public static TabSwitcherDrawable createTabSwitcherDrawable(
             Resources resources, boolean useLight) {
-        Bitmap icon = BitmapFactory.decodeResource(resources, R.drawable.btn_tabswitcher);
+        Bitmap icon = BitmapFactory.decodeResource(resources,
+                FeatureUtilities.isChromeModernDesignEnabled() && !DeviceFormFactor.isTablet()
+                        ? R.drawable.btn_tabswitcher_modern
+                        : R.drawable.btn_tabswitcher);
         return new TabSwitcherDrawable(resources, useLight, icon);
     }
 

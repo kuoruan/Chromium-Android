@@ -11,7 +11,9 @@ import android.text.style.ClickableSpan;
 import android.view.View;
 
 import org.chromium.base.annotations.CalledByNative;
+import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ResourceId;
+import org.chromium.ui.UiUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -80,6 +82,9 @@ public class AutofillSaveCardInfoBar extends ConfirmInfoBar {
 
     private final long mNativeAutofillSaveCardInfoBar;
     private final List<CardDetail> mCardDetails = new ArrayList<>();
+    private int mBrandIconId = -1;
+    private String mTitleText;
+    private String mDescriptionText;
     private final LinkedList<LegalMessageLine> mLegalMessageLines =
             new LinkedList<LegalMessageLine>();
 
@@ -141,6 +146,36 @@ public class AutofillSaveCardInfoBar extends ConfirmInfoBar {
     }
 
     /**
+     * Sets description line to the infobar.
+     *
+     * @param text description line text.
+     */
+    @CalledByNative
+    private void setDescriptionText(String text) {
+        mDescriptionText = text;
+    }
+
+    /**
+     * Sets title text to the infobar.
+     *
+     * @param text Title text.
+     */
+    @CalledByNative
+    private void setTitleText(String text) {
+        mTitleText = text;
+    }
+
+    /**
+     * Sets Branding icon id to the infobar.
+     *
+     * @param enumeratedIconId ID corresponding to the Google Pay branding.
+     */
+    @CalledByNative
+    private void setBrandIconId(int enumeratedIconId) {
+        mBrandIconId = ResourceId.mapToDrawableId(enumeratedIconId);
+    }
+
+    /**
      * Adds a line of legal message plain text to the infobar.
      *
      * @param text The legal message plain text.
@@ -162,13 +197,30 @@ public class AutofillSaveCardInfoBar extends ConfirmInfoBar {
         mLegalMessageLines.getLast().links.add(new LegalMessageLine.Link(start, end, url));
     }
 
+    /**
+     * Whether Google Pay branding enabled or not.
+     */
+    private boolean isGooglePayBrandingEnabled() {
+        return mBrandIconId != -1;
+    }
+
     @Override
     public void createContent(InfoBarLayout layout) {
         super.createContent(layout);
+        if (isGooglePayBrandingEnabled()) {
+            UiUtils.removeViewFromParent(layout.getMessageTextView());
+            layout.getMessageLayout().addIconTitle(mBrandIconId, mTitleText);
+        }
         InfoBarControlLayout control = layout.addControlLayout();
+        // Description text can be empty to simplify the prompt in future Finch
+        // experiments.
+        if (isGooglePayBrandingEnabled() && !mDescriptionText.isEmpty()) {
+            control.addDescription(mDescriptionText);
+        }
         for (int i = 0; i < mCardDetails.size(); i++) {
             CardDetail detail = mCardDetails.get(i);
-            control.addIcon(detail.issuerIconDrawableId, 0, detail.label, detail.subLabel);
+            control.addIcon(detail.issuerIconDrawableId, 0, detail.label, detail.subLabel,
+                    R.dimen.infobar_descriptive_text_size);
         }
 
         for (LegalMessageLine line : mLegalMessageLines) {

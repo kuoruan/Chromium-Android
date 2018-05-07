@@ -4,8 +4,8 @@
 
 package org.chromium.chrome.browser.download;
 
-import org.chromium.chrome.browser.download.DownloadUpdate.PendingState;
 import org.chromium.components.offline_items_collection.ContentId;
+import org.chromium.components.offline_items_collection.PendingState;
 
 /**
  * Class for reporting the status of a download.
@@ -51,7 +51,7 @@ public interface DownloadNotifier {
      * @param pendingState Reason download is pending
      */
     void notifyDownloadInterrupted(
-            DownloadInfo downloadInfo, boolean isAutoResumable, PendingState pendingState);
+            DownloadInfo downloadInfo, boolean isAutoResumable, @PendingState int pendingState);
 
     /**
      * Cancel the notification for a download.

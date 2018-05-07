@@ -11,6 +11,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.drawable.GradientDrawable;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
@@ -18,7 +19,6 @@ import android.support.v7.widget.RecyclerView.AdapterDataObserver;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.text.method.LinkMovementMethod;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -56,17 +56,16 @@ import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.MathUtils;
 import org.chromium.chrome.browser.util.ViewUtils;
-import org.chromium.chrome.browser.widget.bottomsheet.ChromeHomePromoDialog;
+import org.chromium.chrome.browser.vr_shell.VrShellDelegate;
 import org.chromium.chrome.browser.widget.displaystyle.UiConfig;
 import org.chromium.ui.base.DeviceFormFactor;
-import org.chromium.ui.text.NoUnderlineClickableSpan;
-import org.chromium.ui.text.SpanApplier;
 
 /**
  * The native new tab page, represented by some basic data such as title and url, and an Android
  * View that displays the page.
  */
-public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
+public class NewTabPageView
+        extends FrameLayout implements TileGroup.Observer, VrShellDelegate.VrModeObserver {
     private static final String TAG = "NewTabPageView";
 
     private static final long SNAP_SCROLL_DELAY_MS = 30;
@@ -147,6 +146,12 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
     private int mSnapshotHeight;
     private int mSnapshotScrollY;
     private ContextMenuManager mContextMenuManager;
+
+    /**
+     * Lateral inset to add to the top and bottom of the search box bounds. May be 0 if no inset
+     * should be applied. See {@link Rect#inset(int, int)}.
+     */
+    private int mSearchBoxBoundsLateralInset;
 
     /**
      * Manages the view interaction with the rest of the system.
@@ -253,12 +258,6 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
         mContextMenuManager = new ContextMenuManager(mManager.getNavigationDelegate(),
                 mRecyclerView::setTouchEnabled, closeContextMenuCallback);
         mTab.getWindowAndroid().addContextMenuCloseListener(mContextMenuManager);
-        manager.addDestructionObserver(new DestructionObserver() {
-            @Override
-            public void onDestroy() {
-                mTab.getWindowAndroid().removeContextMenuCloseListener(mContextMenuManager);
-            }
-        });
 
         Profile profile = Profile.getLastUsedProfile();
         OfflinePageBridge offlinePageBridge =
@@ -287,7 +286,18 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
 
         mSearchBoxView = mNewTabPageLayout.findViewById(R.id.search_box);
         if (SuggestionsConfig.useModernLayout()) {
-            ViewUtils.setNinePatchBackgroundResource(mSearchBoxView, R.drawable.card_modern);
+            mSearchBoxView.setBackgroundResource(R.drawable.modern_toolbar_background);
+            if (!DeviceFormFactor.isTablet()) {
+                mSearchBoxView.getLayoutParams().height = getResources().getDimensionPixelSize(
+                        R.dimen.modern_toolbar_background_size);
+                mSearchBoxBoundsLateralInset = getResources().getDimensionPixelSize(
+                        R.dimen.ntp_search_box_bounds_lateral_inset_modern);
+            } else {
+                mSearchBoxView.getLayoutParams().height =
+                        getResources().getDimensionPixelSize(R.dimen.toolbar_height_no_shadow);
+                GradientDrawable background = (GradientDrawable) mSearchBoxView.getBackground();
+                background.setCornerRadius(mSearchBoxView.getLayoutParams().height / 2.f);
+            }
         }
         mNoSearchLogoSpacer = mNewTabPageLayout.findViewById(R.id.no_search_logo_spacer);
 
@@ -296,7 +306,6 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
 
         initializeSearchBoxTextView();
         initializeVoiceSearchButton();
-        initializeChromeHomePromo();
         initializeLayoutChangeListeners();
         setSearchProviderInfo(searchProviderHasLogo, searchProviderIsGoogle);
         mSearchProviderLogoView.showSearchProviderInitialView();
@@ -345,6 +354,16 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
             }
         });
 
+        VrShellDelegate.registerVrModeObserver(this);
+        if (VrShellDelegate.isInVr()) onEnterVr();
+
+        manager.addDestructionObserver(new DestructionObserver() {
+            @Override
+            public void onDestroy() {
+                NewTabPageView.this.onDestroy();
+            }
+        });
+
         mInitialized = true;
 
         TraceEvent.end(TAG + ".initialize()");
@@ -368,7 +387,7 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
         final TextView searchBoxTextView =
                 (TextView) mSearchBoxView.findViewById(R.id.search_box_text);
         String hintText = getResources().getString(R.string.search_or_type_web_address);
-        if (!DeviceFormFactor.isTablet()) {
+        if (!DeviceFormFactor.isTablet() || SuggestionsConfig.useModernLayout()) {
             searchBoxTextView.setHint(hintText);
         } else {
             searchBoxTextView.setContentDescription(hintText);
@@ -410,7 +429,7 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
             searchBoxTextView.setCompoundDrawablePadding(
                     getResources().getDimensionPixelOffset(R.dimen.ntp_search_box_logo_padding));
             ApiCompatibilityUtils.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                    searchBoxTextView, R.drawable.googleg, 0, 0, 0);
+                    searchBoxTextView, R.drawable.ic_logo_googleg_24dp, 0, 0, 0);
         } else {
             searchBoxTextView.setCompoundDrawablePadding(0);
 
@@ -429,30 +448,15 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
                 mManager.focusSearchBox(true, null);
             }
         });
-        TraceEvent.end(TAG + ".initializeVoiceSearchButton()");
-    }
 
-    private void initializeChromeHomePromo() {
-        if (DeviceFormFactor.isTablet()
-                || !ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_PROMO)) {
-            return;
+        if (SuggestionsConfig.useModernLayout() && !DeviceFormFactor.isTablet()) {
+            ApiCompatibilityUtils.setMarginEnd(
+                    (MarginLayoutParams) mVoiceSearchButton.getLayoutParams(),
+                    getResources().getDimensionPixelSize(
+                            R.dimen.ntp_search_box_voice_search_margin_end_modern));
         }
 
-        NoUnderlineClickableSpan link = new NoUnderlineClickableSpan() {
-            @Override
-            public void onClick(View view) {
-                new ChromeHomePromoDialog(mTab.getActivity(), ChromeHomePromoDialog.ShowReason.NTP)
-                        .show();
-            }
-        };
-
-        TextView textView = mNewTabPageLayout.findViewById(R.id.chrome_home_promo_text);
-        textView.setText(
-                SpanApplier.applySpans(getResources().getString(R.string.ntp_chrome_home_promo),
-                        new SpanApplier.SpanInfo("<link>", "</link>", link)));
-        textView.setMovementMethod(LinkMovementMethod.getInstance());
-        mNewTabPageLayout.findViewById(R.id.chrome_home_promo_container)
-                .setVisibility(View.VISIBLE);
+        TraceEvent.end(TAG + ".initializeVoiceSearchButton()");
     }
 
     private void initializeLayoutChangeListeners() {
@@ -687,9 +691,6 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
             // Don't change the visibility of a ViewStub as that will automagically inflate it.
             if (child instanceof ViewStub) continue;
 
-            // Skip the Chrome Home promo.
-            if (child.getId() == R.id.chrome_home_promo_container) continue;
-
             if (child == mSearchProviderLogoView) {
                 child.setVisibility(logoVisibility);
             } else {
@@ -713,16 +714,13 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
      * Updates the padding for the tile grid based on what is shown above it.
      */
     private void updateTileGridPadding() {
-        final int paddingTop;
-        if (ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_PROMO)) {
-            // The Chrome Home promo has enough whitespace.
-            paddingTop = 0;
-        } else {
-            // Set a bit more top padding on the tile grid if there is no logo.
-            paddingTop = getResources().getDimensionPixelSize(shouldShowLogo()
-                            ? R.dimen.tile_grid_layout_padding_top
-                            : R.dimen.tile_grid_layout_no_logo_padding_top);
-        }
+        int paddingWithLogoId = SuggestionsConfig.useModernLayout()
+                ? R.dimen.tile_grid_layout_modern_padding_top
+                : R.dimen.tile_grid_layout_padding_top;
+        // Set a bit more top padding on the tile grid if there is no logo.
+        final int paddingTop = getResources().getDimensionPixelSize(shouldShowLogo()
+                        ? paddingWithLogoId
+                        : R.dimen.tile_grid_layout_no_logo_padding_top);
         mSiteSectionViewHolder.itemView.setPadding(
                 0, paddingTop, 0, mSiteSectionViewHolder.itemView.getPaddingBottom());
     }
@@ -775,7 +773,8 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
         int basePosition = mRecyclerView.computeVerticalScrollOffset()
                 + mNewTabPageLayout.getPaddingTop();
         int target = Math.max(basePosition,
-                    mSearchBoxView.getBottom() - mSearchBoxView.getPaddingBottom());
+                mSearchBoxView.getBottom() - mSearchBoxView.getPaddingBottom()
+                        - mSearchBoxBoundsLateralInset);
 
         mNewTabPageLayout.setTranslationY(percent * (basePosition - target));
     }
@@ -811,7 +810,6 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
     void getSearchBoxBounds(Rect bounds, Point translation) {
         int searchBoxX = (int) mSearchBoxView.getX();
         int searchBoxY = (int) mSearchBoxView.getY();
-
         bounds.set(searchBoxX + mSearchBoxView.getPaddingLeft(),
                 searchBoxY + mSearchBoxView.getPaddingTop(),
                 searchBoxX + mSearchBoxView.getWidth() - mSearchBoxView.getPaddingRight(),
@@ -834,6 +832,10 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
             translation.offset((int) view.getX(), (int) view.getY());
         }
         bounds.offset(translation.x, translation.y);
+
+        if (translation.y != Integer.MIN_VALUE) {
+            bounds.inset(0, mSearchBoxBoundsLateralInset);
+        }
     }
 
     /**
@@ -1049,4 +1051,18 @@ public class NewTabPageView extends FrameLayout implements TileGroup.Observer {
         }
     }
 
+    @Override
+    public void onEnterVr() {
+        mSearchBoxView.setVisibility(GONE);
+    }
+
+    @Override
+    public void onExitVr() {
+        mSearchBoxView.setVisibility(VISIBLE);
+    }
+
+    private void onDestroy() {
+        mTab.getWindowAndroid().removeContextMenuCloseListener(mContextMenuManager);
+        VrShellDelegate.unregisterVrModeObserver(this);
+    }
 }

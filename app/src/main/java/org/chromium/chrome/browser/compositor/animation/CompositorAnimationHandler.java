@@ -39,6 +39,9 @@ public class CompositorAnimationHandler {
     /** Whether or not testing mode is enabled. In this mode, animations end immediately. */
     private boolean mIsInTestingMode;
 
+    /** The last time that an update was pushed to animations. */
+    private long mLastUpdateTimeMs;
+
     /**
      * Default constructor.
      * @param host A {@link LayoutUpdateHost} responsible for requesting frames when an animation
@@ -54,6 +57,10 @@ public class CompositorAnimationHandler {
      * @param animator The animator to start.
      */
     public final void registerAndStartAnimator(final CompositorAnimator animator) {
+        // If animations are currently running, the last updated time is being updated. If not,
+        // reset the value here. This prevents gaps in animations from breaking timing.
+        if (getActiveAnimationCount() <= 0) mLastUpdateTimeMs = System.currentTimeMillis();
+
         animator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator a) {
@@ -74,10 +81,22 @@ public class CompositorAnimationHandler {
 
     /**
      * Push an update to all the currently running animators.
+     * @return True if all animations controlled by this handler have completed.
+     */
+    public final boolean pushUpdate() {
+        long currentTime = System.currentTimeMillis();
+        long deltaTimeMs = currentTime - mLastUpdateTimeMs;
+        mLastUpdateTimeMs = currentTime;
+
+        return pushUpdate(deltaTimeMs);
+    }
+
+    /**
+     * Push an update to all the currently running animators.
      * @param deltaTimeMs The time since the previous update in ms.
      * @return True if all animations controlled by this handler have completed.
      */
-    public final boolean pushUpdate(long deltaTimeMs) {
+    final boolean pushUpdate(long deltaTimeMs) {
         mWasUpdateRequestedForAnimationStart = false;
         if (mAnimators.isEmpty()) return true;
 

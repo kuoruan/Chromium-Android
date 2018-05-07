@@ -16,8 +16,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.SystemClock;
+import android.provider.Browser;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
+import android.support.customtabs.CustomTabsIntent;
 import android.support.customtabs.CustomTabsService;
 import android.support.customtabs.CustomTabsSessionToken;
 import android.support.customtabs.TrustedWebUtils;
@@ -47,7 +49,7 @@ import org.chromium.chrome.browser.browserservices.OriginVerifier;
 import org.chromium.chrome.browser.browserservices.OriginVerifier.OriginVerificationListener;
 import org.chromium.chrome.browser.compositor.layouts.LayoutManager;
 import org.chromium.chrome.browser.customtabs.CustomTabAppMenuPropertiesDelegate;
-import org.chromium.chrome.browser.customtabs.CustomTabLayoutManager;
+import org.chromium.chrome.browser.customtabs.CustomTabIntentDataProvider;
 import org.chromium.chrome.browser.customtabs.CustomTabsConnection;
 import org.chromium.chrome.browser.document.ChromeLauncherActivity;
 import org.chromium.chrome.browser.document.DocumentUtils;
@@ -63,6 +65,7 @@ import org.chromium.chrome.browser.widget.TintedDrawable;
 import org.chromium.content.browser.ScreenOrientationProvider;
 import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.content_public.browser.NavigationController;
+import org.chromium.content_public.browser.NavigationEntry;
 import org.chromium.net.NetworkChangeNotifier;
 import org.chromium.ui.base.PageTransition;
 
@@ -149,10 +152,19 @@ public class WebappActivity extends SingleTabActivity {
         }
 
         @Override
+        @Nullable
         public String getCurrentUrl() {
             if (getActivityTab() == null) return null;
 
             return getActivityTab().getUrl();
+        }
+
+        @Override
+        @Nullable
+        public String getPendingUrl() {
+            NavigationEntry entry = getActivityTab().getWebContents().getNavigationController()
+                    .getPendingEntry();
+            return entry != null ? entry.getUrl() : null;
         }
 
         /**
@@ -323,7 +335,7 @@ public class WebappActivity extends SingleTabActivity {
         }
 
         initializeUI(getSavedInstanceState());
-        LayoutManager layoutDriver = new CustomTabLayoutManager(getCompositorViewHolder());
+        LayoutManager layoutDriver = new LayoutManager(getCompositorViewHolder());
         initializeCompositorContent(layoutDriver, findViewById(R.id.url_bar),
                 (ViewGroup) findViewById(android.R.id.content),
                 (ToolbarControlContainer) findViewById(R.id.control_container));
@@ -509,16 +521,6 @@ public class WebappActivity extends SingleTabActivity {
                     mWebappInfo.id(), new WebappRegistry.FetchWebappDataStorageCallback() {
                         @Override
                         public void onWebappDataStorageRetrieved(WebappDataStorage storage) {
-                            // Initialize the time of the last is-update-needed check with the
-                            // registration time. This prevents checking for updates on the
-                            // first run.
-                            // TODO(yusufo): We should clearly define what can be
-                            // registered through the support library and what happens for Trusted
-                            // Web Activities here.
-                            if (getBrowserSession() == null) {
-                                storage.updateTimeOfLastCheckForUpdatedWebManifest();
-                            }
-
                             onDeferredStartupWithStorage(storage);
                         }
                     });
@@ -601,7 +603,7 @@ public class WebappActivity extends SingleTabActivity {
         // with the heuristic.
         if (mWebappInfo.isLaunchedFromHomescreen()) {
             boolean previouslyLaunched = storage.hasBeenLaunched();
-            long previousUsageTimestamp = storage.getLastUsedTime();
+            long previousUsageTimestamp = storage.getLastUsedTimeMs();
             storage.setHasBeenLaunched();
             // TODO(yusufo): WebappRegistry#unregisterOldWebapps uses this information to delete
             // WebappDataStorage objects for legacy webapps which haven't been used in a while.
@@ -719,7 +721,7 @@ public class WebappActivity extends SingleTabActivity {
         };
     }
 
-    protected WebappScopePolicy scopePolicy() {
+    public WebappScopePolicy scopePolicy() {
         return isVerified() ? WebappScopePolicy.STRICT : WebappScopePolicy.LEGACY;
     }
 
@@ -763,6 +765,23 @@ public class WebappActivity extends SingleTabActivity {
         if (getBrowserSession() == null) return null;
         return CustomTabsConnection.getInstance().getClientPackageNameForSession(
                 getBrowserSession());
+    }
+
+    public CustomTabsIntent buildCustomTabIntentForURL(String url) {
+        CustomTabsIntent.Builder intentBuilder = new CustomTabsIntent.Builder();
+        intentBuilder.setShowTitle(true);
+        if (mWebappInfo.hasValidThemeColor()) {
+            // Need to cast as themeColor is a long to contain possible error results.
+            intentBuilder.setToolbarColor((int) mWebappInfo.themeColor());
+        }
+        CustomTabsIntent customTabIntent = intentBuilder.build();
+        customTabIntent.intent.setPackage(getPackageName());
+        customTabIntent.intent.putExtra(
+                CustomTabIntentDataProvider.EXTRA_SEND_TO_EXTERNAL_DEFAULT_HANDLER, true);
+        customTabIntent.intent.putExtra(
+                CustomTabIntentDataProvider.EXTRA_BROWSER_LAUNCH_SOURCE, getActivityType());
+        customTabIntent.intent.putExtra(Browser.EXTRA_APPLICATION_ID, mWebappInfo.apkPackageName());
+        return customTabIntent;
     }
 
     private void updateToolbarCloseButtonVisibility() {
@@ -825,7 +844,9 @@ public class WebappActivity extends SingleTabActivity {
         if (mBrandColor != null && mWebappInfo.displayMode() != WebDisplayMode.FULLSCREEN) {
             taskDescriptionColor = mBrandColor;
             statusBarColor = ColorUtils.getDarkenedColorForStatusBar(mBrandColor);
-            getToolbarManager().updatePrimaryColor(mBrandColor, false);
+            if (getToolbarManager() != null) {
+                getToolbarManager().updatePrimaryColor(mBrandColor, false);
+            }
         }
 
         ApiCompatibilityUtils.setTaskDescription(this, title, icon,

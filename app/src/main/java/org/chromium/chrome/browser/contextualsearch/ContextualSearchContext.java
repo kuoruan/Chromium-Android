@@ -114,11 +114,13 @@ public abstract class ContextualSearchContext {
      */
     void setSurroundingText(
             String encoding, String surroundingText, int startOffset, int endOffset) {
+        assert startOffset <= endOffset;
         mEncoding = encoding;
         mSurroundingText = surroundingText;
         mSelectionStartOffset = startOffset;
         mSelectionEndOffset = endOffset;
-        if (startOffset == endOffset && !hasAnalyzedTap()) {
+        if (startOffset == endOffset && startOffset <= surroundingText.length()
+                && !hasAnalyzedTap()) {
             analyzeTap(startOffset);
         }
         // Notify of an initial selection if it's not empty.

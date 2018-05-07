@@ -10,6 +10,7 @@ import android.app.ActivityManager;
 import android.app.ActivityManager.AppTask;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.provider.Browser;
 import android.text.TextUtils;
@@ -26,6 +27,9 @@ import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.util.IntentUtils;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -272,8 +276,42 @@ public class MultiWindowUtils implements ActivityStateListener {
      * @return Whether or not {@code activity} is currently in pre-N Samsung multi-window mode.
      */
     public boolean isLegacyMultiWindow(Activity activity) {
-        // This logic is overridden in a subclass.
-        return false;
+        if (activity == null) return false;
+
+        try {
+            // Check if Samsung's multi-window mode is supported on this device.
+            // PackageManager#hasSystemFeature(PackageManager.FEATURE_MULTIWINDOW);
+            PackageManager pm = activity.getPackageManager();
+            Field multiwindowFeatureField = pm.getClass().getField("FEATURE_MULTIWINDOW");
+            if (!pm.hasSystemFeature((String) multiwindowFeatureField.get(null))) return false;
+
+            // Grab the current window mode.
+            // int windowMode = Activity#getWindowMode();
+            Method getWindowMode = activity.getClass().getMethod("getWindowMode", (Class[]) null);
+            int windowMode = (Integer) getWindowMode.invoke(activity, (Object[]) null);
+
+            // Grab the multi-window mode constant.
+            // android.view.WindowManagerPolicy#WINDOW_MODE_FREESTYLE
+            Class<?> windowManagerPolicyClass = Class.forName("android.view.WindowManagerPolicy");
+            Field windowModeFreestyleField =
+                    windowManagerPolicyClass.getField("WINDOW_MODE_FREESTYLE");
+            int featureMultiWindowFreestyle = (Integer) windowModeFreestyleField.get(null);
+
+            // Compare windowMode with WINDOW_MODE_FREESTYLE to see if that flag is set.
+            return (windowMode & featureMultiWindowFreestyle) != 0;
+        } catch (NoSuchFieldException e) {
+            return false;
+        } catch (IllegalAccessException e) {
+            return false;
+        } catch (IllegalArgumentException e) {
+            return false;
+        } catch (NoSuchMethodException e) {
+            return false;
+        } catch (InvocationTargetException e) {
+            return false;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     /**

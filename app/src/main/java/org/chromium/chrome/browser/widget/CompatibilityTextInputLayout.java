@@ -27,6 +27,10 @@ public class CompatibilityTextInputLayout extends TextInputLayout {
 
     public CompatibilityTextInputLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
+        // Disable the hint animation initially to work around a bug in the support library that
+        // causes the hint text and text in populated EditText views to overlap when first
+        // displayed on M-. See https://crbug.com/740057.
+        setHintAnimationEnabled(false);
     }
 
     @Override
@@ -45,6 +49,12 @@ public class CompatibilityTextInputLayout extends TextInputLayout {
         if (views.size() == 1) {
             ApiCompatibilityUtils.setLabelFor(this, views.get(0).getId());
         }
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        setHintAnimationEnabled(true);
     }
 
     /**

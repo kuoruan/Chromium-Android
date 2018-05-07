@@ -71,11 +71,12 @@ public class X509Util {
                     shouldReloadTrustManager = true;
                 }
             } else {
+                @SuppressWarnings("deprecation")
+                String action = KeyChain.ACTION_STORAGE_CHANGED;
                 // Before Android O, KeyChain only emitted a coarse-grained intent. This fires much
                 // more often than it should (https://crbug.com/381912), but there are no APIs to
                 // distinguish the various cases.
-                shouldReloadTrustManager =
-                        KeyChain.ACTION_STORAGE_CHANGED.equals(intent.getAction());
+                shouldReloadTrustManager = action.equals(intent.getAction());
             }
 
             if (shouldReloadTrustManager) {
@@ -275,7 +276,9 @@ public class X509Util {
                 filter.addAction(KeyChain.ACTION_KEY_ACCESS_CHANGED);
                 filter.addAction(KeyChain.ACTION_TRUST_STORE_CHANGED);
             } else {
-                filter.addAction(KeyChain.ACTION_STORAGE_CHANGED);
+                @SuppressWarnings("deprecation")
+                String action = KeyChain.ACTION_STORAGE_CHANGED;
+                filter.addAction(action);
             }
             ContextUtils.getApplicationContext().registerReceiver(sTrustStorageListener, filter);
         }

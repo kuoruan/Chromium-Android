@@ -26,7 +26,7 @@
 <string name="autofill_from_google_account_long">"來自 Google Pay"</string>
 <string name="http_post_warning">"你尋找的網頁使用了你輸入的資料。返回該頁會重複你剛才的行動。你確定要繼續嗎？"</string>
 <string name="http_post_warning_resend">"繼續"</string>
-<string name="login_dialog_title">"需要進行驗證"</string>
+<string name="login_dialog_title">"登入"</string>
 <string name="login_dialog_ok_button_label">"登入"</string>
 <string name="login_dialog_username_field">"使用者名稱"</string>
 <string name="login_dialog_password_field">"密碼"</string>
@@ -44,7 +44,7 @@
 <string name="new_tab_otr_subtitle">"現在，你可以進行私密瀏覽了。共用這部裝置的其他使用者不會看到你的活動，不過，你下載的內容和新增的書籤仍會保留在裝置上。"</string>
 <string name="new_tab_otr_not_saved">"Chrome &lt;em&gt;不會儲存&lt;/em&gt;下列資訊：
         &lt;ul&gt;
-          &lt;li&gt;你的瀏覽紀錄
+          &lt;li&gt;你的瀏覽記錄
           &lt;li&gt;Cookie 和網站資料
           &lt;li&gt;你在表單中輸入的資訊
         &lt;/ul&gt;"</string>

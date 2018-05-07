@@ -8,31 +8,13 @@ import android.graphics.Bitmap;
 
 import org.chromium.components.offline_items_collection.ContentId;
 import org.chromium.components.offline_items_collection.OfflineItem.Progress;
+import org.chromium.components.offline_items_collection.PendingState;
 
 /**
  * Class representing information relating to an update in download status.
  * TODO(jming): Consolidate with other downloads-related objects (http://crbug.com/746692).
  */
 public final class DownloadUpdate {
-    /**
-     * Used to indicate reason download is pending, if any.
-     */
-    public enum PendingState {
-        // Download is not pending.
-        NOT_PENDING,
-
-        // Download is pending due to no network connection.
-        PENDING_NETWORK,
-
-        // Download is pending because another download is currently being downloaded.
-        PENDING_ANOTHER_DOWNLOAD,
-
-        // Download is pending due to an unspecified reason.
-        // TODO(cmsy): Remove once implementation for descriptive pending status text for offline
-        // pages is complete.
-        PENDING_REASON_UNKNOWN,
-    }
-
     private final ContentId mContentId;
     private final String mFileName;
     private final String mFilePath;
@@ -49,7 +31,7 @@ public final class DownloadUpdate {
     private final long mStartTime;
     private final long mSystemDownloadId;
     private final long mTimeRemainingInMillis;
-    private final PendingState mPendingState;
+    private final @PendingState int mPendingState;
 
     private DownloadUpdate(Builder builder) {
         this.mContentId = builder.mContentId;
@@ -139,7 +121,7 @@ public final class DownloadUpdate {
         return mTimeRemainingInMillis;
     }
 
-    public PendingState getPendingState() {
+    public @PendingState int getPendingState() {
         return mPendingState;
     }
 
@@ -163,7 +145,7 @@ public final class DownloadUpdate {
         private long mStartTime;
         private long mSystemDownloadId = -1;
         private long mTimeRemainingInMillis;
-        private PendingState mPendingState;
+        private @PendingState int mPendingState;
 
         public Builder setContentId(ContentId contentId) {
             this.mContentId = contentId;
@@ -245,7 +227,7 @@ public final class DownloadUpdate {
             return this;
         }
 
-        public Builder setPendingState(PendingState pendingState) {
+        public Builder setPendingState(@PendingState int pendingState) {
             this.mPendingState = pendingState;
             return this;
         }

@@ -63,11 +63,14 @@ public class DownloadSharedPreferenceHelper {
     }
 
     /**
-     * Adds a DownloadSharedPreferenceEntry to SharedPrefs. If an entry with the same
-     * {@link ContentId} already exists in SharedPrefs, update it if it has changed.
-     * @param pendingEntry A DownloadSharedPreferenceEntry to be added.
+     * Adds a DownloadSharedPreferenceEntry to SharedPrefs. Replaces/updates if entry with same
+     * {@link ContentId} already exists.
+     *
+     * @param pendingEntry  Entry to be added/updated.
+     * @param forceCommit   Whether this update of shared preferences should be done synchronously.
      */
-    public void addOrReplaceSharedPreferenceEntry(DownloadSharedPreferenceEntry pendingEntry) {
+    public void addOrReplaceSharedPreferenceEntry(
+            DownloadSharedPreferenceEntry pendingEntry, boolean forceCommit) {
         Iterator<DownloadSharedPreferenceEntry> iterator =
                 mDownloadSharedPreferenceEntries.iterator();
         while (iterator.hasNext()) {
@@ -79,11 +82,21 @@ public class DownloadSharedPreferenceHelper {
             }
         }
         mDownloadSharedPreferenceEntries.add(pendingEntry);
-        storeDownloadSharedPreferenceEntries();
+        storeDownloadSharedPreferenceEntries(forceCommit);
 
         for (Observer observer : mObservers) {
             observer.onAddOrReplaceDownloadSharedPreferenceEntry(pendingEntry.id);
         }
+    }
+
+    /**
+     * Adds a DownloadSharedPreferenceEntry to SharedPrefs. Replaces/updates if entry with same
+     * {@link ContentId} already exists. Assumes no forced synchronous update of shared preferences.
+     *
+     * @param pendingEntry  The DownloadSharedPreference entry to be added/replaced.
+     */
+    public void addOrReplaceSharedPreferenceEntry(DownloadSharedPreferenceEntry pendingEntry) {
+        addOrReplaceSharedPreferenceEntry(pendingEntry, false /* forceCommit */);
     }
 
     /**
@@ -103,7 +116,7 @@ public class DownloadSharedPreferenceHelper {
             }
         }
         if (found) {
-            storeDownloadSharedPreferenceEntries();
+            storeDownloadSharedPreferenceEntries(false);
         }
     }
 
@@ -164,13 +177,14 @@ public class DownloadSharedPreferenceHelper {
 
     /**
      * Helper method to store all the SharedPreferences entries.
+     * @param forceCommit   Whether SharedPreferences should be updated synchronously.
      */
-    private void storeDownloadSharedPreferenceEntries() {
+    private void storeDownloadSharedPreferenceEntries(boolean forceCommit) {
         Set<String> entries = new HashSet<String>();
         for (int i = 0; i < mDownloadSharedPreferenceEntries.size(); ++i) {
             entries.add(mDownloadSharedPreferenceEntries.get(i).getSharedPreferenceString());
         }
         DownloadManagerService.storeDownloadInfo(
-                mSharedPrefs, KEY_PENDING_DOWNLOAD_NOTIFICATIONS, entries);
+                mSharedPrefs, KEY_PENDING_DOWNLOAD_NOTIFICATIONS, entries, forceCommit);
     }
 }

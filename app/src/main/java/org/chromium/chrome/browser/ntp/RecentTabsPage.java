@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.ntp;
 
 import android.app.Activity;
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.os.SystemClock;
@@ -25,6 +26,8 @@ import org.chromium.chrome.browser.NativePage;
 import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.compositor.layouts.content.InvalidationAwareThumbnailProvider;
 import org.chromium.chrome.browser.metrics.StartupMetrics;
+import org.chromium.chrome.browser.util.ColorUtils;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.ViewUtils;
 
 import java.util.concurrent.TimeUnit;
@@ -82,10 +85,11 @@ public class RecentTabsPage
     public RecentTabsPage(ChromeActivity activity, RecentTabsManager recentTabsManager) {
         mActivity = activity;
         mRecentTabsManager = recentTabsManager;
+        Resources resources = activity.getResources();
 
-        mTitle = activity.getResources().getString(R.string.recent_tabs);
-        mThemeColor = ApiCompatibilityUtils.getColor(
-                activity.getResources(), R.color.default_primary_color);
+        mTitle = resources.getString(R.string.recent_tabs);
+        mThemeColor = ColorUtils.getDefaultThemeColor(
+                resources, FeatureUtilities.isChromeModernDesignEnabled(), false);
         mRecentTabsManager.setUpdatedCallback(this);
         LayoutInflater inflater = LayoutInflater.from(activity);
         mView = (ViewGroup) inflater.inflate(R.layout.recent_tabs_page, null);
@@ -102,13 +106,15 @@ public class RecentTabsPage
         ApplicationStatus.registerStateListenerForActivity(this, activity);
         // {@link #mInForeground} will be updated once the view is attached to the window.
 
+        View recentTabsRoot = mView.findViewById(R.id.recent_tabs_root);
+        if (FeatureUtilities.isChromeModernDesignEnabled()) {
+            recentTabsRoot.setBackgroundColor(mThemeColor);
+        }
         if (activity.getBottomSheet() != null) {
-            View recentTabsRoot = mView.findViewById(R.id.recent_tabs_root);
             ApiCompatibilityUtils.setPaddingRelative(recentTabsRoot,
                     ApiCompatibilityUtils.getPaddingStart(recentTabsRoot), 0,
                     ApiCompatibilityUtils.getPaddingEnd(recentTabsRoot),
-                    activity.getResources().getDimensionPixelSize(
-                            R.dimen.bottom_control_container_height));
+                    resources.getDimensionPixelSize(R.dimen.bottom_control_container_height));
         }
 
         onUpdated();

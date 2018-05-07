@@ -14,27 +14,6 @@ import org.chromium.content_public.browser.WebContents;
 @JNINamespace("dom_distiller::android")
 public final class DistillablePageUtils {
     /**
-     * Callback for handling the result of isPageDistillable.
-     */
-    public static interface PageDistillableCallback {
-        public void onIsPageDistillableResult(boolean isDistillable);
-    }
-
-    public static void isPageDistillable(WebContents webContents, boolean isMobileOptimized,
-            PageDistillableCallback callback) {
-        nativeIsPageDistillable(webContents, isMobileOptimized, callback);
-    }
-
-    @CalledByNative
-    private static void callOnIsPageDistillableResult(
-            PageDistillableCallback callback, boolean isDistillable) {
-        callback.onIsPageDistillableResult(isDistillable);
-    }
-
-    private static native void nativeIsPageDistillable(
-            WebContents webContents, boolean isMobileOptimized, PageDistillableCallback callback);
-
-    /**
      * Delegate to receive distillability updates.
      */
     public interface PageDistillableDelegate {

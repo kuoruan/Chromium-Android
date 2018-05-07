@@ -95,21 +95,6 @@
              android:title="@string/menu_preferences" />
     </group>
 
-    <!-- Items shown only in the the BottomSheet NTP UI -->
-    <group android:id="@+id/BOTTOM_SHEET_NTP_MENU"
-        android:visible="false">
-         <item android:id="@id/new_tab_menu_id"
-             android:title="@string/menu_new_tab" />
-         <item android:id="@id/new_incognito_tab_menu_id"
-             android:title="@string/menu_new_incognito_tab" />
-         <item android:id="@id/recent_tabs_menu_id"
-            android:title="@string/menu_recent_tabs" />
-         <item android:id="@id/preferences_id"
-             android:title="@string/menu_preferences" />
-         <item android:id="@id/help_id"
-            android:title="@string/menu_help" />
-    </group>
-
     <!-- Items shown only when the tablet has no visible tabs -->
     <group android:id="@+id/TABLET_EMPTY_MODE_MENU"
         android:visible="false">

@@ -4,13 +4,13 @@
 
 package org.chromium.content_public.browser;
 
+import android.content.Context;
 import android.os.ResultReceiver;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.content.browser.input.ImeAdapterImpl;
-import org.chromium.content.browser.input.InputMethodManagerWrapper;
 
 /**
  * Adapts and plumbs android IME service onto the chrome text input API.
@@ -30,6 +30,20 @@ public interface ImeAdapter {
     }
 
     /**
+     * @return the default {@link InputMethodManagerWrapper} that the ImeAdapter uses to
+     * make calls to the InputMethodManager.
+     */
+    static InputMethodManagerWrapper createDefaultInputMethodManagerWrapper(Context context) {
+        return ImeAdapterImpl.createDefaultInputMethodManagerWrapper(context);
+    }
+
+    /**
+     * @return the active {@link InputConnection} that the IME uses to communicate updates to its
+     * clients.
+     */
+    InputConnection getActiveInputConnection();
+
+    /**
      * Add {@link ImeEventObserver} object to {@link ImeAdapter}.
      * @param observer imeEventObserver instance to add.
      */
@@ -46,6 +60,13 @@ public interface ImeAdapter {
     boolean onCheckIsTextEditor();
 
     /**
+     * Overrides the InputMethodManagerWrapper that ImeAdapter uses to make calls to
+     * InputMethodManager.
+     * @param immw InputMethodManagerWrapper that should be used to call InputMethodManager.
+     */
+    void setInputMethodManagerWrapper(InputMethodManagerWrapper immw);
+
+    /**
      * @return a newly instantiated {@link ResultReceiver} used to scroll to the editable
      *     node at the right timing.
      */
@@ -57,12 +78,4 @@ public interface ImeAdapter {
      */
     @VisibleForTesting
     InputConnection getInputConnectionForTest();
-
-    /**
-     * Overrides the InputMethodManagerWrapper that ImeAdapter uses to make calls to
-     * InputMethodManager.
-     * @param immw InputMethodManagerWrapper that should be used to call InputMethodManager.
-     */
-    @VisibleForTesting
-    void setInputMethodManagerWrapperForTest(InputMethodManagerWrapper immw);
 }

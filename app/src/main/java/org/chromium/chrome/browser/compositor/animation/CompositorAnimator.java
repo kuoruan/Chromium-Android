@@ -10,6 +10,7 @@ import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import org.chromium.base.ObserverList;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation;
 
@@ -37,7 +38,7 @@ public class CompositorAnimator extends Animator {
     private final WeakReference<CompositorAnimationHandler> mHandler;
 
     /** The list of listeners for events through the life of an animation. */
-    private final ArrayList<AnimatorListener> mListeners = new ArrayList<>();
+    private final ObserverList<AnimatorListener> mListeners = new ObserverList<>();
 
     /** The list of frame update listeners for this animation. */
     private final ArrayList<AnimatorUpdateListener> mAnimatorUpdateListeners = new ArrayList<>();
@@ -110,7 +111,30 @@ public class CompositorAnimator extends Animator {
      * A utility for creating a basic animator.
      * @param handler The {@link CompositorAnimationHandler} responsible for running the animation.
      * @param target The object to modify.
-     * @param property The projecty of the object to modify.
+     * @param property The property of the object to modify.
+     * @param startValue The starting animation value.
+     * @param endValue The end animation value.
+     * @param durationMs The duration of the animation in ms.
+     * @param interpolator The time interpolator for the animation.
+     * @return A {@link CompositorAnimator} for the property.
+     */
+    public static <T> CompositorAnimator ofFloatProperty(CompositorAnimationHandler handler,
+            final T target, final FloatProperty<T> property, float startValue, float endValue,
+            long durationMs, TimeInterpolator interpolator) {
+        CompositorAnimator animator = new CompositorAnimator(handler);
+        animator.setValues(startValue, endValue);
+        animator.setDuration(durationMs);
+        animator.addUpdateListener(
+                (CompositorAnimator a) -> property.setValue(target, a.getAnimatedValue()));
+        animator.setInterpolator(interpolator);
+        return animator;
+    }
+
+    /**
+     * A utility for creating a basic animator.
+     * @param handler The {@link CompositorAnimationHandler} responsible for running the animation.
+     * @param target The object to modify.
+     * @param property The property of the object to modify.
      * @param startValue The starting animation value.
      * @param endValue The end animation value.
      * @param durationMs The duration of the animation in ms.
@@ -119,16 +143,8 @@ public class CompositorAnimator extends Animator {
     public static <T> CompositorAnimator ofFloatProperty(CompositorAnimationHandler handler,
             final T target, final FloatProperty<T> property, float startValue, float endValue,
             long durationMs) {
-        CompositorAnimator animator = new CompositorAnimator(handler);
-        animator.setValues(startValue, endValue);
-        animator.setDuration(durationMs);
-        animator.addUpdateListener(new AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(CompositorAnimator animator) {
-                property.setValue(target, animator.getAnimatedValue());
-            }
-        });
-        return animator;
+        return ofFloatProperty(handler, target, property, startValue, endValue, durationMs,
+                ChromeAnimation.getDecelerateInterpolator());
     }
 
     /** An interface for listening for frames of an animation. */
@@ -205,13 +221,6 @@ public class CompositorAnimator extends Animator {
     }
 
     /**
-     * @param listener The listener to remove.
-     */
-    public void removeUpdateListener(AnimatorUpdateListener listener) {
-        mAnimatorUpdateListeners.remove(listener);
-    }
-
-    /**
      * @return Whether or not the animation has ended after being started. If the animation is
      *         started after ending, this value will be reset to true.
      */
@@ -240,12 +249,12 @@ public class CompositorAnimator extends Animator {
 
     @Override
     public void addListener(AnimatorListener listener) {
-        mListeners.add(listener);
+        mListeners.addObserver(listener);
     }
 
     @Override
     public void removeListener(AnimatorListener listener) {
-        mListeners.remove(listener);
+        mListeners.removeObserver(listener);
     }
 
     @Override
@@ -255,6 +264,7 @@ public class CompositorAnimator extends Animator {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void start() {
         if (mAnimationState != AnimationState.ENDED) return;
 
@@ -265,11 +275,11 @@ public class CompositorAnimator extends Animator {
         if (handler != null) handler.registerAndStartAnimator(this);
         mTimeSinceStartMs = 0;
 
-        ArrayList<AnimatorListener> clonedList = (ArrayList<AnimatorListener>) mListeners.clone();
-        for (int i = 0; i < clonedList.size(); i++) clonedList.get(i).onAnimationStart(this);
+        for (AnimatorListener listener : mListeners) listener.onAnimationStart(this);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void cancel() {
         if (mAnimationState == AnimationState.ENDED) return;
 
@@ -277,13 +287,13 @@ public class CompositorAnimator extends Animator {
 
         super.cancel();
 
-        ArrayList<AnimatorListener> clonedList = (ArrayList<AnimatorListener>) mListeners.clone();
-        for (int i = 0; i < clonedList.size(); i++) clonedList.get(i).onAnimationCancel(this);
+        for (AnimatorListener listener : mListeners) listener.onAnimationCancel(this);
 
         end();
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void end() {
         if (mAnimationState == AnimationState.ENDED) return;
 
@@ -294,13 +304,12 @@ public class CompositorAnimator extends Animator {
         // If the animation was ended early but not canceled, push one last update to the listeners.
         if (!mDidUpdateToCompletion && !wasCanceled) {
             mAnimatedFraction = 1f;
-            ArrayList<AnimatorUpdateListener> clonedList =
-                    (ArrayList<AnimatorUpdateListener>) mAnimatorUpdateListeners.clone();
-            for (int i = 0; i < clonedList.size(); i++) clonedList.get(i).onAnimationUpdate(this);
+            for (AnimatorUpdateListener listener : mAnimatorUpdateListeners) {
+                listener.onAnimationUpdate(this);
+            }
         }
 
-        ArrayList<AnimatorListener> clonedList = (ArrayList<AnimatorListener>) mListeners.clone();
-        for (int i = 0; i < clonedList.size(); i++) clonedList.get(i).onAnimationEnd(this);
+        for (AnimatorListener listener : mListeners) listener.onAnimationEnd(this);
     }
 
     @Override

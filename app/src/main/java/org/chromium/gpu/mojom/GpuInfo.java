@@ -16,8 +16,8 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 216;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(216, 0)};
+    private static final int STRUCT_SIZE = 192;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(192, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public org.chromium.mojo.common.mojom.TimeDelta initializationTime;
     public boolean optimus;
@@ -43,16 +43,11 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
     public boolean softwareRendering;
     public boolean directRendering;
     public boolean sandboxed;
-    public int processCrashCount;
     public boolean inProcessGpu;
     public boolean passthroughCmdDecoder;
     public boolean directComposition;
     public boolean supportsOverlays;
     public boolean canSupportThreadedTextureMailbox;
-    public int basicInfoState;
-    public int contextInfoState;
-    public int dxDiagnosticsInfoState;
-    public DxDiagNode dxDiagnostics;
     public VideoDecodeAcceleratorCapabilities videoDecodeAcceleratorCapabilities;
     public VideoEncodeAcceleratorSupportedProfile[] videoEncodeAcceleratorSupportedProfiles;
     public boolean jpegDecodeAcceleratorSupported;
@@ -227,36 +222,12 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.processCrashCount = decoder0.readInt(160);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.basicInfoState = decoder0.readInt(164);
-                    CollectInfoResult.validate(result.basicInfoState);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.contextInfoState = decoder0.readInt(168);
-                    CollectInfoResult.validate(result.contextInfoState);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.dxDiagnosticsInfoState = decoder0.readInt(172);
-                    CollectInfoResult.validate(result.dxDiagnosticsInfoState);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(176, true);
-                result.dxDiagnostics = DxDiagNode.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(184, false);
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(160, false);
                 result.videoDecodeAcceleratorCapabilities = VideoDecodeAcceleratorCapabilities.decode(decoder1);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(192, false);
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(168, false);
                 {
                     org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
                     result.videoEncodeAcceleratorSupportedProfiles = new VideoEncodeAcceleratorSupportedProfile[si1.elementsOrVersion];
@@ -269,11 +240,11 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.systemVisual = decoder0.readLong(200);
+                result.systemVisual = decoder0.readLong(176);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.rgbaVisual = decoder0.readLong(208);
+                result.rgbaVisual = decoder0.readLong(184);
             }
         } finally {
             decoder0.decreaseStackDepth();
@@ -354,31 +325,21 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.glWsExtensions, 152, false);
         
-        encoder0.encode(this.processCrashCount, 160);
-        
-        encoder0.encode(this.basicInfoState, 164);
-        
-        encoder0.encode(this.contextInfoState, 168);
-        
-        encoder0.encode(this.dxDiagnosticsInfoState, 172);
-        
-        encoder0.encode(this.dxDiagnostics, 176, true);
-        
-        encoder0.encode(this.videoDecodeAcceleratorCapabilities, 184, false);
+        encoder0.encode(this.videoDecodeAcceleratorCapabilities, 160, false);
         
         if (this.videoEncodeAcceleratorSupportedProfiles == null) {
-            encoder0.encodeNullPointer(192, false);
+            encoder0.encodeNullPointer(168, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.videoEncodeAcceleratorSupportedProfiles.length, 192, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.videoEncodeAcceleratorSupportedProfiles.length, 168, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
             for (int i0 = 0; i0 < this.videoEncodeAcceleratorSupportedProfiles.length; ++i0) {
                 
                 encoder1.encode(this.videoEncodeAcceleratorSupportedProfiles[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
         
-        encoder0.encode(this.systemVisual, 200);
+        encoder0.encode(this.systemVisual, 176);
         
-        encoder0.encode(this.rgbaVisual, 208);
+        encoder0.encode(this.rgbaVisual, 184);
     }
 
     /**
@@ -441,8 +402,6 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
             return false;
         if (this.sandboxed!= other.sandboxed)
             return false;
-        if (this.processCrashCount!= other.processCrashCount)
-            return false;
         if (this.inProcessGpu!= other.inProcessGpu)
             return false;
         if (this.passthroughCmdDecoder!= other.passthroughCmdDecoder)
@@ -452,14 +411,6 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
         if (this.supportsOverlays!= other.supportsOverlays)
             return false;
         if (this.canSupportThreadedTextureMailbox!= other.canSupportThreadedTextureMailbox)
-            return false;
-        if (this.basicInfoState!= other.basicInfoState)
-            return false;
-        if (this.contextInfoState!= other.contextInfoState)
-            return false;
-        if (this.dxDiagnosticsInfoState!= other.dxDiagnosticsInfoState)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.dxDiagnostics, other.dxDiagnostics))
             return false;
         if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.videoDecodeAcceleratorCapabilities, other.videoDecodeAcceleratorCapabilities))
             return false;
@@ -505,16 +456,11 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.softwareRendering);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.directRendering);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sandboxed);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.processCrashCount);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.inProcessGpu);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.passthroughCmdDecoder);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.directComposition);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.supportsOverlays);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.canSupportThreadedTextureMailbox);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.basicInfoState);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.contextInfoState);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.dxDiagnosticsInfoState);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.dxDiagnostics);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoDecodeAcceleratorCapabilities);
         result = prime * result + java.util.Arrays.deepHashCode(this.videoEncodeAcceleratorSupportedProfiles);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.jpegDecodeAcceleratorSupported);

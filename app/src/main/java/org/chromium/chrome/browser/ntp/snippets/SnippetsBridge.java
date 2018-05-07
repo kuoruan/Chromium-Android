@@ -262,6 +262,11 @@ public class SnippetsBridge implements SuggestionsSource {
         for (Observer observer : mObserverList) observer.onFullRefreshRequired();
     }
 
+    @CalledByNative
+    private void onSuggestionsVisibilityChanged(@CategoryInt int category) {
+        for (Observer observer : mObserverList) observer.onSuggestionsVisibilityChanged(category);
+    }
+
     private native long nativeInit(Profile profile);
     private native void nativeDestroy(long nativeNTPSnippetsBridge);
     private native void nativeReloadSuggestions(long nativeNTPSnippetsBridge);

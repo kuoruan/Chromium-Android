@@ -13,10 +13,8 @@ public interface ContentBitmapCallback {
     /**
      * Called when bitmap version of the content is acquired.
      *
-     * @param bitmap content snapshot in the format of {@link Bitmap}, or an empty
-     *        bitmap if the operation failed.
-     * @param response one of response types as defined in
-     *        {@link org.chromium.content_public.browser.readback_types.ReadbackResponse}
+     * @param bitmap content snapshot in the format of {@link Bitmap}, or null
+     *        if the operation failed.
      */
-    void onFinishGetBitmap(Bitmap bitmap, int response);
+    void onFinishGetBitmap(Bitmap bitmap);
 }

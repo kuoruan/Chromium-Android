@@ -86,8 +86,7 @@ public class NotificationService extends IntentService {
     @Override
     public void onHandleIntent(final Intent intent) {
         if (!intent.hasExtra(NotificationConstants.EXTRA_NOTIFICATION_ID)
-                || !intent.hasExtra(NotificationConstants.EXTRA_NOTIFICATION_INFO_ORIGIN)
-                || !intent.hasExtra(NotificationConstants.EXTRA_NOTIFICATION_INFO_TAG)) {
+                || !intent.hasExtra(NotificationConstants.EXTRA_NOTIFICATION_INFO_ORIGIN)) {
             return;
         }
 

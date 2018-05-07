@@ -54,6 +54,8 @@ import java.lang.annotation.RetentionPolicy;
     ContentSettingsType.CONTENT_SETTINGS_TYPE_ACCESSIBILITY_EVENTS,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_CLIPBOARD_READ,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_CLIPBOARD_WRITE,
+    ContentSettingsType.CONTENT_SETTINGS_TYPE_PLUGINS_DATA,
+    ContentSettingsType.CONTENT_SETTINGS_TYPE_PAYMENT_HANDLER,
     ContentSettingsType.CONTENT_SETTINGS_NUM_TYPES
 })
 @Retention(RetentionPolicy.SOURCE)
@@ -146,5 +148,13 @@ public @interface ContentSettingsType {
    * associated prefs data.
    */
   int CONTENT_SETTINGS_TYPE_CLIPBOARD_WRITE = 36;
-  int CONTENT_SETTINGS_NUM_TYPES = 37;
+  /**
+   * Used to store whether the user has ever changed the Flash permission for a site.
+   */
+  int CONTENT_SETTINGS_TYPE_PLUGINS_DATA = 37;
+  /**
+   * Used to store whether to allow a website to install a payment handler.
+   */
+  int CONTENT_SETTINGS_TYPE_PAYMENT_HANDLER = 38;
+  int CONTENT_SETTINGS_NUM_TYPES = 39;
 }

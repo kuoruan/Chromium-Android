@@ -410,7 +410,14 @@ public class InstantAppsHandler {
      * @param info The resolve info.
      */
     public boolean isInstantAppResolveInfo(ResolveInfo info) {
-        if (info == null || info.activityInfo == null) return false;
-        return EPHEMERAL_INSTALLER_CLASS.equals(info.activityInfo.name);
+        if (info == null) return false;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return info.isInstantAppAvailable;
+        } else if (info.activityInfo != null) {
+            return EPHEMERAL_INSTALLER_CLASS.equals(info.activityInfo.name);
+        }
+
+        return false;
     }
 }

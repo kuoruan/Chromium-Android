@@ -9,11 +9,14 @@ import android.support.v7.widget.RecyclerView;
 import org.chromium.base.Callback;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ntp.NewTabPage;
 import org.chromium.chrome.browser.ntp.snippets.CategoryInt;
 import org.chromium.chrome.browser.ntp.snippets.FaviconFetchResult;
 import org.chromium.chrome.browser.ntp.snippets.SnippetArticle;
 import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
+import org.chromium.chrome.browser.preferences.Pref;
+import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.tab.Tab;
 
 import java.util.concurrent.TimeUnit;
@@ -49,6 +52,14 @@ public abstract class SuggestionsMetrics {
 
     public static void recordTileTapped() {
         RecordUserAction.record("Suggestions.Tile.Tapped");
+    }
+
+    public static void recordExpandableHeaderTapped(boolean expanded) {
+        if (expanded) {
+            RecordUserAction.record("Suggestions.ExpandableHeader.Expanded");
+        } else {
+            RecordUserAction.record("Suggestions.ExpandableHeader.Collapsed");
+        }
     }
 
     public static void recordCardTapped() {
@@ -100,6 +111,19 @@ public abstract class SuggestionsMetrics {
     }
 
     // Histogram recordings
+
+    /**
+     * Records whether article suggestions are set visible by user.
+     */
+    public static void recordArticlesListVisible() {
+        if (!ChromeFeatureList.isEnabled(
+                    ChromeFeatureList.NTP_ARTICLE_SUGGESTIONS_EXPANDABLE_HEADER)) {
+            return;
+        }
+
+        RecordHistogram.recordBooleanHistogram("NewTabPage.ContentSuggestions.ArticlesListVisible",
+                PrefServiceBridge.getInstance().getBoolean(Pref.NTP_ARTICLES_LIST_VISIBLE));
+    }
 
     /**
      * Records the time it took to fetch a favicon for an article.

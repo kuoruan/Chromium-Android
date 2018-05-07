@@ -32,7 +32,6 @@ import org.chromium.chrome.browser.instantapps.InstantAppsHandler;
 import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.metrics.VariationsSession;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
-import org.chromium.chrome.browser.net.qualityprovider.ExternalEstimateProviderAndroid;
 import org.chromium.chrome.browser.offlinepages.CCTRequestStatus;
 import org.chromium.chrome.browser.omaha.RequestGenerator;
 import org.chromium.chrome.browser.partnerbookmarks.PartnerBookmark;
@@ -150,14 +149,6 @@ public abstract class AppHooks {
      */
     public ExternalDataUseObserver createExternalDataUseObserver(long nativePtr) {
         return new ExternalDataUseObserver(nativePtr);
-    }
-
-    /**
-     * @return A provider of external estimates.
-     * @param nativePtr Pointer to the native ExternalEstimateProviderAndroid object.
-     */
-    public ExternalEstimateProviderAndroid createExternalEstimateProviderAndroid(long nativePtr) {
-        return new ExternalEstimateProviderAndroid(nativePtr) {};
     }
 
     /**

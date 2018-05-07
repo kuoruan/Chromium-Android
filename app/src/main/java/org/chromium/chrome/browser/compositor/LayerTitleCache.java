@@ -20,7 +20,6 @@ import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.util.ColorUtils;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.ui.base.DeviceFormFactor;
 import org.chromium.ui.resources.ResourceManager;
 import org.chromium.ui.resources.dynamics.BitmapDynamicResource;
@@ -126,11 +125,10 @@ public class LayerTitleCache implements TitleCache {
 
         boolean isDarkTheme = tab.isIncognito();
         // The theme might require lighter text.
-        if (!DeviceFormFactor.isTablet() && !FeatureUtilities.isChromeHomeEnabled()) {
+        if (!DeviceFormFactor.isTablet()) {
             isDarkTheme |= ColorUtils.shouldUseLightForegroundOnBackground(tab.getThemeColor());
         }
 
-        ColorUtils.shouldUseLightForegroundOnBackground(tab.getThemeColor());
         boolean isRtl = tab.isTitleDirectionRtl();
         TitleBitmapFactory titleBitmapFactory =
                 isDarkTheme ? mDarkTitleBitmapFactory : mStandardTitleBitmapFactory;

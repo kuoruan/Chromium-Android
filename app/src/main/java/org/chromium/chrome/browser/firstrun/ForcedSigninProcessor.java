@@ -68,7 +68,7 @@ public final class ForcedSigninProcessor {
      */
     private static void processForcedSignIn(
             final Context appContext, @Nullable final Runnable onComplete) {
-        final SigninManager signinManager = SigninManager.get(appContext);
+        final SigninManager signinManager = SigninManager.get();
         // By definition we have finished all the checks for first run.
         signinManager.onFirstRunCheckDone();
         if (!FeatureUtilities.canAllowSync(appContext) || !signinManager.isSignInAllowed()) {
@@ -112,7 +112,7 @@ public final class ForcedSigninProcessor {
     // consider removing the child account / EDU checks.
     public static void checkCanSignIn(final ChromeActivity activity) {
         final Context appContext = activity.getApplicationContext();
-        if (SigninManager.get(appContext).isForceSigninEnabled()) {
+        if (SigninManager.get().isForceSigninEnabled()) {
             ExternalAuthUtils.getInstance().canUseGooglePlayServices(
                     new UserRecoverableErrorHandler.ModalDialog(activity, false));
         }

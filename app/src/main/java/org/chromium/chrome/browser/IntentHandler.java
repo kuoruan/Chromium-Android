@@ -292,11 +292,10 @@ public class IntentHandler {
 
     /**
      * Determines what App was used to fire this Intent.
-     * @param packageName Package name of this application.
      * @param intent Intent that was used to launch Chrome.
      * @return ExternalAppId representing the app.
      */
-    public static ExternalAppId determineExternalIntentSource(String packageName, Intent intent) {
+    public static ExternalAppId determineExternalIntentSource(Intent intent) {
         String appId = IntentUtils.safeGetStringExtra(intent, Browser.EXTRA_APPLICATION_ID);
         ExternalAppId externalId = ExternalAppId.OTHER;
         if (appId == null) {
@@ -319,31 +318,41 @@ public class IntentHandler {
                 }
             }
         } else {
-            if (appId.equals(PACKAGE_PLUS)) {
-                externalId = ExternalAppId.PLUS;
-            } else if (appId.equals(PACKAGE_GMAIL)) {
-                externalId = ExternalAppId.GMAIL;
-            } else if (appId.equals(PACKAGE_HANGOUTS)) {
-                externalId = ExternalAppId.HANGOUTS;
-            } else if (appId.equals(PACKAGE_MESSENGER)) {
-                externalId = ExternalAppId.MESSENGER;
-            } else if (appId.equals(PACKAGE_LINE)) {
-                externalId = ExternalAppId.LINE;
-            } else if (appId.equals(PACKAGE_WHATSAPP)) {
-                externalId = ExternalAppId.WHATSAPP;
-            } else if (appId.equals(PACKAGE_GSA)) {
-                externalId = ExternalAppId.GSA;
-            } else if (appId.equals(packageName)) {
-                externalId = ExternalAppId.CHROME;
-            } else if (appId.startsWith(WEBAPK_PACKAGE_PREFIX)) {
-                externalId = ExternalAppId.WEBAPK;
-            }
+            externalId = mapPackageToExternalAppId(appId);
         }
         return externalId;
     }
 
+    /**
+     * Returns the appropriate entry of the ExteranAppId enum based on the supplied package name.
+     * @param packageName String The application package name to map.
+     * @return ExternalAppId representing the app.
+     */
+    public static ExternalAppId mapPackageToExternalAppId(String packageName) {
+        if (packageName.equals(PACKAGE_PLUS)) {
+            return ExternalAppId.PLUS;
+        } else if (packageName.equals(PACKAGE_GMAIL)) {
+            return ExternalAppId.GMAIL;
+        } else if (packageName.equals(PACKAGE_HANGOUTS)) {
+            return ExternalAppId.HANGOUTS;
+        } else if (packageName.equals(PACKAGE_MESSENGER)) {
+            return ExternalAppId.MESSENGER;
+        } else if (packageName.equals(PACKAGE_LINE)) {
+            return ExternalAppId.LINE;
+        } else if (packageName.equals(PACKAGE_WHATSAPP)) {
+            return ExternalAppId.WHATSAPP;
+        } else if (packageName.equals(PACKAGE_GSA)) {
+            return ExternalAppId.GSA;
+        } else if (packageName.equals(ContextUtils.getApplicationContext().getPackageName())) {
+            return ExternalAppId.CHROME;
+        } else if (packageName.startsWith(WEBAPK_PACKAGE_PREFIX)) {
+            return ExternalAppId.WEBAPK;
+        }
+        return ExternalAppId.OTHER;
+    }
+
     private void recordExternalIntentSourceUMA(Intent intent) {
-        ExternalAppId externalId = determineExternalIntentSource(mPackageName, intent);
+        ExternalAppId externalId = determineExternalIntentSource(intent);
         RecordHistogram.recordEnumeratedHistogram("MobileIntent.PageLoadDueToExternalApp",
                 externalId.ordinal(), ExternalAppId.INDEX_BOUNDARY.ordinal());
         if (externalId == ExternalAppId.OTHER) {

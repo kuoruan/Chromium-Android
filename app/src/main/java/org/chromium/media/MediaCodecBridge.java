@@ -375,7 +375,7 @@ class MediaCodecBridge {
         }
     }
 
-    @SuppressLint("WrongConstant") // TODO(crbug.com/799070): Not sure why it is necessary.
+    @SuppressLint("WrongConstant") // False positive on logging statement.
     @CalledByNative
     private int queueSecureInputBuffer(int index, int offset, byte[] iv, byte[] keyId,
             int[] numBytesOfClearData, int[] numBytesOfEncryptedData, int numSubSamples,

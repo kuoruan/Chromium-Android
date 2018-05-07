@@ -34,7 +34,6 @@ import org.chromium.content_public.browser.JavaScriptCallback;
 import org.chromium.content_public.browser.MessagePort;
 import org.chromium.content_public.browser.NavigationController;
 import org.chromium.content_public.browser.RenderFrameHost;
-import org.chromium.content_public.browser.SmartClipCallback;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.content_public.browser.WebContentsInternals;
 import org.chromium.content_public.browser.WebContentsObserver;
@@ -117,15 +116,14 @@ public class WebContentsImpl implements WebContents, RenderFrameHostDelegate {
     // the same life time as native MediaSession.
     private MediaSessionImpl mMediaSession;
 
-    class SmartClipCallbackImpl implements SmartClipCallback {
-        public SmartClipCallbackImpl(final Handler smartClipHandler) {
+    private class SmartClipCallback {
+        public SmartClipCallback(final Handler smartClipHandler) {
             mHandler = smartClipHandler;
         }
         public void storeRequestRect(Rect rect) {
             mRect = rect;
         }
 
-        @Override
         public void onSmartClipDataExtracted(String text, String html) {
             Bundle bundle = new Bundle();
             bundle.putString("url", getVisibleUrl());
@@ -142,7 +140,7 @@ public class WebContentsImpl implements WebContents, RenderFrameHostDelegate {
         Rect mRect;
         final Handler mHandler;
     }
-    private SmartClipCallbackImpl mSmartClipCallback;
+    private SmartClipCallback mSmartClipCallback;
 
     private EventForwarder mEventForwarder;
 
@@ -401,13 +399,6 @@ public class WebContentsImpl implements WebContents, RenderFrameHostDelegate {
     }
 
     @Override
-    public void updateBrowserControlsState(
-            boolean enableHiding, boolean enableShowing, boolean animate) {
-        nativeUpdateBrowserControlsState(
-                mNativeWebContentsAndroid, enableHiding, enableShowing, animate);
-    }
-
-    @Override
     public void scrollFocusedEditableNodeIntoView() {
         // The native side keeps track of whether the zoom and scroll actually occurred. It is
         // more efficient to do it this way and sometimes fire an unnecessary message rather
@@ -520,7 +511,7 @@ public class WebContentsImpl implements WebContents, RenderFrameHostDelegate {
             mSmartClipCallback = null;
             return;
         }
-        mSmartClipCallback = new SmartClipCallbackImpl(smartClipHandler);
+        mSmartClipCallback = new SmartClipCallback(smartClipHandler);
     }
 
     @CalledByNative
@@ -609,9 +600,8 @@ public class WebContentsImpl implements WebContents, RenderFrameHostDelegate {
     }
 
     @CalledByNative
-    private void onGetContentBitmapFinished(ContentBitmapCallback callback, Bitmap bitmap,
-            int response) {
-        callback.onFinishGetBitmap(bitmap, response);
+    private void onGetContentBitmapFinished(ContentBitmapCallback callback, Bitmap bitmap) {
+        callback.onFinishGetBitmap(bitmap);
     }
 
     @Override
@@ -653,6 +643,11 @@ public class WebContentsImpl implements WebContents, RenderFrameHostDelegate {
     }
 
     @Override
+    public boolean isPictureInPictureAllowedForFullscreenVideo() {
+        return nativeIsPictureInPictureAllowedForFullscreenVideo(mNativeWebContentsAndroid);
+    }
+
+    @Override
     public @Nullable Rect getFullscreenVideoSize() {
         return nativeGetFullscreenVideoSize(mNativeWebContentsAndroid);
     }
@@ -660,6 +655,16 @@ public class WebContentsImpl implements WebContents, RenderFrameHostDelegate {
     @Override
     public void setSize(int width, int height) {
         nativeSetSize(mNativeWebContentsAndroid, width, height);
+    }
+
+    @Override
+    public int getWidth() {
+        return nativeGetWidth(mNativeWebContentsAndroid);
+    }
+
+    @Override
+    public int getHeight() {
+        return nativeGetHeight(mNativeWebContentsAndroid);
     }
 
     @CalledByNative
@@ -771,8 +776,6 @@ public class WebContentsImpl implements WebContents, RenderFrameHostDelegate {
     private native boolean nativeFocusLocationBarByDefault(long nativeWebContentsAndroid);
     private native boolean nativeIsRenderWidgetHostViewReady(long nativeWebContentsAndroid);
     private native void nativeExitFullscreen(long nativeWebContentsAndroid);
-    private native void nativeUpdateBrowserControlsState(long nativeWebContentsAndroid,
-            boolean enableHiding, boolean enableShowing, boolean animate);
     private native void nativeScrollFocusedEditableNodeIntoView(long nativeWebContentsAndroid);
     private native void nativeSelectWordAroundCaret(long nativeWebContentsAndroid);
     private native void nativeAdjustSelectionByCharacterOffset(long nativeWebContentsAndroid,
@@ -808,7 +811,11 @@ public class WebContentsImpl implements WebContents, RenderFrameHostDelegate {
             long nativeWebContentsAndroid, int x, int y);
     private native void nativeSetHasPersistentVideo(long nativeWebContentsAndroid, boolean value);
     private native boolean nativeHasActiveEffectivelyFullscreenVideo(long nativeWebContentsAndroid);
+    private native boolean nativeIsPictureInPictureAllowedForFullscreenVideo(
+            long nativeWebContentsAndroid);
     private native Rect nativeGetFullscreenVideoSize(long nativeWebContentsAndroid);
     private native void nativeSetSize(long nativeWebContentsAndroid, int width, int height);
+    private native int nativeGetWidth(long nativeWebContentsAndroid);
+    private native int nativeGetHeight(long nativeWebContentsAndroid);
     private native EventForwarder nativeGetOrCreateEventForwarder(long nativeWebContentsAndroid);
 }

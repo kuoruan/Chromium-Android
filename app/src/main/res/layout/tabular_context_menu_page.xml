@@ -22,7 +22,7 @@
              background to the image. -->
         <ImageView
             android:id="@+id/context_header_image"
-            android:layout_marginTop="30dp"
+            android:layout_marginTop="@dimen/context_menu_image_vertical_margin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"

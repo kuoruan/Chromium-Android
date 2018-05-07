@@ -76,7 +76,7 @@ public final class WebContentsUserData {
         WebContentsUserData data = userDataMap.get(key);
         if (data == null && userDataFactory != null) {
             T object = userDataFactory.create(webContents);
-            assert object.getClass() == key;
+            assert key.isInstance(object);
             webContentsImpl.setUserData(key, new WebContentsUserData(object));
             // Retrieves from the map again to return null in case |setUserData| fails
             // to store the object.

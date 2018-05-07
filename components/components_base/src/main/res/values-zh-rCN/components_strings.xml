@@ -26,7 +26,7 @@
 <string name="autofill_from_google_account_long">"来自 Google Pay"</string>
 <string name="http_post_warning">"您所查找的网页要使用已输入的信息。返回此页可能需要重复已进行的所有操作。是否要继续操作？"</string>
 <string name="http_post_warning_resend">"继续"</string>
-<string name="login_dialog_title">"需要进行身份验证"</string>
+<string name="login_dialog_title">"登录"</string>
 <string name="login_dialog_ok_button_label">"登录"</string>
 <string name="login_dialog_username_field">"用户名"</string>
 <string name="login_dialog_password_field">"密码"</string>

@@ -33,8 +33,6 @@ import android.widget.TextView;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.PasswordManagerHandler.PasswordListObserver;
-import org.chromium.chrome.browser.PasswordUIView;
 import org.chromium.chrome.browser.sync.ProfileSyncService;
 import org.chromium.chrome.browser.widget.TintedImageButton;
 import org.chromium.components.sync.AndroidSyncSettings;
@@ -51,7 +49,8 @@ public class PasswordEntryEditor extends Fragment {
     private static final int PASSWORD_ENTRY_ACTION_VIEWED = 0;
     private static final int PASSWORD_ENTRY_ACTION_DELETED = 1;
     private static final int PASSWORD_ENTRY_ACTION_CANCELLED = 2;
-    private static final int PASSWORD_ENTRY_ACTION_BOUNDARY = 3;
+    private static final int PASSWORD_ENTRY_ACTION_VIEWED_AFTER_SEARCH = 3;
+    private static final int PASSWORD_ENTRY_ACTION_BOUNDARY = 4;
 
     // Constants used to log UMA enum histogram, must stay in sync with
     // PasswordManagerAndroidWebsiteActions. Further actions can only be appended, existing
@@ -87,6 +86,7 @@ public class PasswordEntryEditor extends Fragment {
     private View mView;
     private boolean mViewButtonPressed;
     private boolean mCopyButtonPressed;
+    private boolean mFoundViaSearch;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -102,6 +102,8 @@ public class PasswordEntryEditor extends Fragment {
         mExtras = getArguments();
         assert mExtras != null;
         mID = mExtras.getInt(SavePasswordsPreferences.PASSWORD_LIST_ID);
+        mFoundViaSearch = getActivity().getIntent().getBooleanExtra(
+                SavePasswordsPreferences.EXTRA_FOUND_VIA_SEARCH, false);
         final String name = mExtras.containsKey(SavePasswordsPreferences.PASSWORD_LIST_NAME)
                 ? mExtras.getString(SavePasswordsPreferences.PASSWORD_LIST_NAME)
                 : null;
@@ -165,6 +167,12 @@ public class PasswordEntryEditor extends Fragment {
             RecordHistogram.recordEnumeratedHistogram(
                     "PasswordManager.Android.PasswordCredentialEntry", PASSWORD_ENTRY_ACTION_VIEWED,
                     PASSWORD_ENTRY_ACTION_BOUNDARY);
+            // Additionally, save whether the entry was found via the Preference's search function.
+            if (mFoundViaSearch) {
+                RecordHistogram.recordEnumeratedHistogram(
+                        "PasswordManager.Android.PasswordCredentialEntry",
+                        PASSWORD_ENTRY_ACTION_VIEWED_AFTER_SEARCH, PASSWORD_ENTRY_ACTION_BOUNDARY);
+            }
 
         } else {
             RecordHistogram.recordEnumeratedHistogram(
@@ -177,7 +185,8 @@ public class PasswordEntryEditor extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (ReauthenticationManager.authenticationStillValid()) {
+        if (ReauthenticationManager.authenticationStillValid(
+                    ReauthenticationManager.REAUTH_SCOPE_ONE_AT_A_TIME)) {
             if (mViewButtonPressed) displayPassword();
 
             if (mCopyButtonPressed) copyPassword();
@@ -207,7 +216,8 @@ public class PasswordEntryEditor extends Fragment {
 
     // Delete was clicked.
     private void removeItem() {
-        final PasswordListObserver passwordDeleter = new PasswordListObserver() {
+        final PasswordManagerHandler.PasswordListObserver
+                passwordDeleter = new PasswordManagerHandler.PasswordListObserver() {
             @Override
             public void passwordListAvailable(int count) {
                 if (!mException) {
@@ -357,13 +367,15 @@ public class PasswordEntryEditor extends Fragment {
                 Toast.makeText(getActivity().getApplicationContext(),
                              R.string.password_entry_editor_set_lock_screen, Toast.LENGTH_LONG)
                         .show();
-            } else if (ReauthenticationManager.authenticationStillValid()) {
+            } else if (ReauthenticationManager.authenticationStillValid(
+                               ReauthenticationManager.REAUTH_SCOPE_ONE_AT_A_TIME)) {
                 copyPassword();
             } else {
                 mCopyButtonPressed = true;
                 ReauthenticationManager.displayReauthenticationFragment(
                         R.string.lockscreen_description_copy,
-                        R.id.password_entry_editor_interactive, getFragmentManager());
+                        R.id.password_entry_editor_interactive, getFragmentManager(),
+                        ReauthenticationManager.REAUTH_SCOPE_ONE_AT_A_TIME);
             }
         });
         viewPasswordButton.setOnClickListener(v -> {
@@ -376,13 +388,15 @@ public class PasswordEntryEditor extends Fragment {
                                & InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD)
                     == InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD) {
                 hidePassword();
-            } else if (ReauthenticationManager.authenticationStillValid()) {
+            } else if (ReauthenticationManager.authenticationStillValid(
+                               ReauthenticationManager.REAUTH_SCOPE_ONE_AT_A_TIME)) {
                 displayPassword();
             } else {
                 mViewButtonPressed = true;
                 ReauthenticationManager.displayReauthenticationFragment(
                         R.string.lockscreen_description_view,
-                        R.id.password_entry_editor_interactive, getFragmentManager());
+                        R.id.password_entry_editor_interactive, getFragmentManager(),
+                        ReauthenticationManager.REAUTH_SCOPE_ONE_AT_A_TIME);
             }
         });
     }

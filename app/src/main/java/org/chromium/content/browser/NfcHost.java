@@ -21,7 +21,7 @@ class NfcHost extends WebContentsObserver implements WindowAndroidChangedObserve
 
     // The WebContents with which this host is associated.
     private final WebContents mWebContents;
-    private final ContentViewCore mContentViewCore;
+    private final ContentViewCoreImpl mContentViewCore;
 
     // The context ID with which this host is associated.
     private final int mContextId;
@@ -46,7 +46,7 @@ class NfcHost extends WebContentsObserver implements WindowAndroidChangedObserve
         super(webContents);
 
         mWebContents = webContents;
-        mContentViewCore = ContentViewCore.fromWebContents(mWebContents);
+        mContentViewCore = ContentViewCoreImpl.fromWebContents(mWebContents);
 
         // NFC will not work if there is no CVC associated with the WebContents, and it will only
         // be requested in contexts where there is a CVC associated with the WebContents as far as

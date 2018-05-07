@@ -16,18 +16,16 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class CaLayerParams extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 32;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
+    private static final int STRUCT_SIZE = 40;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public boolean isEmpty;
-    public int caContextId;
-    public org.chromium.mojo.system.UntypedHandle ioSurfaceMachPort;
+    public CaLayerContent content;
     public Size pixelSize;
     public float scaleFactor;
 
     private CaLayerParams(int version) {
         super(STRUCT_SIZE, version);
-        this.ioSurfaceMachPort = org.chromium.mojo.system.InvalidHandle.INSTANCE;
     }
 
     public CaLayerParams() {
@@ -67,19 +65,15 @@ public final class CaLayerParams extends org.chromium.mojo.bindings.Struct {
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.caContextId = decoder0.readInt(12);
+                result.scaleFactor = decoder0.readFloat(12);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.ioSurfaceMachPort = decoder0.readUntypedHandle(16, true);
+                result.content = CaLayerContent.decode(decoder0, 16);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
-                result.scaleFactor = decoder0.readFloat(20);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, false);
                 result.pixelSize = Size.decode(decoder1);
             }
         } finally {
@@ -95,13 +89,11 @@ public final class CaLayerParams extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.isEmpty, 8, 0);
         
-        encoder0.encode(this.caContextId, 12);
+        encoder0.encode(this.scaleFactor, 12);
         
-        encoder0.encode(this.ioSurfaceMachPort, 16, true);
+        encoder0.encode(this.content, 16, false);
         
-        encoder0.encode(this.scaleFactor, 20);
-        
-        encoder0.encode(this.pixelSize, 24, false);
+        encoder0.encode(this.pixelSize, 32, false);
     }
 
     /**
@@ -118,9 +110,7 @@ public final class CaLayerParams extends org.chromium.mojo.bindings.Struct {
         CaLayerParams other = (CaLayerParams) object;
         if (this.isEmpty!= other.isEmpty)
             return false;
-        if (this.caContextId!= other.caContextId)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.ioSurfaceMachPort, other.ioSurfaceMachPort))
+        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.content, other.content))
             return false;
         if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.pixelSize, other.pixelSize))
             return false;
@@ -137,8 +127,7 @@ public final class CaLayerParams extends org.chromium.mojo.bindings.Struct {
         final int prime = 31;
         int result = prime + getClass().hashCode();
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isEmpty);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.caContextId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.ioSurfaceMachPort);
+        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.content);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pixelSize);
         result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.scaleFactor);
         return result;

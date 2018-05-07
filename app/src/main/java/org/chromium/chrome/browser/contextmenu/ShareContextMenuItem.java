@@ -11,6 +11,7 @@ import android.support.annotation.IdRes;
 import android.support.annotation.StringRes;
 import android.util.Pair;
 
+import org.chromium.base.Callback;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.share.ShareHelper;
 import org.chromium.chrome.browser.widget.TintedDrawable;
@@ -57,9 +58,10 @@ public class ShareContextMenuItem implements ContextMenuItem {
     }
 
     @Override
-    public Drawable getDrawable(Context context) {
-        return TintedDrawable.constructTintedDrawable(
+    public void getDrawableAsync(Context context, Callback<Drawable> callback) {
+        Drawable drawable = TintedDrawable.constructTintedDrawable(
                 context.getResources(), mIconId, R.color.light_normal_color);
+        callback.onResult(drawable);
     }
 
     @Override

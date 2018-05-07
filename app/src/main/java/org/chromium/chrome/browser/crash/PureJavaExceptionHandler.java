@@ -17,7 +17,7 @@ import org.chromium.base.annotations.MainDex;
 public class PureJavaExceptionHandler implements Thread.UncaughtExceptionHandler {
     private final Thread.UncaughtExceptionHandler mParent;
     private boolean mHandlingException;
-    private static boolean sIsDisabled = false;
+    private static boolean sIsDisabled;
 
     private PureJavaExceptionHandler(Thread.UncaughtExceptionHandler parent) {
         mParent = parent;

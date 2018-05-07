@@ -44,7 +44,9 @@ public final class BufferFormat {
 
     public static final int BGRX_1010102 = BGRX_8888 + 1;
 
-    public static final int BGRA_8888 = BGRX_1010102 + 1;
+    public static final int RGBX_1010102 = BGRX_1010102 + 1;
+
+    public static final int BGRA_8888 = RGBX_1010102 + 1;
 
     public static final int RGBA_F16 = BGRA_8888 + 1;
 
@@ -80,6 +82,7 @@ public final class BufferFormat {
             case 16:
             case 17:
             case 18:
+            case 19:
                 return true;
         }
         return false;

@@ -19,6 +19,7 @@ import android.os.Build;
 import android.os.StrictMode;
 import android.provider.Browser;
 import android.provider.Telephony;
+import android.support.customtabs.CustomTabsIntent;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.view.WindowManager.BadTokenException;
@@ -42,10 +43,13 @@ import org.chromium.chrome.browser.document.ChromeLauncherActivity;
 import org.chromium.chrome.browser.externalnav.ExternalNavigationHandler.OverrideUrlLoadingResult;
 import org.chromium.chrome.browser.instantapps.AuthenticatedProxyActivity;
 import org.chromium.chrome.browser.instantapps.InstantAppsHandler;
+import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.tab.TabObserver;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.chrome.browser.util.UrlUtilities;
 import org.chromium.chrome.browser.webapps.WebappActivity;
+import org.chromium.chrome.browser.webapps.WebappScopePolicy;
 import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.content_public.browser.NavigationController;
 import org.chromium.content_public.browser.NavigationEntry;
@@ -69,10 +73,19 @@ public class ExternalNavigationDelegateImpl implements ExternalNavigationDelegat
 
     protected final Context mApplicationContext;
     private final Tab mTab;
+    private final TabObserver mTabObserver;
+    private boolean mIsTabDestroyed;
 
     public ExternalNavigationDelegateImpl(Tab tab) {
         mTab = tab;
         mApplicationContext = ContextUtils.getApplicationContext();
+        mTabObserver = new EmptyTabObserver() {
+            @Override
+            public void onDestroyed(Tab tab) {
+                mIsTabDestroyed = true;
+            }
+        };
+        mTab.addObserver(mTabObserver);
     }
 
     /**
@@ -243,18 +256,14 @@ public class ExternalNavigationDelegateImpl implements ExternalNavigationDelegat
     }
 
     @Override
-    public boolean isSpecializedHandlerAvailable(List<ResolveInfo> infos) {
-        return countSpecializedHandlers(infos) > 0;
-    }
-
-    @Override
-    public boolean isWithinCurrentWebappScope(String url) {
+    public @WebappScopePolicy.NavigationDirective int applyWebappScopePolicyForUrl(String url) {
         Context context = getAvailableContext();
         if (context instanceof WebappActivity) {
-            String scope = ((WebappActivity) context).getWebappScope();
-            return url.startsWith(scope);
+            WebappActivity webappActivity = (WebappActivity) context;
+            return webappActivity.scopePolicy().applyPolicyForNavigationToUrl(
+                    webappActivity.getWebappInfo(), url);
         }
-        return false;
+        return WebappScopePolicy.NavigationDirective.NORMAL_BEHAVIOR;
     }
 
     @Override
@@ -514,6 +523,17 @@ public class ExternalNavigationDelegateImpl implements ExternalNavigationDelegat
     }
 
     @Override
+    public void launchCctForWebappUrl(String url, boolean launchInNewTask) {
+        Context context = getAvailableContext();
+        if (!(context instanceof WebappActivity)) return;
+
+        CustomTabsIntent customTabIntent =
+                ((WebappActivity) context).buildCustomTabIntentForURL(url);
+        if (launchInNewTask) customTabIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        customTabIntent.launchUrl(context, Uri.parse(url));
+    }
+
+    @Override
     public OverrideUrlLoadingResult clobberCurrentTab(
             String url, String referrerUrl, final Tab tab) {
         int transitionType = PageTransition.LINK;
@@ -530,7 +550,10 @@ public class ExternalNavigationDelegateImpl implements ExternalNavigationDelegat
             ThreadUtils.postOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    tab.loadUrl(loadUrlParams);
+                    // Tab might be closed when this is run. See https://crbug.com/662877
+                    if (!mIsTabDestroyed) {
+                        tab.loadUrl(loadUrlParams);
+                    }
                 }
             });
             return OverrideUrlLoadingResult.OVERRIDE_WITH_CLOBBERING_TAB;

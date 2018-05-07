@@ -174,6 +174,7 @@ public class ActionModeController {
      * Hide animation for the textview if the action bar is not visible.
      */
     public void startHideAnimation() {
+        if (!mShowingActionMode) return;
         if (mCurrentAnimation != null) mCurrentAnimation.cancel();
 
         mCurrentAnimation = ObjectAnimator.ofInt(mActionBarDelegate, TOP_MARGIN_ANIM_PROPERTY,

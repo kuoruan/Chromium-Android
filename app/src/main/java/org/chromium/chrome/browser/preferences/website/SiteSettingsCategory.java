@@ -39,6 +39,7 @@ public class SiteSettingsCategory {
     public static final String CATEGORY_AUTOPLAY = "autoplay";
     public static final String CATEGORY_BACKGROUND_SYNC = "background_sync";
     public static final String CATEGORY_CAMERA = "camera";
+    public static final String CATEGORY_CLIPBOARD = "clipboard";
     public static final String CATEGORY_COOKIES = "cookies";
     public static final String CATEGORY_DEVICE_LOCATION = "device_location";
     public static final String CATEGORY_JAVASCRIPT = "javascript";
@@ -103,6 +104,10 @@ public class SiteSettingsCategory {
                     android.Manifest.permission.CAMERA,
                     ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA);
         }
+        if (CATEGORY_CLIPBOARD.equals(category)) {
+            return new SiteSettingsCategory(CATEGORY_CLIPBOARD, "",
+                    ContentSettingsType.CONTENT_SETTINGS_TYPE_CLIPBOARD_READ);
+        }
         if (CATEGORY_COOKIES.equals(category)) {
             return new SiteSettingsCategory(CATEGORY_COOKIES, "",
                     ContentSettingsType.CONTENT_SETTINGS_TYPE_COOKIES);
@@ -162,17 +167,20 @@ public class SiteSettingsCategory {
         if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC) {
             return fromString(CATEGORY_BACKGROUND_SYNC);
         }
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA) {
-            return fromString(CATEGORY_CAMERA);
+        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_CLIPBOARD_READ) {
+            return fromString(CATEGORY_CLIPBOARD);
         }
         if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_COOKIES) {
             return fromString(CATEGORY_COOKIES);
         }
+        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_GEOLOCATION) {
+            return fromString(CATEGORY_DEVICE_LOCATION);
+        }
         if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_JAVASCRIPT) {
             return fromString(CATEGORY_JAVASCRIPT);
         }
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_GEOLOCATION) {
-            return fromString(CATEGORY_DEVICE_LOCATION);
+        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA) {
+            return fromString(CATEGORY_CAMERA);
         }
         if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_MIC) {
             return fromString(CATEGORY_MICROPHONE);
@@ -233,18 +241,25 @@ public class SiteSettingsCategory {
     }
 
     /**
-     * Returns whether this category is the Cookies category.
-     */
-    public boolean showCookiesSites() {
-        return mContentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_COOKIES;
-    }
-
-    /**
      * Returns whether this category is the Camera category.
      */
     public boolean showCameraSites() {
         return mContentSettingsType
                 == ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA;
+    }
+
+    /**
+     * Returns whether this category is the Clipboard category.
+     */
+    public boolean showClipboardSites() {
+        return mContentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_CLIPBOARD_READ;
+    }
+
+    /**
+     * Returns whether this category is the Cookies category.
+     */
+    public boolean showCookiesSites() {
+        return mContentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_COOKIES;
     }
 
     /**

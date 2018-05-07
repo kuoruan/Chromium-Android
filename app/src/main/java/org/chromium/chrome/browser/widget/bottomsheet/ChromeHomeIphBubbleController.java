@@ -22,15 +22,14 @@ import org.chromium.chrome.browser.feature_engagement.TrackerFactory;
 import org.chromium.chrome.browser.firstrun.FirstRunStatus;
 import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager;
 import org.chromium.chrome.browser.profiles.Profile;
-import org.chromium.chrome.browser.toolbar.BottomToolbarPhone;
 import org.chromium.chrome.browser.widget.ViewHighlighter;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.StateChangeReason;
 import org.chromium.chrome.browser.widget.textbubble.TextBubble;
-import org.chromium.chrome.browser.widget.textbubble.ViewAnchoredTextBubble;
 import org.chromium.components.feature_engagement.EventConstants;
 import org.chromium.components.feature_engagement.FeatureConstants;
 import org.chromium.components.feature_engagement.Tracker;
 import org.chromium.content.browser.BrowserStartupController;
+import org.chromium.ui.widget.ViewRectProvider;
 
 import java.util.ArrayDeque;
 
@@ -53,7 +52,6 @@ public class ChromeHomeIphBubbleController {
 
     private TextBubble mHelpBubble;
     private LayoutManagerChrome mLayoutManager;
-    private BottomToolbarPhone mToolbar;
     private View mControlContainer;
     private ChromeFullscreenManager mFullscreenManager;
     private BottomSheet mBottomSheet;
@@ -64,15 +62,12 @@ public class ChromeHomeIphBubbleController {
     /**
      * Create a new ChromeHomeIphBubbleController.
      * @param context The {@link Context} used to retrieve resources.
-     * @param toolbar The {@link BottomToolbarPhone} used to determine if the expand button is
-     *                showing.
      * @param controlContainer The {@link View} used to position bubbles.
      * @param bottomSheet The {@link BottomSheet} for the activity.
      */
-    public ChromeHomeIphBubbleController(Context context, BottomToolbarPhone toolbar,
-            View controlContainer, BottomSheet bottomSheet) {
+    public ChromeHomeIphBubbleController(
+            Context context, View controlContainer, BottomSheet bottomSheet) {
         mContext = context;
-        mToolbar = toolbar;
         mControlContainer = controlContainer;
         mBottomSheet = bottomSheet;
 
@@ -173,17 +168,12 @@ public class ChromeHomeIphBubbleController {
         boolean showAtTopOfScreen = showRefreshIph
                 && ChromeFeatureList.isEnabled(
                            ChromeFeatureList.CHROME_HOME_PULL_TO_REFRESH_IPH_AT_TOP);
-        boolean showExpandButtonHelpBubble = !showRefreshIph && mToolbar.isUsingExpandButton();
-        View anchorView = showExpandButtonHelpBubble
-                ? mControlContainer.findViewById(R.id.expand_sheet_button)
-                : mControlContainer;
+        View anchorView = mControlContainer;
         int stringId = 0;
         if (showRefreshIph) {
             stringId = showAtTopOfScreen
                     ? R.string.bottom_sheet_pull_to_refresh_help_bubble_accessibility_message
                     : R.string.bottom_sheet_pull_to_refresh_help_bubble_message;
-        } else if (showExpandButtonHelpBubble) {
-            stringId = R.string.bottom_sheet_accessibility_expand_button_help_bubble_message;
         } else {
             stringId = R.string.bottom_sheet_help_bubble_message;
         }
@@ -218,16 +208,16 @@ public class ChromeHomeIphBubbleController {
         };
 
         if (showAtTopOfScreen) {
-            mHelpBubble =
-                    new TextBubble(mContext, topAnchorView, stringId, accessibilityStringId, false);
-            mHelpBubble.setAnchorRect(getTopAnchorRect(topAnchorView));
+            mHelpBubble = new TextBubble(mContext, topAnchorView, stringId, accessibilityStringId,
+                    false, getTopAnchorRect(topAnchorView));
             topAnchorView.addOnLayoutChangeListener(topAnchorLayoutChangeListener);
         } else {
-            mHelpBubble = new ViewAnchoredTextBubble(
-                    mContext, anchorView, stringId, accessibilityStringId);
+            ViewRectProvider rectProvider = new ViewRectProvider(anchorView);
             int inset = mContext.getResources().getDimensionPixelSize(
                     R.dimen.bottom_sheet_help_bubble_inset);
-            ((ViewAnchoredTextBubble) mHelpBubble).setInsetPx(0, inset, 0, inset);
+            rectProvider.setInsetPx(0, inset, 0, inset);
+            mHelpBubble = new TextBubble(
+                    mContext, anchorView, stringId, accessibilityStringId, rectProvider);
         }
 
         if (ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_PERSISTENT_IPH)) {
@@ -263,11 +253,6 @@ public class ChromeHomeIphBubbleController {
                 mHelpBubble = null;
             }
         });
-
-        // Highlight the expand button if necessary.
-        if (showExpandButtonHelpBubble) {
-            ViewHighlighter.turnOnHighlight(anchorView, true);
-        }
 
         // Show the bubble.
         mHelpBubble.show();

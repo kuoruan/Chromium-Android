@@ -21,6 +21,7 @@ import java.lang.annotation.RetentionPolicy;
     SavePageResult.STORE_FAILURE, SavePageResult.ALREADY_EXISTS, SavePageResult.SKIPPED,
     SavePageResult.SECURITY_CERTIFICATE_ERROR, SavePageResult.ERROR_PAGE,
     SavePageResult.INTERSTITIAL_PAGE, SavePageResult.DIGEST_CALCULATION_FAILED,
+    SavePageResult.FILE_MOVE_FAILED, SavePageResult.ADD_TO_DOWNLOAD_MANAGER_FAILED,
     SavePageResult.RESULT_COUNT
 })
 @Retention(RetentionPolicy.SOURCE)
@@ -51,8 +52,16 @@ public @interface SavePageResult {
    */
   int DIGEST_CALCULATION_FAILED = 11;
   /**
+   * Unable to move the file into a public directory.
+   */
+  int FILE_MOVE_FAILED = 12;
+  /**
+   * Unable to add the file to the system download manager.
+   */
+  int ADD_TO_DOWNLOAD_MANAGER_FAILED = 13;
+  /**
    * NOTE: always keep this entry at the end. Add new result types only immediately above this line.
    * Make sure to update the corresponding histogram enum accordingly.
    */
-  int RESULT_COUNT = 12;
+  int RESULT_COUNT = 14;
 }

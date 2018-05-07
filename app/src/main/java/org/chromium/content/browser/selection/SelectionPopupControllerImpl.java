@@ -41,10 +41,13 @@ import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.content.R;
 import org.chromium.content.browser.ContentClassFactory;
+import org.chromium.content.browser.WindowAndroidChangedObserver;
+import org.chromium.content.browser.WindowEventObserver;
 import org.chromium.content.browser.webcontents.WebContentsImpl;
 import org.chromium.content.browser.webcontents.WebContentsUserData;
 import org.chromium.content.browser.webcontents.WebContentsUserData.UserDataFactory;
 import org.chromium.content_public.browser.ActionModeCallbackHelper;
+import org.chromium.content_public.browser.ImeEventObserver;
 import org.chromium.content_public.browser.SelectionClient;
 import org.chromium.content_public.browser.SelectionPopupController;
 import org.chromium.content_public.browser.WebContents;
@@ -60,8 +63,9 @@ import java.util.List;
  */
 @JNINamespace("content")
 @TargetApi(Build.VERSION_CODES.M)
-public class SelectionPopupControllerImpl
-        extends ActionModeCallbackHelper implements SelectionPopupController {
+public class SelectionPopupControllerImpl extends ActionModeCallbackHelper
+        implements ImeEventObserver, SelectionPopupController, WindowEventObserver,
+                   WindowAndroidChangedObserver {
     private static final String TAG = "SelectionPopupCtlr"; // 20 char limit
 
     /**
@@ -158,8 +162,6 @@ public class SelectionPopupControllerImpl
      * none exists.
      */
     private SelectionInsertionHandleObserver mHandleObserver;
-    // Whether a handle dragging is in progress.
-    private boolean mDragStarted;
 
     /**
      * Create {@link SelectionPopupController} instance.
@@ -240,7 +242,6 @@ public class SelectionPopupControllerImpl
         mLastSelectedText = "";
 
         mHandleObserver = ContentClassFactory.get().createHandleObserver(view);
-        mDragStarted = false;
 
         if (initializeNative) nativeInit(mWebContents);
 
@@ -269,6 +270,13 @@ public class SelectionPopupControllerImpl
         destroyPastePopup();
 
         mView = view;
+    }
+
+    // ImeEventObserver
+
+    @Override
+    public void onNodeAttributeUpdated(boolean editable, boolean password) {
+        updateSelectionState(editable, password);
     }
 
     @Override
@@ -524,12 +532,19 @@ public class SelectionPopupControllerImpl
         }
     }
 
-    /**
-     * @see ActionMode#onWindowFocusChanged()
-     */
-    public void onWindowFocusChanged(boolean hasWindowFocus) {
+    // WindowAndroidChangedObserver
+
+    @Override
+    public void onWindowAndroidChanged(WindowAndroid newWindowAndroid) {
+        mWindowAndroid = newWindowAndroid;
+    }
+
+    // WindowEventObserver
+
+    @Override
+    public void onWindowFocusChanged(boolean gainFocus) {
         if (supportsFloatingActionMode() && isActionModeValid()) {
-            mActionMode.onWindowFocusChanged(hasWindowFocus);
+            mActionMode.onWindowFocusChanged(gainFocus);
         }
     }
 
@@ -1107,18 +1122,12 @@ public class SelectionPopupControllerImpl
     // All coordinates are in DIP.
     @VisibleForTesting
     @CalledByNative
-    void onSelectionEvent(int eventType, int left, int top, int right, int bottom,
-            float boundMiddlePointX, float boundMiddlePointY) {
+    void onSelectionEvent(int eventType, int left, int top, int right, int bottom) {
         // Ensure the provided selection coordinates form a non-empty rect, as required by
         // the selection action mode.
         if (left == right) ++right;
         if (top == bottom) ++bottom;
-        final float deviceScale = getDeviceScaleFactor();
-        boundMiddlePointX *= deviceScale;
-        // The selection coordinates are relative to the content viewport, but we need
-        // coordinates relative to the containing View, so adding getContentOffsetYPix().
-        boundMiddlePointY = boundMiddlePointY * deviceScale
-                + mWebContents.getRenderCoordinates().getContentOffsetYPix();
+
         switch (eventType) {
             case SelectionEventType.SELECTION_HANDLES_SHOWN:
                 break;
@@ -1126,9 +1135,6 @@ public class SelectionPopupControllerImpl
             case SelectionEventType.SELECTION_HANDLES_MOVED:
                 mSelectionRect.set(left, top, right, bottom);
                 invalidateContentRect();
-                if (mDragStarted && mHandleObserver != null) {
-                    mHandleObserver.handleDragStartedOrMoved(boundMiddlePointX, boundMiddlePointY);
-                }
                 break;
 
             case SelectionEventType.SELECTION_HANDLES_CLEARED:
@@ -1144,10 +1150,6 @@ public class SelectionPopupControllerImpl
 
             case SelectionEventType.SELECTION_HANDLE_DRAG_STARTED:
                 hideActionMode(true);
-                mDragStarted = true;
-                if (mHandleObserver != null) {
-                    mHandleObserver.handleDragStartedOrMoved(boundMiddlePointX, boundMiddlePointY);
-                }
                 break;
 
             case SelectionEventType.SELECTION_HANDLE_DRAG_STOPPED:
@@ -1155,7 +1157,6 @@ public class SelectionPopupControllerImpl
                 if (mHandleObserver != null) {
                     mHandleObserver.handleDragStopped();
                 }
-                mDragStarted = false;
                 break;
 
             case SelectionEventType.INSERTION_HANDLE_SHOWN:
@@ -1169,9 +1170,6 @@ public class SelectionPopupControllerImpl
                     showPastePopup();
                 } else {
                     destroyPastePopup();
-                }
-                if (mDragStarted && mHandleObserver != null) {
-                    mHandleObserver.handleDragStartedOrMoved(boundMiddlePointX, boundMiddlePointY);
                 }
                 break;
 
@@ -1194,10 +1192,6 @@ public class SelectionPopupControllerImpl
             case SelectionEventType.INSERTION_HANDLE_DRAG_STARTED:
                 mWasPastePopupShowingOnInsertionDragStart = isPastePopupShowing();
                 destroyPastePopup();
-                mDragStarted = true;
-                if (mHandleObserver != null) {
-                    mHandleObserver.handleDragStartedOrMoved(boundMiddlePointX, boundMiddlePointY);
-                }
                 break;
 
             case SelectionEventType.INSERTION_HANDLE_DRAG_STOPPED:
@@ -1209,7 +1203,6 @@ public class SelectionPopupControllerImpl
                 if (mHandleObserver != null) {
                     mHandleObserver.handleDragStopped();
                 }
-                mDragStarted = false;
                 break;
 
             default:
@@ -1217,9 +1210,23 @@ public class SelectionPopupControllerImpl
         }
 
         if (mSelectionClient != null) {
-            int xAnchorPix = (int) (mSelectionRect.left * deviceScale);
-            int yAnchorPix = (int) (mSelectionRect.bottom * deviceScale);
+            final float deviceScale = getDeviceScaleFactor();
+            final int xAnchorPix = (int) (mSelectionRect.left * deviceScale);
+            final int yAnchorPix = (int) (mSelectionRect.bottom * deviceScale);
             mSelectionClient.onSelectionEvent(eventType, xAnchorPix, yAnchorPix);
+        }
+    }
+
+    @VisibleForTesting
+    @CalledByNative
+    /* package */ void onDragUpdate(float x, float y) {
+        if (mHandleObserver != null) {
+            final float deviceScale = getDeviceScaleFactor();
+            x *= deviceScale;
+            // The selection coordinates are relative to the content viewport, but we need
+            // coordinates relative to the containing View, so adding getContentOffsetYPix().
+            y = y * deviceScale + mWebContents.getRenderCoordinates().getContentOffsetYPix();
+            mHandleObserver.handleDragStartedOrMoved(x, y);
         }
     }
 

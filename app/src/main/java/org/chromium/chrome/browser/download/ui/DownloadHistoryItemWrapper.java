@@ -19,13 +19,13 @@ import org.chromium.chrome.browser.download.DownloadUtils;
 import org.chromium.chrome.browser.download.items.OfflineContentAggregatorFactory;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.widget.DateDividedAdapter.TimedItem;
+import org.chromium.components.download.DownloadState;
 import org.chromium.components.offline_items_collection.OfflineContentProvider;
 import org.chromium.components.offline_items_collection.OfflineItem;
 import org.chromium.components.offline_items_collection.OfflineItem.Progress;
 import org.chromium.components.offline_items_collection.OfflineItemFilter;
 import org.chromium.components.offline_items_collection.OfflineItemState;
 import org.chromium.components.url_formatter.UrlFormatter;
-import org.chromium.content_public.browser.DownloadState;
 import org.chromium.ui.widget.Toast;
 
 import java.io.File;
@@ -79,6 +79,7 @@ public abstract class DownloadHistoryItemWrapper extends TimedItem {
     protected File mFile;
     private Long mStableId;
     private boolean mIsDeletionPending;
+    private boolean mShouldShowRecentBadge;
 
     private DownloadHistoryItemWrapper(BackendProvider provider, ComponentName component) {
         mBackendProvider = provider;
@@ -106,7 +107,7 @@ public abstract class DownloadHistoryItemWrapper extends TimedItem {
     }
 
     /** @return Whether this download should be shown to the user. */
-    boolean isVisibleToUser(int filter) {
+    boolean isVisibleToUser(@DownloadFilter.Type int filter) {
         if (isDeletionPending()) return false;
         return filter == getFilterType() || filter == DownloadFilter.FILTER_ALL;
     }
@@ -167,7 +168,7 @@ public abstract class DownloadHistoryItemWrapper extends TimedItem {
     public abstract String getUrl();
 
     /** @return {@link DownloadFilter} that represents the file type. */
-    public abstract int getFilterType();
+    public abstract @DownloadFilter.Type int getFilterType();
 
     /** @return The mime type or null if the item doesn't have one. */
     public abstract String getMimeType();
@@ -199,6 +200,9 @@ public abstract class DownloadHistoryItemWrapper extends TimedItem {
     /** @return Whether the download is currently paused. */
     abstract boolean isPaused();
 
+    /** @return Whether the download is currently pending. */
+    abstract boolean isPending();
+
     /** Called when the user wants to open the file. */
     abstract void open();
 
@@ -218,6 +222,16 @@ public abstract class DownloadHistoryItemWrapper extends TimedItem {
      * @return Whether the file associated with the download item was deleted.
      */
     abstract boolean removePermanently();
+
+    /** @return Whether this item should be marked as NEW in download home. */
+    public boolean shouldShowRecentBadge() {
+        return mShouldShowRecentBadge;
+    }
+
+    /** Set whether this item should be badged as NEW addition. */
+    public void setShouldShowRecentBadge(boolean shouldShowRecentBadge) {
+        mShouldShowRecentBadge = shouldShowRecentBadge;
+    }
 
     protected void recordOpenSuccess() {
         RecordUserAction.record("Android.DownloadManager.Item.OpenSucceeded");
@@ -421,7 +435,12 @@ public abstract class DownloadHistoryItemWrapper extends TimedItem {
         }
 
         @Override
-        boolean isVisibleToUser(int filter) {
+        public boolean isPending() {
+            return DownloadUtils.isDownloadPending(mItem);
+        }
+
+        @Override
+        boolean isVisibleToUser(@DownloadFilter.Type int filter) {
             if (!super.isVisibleToUser(filter)) return false;
 
             if (TextUtils.isEmpty(getFilePath()) || TextUtils.isEmpty(getDisplayFileName())) {
@@ -606,6 +625,11 @@ public abstract class DownloadHistoryItemWrapper extends TimedItem {
         @Override
         public boolean isPaused() {
             return mItem.state == OfflineItemState.PAUSED;
+        }
+
+        @Override
+        public boolean isPending() {
+            return mItem.state == OfflineItemState.PENDING;
         }
     }
 }

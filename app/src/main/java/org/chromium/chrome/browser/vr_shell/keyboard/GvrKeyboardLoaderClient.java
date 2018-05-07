@@ -21,7 +21,7 @@ import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 
 /** Loads the GVR keyboard SDK dynamically using the Keyboard Service. */
-@JNINamespace("vr_shell")
+@JNINamespace("vr")
 public class GvrKeyboardLoaderClient {
     private static final String TAG = "ChromeGvrKbClient";
     private static final boolean DEBUG_LOGS = false;
@@ -72,7 +72,7 @@ public class GvrKeyboardLoaderClient {
             ClassLoader remoteClassLoader = (ClassLoader) getRemoteClassLoader();
             if (remoteClassLoader != null) {
                 IBinder binder = newBinder(remoteClassLoader, LOADER_NAME);
-                sLoader = IGvrKeyboardLoader.Stub.asInterface(binder);
+                if (binder != null) sLoader = IGvrKeyboardLoader.Stub.asInterface(binder);
             }
         }
         return sLoader;
@@ -115,7 +115,10 @@ public class GvrKeyboardLoaderClient {
             Class<?> clazz = classLoader.loadClass(className);
             return (IBinder) clazz.getConstructor().newInstance();
         } catch (ClassNotFoundException e) {
-            throw new IllegalStateException("Unable to find dynamic class " + className);
+            // This could happen if the user has a really old version of the keyboard installed when
+            // dynamic loading was not supported.
+            Log.e(TAG, "Unable to find dynamic class " + className);
+            return null;
         } catch (InstantiationException e) {
             throw new IllegalStateException("Unable to instantiate the remote class " + className);
         } catch (IllegalAccessException e) {

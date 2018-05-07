@@ -12,6 +12,7 @@ import android.graphics.Color;
 import android.graphics.RectF;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.compositor.animation.FloatProperty;
 import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.toolbar.ToolbarPhone;
@@ -101,7 +102,6 @@ public class LayoutTab implements ChromeAnimation.Animatable<LayoutTab.Property>
     private boolean mInsetBorderVertical;
     private float mToolbarYOffset;
     private float mSideBorderScale;
-    private boolean mForceDefaultThemeColor;
 
     private final RectF mBounds = new RectF(); // Pre-allocated to avoid in-frame allocations.
     private final RectF mClosePlacement = new RectF();
@@ -273,21 +273,6 @@ public class LayoutTab implements ChromeAnimation.Animatable<LayoutTab.Property>
      */
     public boolean isInitFromHostNeeded() {
         return !mInitFromHostCalled;
-    }
-
-    /**
-     * @return Whether or not the object rendering this LayoutTab should force default theme colors.
-     */
-    public boolean getForceDefaultThemeColor() {
-        return mForceDefaultThemeColor;
-    }
-
-    /**
-     * @param force Whether or not the object rendering this LayoutTab should force default theme
-     *              colors.
-     */
-    public void setForceDefaultThemeColor(boolean force) {
-        mForceDefaultThemeColor = force;
     }
 
     /**
@@ -1033,4 +1018,78 @@ public class LayoutTab implements ChromeAnimation.Animatable<LayoutTab.Property>
             mCurrentAnimations = null;
         }
     }
+
+    public static final FloatProperty<LayoutTab> ALPHA = new FloatProperty<LayoutTab>("ALPHA") {
+        @Override
+        public void setValue(LayoutTab layoutTab, float v) {
+            layoutTab.setAlpha(v);
+        }
+
+        @Override
+        public Float get(LayoutTab layoutTab) {
+            return layoutTab.getAlpha();
+        }
+    };
+
+    public static final FloatProperty<LayoutTab> BORDER_ALPHA =
+            new FloatProperty<LayoutTab>("BORDER_ALPHA") {
+                @Override
+                public void setValue(LayoutTab layoutTab, float v) {
+                    layoutTab.setBorderAlpha(v);
+                }
+
+                @Override
+                public Float get(LayoutTab layoutTab) {
+                    return layoutTab.getBorderAlpha();
+                }
+            };
+
+    public static final FloatProperty<LayoutTab> BORDER_SCALE =
+            new FloatProperty<LayoutTab>("BORDER_SCALE") {
+                @Override
+                public void setValue(LayoutTab layoutTab, float v) {
+                    layoutTab.setBorderScale(v);
+                }
+
+                @Override
+                public Float get(LayoutTab layoutTab) {
+                    return layoutTab.getBorderScale();
+                }
+            };
+
+    public static final FloatProperty<LayoutTab> SCALE = new FloatProperty<LayoutTab>("SCALE") {
+        @Override
+        public void setValue(LayoutTab layoutTab, float v) {
+            layoutTab.setScale(v);
+        }
+
+        @Override
+        public Float get(LayoutTab layoutTab) {
+            return layoutTab.getScale();
+        }
+    };
+
+    public static final FloatProperty<LayoutTab> X = new FloatProperty<LayoutTab>("X") {
+        @Override
+        public void setValue(LayoutTab layoutTab, float v) {
+            layoutTab.setX(v);
+        }
+
+        @Override
+        public Float get(LayoutTab layoutTab) {
+            return layoutTab.getX();
+        }
+    };
+
+    public static final FloatProperty<LayoutTab> Y = new FloatProperty<LayoutTab>("Y") {
+        @Override
+        public void setValue(LayoutTab layoutTab, float v) {
+            layoutTab.setY(v);
+        }
+
+        @Override
+        public Float get(LayoutTab layoutTab) {
+            return layoutTab.getY();
+        }
+    };
 }

@@ -36,7 +36,7 @@ class ForeignSessionHelper {
      * Represents synced foreign session.
      */
     static class ForeignSession {
-        // Please keep in sync with synced_session.h
+        // Please keep in sync with components/sync/protocol/sync_enums.proto.
         static final int DEVICE_TYPE_UNSET = 0;
         static final int DEVICE_TYPE_WIN = 1;
         static final int DEVICE_TYPE_MACOSX = 2;

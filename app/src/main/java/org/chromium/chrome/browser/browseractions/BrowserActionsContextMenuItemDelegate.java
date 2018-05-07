@@ -108,13 +108,16 @@ public class BrowserActionsContextMenuItemDelegate {
      * Called when the {@code linkUrl} should be shared.
      * @param shareDirectly Whether to share directly with the previous app shared with.
      * @param linkUrl The url to share.
+     * @param shouldCloseActivity Whether to close activity after sharing.
      */
-    public void share(Boolean shareDirectly, String linkUrl) {
+    public void share(Boolean shareDirectly, String linkUrl, boolean shouldCloseActivity) {
+        Runnable onShareDialogDismissed = shouldCloseActivity ? mActivity::finish : null;
         ShareParams params = new ShareParams.Builder(mActivity, linkUrl, linkUrl)
                                      .setShareDirectly(shareDirectly)
                                      .setSaveLastUsed(!shareDirectly)
                                      .setSourcePackageName(mSourcePackageName)
                                      .setIsExternalUrl(true)
+                                     .setOnDialogDismissed(onShareDialogDismissed)
                                      .build();
         ShareHelper.share(params);
     }

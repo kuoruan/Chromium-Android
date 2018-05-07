@@ -15,6 +15,7 @@ import android.util.Property;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
@@ -80,7 +81,6 @@ public class LocationBarTablet extends LocationBarLayout {
     private View mLocationBarIcon;
     private View mBookmarkButton;
     private View mSaveOfflineButton;
-    private float mUrlFocusChangePercent;
     private Animator mUrlFocusChangeAnimator;
     private View[] mTargets;
     private final Rect mCachedTargetBounds = new Rect();
@@ -324,6 +324,11 @@ public class LocationBarTablet extends LocationBarLayout {
         if (mAnimatingWidthChange) {
             setWidthChangeAnimationPercent(mWidthChangePercent);
         }
+    }
+
+    @Override
+    public boolean useModernDesign() {
+        return false;
     }
 
     /**
@@ -582,5 +587,31 @@ public class LocationBarTablet extends LocationBarLayout {
         // is focused.
         return isVoiceSearchEnabled() && mNativeInitialized
                 && (mUrlBar.hasFocus() || mUrlFocusChangeInProgress);
+    }
+
+    @Override
+    protected List<View> getUrlContainerViewsForMargin() {
+        List<View> outList = new ArrayList<View>(1);
+        int urlContainerChildIndex = indexOfChild(mUrlBar);
+        assert urlContainerChildIndex != -1;
+
+        // For tablets, we have FrameLayouts next to the URL bar and we only want to calculate
+        // the URL bar margin based on the largest one, so we return a list containing only that.
+        int largestChildWidth = 0;
+        View largestChildView = null;
+        for (int i = urlContainerChildIndex + 1; i < getChildCount(); i++) {
+            View childView = getChildAt(i);
+            FrameLayout.LayoutParams childLayoutParams =
+                    (FrameLayout.LayoutParams) childView.getLayoutParams();
+            int width = childLayoutParams.width
+                    + ApiCompatibilityUtils.getMarginStart(childLayoutParams)
+                    + ApiCompatibilityUtils.getMarginEnd(childLayoutParams);
+            if (width > largestChildWidth) {
+                largestChildWidth = width;
+                largestChildView = childView;
+            }
+        }
+        if (largestChildView != null) outList.add(largestChildView);
+        return outList;
     }
 }

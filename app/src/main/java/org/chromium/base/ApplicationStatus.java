@@ -8,7 +8,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
 import android.app.Application.ActivityLifecycleCallbacks;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.Window;
@@ -322,13 +321,7 @@ public class ApplicationStatus {
         int oldApplicationState = getStateForApplication();
 
         if (newState == ActivityState.CREATED) {
-            // TODO(tedchoc): crbug/691100.  The timing of application callback lifecycles were
-            //                changed in O and the activity info may have been lazily created
-            //                on first access to avoid a crash on startup.  This should be removed
-            //                once the new lifecycle APIs are available.
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                assert !sActivityInfo.containsKey(activity);
-            }
+            assert !sActivityInfo.containsKey(activity);
             sActivityInfo.put(activity, new ActivityInfo());
         }
 
@@ -504,14 +497,6 @@ public class ApplicationStatus {
         ApplicationStatus.assertInitialized();
 
         ActivityInfo info = sActivityInfo.get(activity);
-        // TODO(tedchoc): crbug/691100.  The timing of application callback lifecycles were changed
-        //                in O and the activity info may need to be lazily created if the onCreate
-        //                event has not yet been received.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && info == null
-                && !activity.isDestroyed()) {
-            info = new ActivityInfo();
-            sActivityInfo.put(activity, info);
-        }
         if (info == null) {
             throw new IllegalStateException(
                     "Attempting to register listener on an untracked activity.");

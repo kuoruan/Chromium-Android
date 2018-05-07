@@ -23,7 +23,7 @@
         <item name="android:textColorHighlight">@color/text_highlight_color</item>
         <item name="android:textColorLink">@color/light_active_color</item>
         <item name="colorPrimaryDark">@android:color/black</item>
-        <item name="android:colorAccent">@color/google_blue_500</item>
+        <item name="android:colorAccent" tools:targetApi="21">@color/google_blue_500</item>
         <item name="android:statusBarColor" tools:targetApi="21">@android:color/black</item>
 
         <!--  Overriding AppCompat values -->
@@ -44,34 +44,22 @@
     </style>
     <style name="MainTheme" parent="MainThemeBase" />
 
-    <style name="SearchActivityTheme" parent="MainTheme">
+    <!-- Extend MainThemeBase rather than MainTheme to avoid values-v27 navigation bar colors from
+         being applied -->
+    <style name="SearchActivityTheme" parent="MainThemeBase">
         <item name="android:windowBackground">@color/google_grey_500</item>
     </style>
 
-    <style name="TabbedModeTheme" parent="MainTheme">
+    <style name="TabbedModeThemeBase" parent="MainTheme">
         <item name="android:windowBackground">@android:color/white</item>
     </style>
+
+    <style name="TabbedModeTheme" parent="TabbedModeThemeBase" />
 
     <style name="FirstRunTheme" parent="DialogWhenLarge">
     </style>
 
     <style name="TabbedModeFirstRunTheme" parent="TabbedModeTheme">
-    </style>
-
-    <!-- The theme to use when starting Chrome in VR mode.-->
-    <style name="VrSupportTheme" parent="MainTheme">
-       <!-- Android shows a preview window to give the user immediate feedback that the
-            app launched. The default behavior with this preview window is to show system
-            UI (e.g. navigation bars), which looks jarring if the user already has their
-            headset on. We disable the preview window feature when starting Chrome in VR
-            mode.
-       -->
-      <item name="android:windowDisablePreview">true</item>
-      <item name="android:windowBackground">@android:color/black</item>
-    </style>
-    <style name="VrSupportThemeLauncher" parent="@android:style/Theme.NoDisplay">
-      <item name="android:windowDisablePreview">true</item>
-      <item name="android:windowBackground">@android:color/black</item>
     </style>
 
     <style name="FullscreenWhiteBase" parent="Theme.AppCompat.Light" >
@@ -98,7 +86,9 @@
     </style>
 
     <!-- Web app themes -->
-    <style name="WebappTheme" parent="MainTheme">
+    <!-- Extend MainThemeBase rather than MainTheme to avoid values-v27 navigation bar colors from
+         being applied -->
+    <style name="WebappTheme" parent="MainThemeBase">
         <item name="android:windowBackground">@null</item>
         <item name="android:windowDisablePreview">true</item>
     </style>
@@ -378,9 +368,6 @@
         <item name="android:windowEnterAnimation">@anim/textbubble_in</item>
         <item name="android:windowExitAnimation">@anim/textbubble_out</item>
     </style>
-    <style name="FullscreenNotificationBubble" parent="@android:style/Animation.Toast">
-        <item name="android:windowEnterAnimation">@anim/fullscreen_notification_in</item>
-    </style>
 
     <!-- Promo dialogs -->
     <style name="PromoDialog" >
@@ -403,21 +390,6 @@
     </style>
 
     <!-- Cast and media playback notifications -->
-    <style
-        name="MediaNotificationTitle"
-        parent="@android:style/TextAppearance.StatusBar.EventContent.Title"/>
-    <style
-        name="MediaNotificationText"
-        parent="@android:style/TextAppearance.StatusBar.EventContent"/>
-    <style
-        name="RemoteNotificationTitle"
-        parent="@android:style/TextAppearance.StatusBar.EventContent.Title"/>
-    <style
-        name="RemoteNotificationText"
-        parent="@android:style/TextAppearance.StatusBar.EventContent"/>
-    <style
-        name="RemoteNotificationProgressBar"
-        parent="@android:style/Widget.Holo.ProgressBar.Horizontal"/>
     <style name="CastMediaRouteButton" parent="@style/Widget.MediaRouter.MediaRouteButton">
         <item name="android:background">@null</item>
         <item name="android:paddingTop">0dp</item>
@@ -601,13 +573,10 @@
         <item name="android:scaleType">center</item>
         <item name="android:layout_gravity">end</item>
     </style>
-    <style name="LocationBarMenuButton" parent="LocationBarButton">
-        <item name="android:layout_height">match_parent</item>
-        <item name="android:layout_width">match_parent</item>
-    </style>
     <style name="ModernToolbar" parent="Widget.AppCompat.Toolbar">
         <item name="titleTextAppearance">@style/BlackHeadline1</item>
         <item name="windowActionBarOverlay">true</item>
+        <item name="android:background">@color/modern_primary_color</item>
     </style>
     <style name="ToolbarButton">
         <item name="android:background">?attr/selectableItemBackground</item>
@@ -651,7 +620,7 @@
 
     <!-- New tab page RecyclerView overscroll color -->
     <style name="NewTabPageRecyclerView">
-        <item name="android:colorEdgeEffect">@color/google_grey_300</item>
+        <item name="android:colorEdgeEffect" tools:targetApi="21">@color/google_grey_300</item>
     </style>
 
     <!-- Modern List Item -->
@@ -677,8 +646,11 @@
         <item name="android:background">@null</item>
         <item name="android:scaleType">center</item>
     </style>
-    <style name="ListMenuStyle" parent="Widget.AppCompat.ListPopupWindow">
-        <item name="android:popupBackground">@drawable/menu_bg</item>
+    <!-- 18dp padding is added to each side to limit the image width to 20dp (56dp - 2 * 18dp). -->
+    <style name="ListItemEndIconSmall" parent="ListItemEndIcon">
+        <item name="android:paddingStart">18dp</item>
+        <item name="android:paddingEnd">18dp</item>
+        <item name="android:scaleType">centerInside</item>
     </style>
 
     <!-- Download Home -->
@@ -724,6 +696,21 @@
     </style>
     <style name="DownloadIconView" parent="@style/ListItemStartIcon">
         <item name="android:background">@color/light_active_color</item>
+    </style>
+    <style name="DownloadNewBadgeStyle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@color/light_active_color</item>
+        <item name="android:layout_marginStart">-8dp</item>
+        <item name="android:layout_marginTop">-2dp</item>
+        <item name="android:paddingStart">6dp</item>
+        <item name="android:paddingEnd">6dp</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">@dimen/text_size_small</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:text">@string/prefetch_badge_new</item>
     </style>
 
     <!-- Data Reduction -->

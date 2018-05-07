@@ -11,40 +11,55 @@
     android:layout_height="wrap_content" >
 
     <LinearLayout
-            android:id="@+id/layout_container"
-            style="@style/ListItemContainer" >
+        android:id="@+id/layout_container"
+        style="@style/ListItemContainer" >
 
         <org.chromium.chrome.browser.widget.TintedImageView
-                android:id="@+id/icon_view"
-                style="@style/DownloadIconView"
-                android:src="@drawable/ic_chrome" />
+            android:id="@+id/icon_view"
+            style="@style/DownloadIconView"
+            android:src="@drawable/ic_chrome" />
 
         <RelativeLayout
-                android:id="@+id/completed_layout"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" >
+            android:id="@+id/completed_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" >
 
-            <TextView
+            <LinearLayout
+                android:id="@+id/filename_row"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" >
+
+                <TextView
                     android:id="@+id/title"
                     style="@style/DownloadTitleStyle"
+                    android:layout_weight="1"
                     android:text="@string/download_manager_offline_header_title" />
 
-            <ImageView
+                <!-- TODO(shaktisahu) : Add it back on when UX is determined. -->
+                <TextView
+                    android:id="@+id/new_badge"
+                    style="@style/DownloadNewBadgeStyle"
+                    android:layout_weight="0"
+                    android:visibility="gone" />
+
+                <ImageView
                     android:id="@+id/expand_icon"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
+                    android:layout_weight="0"
+                    android:layout_gravity="center_vertical|end"
                     android:paddingEnd="16dp"
                     android:contentDescription="@null"
-                    android:src="@drawable/ic_expanded" />
+                    android:src="@drawable/ic_expand_more_black_24dp" />
+            </LinearLayout>
 
             <TextView
-                    android:id="@+id/description"
-                    style="@style/DownloadDescriptionStyle"
-                    android:layout_below="@+id/title"
-                    android:text="@string/download_manager_offline_header_description" />
+                android:id="@+id/description"
+                style="@style/DownloadDescriptionStyle"
+                android:layout_below="@+id/filename_row"
+                android:text="@string/download_manager_offline_header_description" />
         </RelativeLayout>
     </LinearLayout>
 </view>

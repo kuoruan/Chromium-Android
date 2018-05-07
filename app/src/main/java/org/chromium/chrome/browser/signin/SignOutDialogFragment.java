@@ -58,7 +58,7 @@ public class SignOutDialogFragment extends DialogFragment implements
                     SHOW_GAIA_SERVICE_TYPE_EXTRA, mGaiaServiceType);
         }
 
-        String managementDomain = SigninManager.get(getActivity()).getManagementDomain();
+        String managementDomain = SigninManager.get().getManagementDomain();
         String message;
         if (managementDomain == null) {
             message = getActivity().getResources().getString(R.string.signout_message);

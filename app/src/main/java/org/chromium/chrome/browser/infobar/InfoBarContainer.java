@@ -492,7 +492,7 @@ public class InfoBarContainer extends SwipableOverlayView {
     protected boolean shouldConsumeScroll(int scrollOffsetY, int scrollExtentY) {
         ChromeFullscreenManager manager = mTab.getActivity().getFullscreenManager();
 
-        if (!manager.areBrowserControlsAtBottom()) return true;
+        if (manager.getBottomControlsHeight() <= 0) return true;
 
         boolean isScrollingDownward = scrollOffsetY > mLastScrollOffsetY;
         boolean didDirectionChange = isScrollingDownward != mIsScrollingDownward;

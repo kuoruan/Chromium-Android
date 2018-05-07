@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser.media.router;
 
+import javax.annotation.Nullable;
+
 /**
  * An interface components providing media sinks and routes need to implement to hooks up into
  * {@link ChromeMediaRouter}.
@@ -83,4 +85,12 @@ public interface MediaRouteProvider {
      * @param nativeCallbackId The id of the result callback tracked by the native side.
      */
     void sendStringMessage(String routeId, String message, int nativeCallbackId);
+
+    /**
+     * Returns a MediaController for the given route ID.
+     * Returns null if no MediaController can be retrieved from the given route ID.
+     * @param routeId The id of the route.
+     */
+    @Nullable
+    MediaController getMediaController(String routeId);
 }

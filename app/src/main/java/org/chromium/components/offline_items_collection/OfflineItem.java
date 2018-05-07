@@ -95,6 +95,8 @@ public class OfflineItem {
     public long receivedBytes;
     public Progress progress;
     public long timeRemainingMs;
+    @PendingState
+    public int pendingState;
 
     public OfflineItem() {
         id = new ContentId();

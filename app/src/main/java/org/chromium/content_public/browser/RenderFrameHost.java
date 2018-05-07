@@ -33,4 +33,9 @@ public interface RenderFrameHost {
      * @return The InterfaceProvider for the frame.
      */
     InterfaceProvider getRemoteInterfaces();
+
+    /**
+     * Notifies the native RenderFrameHost of a user gesture.
+     */
+    void setHasReceivedUserGesture();
 }

@@ -65,9 +65,10 @@ public class RecentTabsGroupView extends RelativeLayout {
         // Create drawable for expand/collapse arrow.
         LevelListDrawable collapseIcon = new LevelListDrawable();
         collapseIcon.addLevel(DRAWABLE_LEVEL_COLLAPSED, DRAWABLE_LEVEL_COLLAPSED,
-                TintedDrawable.constructTintedDrawable(getResources(), R.drawable.ic_expanded));
-        TintedDrawable collapse =
-                TintedDrawable.constructTintedDrawable(getResources(), R.drawable.ic_collapsed);
+                TintedDrawable.constructTintedDrawable(
+                        getResources(), R.drawable.ic_expand_more_black_24dp));
+        TintedDrawable collapse = TintedDrawable.constructTintedDrawable(
+                getResources(), R.drawable.ic_expand_less_black_24dp);
         collapse.setTint(
                 ApiCompatibilityUtils.getColorStateList(getResources(), R.color.blue_mode_tint));
         collapseIcon.addLevel(DRAWABLE_LEVEL_EXPANDED, DRAWABLE_LEVEL_EXPANDED, collapse);
@@ -106,7 +107,7 @@ public class RecentTabsGroupView extends RelativeLayout {
      */
     public void configureForRecentlyClosedTabs(boolean isExpanded) {
         mDeviceIcon.setVisibility(View.VISIBLE);
-        mDeviceIcon.setImageResource(R.drawable.recent_recently_closed);
+        mDeviceIcon.setImageResource(R.drawable.web_asset);
         mDeviceLabel.setText(R.string.recently_closed);
         setTimeLabelVisibility(View.GONE);
         configureExpandedCollapsed(isExpanded);
@@ -126,9 +127,9 @@ public class RecentTabsGroupView extends RelativeLayout {
     }
 
     private void configureExpandedCollapsed(boolean isExpanded) {
-        String description = getResources().getString(isExpanded
-                ? R.string.ntp_recent_tabs_accessibility_expanded_group
-                : R.string.ntp_recent_tabs_accessibility_collapsed_group);
+        String description =
+                getResources().getString(isExpanded ? R.string.accessibility_collapse_section_header
+                                                    : R.string.accessibility_expand_section_header);
         mExpandCollapseIcon.setContentDescription(description);
 
         int level = isExpanded ? DRAWABLE_LEVEL_EXPANDED : DRAWABLE_LEVEL_COLLAPSED;

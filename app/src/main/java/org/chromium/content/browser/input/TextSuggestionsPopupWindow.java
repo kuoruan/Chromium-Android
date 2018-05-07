@@ -11,7 +11,7 @@ import android.text.style.TextAppearanceSpan;
 import android.view.View;
 
 import org.chromium.content.R;
-import org.chromium.content.browser.WindowAndroidProvider;
+import org.chromium.ui.base.WindowAndroid;
 
 /**
  * A subclass of SuggestionsPopupWindow to be used for showing suggestions from one or more
@@ -25,12 +25,12 @@ public class TextSuggestionsPopupWindow extends SuggestionsPopupWindow {
     /**
      * @param context Android context to use.
      * @param textSuggestionHost TextSuggestionHost instance (used to communicate with Blink).
+     * @param windowAndroid The current WindowAndroid instance.
      * @param parentView The view used to attach the PopupWindow.
-     * @param windowAndroidProvider A WindowAndroidProvider instance used to get the window size.
      */
     public TextSuggestionsPopupWindow(Context context, TextSuggestionHost textSuggestionHost,
-            View parentView, WindowAndroidProvider windowAndroidProvider) {
-        super(context, textSuggestionHost, parentView, windowAndroidProvider);
+            WindowAndroid windowAndroid, View parentView) {
+        super(context, textSuggestionHost, windowAndroid, parentView);
 
         mPrefixSpan = new TextAppearanceSpan(context, R.style.SuggestionPrefixOrSuffix);
         mSuffixSpan = new TextAppearanceSpan(context, R.style.SuggestionPrefixOrSuffix);

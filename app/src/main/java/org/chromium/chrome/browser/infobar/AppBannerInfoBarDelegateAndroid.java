@@ -4,13 +4,9 @@
 
 package org.chromium.chrome.browser.infobar;
 
-import android.os.Looper;
-
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.chrome.browser.banners.AppData;
 import org.chromium.chrome.browser.banners.InstallerDelegate;
-import org.chromium.chrome.browser.tab.Tab;
 
 /**
  * Handles the promotion and installation of an app specified by the current web page. This object
@@ -18,55 +14,31 @@ import org.chromium.chrome.browser.tab.Tab;
  */
 @JNINamespace("banners")
 public class AppBannerInfoBarDelegateAndroid implements InstallerDelegate.Observer {
-    /** Weak pointer to the native AppBannerInfoBarDelegateAndroid. */
+    /** Pointer to the native AppBannerInfoBarDelegateAndroid. */
     private long mNativePointer;
-
-    /** Delegate which does the actual monitoring of an in-progress installation. */
-    private InstallerDelegate mInstallerDelegate;
 
     private AppBannerInfoBarDelegateAndroid(long nativePtr) {
         mNativePointer = nativePtr;
-        mInstallerDelegate = new InstallerDelegate(Looper.getMainLooper(), this);
     }
 
     @Override
     public void onInstallIntentCompleted(InstallerDelegate delegate, boolean isInstalling) {
-        if (mInstallerDelegate != delegate) return;
-        nativeOnInstallIntentReturned(mNativePointer, isInstalling);
+        if (mNativePointer != 0) nativeOnInstallIntentReturned(mNativePointer, isInstalling);
     }
 
     @Override
     public void onInstallFinished(InstallerDelegate delegate, boolean success) {
-        if (mInstallerDelegate != delegate) return;
-        nativeOnInstallFinished(mNativePointer, success);
+        if (mNativePointer != 0) nativeOnInstallFinished(mNativePointer, success);
     }
 
     @Override
     public void onApplicationStateChanged(InstallerDelegate delegate, int newState) {
-        if (mInstallerDelegate != delegate) return;
-        nativeUpdateInstallState(mNativePointer);
+        if (mNativePointer != 0) nativeUpdateInstallState(mNativePointer);
     }
 
     @CalledByNative
     private void destroy() {
-        mInstallerDelegate.destroy();
-        mInstallerDelegate = null;
         mNativePointer = 0;
-    }
-
-    @CalledByNative
-    private boolean installOrOpenNativeApp(Tab tab, AppData appData, String referrer) {
-        return mInstallerDelegate.installOrOpenNativeApp(tab, appData, referrer);
-    }
-
-    @CalledByNative
-    private void showAppDetails(Tab tab, AppData appData) {
-        tab.getWindowAndroid().showIntent(appData.detailsIntent(), null, null);
-    }
-
-    @CalledByNative
-    private int determineInstallState(String packageName) {
-        return mInstallerDelegate.determineInstallState(packageName);
     }
 
     @CalledByNative

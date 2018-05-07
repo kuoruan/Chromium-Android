@@ -221,9 +221,4 @@ class StackAnimationLandscape extends StackAnimation {
     protected float getScreenSizeInScrollDirection() {
         return mWidth;
     }
-
-    @Override
-    protected int getTabCreationDirection() {
-        return 1;
-    }
 }

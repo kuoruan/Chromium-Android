@@ -71,6 +71,19 @@ public class IntentUtils {
     }
 
     /**
+     * Just like {@link Bundle#getBoolean(String, boolean)} but doesn't throw exceptions.
+     */
+    public static boolean safeGetBoolean(Bundle bundle, String name, boolean defaultValue) {
+        try {
+            return bundle.getBoolean(name, defaultValue);
+        } catch (Throwable t) {
+            // Catches un-parceling exceptions.
+            Log.e(TAG, "getBoolean failed on bundle " + bundle);
+            return defaultValue;
+        }
+    }
+
+    /**
      * Just like {@link Intent#getIntExtra(String, int)} but doesn't throw exceptions.
      */
     public static int safeGetIntExtra(Intent intent, String name, int defaultValue) {
@@ -223,6 +236,20 @@ public class IntentUtils {
         } catch (Throwable t) {
             // Catches un-parceling exceptions.
             Log.e(TAG, "getParcelableArrayListExtra failed on intent " + intent);
+            return null;
+        }
+    }
+
+    /**
+     * Just link {@link Bundle#getParcelableArrayList(String)} but doesn't throw exceptions.
+     */
+    public static <T extends Parcelable> ArrayList<T> safeGetParcelableArrayList(
+            Bundle bundle, String name) {
+        try {
+            return bundle.getParcelableArrayList(name);
+        } catch (Throwable t) {
+            // Catches un-parceling exceptions.
+            Log.e(TAG, "getParcelableArrayList failed on bundle " + bundle);
             return null;
         }
     }

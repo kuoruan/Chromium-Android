@@ -25,7 +25,6 @@ public class OfflineContentAggregatorBridge implements OfflineContentProvider {
 
     private long mNativeOfflineContentAggregatorBridge;
     private ObserverList<OfflineContentProvider.Observer> mObservers;
-    private boolean mItemsAvailable;
 
     /**
      * A private constructor meant to be called by the C++ OfflineContentAggregatorBridge.
@@ -34,16 +33,10 @@ public class OfflineContentAggregatorBridge implements OfflineContentProvider {
      */
     private OfflineContentAggregatorBridge(long nativeOfflineContentAggregatorBridge) {
         mNativeOfflineContentAggregatorBridge = nativeOfflineContentAggregatorBridge;
-        mItemsAvailable = false;
         mObservers = new ObserverList<OfflineContentProvider.Observer>();
     }
 
     // OfflineContentProvider implementation.
-    @Override
-    public boolean areItemsAvailable() {
-        return mItemsAvailable;
-    }
-
     @Override
     public void openItem(ContentId id) {
         if (mNativeOfflineContentAggregatorBridge == 0) return;
@@ -96,14 +89,6 @@ public class OfflineContentAggregatorBridge implements OfflineContentProvider {
     @Override
     public void addObserver(final OfflineContentProvider.Observer observer) {
         mObservers.addObserver(observer);
-        if (!areItemsAvailable()) return;
-
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                notifyObserverOfItemsReady(observer);
-            }
-        });
     }
 
     @Override
@@ -111,21 +96,7 @@ public class OfflineContentAggregatorBridge implements OfflineContentProvider {
         mObservers.removeObserver(observer);
     }
 
-    private void notifyObserverOfItemsReady(Observer observer) {
-        if (!mObservers.hasObserver(observer)) return;
-        observer.onItemsAvailable();
-    }
-
     // Methods called from C++ via JNI.
-    @CalledByNative
-    private void onItemsAvailable() {
-        mItemsAvailable = true;
-
-        for (Observer observer : mObservers) {
-            observer.onItemsAvailable();
-        }
-    }
-
     @CalledByNative
     private void onItemsAdded(ArrayList<OfflineItem> items) {
         if (items.size() == 0) return;

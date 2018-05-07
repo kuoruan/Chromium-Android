@@ -4,12 +4,19 @@
 
 package org.chromium.content.browser.input;
 
+import android.content.Context;
+import android.view.View;
+
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.content.browser.ContentViewCoreImpl;
+import org.chromium.content.browser.WindowAndroidChangedObserver;
+import org.chromium.content.browser.WindowEventObserver;
 import org.chromium.content.browser.webcontents.WebContentsImpl;
+import org.chromium.content.browser.webcontents.WebContentsUserData;
+import org.chromium.content.browser.webcontents.WebContentsUserData.UserDataFactory;
 import org.chromium.content_public.browser.WebContents;
+import org.chromium.ui.base.WindowAndroid;
 
 /**
  * Handles displaying the Android spellcheck/text suggestion menu (provided by
@@ -17,26 +24,109 @@ import org.chromium.content_public.browser.WebContents;
  * the commands in that menu (by calling back to the C++ class).
  */
 @JNINamespace("content")
-public class TextSuggestionHost {
+public class TextSuggestionHost implements WindowEventObserver, WindowAndroidChangedObserver {
     private long mNativeTextSuggestionHost;
-    private final ContentViewCoreImpl mContentViewCore;
+    private final WebContentsImpl mWebContents;
+
+    private Context mContext;
+    private View mContainerView;
+    private boolean mIsAttachedToWindow;
+    private WindowAndroid mWindowAndroid;
 
     private SpellCheckPopupWindow mSpellCheckPopupWindow;
     private TextSuggestionsPopupWindow mTextSuggestionsPopupWindow;
 
-    public TextSuggestionHost(ContentViewCoreImpl contentViewCore) {
-        mContentViewCore = contentViewCore;
-        mNativeTextSuggestionHost = nativeInit(contentViewCore.getWebContents());
+    private boolean mInitialized;
+
+    private static final class UserDataFactoryLazyHolder {
+        private static final UserDataFactory<TextSuggestionHost> INSTANCE = TextSuggestionHost::new;
     }
 
-    private static float getContentOffsetYPix(WebContents webContents) {
-        return ((WebContentsImpl) webContents).getRenderCoordinates().getContentOffsetYPix();
+    /**
+     * Create {@link TextSuggestionHost} instance.
+     * @param context Context for action mode.
+     * @param webContents WebContents instance.
+     * @param windowAndroid The current WindowAndroid instance.
+     * @param view Container view.
+     */
+    public static TextSuggestionHost create(
+            Context context, WebContents webContents, WindowAndroid windowAndroid, View view) {
+        TextSuggestionHost host = WebContentsUserData.fromWebContents(
+                webContents, TextSuggestionHost.class, UserDataFactoryLazyHolder.INSTANCE);
+        assert host != null;
+        assert !host.initialized();
+        host.init(context, windowAndroid, view);
+        return host;
+    }
+
+    /**
+     * Get {@link TextSuggestionHost} object used for the give WebContents.
+     * {@link #create()} should precede any calls to this.
+     * @param webContents {@link WebContents} object.
+     * @return {@link TextSuggestionHost} object. {@code null} if not available because
+     *         {@link #create()} is not called yet.
+     */
+    public static TextSuggestionHost fromWebContents(WebContents webContents) {
+        return WebContentsUserData.fromWebContents(webContents, TextSuggestionHost.class, null);
+    }
+
+    /**
+     * Create {@link TextSuggestionHost} instance.
+     * @param webContents WebContents instance.
+     */
+    public TextSuggestionHost(WebContents webContents) {
+        mWebContents = (WebContentsImpl) webContents;
+    }
+
+    private void init(Context context, WindowAndroid windowAndroid, View view) {
+        mContext = context;
+        mWindowAndroid = windowAndroid;
+        mContainerView = view;
+        mNativeTextSuggestionHost = nativeInit(mWebContents);
+        mInitialized = true;
+    }
+
+    private boolean initialized() {
+        return mInitialized;
+    }
+
+    private float getContentOffsetYPix() {
+        return mWebContents.getRenderCoordinates().getContentOffsetYPix();
+    }
+
+    public void setContainerView(View containerView) {
+        mContainerView = containerView;
+    }
+
+    // WindowAndroidChangedObserver
+
+    @Override
+    public void onWindowAndroidChanged(WindowAndroid newWindowAndroid) {
+        mWindowAndroid = newWindowAndroid;
+        if (mSpellCheckPopupWindow != null) {
+            mSpellCheckPopupWindow.updateWindowAndroid(mWindowAndroid);
+        }
+        if (mTextSuggestionsPopupWindow != null) {
+            mTextSuggestionsPopupWindow.updateWindowAndroid(mWindowAndroid);
+        }
+    }
+
+    // WindowEventObserver
+
+    @Override
+    public void onAttachedToWindow() {
+        mIsAttachedToWindow = true;
+    }
+
+    @Override
+    public void onDetachedFromWindow() {
+        mIsAttachedToWindow = false;
     }
 
     @CalledByNative
     private void showSpellCheckSuggestionMenu(
             double caretXPx, double caretYPx, String markedText, String[] suggestions) {
-        if (!mContentViewCore.isAttachedToWindow()) {
+        if (!mIsAttachedToWindow) {
             // This can happen if a new browser window is opened immediately after tapping a spell
             // check underline, before the timer to open the menu fires.
             onSuggestionMenuClosed(false);
@@ -44,18 +134,17 @@ public class TextSuggestionHost {
         }
 
         hidePopups();
-        mSpellCheckPopupWindow = new SpellCheckPopupWindow(mContentViewCore.getContext(), this,
-                mContentViewCore.getContainerView(), mContentViewCore);
+        mSpellCheckPopupWindow =
+                new SpellCheckPopupWindow(mContext, this, mWindowAndroid, mContainerView);
 
-        mSpellCheckPopupWindow.show(caretXPx,
-                caretYPx + getContentOffsetYPix(mContentViewCore.getWebContents()), markedText,
-                suggestions);
+        mSpellCheckPopupWindow.show(
+                caretXPx, caretYPx + getContentOffsetYPix(), markedText, suggestions);
     }
 
     @CalledByNative
     private void showTextSuggestionMenu(
             double caretXPx, double caretYPx, String markedText, SuggestionInfo[] suggestions) {
-        if (!mContentViewCore.isAttachedToWindow()) {
+        if (!mIsAttachedToWindow) {
             // This can happen if a new browser window is opened immediately after tapping a spell
             // check underline, before the timer to open the menu fires.
             onSuggestionMenuClosed(false);
@@ -63,12 +152,11 @@ public class TextSuggestionHost {
         }
 
         hidePopups();
-        mTextSuggestionsPopupWindow = new TextSuggestionsPopupWindow(mContentViewCore.getContext(),
-                this, mContentViewCore.getContainerView(), mContentViewCore);
+        mTextSuggestionsPopupWindow =
+                new TextSuggestionsPopupWindow(mContext, this, mWindowAndroid, mContainerView);
 
-        mTextSuggestionsPopupWindow.show(caretXPx,
-                caretYPx + getContentOffsetYPix(mContentViewCore.getWebContents()), markedText,
-                suggestions);
+        mTextSuggestionsPopupWindow.show(
+                caretXPx, caretYPx + getContentOffsetYPix(), markedText, suggestions);
     }
 
     /**

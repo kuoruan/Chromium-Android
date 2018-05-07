@@ -8,7 +8,6 @@ import org.chromium.chrome.browser.download.DownloadInfo;
 import org.chromium.chrome.browser.download.DownloadItem;
 import org.chromium.chrome.browser.download.DownloadNotifier;
 import org.chromium.chrome.browser.download.DownloadServiceDelegate;
-import org.chromium.chrome.browser.download.DownloadUpdate.PendingState;
 import org.chromium.components.offline_items_collection.ContentId;
 import org.chromium.components.offline_items_collection.OfflineContentProvider;
 import org.chromium.components.offline_items_collection.OfflineItem;
@@ -70,9 +69,6 @@ public class OfflineContentAggregatorNotificationBridgeUi
     }
 
     // OfflineContentProvider.Observer implementation.
-    @Override
-    public void onItemsAvailable() {}
-
     @Override
     public void onItemsAdded(ArrayList<OfflineItem> items) {
         for (int i = 0; i < items.size(); i++) {
@@ -164,8 +160,7 @@ public class OfflineContentAggregatorNotificationBridgeUi
                 break;
             case OfflineItemState.INTERRUPTED:
                 // TODO(dtrainor): Push the correct value for auto resume.
-                // TODO(cmsy): Pass in correct PendingState.
-                mUi.notifyDownloadInterrupted(info, true, PendingState.PENDING_REASON_UNKNOWN);
+                mUi.notifyDownloadInterrupted(info, true, item.pendingState);
                 break;
             case OfflineItemState.PAUSED:
                 mUi.notifyDownloadPaused(info);

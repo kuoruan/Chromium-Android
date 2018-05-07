@@ -9,7 +9,7 @@ import org.chromium.base.annotations.JNINamespace;
 /**
  * Container class to provide the version and the compatibility with Chrome of the installed VrCore.
  */
-@JNINamespace("vr_shell")
+@JNINamespace("vr")
 public class VrCoreInfo {
     /** Represents the version of the installed GVR SDK. */
     public static class GvrVersion {

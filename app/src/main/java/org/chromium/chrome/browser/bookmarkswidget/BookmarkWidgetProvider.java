@@ -10,7 +10,9 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.widget.RemoteViews;
 
@@ -80,6 +82,12 @@ public class BookmarkWidgetProvider extends AppWidgetProvider {
      * Refreshes all Chrome Bookmark widgets.
      */
     public static void refreshAllWidgets(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2
+                && !context.getPackageManager().hasSystemFeature(
+                           PackageManager.FEATURE_APP_WIDGETS)) {
+            return;
+        }
+
         context.sendBroadcast(new Intent(
                 getBookmarkAppWidgetUpdateAction(context),
                 null, context, BookmarkThumbnailWidgetProvider.class));

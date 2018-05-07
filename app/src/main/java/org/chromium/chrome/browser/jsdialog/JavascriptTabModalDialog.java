@@ -115,6 +115,9 @@ public class JavascriptTabModalDialog implements ModalDialogView.Controller {
         cancel();
     }
 
+    @Override
+    public void onDismiss() {}
+
     /**
      * Sends notification to native that the user accepts the dialog.
      * @param promptResult The text edited by user.

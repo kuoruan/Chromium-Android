@@ -7,13 +7,14 @@ package org.chromium.chrome.browser.history;
 import android.app.Activity;
 import android.view.View;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.BasicNativePage;
 import org.chromium.chrome.browser.NativePageHost;
 import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarManageable;
+import org.chromium.chrome.browser.util.ColorUtils;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 
 /**
  * Native page for managing browsing history.
@@ -32,9 +33,10 @@ public class HistoryPage extends BasicNativePage {
     public HistoryPage(Activity activity, NativePageHost host) {
         super(activity, host);
 
-        mThemeColor = !host.isIncognito() ? super.getThemeColor()
-                                          : ApiCompatibilityUtils.getColor(activity.getResources(),
-                                                    R.color.incognito_primary_color);
+        mThemeColor = !host.isIncognito()
+                ? super.getThemeColor()
+                : ColorUtils.getDefaultThemeColor(activity.getResources(),
+                          FeatureUtilities.isChromeModernDesignEnabled(), true);
     }
 
     @Override

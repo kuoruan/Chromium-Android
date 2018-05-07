@@ -16,7 +16,6 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Process;
-import android.os.StrictMode;
 import android.os.SystemClock;
 import android.support.customtabs.CustomTabsCallback;
 import android.support.customtabs.CustomTabsIntent;
@@ -32,6 +31,7 @@ import org.json.JSONObject;
 import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
+import org.chromium.base.StrictModeContext;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.TimeUtils;
 import org.chromium.base.TraceEvent;
@@ -70,9 +70,11 @@ import org.chromium.net.GURLUtils;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -88,6 +90,8 @@ public class CustomTabsConnection {
     @VisibleForTesting
     static final String PAGE_LOAD_METRICS_CALLBACK = "NavigationMetrics";
     static final String BOTTOM_BAR_SCROLL_STATE_CALLBACK = "onBottomBarScrollStateChanged";
+    @VisibleForTesting
+    static final String OPEN_IN_BROWSER_CALLBACK = "onOpenInBrowser";
 
     // For CustomTabs.SpeculationStatusOnStart, see tools/metrics/enums.xml. Append only.
     private static final int SPECULATION_STATUS_ON_START_ALLOWED = 0;
@@ -115,9 +119,13 @@ public class CustomTabsConnection {
     private static final int SPECULATION_STATUS_ON_SWAP_MAX = 4;
 
     // Constants for sending connection characteristics.
-    private static final String EFFECTIVE_CONNECTION_TYPE = "effectiveConnectionType";
-    private static final String HTTP_RTT_MS = "httpRttMs";
-    private static final String TRANSPORT_RTT_MS = "transportRttMs";
+    public static final String DATA_REDUCTION_ENABLED = "dataReductionEnabled";
+
+    // "/bg_non_interactive" is from L MR1, "/apps/bg_non_interactive" before,
+    // and "background" from O.
+    @VisibleForTesting
+    static final Set<String> BACKGROUND_GROUPS = new HashSet<>(
+            Arrays.asList("/bg_non_interactive", "/apps/bg_non_interactive", "/background"));
 
     // For testing only, DO NOT USE.
     @VisibleForTesting
@@ -217,8 +225,6 @@ public class CustomTabsConnection {
     public CustomTabsConnection() {
         super();
         mContext = ContextUtils.getApplicationContext();
-        // Command line switch values are used below.
-        ((ChromeApplication) mContext).initCommandLine();
         mClientManager = new ClientManager(mContext);
         mLogRequests = CommandLine.getInstance().hasSwitch(LOG_SERVICE_REQUESTS);
     }
@@ -236,7 +242,7 @@ public class CustomTabsConnection {
      * No rate-limiting, can be spammy if the app is misbehaved.
      *
      * @param name Call name to log.
-     * @param The return value for the logged call.
+     * @param result The return value for the logged call.
      */
     void logCall(String name, Object result) {
         if (!mLogRequests) return;
@@ -262,7 +268,7 @@ public class CustomTabsConnection {
      * The conversion is limited to Bundles not containing any array, and some elements are
      * converted into strings.
      *
-     * @param Bundle a Bundle to convert.
+     * @param bundle a Bundle to convert.
      * @return A JSON object, empty object if the parameter is null.
      */
     protected static JSONObject bundleToJson(Bundle bundle) {
@@ -363,7 +369,7 @@ public class CustomTabsConnection {
     /**
      * Starts as much as possible in anticipation of a future navigation.
      *
-     * @param mayCreatesparewebcontents true if warmup() can create a spare renderer.
+     * @param mayCreateSpareWebContents true if warmup() can create a spare renderer.
      * @return true for success.
      */
     private boolean warmupInternal(final boolean mayCreateSpareWebContents) {
@@ -601,26 +607,53 @@ public class CustomTabsConnection {
         final Bundle actionButtonBundle = IntentUtils.safeGetBundle(bundle,
                 CustomTabsIntent.EXTRA_ACTION_BUTTON_BUNDLE);
         boolean result = true;
+        List<Integer> ids = new ArrayList<>();
+        List<String> descriptions = new ArrayList<>();
+        List<Bitmap> icons = new ArrayList<>();
         if (actionButtonBundle != null) {
-            final int id = IntentUtils.safeGetInt(actionButtonBundle, CustomTabsIntent.KEY_ID,
+            int id = IntentUtils.safeGetInt(actionButtonBundle, CustomTabsIntent.KEY_ID,
                     CustomTabsIntent.TOOLBAR_ACTION_BUTTON_ID);
-            final Bitmap bitmap = CustomButtonParams.parseBitmapFromBundle(actionButtonBundle);
-            final String description = CustomButtonParams
-                    .parseDescriptionFromBundle(actionButtonBundle);
+            Bitmap bitmap = CustomButtonParams.parseBitmapFromBundle(actionButtonBundle);
+            String description = CustomButtonParams.parseDescriptionFromBundle(actionButtonBundle);
             if (bitmap != null && description != null) {
-                try {
-                    result &= ThreadUtils.runOnUiThreadBlocking(new Callable<Boolean>() {
-                        @Override
-                        public Boolean call() throws Exception {
-                            return BrowserSessionContentUtils.updateCustomButton(
-                                    session, id, bitmap, description);
-                        }
-                    });
-                } catch (ExecutionException e) {
-                    result = false;
-                }
+                ids.add(id);
+                descriptions.add(description);
+                icons.add(bitmap);
             }
         }
+
+        List<Bundle> bundleList = IntentUtils.safeGetParcelableArrayList(
+                bundle, CustomTabsIntent.EXTRA_TOOLBAR_ITEMS);
+        if (bundleList != null) {
+            for (Bundle toolbarItemBundle : bundleList) {
+                int id = IntentUtils.safeGetInt(toolbarItemBundle, CustomTabsIntent.KEY_ID,
+                        CustomTabsIntent.TOOLBAR_ACTION_BUTTON_ID);
+                if (ids.contains(id)) continue;
+
+                Bitmap bitmap = CustomButtonParams.parseBitmapFromBundle(toolbarItemBundle);
+                if (bitmap == null) continue;
+
+                String description =
+                        CustomButtonParams.parseDescriptionFromBundle(toolbarItemBundle);
+                if (description == null) continue;
+
+                ids.add(id);
+                descriptions.add(description);
+                icons.add(bitmap);
+            }
+        }
+
+        if (!ids.isEmpty()) {
+            result &= ThreadUtils.runOnUiThreadBlockingNoException(() -> {
+                boolean res = true;
+                for (int i = 0; i < ids.size(); i++) {
+                    res &= BrowserSessionContentUtils.updateCustomButton(
+                            session, ids.get(i), icons.get(i), descriptions.get(i));
+                }
+                return res;
+            });
+        }
+
         if (bundle.containsKey(CustomTabsIntent.EXTRA_REMOTEVIEWS)) {
             final RemoteViews remoteViews = IntentUtils.safeGetParcelable(bundle,
                     CustomTabsIntent.EXTRA_REMOTEVIEWS);
@@ -628,17 +661,10 @@ public class CustomTabsConnection {
                     CustomTabsIntent.EXTRA_REMOTEVIEWS_VIEW_IDS);
             final PendingIntent pendingIntent = IntentUtils.safeGetParcelable(bundle,
                     CustomTabsIntent.EXTRA_REMOTEVIEWS_PENDINGINTENT);
-            try {
-                result &= ThreadUtils.runOnUiThreadBlocking(new Callable<Boolean>() {
-                    @Override
-                    public Boolean call() throws Exception {
-                        return BrowserSessionContentUtils.updateRemoteViews(
-                                session, remoteViews, clickableIDs, pendingIntent);
-                    }
-                });
-            } catch (ExecutionException e) {
-                result = false;
-            }
+            result &= ThreadUtils.runOnUiThreadBlockingNoException(() -> {
+                return BrowserSessionContentUtils.updateRemoteViews(
+                        session, remoteViews, clickableIDs, pendingIntent);
+            });
         }
         logCall("updateVisuals()", result);
         return result;
@@ -768,7 +794,7 @@ public class CustomTabsConnection {
      * Note that this methods accepts URLs that don't exactly match the initially
      * prerendered URL. More precisely, the #fragment is ignored. In this case,
      * the client needs to navigate to the correct URL after the WebContents
-     * swap. This can be tested using {@link UrlUtilities#urlsFragmentsDiffer()}.
+     * swap. This can be tested using {@link UrlUtilities#urlsFragmentsDiffer}.
      *
      * @param session The Binder object identifying a session.
      * @param url The URL the WebContents is for.
@@ -1010,18 +1036,10 @@ public class CustomTabsConnection {
      * @param hidden Whether the bottom bar is hidden or shown.
      */
     public void onBottomBarScrollStateChanged(CustomTabsSessionToken session, boolean hidden) {
-        if (!shouldSendBottomBarScrollStateForSession(session)) return;
-        CustomTabsCallback callback = mClientManager.getCallbackForSession(session);
-
         Bundle args = new Bundle();
         args.putBoolean("hidden", hidden);
-        try {
-            callback.extraCallback(BOTTOM_BAR_SCROLL_STATE_CALLBACK, args);
-        } catch (Exception e) {
-            // Pokemon exception handling, see below and crbug.com/517023.
-            return;
-        }
-        if (mLogRequests) {
+
+        if (safeExtraCallback(session, BOTTOM_BAR_SCROLL_STATE_CALLBACK, args) && mLogRequests) {
             logCallback("extraCallback(" + BOTTOM_BAR_SCROLL_STATE_CALLBACK + ")", hidden);
         }
     }
@@ -1029,8 +1047,7 @@ public class CustomTabsConnection {
     /**
      * Notifies the application of a navigation event.
      *
-     * Delivers the {@link CustomTabsConnectionCallback#onNavigationEvent}
-     * callback to the application.
+     * Delivers the {@link CustomTabsCallback#onNavigationEvent} callback to the application.
      *
      * @param session The Binder object identifying the session.
      * @param navigationEvent The navigation event code, defined in {@link CustomTabsCallback}
@@ -1108,25 +1125,46 @@ public class CustomTabsConnection {
      *     should be a key specifying the metric name and the metric value as the value.
      */
     boolean notifyPageLoadMetrics(CustomTabsSessionToken session, Bundle args) {
+        if (safeExtraCallback(session, PAGE_LOAD_METRICS_CALLBACK, args)) {
+            logPageLoadMetricsCallback(args);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Notifies the application that the user has selected to open the page in their browser.
+     * @param session Session identifier.
+     * @return true if success. To protect Chrome exceptions in the client application are swallowed
+     *     and false is returned.
+     */
+    boolean notifyOpenInBrowser(CustomTabsSessionToken session) {
+        return safeExtraCallback(session, OPEN_IN_BROWSER_CALLBACK,
+                getExtrasBundleForNavigationEventForSession(session));
+    }
+
+    /**
+     * Wraps calling extraCallback in a try/catch so exceptions thrown by the host app don't crash
+     * Chrome. See https://crbug.com/517023.
+     */
+    private boolean safeExtraCallback(CustomTabsSessionToken session, String callbackName,
+            Bundle args) {
         CustomTabsCallback callback = mClientManager.getCallbackForSession(session);
         if (callback == null) return false;
 
         try {
-            callback.extraCallback(PAGE_LOAD_METRICS_CALLBACK, args);
+            callback.extraCallback(callbackName, args);
         } catch (Exception e) {
-            // Pokemon exception handling, see above and crbug.com/517023.
             return false;
         }
-        logPageLoadMetricsCallback(args);
         return true;
     }
 
     /**
      * Keeps the application linked with a given session alive.
      *
-     * The application is kept alive (that is, raised to at least the current
-     * process priority level) until {@link dontKeepAliveForSessionId()} is
-     * called.
+     * The application is kept alive (that is, raised to at least the current process priority
+     * level) until {@link #dontKeepAliveForSession} is called.
      *
      * @param session The Binder object identifying the session.
      * @param intent Intent describing the service to bind to.
@@ -1139,7 +1177,7 @@ public class CustomTabsConnection {
     /**
      * Lets the lifetime of the process linked to a given sessionId be managed normally.
      *
-     * Without a matching call to {@link keepAliveForSessionId}, this is a no-op.
+     * Without a matching call to {@link #keepAliveForSession}, this is a no-op.
      *
      * @param session The Binder object identifying the session.
      */
@@ -1152,40 +1190,29 @@ public class CustomTabsConnection {
      */
     @VisibleForTesting
     static String getSchedulerGroup(int pid) {
-        // Android uses two cgroups for the processes: the root cgroup, and the
-        // "/bg_non_interactive" one for background processes. The list of
-        // cgroups a process is part of can be queried by reading
-        // /proc/<pid>/cgroup, which is world-readable.
+        // Android uses several cgroups for processes, depending on their priority. The list of
+        // cgroups a process is part of can be queried by reading /proc/<pid>/cgroup, which is
+        // world-readable.
         String cgroupFilename = "/proc/" + pid + "/cgroup";
+        String controllerName = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? "cpuset" : "cpu";
         // Reading from /proc does not cause disk IO, but strict mode doesn't like it.
         // crbug.com/567143
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-        try {
-            FileReader fileReader = new FileReader(cgroupFilename);
-            BufferedReader reader = new BufferedReader(fileReader);
-            try {
-                String line = null;
-                while ((line = reader.readLine()) != null) {
-                    // line format: 2:cpu:/bg_non_interactive
-                    String fields[] = line.trim().split(":");
-                    if (fields.length == 3 && fields[1].equals("cpu")) return fields[2];
-                }
-            } finally {
-                reader.close();
+        try (StrictModeContext ctx = StrictModeContext.allowDiskReads();
+                BufferedReader reader = new BufferedReader(new FileReader(cgroupFilename))) {
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                // line format: 2:cpu:/bg_non_interactive
+                String fields[] = line.trim().split(":");
+                if (fields.length == 3 && fields[1].equals(controllerName)) return fields[2];
             }
         } catch (IOException e) {
             return null;
-        } finally {
-            StrictMode.setThreadPolicy(oldPolicy);
         }
         return null;
     }
 
     private static boolean isBackgroundProcess(int pid) {
-        String schedulerGroup = getSchedulerGroup(pid);
-        // "/bg_non_interactive" is from L MR1, "/apps/bg_non_interactive" before.
-        return "/bg_non_interactive".equals(schedulerGroup)
-                || "/apps/bg_non_interactive".equals(schedulerGroup);
+        return BACKGROUND_GROUPS.contains(getSchedulerGroup(pid));
     }
 
     /**

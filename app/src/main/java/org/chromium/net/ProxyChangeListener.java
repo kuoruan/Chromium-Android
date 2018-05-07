@@ -250,7 +250,7 @@ public class ProxyChangeListener {
     }
 
     /**
-     * See net/proxy/proxy_config_service_android.cc
+     * See net/proxy_resolution/proxy_config_service_android.cc
      */
     @NativeClassQualifiedName("ProxyConfigServiceAndroid::JNIDelegate")
     private native void nativeProxySettingsChangedTo(long nativePtr,

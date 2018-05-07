@@ -41,6 +41,13 @@ public class ServiceWorkerPaymentApp extends PaymentInstrument implements Paymen
     private final Set<String> mPreferredRelatedApplicationIds;
     private final boolean mIsIncognito;
 
+    // Below variables are used for installable service worker payment app specifically.
+    private final boolean mNeedsInstallation;
+    private final String mAppName;
+    private final URI mSwUri;
+    private final URI mScope;
+    private final boolean mUseCache;
+
     /**
      * This class represents capabilities of a payment instrument. It is currently only used for
      * 'basic-card' payment instrument.
@@ -132,6 +139,53 @@ public class ServiceWorkerPaymentApp extends PaymentInstrument implements Paymen
         ChromeActivity activity = ChromeActivity.fromWebContents(mWebContents);
         mIsIncognito = activity != null && activity.getCurrentTabModel() != null
                 && activity.getCurrentTabModel().isIncognito();
+
+        mNeedsInstallation = false;
+        mAppName = name;
+        mSwUri = null;
+        mScope = null;
+        mUseCache = false;
+    }
+
+    /**
+     * Build a service worker payment app instance which has not been installed yet.
+     * The payment app will be installed when paying with it.
+     *
+     * @param webContents The web contents where PaymentRequest was invoked.
+     * @param name        The name of the payment app.
+     * @param origin      The origin of the payment app.
+     * @param swUri       The URI to get the service worker js script.
+     * @param scope       The registration scope of the corresponding service worker.
+     * @param useCache    Whether cache is used to register the service worker.
+     * @param icon        The drawable icon of the payment app.
+     * @param methodName  The supported method name.
+     */
+    public ServiceWorkerPaymentApp(WebContents webContents, @Nullable String name, String origin,
+            URI swUri, URI scope, boolean useCache, @Nullable Drawable icon, String methodName) {
+        // Do not display duplicate information.
+        super(scope.toString(), TextUtils.isEmpty(name) ? origin : name, null,
+                TextUtils.isEmpty(name) ? null : origin, icon);
+
+        mWebContents = webContents;
+        // No registration ID before the app is registered (installed).
+        mRegistrationId = -1;
+        // If name and/or icon is missing or failed to parse from the web app manifest, then do not
+        // preselect this payment app.
+        mCanPreselect = !TextUtils.isEmpty(name) && icon != null;
+        mMethodNames = new HashSet<>();
+        mMethodNames.add(methodName);
+        mCapabilities = new Capabilities[0];
+        mPreferredRelatedApplicationIds = new HashSet<>();
+
+        ChromeActivity activity = ChromeActivity.fromWebContents(mWebContents);
+        mIsIncognito = activity != null && activity.getCurrentTabModel() != null
+                && activity.getCurrentTabModel().isIncognito();
+
+        mNeedsInstallation = true;
+        mAppName = name;
+        mSwUri = swUri;
+        mScope = scope;
+        mUseCache = useCache;
     }
 
     @Override
@@ -139,8 +193,8 @@ public class ServiceWorkerPaymentApp extends PaymentInstrument implements Paymen
             String iframeOrigin, byte[][] unusedCertificateChain,
             Map<String, PaymentDetailsModifier> modifiers, final InstrumentsCallback callback) {
         // Do not send canMakePayment event when in incognito mode or basic-card is the only
-        // supported payment method for the payment request.
-        if (mIsIncognito || isOnlySupportBasiccard(methodDataMap)) {
+        // supported payment method or this app needs installation for the payment request.
+        if (mIsIncognito || isOnlySupportBasiccard(methodDataMap) || mNeedsInstallation) {
             new Handler().post(() -> {
                 List<PaymentInstrument> instruments =
                         Collections.singletonList(ServiceWorkerPaymentApp.this);
@@ -267,9 +321,16 @@ public class ServiceWorkerPaymentApp extends PaymentInstrument implements Paymen
             byte[][] unusedCertificateChain, Map<String, PaymentMethodData> methodData,
             PaymentItem total, List<PaymentItem> displayItems,
             Map<String, PaymentDetailsModifier> modifiers, InstrumentDetailsCallback callback) {
-        ServiceWorkerPaymentAppBridge.invokePaymentApp(mWebContents, mRegistrationId, origin,
-                iframeOrigin, id, new HashSet<>(methodData.values()), total,
-                new HashSet<>(modifiers.values()), callback);
+        if (mNeedsInstallation) {
+            ServiceWorkerPaymentAppBridge.installAndInvokePaymentApp(mWebContents, origin,
+                    iframeOrigin, id, new HashSet<>(methodData.values()), total,
+                    new HashSet<>(modifiers.values()), callback, mAppName, mSwUri, mScope,
+                    mUseCache, mMethodNames);
+        } else {
+            ServiceWorkerPaymentAppBridge.invokePaymentApp(mWebContents, mRegistrationId, origin,
+                    iframeOrigin, id, new HashSet<>(methodData.values()), total,
+                    new HashSet<>(modifiers.values()), callback);
+        }
     }
 
     @Override
@@ -279,6 +340,12 @@ public class ServiceWorkerPaymentApp extends PaymentInstrument implements Paymen
 
     @Override
     public void dismissInstrument() {}
+
+    @Override
+    public boolean canMakePayment() {
+        // Return false for PaymentRequest.canMakePayment() if installation is needed.
+        return !mNeedsInstallation;
+    }
 
     @Override
     public boolean canPreselect() {

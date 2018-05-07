@@ -160,27 +160,10 @@ public class BookmarkUtils {
      * @param activity An activity to start the manager with.
      */
     public static void showBookmarkManager(ChromeActivity activity) {
-        showBookmarkManager(activity, false);
-    }
-
-    /**
-     * Shows bookmark main UI.
-     * @param activity An activity to start the manager with.
-     * @param fromMenu Whether bookmarks was triggered from the overflow menu.
-     */
-    public static void showBookmarkManager(ChromeActivity activity, boolean fromMenu) {
         ThreadUtils.assertOnUiThread();
         String url = getFirstUrlToLoad(activity);
 
-        if (activity.getBottomSheet() != null) {
-            if (fromMenu) {
-                activity.getBottomSheetContentController().openBottomSheetForMenuItem(
-                        R.id.action_bookmarks);
-            } else {
-                activity.getBottomSheetContentController().showContentAndOpenSheet(
-                        R.id.action_bookmarks);
-            }
-        } else if (DeviceFormFactor.isTablet()) {
+        if (DeviceFormFactor.isTablet()) {
             openUrl(activity, url, activity.getComponentName());
         } else {
             Intent intent = new Intent(activity, BookmarkActivity.class);

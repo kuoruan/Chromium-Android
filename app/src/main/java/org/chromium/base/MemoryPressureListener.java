@@ -45,24 +45,57 @@ public class MemoryPressureListener {
     private static final String ACTION_TRIM_MEMORY_MODERATE =
             "org.chromium.base.ACTION_TRIM_MEMORY_MODERATE";
 
+    private static OnMemoryPressureCallbackForTesting sOnMemoryPressureCallbackForTesting;
+
+    @VisibleForTesting
     @CalledByNative
-    private static void registerSystemCallback() {
+    public static void registerSystemCallback() {
         ContextUtils.getApplicationContext().registerComponentCallbacks(
                 new ComponentCallbacks2() {
                     @Override
                     public void onTrimMemory(int level) {
-                        maybeNotifyMemoryPresure(level);
+                        if (level >= ComponentCallbacks2.TRIM_MEMORY_COMPLETE
+                                || level == ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL) {
+                            onMemoryPressure(MemoryPressureLevel.CRITICAL);
+                        } else if (level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) {
+                            // Don't notifiy on TRIM_MEMORY_UI_HIDDEN, since this class only
+                            // dispatches actionable memory pressure signals to native.
+                            onMemoryPressure(MemoryPressureLevel.MODERATE);
+                        }
                     }
 
                     @Override
                     public void onLowMemory() {
-                        nativeOnMemoryPressure(MemoryPressureLevel.CRITICAL);
+                        onMemoryPressure(MemoryPressureLevel.CRITICAL);
                     }
 
                     @Override
                     public void onConfigurationChanged(Configuration configuration) {
                     }
                 });
+    }
+
+    /** Memory pressure callback that is called before calling native. Use for testing only.
+     */
+    @VisibleForTesting
+    @FunctionalInterface
+    public interface OnMemoryPressureCallbackForTesting {
+        public void apply(@MemoryPressureLevel int pressure);
+    }
+
+    @VisibleForTesting
+    public static void setOnMemoryPressureCallbackForTesting(
+            OnMemoryPressureCallbackForTesting callback) {
+        sOnMemoryPressureCallbackForTesting = callback;
+    }
+
+    /** Reports memory pressure.
+     */
+    public static void onMemoryPressure(@MemoryPressureLevel int pressure) {
+        if (sOnMemoryPressureCallbackForTesting != null) {
+            sOnMemoryPressureCallbackForTesting.apply(pressure);
+        }
+        nativeOnMemoryPressure(pressure);
     }
 
     /**
@@ -86,17 +119,6 @@ public class MemoryPressureListener {
         return true;
     }
 
-    public static void maybeNotifyMemoryPresure(int level) {
-        if (level >= ComponentCallbacks2.TRIM_MEMORY_COMPLETE) {
-            nativeOnMemoryPressure(MemoryPressureLevel.CRITICAL);
-        } else if (level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND
-                || level == ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL) {
-            // Don't notifiy on TRIM_MEMORY_UI_HIDDEN, since this class only
-            // dispatches actionable memory pressure signals to native.
-            nativeOnMemoryPressure(MemoryPressureLevel.MODERATE);
-        }
-    }
-
     private static void simulateLowMemoryPressureSignal(Activity activity) {
         // The Application and the Activity each have a list of callbacks they notify when this
         // method is called.  Notifying these will simulate the event at the App/Activity level
@@ -113,5 +135,6 @@ public class MemoryPressureListener {
         activity.onTrimMemory(level);
     }
 
-    private static native void nativeOnMemoryPressure(int memoryPressureType);
+    // Don't call directly, always go through onMemoryPressure().
+    private static native void nativeOnMemoryPressure(@MemoryPressureLevel int pressure);
 }

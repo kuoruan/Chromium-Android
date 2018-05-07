@@ -102,9 +102,10 @@ public class PictureInPictureController {
         assert LibraryLoader.isInitialized();
         if (!ChromeFeatureList.isEnabled(ChromeFeatureList.VIDEO_PERSISTENCE)) return false;
 
-        // Only auto-PiP if there is a playing fullscreen video.
+        // Only auto-PiP if there is a playing fullscreen video that allows PiP.
         if (!AppHooks.get().shouldDetectVideoFullscreen()
-                || !webContents.hasActiveEffectivelyFullscreenVideo()) {
+                || !webContents.hasActiveEffectivelyFullscreenVideo()
+                || !webContents.isPictureInPictureAllowedForFullscreenVideo()) {
             recordAttemptResult(METRICS_ATTEMPT_RESULT_NO_VIDEO);
             return false;
         }

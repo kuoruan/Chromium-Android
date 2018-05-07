@@ -78,8 +78,11 @@ public final class SuggestionsConfig {
                 PARAM_CONDENSED_TILE_LAYOUT_FOR_LARGE_SCREENS_ENABLED, false);
     }
 
+    /**
+     * @return Whether the modern layout should be used for suggestions.
+     */
     public static boolean useModernLayout() {
-        return FeatureUtilities.isChromeHomeEnabled()
+        return FeatureUtilities.isChromeModernDesignEnabled()
                 || ChromeFeatureList.isEnabled(ChromeFeatureList.NTP_MODERN_LAYOUT);
     }
 }

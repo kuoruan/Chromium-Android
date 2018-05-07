@@ -94,7 +94,7 @@ public interface CdmProxy extends org.chromium.mojo.bindings.Interface {
 org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client, 
 InitializeResponse callback);
 
-    interface InitializeResponse extends org.chromium.mojo.bindings.Callbacks.Callback3<Integer, Integer, Integer> { }
+    interface InitializeResponse extends org.chromium.mojo.bindings.Callbacks.Callback4<Integer, Integer, Integer, Integer> { }
 
 
 

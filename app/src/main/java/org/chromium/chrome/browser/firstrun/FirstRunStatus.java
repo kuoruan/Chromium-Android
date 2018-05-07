@@ -39,9 +39,8 @@ public class FirstRunStatus {
         if (ContextUtils.getAppSharedPreferences().getBoolean(FIRST_RUN_FLOW_COMPLETE, false)) {
             return true;
         }
-        return CommandLine.isInitialized()
-                && CommandLine.getInstance().hasSwitch(
-                           ChromeSwitches.FORCE_FIRST_RUN_FLOW_COMPLETE_FOR_TESTING);
+        return CommandLine.getInstance().hasSwitch(
+                ChromeSwitches.FORCE_FIRST_RUN_FLOW_COMPLETE_FOR_TESTING);
     }
 
     /**

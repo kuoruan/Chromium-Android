@@ -32,8 +32,6 @@ public class NotificationJobService extends JobService {
         bundle.putBoolean(NotificationConstants.EXTRA_NOTIFICATION_INFO_PROFILE_INCOGNITO,
                 intent.getBooleanExtra(
                         NotificationConstants.EXTRA_NOTIFICATION_INFO_PROFILE_INCOGNITO, false));
-        bundle.putString(NotificationConstants.EXTRA_NOTIFICATION_INFO_TAG,
-                intent.getStringExtra(NotificationConstants.EXTRA_NOTIFICATION_INFO_TAG));
         bundle.putInt(NotificationConstants.EXTRA_NOTIFICATION_INFO_ACTION_INDEX,
                 intent.getIntExtra(NotificationConstants.EXTRA_NOTIFICATION_INFO_ACTION_INDEX, -1));
         bundle.putString(NotificationConstants.EXTRA_NOTIFICATION_INFO_WEBAPK_PACKAGE,
@@ -61,8 +59,7 @@ public class NotificationJobService extends JobService {
         PersistableBundle extras = params.getExtras();
         putJobStartedTimeInExtras(extras);
         if (!extras.containsKey(NotificationConstants.EXTRA_NOTIFICATION_ID)
-                || !extras.containsKey(NotificationConstants.EXTRA_NOTIFICATION_INFO_ORIGIN)
-                || !extras.containsKey(NotificationConstants.EXTRA_NOTIFICATION_INFO_TAG)) {
+                || !extras.containsKey(NotificationConstants.EXTRA_NOTIFICATION_INFO_ORIGIN)) {
             return false;
         }
 

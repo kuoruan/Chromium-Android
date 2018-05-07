@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.ntp.cards;
 
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ntp.snippets.CategoryInt;
 import org.chromium.chrome.browser.ntp.snippets.CategoryStatus;
 import org.chromium.chrome.browser.ntp.snippets.KnownCategories;
@@ -13,6 +14,8 @@ import org.chromium.chrome.browser.ntp.snippets.SnippetArticle;
 import org.chromium.chrome.browser.ntp.snippets.SnippetsBridge;
 import org.chromium.chrome.browser.ntp.snippets.SuggestionsSource;
 import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
+import org.chromium.chrome.browser.preferences.Pref;
+import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.suggestions.SuggestionsRanker;
 import org.chromium.chrome.browser.suggestions.SuggestionsUiDelegate;
 import org.chromium.chrome.browser.util.FeatureUtilities;
@@ -75,10 +78,17 @@ public class SectionList
             if (SnippetsBridge.isCategoryEnabled(categoryStatus)) {
                 resetSection(category, categoryStatus, alwaysAllowEmptySections,
                         shouldReportPrefetchedSuggestionsMetrics(category));
+            } else {
+                // If articles category is currently disabled, we may still need to show an
+                // expandable header for the section.
+                maybeAddSectionForHeader(category);
             }
         }
 
-        maybeHideArticlesHeader();
+        if (!ChromeFeatureList.isEnabled(
+                    ChromeFeatureList.NTP_ARTICLE_SUGGESTIONS_EXPANDABLE_HEADER)) {
+            maybeHideArticlesHeader();
+        }
         recordDisplayedSuggestions(categories);
     }
 
@@ -178,6 +188,12 @@ public class SectionList
     @Override
     public void onFullRefreshRequired() {
         refreshSuggestions();
+    }
+
+    @Override
+    public void onSuggestionsVisibilityChanged(@CategoryInt int category) {
+        if (!mSections.containsKey(category)) return;
+        mSections.get(category).updateExpandableHeader();
     }
 
     @Override
@@ -339,6 +355,27 @@ public class SectionList
         if (articlesSection == null) return;
 
         articlesSection.setHeaderVisibility(false);
+    }
+
+    /**
+     * A section that allows zero items should be created for showing the section header if it is
+     * not yet created.
+     * @param category The category that needs a correspond section shown for the header.
+     */
+    private void maybeAddSectionForHeader(@CategoryInt int category) {
+        if (!ChromeFeatureList.isEnabled(
+                    ChromeFeatureList.NTP_ARTICLE_SUGGESTIONS_EXPANDABLE_HEADER))
+            return;
+        if (category != KnownCategories.ARTICLES) return;
+
+        // Don't add a header if the entire articles section is disabled by policy.
+        if (!PrefServiceBridge.getInstance().getBoolean(Pref.NTP_ARTICLES_SECTION_ENABLED)) return;
+
+        SuggestionsSection section = mSections.get(category);
+        if (section != null) return;
+
+        int status = mUiDelegate.getSuggestionsSource().getCategoryStatus(category);
+        resetSection(category, status, true, shouldReportPrefetchedSuggestionsMetrics(category));
     }
 
     /**

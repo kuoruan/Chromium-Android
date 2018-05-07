@@ -116,7 +116,7 @@ public class AddLanguageFragment extends Fragment {
         mItemClickListener = item -> {
             Intent intent = new Intent();
             intent.putExtra(INTENT_NEW_ACCEPT_LANGAUGE, item.getCode());
-            activity.setResult(activity.RESULT_OK, intent);
+            activity.setResult(Activity.RESULT_OK, intent);
             activity.finish();
         };
         mAdapter = new LanguageSearchListAdapter(activity);

@@ -155,12 +155,6 @@ public class TabWindowManager implements ActivityStateListener {
      *         in use by any live tab model selectors.
      */
     public boolean canDestroyIncognitoProfile() {
-        for (int i = 0; i < mSelectors.size(); i++) {
-            if (mSelectors.get(i) != null && mSelectors.get(i).getModel(true).isPendingTabAdd()) {
-                return false;
-            }
-        }
-
         return getIncognitoTabCount() == 0;
     }
 

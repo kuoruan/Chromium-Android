@@ -26,8 +26,8 @@
 <string name="autofill_from_google_account_long">"From Google Pay"</string>
 <string name="http_post_warning">"The page that you\'re looking for used information that you entered. Returning to that page might cause any action you took to be repeated. Do you want to continue?"</string>
 <string name="http_post_warning_resend">"Continue"</string>
-<string name="login_dialog_title">"Authentication required"</string>
-<string name="login_dialog_ok_button_label">"Log in"</string>
+<string name="login_dialog_title">"Sign in"</string>
+<string name="login_dialog_ok_button_label">"Sign in"</string>
 <string name="login_dialog_username_field">"Username"</string>
 <string name="login_dialog_password_field">"Password"</string>
 <string name="sad_tab_title">"Aw, Snap!"</string>

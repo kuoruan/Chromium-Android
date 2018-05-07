@@ -358,9 +358,9 @@
         android:restrictionType="bool"/>
 
     <restriction
-        android:key="EnableCommonNameFallbackForLocalAnchors"
-        android:title="@string/EnableCommonNameFallbackForLocalAnchorsTitle"
-        android:description="@string/EnableCommonNameFallbackForLocalAnchorsDesc"
+        android:key="EnableSymantecLegacyInfrastructure"
+        android:title="@string/EnableSymantecLegacyInfrastructureTitle"
+        android:description="@string/EnableSymantecLegacyInfrastructureDesc"
         android:restrictionType="bool"/>
 
     <restriction
@@ -400,6 +400,14 @@
         android:title="@string/ForceBrowserSigninTitle"
         android:description="@string/ForceBrowserSigninDesc"
         android:restrictionType="bool"/>
+
+    <restriction
+        android:key="SSLVersionMin"
+        android:title="@string/SSLVersionMinTitle"
+        android:description="@string/SSLVersionMinDesc"
+        android:entries="@array/SSLVersionMinEntries"
+        android:entryValues="@array/SSLVersionMinValues"
+        android:restrictionType="choice"/>
 
     <restriction
         android:key="SSLVersionMax"

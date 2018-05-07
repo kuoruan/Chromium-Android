@@ -1293,7 +1293,7 @@ public class ContextualSearchUma {
     }
 
     /**
-     * Logs Ranker's prediction and whether the panel was actually seen when not suppressed.
+     * Logs results-seen when we have a useful Ranker prediction inference.
      * @param wasPanelSeen Whether the panel was seen.
      * @param predictionKind An integer reflecting the Ranker prediction, e.g. that this is a good
      *        time to suppress triggering because the likelihood of opening the panel is relatively
@@ -1301,8 +1301,6 @@ public class ContextualSearchUma {
      */
     public static void logRankerInference(
             boolean wasPanelSeen, @AssistRankerPrediction int predictionKind) {
-        RecordHistogram.recordBooleanHistogram("Search.ContextualSearch.Ranker.Suppressed",
-                predictionKind == AssistRankerPrediction.SUPPRESS);
         if (predictionKind == AssistRankerPrediction.SHOW) {
             RecordHistogram.recordEnumeratedHistogram(
                     "Search.ContextualSearch.Ranker.NotSuppressed.ResultsSeen",
@@ -1312,6 +1310,18 @@ public class ContextualSearchUma {
                     "Search.ContextualSearch.Ranker.WouldSuppress.ResultsSeen",
                     wasPanelSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN, RESULTS_SEEN_BOUNDARY);
         }
+    }
+
+    /**
+     * Logs Ranker's prediction of whether or not to suppress.
+     * @param predictionKind An integer reflecting the Ranker prediction, e.g. that this is a good
+     *        time to suppress triggering because the likelihood of opening the panel is relatively
+     *        low.
+     */
+    public static void logRankerPrediction(@AssistRankerPrediction int predictionKind) {
+        // For now we just log whether or not suppression is predicted.
+        RecordHistogram.recordBooleanHistogram("Search.ContextualSearch.Ranker.Suppressed",
+                predictionKind == AssistRankerPrediction.SUPPRESS);
     }
 
     /** Logs that Ranker recorded a set of features for training or inference. */

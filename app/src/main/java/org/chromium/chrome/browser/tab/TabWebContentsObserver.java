@@ -283,6 +283,11 @@ public class TabWebContentsObserver extends WebContentsObserver {
     }
 
     @Override
+    public void navigationEntriesDeleted() {
+        mTab.notifyNavigationEntriesDeleted();
+    }
+
+    @Override
     public void destroy() {
         MediaCaptureNotificationService.updateMediaNotificationForTab(
                 mTab.getApplicationContext(), mTab.getId(), 0, mTab.getUrl());

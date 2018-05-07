@@ -19,6 +19,7 @@ import org.chromium.chrome.browser.payments.ui.EditorModel;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -39,6 +40,7 @@ public class ContactEditor extends EditorBase<AutofillContact> {
     private final boolean mRequestPayerName;
     private final boolean mRequestPayerPhone;
     private final boolean mRequestPayerEmail;
+    private final boolean mSaveToDisk;
     private final Set<CharSequence> mPayerNames;
     private final Set<CharSequence> mPhoneNumbers;
     private final Set<CharSequence> mEmailAddresses;
@@ -48,16 +50,18 @@ public class ContactEditor extends EditorBase<AutofillContact> {
     /**
      * Builds a contact information editor.
      *
-     * @param requestPayerName Whether to request the user's name.
+     * @param requestPayerName  Whether to request the user's name.
      * @param requestPayerPhone Whether to request the user's phone number.
      * @param requestPayerEmail Whether to request the user's email address.
+     * @param saveToDisk        Whether to save changes to disk.
      */
-    public ContactEditor(boolean requestPayerName,
-            boolean requestPayerPhone, boolean requestPayerEmail) {
+    public ContactEditor(boolean requestPayerName, boolean requestPayerPhone,
+            boolean requestPayerEmail, boolean saveToDisk) {
         assert requestPayerName || requestPayerPhone || requestPayerEmail;
         mRequestPayerName = requestPayerName;
         mRequestPayerPhone = requestPayerPhone;
         mRequestPayerEmail = requestPayerEmail;
+        mSaveToDisk = saveToDisk;
         mPayerNames = new HashSet<>();
         mPhoneNumbers = new HashSet<>();
         mEmailAddresses = new HashSet<>();
@@ -211,7 +215,17 @@ public class ContactEditor extends EditorBase<AutofillContact> {
                 profile.setEmailAddress(email);
             }
 
-            profile.setGUID(PersonalDataManager.getInstance().setProfileToLocal(profile));
+            if (mSaveToDisk) {
+                profile.setGUID(PersonalDataManager.getInstance().setProfileToLocal(profile));
+            }
+
+            if (profile.getGUID().isEmpty()) {
+                assert !mSaveToDisk;
+
+                // Set a fake guid for a new temp AutofillProfile.
+                profile.setGUID(UUID.randomUUID().toString());
+            }
+
             profile.setIsLocal(true);
             contact.completeContact(profile.getGUID(), name, phone, email);
             callback.onResult(contact);

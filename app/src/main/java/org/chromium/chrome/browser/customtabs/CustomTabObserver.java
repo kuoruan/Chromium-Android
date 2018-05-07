@@ -12,7 +12,6 @@ import android.support.customtabs.CustomTabsCallback;
 import android.support.customtabs.CustomTabsSessionToken;
 import android.text.TextUtils;
 
-import org.chromium.base.ThreadUtils;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.prerender.ExternalPrerenderHandler;
@@ -20,7 +19,6 @@ import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tab.TabObserver;
 import org.chromium.components.security_state.ConnectionSecurityLevel;
-import org.chromium.content_public.browser.ContentBitmapCallback;
 import org.chromium.content_public.browser.LoadUrlParams;
 
 import java.util.concurrent.TimeUnit;
@@ -32,14 +30,14 @@ class CustomTabObserver extends EmptyTabObserver {
     private final CustomTabsConnection mCustomTabsConnection;
     private final CustomTabsSessionToken mSession;
     private final boolean mOpenedByChrome;
+    private final NavigationInfoCaptureTrigger mNavigationInfoCaptureTrigger =
+            new NavigationInfoCaptureTrigger(this::captureNavigationInfo);
     private int mContentBitmapWidth;
     private int mContentBitmapHeight;
 
     private long mIntentReceivedTimestamp;
     private long mPageLoadStartedTimestamp;
     private long mFirstCommitTimestamp;
-
-    private boolean mScreenshotTakenForCurrentNavigation;
 
     private static final int STATE_RESET = 0;
     private static final int STATE_WAITING_LOAD_START = 1;
@@ -116,7 +114,7 @@ class CustomTabObserver extends EmptyTabObserver {
             mCustomTabsConnection.setSendNavigationInfoForSession(mSession, false);
             mCustomTabsConnection.notifyNavigationEvent(
                     mSession, CustomTabsCallback.NAVIGATION_STARTED);
-            mScreenshotTakenForCurrentNavigation = false;
+            mNavigationInfoCaptureTrigger.onNewNavigation();
         }
     }
 
@@ -130,7 +128,7 @@ class CustomTabObserver extends EmptyTabObserver {
 
     @Override
     public void onHidden(Tab tab) {
-        if (!mScreenshotTakenForCurrentNavigation) captureNavigationInfo(tab);
+        mNavigationInfoCaptureTrigger.onHide(tab);
     }
 
     @Override
@@ -178,7 +176,7 @@ class CustomTabObserver extends EmptyTabObserver {
             }
         }
         resetPageLoadTracking();
-        captureNavigationInfo(tab);
+        mNavigationInfoCaptureTrigger.onLoadFinished(tab);
     }
 
     @Override
@@ -211,6 +209,10 @@ class CustomTabObserver extends EmptyTabObserver {
         if (isFirstMainFrameCommit) mFirstCommitTimestamp = SystemClock.elapsedRealtime();
     }
 
+    public void onFirstMeaningfulPaint(Tab tab) {
+        mNavigationInfoCaptureTrigger.onFirstMeaningfulPaint(tab);
+    }
+
     private void resetPageLoadTracking() {
         mCurrentState = STATE_RESET;
         mIntentReceivedTimestamp = -1;
@@ -219,26 +221,15 @@ class CustomTabObserver extends EmptyTabObserver {
     private void captureNavigationInfo(final Tab tab) {
         if (mCustomTabsConnection == null) return;
         if (!mCustomTabsConnection.shouldSendNavigationInfoForSession(mSession)) return;
+        if (tab.getWebContents() == null) return;
 
-        final ContentBitmapCallback callback = new ContentBitmapCallback() {
-            @Override
-            public void onFinishGetBitmap(Bitmap bitmap, int response) {
-                if (TextUtils.isEmpty(tab.getTitle()) && bitmap == null) return;
-                mCustomTabsConnection.sendNavigationInfo(
-                        mSession, tab.getUrl(), tab.getTitle(), bitmap);
-            }
-        };
-        // Delay screenshot capture since the page might be doing post load tasks. And this also
-        // gives time to get rid of any redirects and avoid capturing screenshots for those.
-        ThreadUtils.postOnUiThreadDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (!tab.isHidden() && mCurrentState != STATE_RESET) return;
-                if (tab.getWebContents() == null) return;
-                tab.getWebContents().getContentBitmapAsync(
-                        mContentBitmapWidth, mContentBitmapHeight, callback);
-                mScreenshotTakenForCurrentNavigation = true;
-            }
-        }, 1000);
+        tab.getWebContents().getContentBitmapAsync(
+                mContentBitmapWidth, mContentBitmapHeight, (Bitmap bitmap) -> {
+                    if (TextUtils.isEmpty(tab.getTitle()) && bitmap == null) return;
+                    mCustomTabsConnection.sendNavigationInfo(
+                            mSession, tab.getUrl(), tab.getTitle(), bitmap);
+                });
+
+        return;
     }
 }

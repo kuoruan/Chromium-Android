@@ -56,10 +56,14 @@ public class ShareParams {
     /** The package name of the app who requests for share. If Null, it is requested by Chrome */
     private final String mSourcePackageName;
 
+    /** The {@link Runnable} called when the share dialog is dismissed. */
+    @Nullable
+    private final Runnable mOnDialogDismissed;
+
     private ShareParams(boolean shareDirectly, boolean saveLastUsed, Activity activity,
             String title, String text, String url, @Nullable Uri offlineUri,
             @Nullable Uri screenshotUri, @Nullable TargetChosenCallback callback,
-            @Nullable String sourcePackageName) {
+            @Nullable String sourcePackageName, @Nullable Runnable onDialogDismissed) {
         mShareDirectly = shareDirectly;
         mSaveLastUsed = saveLastUsed;
         mActivity = activity;
@@ -70,6 +74,7 @@ public class ShareParams {
         mScreenshotUri = screenshotUri;
         mCallback = callback;
         mSourcePackageName = sourcePackageName;
+        mOnDialogDismissed = onDialogDismissed;
     }
 
     /**
@@ -146,6 +151,14 @@ public class ShareParams {
         return mSourcePackageName;
     }
 
+    /**
+     * @return The {@link Runnable} to be called when the share dialog is dismissed.
+     */
+    @Nullable
+    public Runnable getOnDialogDismissed() {
+        return mOnDialogDismissed;
+    }
+
     /** The builder for {@link ShareParams} objects. */
     public static class Builder {
         private boolean mShareDirectly;
@@ -159,6 +172,7 @@ public class ShareParams {
         private TargetChosenCallback mCallback;
         private String mSourcePackageName;
         private boolean mIsExternalUrl;
+        private Runnable mOnDialogDismissed;
 
         public Builder(@NonNull Activity activity, @NonNull String title, @NonNull String url) {
             mActivity = activity;
@@ -239,6 +253,14 @@ public class ShareParams {
             return this;
         }
 
+        /**
+         * Set a runnable to be called when the share dialog is dismissed.
+         */
+        public Builder setOnDialogDismissed(Runnable onDialogDismised) {
+            mOnDialogDismissed = onDialogDismised;
+            return this;
+        }
+
         /** @return A fully constructed {@link ShareParams} object. */
         public ShareParams build() {
             if (!TextUtils.isEmpty(mUrl)) {
@@ -253,7 +275,7 @@ public class ShareParams {
                 }
             }
             return new ShareParams(mShareDirectly, mSaveLastUsed, mActivity, mTitle, mText, mUrl,
-                    mOfflineUri, mScreenshotUri, mCallback, mSourcePackageName);
+                    mOfflineUri, mScreenshotUri, mCallback, mSourcePackageName, mOnDialogDismissed);
         }
     }
 }

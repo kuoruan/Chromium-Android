@@ -26,14 +26,36 @@
         android:src="@drawable/ntp_all_dismissed_white" />
 
     <org.chromium.ui.widget.TextViewWithLeading
-        android:id="@+id/body_text"
+        android:id="@+id/title_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/image"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="8dp"
+        android:gravity="center_horizontal"
+        android:text="@string/ntp_title_no_suggestions"
+        android:textAppearance="@style/BlackTitle1"
+        chrome:leading="24dp" />
+
+    <org.chromium.ui.widget.TextViewWithLeading
+        android:id="@+id/body_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/title_text"
         android:layout_alignParentStart="true"
         android:gravity="center_horizontal"
         android:text="@string/ntp_all_dismissed_body_text_morning"
         android:textSize="14sp"
         android:textColor="@color/snippets_text_color"
         chrome:leading="20dp" />
+
+    <Button
+        android:id="@+id/action_button"
+        style="@style/SuggestionCardAction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/body_text"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="12dp"
+        android:text="@string/ntp_all_dismissed_refresh" />
 </RelativeLayout>

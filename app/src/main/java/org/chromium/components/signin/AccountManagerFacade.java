@@ -788,7 +788,8 @@ public class AccountManagerFacade {
                     try {
                         return mAuthTask.run();
                     } catch (AuthException ex) {
-                        Log.w(TAG, "Failed to perform auth task", ex);
+                        Log.w(TAG, "Failed to perform auth task: %s", ex.stringifyCausalChain());
+                        Log.d(TAG, "Exception details:", ex);
                         mIsTransientError.set(ex.isTransientError());
                     }
                     return null;

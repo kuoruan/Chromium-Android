@@ -11,9 +11,11 @@ import android.text.TextUtils;
 
 import org.chromium.base.Callback;
 import org.chromium.base.Log;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ntp.NewTabPageUma;
 import org.chromium.chrome.browser.ntp.snippets.CategoryInt;
 import org.chromium.chrome.browser.ntp.snippets.CategoryStatus;
+import org.chromium.chrome.browser.ntp.snippets.KnownCategories;
 import org.chromium.chrome.browser.ntp.snippets.SectionHeader;
 import org.chromium.chrome.browser.ntp.snippets.SnippetArticle;
 import org.chromium.chrome.browser.ntp.snippets.SnippetArticleViewHolder;
@@ -21,6 +23,8 @@ import org.chromium.chrome.browser.ntp.snippets.SnippetsBridge;
 import org.chromium.chrome.browser.ntp.snippets.SuggestionsSource;
 import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
 import org.chromium.chrome.browser.offlinepages.OfflinePageItem;
+import org.chromium.chrome.browser.preferences.Pref;
+import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.suggestions.SuggestionsOfflineModelObserver;
 import org.chromium.chrome.browser.suggestions.SuggestionsRanker;
 import org.chromium.chrome.browser.suggestions.SuggestionsUiDelegate;
@@ -90,7 +94,14 @@ public class SuggestionsSection extends InnerNode {
         mCategoryInfo = info;
         mSuggestionsSource = uiDelegate.getSuggestionsSource();
 
-        mHeader = new SectionHeader(info.getTitle());
+        boolean isExpandable = ChromeFeatureList.isEnabled(
+                                       ChromeFeatureList.NTP_ARTICLE_SUGGESTIONS_EXPANDABLE_HEADER)
+                && getCategory() == KnownCategories.ARTICLES;
+        boolean isExpanded =
+                PrefServiceBridge.getInstance().getBoolean(Pref.NTP_ARTICLES_LIST_VISIBLE);
+        mHeader = isExpandable ? new SectionHeader(info.getTitle(), isExpanded,
+                                         this::updateSuggestionsVisibilityForExpandableHeader)
+                               : new SectionHeader(info.getTitle());
         mSuggestionsList = new SuggestionsList(mSuggestionsSource, ranker, info);
         mMoreButton = new ActionItem(this, ranker);
 
@@ -107,7 +118,7 @@ public class SuggestionsSection extends InnerNode {
         uiDelegate.addDestructionObserver(mOfflineModelObserver);
 
         if (!isChromeHomeEnabled) {
-            mStatus.setVisible(!hasSuggestions());
+            mStatus.setVisible(shouldShowStatusItem());
         }
     }
 
@@ -254,7 +265,7 @@ public class SuggestionsSection extends InnerNode {
         // track down what's going wrong.
         assert (mStatus == null) == FeatureUtilities.isChromeHomeEnabled();
         if (mStatus != null) {
-            mStatus.setVisible(!hasSuggestions());
+            mStatus.setVisible(shouldShowStatusItem());
         }
 
         // When the ActionItem stops being dismissable, it is possible that it was being
@@ -435,6 +446,8 @@ public class SuggestionsSection extends InnerNode {
      */
     public void appendSuggestions(List<SnippetArticle> suggestions, boolean keepSectionSize,
             boolean reportPrefetchedSuggestionsCount) {
+        if (!shouldShowSuggestions()) return;
+
         int numberOfSuggestionsExposed = getNumberOfSuggestionsExposed();
         if (keepSectionSize) {
             Log.d(TAG, "updateSuggestions: keeping the first %d suggestion",
@@ -481,6 +494,7 @@ public class SuggestionsSection extends InnerNode {
      * Returns whether the list of suggestions can be updated at the moment.
      */
     private boolean canUpdateSuggestions(int numberOfSuggestionsExposed) {
+        if (!shouldShowSuggestions()) return false;
         if (!hasSuggestions()) return true; // If we don't have any, we always accept updates.
 
         if (CardsVariationParameters.ignoreUpdatesForExistingSuggestions()) {
@@ -547,7 +561,9 @@ public class SuggestionsSection extends InnerNode {
         }
 
         boolean isLoading = SnippetsBridge.isCategoryLoading(status);
-        mMoreButton.updateState(isLoading ? ActionItem.State.LOADING : ActionItem.State.BUTTON);
+        mMoreButton.updateState(!shouldShowSuggestions()
+                        ? ActionItem.State.HIDDEN
+                        : (isLoading ? ActionItem.State.LOADING : ActionItem.State.BUTTON));
     }
 
     /** Clears the suggestions and related data, resetting the state of the section. */
@@ -589,6 +605,20 @@ public class SuggestionsSection extends InnerNode {
     }
 
     /**
+     * @return Whether or not the suggestions should be shown in this section.
+     */
+    private boolean shouldShowSuggestions() {
+        return !mHeader.isExpandable() || mHeader.isExpanded();
+    }
+
+    /**
+     * @return Whether or not the {@link StatusItem} should be shown in this section.
+     */
+    private boolean shouldShowStatusItem() {
+        return shouldShowSuggestions() && !hasSuggestions();
+    }
+
+    /**
      * @return The set of indices corresponding to items that can dismiss this entire section
      * (as opposed to individual items in it).
      */
@@ -602,6 +632,33 @@ public class SuggestionsSection extends InnerNode {
 
         assert statusCardIndex + 1 == getStartingOffsetForChild(mMoreButton);
         return new HashSet<>(Arrays.asList(statusCardIndex, statusCardIndex + 1));
+    }
+
+    /**
+     * Update the expandable header state to match the preference value if necessary. This can
+     * happen when the preference is updated by a user click on another new tab page.
+     */
+    void updateExpandableHeader() {
+        if (mHeader.isExpandable()
+                && mHeader.isExpanded()
+                        != PrefServiceBridge.getInstance().getBoolean(
+                                   Pref.NTP_ARTICLES_LIST_VISIBLE)) {
+            mHeader.toggleHeader();
+        }
+    }
+
+    /**
+     * Update the visibility of the suggestions based on whether the header is expanded. This is
+     * called when the section header is toggled.
+     */
+    private void updateSuggestionsVisibilityForExpandableHeader() {
+        assert mHeader.isExpandable();
+        PrefServiceBridge.getInstance().setBoolean(
+                Pref.NTP_ARTICLES_LIST_VISIBLE, mHeader.isExpanded());
+        clearData();
+        if (mHeader.isExpanded()) updateSuggestions();
+        setStatus(mSuggestionsSource.getCategoryStatus(getCategory()));
+        mStatus.setVisible(shouldShowStatusItem());
     }
 
     public SuggestionsCategoryInfo getCategoryInfo() {

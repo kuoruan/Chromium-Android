@@ -34,6 +34,7 @@ import android.text.TextUtils;
 import android.util.SparseArray;
 import android.view.KeyEvent;
 
+import org.chromium.base.CollectionUtil;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.SysUtils;
@@ -794,13 +795,21 @@ public class MediaNotificationManager {
 
     @VisibleForTesting
     void onPlay(int actionSource) {
-        if (!mMediaNotificationInfo.isPaused) return;
+        // MediaSessionCompat calls this sometimes when `mMediaNotificationInfo`
+        // is no longer available. It's unclear if it is a Support Library issue
+        // or something that isn't properly cleaned up but given that the
+        // crashes are rare and the fix is simple, null check was enough.
+        if (mMediaNotificationInfo == null || !mMediaNotificationInfo.isPaused) return;
         mMediaNotificationInfo.listener.onPlay(actionSource);
     }
 
     @VisibleForTesting
     void onPause(int actionSource) {
-        if (mMediaNotificationInfo.isPaused) return;
+        // MediaSessionCompat calls this sometimes when `mMediaNotificationInfo`
+        // is no longer available. It's unclear if it is a Support Library issue
+        // or something that isn't properly cleaned up but given that the
+        // crashes are rare and the fix is simple, null check was enough.
+        if (mMediaNotificationInfo == null || mMediaNotificationInfo.isPaused) return;
         mMediaNotificationInfo.listener.onPause(actionSource);
     }
 
@@ -1216,7 +1225,7 @@ public class MediaNotificationManager {
                 compactActions.add(actions.indexOf(MediaSessionAction.PLAY));
             }
             compactActions.add(actions.indexOf(CUSTOM_MEDIA_SESSION_ACTION_STOP));
-            return convertIntegerListToIntArray(compactActions);
+            return CollectionUtil.integerListToIntArray(compactActions);
         }
 
         int[] actionsArray = new int[COMPACT_VIEW_ACTIONS_COUNT];
@@ -1243,12 +1252,6 @@ public class MediaNotificationManager {
         actionsArray[2] = actions.indexOf(MediaSessionAction.SEEK_FORWARD);
 
         return actionsArray;
-    }
-
-    static int[] convertIntegerListToIntArray(List<Integer> intList) {
-        int[] intArray = new int[intList.size()];
-        for (int i = 0; i < intList.size(); ++i) intArray[i] = i;
-        return intArray;
     }
 
     private static Context getContext() {

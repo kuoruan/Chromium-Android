@@ -28,6 +28,22 @@ public abstract class WebsitePreferenceBridge {
     }
 
     /**
+     * @return the list of all origins that have clipboard permissions in non-incognito mode.
+     */
+    @SuppressWarnings("unchecked")
+    public static List<ClipboardInfo> getClipboardInfo() {
+        ArrayList<ClipboardInfo> list = new ArrayList<ClipboardInfo>();
+        nativeGetClipboardOrigins(list);
+        return list;
+    }
+
+    @CalledByNative
+    private static void insertClipboardInfoIntoList(
+            ArrayList<ClipboardInfo> list, String origin, String embedder) {
+        list.add(new ClipboardInfo(origin, embedder, false));
+    }
+
+    /**
      * @return the list of all origins that have geolocation permissions in non-incognito mode.
      */
     @SuppressWarnings("unchecked")
@@ -235,6 +251,11 @@ public abstract class WebsitePreferenceBridge {
         return nativeGetAdBlockingActivated(origin);
     }
 
+    private static native void nativeGetClipboardOrigins(Object list);
+    static native int nativeGetClipboardSettingForOrigin(
+            String origin, boolean isIncognito);
+    public static native void nativeSetClipboardSettingForOrigin(
+            String origin, int value, boolean isIncognito);
     private static native void nativeGetGeolocationOrigins(Object list, boolean managedOnly);
     static native int nativeGetGeolocationSettingForOrigin(
             String origin, String embedder, boolean isIncognito);
@@ -266,7 +287,7 @@ public abstract class WebsitePreferenceBridge {
     static native void nativeSetCameraSettingForOrigin(
             String origin, int value, boolean isIncognito);
     static native void nativeClearCookieData(String path);
-    static native void nativeClearLocalStorageData(String path);
+    static native void nativeClearLocalStorageData(String path, Object callback);
     static native void nativeClearStorageData(String origin, int type, Object callback);
     private static native void nativeFetchLocalStorageInfo(
             Object callback, boolean includeImportant);

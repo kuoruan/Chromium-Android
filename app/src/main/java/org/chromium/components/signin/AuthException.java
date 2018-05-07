@@ -43,4 +43,15 @@ public class AuthException extends Exception {
     public boolean isTransientError() {
         return mIsTransientError;
     }
+
+    /**
+     * Joins messages from all exceptions in the causal chain into a single string.
+     */
+    public String stringifyCausalChain() {
+        StringBuilder builder = new StringBuilder(toString());
+        for (Throwable cause = getCause(); cause != null; cause = cause.getCause()) {
+            builder.append("\nCaused by: ").append(cause.toString());
+        }
+        return builder.toString();
+    }
 }

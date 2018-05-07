@@ -21,6 +21,7 @@ import android.graphics.RectF;
 import android.graphics.Region.Op;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.SystemClock;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -32,19 +33,12 @@ import android.view.animation.OvershootInterpolator;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.CalledByNative;
-import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.content.R;
-import org.chromium.content_public.browser.WebContents;
 
 /**
- * PopupZoomer is used to show the tap disambiguation popup.  When a tap lands ambiguously
- * between two tiny touch targets (usually links) on a desktop site viewed on a phone,
- * a magnified view of the content is shown, the screen is grayed out and the user
- * must re-tap the magnified content in order to clarify their intent.
+ * {@link View} class that implements tap disambiguation UI.
  */
-@JNINamespace("content")
 public class PopupZoomer extends View {
     private static final String TAG = "cr.PopupZoomer";
 
@@ -67,8 +61,6 @@ public class PopupZoomer extends View {
     private static final int UMA_TAPDISAMBIGUATION_TAPPEDINSIDE_DIFFERENTNODE = 5;
     private static final int UMA_TAPDISAMBIGUATION_COUNT = 6;
 
-    private long mNativePopupZoomer;
-
     private void recordHistogram(int value) {
         RecordHistogram.recordEnumeratedHistogram(
                 UMA_TAPDISAMBIGUATION, value, UMA_TAPDISAMBIGUATION_COUNT);
@@ -81,7 +73,7 @@ public class PopupZoomer extends View {
         public void onResolveTapDisambiguation(long timeMs, float x, float y, boolean isLongPress);
     }
 
-    private OnTapListener mOnTapListener;
+    private final OnTapListener mOnTapListener;
 
     /**
      * Interface to be implemented to add and remove PopupZoomer to/from the view hierarchy.
@@ -91,7 +83,7 @@ public class PopupZoomer extends View {
         public void onPopupZoomerHidden(PopupZoomer zoomer);
     }
 
-    private OnVisibilityChangedListener mOnVisibilityChangedListener;
+    private final OnVisibilityChangedListener mOnVisibilityChangedListener;
 
     // Cached drawable used to frame the zooming popup.
     // TODO(tonyg): This should be marked purgeable so that if the system wants to recover this
@@ -197,11 +189,16 @@ public class PopupZoomer extends View {
     /**
      * Creates Popupzoomer.
      * @param context Context to be used.
-     * @param webContents WebContents instance with which this PopupZoomer is associated.
      * @param containerView view that popup zoomer gets added to.
+     * @param visibilityListener {@link OnVisibilityChangedListener} listener.
+     * @param tapListener {@link OnTapListener} listener.
      */
-    public PopupZoomer(Context context, WebContents webContents, ViewGroup containerView) {
+    public PopupZoomer(Context context, ViewGroup containerView,
+            OnVisibilityChangedListener visibilityListener, OnTapListener tapListener) {
         super(context);
+
+        mOnVisibilityChangedListener = visibilityListener;
+        mOnTapListener = tapListener;
 
         setVisibility(INVISIBLE);
         setFocusable(true);
@@ -249,54 +246,13 @@ public class PopupZoomer extends View {
                     }
                 };
         mGestureDetector = new GestureDetector(context, listener);
-        initOptionalListeners(containerView);
-        mNativePopupZoomer = nativeInit(webContents);
-    }
-
-    protected void initOptionalListeners(final ViewGroup containerView) {
-        // OnVisibilityChangedListener, OnTapListener can only be used to add and remove views
-        // from the container view at creation.
-        mOnVisibilityChangedListener = new OnVisibilityChangedListener() {
-            @Override
-            public void onPopupZoomerShown(final PopupZoomer zoomer) {
-                containerView.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (containerView.indexOfChild(zoomer) == -1) {
-                            containerView.addView(zoomer);
-                        }
-                    }
-                });
-            }
-
-            @Override
-            public void onPopupZoomerHidden(final PopupZoomer zoomer) {
-                containerView.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (containerView.indexOfChild(zoomer) != -1) {
-                            containerView.removeView(zoomer);
-                            containerView.invalidate();
-                        }
-                    }
-                });
-            }
-        };
-        mOnTapListener = new OnTapListener() {
-            @Override
-            public void onResolveTapDisambiguation(
-                    long timeMs, float x, float y, boolean isLongPress) {
-                if (mNativePopupZoomer == 0) return;
-                containerView.requestFocus();
-                nativeResolveTapDisambiguation(mNativePopupZoomer, timeMs, x, y, isLongPress);
-            }
-        };
     }
 
     /**
      * Sets the bitmap to be used for the zoomed view.
      */
-    public void setBitmap(Bitmap bitmap) {
+    @VisibleForTesting
+    void setBitmap(Bitmap bitmap) {
         if (mZoomedBitmap != null) {
             mZoomedBitmap.recycle();
             mZoomedBitmap = null;
@@ -309,7 +265,11 @@ public class PopupZoomer extends View {
         RectF canvasRect = new RectF(0, 0, canvas.getWidth(), canvas.getHeight());
         float overlayCornerRadius = getOverlayCornerRadius(getContext());
         path.addRoundRect(canvasRect, overlayCornerRadius, overlayCornerRadius, Direction.CCW);
-        canvas.clipPath(path, Op.XOR);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            canvas.clipOutPath(path);
+        } else {
+            canvas.clipPath(path, Op.DIFFERENCE);
+        }
         Paint clearPaint = new Paint();
         clearPaint.setXfermode(new PorterDuffXfermode(Mode.SRC));
         clearPaint.setColor(Color.TRANSPARENT);
@@ -635,29 +595,4 @@ public class PopupZoomer extends View {
             return mInterpolator.getInterpolation(input);
         }
     }
-
-    @CalledByNative
-    private void destroy() {
-        mNativePopupZoomer = 0;
-    }
-
-    @CalledByNative
-    private void showPopup(Rect targetRect, Bitmap zoomedBitmap) {
-        setBitmap(zoomedBitmap);
-        show(targetRect);
-    }
-
-    @CalledByNative
-    private void hidePopup() {
-        hide(false);
-    }
-
-    @CalledByNative
-    private static Rect createRect(int x, int y, int right, int bottom) {
-        return new Rect(x, y, right, bottom);
-    }
-
-    private native long nativeInit(WebContents webContents);
-    private native void nativeResolveTapDisambiguation(
-            long nativePopupZoomer, long timeMs, float x, float y, boolean isLongPress);
 }

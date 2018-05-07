@@ -476,7 +476,7 @@ public class ChromeHomeSurveyController implements InfoBarContainer.InfoBarAnima
 
     static class StartDownloadIfEligibleTask extends AsyncTask<Void, Void, Boolean> {
         final ChromeHomeSurveyController mController;
-        @SuppressLint("StaticFieldLeak") // TODO(crbug.com/799070): Fix.
+        @SuppressLint("StaticFieldLeak") // TODO(crbug.com/807728): Remove and fix.
         final Context mContext;
         final TabModelSelector mSelector;
 

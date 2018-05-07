@@ -47,11 +47,10 @@ public class LocationBarPhone extends LocationBarLayout {
     private @Nullable View mIncognitoBadge;
     private View mGoogleGContainer;
     private View mGoogleG;
-    private View mUrlActionsContainer;
     private int mIncognitoBadgePadding;
     private int mGoogleGWidth;
     private int mGoogleGMargin;
-    private float mUrlFocusChangePercent;
+
     private Runnable mKeyboardResizeModeTask;
     private ObjectAnimator mOmniboxBackgroundAnimator;
     private boolean mCloseSheetOnBackButton;
@@ -77,12 +76,11 @@ public class LocationBarPhone extends LocationBarLayout {
         mGoogleGWidth = getResources().getDimensionPixelSize(R.dimen.location_bar_google_g_width);
         mGoogleGMargin = getResources().getDimensionPixelSize(R.dimen.location_bar_google_g_margin);
 
-        mUrlActionsContainer = findViewById(R.id.url_action_container);
         Rect delegateArea = new Rect();
-        mUrlActionsContainer.getHitRect(delegateArea);
+        mUrlActionContainer.getHitRect(delegateArea);
         delegateArea.left -= ACTION_BUTTON_TOUCH_OVERFLOW_LEFT;
-        TouchDelegate touchDelegate = new TouchDelegate(delegateArea, mUrlActionsContainer);
-        assert mUrlActionsContainer.getParent() == this;
+        TouchDelegate touchDelegate = new TouchDelegate(delegateArea, mUrlActionContainer);
+        assert mUrlActionContainer.getParent() == this;
         setTouchDelegate(touchDelegate);
     }
 
@@ -101,12 +99,12 @@ public class LocationBarPhone extends LocationBarLayout {
         mUrlFocusChangePercent = percent;
 
         if (percent > 0f) {
-            mUrlActionsContainer.setVisibility(VISIBLE);
+            mUrlActionContainer.setVisibility(VISIBLE);
         } else if (percent == 0f && !isUrlFocusChangeInProgress()) {
             // If a URL focus change is in progress, then it will handle setting the visibility
             // correctly after it completes.  If done here, it would cause the URL to jump due
             // to a badly timed layout call.
-            mUrlActionsContainer.setVisibility(GONE);
+            mUrlActionContainer.setVisibility(GONE);
         }
 
         updateButtonVisibility();
@@ -131,17 +129,17 @@ public class LocationBarPhone extends LocationBarLayout {
     @Override
     protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
         boolean needsCanvasRestore = false;
-        if (child == mUrlBar && mUrlActionsContainer.getVisibility() == VISIBLE) {
+        if (child == mUrlBar && mUrlActionContainer.getVisibility() == VISIBLE) {
             canvas.save();
 
             // Clip the URL bar contents to ensure they do not draw under the URL actions during
             // focus animations.  Based on the RTL state of the location bar, the url actions
             // container can be on the left or right side, so clip accordingly.
-            if (mUrlBar.getLeft() < mUrlActionsContainer.getLeft()) {
-                canvas.clipRect(0, 0, (int) mUrlActionsContainer.getX(), getBottom());
+            if (mUrlBar.getLeft() < mUrlActionContainer.getLeft()) {
+                canvas.clipRect(0, 0, (int) mUrlActionContainer.getX(), getBottom());
             } else {
-                canvas.clipRect(mUrlActionsContainer.getX() + mUrlActionsContainer.getWidth(),
-                        0, getWidth(), getBottom());
+                canvas.clipRect(mUrlActionContainer.getX() + mUrlActionContainer.getWidth(), 0,
+                        getWidth(), getBottom());
             }
             needsCanvasRestore = true;
         }
@@ -176,7 +174,7 @@ public class LocationBarPhone extends LocationBarLayout {
             if (mBottomSheet == null) {
                 setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE, true);
             }
-            mUrlActionsContainer.setVisibility(GONE);
+            mUrlActionContainer.setVisibility(GONE);
         } else {
             // If Chrome Home is enabled, it will handle its own mode changes.
             if (mBottomSheet == null) {
@@ -392,5 +390,13 @@ public class LocationBarPhone extends LocationBarLayout {
     public void onNativeLibraryReady() {
         super.onNativeLibraryReady();
         if (mBottomSheet != null) updateGoogleG();
+
+        // TODO(twellington): Move this to constructor when isModernUiEnabled() is available before
+        // native is loaded.
+        if (useModernDesign()) {
+            // Modern does not use the incognito badge. Remove the View to save memory.
+            removeView(mIncognitoBadge);
+            mIncognitoBadge = null;
+        }
     }
 }

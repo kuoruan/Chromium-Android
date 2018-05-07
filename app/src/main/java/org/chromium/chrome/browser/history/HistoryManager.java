@@ -26,6 +26,7 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.document.ChromeLauncherActivity;
 import org.chromium.chrome.browser.favicon.LargeIconBridge;
@@ -39,7 +40,8 @@ import org.chromium.chrome.browser.signin.SigninManager.SignInStateObserver;
 import org.chromium.chrome.browser.snackbar.Snackbar;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;
 import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarController;
-import org.chromium.chrome.browser.util.FeatureUtilities;
+import org.chromium.chrome.browser.tabmodel.TabCreatorManager.TabCreator;
+import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.chrome.browser.widget.selection.SelectableBottomSheetContent.SelectableBottomSheetContentManager;
 import org.chromium.chrome.browser.widget.selection.SelectableListLayout;
@@ -47,6 +49,7 @@ import org.chromium.chrome.browser.widget.selection.SelectableListToolbar;
 import org.chromium.chrome.browser.widget.selection.SelectableListToolbar.SearchDelegate;
 import org.chromium.chrome.browser.widget.selection.SelectionDelegate;
 import org.chromium.chrome.browser.widget.selection.SelectionDelegate.SelectionObserver;
+import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.ui.base.Clipboard;
 import org.chromium.ui.base.DeviceFormFactor;
 
@@ -118,9 +121,7 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
         mToolbar = (HistoryManagerToolbar) mSelectableListLayout.initializeToolbar(
                 R.layout.history_toolbar, mSelectionDelegate, R.string.menu_history, null,
                 R.id.normal_menu_group, R.id.selection_mode_menu_group,
-                FeatureUtilities.isChromeHomeEnabled() ? R.color.modern_toolbar_bg
-                                                       : R.color.modern_primary_color,
-                this, true);
+                R.color.modern_primary_color, this, true);
         mToolbar.setManager(this);
         mToolbar.initializeSearchView(this, R.string.history_manager_search, R.id.search_menu_id);
         mToolbar.setInfoMenuItem(R.id.info_menu_id);
@@ -169,7 +170,7 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
             }});
 
         // 9. Listen to changes in sign in state.
-        SigninManager.get(mActivity).addSignInStateObserver(this);
+        SigninManager.get().addSignInStateObserver(this);
 
         // 10. Create PrefChangeRegistrar to receive notifications on preference changes.
         mPrefChangeRegistrar = new PrefChangeRegistrar();
@@ -268,7 +269,7 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
         mHistoryAdapter.onDestroyed();
         mLargeIconBridge.destroy();
         mLargeIconBridge = null;
-        SigninManager.get(mActivity).removeSignInStateObserver(this);
+        SigninManager.get().removeSignInStateObserver(this);
         mPrefChangeRegistrar.destroy();
     }
 
@@ -293,8 +294,21 @@ public class HistoryManager implements OnMenuItemClickListener, SignInStateObser
      *                     the current tab.
      */
     public void openUrl(String url, Boolean isIncognito, boolean createNewTab) {
-        IntentHandler.startActivityForTrustedIntent(
-                getOpenUrlIntent(url, isIncognito, createNewTab));
+        if (isDisplayedInSeparateActivity()) {
+            IntentHandler.startActivityForTrustedIntent(
+                    getOpenUrlIntent(url, isIncognito, createNewTab));
+            return;
+        }
+
+        ChromeActivity activity = (ChromeActivity) mActivity;
+        if (createNewTab) {
+            TabCreator tabCreator = (isIncognito == null) ? activity.getCurrentTabCreator()
+                                                          : activity.getTabCreator(isIncognito);
+            tabCreator.createNewTab(
+                    new LoadUrlParams(url), TabLaunchType.FROM_LINK, activity.getActivityTab());
+        } else {
+            activity.getActivityTab().loadUrl(new LoadUrlParams(url));
+        }
     }
 
     /**

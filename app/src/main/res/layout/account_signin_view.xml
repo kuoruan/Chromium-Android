@@ -114,25 +114,25 @@
                 <View style="@style/Divider"/>
 
                 <TextView
+                    android:id="@+id/signin_sync_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:layout_marginBottom="8dp"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:text="@string/sync_confirmation_chrome_sync_title"
                     android:textAppearance="@style/BlackTitle2"
                     android:drawableStart="@drawable/chrome_sync_logo"
                     android:drawablePadding="16dp"/>
 
                 <TextView
+                    android:id="@+id/signin_sync_description"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
                     android:paddingStart="56dp"
                     android:paddingEnd="16dp"
                     android:lineSpacingMultiplier="1.4"
-                    android:text="@string/sync_confirmation_chrome_sync_message"
                     android:textColor="@color/descriptive_text_color"
                     android:textSize="@dimen/text_size_medium" />
 
@@ -142,15 +142,15 @@
                     android:layout_marginEnd="16dp"/>
 
                 <TextView
+                    android:id="@+id/signin_personalize_service_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:layout_marginBottom="8dp"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:text="@string/sync_confirmation_personalize_services_title"
                     android:textAppearance="@style/BlackTitle2"
-                    android:drawableStart="@drawable/googleg"
+                    android:drawableStart="@drawable/ic_logo_googleg_24dp"
                     android:drawablePadding="16dp"/>
 
                 <TextView
@@ -161,7 +161,6 @@
                     android:paddingStart="56dp"
                     android:paddingEnd="16dp"
                     android:lineSpacingMultiplier="1.4"
-                    android:text="@string/sync_confirmation_personalize_services_body"
                     android:textColor="@color/descriptive_text_color"
                     android:textSize="@dimen/text_size_medium"/>
 
@@ -173,7 +172,6 @@
                     android:paddingEnd="16dp"
                     android:paddingBottom="36dp"
                     android:lineSpacingMultiplier="1.4"
-                    android:text="@string/signin_signed_in_settings_description"
                     android:textColor="@color/descriptive_text_color"
                     android:textSize="@dimen/text_size_medium" />
             </LinearLayout>
@@ -196,7 +194,6 @@
             android:layout_height="36dp"
             android:paddingStart="@dimen/fre_button_padding"
             android:paddingEnd="@dimen/fre_button_padding"
-            android:text="@string/fre_skip_text"
             android:textAllCaps="true"
             android:textColor="@color/light_active_color"
             android:textSize="14sp"/>
@@ -214,7 +211,6 @@
             android:layout_height="36dp"
             android:paddingStart="@dimen/fre_button_padding"
             android:paddingEnd="@dimen/fre_button_padding"
-            android:text="@string/choose_account_sign_in"
             android:textAllCaps="true"
             style="@style/WhiteBody"
             chrome:buttonColor="@color/light_active_color"
@@ -225,7 +221,6 @@
             style="@style/ButtonCompatBorderless"
             android:layout_width="wrap_content"
             android:layout_height="36dp"
-            android:text="@string/more"
             android:textAllCaps="true"
             android:textColor="@color/light_active_color"
             android:textSize="@dimen/text_size_medium"

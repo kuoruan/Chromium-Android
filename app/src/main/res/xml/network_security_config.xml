@@ -4,7 +4,12 @@
      found in the LICENSE file. -->
 
 <network-security-config>
-    <base-config>
+    <!-- We delegate the handling of HLS videos to Android MediaPlayer. Starting
+    with Android P, the default value of isCleartextTrafficPermitted() is false.
+    This breaks our usage of MediaPlayer. We have to explicitly set
+    cleartextTrafficPermitted here to preserve functionality.
+    See https://crbug.com/827265. See also MediaPlayerRenderer. -->
+    <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="user"/>
             <certificates src="system"/>

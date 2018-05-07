@@ -8,7 +8,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.StrictMode;
 import android.os.SystemClock;
 import android.view.ContextThemeWrapper;
 import android.view.InflateException;
@@ -19,6 +18,7 @@ import android.view.ViewStub;
 import android.widget.FrameLayout;
 
 import org.chromium.base.Log;
+import org.chromium.base.StrictModeContext;
 import org.chromium.base.SysUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.TraceEvent;
@@ -114,12 +114,11 @@ public final class WarmupManager {
      */
     public void initializeViewHierarchy(Context baseContext, int toolbarContainerId,
             int toolbarId) {
-        TraceEvent.begin("WarmupManager.initializeViewHierarchy");
         // Inflating the view hierarchy causes StrictMode violations on some
         // devices. Since layout inflation should happen on the UI thread, allow
         // the disk reads. crbug.com/644243.
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-        try {
+        try (TraceEvent e = TraceEvent.scoped("WarmupManager.initializeViewHierarchy");
+                StrictModeContext c = StrictModeContext.allowDiskReads()) {
             ThreadUtils.assertOnUiThread();
             if (mMainView != null && mToolbarContainerId == toolbarContainerId) return;
             ContextThemeWrapper context =
@@ -138,9 +137,6 @@ public final class WarmupManager {
             // See crbug.com/606715.
             Log.e(TAG, "Inflation exception.", e);
             mMainView = null;
-        } finally {
-            StrictMode.setThreadPolicy(oldPolicy);
-            TraceEvent.end("WarmupManager.initializeViewHierarchy");
         }
     }
 
@@ -186,7 +182,8 @@ public final class WarmupManager {
         new AsyncTask<String, Void, Void>() {
             @Override
             protected Void doInBackground(String... params) {
-                try {
+                try (TraceEvent e =
+                                TraceEvent.scoped("WarmupManager.prefetchDnsForUrlInBackground")) {
                     InetAddress.getByName(new URL(url).getHost());
                 } catch (MalformedURLException e) {
                     // We don't do anything with the result of the request, it

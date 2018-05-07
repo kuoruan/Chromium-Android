@@ -462,17 +462,18 @@ public class ShareHelper {
             }
         });
 
-        if (callback != null) {
-            dialog.setOnDismissListener(new OnDismissListener() {
-                @Override
-                public void onDismiss(DialogInterface dialog) {
-                    if (!callbackCalled[0]) {
-                        callback.onCancel();
-                        callbackCalled[0] = true;
-                    }
+        dialog.setOnDismissListener(new OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                if (callback != null && !callbackCalled[0]) {
+                    callback.onCancel();
+                    callbackCalled[0] = true;
                 }
-            });
-        }
+                if (params.getOnDialogDismissed() != null) {
+                    params.getOnDialogDismissed().run();
+                }
+            }
+        });
 
         if (sFakeIntentReceiverForTesting != null) {
             sFakeIntentReceiverForTesting.onCustomChooserShown(dialog);
@@ -604,7 +605,6 @@ public class ShareHelper {
     public static Intent getShareLinkIntent(ShareParams params) {
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.addFlags(ApiCompatibilityUtils.getActivityNewDocumentFlag());
-        intent.putExtra(Intent.EXTRA_SUBJECT, params.getTitle());
         intent.putExtra(EXTRA_TASK_ID, params.getActivity().getTaskId());
 
         Uri screenshotUri = params.getScreenshotUri();
@@ -618,12 +618,16 @@ public class ShareHelper {
         }
 
         if (params.getOfflineUri() != null) {
+            intent.putExtra(Intent.EXTRA_SUBJECT, params.getTitle());
             intent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intent.putExtra(Intent.EXTRA_STREAM, params.getOfflineUri());
             intent.addCategory(Intent.CATEGORY_DEFAULT);
             intent.setType("multipart/related");
         } else {
+            if (!TextUtils.equals(params.getText(), params.getTitle())) {
+                intent.putExtra(Intent.EXTRA_SUBJECT, params.getTitle());
+            }
             intent.putExtra(Intent.EXTRA_TEXT, params.getText());
             intent.setType("text/plain");
         }

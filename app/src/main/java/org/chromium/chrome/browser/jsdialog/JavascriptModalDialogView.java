@@ -43,6 +43,9 @@ public class JavascriptModalDialogView extends ModalDialogView {
         params.title = title;
         params.positiveButtonTextId = positiveButtonTextId;
         params.negativeButtonTextId = negativeButtonTextId;
+        LayoutInflater inflater = LayoutInflater.from(ModalDialogView.getContext());
+        params.customView = inflater.inflate(R.layout.js_modal_dialog, null);
+
         return new JavascriptModalDialogView(
                 controller, params, message, promptText, shouldShowSuppressCheckBox);
     }
@@ -51,14 +54,10 @@ public class JavascriptModalDialogView extends ModalDialogView {
             String promptText, boolean shouldShowSuppressCheckBox) {
         super(controller, params);
 
-        LayoutInflater inflater = LayoutInflater.from(getContext());
-        View customLayout = inflater.inflate(R.layout.js_modal_dialog, null);
-        params.customView = customLayout;
-
         mScrollView = params.customView.findViewById(R.id.js_modal_dialog_scroll_view);
-        mMessageView = customLayout.findViewById(R.id.js_modal_dialog_message);
-        mPromptEditText = customLayout.findViewById(R.id.js_modal_dialog_prompt);
-        mSuppressCheckBox = customLayout.findViewById(R.id.suppress_js_modal_dialogs);
+        mMessageView = params.customView.findViewById(R.id.js_modal_dialog_message);
+        mPromptEditText = params.customView.findViewById(R.id.js_modal_dialog_prompt);
+        mSuppressCheckBox = params.customView.findViewById(R.id.suppress_js_modal_dialogs);
 
         mMessageView.setText(message);
         setPromptText(promptText);

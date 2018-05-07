@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -58,17 +59,20 @@ public class AddressEditor
     private EditorModel mEditor;
     private ProgressDialog mProgressDialog;
     private boolean mEmailFieldIncluded;
+    private boolean mSaveToDisk;
 
     /**
      * Builds an address editor.
      *
      * @param emailFieldIncluded True if the address editor has an email field. The autofill form
-     * has an email address, and the payment request doesn't.
+     *                           has an email address, and the payment request doesn't.
+     * @param saveToDisk         Whether to save changes to disk after editing.
      */
-    public AddressEditor(boolean emailFieldIncluded) {
+    public AddressEditor(boolean emailFieldIncluded, boolean saveToDisk) {
         mPhoneFormatter = new PhoneNumberUtil.CountryAwareFormatTextWatcher();
         mPhoneValidator = new CountryAwarePhoneNumberValidator();
         mEmailFieldIncluded = emailFieldIncluded;
+        mSaveToDisk = saveToDisk;
     }
 
     /**
@@ -278,7 +282,18 @@ public class AddressEditor
         }
 
         // Save the edited autofill profile locally.
-        profile.setGUID(PersonalDataManager.getInstance().setProfileToLocal(mProfile));
+        if (mSaveToDisk) {
+            profile.setGUID(PersonalDataManager.getInstance().setProfileToLocal(mProfile));
+        }
+
+        if (profile.getGUID().isEmpty()) {
+            assert !mSaveToDisk;
+
+            // Set a fake guid for a new temp AutofillProfile to be used in CardEditor. Note that
+            // this temp AutofillProfile should not be saved to disk.
+            profile.setGUID(UUID.randomUUID().toString());
+        }
+
         profile.setIsLocal(true);
     }
 
@@ -347,7 +362,7 @@ public class AddressEditor
                 (adminAreaCodes != null && adminAreaNames != null && adminAreaCodes.length != 0
                         && adminAreaCodes.length == adminAreaNames.length)
                         ? EditorFieldModel.createDropdown(null /* label */,
-                                  mAutofillProfileBridge.getAdminAreaDropdownList(
+                                  AutofillProfileBridge.getAdminAreaDropdownList(
                                           adminAreaCodes, adminAreaNames),
                                   mContext.getString(R.string.select))
                         : EditorFieldModel.createTextInput(

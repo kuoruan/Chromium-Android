@@ -20,7 +20,8 @@ import java.lang.annotation.RetentionPolicy;
     BackgroundSavePageResult.LOADING_CANCELED, BackgroundSavePageResult.FOREGROUND_CANCELED,
     BackgroundSavePageResult.SAVE_FAILED, BackgroundSavePageResult.EXPIRED,
     BackgroundSavePageResult.RETRY_COUNT_EXCEEDED, BackgroundSavePageResult.START_COUNT_EXCEEDED,
-    BackgroundSavePageResult.USER_CANCELED, BackgroundSavePageResult.STATUS_COUNT
+    BackgroundSavePageResult.USER_CANCELED, BackgroundSavePageResult.DOWNLOAD_THROTTLED,
+    BackgroundSavePageResult.STATUS_COUNT
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface BackgroundSavePageResult {
@@ -33,8 +34,9 @@ public @interface BackgroundSavePageResult {
   int RETRY_COUNT_EXCEEDED = 6;
   int START_COUNT_EXCEEDED = 7;
   int USER_CANCELED = 8;
+  int DOWNLOAD_THROTTLED = 9;
   /**
    * NOTE: insert new values above this line and update histogram enum too.
    */
-  int STATUS_COUNT = 9;
+  int STATUS_COUNT = 10;
 }

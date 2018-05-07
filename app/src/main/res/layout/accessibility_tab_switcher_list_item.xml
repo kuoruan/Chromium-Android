@@ -21,7 +21,7 @@
         android:layout_height="match_parent"
         android:visibility="gone" >
 
-        <ImageView
+        <org.chromium.chrome.browser.widget.TintedImageView
             android:id="@+id/tab_favicon"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
@@ -29,10 +29,10 @@
             android:minHeight="40dp"
             android:paddingStart="12dp"
             android:paddingEnd="8dp"
-            android:src="@drawable/globe_favicon"
             android:scaleType="fitCenter"
             android:gravity="center_vertical"
-            android:contentDescription="@null" />
+            android:contentDescription="@null"
+            chrome:chrometint="@android:color/white" />
         <TextView
             android:id="@+id/tab_title"
             android:layout_width="0dp"
@@ -63,11 +63,13 @@
 
         <include layout="@layout/modern_list_item_view" />
 
+        <!-- TODO(huayinz): Remove custom padding after https://crbug.com/746712 is fixed. -->
         <org.chromium.chrome.browser.widget.TintedImageButton
             android:id="@+id/close_btn_modern"
-            style="@style/ListItemEndIcon"
-            android:src="@drawable/btn_close"
-            chrome:chrometint="@color/dark_mode_tint" />
+            style="@style/ListItemEndIconSmall"
+            android:paddingStart="23dp"
+            android:paddingEnd="13dp"
+            android:src="@drawable/btn_delete_24dp" />
     </LinearLayout>
 
     <LinearLayout

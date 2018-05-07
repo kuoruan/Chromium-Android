@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.preferences;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.chromium.base.ContextUtils;
@@ -13,6 +14,7 @@ import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.ContentSettingsType;
+import org.chromium.chrome.browser.download.DownloadPromptStatus;
 import org.chromium.chrome.browser.preferences.languages.LanguageItem;
 import org.chromium.chrome.browser.preferences.website.ContentSetting;
 import org.chromium.chrome.browser.preferences.website.ContentSettingException;
@@ -27,7 +29,7 @@ import java.util.List;
  * preferences should be grouped with their relevant functionality but this is a grab-bag for other
  * preferences.
  */
-public final class PrefServiceBridge {
+public class PrefServiceBridge {
     // These values must match the native enum values in
     // SupervisedUserURLFilter::FilteringBehavior
     public static final int SUPERVISED_USER_FILTERING_ALLOW = 0;
@@ -82,9 +84,9 @@ public final class PrefServiceBridge {
         return new AboutVersionStrings(applicationVersion, osVersion);
     }
 
-    private PrefServiceBridge() {
-        TemplateUrlService.getInstance().load();
-    }
+    // Singleton constructor. Do not call directly unless for testing purpose.
+    @VisibleForTesting
+    protected PrefServiceBridge() {}
 
     private static PrefServiceBridge sInstance;
 
@@ -93,7 +95,12 @@ public final class PrefServiceBridge {
      */
     public static PrefServiceBridge getInstance() {
         ThreadUtils.assertOnUiThread();
-        if (sInstance == null) sInstance = new PrefServiceBridge();
+        if (sInstance == null) {
+            sInstance = new PrefServiceBridge();
+
+            // Put initialization here to make instantiation in unit tests easier.
+            TemplateUrlService.getInstance().load();
+        }
         return sInstance;
     }
 
@@ -363,6 +370,13 @@ public final class PrefServiceBridge {
      */
     public boolean isBackgroundSyncAllowed() {
         return nativeGetBackgroundSyncEnabled();
+    }
+
+    /**
+     * @return true if websites are allowed to read from the clipboard.
+     */
+    public boolean isClipboardEnabled() {
+        return isContentSettingEnabled(ContentSettingsType.CONTENT_SETTINGS_TYPE_CLIPBOARD_READ);
     }
 
     /**
@@ -699,6 +713,10 @@ public final class PrefServiceBridge {
 
     public void setBlockThirdPartyCookiesEnabled(boolean enabled) {
         nativeSetBlockThirdPartyCookiesEnabled(enabled);
+    }
+
+    public void setClipboardEnabled(boolean allow) {
+        nativeSetClipboardEnabled(allow);
     }
 
     public void setDoNotTrackEnabled(boolean enabled) {
@@ -1050,8 +1068,28 @@ public final class PrefServiceBridge {
     /**
      * @param directory New directory to set as the download default directory.
      */
-    public void setDownloadDefaultDirectory(String directory) {
-        nativeSetDownloadDefaultDirectory(directory);
+    public void setDownloadAndSaveFileDefaultDirectory(String directory) {
+        nativeSetDownloadAndSaveFileDefaultDirectory(directory);
+    }
+
+    /**
+     * @return The status of prompt for download pref, defined by {@link DownloadPromptStatus}.
+     */
+    @DownloadPromptStatus
+    public int getPromptForDownloadAndroid() {
+        return nativeGetPromptForDownloadAndroid();
+    }
+
+    /**
+     * @param status New status to update the prompt for download preference.
+     */
+    public void setPromptForDownloadAndroid(@DownloadPromptStatus int status) {
+        nativeSetPromptForDownloadAndroid(status);
+    }
+
+    @VisibleForTesting
+    public static void setInstanceForTesting(@Nullable PrefServiceBridge instanceForTesting) {
+        sInstance = instanceForTesting;
     }
 
     private native boolean nativeGetBoolean(int preference);
@@ -1108,6 +1146,7 @@ public final class PrefServiceBridge {
     private native void nativeSetAllowCookiesEnabled(boolean allow);
     private native void nativeSetBackgroundSyncEnabled(boolean allow);
     private native void nativeSetBlockThirdPartyCookiesEnabled(boolean enabled);
+    private native void nativeSetClipboardEnabled(boolean allow);
     private native void nativeSetDoNotTrackEnabled(boolean enabled);
     private native void nativeSetRememberPasswordsEnabled(boolean allow);
     private native void nativeSetPasswordManagerAutoSigninEnabled(boolean enabled);
@@ -1167,5 +1206,7 @@ public final class PrefServiceBridge {
     private native boolean nativeIsBlockedLanguage(String language);
     private native void nativeSetLanguageBlockedState(String language, boolean blocked);
     private native String nativeGetDownloadDefaultDirectory();
-    private native void nativeSetDownloadDefaultDirectory(String directory);
+    private native void nativeSetDownloadAndSaveFileDefaultDirectory(String directory);
+    private native int nativeGetPromptForDownloadAndroid();
+    private native void nativeSetPromptForDownloadAndroid(int status);
 }

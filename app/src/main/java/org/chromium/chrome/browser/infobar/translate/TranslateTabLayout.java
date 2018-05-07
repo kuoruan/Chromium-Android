@@ -45,7 +45,7 @@ public class TranslateTabLayout extends TabLayout {
     /**
      * Constructor for inflating from XML.
      */
-    @SuppressLint("CustomViewStyleable") // TODO(crbug.com/799070): File bug for author to fix.
+    @SuppressLint("CustomViewStyleable") // TODO(crbug.com/807725): Remove and fix.
     public TranslateTabLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
 

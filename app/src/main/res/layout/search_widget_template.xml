@@ -31,6 +31,7 @@
             android:gravity="center_vertical"
             android:singleLine="true"
             android:textAlignment="viewStart"
+            android:text="@string/search_widget_default"
             android:textColor="@color/google_grey_600"
             android:textSize="17sp" />
 

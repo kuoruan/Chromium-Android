@@ -280,13 +280,10 @@ AcquireResponse callback) {
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public org.chromium.mojo.system.SharedBufferHandle sharedBuffer;
-        public org.chromium.mojo.system.UntypedHandle socketDescriptor;
+        public AudioDataPipe dataPipe;
     
         private AudioOutputStreamProviderAcquireResponseParams(int version) {
             super(STRUCT_SIZE, version);
-            this.sharedBuffer = org.chromium.mojo.system.InvalidHandle.INSTANCE;
-            this.socketDescriptor = org.chromium.mojo.system.InvalidHandle.INSTANCE;
         }
     
         public AudioOutputStreamProviderAcquireResponseParams() {
@@ -322,11 +319,8 @@ AcquireResponse callback) {
                 result = new AudioOutputStreamProviderAcquireResponseParams(mainDataHeader.elementsOrVersion);
                 if (mainDataHeader.elementsOrVersion >= 0) {
                     
-                    result.sharedBuffer = decoder0.readSharedBufferHandle(8, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.socketDescriptor = decoder0.readUntypedHandle(12, false);
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.dataPipe = AudioDataPipe.decode(decoder1);
                 }
             } finally {
                 decoder0.decreaseStackDepth();
@@ -339,9 +333,7 @@ AcquireResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(this.sharedBuffer, 8, false);
-            
-            encoder0.encode(this.socketDescriptor, 12, false);
+            encoder0.encode(this.dataPipe, 8, false);
         }
     
         /**
@@ -356,9 +348,7 @@ AcquireResponse callback) {
             if (getClass() != object.getClass())
                 return false;
             AudioOutputStreamProviderAcquireResponseParams other = (AudioOutputStreamProviderAcquireResponseParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sharedBuffer, other.sharedBuffer))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.socketDescriptor, other.socketDescriptor))
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.dataPipe, other.dataPipe))
                 return false;
             return true;
         }
@@ -370,8 +360,7 @@ AcquireResponse callback) {
         public int hashCode() {
             final int prime = 31;
             int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sharedBuffer);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.socketDescriptor);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.dataPipe);
             return result;
         }
     }
@@ -397,7 +386,7 @@ AcquireResponse callback) {
 
                 AudioOutputStreamProviderAcquireResponseParams response = AudioOutputStreamProviderAcquireResponseParams.deserialize(messageWithHeader.getPayload());
 
-                mCallback.call(response.sharedBuffer, response.socketDescriptor);
+                mCallback.call(response.dataPipe);
                 return true;
             } catch (org.chromium.mojo.bindings.DeserializationException e) {
                 return false;
@@ -421,12 +410,10 @@ AcquireResponse callback) {
         }
 
         @Override
-        public void call(org.chromium.mojo.system.SharedBufferHandle sharedBuffer, org.chromium.mojo.system.UntypedHandle socketDescriptor) {
+        public void call(AudioDataPipe dataPipe) {
             AudioOutputStreamProviderAcquireResponseParams _response = new AudioOutputStreamProviderAcquireResponseParams();
 
-            _response.sharedBuffer = sharedBuffer;
-
-            _response.socketDescriptor = socketDescriptor;
+            _response.dataPipe = dataPipe;
 
             org.chromium.mojo.bindings.ServiceMessage _message =
                     _response.serializeWithHeader(

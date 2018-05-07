@@ -222,9 +222,4 @@ class StackAnimationPortrait extends StackAnimation {
     protected float getScreenSizeInScrollDirection() {
         return mHeight;
     }
-
-    @Override
-    protected int getTabCreationDirection() {
-        return -1;
-    }
 }

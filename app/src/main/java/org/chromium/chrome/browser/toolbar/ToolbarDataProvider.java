@@ -75,6 +75,11 @@ public interface ToolbarDataProvider {
     boolean isOfflinePage();
 
     /**
+     * @return Whether the page currently shown is an untrusted offline page.
+     */
+    boolean isShowingUntrustedOfflinePage();
+
+    /**
      * @param urlBarText The text currently displayed in the url bar.
      * @return Whether the Google 'G' should be shown in the location bar.
      */
@@ -102,4 +107,9 @@ public interface ToolbarDataProvider {
      */
     @DrawableRes
     int getSecurityIconResource();
+
+    /**
+     * @return Whether or not we're currently showing a search query instead of a URL.
+     */
+    boolean isDisplayingQueryTerms();
 }

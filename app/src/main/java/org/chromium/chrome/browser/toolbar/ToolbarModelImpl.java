@@ -5,18 +5,15 @@
 package org.chromium.chrome.browser.toolbar;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.os.Build;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeFeatureList;
-import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.dom_distiller.DomDistillerServiceFactory;
 import org.chromium.chrome.browser.dom_distiller.DomDistillerTabUtils;
 import org.chromium.chrome.browser.locale.LocaleManager;
@@ -37,22 +34,29 @@ import org.chromium.ui.base.DeviceFormFactor;
 /**
  * Contains the data and state for the toolbar.
  */
-class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, ToolbarModelDelegate {
+@VisibleForTesting
+public class ToolbarModelImpl
+        extends ToolbarModel implements ToolbarDataProvider, ToolbarModelDelegate {
     private final BottomSheet mBottomSheet;
+    private final boolean mUseModernDesign;
     private Tab mTab;
     private boolean mIsIncognito;
     private int mPrimaryColor;
     private boolean mIsUsingBrandColor;
+    private boolean mQueryInOmniboxEnabled;
 
     /**
      * Default constructor for this class.
+     * @param bottomSheet The {@link BottomSheet} for the activity displaying this toolbar.
+     * @param useModernDesign Whether the modern design should be used for the toolbar represented
+     *                        by this model.
      */
-    public ToolbarModelImpl(@Nullable BottomSheet bottomSheet) {
+    public ToolbarModelImpl(@Nullable BottomSheet bottomSheet, boolean useModernDesign) {
         super();
         mBottomSheet = bottomSheet;
-        mPrimaryColor = ApiCompatibilityUtils.getColor(
-                ContextUtils.getApplicationContext().getResources(),
-                R.color.default_primary_color);
+        mUseModernDesign = useModernDesign;
+        mPrimaryColor = ColorUtils.getDefaultThemeColor(
+                ContextUtils.getApplicationContext().getResources(), useModernDesign, false);
     }
 
     /**
@@ -60,6 +64,7 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
      */
     public void initializeWithNative() {
         initialize(this);
+        mQueryInOmniboxEnabled = ChromeFeatureList.isEnabled(ChromeFeatureList.QUERY_IN_OMNIBOX);
     }
 
     @Override
@@ -97,13 +102,8 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
     @Override
     public String getCurrentUrl() {
         // TODO(yusufo) : Consider using this for all calls from getTab() for accessing url.
-        if (!hasTab()) {
-            if (mBottomSheet != null && mBottomSheet.isShowingNewTab()) {
-                return UrlConstants.NTP_URL;
-            } else {
-                return "";
-            }
-        }
+        if (!hasTab()) return "";
+
         // Tab.getUrl() returns empty string if it does not have a URL.
         return getTab().getUrl().trim();
     }
@@ -142,6 +142,10 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
             String originalUrl = mTab.getOriginalUrl();
             displayText = OfflinePageUtils.stripSchemeFromOnlineUrl(
                   DomDistillerTabUtils.getFormattedUrlFromOriginalDistillerUrl(originalUrl));
+        } else {
+            String searchTerms = extractSearchTermsFromUrl(url);
+            // Show the search terms in the omnibox instead of the URL if this is a DSE search URL.
+            if (searchTerms != null) displayText = searchTerms;
         }
 
         return displayText;
@@ -191,17 +195,13 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
         Context context = ContextUtils.getApplicationContext();
         mIsUsingBrandColor = !isIncognito()
                 && mPrimaryColor
-                        != ApiCompatibilityUtils.getColor(
-                                   context.getResources(), R.color.default_primary_color)
+                        != ColorUtils.getDefaultThemeColor(
+                                   context.getResources(), mUseModernDesign, isIncognito())
                 && hasTab() && !mTab.isNativePage();
     }
 
     @Override
     public int getPrimaryColor() {
-        if (mBottomSheet != null) {
-            Resources res = ContextUtils.getApplicationContext().getResources();
-            return ColorUtils.getDefaultThemeColor(res, true, isIncognito());
-        }
         return mPrimaryColor;
     }
 
@@ -213,6 +213,11 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
     @Override
     public boolean isOfflinePage() {
         return hasTab() && OfflinePageUtils.isOfflinePage(mTab);
+    }
+
+    @Override
+    public boolean isShowingUntrustedOfflinePage() {
+        return isOfflinePage() && !OfflinePageUtils.isShowingTrustedOfflinePage(mTab);
     }
 
     @Override
@@ -229,8 +234,8 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
         boolean isShownInRegularNtp = ntp != null && ntp.isLocationBarShownInNTP()
                 && ChromeFeatureList.isEnabled(ChromeFeatureList.NTP_SHOW_GOOGLE_G_IN_OMNIBOX);
 
-        boolean isShownInBottomSheet = mBottomSheet != null && !mBottomSheet.isShowingNewTab()
-                && mBottomSheet.isSheetOpen() && TextUtils.isEmpty(urlBarText)
+        boolean isShownInBottomSheet = mBottomSheet != null && mBottomSheet.isSheetOpen()
+                && TextUtils.isEmpty(urlBarText)
                 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
                 && ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_CLEAR_URL_ON_OPEN)
                 && ChromeFeatureList.isEnabled(
@@ -262,6 +267,11 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
 
     @Override
     public int getSecurityIconResource() {
+        // If we're showing a query in the omnibox, and the security level is high enough to show
+        // the search icon, return that instead of the security icon.
+        if (isDisplayingQueryTerms()) {
+            return R.drawable.ic_search;
+        }
         return getSecurityIconResource(
                 getSecurityLevel(), !DeviceFormFactor.isTablet(), isOfflinePage());
     }
@@ -306,5 +316,35 @@ class ToolbarModelImpl extends ToolbarModel implements ToolbarDataProvider, Tool
                 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
                 && ChromeFeatureList.isInitialized()
                 && ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_HOME_CLEAR_URL_ON_OPEN);
+    }
+
+    @Override
+    public boolean isDisplayingQueryTerms() {
+        return extractSearchTermsFromUrl(getCurrentUrl()) != null;
+    }
+
+    private boolean securityLevelSafeForQueryInOmnibox() {
+        int securityLevel = getSecurityLevel();
+        return securityLevel == ConnectionSecurityLevel.SECURE
+                || securityLevel == ConnectionSecurityLevel.EV_SECURE;
+    }
+
+    /**
+     * Extracts query terms from a URL if it's a SRP URL from the default search engine.
+     *
+     * @param url The URL to extract search terms from.
+     * @return The search terms. Returns null if not a DSE SRP URL or there are no search terms to
+     *         extract, if query in omnibox is disabled, or if the security level is insufficient to
+     *         display search terms in place of SRP URL.
+     */
+    private String extractSearchTermsFromUrl(String url) {
+        boolean shouldShowSearchTerms =
+                mQueryInOmniboxEnabled && securityLevelSafeForQueryInOmnibox();
+        if (!shouldShowSearchTerms) return null;
+        String searchTerms = TemplateUrlService.getInstance().extractSearchTermsFromUrl(url);
+        if (!TextUtils.isEmpty(searchTerms)) {
+            return searchTerms;
+        }
+        return null;
     }
 }

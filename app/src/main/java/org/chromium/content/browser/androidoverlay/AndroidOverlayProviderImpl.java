@@ -66,6 +66,7 @@ public class AndroidOverlayProviderImpl implements AndroidOverlayProvider {
         // Limit the number of concurrent surfaces.
         if (mNumOverlays >= MAX_OVERLAYS) {
             client.onDestroyed();
+            client.close();
             return;
         }
 

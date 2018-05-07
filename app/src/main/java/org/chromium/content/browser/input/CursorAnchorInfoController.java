@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.inputmethod.CursorAnchorInfo;
 
 import org.chromium.base.VisibleForTesting;
+import org.chromium.content_public.browser.InputMethodManagerWrapper;
 
 import java.util.Arrays;
 
@@ -100,8 +101,7 @@ final class CursorAnchorInfoController {
     }
 
     @VisibleForTesting
-    public void setInputMethodManagerWrapperForTest(
-            InputMethodManagerWrapper inputMethodManagerWrapper) {
+    public void setInputMethodManagerWrapper(InputMethodManagerWrapper inputMethodManagerWrapper) {
         mInputMethodManagerWrapper = inputMethodManagerWrapper;
     }
 

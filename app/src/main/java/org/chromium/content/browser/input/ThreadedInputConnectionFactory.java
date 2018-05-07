@@ -12,6 +12,7 @@ import android.view.inputmethod.EditorInfo;
 
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.content_public.browser.InputMethodManagerWrapper;
 
 /**
  * A factory class for {@link ThreadedInputConnection}. The class also includes triggering
@@ -121,7 +122,10 @@ public class ThreadedInputConnectionFactory implements ChromiumBaseInputConnecti
             Log.i(TAG, "initializeAndGet. outAttr: " + ImeUtils.getEditorInfoDebugString(outAttrs));
         }
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+        // https://crbug.com/820756
+        final String htcMailPackageId = "com.htc.android.mail";
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N
+                || htcMailPackageId.equals(view.getContext().getPackageName())) {
             // IMM can internally ignore subsequent activation requests, e.g., by checking
             // mServedConnecting.
             if (mCheckInvalidator != null) mCheckInvalidator.invalidate();

@@ -140,6 +140,21 @@ class LanguagesManager {
     }
 
     /**
+     * Move a language's position in the user's accept languages list.
+     * @param code The language code to move.
+     * @param offset The offset from the original position.
+     *               Negative value means up and positive value means down.
+     * @param reload  Whether to reload the language list.
+     */
+    public void moveLanguagePosition(String code, int offset, boolean reload) {
+        if (offset == 0) return;
+
+        PrefServiceBridge.getInstance().moveAcceptLanguage(code, offset);
+        recordAction(ACTION_LANGUAGE_LIST_REORDERED);
+        if (reload) notifyAcceptLanguageObserver();
+    }
+
+    /**
      * Get the static instance of ChromePreferenceManager if it exists else create it.
      * @return the LanguagesManager singleton.
      */

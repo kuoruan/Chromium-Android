@@ -21,8 +21,18 @@ public class TabModalLifetimeHandler {
     private final TabObserver mTabObserver = new EmptyTabObserver() {
         @Override
         public void onInteractabilityChanged(boolean isInteractable) {
-            if (!isInteractable && mPresenter.getModalDialog() != null) {
-                mManager.cancelAllDialogs();
+            if (!isInteractable) {
+                mManager.suspendType(ModalDialogManager.TAB_MODAL);
+            } else {
+                mManager.resumeType(ModalDialogManager.TAB_MODAL);
+            }
+        }
+
+        @Override
+        public void onDestroyed(Tab tab) {
+            if (mActiveTab == tab) {
+                mManager.cancelAllDialogs(ModalDialogManager.TAB_MODAL);
+                mActiveTab = null;
             }
         }
     };
@@ -48,9 +58,18 @@ public class TabModalLifetimeHandler {
         mTabModelObserver = new TabModelSelectorTabModelObserver(tabModelSelector) {
             @Override
             public void didSelectTab(Tab tab, TabModel.TabSelectionType type, int lastId) {
-                if (mActiveTab != null) mActiveTab.removeObserver(mTabObserver);
-                mActiveTab = tabModelSelector.getCurrentTab();
-                if (mActiveTab != null) mActiveTab.addObserver(mTabObserver);
+                if (tab == null || tab.getId() != lastId) {
+                    mManager.cancelAllDialogs(ModalDialogManager.TAB_MODAL);
+                    if (mActiveTab != null) mActiveTab.removeObserver(mTabObserver);
+
+                    mActiveTab = tab;
+                    if (mActiveTab != null) {
+                        mActiveTab.addObserver(mTabObserver);
+                        if (mActiveTab.isUserInteractable()) {
+                            mManager.resumeType(ModalDialogManager.TAB_MODAL);
+                        }
+                    }
+                }
             }
         };
     }

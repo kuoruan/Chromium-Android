@@ -111,7 +111,7 @@ public class ConfirmSyncDataStateMachineDelegate {
                     .setTitle(R.string.sign_in_timeout_title)
                     .setMessage(R.string.sign_in_timeout_message)
                     .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.cancel())
-                    .setPositiveButton(R.string.retry, (dialog, which) -> mListener.onRetry())
+                    .setPositiveButton(R.string.try_again, (dialog, which) -> mListener.onRetry())
                     .create();
         }
 

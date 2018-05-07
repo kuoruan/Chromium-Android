@@ -51,7 +51,9 @@ class JpegDecodeAccelerator_Internal {
 
     private static final int DECODE_ORDINAL = 1;
 
-    private static final int UNINITIALIZE_ORDINAL = 2;
+    private static final int DECODE_WITH_FD_ORDINAL = 2;
+
+    private static final int UNINITIALIZE_ORDINAL = 3;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements JpegDecodeAccelerator.Proxy {
@@ -111,6 +113,40 @@ DecodeResponse callback) {
 
 
         @Override
+        public void decodeWithFd(
+int bufferId, org.chromium.mojo.system.UntypedHandle inputFd, int inputBufferSize, int codedSizeWidth, int codedSizeHeight, org.chromium.mojo.system.UntypedHandle outputFd, int outputBufferSize, 
+DecodeWithFdResponse callback) {
+
+            JpegDecodeAcceleratorDecodeWithFdParams _message = new JpegDecodeAcceleratorDecodeWithFdParams();
+
+            _message.bufferId = bufferId;
+
+            _message.inputFd = inputFd;
+
+            _message.inputBufferSize = inputBufferSize;
+
+            _message.codedSizeWidth = codedSizeWidth;
+
+            _message.codedSizeHeight = codedSizeHeight;
+
+            _message.outputFd = outputFd;
+
+            _message.outputBufferSize = outputBufferSize;
+
+
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    DECODE_WITH_FD_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new JpegDecodeAcceleratorDecodeWithFdResponseParamsForwardToCallback(callback));
+
+        }
+
+
+        @Override
         public void uninitialize(
 ) {
 
@@ -147,6 +183,8 @@ DecodeResponse callback) {
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 JpegDecodeAccelerator_Internal.MANAGER, messageWithHeader);
+            
+            
             
             
             
@@ -215,6 +253,21 @@ DecodeResponse callback) {
                                 JpegDecodeAcceleratorDecodeParams.deserialize(messageWithHeader.getPayload());
             
                         getImpl().decode(data.inputBuffer, data.codedSize, data.outputHandle, data.outputBufferSize, new JpegDecodeAcceleratorDecodeResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
+            
+            
+            
+            
+            
+            
+            
+                    case DECODE_WITH_FD_ORDINAL: {
+            
+                        JpegDecodeAcceleratorDecodeWithFdParams data =
+                                JpegDecodeAcceleratorDecodeWithFdParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().decodeWithFd(data.bufferId, data.inputFd, data.inputBufferSize, data.codedSizeWidth, data.codedSizeHeight, data.outputFd, data.outputBufferSize, new JpegDecodeAcceleratorDecodeWithFdResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
             
@@ -749,6 +802,326 @@ DecodeResponse callback) {
                             mCore,
                             new org.chromium.mojo.bindings.MessageHeader(
                                     DECODE_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
+        }
+    }
+
+
+
+    
+    static final class JpegDecodeAcceleratorDecodeWithFdParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 40;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int bufferId;
+        public org.chromium.mojo.system.UntypedHandle inputFd;
+        public int inputBufferSize;
+        public int codedSizeWidth;
+        public int codedSizeHeight;
+        public org.chromium.mojo.system.UntypedHandle outputFd;
+        public int outputBufferSize;
+    
+        private JpegDecodeAcceleratorDecodeWithFdParams(int version) {
+            super(STRUCT_SIZE, version);
+            this.inputFd = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+            this.outputFd = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+        }
+    
+        public JpegDecodeAcceleratorDecodeWithFdParams() {
+            this(0);
+        }
+    
+        public static JpegDecodeAcceleratorDecodeWithFdParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static JpegDecodeAcceleratorDecodeWithFdParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static JpegDecodeAcceleratorDecodeWithFdParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            JpegDecodeAcceleratorDecodeWithFdParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new JpegDecodeAcceleratorDecodeWithFdParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.bufferId = decoder0.readInt(8);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.inputFd = decoder0.readUntypedHandle(12, false);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.inputBufferSize = decoder0.readInt(16);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.codedSizeWidth = decoder0.readInt(20);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.codedSizeHeight = decoder0.readInt(24);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.outputFd = decoder0.readUntypedHandle(28, false);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.outputBufferSize = decoder0.readInt(32);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.bufferId, 8);
+            
+            encoder0.encode(this.inputFd, 12, false);
+            
+            encoder0.encode(this.inputBufferSize, 16);
+            
+            encoder0.encode(this.codedSizeWidth, 20);
+            
+            encoder0.encode(this.codedSizeHeight, 24);
+            
+            encoder0.encode(this.outputFd, 28, false);
+            
+            encoder0.encode(this.outputBufferSize, 32);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            JpegDecodeAcceleratorDecodeWithFdParams other = (JpegDecodeAcceleratorDecodeWithFdParams) object;
+            if (this.bufferId!= other.bufferId)
+                return false;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.inputFd, other.inputFd))
+                return false;
+            if (this.inputBufferSize!= other.inputBufferSize)
+                return false;
+            if (this.codedSizeWidth!= other.codedSizeWidth)
+                return false;
+            if (this.codedSizeHeight!= other.codedSizeHeight)
+                return false;
+            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.outputFd, other.outputFd))
+                return false;
+            if (this.outputBufferSize!= other.outputBufferSize)
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.bufferId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.inputFd);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.inputBufferSize);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.codedSizeWidth);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.codedSizeHeight);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.outputFd);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.outputBufferSize);
+            return result;
+        }
+    }
+
+
+
+    
+    static final class JpegDecodeAcceleratorDecodeWithFdResponseParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int bufferId;
+        public int error;
+    
+        private JpegDecodeAcceleratorDecodeWithFdResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public JpegDecodeAcceleratorDecodeWithFdResponseParams() {
+            this(0);
+        }
+    
+        public static JpegDecodeAcceleratorDecodeWithFdResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static JpegDecodeAcceleratorDecodeWithFdResponseParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static JpegDecodeAcceleratorDecodeWithFdResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            JpegDecodeAcceleratorDecodeWithFdResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new JpegDecodeAcceleratorDecodeWithFdResponseParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.bufferId = decoder0.readInt(8);
+                }
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.error = decoder0.readInt(12);
+                        DecodeError.validate(result.error);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.bufferId, 8);
+            
+            encoder0.encode(this.error, 12);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            JpegDecodeAcceleratorDecodeWithFdResponseParams other = (JpegDecodeAcceleratorDecodeWithFdResponseParams) object;
+            if (this.bufferId!= other.bufferId)
+                return false;
+            if (this.error!= other.error)
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.bufferId);
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.error);
+            return result;
+        }
+    }
+
+    static class JpegDecodeAcceleratorDecodeWithFdResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final JpegDecodeAccelerator.DecodeWithFdResponse mCallback;
+
+        JpegDecodeAcceleratorDecodeWithFdResponseParamsForwardToCallback(JpegDecodeAccelerator.DecodeWithFdResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(DECODE_WITH_FD_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                JpegDecodeAcceleratorDecodeWithFdResponseParams response = JpegDecodeAcceleratorDecodeWithFdResponseParams.deserialize(messageWithHeader.getPayload());
+
+                mCallback.call(response.bufferId, response.error);
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class JpegDecodeAcceleratorDecodeWithFdResponseParamsProxyToResponder implements JpegDecodeAccelerator.DecodeWithFdResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        JpegDecodeAcceleratorDecodeWithFdResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call(Integer bufferId, Integer error) {
+            JpegDecodeAcceleratorDecodeWithFdResponseParams _response = new JpegDecodeAcceleratorDecodeWithFdResponseParams();
+
+            _response.bufferId = bufferId;
+
+            _response.error = error;
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    DECODE_WITH_FD_ORDINAL,
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
                                     mRequestId));
             mMessageReceiver.accept(_message);

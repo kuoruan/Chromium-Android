@@ -9,6 +9,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.CallSuper;
+import android.support.annotation.StringRes;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -35,6 +36,7 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.toolbar.ActionModeController;
 import org.chromium.chrome.browser.toolbar.ToolbarActionModeCallback;
 import org.chromium.chrome.browser.util.FeatureUtilities;
+import org.chromium.chrome.browser.vr_shell.VrShellDelegate;
 import org.chromium.chrome.browser.widget.NumberRollView;
 import org.chromium.chrome.browser.widget.TintedDrawable;
 import org.chromium.chrome.browser.widget.TintedImageButton;
@@ -55,9 +57,9 @@ import javax.annotation.Nullable;
  *
  * @param <E> The type of the selectable items this toolbar interacts with.
  */
-public class SelectableListToolbar<E> extends Toolbar implements SelectionObserver<E>,
-        OnClickListener, OnEditorActionListener, DisplayStyleObserver {
-
+public class SelectableListToolbar<E>
+        extends Toolbar implements SelectionObserver<E>, OnClickListener, OnEditorActionListener,
+                                   DisplayStyleObserver, VrShellDelegate.VrModeObserver {
     /**
      * A delegate that handles searching the list of selectable items associated with this toolbar.
      */
@@ -115,6 +117,7 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
     private SearchDelegate mSearchDelegate;
     private boolean mIsLightTheme = true;
     private boolean mSelectableListHasItems;
+    private boolean mIsVrEnabled = false;
 
     protected NumberRollView mNumberRollView;
     private DrawerLayout mDrawerLayout;
@@ -157,6 +160,7 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
         if (mSelectionDelegate != null) mSelectionDelegate.removeObserver(this);
         mObservers.clear();
         UiUtils.hideKeyboard(mSearchEditText);
+        VrShellDelegate.unregisterVrModeObserver(this);
     }
 
     /**
@@ -198,7 +202,8 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
 
         normalBackgroundColorResId = normalBackgroundColorResId != null
                 ? normalBackgroundColorResId
-                : R.color.default_primary_color;
+                : FeatureUtilities.isChromeModernDesignEnabled() ? R.color.modern_primary_color
+                                                                 : R.color.default_primary_color;
         mNormalBackgroundColor =
                 ApiCompatibilityUtils.getColor(getResources(), normalBackgroundColorResId);
         setBackgroundColor(mNormalBackgroundColor);
@@ -215,9 +220,23 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
         mSelectionMenuButton = TintedDrawable.constructTintedDrawable(
                 getResources(), R.drawable.ic_more_vert_black_24dp, android.R.color.white);
 
-        if (!FeatureUtilities.isChromeHomeEnabled()) {
+        if (!FeatureUtilities.isChromeModernDesignEnabled()) {
             setTitleTextAppearance(getContext(), R.style.BlackHeadline2);
         }
+    }
+
+    @Override
+    public void onEnterVr() {
+        // TODO(https://crbug.com/817177): Editing text is not supported in VR, so we disable
+        // searching.
+        mIsVrEnabled = true;
+        if (mHasSearchView) updateSearchMenuItem();
+    }
+
+    @Override
+    public void onExitVr() {
+        mIsVrEnabled = false;
+        if (mHasSearchView) updateSearchMenuItem();
     }
 
     /**
@@ -266,12 +285,15 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
             }
         });
 
-        if (FeatureUtilities.isChromeHomeEnabled()) {
+        if (FeatureUtilities.isChromeModernDesignEnabled()) {
             mClearTextButton.setPadding(ApiCompatibilityUtils.getPaddingStart(mClearTextButton),
                     mClearTextButton.getPaddingTop(),
                     getResources().getDimensionPixelSize(R.dimen.clear_text_button_end_padding),
                     mClearTextButton.getPaddingBottom());
         }
+
+        VrShellDelegate.registerVrModeObserver(this);
+        if (VrShellDelegate.isInVr()) onEnterVr();
     }
 
     @Override
@@ -303,9 +325,12 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
             showNormalView();
         }
 
-        if (mIsSelectionEnabled && !wasSelectionEnabled) {
+        if (mIsSelectionEnabled) {
+            @StringRes
+            int resId = wasSelectionEnabled ? R.string.accessibility_toolbar_multi_select
+                                            : R.string.accessibility_toolbar_screen_position;
             announceForAccessibility(
-                    getResources().getString(R.string.accessibility_toolbar_screen_position));
+                    getContext().getString(resId, Integer.toString(selectedItems.size())));
         }
     }
 
@@ -445,9 +470,7 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
     protected void onDataChanged(int numItems) {
         if (mHasSearchView) {
             mSelectableListHasItems = numItems != 0;
-            getMenu()
-                    .findItem(mSearchMenuItemId)
-                    .setVisible(!mIsSelectionEnabled && !mIsSearching && mSelectableListHasItems);
+            updateSearchMenuItem();
         }
     }
 
@@ -491,8 +514,8 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
         int padding =
                 SelectableListLayout.getPaddingForDisplayStyle(newDisplayStyle, getResources());
         int paddingStartOffset = 0;
-        boolean isModernSearchViewEnabled =
-                mIsSearching && !mIsSelectionEnabled && FeatureUtilities.isChromeHomeEnabled();
+        boolean isModernSearchViewEnabled = mIsSearching && !mIsSelectionEnabled
+                && FeatureUtilities.isChromeModernDesignEnabled();
         MarginLayoutParams params = (MarginLayoutParams) getLayoutParams();
 
         if (newDisplayStyle.horizontal == HorizontalDisplayStyle.WIDE
@@ -572,7 +595,7 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
         getMenu().setGroupVisible(mSelectedGroupResId, false);
         if (mHasSearchView) {
             mSearchView.setVisibility(View.GONE);
-            getMenu().findItem(mSearchMenuItemId).setVisible(mSelectableListHasItems);
+            updateSearchMenuItem();
         }
 
         setNavigationButton(NAVIGATION_BUTTON_MENU);
@@ -611,7 +634,7 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
         mSearchView.setVisibility(View.VISIBLE);
 
         setNavigationButton(NAVIGATION_BUTTON_BACK);
-        if (FeatureUtilities.isChromeHomeEnabled()) {
+        if (FeatureUtilities.isChromeModernDesignEnabled()) {
             setBackgroundResource(R.drawable.search_toolbar_modern_bg);
         } else {
             setBackgroundColor(mSearchBackgroundColor);
@@ -619,6 +642,15 @@ public class SelectableListToolbar<E> extends Toolbar implements SelectionObserv
 
         onThemeChanged(true);
         updateDisplayStyleIfNecessary();
+    }
+
+    private void updateSearchMenuItem() {
+        if (!mHasSearchView) return;
+        MenuItem searchMenuItem = getMenu().findItem(mSearchMenuItemId);
+        if (searchMenuItem != null) {
+            searchMenuItem.setVisible(mSelectableListHasItems && !mIsSelectionEnabled
+                    && !mIsSearching && !mIsVrEnabled);
+        }
     }
 
     protected void switchToNumberRollView(List<E> selectedItems, boolean wasSelectionEnabled) {

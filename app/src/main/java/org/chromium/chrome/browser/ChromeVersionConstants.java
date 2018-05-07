@@ -4,19 +4,9 @@
 
 package org.chromium.chrome.browser;
 
-class ChromeVersionConstants {
+import org.chromium.components.version_info.VersionConstants;
+
+// Constants specific to Chrome. Common constants are in VersionConstants.
+class ChromeVersionConstants extends VersionConstants {
     static final String PRODUCT_NAME = "Chromium";
-    static final String PRODUCT_VERSION = "65.0.3325.230";
-    @SuppressWarnings({"ComplexBooleanConstant", "IdentityBinaryExpression"})
-    static final boolean IS_OFFICIAL_BUILD = 1 == 1;
-
-    static final int PRODUCT_MAJOR_VERSION = 65;
-
-    static final int CHANNEL_DEFAULT = 0;
-    static final int CHANNEL_CANARY = 1;
-    static final int CHANNEL_DEV = 2;
-    static final int CHANNEL_BETA = 3;
-    static final int CHANNEL_STABLE = 4;
-    static final int CHANNEL_WORK = 5;
-    static final int CHANNEL = CHANNEL_STABLE;
 }

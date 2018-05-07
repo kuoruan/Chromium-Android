@@ -49,17 +49,22 @@ public class VrFirstRunActivity extends Activity {
         // here ensures that this never happens for users running the latest version of VrCore.
         wrapper.setVrModeEnabled(this, true);
         mApi = wrapper.createVrDaydreamApi(this);
-        if (!mApi.isDaydreamCurrentViewer()) {
-            showFre();
-            return;
-        }
-        // Show DOFF with a timeout so that this activity has enough time to be the active VR app.
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mApi.exitFromVr(VrShellDelegate.EXIT_VR_RESULT, new Intent());
+        try {
+            if (!mApi.isDaydreamCurrentViewer()) {
+                showFre();
+                return;
             }
-        }, SHOW_DOFF_TIMEOUT_MS);
+            // Show DOFF with a timeout so that this activity has enough time to be the active VR
+            // app.
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mApi.exitFromVr(VrShellDelegate.EXIT_VR_RESULT, new Intent());
+                }
+            }, SHOW_DOFF_TIMEOUT_MS);
+        } finally {
+            mApi.close();
+        }
     }
 
     @Override

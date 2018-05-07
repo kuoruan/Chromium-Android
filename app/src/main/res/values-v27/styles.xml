@@ -6,18 +6,22 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="MainTheme" parent="MainThemeBase">
         <item name="android:navigationBarColor">@color/bottom_system_nav_color</item>
+        <item name="android:navigationBarDividerColor">@color/bottom_system_nav_divider_color</item>
         <item name="android:windowLightNavigationBar">true</item>
     </style>
     <style name="FullscreenWhite" parent="FullscreenWhiteBase">
         <item name="android:navigationBarColor">@color/bottom_system_nav_color</item>
+        <item name="android:navigationBarDividerColor">@color/bottom_system_nav_divider_color</item>
         <item name="android:windowLightNavigationBar">true</item>
     </style>
     <style name="ThemeWithActionBar" parent="ThemeWithActionBarBase">
         <item name="android:navigationBarColor">@color/bottom_system_nav_color</item>
+        <item name="android:navigationBarDividerColor">@color/bottom_system_nav_divider_color</item>
         <item name="android:windowLightNavigationBar">true</item>
     </style>
     <style name="DialogWhenLarge" parent="DialogWhenLargeBase">
         <item name="android:navigationBarColor">@color/bottom_system_nav_color</item>
+        <item name="android:navigationBarDividerColor">@color/bottom_system_nav_divider_color</item>
         <item name="android:windowLightNavigationBar">true</item>
     </style>
 </resources>

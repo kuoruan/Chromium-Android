@@ -151,8 +151,7 @@ public class AppIndexingUtil {
     }
 
     boolean isEnabledForDevice() {
-        return !SysUtils.isLowEndDevice()
-                && ChromeFeatureList.isEnabled(ChromeFeatureList.COPYLESS_PASTE);
+        return !SysUtils.isLowEndDevice();
     }
 
     private LruCache<String, CacheEntry> getPageCache() {

@@ -57,7 +57,9 @@ class WatchTimeRecorder_Internal {
 
     private static final int SET_VIDEO_DECODER_NAME_ORDINAL = 4;
 
-    private static final int UPDATE_UNDERFLOW_COUNT_ORDINAL = 5;
+    private static final int SET_AUTOPLAY_INITIATED_ORDINAL = 5;
+
+    private static final int UPDATE_UNDERFLOW_COUNT_ORDINAL = 6;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements WatchTimeRecorder.Proxy {
@@ -151,6 +153,23 @@ String name) {
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
                             new org.chromium.mojo.bindings.MessageHeader(SET_VIDEO_DECODER_NAME_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void setAutoplayInitiated(
+boolean value) {
+
+            WatchTimeRecorderSetAutoplayInitiatedParams _message = new WatchTimeRecorderSetAutoplayInitiatedParams();
+
+            _message.value = value;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(SET_AUTOPLAY_INITIATED_ORDINAL)));
 
         }
 
@@ -264,6 +283,19 @@ int count) {
             
             
             
+                    case SET_AUTOPLAY_INITIATED_ORDINAL: {
+            
+                        WatchTimeRecorderSetAutoplayInitiatedParams data =
+                                WatchTimeRecorderSetAutoplayInitiatedParams.deserialize(messageWithHeader.getPayload());
+            
+                        getImpl().setAutoplayInitiated(data.value);
+                        return true;
+                    }
+            
+            
+            
+            
+            
                     case UPDATE_UNDERFLOW_COUNT_ORDINAL: {
             
                         WatchTimeRecorderUpdateUnderflowCountParams data =
@@ -297,6 +329,8 @@ int count) {
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), WatchTimeRecorder_Internal.MANAGER, messageWithHeader, receiver);
+            
+            
             
             
             
@@ -794,6 +828,98 @@ int count) {
             final int prime = 31;
             int result = prime + getClass().hashCode();
             result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.name);
+            return result;
+        }
+    }
+
+
+
+    
+    static final class WatchTimeRecorderSetAutoplayInitiatedParams extends org.chromium.mojo.bindings.Struct {
+    
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public boolean value;
+    
+        private WatchTimeRecorderSetAutoplayInitiatedParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+    
+        public WatchTimeRecorderSetAutoplayInitiatedParams() {
+            this(0);
+        }
+    
+        public static WatchTimeRecorderSetAutoplayInitiatedParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+    
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static WatchTimeRecorderSetAutoplayInitiatedParams deserialize(java.nio.ByteBuffer data) {
+            if (data == null)
+                return null;
+    
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+    
+        @SuppressWarnings("unchecked")
+        public static WatchTimeRecorderSetAutoplayInitiatedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            WatchTimeRecorderSetAutoplayInitiatedParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                result = new WatchTimeRecorderSetAutoplayInitiatedParams(mainDataHeader.elementsOrVersion);
+                if (mainDataHeader.elementsOrVersion >= 0) {
+                    
+                    result.value = decoder0.readBoolean(8, 0);
+                }
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+    
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.value, 8, 0);
+        }
+    
+        /**
+         * @see Object#equals(Object)
+         */
+        @Override
+        public boolean equals(Object object) {
+            if (object == this)
+                return true;
+            if (object == null)
+                return false;
+            if (getClass() != object.getClass())
+                return false;
+            WatchTimeRecorderSetAutoplayInitiatedParams other = (WatchTimeRecorderSetAutoplayInitiatedParams) object;
+            if (this.value!= other.value)
+                return false;
+            return true;
+        }
+    
+        /**
+         * @see Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = prime + getClass().hashCode();
+            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.value);
             return result;
         }
     }

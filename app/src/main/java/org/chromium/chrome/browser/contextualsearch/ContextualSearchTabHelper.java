@@ -241,6 +241,11 @@ public class ContextualSearchTabHelper
                 controller.setSelectionClient(
                         mSelectionClientManager.removeContextualSearchSelectionClient());
             }
+            // Also make sure the UI is hidden if the device is offline.
+            ContextualSearchManager contextualSearchManager = getContextualSearchManager(mTab);
+            if (contextualSearchManager != null && !isDeviceOnline(contextualSearchManager)) {
+                contextualSearchManager.hideContextualSearch(StateChangeReason.UNKNOWN);
+            }
         }
     }
 

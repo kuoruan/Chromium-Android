@@ -7,9 +7,7 @@ package org.chromium.chrome.browser.feedback;
 import android.util.Pair;
 
 import org.chromium.base.CollectionUtil;
-import org.chromium.base.StrictModeContext;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 
@@ -22,8 +20,6 @@ class ChromeHomeFeedbackSource implements FeedbackSource {
     static final String CHROME_HOME_STATE_KEY = "Chrome Home State";
     private static final String CHROME_HOME_ENABLED_VALUE = "Enabled";
     private static final String CHROME_HOME_DISABLED_VALUE = "Disabled";
-    private static final String CHROME_HOME_OPT_IN_VALUE = "Opt-In";
-    private static final String CHROME_HOME_OPT_OUT_VALUE = "Opt-Out";
 
     private final boolean mIsOffTheRecord;
 
@@ -35,19 +31,8 @@ class ChromeHomeFeedbackSource implements FeedbackSource {
     public Map<String, String> getFeedback() {
         if (mIsOffTheRecord) return null;
 
-        boolean userPreferenceSet = false;
-        // Allow disk access for preferences while Chrome Home is in experimentation.
-        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
-            userPreferenceSet =
-                    ChromePreferenceManager.getInstance().isChromeHomeUserPreferenceSet();
-        }
-
-        String value;
-        if (FeatureUtilities.isChromeHomeEnabled()) {
-            value = userPreferenceSet ? CHROME_HOME_OPT_IN_VALUE : CHROME_HOME_ENABLED_VALUE;
-        } else {
-            value = userPreferenceSet ? CHROME_HOME_OPT_OUT_VALUE : CHROME_HOME_DISABLED_VALUE;
-        }
+        String value = FeatureUtilities.isChromeHomeEnabled() ? CHROME_HOME_ENABLED_VALUE
+                                                              : CHROME_HOME_DISABLED_VALUE;
 
         return CollectionUtil.newHashMap(Pair.create(CHROME_HOME_STATE_KEY, value));
     }

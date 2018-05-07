@@ -4,20 +4,12 @@
 
 package org.chromium.chrome.browser.compositor.bottombar;
 
-import org.chromium.content.browser.ContentViewCore;
-
 /**
- * The delegate that is notified when the OverlayPanel ContentViewCore is ready to be rendered.
+ * The delegate that is notified when the OverlayPanel content is released.
  */
 public interface OverlayPanelContentViewDelegate {
     /**
-     * Sets the {@code ContentViewCore} associated to the OverlayPanel.
-     * @param contentViewCore Reference to the ContentViewCore.
+     * Releases the content associated to the OverlayPanel.
      */
-    void setOverlayPanelContentViewCore(ContentViewCore contentViewCore);
-
-    /**
-     * Releases the {@code ContentViewCore} associated to the OverlayPanel.
-     */
-    void releaseOverlayPanelContentViewCore();
+    void releaseOverlayPanelContent();
 }

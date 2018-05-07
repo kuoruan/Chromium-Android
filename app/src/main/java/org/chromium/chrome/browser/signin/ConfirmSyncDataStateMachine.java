@@ -99,7 +99,7 @@ public class ConfirmSyncDataStateMachine
         mContext = context;
         mCallback = callback;
 
-        mCurrentlyManaged = SigninManager.get(context).getManagementDomain() != null;
+        mCurrentlyManaged = SigninManager.get().getManagementDomain() != null;
 
         mDelegate = new ConfirmSyncDataStateMachineDelegate(mFragmentManager);
 

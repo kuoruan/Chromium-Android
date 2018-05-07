@@ -20,7 +20,7 @@ public final class MediaImage extends org.chromium.mojo.bindings.Struct {
     private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public org.chromium.url.mojom.Url src;
-    public org.chromium.mojo.common.mojom.String16 type;
+    public org.chromium.mojo_base.mojom.String16 type;
     public org.chromium.gfx.mojom.Size[] sizes;
 
     private MediaImage(int version) {
@@ -66,7 +66,7 @@ public final class MediaImage extends org.chromium.mojo.bindings.Struct {
             if (mainDataHeader.elementsOrVersion >= 0) {
                 
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
-                result.type = org.chromium.mojo.common.mojom.String16.decode(decoder1);
+                result.type = org.chromium.mojo_base.mojom.String16.decode(decoder1);
             }
             if (mainDataHeader.elementsOrVersion >= 0) {
                 

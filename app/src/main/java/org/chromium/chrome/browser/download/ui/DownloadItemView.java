@@ -36,7 +36,6 @@ import org.chromium.components.variations.VariationsAssociatedData;
 import org.chromium.ui.UiUtils;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * The view for a downloaded item displayed in the Downloads list.
@@ -119,7 +118,7 @@ public class DownloadItemView extends SelectableItemView<DownloadHistoryItemWrap
 
         mIconBackgroundResId = R.drawable.list_item_icon_modern_bg;
 
-        if (FeatureUtilities.isChromeHomeEnabled()) {
+        if (FeatureUtilities.isChromeModernDesignEnabled()) {
             mIconForegroundColorList = ApiCompatibilityUtils.getColorStateList(
                     context.getResources(), R.color.dark_mode_tint);
         } else {
@@ -245,12 +244,17 @@ public class DownloadItemView extends SelectableItemView<DownloadHistoryItemWrap
         mFilenameCompletedView.setText(item.getDisplayFileName());
         mFilenameInProgressView.setText(item.getDisplayFileName());
 
-        String description = String.format(Locale.getDefault(), "%s - %s",
-                Formatter.formatFileSize(context, item.getFileSize()), item.getDisplayHostname());
+        String description = context.getString(R.string.download_manager_list_item_description,
+                Formatter.formatFileSize(getContext(), item.getFileSize()),
+                item.getDisplayHostname());
         mDescriptionCompletedView.setText(description);
 
         if (item.isComplete()) {
             showLayout(mLayoutCompleted);
+
+            // To ensure that text views have correct width after recycling, we have to request
+            // re-layout.
+            mFilenameCompletedView.requestLayout();
         } else {
             showLayout(mLayoutInProgress);
             mDownloadStatusView.setText(item.getStatusString());
@@ -261,11 +265,15 @@ public class DownloadItemView extends SelectableItemView<DownloadHistoryItemWrap
                 mPauseResumeButton.setImageResource(R.drawable.ic_play_arrow_white_24dp);
                 mPauseResumeButton.setContentDescription(
                         getContext().getString(R.string.download_notification_resume_button));
-                mProgressView.setIndeterminate(false);
             } else {
                 mPauseResumeButton.setImageResource(R.drawable.ic_pause_white_24dp);
                 mPauseResumeButton.setContentDescription(
                         getContext().getString(R.string.download_notification_pause_button));
+            }
+
+            if (item.isPaused() || item.isPending()) {
+                mProgressView.setIndeterminate(false);
+            } else {
                 mProgressView.setIndeterminate(progress.isIndeterminate());
             }
 
@@ -330,7 +338,7 @@ public class DownloadItemView extends SelectableItemView<DownloadHistoryItemWrap
     @Override
     protected void updateIconView() {
         if (isChecked()) {
-            if (FeatureUtilities.isChromeHomeEnabled()) {
+            if (FeatureUtilities.isChromeModernDesignEnabled()) {
                 mIconView.setBackgroundResource(mIconBackgroundResId);
                 mIconView.getBackground().setLevel(
                         getResources().getInteger(R.integer.list_item_level_selected));
@@ -343,7 +351,7 @@ public class DownloadItemView extends SelectableItemView<DownloadHistoryItemWrap
         } else if (mThumbnailBitmap != null) {
             assert !mThumbnailBitmap.isRecycled();
             mIconView.setBackground(null);
-            if (FeatureUtilities.isChromeHomeEnabled()) {
+            if (FeatureUtilities.isChromeModernDesignEnabled()) {
                 RoundedBitmapDrawable roundedIcon = RoundedBitmapDrawableFactory.create(
                         getResources(),
                         Bitmap.createScaledBitmap(mThumbnailBitmap, mIconSize, mIconSize, false));
@@ -354,7 +362,7 @@ public class DownloadItemView extends SelectableItemView<DownloadHistoryItemWrap
             }
             mIconView.setTint(null);
         } else {
-            if (FeatureUtilities.isChromeHomeEnabled()) {
+            if (FeatureUtilities.isChromeModernDesignEnabled()) {
                 mIconView.setBackgroundResource(mIconBackgroundResId);
                 mIconView.getBackground().setLevel(
                         getResources().getInteger(R.integer.list_item_level_default));

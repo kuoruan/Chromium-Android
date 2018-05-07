@@ -18,9 +18,6 @@ public interface OfflineContentProvider {
      * (components/offline_items_collection/core/offline_content_provider.h) class.
      */
     interface Observer {
-        /** See OfflineContentProvider::Observer::OnItemsAvailable(...). */
-        void onItemsAvailable();
-
         /** See OfflineContentProvider::Observer::OnItemsAdded(...). */
         void onItemsAdded(ArrayList<OfflineItem> items);
 
@@ -30,9 +27,6 @@ public interface OfflineContentProvider {
         /** See OfflineContentProvider::Observer::OnItemUpdated(...). */
         void onItemUpdated(OfflineItem item);
     }
-
-    /** See OfflineContentProvider::AreItemsAvailable(). */
-    boolean areItemsAvailable();
 
     /** See OfflineContentProvider::OpenItem(...). */
     void openItem(ContentId id);

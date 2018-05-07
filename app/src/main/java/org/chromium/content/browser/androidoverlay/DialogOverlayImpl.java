@@ -309,6 +309,8 @@ public class DialogOverlayImpl implements AndroidOverlay, DialogOverlayCore.Host
         mDialogCore = null;
 
         // If we wanted to send any message to |mClient|, we should have done so already.
+        // We close |mClient| first to prevent leaking the mojo router object.
+        if (mClient != null) mClient.close();
         mClient = null;
     }
 

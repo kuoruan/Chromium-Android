@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.os.Build;
+import android.os.Process;
 import android.preference.PreferenceManager;
 
 import org.chromium.base.annotations.JNINamespace;
@@ -148,5 +149,38 @@ public class ContextUtils {
             context = ((ContextWrapper) context).getBaseContext();
         }
         return context.getAssets();
+    }
+
+    /**
+     * @return Whether the process is isolated.
+     */
+    public static boolean isIsolatedProcess() {
+        try {
+            return (Boolean) Process.class.getMethod("isIsolated").invoke(null);
+        } catch (Exception e) { // No multi-catch below API level 19 for reflection exceptions.
+            // If fallback logic is ever needed, refer to:
+            // https://chromium-review.googlesource.com/c/chromium/src/+/905563/1
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** @return The name of the current process. E.g. "org.chromium.chrome:privileged_process0". */
+    public static String getProcessName() {
+        try {
+            // An even more convenient ActivityThread.currentProcessName() exists, but was not added
+            // until JB MR2.
+            Class<?> activityThreadClazz = Class.forName("android.app.ActivityThread");
+            Object activityThread =
+                    activityThreadClazz.getMethod("currentActivityThread").invoke(null);
+            return (String) activityThreadClazz.getMethod("getProcessName").invoke(activityThread);
+        } catch (Exception e) { // No multi-catch below API level 19 for reflection exceptions.
+            // If fallback logic is ever needed, refer to:
+            // https://chromium-review.googlesource.com/c/chromium/src/+/905563/1
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static boolean isMainProcess() {
+        return !getProcessName().contains(":");
     }
 }

@@ -4,19 +4,14 @@
 
 package org.chromium.chrome.browser.widget.textbubble;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.StringRes;
-import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.MeasureSpec;
 import android.view.View.OnTouchListener;
-import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
 import android.widget.PopupWindow;
@@ -28,24 +23,22 @@ import org.chromium.base.ObserverList;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.util.AccessibilityUtil;
 import org.chromium.chrome.browser.util.MathUtils;
+import org.chromium.ui.widget.AnchoredPopupWindow;
+import org.chromium.ui.widget.RectProvider;
+import org.chromium.ui.widget.ViewRectProvider;
 
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * UI component that handles showing a text callout bubble.  Positioning this bubble happens through
- * calls to {@link #setAnchorRect(Rect)}.  This should be called at least once before the
- * {@link #show()} call.  To attach to a {@link View} see {@link ViewAnchoredTextBubble}.
+ * UI component that handles showing a text callout bubble.
  */
-public class TextBubble implements OnTouchListener {
+public class TextBubble implements AnchoredPopupWindow.LayoutObserver {
     /**
      * Specifies no limit to the popup duration.
      * @see #setAutoDismissTimeout(long)
      */
     public static final long NO_TIMEOUT = 0;
-
-    /** Orientation preferences for the bubble */
-    public enum Orientation { MAX_AVAILABLE_SPACE, BELOW, ABOVE }
 
     /**
      * A set of bubbles which are active at this moment. This set can be used to dismiss the
@@ -53,25 +46,15 @@ public class TextBubble implements OnTouchListener {
      */
     private static final Set<TextBubble> sBubbles = new HashSet<>();
 
-    // Cache Rect objects for querying View and Screen coordinate APIs.
-    private final Rect mCachedPaddingRect = new Rect();
-    private final Rect mCachedWindowRect = new Rect();
-
     private final Context mContext;
     private final Handler mHandler;
     private final View mRootView;
 
-    /** The margin to add to the text bubble so it doesn't bump against the edges of the screen. */
-    private final int mMarginPx;
-
     /** The actual {@link PopupWindow}.  Internalized to prevent API leakage. */
-    private final PopupWindow mPopupWindow;
+    private final AnchoredPopupWindow mPopupWindow;
 
     /** The {@link Drawable} that is responsible for drawing the bubble and the arrow. */
     private final ArrowBubbleDrawable mDrawable;
-
-    /** The {@link Rect} to anchor the bubble to in screen space. */
-    private final Rect mAnchorRect = new Rect();
 
     private final Runnable mDismissRunnable = new Runnable() {
         @Override
@@ -83,11 +66,6 @@ public class TextBubble implements OnTouchListener {
     private final OnDismissListener mDismissListener = new OnDismissListener() {
         @Override
         public void onDismiss() {
-            if (mIgnoreDismissal) return;
-
-            mHandler.removeCallbacks(mDismissRunnable);
-            for (OnDismissListener listener : mDismissListeners) listener.onDismiss();
-
             sBubbles.remove(TextBubble.this);
         }
     };
@@ -104,22 +82,6 @@ public class TextBubble implements OnTouchListener {
     private ObserverList<OnDismissListener> mDismissListeners = new ObserverList<>();
     private OnTouchListener mTouchListener;
 
-    // Positioning/sizing coordinates for the popup bubble.
-    private int mX;
-    private int mY;
-    private int mWidth;
-    private int mHeight;
-
-    // Preferred orientation for the bubble with respect to the anchor.
-    private Orientation mPreferredOrientation = Orientation.MAX_AVAILABLE_SPACE;
-
-    /**
-     * Tracks whether or not we are in the process of updating the bubble, which might include a
-     * dismiss and show.  In that case we don't want to let the world know we're dismissing because
-     * it's only temporary.
-     */
-    private boolean mIgnoreDismissal;
-
     // Content specific variables.
     /** The resource id for the string to show in the bubble. */
     @StringRes
@@ -129,16 +91,66 @@ public class TextBubble implements OnTouchListener {
     @StringRes
     private final int mAccessibilityStringId;
 
+    /** The content view shown in the popup window. */
+    private View mContentView;
+
+    /**
+     * Constructs a {@link TextBubble} instance using the default arrow drawable background. Creates
+     * a {@link ViewRectProvider} using the provided {@code anchorView}.
+     * @param context  Context to draw resources from.
+     * @param rootView The {@link View} to use for size calculations and for display.
+     * @param stringId The id of the string resource for the text that should be shown.
+     * @param accessibilityStringId The id of the string resource of the accessibility text.
+     * @param anchorView The {@link View} used to anchor the bubble.
+     */
+    public TextBubble(Context context, View rootView, @StringRes int stringId,
+            @StringRes int accessibilityStringId, View anchorView) {
+        this(context, rootView, stringId, accessibilityStringId, true,
+                new ViewRectProvider(anchorView));
+    }
+
+    /**
+     * Constructs a {@link TextBubble} instance using the default arrow drawable background. Creates
+     * a {@link RectProvider} using the provided {@code anchorRect}.
+     * @param context  Context to draw resources from.
+     * @param rootView The {@link View} to use for size calculations and for display.
+     * @param stringId The id of the string resource for the text that should be shown.
+     * @param accessibilityStringId The id of the string resource of the accessibility text.
+     * @param anchorRect The {@link Rect} used to anchor the text bubble.
+     */
+    public TextBubble(Context context, View rootView, @StringRes int stringId,
+            @StringRes int accessibilityStringId, Rect anchorRect) {
+        this(context, rootView, stringId, accessibilityStringId, true,
+                new RectProvider(anchorRect));
+    }
+
+    /**
+     * Constructs a {@link TextBubble} instance. Creates a {@link RectProvider} using the provided
+     * {@code anchorRect}.
+     * @param context  Context to draw resources from.
+     * @param rootView The {@link View} to use for size calculations and for display.
+     * @param stringId The id of the string resource for the text that should be shown.
+     * @param accessibilityStringId The id of the string resource of the accessibility text.
+     * @param showArrow Whether the bubble should have an arrow.
+     * @param anchorRect The {@link Rect} used to anchor the text bubble.
+     */
+    public TextBubble(Context context, View rootView, @StringRes int stringId,
+            @StringRes int accessibilityStringId, boolean showArrow, Rect anchorRect) {
+        this(context, rootView, stringId, accessibilityStringId, showArrow,
+                new RectProvider(anchorRect));
+    }
+
     /**
      * Constructs a {@link TextBubble} instance using the default arrow drawable background.
      * @param context  Context to draw resources from.
      * @param rootView The {@link View} to use for size calculations and for display.
      * @param stringId The id of the string resource for the text that should be shown.
      * @param accessibilityStringId The id of the string resource of the accessibility text.
+     * @param anchorRectProvider The {@link RectProvider} used to anchor the text bubble.
      */
     public TextBubble(Context context, View rootView, @StringRes int stringId,
-            @StringRes int accessibilityStringId) {
-        this(context, rootView, stringId, accessibilityStringId, true);
+            @StringRes int accessibilityStringId, RectProvider anchorRectProvider) {
+        this(context, rootView, stringId, accessibilityStringId, true, anchorRectProvider);
     }
 
     /**
@@ -148,29 +160,33 @@ public class TextBubble implements OnTouchListener {
      * @param stringId The id of the string resource for the text that should be shown.
      * @param accessibilityStringId The id of the string resource of the accessibility text.
      * @param showArrow Whether the bubble should have an arrow.
+     * @param anchorRectProvider The {@link RectProvider} used to anchor the text bubble.
      */
     public TextBubble(Context context, View rootView, @StringRes int stringId,
-            @StringRes int accessibilityStringId, boolean showArrow) {
+            @StringRes int accessibilityStringId, boolean showArrow,
+            RectProvider anchorRectProvider) {
         mContext = context;
         mRootView = rootView.getRootView();
         mStringId = stringId;
         mAccessibilityStringId = accessibilityStringId;
-        mPopupWindow = new PopupWindow(mContext);
 
         mDrawable = new ArrowBubbleDrawable(context);
         mDrawable.setShowArrow(showArrow);
 
+        mContentView = createContentView();
+        mPopupWindow = new AnchoredPopupWindow(
+                context, rootView, mDrawable, mContentView, anchorRectProvider);
+        mPopupWindow.setMargin(
+                context.getResources().getDimensionPixelSize(R.dimen.text_bubble_margin));
+        mPopupWindow.setPreferredHorizontalOrientation(
+                AnchoredPopupWindow.HORIZONTAL_ORIENTATION_CENTER);
+        mPopupWindow.setLayoutObserver(this);
+
         mHandler = new Handler();
 
-        mPopupWindow.setWidth(ViewGroup.LayoutParams.WRAP_CONTENT);
-        mPopupWindow.setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
-        mPopupWindow.setBackgroundDrawable(mDrawable);
         mPopupWindow.setAnimationStyle(R.style.TextBubbleAnimation);
 
-        mPopupWindow.setTouchInterceptor(this);
-        mPopupWindow.setOnDismissListener(mDismissListener);
-
-        mMarginPx = context.getResources().getDimensionPixelSize(R.dimen.text_bubble_margin);
+        addOnDismissListener(mDismissListener);
 
         // Set predefined styles for the TextBubble.
         mDrawable.setBubbleColor(
@@ -185,9 +201,7 @@ public class TextBubble implements OnTouchListener {
             mHandler.postDelayed(mDismissRunnable, mAutoDismissTimeoutMs);
         }
 
-        createContentView();
-        updateBubbleLayout();
-        mPopupWindow.showAtLocation(mRootView, Gravity.TOP | Gravity.START, mX, mY);
+        mPopupWindow.show();
         announceForAccessibility();
         sBubbles.add(this);
     }
@@ -222,7 +236,7 @@ public class TextBubble implements OnTouchListener {
      * @see PopupWindow#setTouchInterceptor(OnTouchListener)
      */
     public void setTouchInterceptor(OnTouchListener onTouchListener) {
-        mTouchListener = onTouchListener;
+        mPopupWindow.setTouchInterceptor(onTouchListener);
     }
 
     /**
@@ -230,7 +244,7 @@ public class TextBubble implements OnTouchListener {
      * @see PopupWindow#setOnDismissListener(OnDismissListener)
      */
     public void addOnDismissListener(OnDismissListener onDismissListener) {
-        mDismissListeners.addObserver(onDismissListener);
+        mPopupWindow.addOnDismissListener(onDismissListener);
     }
 
     /**
@@ -238,7 +252,7 @@ public class TextBubble implements OnTouchListener {
      * @see PopupWindow#setOnDismissListener(OnDismissListener)
      */
     public void removeOnDismissListener(OnDismissListener onDismissListener) {
-        mDismissListeners.removeObserver(onDismissListener);
+        mPopupWindow.removeOnDismissListener(onDismissListener);
     }
 
     /**
@@ -262,114 +276,29 @@ public class TextBubble implements OnTouchListener {
      *                {@code false}.
      */
     public void setDismissOnTouchInteraction(boolean dismiss) {
-        mDismissOnTouchInteraction = dismiss;
-        mPopupWindow.setOutsideTouchable(mDismissOnTouchInteraction);
+        mPopupWindow.setDismissOnTouchInteraction(dismiss);
     }
 
     /**
-     * Sets the {@link Rect} this bubble attaches and orients to.  This will move the bubble if it
-     * is already visible, but should be called at least once calling {@link #show()}.
-     *
-     * @param rect A {@link Rect} object that represents the anchor object's position in screen
-     *             space (e.g. if this bubble is backing a {@link View}, see
-     *             {@link View#getLocationOnScreen(int[])}.
+     * Sets the preferred vertical orientation of the bubble with respect to the anchor view such as
+     * above or below the anchor.
+     * @param orientation The vertical orientation preferred.
      */
-    public void setAnchorRect(Rect rect) {
-        mAnchorRect.set(rect);
-        if (mPopupWindow.isShowing()) updateBubbleLayout();
+    public void setPreferredVerticalOrientation(
+            @AnchoredPopupWindow.VerticalOrientation int orientation) {
+        mPopupWindow.setPreferredVerticalOrientation(orientation);
     }
 
-    /**
-     * Sets the preferred orientation of the bubble with respect to the anchor view such as above or
-     * below the anchor.
-     * @param orientation The orientation preferred.
-     */
-    public void setPreferredOrientation(Orientation orientation) {
-        mPreferredOrientation = orientation;
-    }
-
-    /**
-     * Causes this bubble to position/size itself.  The calculations will happen even if the bubble
-     * isn't visible.
-     */
-    private void updateBubbleLayout() {
-        // Determine the size of the text bubble.
-        ArrowBubbleDrawable background = (ArrowBubbleDrawable) mPopupWindow.getBackground();
-        boolean currentPositionBelow = background.isArrowOnTop();
-        boolean preferCurrentOrientation = mPopupWindow.isShowing();
-
-        background.getPadding(mCachedPaddingRect);
-        int paddingX = mCachedPaddingRect.left + mCachedPaddingRect.right;
-        int paddingY = mCachedPaddingRect.top + mCachedPaddingRect.bottom;
-
-        int maxContentWidth = mRootView.getWidth() - paddingX - mMarginPx * 2;
-
-        // Determine whether or not the bubble should be above or below the anchor.
-        // Aggressively try to put it below the anchor.  Put it above only if it would fit better.
-        View contentView = mPopupWindow.getContentView();
-        int widthSpec = MeasureSpec.makeMeasureSpec(maxContentWidth, MeasureSpec.AT_MOST);
-        contentView.measure(widthSpec, MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
-        int idealHeight = contentView.getMeasuredHeight();
-
-        mRootView.getWindowVisibleDisplayFrame(mCachedWindowRect);
-
-        // In multi-window, the coordinates of root view will be different than (0,0).
-        // So we translate the coordinates of |mCachedWindowRect| w.r.t. its window.
-        int[] rootCoordinates = new int[2];
-        mRootView.getLocationOnScreen(rootCoordinates);
-        mCachedWindowRect.offset(-rootCoordinates[0], -rootCoordinates[1]);
-
-        // TODO(dtrainor): This follows the previous logic.  But we should look into if we want to
-        // use the root view dimensions instead of the window dimensions here so the bubble can't
-        // bleed onto the decorations.
-        int spaceAboveAnchor = mAnchorRect.top - mCachedWindowRect.top - paddingY - mMarginPx;
-        int spaceBelowAnchor = mCachedWindowRect.bottom - mAnchorRect.bottom - paddingY - mMarginPx;
-
-        // Bias based on the center of the bubble and where it is on the screen.
-        boolean idealFitsBelow = idealHeight <= spaceBelowAnchor;
-        boolean idealFitsAbove = idealHeight <= spaceAboveAnchor;
-
-        // Position the bubble in the largest available space where it can fit.  This will bias the
-        // bubbles to show below the anchor if it will not fit in either place.
-        boolean positionBelow =
-                (idealFitsBelow && spaceBelowAnchor >= spaceAboveAnchor) || !idealFitsAbove;
-
-        // Override the ideal bubble orientation if we are trying to maintain the current one.
-        if (preferCurrentOrientation && currentPositionBelow != positionBelow) {
-            if (currentPositionBelow && idealFitsBelow) positionBelow = true;
-            if (!currentPositionBelow && idealFitsAbove) positionBelow = false;
-        }
-
-        if (mPreferredOrientation == Orientation.BELOW && idealFitsBelow) positionBelow = true;
-        if (mPreferredOrientation == Orientation.ABOVE && idealFitsAbove) positionBelow = false;
-
-        int maxContentHeight = positionBelow ? spaceBelowAnchor : spaceAboveAnchor;
-        contentView.measure(
-                widthSpec, MeasureSpec.makeMeasureSpec(maxContentHeight, MeasureSpec.AT_MOST));
-
-        mWidth = contentView.getMeasuredWidth() + paddingX;
-        mHeight = contentView.getMeasuredHeight() + paddingY;
-
-        // Determine the position of the text bubble and arrow.
-        if (positionBelow) {
-            mY = mAnchorRect.bottom;
-        } else {
-            mY = mAnchorRect.top - mHeight;
-        }
-
-        mX = mAnchorRect.left + (mAnchorRect.width() - mWidth) / 2 + mMarginPx;
-
-        // In landscape mode, root view includes the decorations in some devices. So we guard the
-        // window dimensions against |mCachedWindowRect.right| instead.
-        mX = MathUtils.clamp(mX, mMarginPx, mCachedWindowRect.right - mWidth - mMarginPx);
-
+    @Override
+    public void onPreLayoutChange(
+            boolean positionBelow, int x, int y, int width, int height, Rect anchorRect) {
         int arrowXOffset = 0;
         if (mDrawable.isShowingArrow()) {
-            arrowXOffset = mAnchorRect.centerX() - mX;
+            arrowXOffset = anchorRect.centerX() - x;
 
             // Force the anchor to be in a reasonable spot w.r.t. the bubble (not over the corners).
             int minArrowOffset = mDrawable.getArrowLeftSpacing();
-            int maxArrowOffset = mWidth - mDrawable.getArrowRightSpacing();
+            int maxArrowOffset = width - mDrawable.getArrowRightSpacing();
             arrowXOffset = MathUtils.clamp(arrowXOffset, minArrowOffset, maxArrowOffset);
         }
 
@@ -378,34 +307,20 @@ public class TextBubble implements OnTouchListener {
 
         mDrawable.setPositionProperties(arrowXOffset, positionBelow);
 
-        if (mPopupWindow.isShowing() && positionBelow != currentPositionBelow) {
-            // This is a hack to deal with the case where the arrow flips between top and bottom.
-            // In this case the padding of the background drawable in the PopupWindow changes.
-            try {
-                mIgnoreDismissal = true;
-                mPopupWindow.dismiss();
-                mPopupWindow.showAtLocation(mRootView, Gravity.TOP | Gravity.START, mX, mY);
-            } finally {
-                mIgnoreDismissal = false;
-            }
-        }
-
-        mPopupWindow.update(mX, mY, mWidth, mHeight);
     }
 
-    private void createContentView() {
-        if (mPopupWindow.getContentView() != null) return;
-
+    private View createContentView() {
         View view = LayoutInflater.from(mContext).inflate(R.layout.textbubble_text, null);
         ((TextView) view)
                 .setText(AccessibilityUtil.isAccessibilityEnabled() ? mAccessibilityStringId
                                                                     : mStringId);
-        mPopupWindow.setContentView(view);
 
         // On some versions of Android, the LayoutParams aren't set until after the popup window
         // is shown. Explicitly set the LayoutParams to avoid crashing. See crbug.com/713759.
         view.setLayoutParams(
                 new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+
+        return view;
     }
 
     /**
@@ -415,11 +330,11 @@ public class TextBubble implements OnTouchListener {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (!mPopupWindow.isShowing() || mPopupWindow.getContentView() == null) return;
+                if (!mPopupWindow.isShowing() || mContentView == null) return;
 
                 View view = null;
                 if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
-                    view = mPopupWindow.getContentView();
+                    view = mContentView;
                 } else {
                     // For Android J and K, send the accessibility event from root view.
                     // See https://crbug.com/773387.
@@ -429,14 +344,5 @@ public class TextBubble implements OnTouchListener {
                 view.announceForAccessibility(mContext.getString(mAccessibilityStringId));
             }
         });
-    }
-
-    // OnTouchListener implementation.
-    @SuppressLint("ClickableViewAccessibility")
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        boolean returnValue = mTouchListener != null && mTouchListener.onTouch(v, event);
-        if (mDismissOnTouchInteraction) dismiss();
-        return returnValue;
     }
 }

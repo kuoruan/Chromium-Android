@@ -389,12 +389,14 @@ public class PaymentRequestImpl
 
         mApps = new ArrayList<>();
 
-        mAddressEditor = new AddressEditor(/*emailFieldIncluded=*/false);
-        mCardEditor = new CardEditor(mWebContents, mAddressEditor, sObserverForTest);
-
         ChromeActivity activity = ChromeActivity.fromWebContents(mWebContents);
         mIsIncognito = activity != null && activity.getCurrentTabModel() != null
                 && activity.getCurrentTabModel().isIncognito();
+
+        // Do not persist changes on disk in incognito mode.
+        mAddressEditor =
+                new AddressEditor(/*emailFieldIncluded=*/false, /*saveToDisk=*/!mIsIncognito);
+        mCardEditor = new CardEditor(mWebContents, mAddressEditor, sObserverForTest);
 
         mJourneyLogger = new JourneyLogger(mIsIncognito, mWebContents.getLastCommittedUrl());
 
@@ -525,8 +527,9 @@ public class PaymentRequestImpl
         }
 
         if (mRequestPayerName || mRequestPayerPhone || mRequestPayerEmail) {
-            mContactEditor =
-                    new ContactEditor(mRequestPayerName, mRequestPayerPhone, mRequestPayerEmail);
+            // Do not persist changes on disk in incognito mode.
+            mContactEditor = new ContactEditor(mRequestPayerName, mRequestPayerPhone,
+                    mRequestPayerEmail, /*saveToDisk=*/!mIsIncognito);
             mContactSection = new ContactDetailsSection(activity,
                     Collections.unmodifiableList(profiles), mContactEditor, mJourneyLogger);
         }
@@ -746,7 +749,7 @@ public class PaymentRequestImpl
         for (Map.Entry<PaymentApp, Map<String, PaymentMethodData>> q : queryApps.entrySet()) {
             q.getKey().getInstruments(q.getValue(), mTopLevelOrigin, mPaymentRequestOrigin,
                     mCertificateChain,
-                    mModifiers == null ? new HashMap() : Collections.unmodifiableMap(mModifiers),
+                    mModifiers == null ? new HashMap<>() : Collections.unmodifiableMap(mModifiers),
                     this);
         }
     }
@@ -1522,7 +1525,10 @@ public class PaymentRequestImpl
         mPaymentMethodsSection.addAndSelectOrUpdateItem(updatedAutofillPaymentInstruments);
 
         updateInstrumentModifiedTotals();
-        mUI.updateSection(PaymentRequestUI.TYPE_PAYMENT_METHODS, mPaymentMethodsSection);
+
+        if (mUI != null) {
+            mUI.updateSection(PaymentRequestUI.TYPE_PAYMENT_METHODS, mPaymentMethodsSection);
+        }
     }
 
     @Override
@@ -1533,7 +1539,10 @@ public class PaymentRequestImpl
         mPaymentMethodsSection.removeAndUnselectItem(guid);
 
         updateInstrumentModifiedTotals();
-        mUI.updateSection(PaymentRequestUI.TYPE_PAYMENT_METHODS, mPaymentMethodsSection);
+
+        if (mUI != null) {
+            mUI.updateSection(PaymentRequestUI.TYPE_PAYMENT_METHODS, mPaymentMethodsSection);
+        }
     }
 
     /**

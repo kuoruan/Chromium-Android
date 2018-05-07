@@ -10,6 +10,7 @@ import android.app.Notification;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ import android.support.customtabs.CustomTabsSessionToken;
 import android.support.customtabs.TrustedWebUtils;
 
 import org.chromium.base.CommandLine;
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.StrictModeContext;
 import org.chromium.base.metrics.CachedMetrics;
@@ -35,6 +37,7 @@ import org.chromium.chrome.browser.metrics.MediaNotificationUma;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.notifications.NotificationPlatformBridge;
 import org.chromium.chrome.browser.partnercustomizations.PartnerBrowserCustomizations;
+import org.chromium.chrome.browser.searchwidget.SearchActivity;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.DocumentModeAssassin;
 import org.chromium.chrome.browser.upgrade.UpgradeActivity;
@@ -252,7 +255,25 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
     public void processWebSearchIntent(String query) {
         Intent searchIntent = new Intent(Intent.ACTION_WEB_SEARCH);
         searchIntent.putExtra(SearchManager.QUERY, query);
-        mActivity.startActivity(searchIntent);
+
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
+            int resolvers =
+                    ContextUtils.getApplicationContext()
+                            .getPackageManager()
+                            .queryIntentActivities(searchIntent, PackageManager.GET_RESOLVED_FILTER)
+                            .size();
+            if (resolvers == 0) {
+                // Phone doesn't have a WEB_SEARCH action handler, open Search Activity with
+                // the given query.
+                Intent searchActivityIntent = new Intent(Intent.ACTION_MAIN);
+                searchActivityIntent.setClass(
+                        ContextUtils.getApplicationContext(), SearchActivity.class);
+                searchActivityIntent.putExtra(SearchManager.QUERY, query);
+                mActivity.startActivity(searchActivityIntent);
+            } else {
+                mActivity.startActivity(searchIntent);
+            }
+        }
     }
 
     @Override
@@ -440,8 +461,7 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
      * Records metrics gleaned from the Intent.
      */
     private void recordIntentMetrics() {
-        IntentHandler.ExternalAppId source =
-                IntentHandler.determineExternalIntentSource(mActivity.getPackageName(), mIntent);
+        IntentHandler.ExternalAppId source = IntentHandler.determineExternalIntentSource(mIntent);
         if (mIntent.getPackage() == null && source != IntentHandler.ExternalAppId.CHROME) {
             int flagsOfInterest = Intent.FLAG_ACTIVITY_NEW_TASK;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

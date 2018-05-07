@@ -335,7 +335,7 @@ abstract class OverlayPanelBase {
      * @return The height of the Overlay Panel Content View in pixels.
      */
     public int getContentViewHeightPx() {
-        return Math.round((mMaximumHeight - getToolbarHeight()) / mPxToDp);
+        return Math.round(mMaximumHeight / mPxToDp);
     }
 
     // ============================================================================================

@@ -54,9 +54,10 @@ import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.BottomSheetCon
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.StateChangeReason;
 import org.chromium.chrome.browser.widget.bottomsheet.base.BottomNavigationView;
 import org.chromium.chrome.browser.widget.bottomsheet.base.BottomNavigationView.OnNavigationItemSelectedListener;
-import org.chromium.chrome.browser.widget.textbubble.ViewAnchoredTextBubble;
+import org.chromium.chrome.browser.widget.textbubble.TextBubble;
 import org.chromium.content.browser.BrowserStartupController;
 import org.chromium.ui.UiUtils;
+import org.chromium.ui.widget.ViewRectProvider;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -422,12 +423,7 @@ public class BottomSheetContentController
      * @param itemId The menu item id of the {@link BottomSheetContent} to show.
      */
     public void showContentAndOpenSheet(int itemId) {
-        if (mActivity.isInOverviewMode() && !mBottomSheet.isShowingNewTab()) {
-            // Open a new tab to show the content if currently in tab switcher and a new tab is
-            // not currently being displayed.
-            mShouldOpenSheetOnNextContentChange = true;
-            mBottomSheet.displayNewTabUi(mTabModelSelector.getCurrentModel().isIncognito(), itemId);
-        } else if (itemId != mSelectedItemId) {
+        if (itemId != mSelectedItemId) {
             mShouldOpenSheetOnNextContentChange = true;
             selectItem(itemId);
         } else if (mBottomSheet.getSheetState() != BottomSheet.SHEET_STATE_FULL) {
@@ -801,8 +797,9 @@ public class BottomSheetContentController
             throw new RuntimeException("Attempting to show invalid content in bottom sheet.");
         }
 
-        final ViewAnchoredTextBubble helpBubble =
-                new ViewAnchoredTextBubble(getContext(), mBottomSheet, stringId, stringId);
+        ViewRectProvider rectProvider = new ViewRectProvider(mBottomSheet);
+        final TextBubble helpBubble =
+                new TextBubble(getContext(), mBottomSheet, stringId, stringId, rectProvider);
         helpBubble.setDismissOnTouchInteraction(true);
 
         mBottomSheet.addObserver(new EmptyBottomSheetObserver() {
@@ -829,7 +826,7 @@ public class BottomSheetContentController
                 if (state != BottomSheet.SHEET_STATE_HALF || mHelpBubbleShown) return;
                 int inset = getContext().getResources().getDimensionPixelSize(
                         R.dimen.bottom_sheet_help_bubble_inset);
-                helpBubble.setInsetPx(0, inset, 0, inset);
+                rectProvider.setInsetPx(0, inset, 0, inset);
                 helpBubble.show();
                 mHelpBubbleShown = true;
             }

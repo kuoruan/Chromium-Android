@@ -10,7 +10,6 @@ import android.view.View;
 
 import org.chromium.chrome.browser.compositor.TitleCache;
 import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager;
-import org.chromium.content.browser.ContentViewCore;
 
 /**
  * This is the minimal interface of the host view from the layout side.
@@ -89,12 +88,6 @@ public interface LayoutManagerHost {
      * @return The manager in charge of handling fullscreen changes.
      */
     ChromeFullscreenManager getFullscreenManager();
-
-    /**
-     * Called when a new {@link ContentViewCore} has been added for an OverlayPanel.
-     * @param content The {@link ContentViewCore} that was added for the OverlayPanel.
-     */
-    void onOverlayPanelContentViewCoreAdded(ContentViewCore content);
 
     /**
      * Called when the currently visible content has been changed.

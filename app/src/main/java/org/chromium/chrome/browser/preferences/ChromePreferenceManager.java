@@ -45,6 +45,10 @@ public class ChromePreferenceManager {
             "chrome_home_opt_out_snackbar_shown";
 
     private static final String CHROME_DEFAULT_BROWSER = "applink.chrome_default_browser";
+    private static final String CHROME_MODERN_DESIGN_ENABLED_KEY = "chrome_modern_design_enabled";
+
+    private static final String HOME_PAGE_BUTTON_FORCE_ENABLED_KEY =
+            "home_page_button_force_enabled";
 
     private static final String CONTENT_SUGGESTIONS_SHOWN_KEY = "content_suggestions_shown";
 
@@ -67,6 +71,9 @@ public class ChromePreferenceManager {
     private static final String CHROME_HOME_MENU_ITEM_CLICK_COUNT_KEY =
             "chrome_home_menu_item_click_count";
     private static final String SOLE_INTEGRATION_ENABLED_KEY = "sole_integration_enabled";
+
+    private static final String COMMAND_LINE_ON_NON_ROOTED_ENABLED_KEY =
+            "command_line_on_non_rooted_enabled";
 
     private static class LazyHolder {
         static final ChromePreferenceManager INSTANCE = new ChromePreferenceManager();
@@ -387,6 +394,21 @@ public class ChromePreferenceManager {
     }
 
     /**
+     * Set whether or not Chrome modern design is enabled.
+     * @param isEnabled Whether the feature is enabled.
+     */
+    public void setChromeModernDesignEnabled(boolean isEnabled) {
+        writeBoolean(CHROME_MODERN_DESIGN_ENABLED_KEY, isEnabled);
+    }
+
+    /**
+     * @return Whether Chrome modern design is enabled.
+     */
+    public boolean isChromeModernDesignEnabled() {
+        return mSharedPreferences.getBoolean(CHROME_MODERN_DESIGN_ENABLED_KEY, false);
+    }
+
+    /**
      * Set whether or not Chrome Home is enabled.
      * @param isEnabled If Chrome Home is enabled.
      */
@@ -403,61 +425,28 @@ public class ChromePreferenceManager {
     }
 
     /**
-     * Set whether or not Chrome Home is enabled by the user.
-     * @param isEnabled If Chrome Home is enabled by the user.
+     * Set whether or not the home page button is force enabled.
+     * @param isEnabled If the home page button is force enabled.
      */
-    public void setChromeHomeUserEnabled(boolean isEnabled) {
-        writeBoolean(CHROME_HOME_USER_ENABLED_KEY, isEnabled);
+    public void setHomePageButtonForceEnabled(boolean isEnabled) {
+        writeBoolean(HOME_PAGE_BUTTON_FORCE_ENABLED_KEY, isEnabled);
     }
 
     /**
-     * Get whether or not Chrome Home is enabled by the user.
-     * @return True if Chrome Home is enabled by the user.
+     * Get whether or not the home page button is force enabled.
+     * @return True if the home page button is force enabled.
      */
-    public boolean isChromeHomeUserEnabled() {
-        return mSharedPreferences.getBoolean(CHROME_HOME_USER_ENABLED_KEY, false);
+    public boolean isHomePageButtonForceEnabled() {
+        return mSharedPreferences.getBoolean(HOME_PAGE_BUTTON_FORCE_ENABLED_KEY, false);
     }
 
     /**
-     * @return Whether or not the user has set their Chrome Home preference.
+     * Clean up unused Chrome Home preferences.
      */
-    public boolean isChromeHomeUserPreferenceSet() {
-        return mSharedPreferences.contains(CHROME_HOME_USER_ENABLED_KEY);
-    }
-
-    /**
-     * Remove the Chrome Home user preference.
-     */
-    public void clearChromeHomeUserPreference() {
+    public void clearObsoleteChromeHomePrefs() {
         removeKey(CHROME_HOME_USER_ENABLED_KEY);
-    }
-
-    /**
-     * Set that the Chrome Home info-promo has been shown.
-     */
-    public void setChromeHomeInfoPromoShown() {
-        writeBoolean(CHROME_HOME_INFO_PROMO_SHOWN_KEY, true);
-    }
-
-    /**
-     * @return Whether the info-only version of the Chrome Home promo has been shown.
-     */
-    public boolean hasChromeHomeInfoPromoShown() {
-        return mSharedPreferences.getBoolean(CHROME_HOME_INFO_PROMO_SHOWN_KEY, false);
-    }
-
-    /**
-     * Mark that the Chrome Home opt-out snackbar has been shown.
-     */
-    public void setChromeHomeOptOutSnackbarShown() {
-        writeBoolean(CHROME_HOME_OPT_OUT_SNACKBAR_SHOWN, true);
-    }
-
-    /**
-     * @return Whether the Chrome Home opt-out snackbar has been shown.
-     */
-    public boolean getChromeHomeOptOutSnackbarShown() {
-        return mSharedPreferences.getBoolean(CHROME_HOME_OPT_OUT_SNACKBAR_SHOWN, false);
+        removeKey(CHROME_HOME_INFO_PROMO_SHOWN_KEY);
+        removeKey(CHROME_HOME_OPT_OUT_SNACKBAR_SHOWN);
     }
 
     /**
@@ -487,6 +476,19 @@ public class ChromePreferenceManager {
     /** Marks that the content suggestions surface has been shown. */
     public void setSuggestionsSurfaceShown() {
         writeBoolean(CONTENT_SUGGESTIONS_SHOWN_KEY, true);
+    }
+
+    /**
+     * Set whether or not command line on non-rooted devices is enabled.
+     * @param isEnabled If command line on non-rooted devices is enabled.
+     */
+    public void setCommandLineOnNonRootedEnabled(boolean isEnabled) {
+        writeBoolean(COMMAND_LINE_ON_NON_ROOTED_ENABLED_KEY, isEnabled);
+    }
+
+    /** Retunr whether command line on non-rooted devices is enabled. */
+    public boolean getCommandLineOnNonRootedEnabled() {
+        return mSharedPreferences.getBoolean(COMMAND_LINE_ON_NON_ROOTED_ENABLED_KEY, false);
     }
 
     /** Returns whether the content suggestions surface has ever been shown. */

@@ -17,6 +17,7 @@ import org.chromium.components.feature_engagement.EventConstants;
 import org.chromium.components.feature_engagement.FeatureConstants;
 import org.chromium.components.feature_engagement.Tracker;
 import org.chromium.components.feature_engagement.TriggerState;
+import org.chromium.ui.widget.RectProvider;
 
 /**
  * Helper class for displaying In-Product Help UI for Contextual Search.
@@ -25,6 +26,7 @@ public class ContextualSearchIPH {
     private View mParentView;
     private ContextualSearchPanel mSearchPanel;
     private TextBubble mHelpBubble;
+    private RectProvider mRectProvider;
     private String mFeatureName;
     private boolean mIsShowing;
 
@@ -109,8 +111,9 @@ public class ContextualSearchIPH {
 
         assert stringId != 0;
         assert mHelpBubble == null;
-        mHelpBubble = new TextBubble(mParentView.getContext(), mParentView, stringId, stringId);
-        mHelpBubble.setAnchorRect(getHelpBubbleAnchorRect());
+        mRectProvider = new RectProvider(getHelpBubbleAnchorRect());
+        mHelpBubble = new TextBubble(
+                mParentView.getContext(), mParentView, stringId, stringId, mRectProvider);
 
         mHelpBubble.setDismissOnTouchInteraction(true);
         mHelpBubble.addOnDismissListener(() -> {
@@ -129,7 +132,7 @@ public class ContextualSearchIPH {
     void updateBubblePosition() {
         if (!mIsShowing || mHelpBubble == null || !mHelpBubble.isShowing()) return;
 
-        mHelpBubble.setAnchorRect(getHelpBubbleAnchorRect());
+        mRectProvider.setRect(getHelpBubbleAnchorRect());
     }
 
     /**

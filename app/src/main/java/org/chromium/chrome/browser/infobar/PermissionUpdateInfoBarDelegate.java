@@ -15,7 +15,7 @@ import org.chromium.base.ApplicationStatus.ActivityStateListener;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.metrics.WebApkUma;
 import org.chromium.chrome.browser.webapps.WebApkActivity;
-import org.chromium.content.browser.ContentViewCore;
+import org.chromium.content_public.browser.ContentViewCore;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.base.WindowAndroid;
 

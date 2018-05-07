@@ -9,8 +9,9 @@ import android.content.res.Resources;
 import android.view.View;
 import android.widget.FrameLayout.LayoutParams;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.util.ColorUtils;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.content_public.browser.LoadUrlParams;
 
 /**
@@ -29,10 +30,10 @@ public abstract class BasicNativePage implements NativePage {
         initialize(activity, host);
         mActivity = activity;
         mHost = host;
-        mBackgroundColor = ApiCompatibilityUtils.getColor(activity.getResources(),
-                R.color.default_primary_color);
-        mThemeColor = ApiCompatibilityUtils.getColor(
-                activity.getResources(), R.color.default_primary_color);
+        int defaultColor = ColorUtils.getDefaultThemeColor(
+                activity.getResources(), FeatureUtilities.isChromeModernDesignEnabled(), false);
+        mBackgroundColor = defaultColor;
+        mThemeColor = defaultColor;
 
         Resources res = mActivity.getResources();
 

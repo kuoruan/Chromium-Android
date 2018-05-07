@@ -60,7 +60,8 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
     private final int mDefaultLevel;
     private final int mIncognitoLevel;
     private final ColorStateList mDarkIconColor;
-    private final ColorStateList mLightIconColor;
+    private final ColorStateList mDarkCloseIconColor;
+    private final ColorStateList mLightCloseIconColor;
 
     // Keeps track of how a tab was closed
     //  < 0 : swiped to the left.
@@ -216,8 +217,10 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
                 context.getResources().getDimensionPixelOffset(R.dimen.accessibility_tab_height);
         mDarkIconColor =
                 ApiCompatibilityUtils.getColorStateList(getResources(), R.color.dark_mode_tint);
-        mLightIconColor =
-                ApiCompatibilityUtils.getColorStateList(getResources(), R.color.light_mode_tint);
+        mDarkCloseIconColor =
+                ApiCompatibilityUtils.getColorStateList(getResources(), R.color.black_alpha_38);
+        mLightCloseIconColor =
+                ApiCompatibilityUtils.getColorStateList(getResources(), R.color.white_alpha_70);
         mDefaultLevel = getResources().getInteger(R.integer.list_item_level_default);
         mIncognitoLevel = getResources().getInteger(R.integer.list_item_level_incognito);
 
@@ -229,7 +232,7 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
     @Override
     public void onFinishInflate() {
         super.onFinishInflate();
-        if (FeatureUtilities.isChromeHomeEnabled()) {
+        if (FeatureUtilities.isChromeModernDesignEnabled()) {
             mTabContents = findViewById(R.id.tab_contents_modern);
             mTitleView = mTabContents.findViewById(R.id.title);
             mDescriptionView = mTabContents.findViewById(R.id.description);
@@ -246,7 +249,7 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
 
         mUndoContents = (LinearLayout) findViewById(R.id.undo_contents);
         mUndoButton = (Button) findViewById(R.id.undo_button);
-        if (FeatureUtilities.isChromeHomeEnabled()) {
+        if (FeatureUtilities.isChromeModernDesignEnabled()) {
             findViewById(R.id.undo_start_space).setVisibility(View.VISIBLE);
             ApiCompatibilityUtils.setTextAppearance(mUndoButton, R.style.BlueButtonText2);
         }
@@ -318,19 +321,19 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
                     getContext().getString(R.string.accessibility_tabstrip_btn_close_tab, title));
         }
 
-        if (FeatureUtilities.isChromeHomeEnabled()) {
+        if (FeatureUtilities.isChromeModernDesignEnabled()) {
             if (mTab.isIncognito()) {
-                setBackgroundResource(R.color.incognito_primary_color);
+                setBackgroundResource(R.color.incognito_modern_primary_color);
                 mFaviconView.getBackground().setLevel(mIncognitoLevel);
                 ApiCompatibilityUtils.setTextAppearance(mTitleView, R.style.WhiteTitle1);
                 ApiCompatibilityUtils.setTextAppearance(mDescriptionView, R.style.WhiteBody);
-                mCloseButton.setTint(mLightIconColor);
+                mCloseButton.setTint(mLightCloseIconColor);
             } else {
                 setBackgroundResource(R.color.modern_primary_color);
                 mFaviconView.getBackground().setLevel(mDefaultLevel);
                 ApiCompatibilityUtils.setTextAppearance(mTitleView, R.style.BlackTitle1);
                 ApiCompatibilityUtils.setTextAppearance(mDescriptionView, R.style.BlackBody);
-                mCloseButton.setTint(mDarkIconColor);
+                mCloseButton.setTint(mDarkCloseIconColor);
             }
 
             if (TextUtils.isEmpty(url)) {
@@ -348,10 +351,10 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
             if (bitmap != null) {
                 mFaviconView.setImageBitmap(bitmap);
             } else {
-                mFaviconView.setImageResource(R.drawable.globe_incognito_favicon);
+                mFaviconView.setImageResource(R.drawable.ic_globe_24dp);
             }
 
-            if (FeatureUtilities.isChromeHomeEnabled()) {
+            if (FeatureUtilities.isChromeModernDesignEnabled()) {
                 ((TintedImageView) mFaviconView).setTint(bitmap != null ? null : mDarkIconColor);
             }
         }

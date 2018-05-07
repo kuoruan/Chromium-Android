@@ -32,7 +32,8 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.library_loader.LibraryProcessType;
 import org.chromium.base.library_loader.ProcessInitException;
-import org.chromium.chrome.browser.ChromeApplication;
+import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.database.SQLiteCursor;
 import org.chromium.chrome.browser.externalauth.ExternalAuthUtils;
@@ -164,6 +165,10 @@ public class ChromeBrowserProvider extends ContentProvider {
         BookmarkColumns.BOOKMARK
     };
 
+    // These must be kept in sync with internal histograms.xml
+    private static final String READ_HISTORY_BOOKMARKS_PERMISSION = "READ_HISTORY_BOOKMARKS";
+    private static final String WRITE_HISTORY_BOOKMARKS_PERMISSION = "WRITE_HISTORY_BOOKMARKS";
+
     private final Object mInitializeUriMatcherLock = new Object();
     private final Object mLoadNativeLock = new Object();
     private UriMatcher mUriMatcher;
@@ -246,8 +251,6 @@ public class ChromeBrowserProvider extends ContentProvider {
         ThreadUtils.runOnUiThreadBlocking(new Runnable() {
             @Override
             public void run() {
-                ((ChromeApplication) getContext().getApplicationContext()).initCommandLine();
-
                 BrowserStartupController.get(LibraryProcessType.PROCESS_BROWSER)
                         .addStartupCompletedObserver(
                                 new BrowserStartupController.StartupCallback() {
@@ -654,14 +657,14 @@ public class ChromeBrowserProvider extends ContentProvider {
      * @return Whether the caller has read access to history and bookmarks information.
      */
     private boolean hasReadAccess() {
-        return hasPermission("com.android.browser.permission.READ_HISTORY_BOOKMARKS");
+        return hasPermission(READ_HISTORY_BOOKMARKS_PERMISSION);
     }
 
     /**
      * @return Whether the caller has write access to history and bookmarks information.
      */
     private boolean hasWriteAccess() {
-        return hasPermission("com.android.browser.permission.WRITE_HISTORY_BOOKMARKS");
+        return hasPermission(WRITE_HISTORY_BOOKMARKS_PERMISSION);
     }
 
     /**
@@ -1194,16 +1197,40 @@ public class ChromeBrowserProvider extends ContentProvider {
         boolean isSystemOrGoogleCaller = ExternalAuthUtils.getInstance().isCallerValid(
                 getContext(), ExternalAuthUtils.FLAG_SHOULD_BE_GOOGLE_SIGNED
                         | ExternalAuthUtils.FLAG_SHOULD_BE_SYSTEM);
-        if (isSystemOrGoogleCaller) return true;
 
+        if (isSystemOrGoogleCaller) {
+            recordPermissionWasGranted("SignaturePassed", permission);
+            return true;
+        }
+
+        boolean hasPermission = false;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return getContext().checkCallingOrSelfPermission(
-                    getReadWritePermissionNameForBookmarkFolders())
+            hasPermission = getContext().checkCallingOrSelfPermission(
+                                    getReadWritePermissionNameForBookmarkFolders())
                     == PackageManager.PERMISSION_GRANTED;
         } else {
-            return getContext().checkCallingOrSelfPermission(permission)
+            final String fullyQualifiedPermission = "com.android.browser.permission." + permission;
+            hasPermission = getContext().checkCallingOrSelfPermission(fullyQualifiedPermission)
                     == PackageManager.PERMISSION_GRANTED;
         }
+
+        if (hasPermission) {
+            recordPermissionWasGranted("CallerHasPermission", permission);
+        }
+        return hasPermission;
+    }
+
+    private void recordPermissionWasGranted(String permissionCheckType, String permission) {
+        int callingUid = Binder.getCallingUid();
+        PackageManager pm = getContext().getPackageManager();
+        String[] packages = pm.getPackagesForUid(callingUid);
+        if (packages.length == 0) return;
+
+        IntentHandler.ExternalAppId externalId =
+                IntentHandler.mapPackageToExternalAppId(packages[0]);
+        RecordHistogram.recordEnumeratedHistogram(
+                "Android.ChromeBrowserProvider." + permissionCheckType + "." + permission,
+                externalId.ordinal(), IntentHandler.ExternalAppId.INDEX_BOUNDARY.ordinal());
     }
 
     private native long nativeInit();

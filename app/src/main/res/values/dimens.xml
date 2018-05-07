@@ -57,7 +57,6 @@
          via scrolling. -->
     <dimen name="menu_vertical_fade_distance">15dp</dimen>
     <dimen name="menu_badge_translation_y_distance">6dp</dimen>
-    <dimen name="menu_negative_vertical_offset_not_top_anchored">4dp</dimen>
 
     <!-- Menu button dragging related dimensions -->
     <dimen name="auto_scroll_full_velocity">500dp</dimen>
@@ -274,8 +273,8 @@
     <dimen name="bottom_location_bar_content_vertical_inset">4dp</dimen>
 
     <!-- Modern toolbar background dimensions -->
-    <dimen name="modern_toolbar_background_size">36dp</dimen>
-    <dimen name="modern_toolbar_background_corner_radius">18dp</dimen>
+    <dimen name="modern_toolbar_background_size">40dp</dimen>
+    <dimen name="modern_toolbar_background_corner_radius">20dp</dimen>
     <dimen name="modern_toolbar_background_lateral_inset">2dp</dimen>
 
     <!-- Omnibox suggestions -->
@@ -301,6 +300,7 @@
     <!-- NTP dimensions -->
     <dimen name="tile_grid_layout_max_width">504dp</dimen>
     <dimen name="tile_grid_layout_padding_top">8dp</dimen>
+    <dimen name="tile_grid_layout_modern_padding_top">24dp</dimen>
     <dimen name="tile_grid_layout_padding_start">12dp</dimen>
     <dimen name="tile_grid_layout_padding_end">12dp</dimen>
     <dimen name="tile_grid_layout_no_logo_padding_top">20dp</dimen>
@@ -338,6 +338,11 @@
     <dimen name="ntp_search_box_shadow_width">4dp</dimen>
     <dimen name="ntp_search_box_transition_length">16dp</dimen>
     <dimen name="ntp_search_box_logo_padding">8dp</dimen>
+    <dimen name="ntp_search_box_voice_search_margin_end_modern">6dp</dimen>
+    <!-- Negative lateral inset added to the search box bounds when modern is enabled. 8dp is added
+         to both the top and bottom bounds to bring the 40dp modern_toolbar_background_size to 56dp
+         (matches toolbar_height_no_shadow). -->
+    <dimen name="ntp_search_box_bounds_lateral_inset_modern">-8dp</dimen>
     <dimen name="ntp_wide_card_lateral_margins">48dp</dimen>
     <dimen name="ntp_list_item_min_height">48dp</dimen>
     <dimen name="ntp_shadow_height">9dp</dimen>
@@ -348,6 +353,7 @@
     <!-- The default padding for the peeking card and the amount the card peeks by in the current
          peeking card animation (the calculations assume this is the same). -->
     <dimen name="snippets_padding">16dp</dimen>
+    <dimen name="snippets_header_top_padding">10dp</dimen>
     <!-- The amount of the peeking card showing above the fold with the increased visibility UI
          (https://crbug.com/660837). -->
     <dimen name="snippets_peeking_card_peek_amount">32dp</dimen>
@@ -369,6 +375,9 @@
     <dimen name="content_suggestions_card_modern_badge_size">18dp</dimen>
     <dimen name="content_suggestions_card_modern_badge_margin_start">8dp</dimen>
     <dimen name="content_suggestions_card_modern_badge_margin_top">8dp</dimen>
+    <!-- Used to offset content_suggestions_card_modern_margin applied to the bottom of the
+         last card. -->
+    <dimen name="content_suggestions_action_modern_margin_top">-16dp</dimen>
     <dimen name="contextual_carousel_space_between_cards">8dp</dimen>
     <dimen name="md_incognito_ntp_line_spacing">6sp</dimen>
     <dimen name="md_incognito_ntp_padding_left">16dp</dimen>
@@ -484,14 +493,14 @@
     <dimen name="list_item_start_icon_width">36dp</dimen>
     <dimen name="list_item_start_icon_corner_radius">18dp</dimen>
     <dimen name="list_item_end_icon_width">56dp</dimen>
-    <dimen name="list_menu_width">140dp</dimen>
+    <dimen name="list_menu_width">180dp</dimen>
 
     <!-- SelectableListLayout dimensions -->
     <dimen name="selectable_list_layout_row_padding">16dp</dimen>
     <dimen name="selectable_list_action_bar_end_padding">6dp</dimen>
     <dimen name="toolbar_wide_display_start_offset">13dp</dimen>
     <dimen name="toolbar_modern_search_view_start_offset">4dp</dimen>
-    <dimen name="search_toolbar_modern_bg_top_bottom_inset">10dp</dimen>
+    <dimen name="search_toolbar_modern_bg_top_bottom_inset">8dp</dimen>
     <dimen name="search_toolbar_modern_bg_lateral_inset">8dp</dimen>
     <dimen name="selectable_list_toolbar_nav_button_start_offset">4dp</dimen>
     <dimen name="selectable_list_search_icon_end_padding">4dp</dimen>
@@ -504,12 +513,9 @@
     <dimen name="bottom_nav_shadow_height">8dp</dimen>
 
     <!-- Chrome Home dimensions -->
-    <dimen name="chrome_home_empty_view_top_padding">72dp</dimen>
     <dimen name="chrome_home_min_full_half_distance">160dp</dimen>
     <dimen name="chrome_home_progress_bar_height">4dp</dimen>
     <dimen name="chrome_home_incognito_ntp_bottom_margin">32dp</dimen>
-    <dimen name="chrome_home_promo_illustration_width">108dp</dimen>
-    <dimen name="chrome_home_promo_illustration_height">206dp</dimen>
 
     <!-- TextBubble dimensions -->
     <dimen name="text_bubble_margin">4dp</dimen>
@@ -523,7 +529,7 @@
     <!--  Miscellaneous dimensions -->
     <dimen name="action_bar_shadow_height">10dp</dimen>
     <dimen name="card_corner_radius">2dp</dimen>
-    <dimen name="clear_text_button_end_padding">8dp</dimen>
+    <dimen name="clear_text_button_end_padding">4dp</dimen>
     <dimen name="sync_promo_view_padding">16dp</dimen>
     <dimen name="sad_tab_bullet_gap">12dp</dimen>
     <dimen name="sad_tab_bullet_leading_offset">1dp</dimen>
@@ -534,7 +540,7 @@
     <dimen name="context_menu_header_image_max_height">150dp</dimen>
     <dimen name="context_menu_max_width">500dp</dimen>
     <dimen name="context_menu_min_padding">20dp</dimen>
-    <dimen name="context_menu_image_top_margin">30dp</dimen>
+    <dimen name="context_menu_image_vertical_margin">30dp</dimen>
     <dimen name="context_menu_selectable_items_min_size">120dp</dimen>
 
     <!-- Divider Dimensions -->

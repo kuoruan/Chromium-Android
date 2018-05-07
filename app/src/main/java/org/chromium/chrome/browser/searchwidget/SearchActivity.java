@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.searchwidget;
 
 import android.app.Activity;
+import android.app.SearchManager;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.v4.app.ActivityOptionsCompat;
@@ -218,8 +219,12 @@ public class SearchActivity extends AsyncInitializationActivity
                 getIntent(), SearchWidgetProvider.EXTRA_START_VOICE_SEARCH, false);
     }
 
+    private String getOptionalIntentQuery() {
+        return IntentUtils.safeGetStringExtra(getIntent(), SearchManager.QUERY);
+    }
+
     private void beginQuery() {
-        mSearchBox.beginQuery(isVoiceSearchIntent());
+        mSearchBox.beginQuery(isVoiceSearchIntent(), getOptionalIntentQuery());
     }
 
     @Override

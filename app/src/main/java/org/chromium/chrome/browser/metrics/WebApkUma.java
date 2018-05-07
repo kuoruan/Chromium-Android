@@ -219,8 +219,9 @@ public class WebApkUma {
      * previous WebAPK launch. Not recorded the first time that a WebAPK is launched.
      */
     public static void recordLaunchInterval(long intervalMs) {
-        RecordHistogram.recordCustomTimesHistogram("WebApk.LaunchInterval", intervalMs,
-                TimeUnit.HOURS.toMillis(1), TimeUnit.DAYS.toMillis(30), TimeUnit.MILLISECONDS, 50);
+        RecordHistogram.recordCustomCountHistogram("WebApk.LaunchInterval2",
+                (int) TimeUnit.MILLISECONDS.toMinutes(intervalMs), 30,
+                (int) TimeUnit.DAYS.toMinutes(90), 50);
     }
 
     /** Records to UMA the count of old "WebAPK update request" files. */

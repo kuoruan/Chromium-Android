@@ -10,6 +10,7 @@ import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.blink_public.platform.modules.remoteplayback.WebRemotePlaybackAvailability;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.media.remote.RemoteVideoInfo.PlayerState;
 import org.chromium.chrome.browser.vr_shell.VrShellDelegate;
 
@@ -204,7 +205,8 @@ public class RemoteMediaPlayerBridge {
     private void requestRemotePlayback(long startPositionMillis) {
         Log.d(TAG, "requestRemotePlayback at t=%d", startPositionMillis);
         // TODO(crbug.com/736568): Re-enable dialog in VR.
-        if (VrShellDelegate.isInVr()) {
+        if (VrShellDelegate.isInVr()
+                && !ChromeFeatureList.isEnabled(ChromeFeatureList.VR_BROWSING_NATIVE_ANDROID_UI)) {
             mMediaStateListener.onRouteDialogCancelled();
             return;
         }
@@ -224,7 +226,8 @@ public class RemoteMediaPlayerBridge {
     private void requestRemotePlaybackControl() {
         Log.d(TAG, "requestRemotePlaybackControl");
         // TODO(crbug.com/736568): Re-enable dialog in VR.
-        if (VrShellDelegate.isInVr()) {
+        if (VrShellDelegate.isInVr()
+                && !ChromeFeatureList.isEnabled(ChromeFeatureList.VR_BROWSING_NATIVE_ANDROID_UI)) {
             mMediaStateListener.onRouteDialogCancelled();
             return;
         }

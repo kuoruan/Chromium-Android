@@ -70,7 +70,14 @@ public class AndroidCellularSignalStrength {
                     != ApplicationState.HAS_RUNNING_ACTIVITIES) {
                 return;
             }
-            mSignalLevel = signalStrength.getLevel();
+            try {
+                mSignalLevel = signalStrength.getLevel();
+            } catch (SecurityException e) {
+                // Catch any exceptions thrown due to unavailability of permissions on certain
+                // Android devices. See  https://crbug.com/820564 for details.
+                mSignalLevel = CellularSignalStrengthError.ERROR_NOT_SUPPORTED;
+                assert false;
+            }
         }
 
         // ApplicationStatus.ApplicationStateListener

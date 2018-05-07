@@ -10,6 +10,7 @@ import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.components.bookmarks.BookmarkId;
 import org.chromium.components.bookmarks.BookmarkType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -87,25 +88,21 @@ public class BookmarkModel extends BookmarkBridge {
     void deleteBookmarks(BookmarkId... bookmarks) {
         assert bookmarks != null && bookmarks.length > 0;
         // Store all titles of bookmarks.
-        String[] titles = new String[bookmarks.length];
+        List<String> titles = new ArrayList<>();
         boolean isUndoable = true;
-        for (int i = 0; i < bookmarks.length; i++) {
-            titles[i] = getBookmarkTitle(bookmarks[i]);
-            isUndoable &= (bookmarks[i].getType() == BookmarkType.NORMAL);
-        }
 
-        if (bookmarks.length == 1) {
-            deleteBookmark(bookmarks[0]);
-        } else {
-            startGroupingUndos();
-            for (BookmarkId bookmark : bookmarks) {
-                deleteBookmark(bookmark);
-            }
-            endGroupingUndos();
+        startGroupingUndos();
+        for (BookmarkId bookmarkId : bookmarks) {
+            BookmarkItem bookmarkItem = getBookmarkById(bookmarkId);
+            if (bookmarkItem == null) continue;
+            isUndoable &= (bookmarkId.getType() == BookmarkType.NORMAL);
+            titles.add(bookmarkItem.getTitle());
+            deleteBookmark(bookmarkId);
         }
+        endGroupingUndos();
 
         for (BookmarkDeleteObserver observer : mDeleteObservers) {
-            observer.onDeleteBookmarks(titles, isUndoable);
+            observer.onDeleteBookmarks(titles.toArray(new String[titles.size()]), isUndoable);
         }
     }
 
@@ -124,7 +121,9 @@ public class BookmarkModel extends BookmarkBridge {
      * @see org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkItem#getTitle()
      */
     String getBookmarkTitle(BookmarkId bookmarkId) {
-        return getBookmarkById(bookmarkId).getTitle();
+        BookmarkItem bookmarkItem = getBookmarkById(bookmarkId);
+        if (bookmarkItem == null) return "";
+        return bookmarkItem.getTitle();
     }
 
     /**

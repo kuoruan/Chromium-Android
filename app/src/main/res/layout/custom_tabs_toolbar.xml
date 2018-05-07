@@ -60,19 +60,14 @@
                 android:textSize="@dimen/location_bar_url_text_size" />
         </view>
     </FrameLayout>
-    <ImageButton
-        android:id="@+id/action_button"
-        style="@style/ToolbarButton"
+    <LinearLayout
+        android:id="@+id/action_buttons"
         android:layout_width="wrap_content"
-        android:maxWidth="@dimen/custom_tabs_toolbar_maxWidth"
-        android:paddingTop="@dimen/custom_tabs_toolbar_vertical_padding"
-        android:paddingBottom="@dimen/custom_tabs_toolbar_vertical_padding"
-        android:adjustViewBounds="true"
-        android:scaleType="centerInside"
+        android:layout_height="match_parent"
         android:layout_marginEnd="42dp"
         android:layout_gravity="center_vertical|end"
-        android:visibility="gone"
-        android:contentDescription="@null" />
+        android:gravity="center_vertical"
+        android:orientation="horizontal" />
     <org.chromium.chrome.browser.widget.TintedImageButton
         android:id="@+id/menu_button"
         style="@style/ToolbarButton"

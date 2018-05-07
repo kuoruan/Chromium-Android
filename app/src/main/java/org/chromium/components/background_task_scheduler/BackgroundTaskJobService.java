@@ -4,7 +4,6 @@
 
 package org.chromium.components.background_task_scheduler;
 
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
@@ -61,7 +60,6 @@ public class BackgroundTaskJobService extends JobService {
         }
     }
 
-    @SuppressLint("UseSparseArrays") // TODO(crbug.com/799070): See if SparseArray is better.
     private final Map<Integer, BackgroundTask> mCurrentTasks = new HashMap<>();
 
     @Override

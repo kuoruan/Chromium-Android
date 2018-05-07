@@ -17,7 +17,9 @@ import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
     UiUnsupportedMode.UNHANDLED_CODE_POINT, UiUnsupportedMode.UNHANDLED_PAGE_INFO,
-    UiUnsupportedMode.VOICE_SEARCH_NEEDS_RECORD_AUDIO_OS_PERMISSION, UiUnsupportedMode.COUNT
+    UiUnsupportedMode.VOICE_SEARCH_NEEDS_RECORD_AUDIO_OS_PERMISSION,
+    UiUnsupportedMode.GENERIC_UNSUPPORTED_FEATURE, UiUnsupportedMode.NEEDS_KEYBOARD_UPDATE,
+    UiUnsupportedMode.COUNT
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface UiUnsupportedMode {
@@ -30,8 +32,10 @@ public @interface UiUnsupportedMode {
    * kURLWithStrongRTLChars = 3,  // Obsolete.
    */
   int VOICE_SEARCH_NEEDS_RECORD_AUDIO_OS_PERMISSION = 4;
+  int GENERIC_UNSUPPORTED_FEATURE = 5;
+  int NEEDS_KEYBOARD_UPDATE = 6;
   /**
    * This must be last.
    */
-  int COUNT = 5;
+  int COUNT = 7;
 }

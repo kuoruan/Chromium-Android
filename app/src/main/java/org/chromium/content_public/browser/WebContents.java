@@ -246,15 +246,6 @@ public interface WebContents extends Parcelable {
     void exitFullscreen();
 
     /**
-     * Changes whether hiding the browser controls is enabled.
-     *
-     * @param enableHiding Whether hiding the browser controls should be enabled or not.
-     * @param enableShowing Whether showing the browser controls should be enabled or not.
-     * @param animate Whether the transition should be animated or not.
-     */
-    void updateBrowserControlsState(boolean enableHiding, boolean enableShowing, boolean animate);
-
-    /**
      * Brings the Editable to the visible area while IME is up to make easier for inputing text.
      */
     void scrollFocusedEditableNodeIntoView();
@@ -460,6 +451,14 @@ public interface WebContents extends Parcelable {
     boolean hasActiveEffectivelyFullscreenVideo();
 
     /**
+     * Whether the WebContents is allowed to enter Picture-in-Picture when it has an active
+     * fullscreen video with native or custom controls.
+     * This should only be called if AppHooks.shouldDetectVideoFullscreen()
+     * returns true.
+     */
+    boolean isPictureInPictureAllowedForFullscreenVideo();
+
+    /**
      * Gets a Rect containing the size of the currently playing fullscreen video. The position of
      * the rectangle is meaningless. Will return null if there is no such video. Fullscreen videos
      * may take a moment to register. This should only be called if
@@ -485,10 +484,24 @@ public interface WebContents extends Parcelable {
     void setHasPersistentVideo(boolean value);
 
     /**
-     * Set the view size of WebContents. The size is in physical pixel.
+     * Set the view size of the WebContents. The size is in physical pixels.
      *
      * @param width The width of the view.
      * @param height The height of the view.
      */
     void setSize(int width, int height);
+
+    /**
+     * Gets the view size width of the WebContents. The size is in physical pixels.
+     *
+     * @return The width of the view.
+     */
+    int getWidth();
+
+    /**
+     * Gets the view size width of the WebContents. The size is in physical pixels.
+     *
+     * @return The width of the view.
+     */
+    int getHeight();
 }

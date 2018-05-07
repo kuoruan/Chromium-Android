@@ -120,7 +120,7 @@ public class WebappRegistry {
                 // Access the WebappDataStorage to force it to finish loading. A strict mode
                 // exception is thrown if the WebappDataStorage is accessed on the UI thread prior
                 // to the storage being fully loaded.
-                storage.getLastUsedTime();
+                storage.getLastUsedTimeMs();
                 return storage;
             }
 
@@ -235,7 +235,7 @@ public class WebappRegistry {
                         && isWebApkInstalled(webApkPackage)) {
                     continue;
                 }
-            } else if ((currentTime - storage.getLastUsedTime())
+            } else if ((currentTime - storage.getLastUsedTimeMs())
                     < WEBAPP_UNOPENED_CLEANUP_DURATION) {
                 continue;
             }

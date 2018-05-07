@@ -7,7 +7,11 @@ package org.chromium.chrome.browser.media.router.cast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import org.chromium.chrome.browser.media.router.MediaController;
+
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 /**
  * The interface for talking to the GMS core. We need to isolate this
@@ -124,4 +128,10 @@ public interface CastSession {
      * Updates the session info when it changes and broadcast the change.
      */
     void updateSessionStatus();
+
+    /**
+     * Returns a controller for the media content.
+     */
+    @Nullable
+    MediaController getMediaController();
 }

@@ -224,6 +224,8 @@ public class SingleCategoryPreferences extends PreferenceFragment
             return website.site().getBackgroundSyncPermission() == ContentSetting.BLOCK;
         } else if (mCategory.showCameraSites()) {
             return website.site().getCameraPermission() == ContentSetting.BLOCK;
+        } else if (mCategory.showClipboardSites()) {
+            return website.site().getClipboardPermission() == ContentSetting.BLOCK;
         } else if (mCategory.showCookiesSites()) {
             return website.site().getCookiePermission() == ContentSetting.BLOCK;
         } else if (mCategory.showGeolocationSites()) {
@@ -268,7 +270,8 @@ public class SingleCategoryPreferences extends PreferenceFragment
         // Set the title and arrow icons for the header.
         allowedGroup.setGroupTitle(resourceId, numAllowed);
         TintedDrawable icon = TintedDrawable.constructTintedDrawable(getResources(),
-                mAllowListExpanded ? R.drawable.ic_expanded : R.drawable.ic_collapsed);
+                mAllowListExpanded ? R.drawable.ic_expand_more_black_24dp
+                                   : R.drawable.ic_expand_less_black_24dp);
         allowedGroup.setExpanded(mAllowListExpanded);
         allowedGroup.setIcon(icon);
     }
@@ -288,7 +291,8 @@ public class SingleCategoryPreferences extends PreferenceFragment
                 : R.string.website_settings_blocked_group_heading;
         blockedGroup.setGroupTitle(resourceId, numBlocked);
         TintedDrawable icon = TintedDrawable.constructTintedDrawable(getResources(),
-                mBlockListExpanded ? R.drawable.ic_expanded : R.drawable.ic_collapsed);
+                mBlockListExpanded ? R.drawable.ic_expand_more_black_24dp
+                                   : R.drawable.ic_expand_less_black_24dp);
         blockedGroup.setExpanded(mBlockListExpanded);
         blockedGroup.setIcon(icon);
     }
@@ -503,6 +507,8 @@ public class SingleCategoryPreferences extends PreferenceFragment
                 PrefServiceBridge.getInstance().setBackgroundSyncEnabled((boolean) newValue);
             } else if (mCategory.showCameraSites()) {
                 PrefServiceBridge.getInstance().setCameraEnabled((boolean) newValue);
+            } else if (mCategory.showClipboardSites()) {
+                PrefServiceBridge.getInstance().setClipboardEnabled((boolean) newValue);
             } else if (mCategory.showCookiesSites()) {
                 PrefServiceBridge.getInstance().setAllowCookiesEnabled((boolean) newValue);
                 updateThirdPartyCookiesCheckBox();
@@ -525,6 +531,7 @@ public class SingleCategoryPreferences extends PreferenceFragment
             }
 
             // Categories that support adding exceptions also manage the 'Add site' preference.
+            // This should only be used for settings that have host-pattern based exceptions.
             if (mCategory.showAutoplaySites() || mCategory.showBackgroundSyncSites()
                     || mCategory.showJavaScriptSites() || mCategory.showSoundSites()) {
                 if ((boolean) newValue) {
@@ -750,6 +757,8 @@ public class SingleCategoryPreferences extends PreferenceFragment
                             PrefServiceBridge.getInstance().isBackgroundSyncAllowed());
                 } else if (mCategory.showCameraSites()) {
                     globalToggle.setChecked(PrefServiceBridge.getInstance().isCameraEnabled());
+                } else if (mCategory.showClipboardSites()) {
+                    globalToggle.setChecked(PrefServiceBridge.getInstance().isClipboardEnabled());
                 } else if (mCategory.showCookiesSites()) {
                     globalToggle.setChecked(
                             PrefServiceBridge.getInstance().isAcceptCookiesEnabled());

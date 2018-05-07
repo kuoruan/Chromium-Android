@@ -13,7 +13,7 @@ import android.view.View;
 import org.chromium.base.ContextUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.widget.textbubble.TextBubble;
-import org.chromium.chrome.browser.widget.textbubble.ViewAnchoredTextBubble;
+import org.chromium.ui.widget.ViewRectProvider;
 
 /**
  * Draws a bubble pointing upward at the tab switcher button.
@@ -37,12 +37,15 @@ public class TabSwitcherCallout {
         if (!isTabSwitcherCalloutNecessary()) return null;
         setIsTabSwitcherCalloutNecessary(false);
 
-        ViewAnchoredTextBubble bubble = new ViewAnchoredTextBubble(context, tabSwitcherButton,
-                R.string.tab_switcher_callout_body, R.string.tab_switcher_callout_body);
+        ViewRectProvider rectProvider = new ViewRectProvider(tabSwitcherButton);
+        int yInsetPx = (int) (Y_OVERLAP_DP * context.getResources().getDisplayMetrics().density);
+        rectProvider.setInsetPx(0, yInsetPx, 0, yInsetPx);
+
+        TextBubble bubble =
+                new TextBubble(context, tabSwitcherButton, R.string.tab_switcher_callout_body,
+                        R.string.tab_switcher_callout_body, rectProvider);
         bubble.setDismissOnTouchInteraction(true);
         bubble.setAutoDismissTimeout(TAB_SWITCHER_CALLOUT_DISMISS_MS);
-        int yInsetPx = (int) (Y_OVERLAP_DP * context.getResources().getDisplayMetrics().density);
-        bubble.setInsetPx(0, yInsetPx, 0, yInsetPx);
         bubble.show();
         return bubble;
     }

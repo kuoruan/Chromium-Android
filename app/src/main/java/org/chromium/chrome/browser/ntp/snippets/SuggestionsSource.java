@@ -34,6 +34,12 @@ public interface SuggestionsSource {
 
         /** Called when the observer should discard the suggestions it has and pull new ones. */
         void onFullRefreshRequired();
+
+        /**
+         * Called when the visibility of the suggestions of the specified category is changed.
+         * @param category The specified category.
+         */
+        void onSuggestionsVisibilityChanged(@CategoryInt int category);
     }
 
     /**
@@ -158,5 +164,8 @@ public interface SuggestionsSource {
 
         @Override
         public void onFullRefreshRequired() {}
+
+        @Override
+        public void onSuggestionsVisibilityChanged(@CategoryInt int category) {}
     }
 }

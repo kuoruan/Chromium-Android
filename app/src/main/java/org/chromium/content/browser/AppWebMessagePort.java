@@ -11,6 +11,7 @@ import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.blink.mojom.CloneableMessage;
+import org.chromium.blink.mojom.SerializedArrayBufferContents;
 import org.chromium.blink.mojom.SerializedBlob;
 import org.chromium.blink.mojom.TransferableMessage;
 import org.chromium.content_public.browser.MessagePort;
@@ -23,6 +24,7 @@ import org.chromium.mojo.system.Core;
 import org.chromium.mojo.system.MessagePipeHandle;
 import org.chromium.mojo.system.Pair;
 import org.chromium.mojo.system.impl.CoreImpl;
+import org.chromium.skia.mojom.Bitmap;
 
 /**
  * Represents the MessageChannel MessagePort object. Inspired from
@@ -248,6 +250,8 @@ public class AppWebMessagePort implements MessagePort {
         msg.message = new CloneableMessage();
         msg.message.encodedMessage = nativeEncodeStringMessage(message);
         msg.message.blobs = new SerializedBlob[0];
+        msg.arrayBufferContentsArray = new SerializedArrayBufferContents[0];
+        msg.imageBitmapContentsArray = new Bitmap[0];
         msg.ports = ports;
         mConnector.accept(msg.serializeWithHeader(mMojoCore, MESSAGE_HEADER));
     }

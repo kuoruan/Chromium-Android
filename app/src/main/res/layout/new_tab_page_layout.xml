@@ -77,7 +77,7 @@
             android:layout_marginStart="12dp"
             android:layout_weight="1"
             android:background="@null"
-            android:drawableStart="@drawable/googleg"
+            android:drawableStart="@drawable/ic_logo_googleg_24dp"
             android:drawablePadding="@dimen/ntp_search_box_logo_padding"
             android:ellipsize="end"
             android:focusableInTouchMode="false"
@@ -86,7 +86,7 @@
             android:inputType="text"
             android:singleLine="true"
             android:textSize="@dimen/location_bar_url_text_size"
-            android:textColorHint="@color/ntp_search_box_hint" />
+            android:textColorHint="@color/search_box_hint" />
         <org.chromium.chrome.browser.widget.TintedImageView
             android:id="@+id/voice_search_button"
             android:layout_width="wrap_content"
@@ -95,32 +95,6 @@
             android:layout_marginEnd="12dp"
             android:contentDescription="@string/accessibility_toolbar_btn_mic"
             android:src="@drawable/btn_mic" />
-    </LinearLayout>
-
-    <!-- Chrome Home promo -->
-    <LinearLayout
-        android:id="@+id/chrome_home_promo_container"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:gravity="center_vertical"
-        android:visibility="gone">
-        <org.chromium.chrome.browser.widget.TintedImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:layout_marginStart="8dp"
-            android:src="@drawable/ic_new_releases_black_24dp" />
-        <org.chromium.ui.widget.TextViewWithClickableSpans
-            android:id="@+id/chrome_home_promo_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:textAppearance="@style/BlackHint2"
-            chrome:leading="20sp" />
     </LinearLayout>
 
     <!-- Middle spacer -->

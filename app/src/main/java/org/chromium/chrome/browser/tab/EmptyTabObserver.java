@@ -120,4 +120,7 @@ public class EmptyTabObserver implements TabObserver {
 
     @Override
     public void onInteractabilityChanged(boolean isInteractable) {}
+
+    @Override
+    public void onNavigationEntriesDeleted(Tab tab) {}
 }

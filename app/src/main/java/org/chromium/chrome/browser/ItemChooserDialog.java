@@ -10,6 +10,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
@@ -92,7 +93,12 @@ public class ItemChooserDialog {
             if (!TextUtils.equals(mIconDescription, iconDescription)) return false;
 
             if (icon == null ^ mIcon == null) return false;
-            if (mIcon != null && !mIcon.getConstantState().equals(icon.getConstantState())) {
+
+            // On Android O and above, Drawable#getConstantState() always returns a different value,
+            // so it does not make sense to compare it.
+            // TODO(crbug.com/773043): Find a way to compare the icons.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O && mIcon != null
+                    && !mIcon.getConstantState().equals(icon.getConstantState())) {
                 return false;
             }
 

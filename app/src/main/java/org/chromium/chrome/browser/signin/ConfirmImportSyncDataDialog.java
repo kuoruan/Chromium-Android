@@ -146,7 +146,7 @@ public class ConfirmImportSyncDataDialog extends DialogFragment
         mKeepSeparateOption.setRadioButtonGroup(radioGroup);
 
         // If the account is managed, disallow merging information.
-        if (SigninManager.get(getActivity()).getManagementDomain() != null) {
+        if (SigninManager.get().getManagementDomain() != null) {
             mKeepSeparateOption.setChecked(true);
             mConfirmImportOption.setOnClickListener(
                     view -> ManagedPreferencesUtils.showManagedByAdministratorToast(getActivity()));

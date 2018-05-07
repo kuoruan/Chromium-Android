@@ -44,7 +44,7 @@
         android:id="@+id/delete_button"
         style="@style/LocationBarButtonTablet"
         android:layout_marginEnd="44dp"
-        android:src="@drawable/btn_delete_url"
+        android:src="@drawable/btn_delete_24dp"
         android:visibility="gone"
         android:contentDescription="@string/accessibility_toolbar_btn_delete_url" />
     <!-- delete_button and bookmark_button overlap, so they should have the same right margin -->

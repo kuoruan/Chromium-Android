@@ -66,25 +66,22 @@ public class TabListSceneLayer extends SceneLayer {
             assert t.isVisible() : "LayoutTab in that list should be visible";
             final float decoration = t.getDecorationAlpha();
 
-            boolean useModernDesign = FeatureUtilities.isChromeHomeEnabled();
+            boolean useModernDesign = FeatureUtilities.isChromeModernDesignEnabled();
 
             float shadowAlpha = decoration;
-            if (useModernDesign) shadowAlpha /= 2;
+            int urlBarBackgroundId = R.drawable.card_single;
+            if (useModernDesign) {
+                urlBarBackgroundId = R.drawable.modern_location_bar;
+                shadowAlpha /= 2;
+            }
 
             int defaultThemeColor =
                     ColorUtils.getDefaultThemeColor(res, useModernDesign, t.isIncognito());
 
             int toolbarBackgroundColor = getTabThemeColor(context, t);
-            int textBoxBackgroundColor = t.getTextBoxBackgroundColor();
-            float textBoxAlpha = t.getTextBoxAlpha();
-            if (t.getForceDefaultThemeColor()) {
-                toolbarBackgroundColor = defaultThemeColor;
-                textBoxBackgroundColor = ColorUtils.getTextBoxColorForToolbarBackground(
-                        res, false, toolbarBackgroundColor, useModernDesign);
-                // In the modern design, the text box is always drawn in the Java layer rather
-                // than the compositor layer.
-                textBoxAlpha = useModernDesign ? 0.f : t.isIncognito() ? textBoxAlpha : 1f;
-            }
+
+            // In the modern design, the text box is always drawn opaque in the compositor.
+            float textBoxAlpha = useModernDesign ? 1.f : t.getTextBoxAlpha();
 
             int closeButtonColor =
                     ColorUtils.getThemedAssetColor(toolbarBackgroundColor, t.isIncognito());
@@ -97,7 +94,7 @@ public class TabListSceneLayer extends SceneLayer {
                     R.drawable.tabswitcher_border_frame_decoration, R.drawable.logo_card_back,
                     R.drawable.tabswitcher_border_frame,
                     R.drawable.tabswitcher_border_frame_inner_shadow, t.canUseLiveTexture(),
-                    fullscreenManager.areBrowserControlsAtBottom(), t.getBackgroundColor(),
+                    FeatureUtilities.isChromeModernDesignEnabled(), t.getBackgroundColor(),
                     ApiCompatibilityUtils.getColor(res, borderColorResource), t.isIncognito(),
                     layout.getOrientation() == Orientation.PORTRAIT, t.getRenderX() * dpToPx,
                     t.getRenderY() * dpToPx, t.getScaledContentWidth() * dpToPx,
@@ -113,8 +110,8 @@ public class TabListSceneLayer extends SceneLayer {
                     LayoutTab.CLOSE_BUTTON_WIDTH_DP * dpToPx, t.getStaticToViewBlend(),
                     t.getBorderScale(), t.getSaturation(), t.getBrightness(), t.showToolbar(),
                     defaultThemeColor, toolbarBackgroundColor, closeButtonColor,
-                    t.anonymizeToolbar(), t.isTitleNeeded(), R.drawable.card_single,
-                    textBoxBackgroundColor, textBoxAlpha, t.getToolbarAlpha(),
+                    t.anonymizeToolbar(), t.isTitleNeeded(), urlBarBackgroundId,
+                    t.getTextBoxBackgroundColor(), textBoxAlpha, t.getToolbarAlpha(),
                     t.getToolbarYOffset() * dpToPx, t.getSideBorderScale(),
                     t.insetBorderVertical());
         }
@@ -125,7 +122,7 @@ public class TabListSceneLayer extends SceneLayer {
      * @return The close button resource ID.
      */
     private int getCloseButtonIconId() {
-        if (FeatureUtilities.isChromeHomeEnabled()) return R.drawable.btn_close_white;
+        if (FeatureUtilities.isChromeModernDesignEnabled()) return R.drawable.btn_close_white;
 
         return R.drawable.btn_tab_close;
     }
@@ -133,19 +130,20 @@ public class TabListSceneLayer extends SceneLayer {
     /**
      * @param context An android context for resources.
      * @param t The layout tab to determine the color of.
-     * @return The theme color for the provided tab. This accounts for features like Chrome Home and
-     *         Chrome Modern.
+     * @return The theme color for the provided tab. This accounts for features like Chrome Modern.
      */
     private int getTabThemeColor(Context context, LayoutTab t) {
-        if (FeatureUtilities.isChromeHomeEnabled()) {
-            if (t.isIncognito()) {
-                return ApiCompatibilityUtils.getColor(
-                        context.getResources(), R.color.incognito_primary_color);
-            }
-            return Color.WHITE;
+        int themeColor = t.getToolbarBackgroundColor();
+
+        // The only time we need to override the theme color is if modern is enabled and the theme
+        // color is the old default theme color.
+        if (FeatureUtilities.isChromeModernDesignEnabled()
+                && ColorUtils.isUsingDefaultToolbarColor(
+                           context.getResources(), false, false, t.getToolbarBackgroundColor())) {
+            themeColor = Color.WHITE;
         }
 
-        return t.getToolbarBackgroundColor();
+        return themeColor;
     }
 
     /**
@@ -153,7 +151,7 @@ public class TabListSceneLayer extends SceneLayer {
      */
     protected int getTabListBackgroundColor(Context context) {
         int colorId = R.color.tab_switcher_background;
-        if (FeatureUtilities.isChromeHomeEnabled()) colorId = R.color.modern_grey_300;
+        if (FeatureUtilities.isChromeModernDesignEnabled()) colorId = R.color.modern_primary_color;
         return ApiCompatibilityUtils.getColor(context.getResources(), colorId);
     }
 
@@ -189,7 +187,7 @@ public class TabListSceneLayer extends SceneLayer {
             int toolbarResourceId, int closeButtonResourceId, int shadowResourceId,
             int contourResourceId, int backLogoResourceId, int borderResourceId,
             int borderInnerShadowResourceId, boolean canUseLiveLayer,
-            boolean browserControlsAtBottom, int tabBackgroundColor,
+            boolean modernDesignEnabled, int tabBackgroundColor,
             int backLogoColor, boolean incognito, boolean isPortrait, float x, float y, float width,
             float height, float contentWidth, float contentHeight, float visibleContentHeight,
             float shadowX, float shadowY, float shadowWidth, float shadowHeight, float pivotX,

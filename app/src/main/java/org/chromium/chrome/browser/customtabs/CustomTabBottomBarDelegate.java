@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.customtabs;
 import android.app.PendingIntent;
 import android.app.PendingIntent.CanceledException;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.customtabs.CustomTabsIntent;
@@ -80,29 +81,25 @@ class CustomTabBottomBarDelegate implements FullscreenListener {
             mClickableIDs = mDataProvider.getClickableViewIDs();
             mClickPendingIntent = mDataProvider.getRemoteViewsPendingIntent();
             showRemoteViews(remoteViews);
-        } else {
-            List<CustomButtonParams> items = mDataProvider.getCustomButtonsOnBottombar();
-            if (items.isEmpty()) return;
-            LinearLayout layout = new LinearLayout(mActivity);
-            layout.setId(R.id.custom_tab_bottom_bar_wrapper);
-            layout.setBackgroundColor(mDataProvider.getBottomBarColor());
-            for (CustomButtonParams params : items) {
-                if (params.showOnToolbar()) continue;
-                final PendingIntent pendingIntent = params.getPendingIntent();
-                OnClickListener clickListener = null;
-                if (pendingIntent != null) {
-                    clickListener = new OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            sendPendingIntentWithUrl(pendingIntent, null, mActivity);
-                        }
-                    };
-                }
-                layout.addView(
-                        params.buildBottomBarButton(mActivity, getBottomBarView(), clickListener));
-            }
-            getBottomBarView().addView(layout);
+            return;
         }
+
+        List<CustomButtonParams> items = mDataProvider.getCustomButtonsOnBottombar();
+        if (items.isEmpty()) return;
+        LinearLayout layout = new LinearLayout(mActivity);
+        layout.setId(R.id.custom_tab_bottom_bar_wrapper);
+        layout.setBackgroundColor(mDataProvider.getBottomBarColor());
+        for (CustomButtonParams params : items) {
+            if (params.showOnToolbar()) continue;
+            final PendingIntent pendingIntent = params.getPendingIntent();
+            OnClickListener clickListener = null;
+            if (pendingIntent != null) {
+                clickListener = v -> sendPendingIntentWithUrl(pendingIntent, null, mActivity);
+            }
+            layout.addView(
+                    params.buildBottomBarButton(mActivity, getBottomBarView(), clickListener));
+        }
+        getBottomBarView().addView(layout);
     }
 
     /**
@@ -228,6 +225,9 @@ class CustomTabBottomBarDelegate implements FullscreenListener {
             });
             return true;
         } catch (RemoteViews.ActionException e) {
+            Log.e(TAG, "Failed to inflate the RemoteViews", e);
+            return false;
+        } catch (Resources.NotFoundException e) {
             Log.e(TAG, "Failed to inflate the RemoteViews", e);
             return false;
         }

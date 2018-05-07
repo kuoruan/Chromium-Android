@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package android.support.customtabs.browseractions;
 
 import android.app.PendingIntent;
+import android.net.Uri;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 
@@ -29,9 +30,10 @@ public class BrowserActionItem {
     private final PendingIntent mAction;
     @DrawableRes
     private int mIconId;
+    private Uri mIconUri;
 
     /**
-     * Constructor for BrowserActionItem with icon, string and action provided.
+     * Constructor for BrowserActionItem with icon from resources.
      * @param title The string shown for a custom item.
      * @param action The PendingIntent executed when a custom item is selected
      * @param iconId The resource id of the icon shown for a custom item.
@@ -44,20 +46,27 @@ public class BrowserActionItem {
     }
 
     /**
+     * Constructor for BrowserActionItem with icon access through a uri.
+     * @param title The string shown for a custom item.
+     * @param action The PendingIntent executed when a custom item is selected
+     * @param iconUri The {@link Uri} used to access the icon file. Note: make sure this is
+     * generated from {@link BrowserServiceFileProvider.generateUri(Context, Bitmap, String,
+     * int, List<ResolveInfo>)}.
+     */
+    public BrowserActionItem(
+            @NonNull String title, @NonNull PendingIntent action, @NonNull Uri iconUri) {
+        mTitle = title;
+        mAction = action;
+        mIconUri = iconUri;
+    }
+
+    /**
      * Constructor for BrowserActionItem with only string and action provided.
      * @param title The icon shown for a custom item.
      * @param action The string shown for a custom item.
      */
     public BrowserActionItem(@NonNull String title, @NonNull PendingIntent action) {
         this(title, action, 0);
-    }
-
-    /**
-     * Sets the resource id of the icon of a custom item.
-     * @param icon The resource id of the icon for a custom item.
-     */
-    public void setIconId(@DrawableRes int iconId) {
-        mIconId = iconId;
     }
 
     /**
@@ -79,5 +88,12 @@ public class BrowserActionItem {
      */
     public PendingIntent getAction() {
         return mAction;
+    }
+
+    /**
+     * @return The uri used to get the icon of a custom item.
+     */
+    public Uri getIconUri() {
+        return mIconUri;
     }
 }

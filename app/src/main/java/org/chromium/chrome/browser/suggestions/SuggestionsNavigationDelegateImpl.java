@@ -16,6 +16,7 @@ import org.chromium.chrome.browser.bookmarks.BookmarkUtils;
 import org.chromium.chrome.browser.device.DeviceClassManager;
 import org.chromium.chrome.browser.download.DownloadUtils;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
+import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
 import org.chromium.chrome.browser.ntp.NewTabPageUma;
 import org.chromium.chrome.browser.ntp.snippets.KnownCategories;
 import org.chromium.chrome.browser.ntp.snippets.SnippetArticle;
@@ -122,10 +123,13 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
             return;
         }
 
-        // We explicitly open an offline page only for offline page downloads. For all other
+        // We explicitly open an offline page only for offline page downloads or for prefetched
+        // offline pages when Data Reduction Proxy is enabled. For all other
         // sections the URL is opened and it is up to Offline Pages whether to open its offline
         // page (e.g. when offline).
-        if (article.isDownload() && !article.isAssetDownload()) {
+        if ((article.isDownload() && !article.isAssetDownload())
+                || (DataReductionProxySettings.getInstance().isDataReductionProxyEnabled()
+                           && article.isPrefetched())) {
             assert article.getOfflinePageOfflineId() != null;
             assert windowOpenDisposition == WindowOpenDisposition.CURRENT_TAB
                     || windowOpenDisposition == WindowOpenDisposition.NEW_WINDOW
@@ -142,7 +146,7 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
 
         LoadUrlParams loadUrlParams =
                 new LoadUrlParams(article.mUrl, PageTransition.AUTO_BOOKMARK);
-        
+
         // For article suggestions, we set the referrer. This is exploited
         // to filter out these history entries for NTP tiles.
         // TODO(mastiz): Extend this with support for other categories.
@@ -209,13 +213,10 @@ public class SuggestionsNavigationDelegateImpl implements SuggestionsNavigationD
                 TabLaunchType.FROM_LONGPRESS_BACKGROUND, mHost.getActiveTab(),
                 /* incognito = */ false);
 
-        // If the bottom sheet NTP UI is showing, a toast is not necessary because the bottom sheet
-        // will be closed when the overview is hidden due to the new tab creation above.
         // If animations are disabled in the DeviceClassManager, a toast is already displayed for
         // all tabs opened in the background.
         // TODO(twellington): Replace this with an animation.
-        if (mActivity.getBottomSheet() != null && !mActivity.getBottomSheet().isShowingNewTab()
-                && DeviceClassManager.enableAnimations()) {
+        if (mActivity.getBottomSheet() != null && DeviceClassManager.enableAnimations()) {
             Toast.makeText(mActivity, R.string.open_in_new_tab_toast, Toast.LENGTH_SHORT).show();
         }
 

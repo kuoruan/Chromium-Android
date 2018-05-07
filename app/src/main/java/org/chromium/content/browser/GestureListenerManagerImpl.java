@@ -23,7 +23,7 @@ import org.chromium.content_public.browser.WebContents;
  * managed by {@link WebContents}.
  */
 @JNINamespace("content")
-public class GestureListenerManagerImpl implements GestureListenerManager {
+public class GestureListenerManagerImpl implements GestureListenerManager, WindowEventObserver {
     private static final class UserDataFactoryLazyHolder {
         private static final UserDataFactory<GestureListenerManagerImpl> INSTANCE =
                 GestureListenerManagerImpl::new;
@@ -32,6 +32,12 @@ public class GestureListenerManagerImpl implements GestureListenerManager {
     private final WebContentsImpl mWebContents;
     private final ObserverList<GestureStateListener> mListeners;
     private final RewindableIterator<GestureStateListener> mIterator;
+
+    // The outstanding fling start events that hasn't got fling end yet. It may be > 1 because
+    // onFlingEnd() is called asynchronously.
+    private int mPotentiallyActiveFlingCount;
+
+    private long mNativeGestureListenerManager;
 
     /**
      * @param webContents {@link WebContents} object.
@@ -47,7 +53,14 @@ public class GestureListenerManagerImpl implements GestureListenerManager {
         mWebContents = (WebContentsImpl) webContents;
         mListeners = new ObserverList<GestureStateListener>();
         mIterator = mListeners.rewindableIterator();
-        nativeInit(mWebContents);
+        mNativeGestureListenerManager = nativeInit(mWebContents);
+    }
+
+    /**
+     * Reset the Java object in the native so this class stops receiving events.
+     */
+    public void reset() {
+        if (mNativeGestureListenerManager != 0) nativeReset(mNativeGestureListenerManager);
     }
 
     @Override
@@ -65,13 +78,17 @@ public class GestureListenerManagerImpl implements GestureListenerManager {
         for (mIterator.rewind(); mIterator.hasNext();) mIterator.next().onTouchDown();
     }
 
-    /**
-     * Update all the listeners after window focus has changed.
-     * @param hasFocus {@code true} if we're gaining focus.
-     */
-    public void updateOnWindowFocusChanged(boolean hasFocus) {
+    /** Checks if there's outstanding fling start events that hasn't got fling end yet. */
+    public boolean hasPotentiallyActiveFling() {
+        return mPotentiallyActiveFlingCount > 0;
+    }
+
+    // WindowEventObserver
+
+    @Override
+    public void onWindowFocusChanged(boolean gainFocus) {
         for (mIterator.rewind(); mIterator.hasNext();) {
-            mIterator.next().onWindowFocusChanged(hasFocus);
+            mIterator.next().onWindowFocusChanged(gainFocus);
         }
     }
 
@@ -104,8 +121,17 @@ public class GestureListenerManagerImpl implements GestureListenerManager {
         }
     }
 
-    /** Update all the listeners after fling end event occurred. */
-    public void updateOnFlingEnd() {
+    /* Called when ongoing fling gesture needs to be reset. */
+    public void resetFlingGesture() {
+        if (mPotentiallyActiveFlingCount > 0) {
+            onFlingEnd();
+            mPotentiallyActiveFlingCount = 0;
+        }
+    }
+
+    @CalledByNative
+    private void onFlingEnd() {
+        if (mPotentiallyActiveFlingCount > 0) mPotentiallyActiveFlingCount--;
         for (mIterator.rewind(); mIterator.hasNext();) {
             mIterator.next().onFlingEndGesture(verticalScrollOffset(), verticalScrollExtent());
         }
@@ -113,6 +139,7 @@ public class GestureListenerManagerImpl implements GestureListenerManager {
 
     @CalledByNative
     private void onFlingStartEventConsumed() {
+        mPotentiallyActiveFlingCount++;
         for (mIterator.rewind(); mIterator.hasNext();) {
             mIterator.next().onFlingStartGesture(verticalScrollOffset(), verticalScrollExtent());
         }
@@ -161,6 +188,7 @@ public class GestureListenerManagerImpl implements GestureListenerManager {
     private void onDestroy() {
         for (mIterator.rewind(); mIterator.hasNext();) mIterator.next().onDestroyed();
         mListeners.clear();
+        mNativeGestureListenerManager = 0;
     }
 
     private int verticalScrollOffset() {
@@ -171,5 +199,6 @@ public class GestureListenerManagerImpl implements GestureListenerManager {
         return mWebContents.getRenderCoordinates().getLastFrameViewportHeightPixInt();
     }
 
-    private native void nativeInit(WebContentsImpl webContents);
+    private native long nativeInit(WebContentsImpl webContents);
+    private native void nativeReset(long nativeGestureListenerManager);
 }

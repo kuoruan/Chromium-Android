@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.browserservices;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.support.annotation.Nullable;
 import android.support.customtabs.CustomTabsSessionToken;
 import android.widget.RemoteViews;
 
@@ -55,5 +56,10 @@ public interface BrowserSessionContentHandler {
     /**
      * @return The current url being displayed to the user.
      */
-    String getCurrentUrl();
+    @Nullable String getCurrentUrl();
+
+    /**
+     * @return The url of a pending navigation, if any.
+     */
+    @Nullable String getPendingUrl();
 }

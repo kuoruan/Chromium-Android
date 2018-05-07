@@ -6,7 +6,7 @@ package org.chromium.chrome.browser.compositor.bottombar;
 
 import org.chromium.chrome.browser.externalnav.ExternalNavigationHandler;
 import org.chromium.components.navigation_interception.NavigationParams;
-import org.chromium.content.browser.ContentViewCore;
+import org.chromium.content_public.browser.ContentViewCore;
 
 /**
  * An base class for tracking events on the overlay panel.
@@ -81,9 +81,8 @@ public class OverlayContentDelegate {
 
     /**
      * Called once the ContentViewCore has been created and set up completely.
-     * @param contentViewCore The contentViewCore that was created.
      */
-    public void onContentViewCreated(ContentViewCore contentViewCore) {}
+    public void onContentViewCreated() {}
 
     /**
      * Called once the ContentViewCore has been destroyed.

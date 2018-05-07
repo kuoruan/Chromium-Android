@@ -9,6 +9,7 @@
     android:minHeight="@dimen/bookmark_minimum_dialog_size_tablet" >
 
     <ScrollView
+        android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingTop="@dimen/toolbar_height_no_shadow"
@@ -61,8 +62,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/toolbar_height_no_shadow"
-        style="@style/ModernToolbar"
-        android:background="@color/modern_toolbar_bg" />
+        style="@style/ModernToolbar" />
 
     <View
         android:id="@+id/shadow"

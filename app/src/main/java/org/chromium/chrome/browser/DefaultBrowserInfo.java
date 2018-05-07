@@ -139,6 +139,15 @@ public final class DefaultBrowserInfo {
         }
     }
 
+    private static List<ResolveInfo> getResolveInfoListForViewIntent(PackageManager pm) {
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(SAMPLE_URL));
+        try {
+            return pm.queryIntentActivities(intent, PackageManager.MATCH_ALL);
+        } catch (NullPointerException ex) {
+            return null;
+        }
+    }
+
     /**
      * @return Title of the menu item for opening a link in the default browser.
      * @param forceChromeAsDefault Whether the Custom Tab is created by Chrome.
@@ -173,13 +182,10 @@ public final class DefaultBrowserInfo {
 
                     PackageManager pm = context.getPackageManager();
 
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse(SAMPLE_URL));
-
                     DefaultInfo info = new DefaultInfo();
 
                     // Query the default handler first.
-                    ResolveInfo defaultRi = pm.resolveActivity(intent, 0);
+                    ResolveInfo defaultRi = getResolveInfoForViewIntent(pm);
                     if (defaultRi != null && defaultRi.match != 0) {
                         info.hasDefault = true;
                         info.isChromeDefault = isSamePackage(context, defaultRi);
@@ -188,15 +194,16 @@ public final class DefaultBrowserInfo {
 
                     // Query all other intent handlers.
                     Set<String> uniquePackages = new HashSet<>();
-                    List<ResolveInfo> ris =
-                            pm.queryIntentActivities(intent, PackageManager.MATCH_ALL);
-                    for (ResolveInfo ri : ris) {
-                        String packageName = ri.activityInfo.applicationInfo.packageName;
-                        if (!uniquePackages.add(packageName)) continue;
+                    List<ResolveInfo> ris = getResolveInfoListForViewIntent(pm);
+                    if (ris != null) {
+                        for (ResolveInfo ri : ris) {
+                            String packageName = ri.activityInfo.applicationInfo.packageName;
+                            if (!uniquePackages.add(packageName)) continue;
 
-                        if (isSystemPackage(ri)) {
-                            if (isSamePackage(context, ri)) info.isChromeSystem = true;
-                            info.systemCount++;
+                            if (isSystemPackage(ri)) {
+                                if (isSamePackage(context, ri)) info.isChromeSystem = true;
+                                info.systemCount++;
+                            }
                         }
                     }
 

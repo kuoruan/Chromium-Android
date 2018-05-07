@@ -26,7 +26,7 @@ import org.chromium.chrome.browser.compositor.overlays.SceneOverlay;
 import org.chromium.chrome.browser.compositor.scene_layer.SceneOverlayLayer;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.tab.Tab;
-import org.chromium.content.browser.ContentViewCore;
+import org.chromium.content_public.browser.ContentViewCore;
 import org.chromium.content_public.common.BrowserControlsState;
 import org.chromium.ui.base.LocalizationUtils;
 import org.chromium.ui.resources.ResourceManager;
@@ -381,9 +381,8 @@ public class OverlayPanel extends OverlayPanelAnimation implements ActivityState
      */
     private OverlayPanelContent createNewOverlayPanelContentInternal() {
         OverlayPanelContent content = mContentFactory.createNewOverlayPanelContent();
-        if (!isFullWidthSizePanel()) {
-            content.setContentViewSize(getContentViewWidthPx(), getContentViewHeightPx());
-        }
+        content.setContentViewSize(
+                getContentViewWidthPx(), getContentViewHeightPx(), isFullWidthSizePanel());
         return content;
     }
 
@@ -431,18 +430,14 @@ public class OverlayPanel extends OverlayPanelAnimation implements ActivityState
     public void updateBrowserControlsState() {
         if (mContent == null) return;
 
-        if (isFullWidthSizePanel()) {
-            // Consider the ContentView height to be fullscreen, and inform the system that
-            // the Toolbar is always visible (from the Compositor's perspective), even though
-            // the Toolbar and Base Page might be offset outside the screen. This means the
-            // renderer will consider the ContentView height to be the fullscreen height
-            // minus the Toolbar height.
-            //
-            // This is necessary to fix the bugs: crbug.com/510205 and crbug.com/510206
-            mContent.updateBrowserControlsState(false, true, false);
-        } else {
-            mContent.updateBrowserControlsState(true, false, false);
-        }
+        // Consider the ContentView height to be fullscreen, and inform the system that
+        // the Toolbar is always visible (from the Compositor's perspective), even though
+        // the Toolbar and Base Page might be offset outside the screen. This means the
+        // renderer will consider the ContentView height to be the fullscreen height
+        // minus the Toolbar height.
+        //
+        // This is necessary to fix the bugs: crbug.com/510205 and crbug.com/510206
+        mContent.updateBrowserControlsState(isFullWidthSizePanel());
     }
 
     /**
@@ -798,9 +793,16 @@ public class OverlayPanel extends OverlayPanelAnimation implements ActivityState
      */
     protected void resizePanelContentViewCore(float width, float height) {
         if (!isShowing()) return;
-        getOverlayPanelContent().onSizeChanged((int) (width / mPxToDp), (int) (height / mPxToDp));
-        getOverlayPanelContent().onPhysicalBackingSizeChanged(
-                (int) (width / mPxToDp), (int) (height / mPxToDp));
+        OverlayPanelContent panelContent = getOverlayPanelContent();
+        int widthPx = (int) (width / mPxToDp);
+        int heightPx = (int) (height / mPxToDp);
+
+        // Device could have been rotated before panel webcontent creation. Update content size.
+        panelContent.setContentViewSize(widthPx, heightPx, isFullWidthSizePanel());
+
+        if (isFullWidthSizePanel()) heightPx = (int) ((height - getBarHeight()) / mPxToDp);
+        panelContent.onSizeChanged(widthPx, heightPx);
+        panelContent.onPhysicalBackingSizeChanged(widthPx, heightPx);
     }
 
     @Override

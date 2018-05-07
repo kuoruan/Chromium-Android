@@ -14,6 +14,7 @@ import static org.chromium.chrome.browser.download.DownloadNotificationService2.
 import static org.chromium.chrome.browser.download.DownloadNotificationService2.EXTRA_DOWNLOAD_CONTENTID_ID;
 import static org.chromium.chrome.browser.download.DownloadNotificationService2.EXTRA_DOWNLOAD_CONTENTID_NAMESPACE;
 import static org.chromium.chrome.browser.download.DownloadNotificationService2.EXTRA_DOWNLOAD_FILE_PATH;
+import static org.chromium.chrome.browser.download.DownloadNotificationService2.EXTRA_DOWNLOAD_STATE_AT_CANCEL;
 import static org.chromium.chrome.browser.download.DownloadNotificationService2.EXTRA_IS_OFF_THE_RECORD;
 import static org.chromium.chrome.browser.download.DownloadNotificationService2.EXTRA_IS_SUPPORTED_MIME_TYPE;
 import static org.chromium.chrome.browser.download.DownloadNotificationService2.EXTRA_NOTIFICATION_BUNDLE_ICON_ID;
@@ -36,6 +37,7 @@ import org.chromium.chrome.browser.notifications.NotificationConstants;
 import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
 import org.chromium.components.offline_items_collection.ContentId;
 import org.chromium.components.offline_items_collection.LegacyHelpers;
+import org.chromium.components.offline_items_collection.PendingState;
 
 /**
  * Creates and updates notifications related to downloads.
@@ -102,6 +104,21 @@ public final class DownloadNotificationFactory {
                         downloadUpdate.getContentId(), downloadUpdate.getIsOffTheRecord());
                 Intent cancelIntent = buildActionIntent(context, ACTION_DOWNLOAD_CANCEL,
                         downloadUpdate.getContentId(), downloadUpdate.getIsOffTheRecord());
+                switch (downloadUpdate.getPendingState()) {
+                    case PendingState.NOT_PENDING:
+                        cancelIntent.putExtra(EXTRA_DOWNLOAD_STATE_AT_CANCEL,
+                                DownloadNotificationUmaHelper.StateAtCancel.DOWNLOADING);
+                        break;
+                    case PendingState.PENDING_NETWORK:
+                        cancelIntent.putExtra(EXTRA_DOWNLOAD_STATE_AT_CANCEL,
+                                DownloadNotificationUmaHelper.StateAtCancel.PENDING_NETWORK);
+                        break;
+                    case PendingState.PENDING_ANOTHER_DOWNLOAD:
+                        cancelIntent.putExtra(EXTRA_DOWNLOAD_STATE_AT_CANCEL,
+                                DownloadNotificationUmaHelper.StateAtCancel
+                                        .PENDING_ANOTHER_DOWNLOAD);
+                        break;
+                }
 
                 builder.setOngoing(true)
                         .setPriority(Notification.PRIORITY_HIGH)
@@ -152,8 +169,8 @@ public final class DownloadNotificationFactory {
                         downloadUpdate.getContentId(), downloadUpdate.getIsOffTheRecord());
                 cancelIntent = buildActionIntent(context, ACTION_DOWNLOAD_CANCEL,
                         downloadUpdate.getContentId(), downloadUpdate.getIsOffTheRecord());
-                PendingIntent deleteIntent = buildPendingIntent(
-                        context, cancelIntent, downloadUpdate.getNotificationId());
+                cancelIntent.putExtra(EXTRA_DOWNLOAD_STATE_AT_CANCEL,
+                        DownloadNotificationUmaHelper.StateAtCancel.PAUSED);
 
                 builder.setAutoCancel(false)
                         .setLargeIcon(downloadUpdate.getIcon())
@@ -166,8 +183,12 @@ public final class DownloadNotificationFactory {
                                 context.getResources().getString(
                                         R.string.download_notification_cancel_button),
                                 buildPendingIntent(
-                                        context, cancelIntent, downloadUpdate.getNotificationId()))
-                        .setDeleteIntent(deleteIntent);
+                                        context, cancelIntent, downloadUpdate.getNotificationId()));
+
+                if (downloadUpdate.getIsTransient()) {
+                    builder.setDeleteIntent(buildPendingIntent(
+                            context, cancelIntent, downloadUpdate.getNotificationId()));
+                }
 
                 break;
 

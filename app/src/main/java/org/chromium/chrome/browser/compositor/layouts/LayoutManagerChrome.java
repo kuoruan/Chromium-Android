@@ -22,21 +22,12 @@ import org.chromium.chrome.browser.contextualsearch.ContextualSearchManagementDe
 import org.chromium.chrome.browser.device.DeviceClassManager;
 import org.chromium.chrome.browser.fullscreen.FullscreenManager;
 import org.chromium.chrome.browser.tab.Tab;
-import org.chromium.chrome.browser.tabmodel.EmptyTabModelObserver;
-import org.chromium.chrome.browser.tabmodel.EmptyTabModelSelectorObserver;
 import org.chromium.chrome.browser.tabmodel.TabCreatorManager;
-import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
-import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
-import org.chromium.chrome.browser.tabmodel.TabModelObserver;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
-import org.chromium.chrome.browser.tabmodel.TabModelSelector.CloseAllTabsDelegate;
-import org.chromium.chrome.browser.tabmodel.TabModelSelectorObserver;
-import org.chromium.chrome.browser.tabmodel.TabModelSelectorTabObserver;
 import org.chromium.chrome.browser.tabmodel.TabModelUtils;
 import org.chromium.chrome.browser.util.AccessibilityUtil;
 import org.chromium.chrome.browser.widget.OverviewListLayout;
-import org.chromium.ui.base.LocalizationUtils;
 import org.chromium.ui.resources.dynamics.DynamicResourceLoader;
 
 import java.util.List;
@@ -45,8 +36,7 @@ import java.util.List;
  * A {@link Layout} controller for the more complicated Chrome browser.  This is currently a
  * superset of {@link LayoutManager}.
  */
-public class LayoutManagerChrome
-        extends LayoutManager implements OverviewModeBehavior, CloseAllTabsDelegate {
+public class LayoutManagerChrome extends LayoutManager implements OverviewModeBehavior {
     // Layouts
     /** An {@link Layout} that should be used as the accessibility tab switcher. */
     protected OverviewListLayout mOverviewListLayout;
@@ -66,83 +56,6 @@ public class LayoutManagerChrome
     private boolean mEnableAnimations = true;
     private boolean mCreatingNtp;
     private final ObserverList<OverviewModeObserver> mOverviewModeObservers;
-    private TabModelSelectorObserver mTabModelSelectorObserver;
-    private TabModelObserver mTabModelObserver;
-    private TabModelSelectorTabObserver mTabSelectorTabObserver;
-
-    /**
-     * Protected class to handle {@link TabModelObserver} related tasks. Extending classes will
-     * need to override any related calls to add new functionality */
-    protected class LayoutManagerTabModelObserver extends EmptyTabModelObserver {
-        @Override
-        public void didSelectTab(Tab tab, TabSelectionType type, int lastId) {
-            if (tab.getId() != lastId) tabSelected(tab.getId(), lastId, tab.isIncognito());
-        }
-
-        @Override
-        public void willAddTab(Tab tab, TabLaunchType type) {
-            // Open the new tab
-            if (type == TabLaunchType.FROM_RESTORE) return;
-            if (type == TabLaunchType.FROM_REPARENTING) return;
-            if (type == TabLaunchType.FROM_EXTERNAL_APP) return;
-            if (type == TabLaunchType.FROM_LAUNCHER_SHORTCUT) return;
-
-            tabCreating(getTabModelSelector().getCurrentTabId(), tab.getUrl(), tab.isIncognito());
-        }
-
-        @Override
-        public void didAddTab(Tab tab, TabLaunchType launchType) {
-            int tabId = tab.getId();
-            if (launchType == TabLaunchType.FROM_RESTORE) {
-                getActiveLayout().onTabRestored(time(), tabId);
-            } else {
-                boolean incognito = tab.isIncognito();
-                boolean willBeSelected = launchType != TabLaunchType.FROM_LONGPRESS_BACKGROUND
-                        || (!getTabModelSelector().isIncognitoSelected() && incognito);
-                float lastTapX = LocalizationUtils.isLayoutRtl()
-                        ? mHost.getWidth() * mPxToDp : 0.f;
-                float lastTapY = 0.f;
-                if (launchType != TabLaunchType.FROM_CHROME_UI) {
-                    float heightDelta = mHost.getHeightMinusBrowserControls() * mPxToDp;
-                    lastTapX = mPxToDp * mLastTapX;
-                    lastTapY = mPxToDp * mLastTapY - heightDelta;
-                }
-
-                tabCreated(tabId, getTabModelSelector().getCurrentTabId(), launchType, incognito,
-                        willBeSelected, lastTapX, lastTapY);
-            }
-        }
-
-        @Override
-        public void didCloseTab(int tabId, boolean incognito) {
-            tabClosed(tabId, incognito, false);
-        }
-
-        @Override
-        public void tabPendingClosure(Tab tab) {
-            tabClosed(tab.getId(), tab.isIncognito(), false);
-        }
-
-        @Override
-        public void tabClosureUndone(Tab tab) {
-            tabClosureCancelled(tab.getId(), tab.isIncognito());
-        }
-
-        @Override
-        public void tabClosureCommitted(Tab tab) {
-            LayoutManagerChrome.this.tabClosureCommitted(tab.getId(), tab.isIncognito());
-        }
-
-        @Override
-        public void didMoveTab(Tab tab, int newIndex, int curIndex) {
-            tabMoved(tab.getId(), curIndex, newIndex, tab.isIncognito());
-        }
-
-        @Override
-        public void tabRemoved(Tab tab) {
-            tabClosed(tab.getId(), tab.isIncognito(), true);
-        }
-    }
 
     /**
      * Creates the {@link LayoutManagerChrome} instance.
@@ -164,13 +77,6 @@ public class LayoutManagerChrome
         if (createOverviewLayout) {
             mOverviewLayout = new StackLayout(context, this, renderHost);
         }
-    }
-
-    /**
-     * @return The {@link TabModelObserver} instance this class should be using.
-     */
-    protected LayoutManagerTabModelObserver createTabModelObserver() {
-        return new LayoutManagerTabModelObserver();
     }
 
     /**
@@ -206,64 +112,11 @@ public class LayoutManagerChrome
 
         super.init(selector, creator, content, androidContentContainer, contextualSearchDelegate,
                 dynamicResourceLoader);
-
-        mTabModelSelectorObserver = new EmptyTabModelSelectorObserver() {
-            @Override
-            public void onTabModelSelected(TabModel newModel, TabModel oldModel) {
-                tabModelSwitched(newModel.isIncognito());
-            }
-        };
-        selector.addObserver(mTabModelSelectorObserver);
-        selector.setCloseAllTabsDelegate(this);
-
-        mTabModelObserver = createTabModelObserver();
-        for (TabModel model : selector.getModels()) model.addObserver(mTabModelObserver);
-
-        mTabSelectorTabObserver = new TabModelSelectorTabObserver(selector) {
-            @Override
-            public void onLoadStarted(Tab tab, boolean toDifferentDocument) {
-                tabLoadStarted(tab.getId(), tab.isIncognito());
-            }
-
-            @Override
-            public void onLoadStopped(Tab tab, boolean toDifferentDocument) {
-                tabLoadFinished(tab.getId(), tab.isIncognito());
-            }
-
-            @Override
-            public void onPageLoadStarted(Tab tab, String url) {
-                tabPageLoadStarted(tab.getId(), tab.isIncognito());
-            }
-
-            @Override
-            public void onPageLoadFinished(Tab tab) {
-                tabPageLoadFinished(tab.getId(), tab.isIncognito());
-            }
-
-            @Override
-            public void onPageLoadFailed(Tab tab, int errorCode) {
-                tabPageLoadFinished(tab.getId(), tab.isIncognito());
-            }
-
-            @Override
-            public void onCrash(Tab tab, boolean sadTabShown) {
-                tabPageLoadFinished(tab.getId(), tab.isIncognito());
-            }
-        };
     }
 
     @Override
     public void destroy() {
         super.destroy();
-        if (mTabModelSelectorObserver != null) {
-            getTabModelSelector().removeObserver(mTabModelSelectorObserver);
-        }
-        if (mTabModelObserver != null) {
-            for (TabModel model : getTabModelSelector().getModels()) {
-                model.removeObserver(mTabModelObserver);
-            }
-        }
-        if (mTabSelectorTabObserver != null) mTabSelectorTabObserver.destroy();
         mOverviewModeObservers.clear();
 
         if (mOverviewLayout != null) {
@@ -397,118 +250,19 @@ public class LayoutManagerChrome
         }
     }
 
-    @VisibleForTesting
-    public void tabSelected(int tabId, int prevId, boolean incognito) {
-        // Update the model here so we properly set the right selected TabModel.
-        if (getActiveLayout() != null) {
-            getActiveLayout().onTabSelected(time(), tabId, prevId, incognito);
-        }
-    }
-
-    /**
-     * Should be called when a tab created event is triggered.
-     * @param id             The id of the tab that was created.
-     * @param sourceId       The id of the creating tab if any.
-     * @param launchType     How the tab was launched.
-     * @param incognito      Whether or not the created tab is incognito.
-     * @param willBeSelected Whether or not the created tab will be selected.
-     * @param originX        The x coordinate of the action that created this tab in dp.
-     * @param originY        The y coordinate of the action that created this tab in dp.
-     */
+    @Override
     protected void tabCreated(int id, int sourceId, TabLaunchType launchType, boolean incognito,
             boolean willBeSelected, float originX, float originY) {
         Tab newTab = TabModelUtils.getTabById(getTabModelSelector().getModel(incognito), id);
         mCreatingNtp = newTab != null && newTab.isNativePage();
-
-        int newIndex = TabModelUtils.getTabIndexById(getTabModelSelector().getModel(incognito), id);
-        getActiveLayout().onTabCreated(
-                time(), id, newIndex, sourceId, incognito, !willBeSelected, originX, originY);
-    }
-
-    /**
-     * Should be called when a tab creating event is triggered (called before the tab is done being
-     * created).
-     * @param sourceId    The id of the creating tab if any.
-     * @param url         The url of the created tab.
-     * @param isIncognito Whether or not created tab will be incognito.
-     */
-    protected void tabCreating(int sourceId, String url, boolean isIncognito) {
-        if (getActiveLayout() != null) getActiveLayout().onTabCreating(sourceId);
-    }
-
-    /**
-     * Should be called when a tab closed event is triggered.
-     * @param id         The id of the closed tab.
-     * @param nextId     The id of the next tab that will be visible, if any.
-     * @param incognito  Whether or not the closed tab is incognito.
-     * @param tabRemoved Whether the tab was removed from the model (e.g. for reparenting), rather
-     *                   than closed and destroyed.
-     */
-    protected void tabClosed(int id, int nextId, boolean incognito, boolean tabRemoved) {
-        if (getActiveLayout() != null) getActiveLayout().onTabClosed(time(), id, nextId, incognito);
-    }
-
-    private void tabClosed(int tabId, boolean incognito, boolean tabRemoved) {
-        Tab currentTab =
-                getTabModelSelector() != null ? getTabModelSelector().getCurrentTab() : null;
-        int nextTabId = currentTab != null ? currentTab.getId() : Tab.INVALID_TAB_ID;
-        tabClosed(tabId, nextTabId, incognito, tabRemoved);
-    }
-
-    /**
-     * Called when a tab closure has been committed and all tab cleanup should happen.
-     * @param id        The id of the closed tab.
-     * @param incognito Whether or not the closed tab is incognito.
-     */
-    protected void tabClosureCommitted(int id, boolean incognito) {
-        if (getActiveLayout() != null) {
-            getActiveLayout().onTabClosureCommitted(time(), id, incognito);
-        }
+        super.tabCreated(id, sourceId, launchType, incognito, willBeSelected, originX, originY);
     }
 
     @Override
     public boolean closeAllTabsRequest(boolean incognito) {
-        if (!isOverviewLayout(getActiveLayout()) || !getActiveLayout().handlesCloseAll()) {
-            return false;
-        }
-        getActiveLayout().onTabsAllClosing(time(), incognito);
-        return true;
-    }
+        if (!isOverviewLayout(getActiveLayout())) return false;
 
-    /**
-     * Called when the selected tab model has switched.
-     * @param incognito Whether or not the new current tab model is incognito.
-     */
-    protected void tabModelSwitched(boolean incognito) {
-        if (getActiveLayout() != null) getActiveLayout().onTabModelSwitched(incognito);
-    }
-
-    private void tabMoved(int id, int oldIndex, int newIndex, boolean incognito) {
-        if (getActiveLayout() != null) {
-            getActiveLayout().onTabMoved(time(), id, oldIndex, newIndex, incognito);
-        }
-    }
-
-    private void tabPageLoadStarted(int id, boolean incognito) {
-        if (getActiveLayout() != null) getActiveLayout().onTabPageLoadStarted(id, incognito);
-    }
-
-    private void tabPageLoadFinished(int id, boolean incognito) {
-        if (getActiveLayout() != null) getActiveLayout().onTabPageLoadFinished(id, incognito);
-    }
-
-    private void tabLoadStarted(int id, boolean incognito) {
-        if (getActiveLayout() != null) getActiveLayout().onTabLoadStarted(id, incognito);
-    }
-
-    private void tabLoadFinished(int id, boolean incognito) {
-        if (getActiveLayout() != null) getActiveLayout().onTabLoadFinished(id, incognito);
-    }
-
-    private void tabClosureCancelled(int id, boolean incognito) {
-        if (getActiveLayout() != null) {
-            getActiveLayout().onTabClosureCancelled(time(), id, incognito);
-        }
+        return super.closeAllTabsRequest(incognito);
     }
 
     @Override
@@ -517,6 +271,12 @@ public class LayoutManagerChrome
             mTitleCache.remove(tabId);
         }
         super.initLayoutTabFromHost(tabId);
+    }
+
+    @Override
+    public void releaseResourcesForTab(int tabId) {
+        super.releaseResourcesForTab(tabId);
+        mTitleCache.remove(tabId);
     }
 
     /**

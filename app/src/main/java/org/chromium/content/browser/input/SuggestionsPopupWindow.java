@@ -29,8 +29,8 @@ import android.widget.TextView;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.content.R;
-import org.chromium.content.browser.WindowAndroidProvider;
 import org.chromium.ui.UiUtils;
+import org.chromium.ui.base.WindowAndroid;
 
 /**
  * Popup window that displays a menu for viewing and applying text replacement suggestions.
@@ -47,7 +47,7 @@ public abstract class SuggestionsPopupWindow
     private final Context mContext;
     protected final TextSuggestionHost mTextSuggestionHost;
     private final View mParentView;
-    private final WindowAndroidProvider mWindowAndroidProvider;
+    private WindowAndroid mWindowAndroid;
 
     private Activity mActivity;
     private DisplayMetrics mDisplayMetrics;
@@ -67,15 +67,15 @@ public abstract class SuggestionsPopupWindow
     /**
      * @param context Android context to use.
      * @param textSuggestionHost TextSuggestionHost instance (used to communicate with Blink).
+     * @param windowAndroid The current WindowAndroid instance.
      * @param parentView The view used to attach the PopupWindow.
-     * @param windowAndroidProvider A WindowAndroidProvider instance used to get the window size.
      */
     public SuggestionsPopupWindow(Context context, TextSuggestionHost textSuggestionHost,
-            View parentView, WindowAndroidProvider windowAndroidProvider) {
+            WindowAndroid windowAndroid, View parentView) {
         mContext = context;
         mTextSuggestionHost = textSuggestionHost;
+        mWindowAndroid = windowAndroid;
         mParentView = parentView;
-        mWindowAndroidProvider = windowAndroidProvider;
 
         createPopupWindow();
         initContentView();
@@ -194,6 +194,13 @@ public abstract class SuggestionsPopupWindow
         return mPopupWindow.isShowing();
     }
 
+    /**
+     * Used by TextSuggestionHost to update {@link WindowAndroid} to the current one.
+     */
+    public void updateWindowAndroid(WindowAndroid windowAndroid) {
+        mWindowAndroid = windowAndroid;
+    }
+
     private void addToDictionary() {
         final Intent intent = new Intent(ACTION_USER_DICTIONARY_INSERT);
 
@@ -279,7 +286,7 @@ public abstract class SuggestionsPopupWindow
         mNumberOfSuggestionsToUse = getSuggestionsCount();
         mHighlightedText = highlightedText;
 
-        mActivity = mWindowAndroidProvider.getWindowAndroid().getActivity().get();
+        mActivity = mWindowAndroid.getActivity().get();
         // Note: the Activity can be null here if we're in a WebView that was created without
         // using an Activity. So all code in this class should handle this case.
         if (mActivity != null) {

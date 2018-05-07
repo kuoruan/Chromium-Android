@@ -21,6 +21,16 @@ import java.util.List;
  * Helper to track necessary stats in UMA related to downloads notifications.
  */
 public final class DownloadNotificationUmaHelper {
+    // The state of a download or offline page request at user-initiated cancel.
+    // Keep in sync with enum OfflineItemsStateAtCancel in enums.xml.
+    static class StateAtCancel {
+        static final int DOWNLOADING = 0;
+        static final int PAUSED = 1;
+        static final int PENDING_NETWORK = 2;
+        static final int PENDING_ANOTHER_DOWNLOAD = 3;
+        static final int MAX = 4;
+    }
+
     // NOTE: Keep these lists/classes in sync with DownloadNotification[...] in enums.xml.
     static class ForegroundLifecycle {
         static final int START = 0; // Initial startForeground.
@@ -118,5 +128,22 @@ public final class DownloadNotificationUmaHelper {
         if (!LibraryLoader.isInitialized()) return;
         RecordHistogram.recordEnumeratedHistogram(
                 "Android.DownloadManager.NotificationLaunch", launchType, LaunchType.MAX);
+    }
+
+    /**
+     * Records the state of a request at user-initiated cancel.
+     * @param isDownload True if the request is a download, false if it is an offline page.
+     * @param state State of a request when cancelled (e.g. downloading, paused).
+     */
+    static void recordStateAtCancelHistogram(boolean isDownload, int state) {
+        if (state == -1) return;
+        if (!LibraryLoader.isInitialized()) return;
+        if (isDownload) {
+            RecordHistogram.recordEnumeratedHistogram(
+                    "Android.OfflineItems.StateAtCancel.Downloads", state, StateAtCancel.MAX);
+        } else {
+            RecordHistogram.recordEnumeratedHistogram(
+                    "Android.OfflineItems.StateAtCancel.OfflinePages", state, StateAtCancel.MAX);
+        }
     }
 }

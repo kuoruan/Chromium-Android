@@ -26,10 +26,11 @@ sync_components() {
 	cp -r ${components}/autofill/android/java/src/* \
 		${components}/background_task_scheduler/android/java/src/* \
 		${components}/bookmarks/common/android/java/src/* \
+		${components}/content_view/java/src/* \
 		${components}/crash/android/java/src/* \
 		${components}/dom_distiller/content/browser/android/java/src/* \
 		${components}/dom_distiller/core/android/java/src/* \
-		${components}/download/internal/android/java/src/* \
+		${components}/download/internal/background_service/android/java/src/* \
 		${components}/feature_engagement/internal/android/java/src/* \
 		${components}/feature_engagement/public/android/java/src/* \
 		${components}/gcm_driver/android/java/src/* \
@@ -38,7 +39,6 @@ sync_components() {
 		${components}/location/android/java/src/* \
 		${components}/minidump_uploader/android/java/src/* \
 		${components}/navigation_interception/android/java/src/* \
-		${components}/ntp_tiles/android/java/src/* \
 		${components}/offline_items_collection/core/android/java/src/* \
 		${components}/payments/content/android/java/src/* \
 		${components}/policy/android/java/src/* \
@@ -48,6 +48,7 @@ sync_components() {
 		${components}/sync/android/java/src/* \
 		${components}/url_formatter/android/java/src/* \
 		${components}/variations/android/java/src/* \
+		${components}/version_info/android/java/src/* \
 		${components}/web_contents_delegate_android/java/src/* \
 		${components}/web_restrictions/browser/java/src/* \
 		"${APP_DIR}/src/main/java"
@@ -60,7 +61,7 @@ sync_components() {
 		${RELEASE_DIR}/gen/components/web_contents_delegate_android/web_contents_delegate_android_strings_grd_grit_output/* \
 		"${MODULES_DIR}/components/web_contents_delegate/src/main/res"
 
-	cp -r ${RELEASE_DIR}/gen/components/strings/java/res/* \
+	cp -f ${RELEASE_DIR}/gen/components/strings/java/res/* \
 		"${MODULES_DIR}/components/components_base/src/main/res"
 }
 
@@ -171,10 +172,15 @@ sync_chrome() {
 	cp -r ${RELEASE_DIR}/gradle/chrome/android/chrome_public_apk/extracted-srcjars/* \
 		"$src_dir"
 
-	cp -r ${BASE_DIR}/chrome/android/java/res/* \
-		${BASE_DIR}/chrome/android/java/res_chromium/* \
+	cp -r ${BASE_DIR}/chrome/android/java/res/* "$res_dir"
+
+	cp -r  ${BASE_DIR}/chrome/android/java/res_chromium/* \
 		${BASE_DIR}/media/base/android/java/res/* \
-		${RELEASE_DIR}/gen/chrome/java/res/* \
+		"$res_dir"
+
+	cp -r ${BASE_DIR}/chrome/android/java/res_vr/* "$res_dir"
+
+	cp -r ${RELEASE_DIR}/gen/chrome/java/res/* \
 		${RELEASE_DIR}/gen/chrome/android/chrome_strings_grd_grit_output/* \
 		${RELEASE_DIR}/gradle/chrome/android/chrome_public_apk/extracted-res/xml \
 		"$res_dir"
@@ -217,7 +223,10 @@ sync_jniLibs() {
 }
 
 clean_project() {
-	local del_files="README|OWNERS|.*\.template|R\.java|.*\.stamp|.*stamp\.d"
+	rm -rf ${APP_DIR}/src/main/java/org/org \
+		${APP_DIR}/src/main/java/{test,templates}
+
+	local del_files="README|OWNERS|COPYING|.*\.template|R\.java|.*\.stamp|.*stamp\.d|.*\.py"
 	find "$PRO_DIR" -regextype "posix-egrep" -regex ".*/(${del_files})" -type f -print0 | \
 		xargs -0 rm -f
 

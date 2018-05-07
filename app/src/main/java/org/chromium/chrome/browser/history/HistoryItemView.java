@@ -54,7 +54,8 @@ public class HistoryItemView extends SelectableItemView<HistoryItem> implements 
         int iconColor = ApiCompatibilityUtils.getColor(
                 getResources(), R.color.default_favicon_background_color);
         mIconGenerator = new RoundedIconGenerator(mDisplayedIconSize, mDisplayedIconSize,
-                FeatureUtilities.isChromeHomeEnabled() ? mDisplayedIconSize / 2 : mCornerRadius,
+                FeatureUtilities.isChromeModernDesignEnabled() ? mDisplayedIconSize / 2
+                                                               : mCornerRadius,
                 iconColor, textSize);
         mEndPadding = context.getResources().getDimensionPixelSize(
                 R.dimen.selectable_list_layout_row_padding);

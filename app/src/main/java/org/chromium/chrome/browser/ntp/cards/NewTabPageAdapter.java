@@ -321,10 +321,14 @@ public class NewTabPageAdapter extends Adapter<NewTabPageViewHolder> implements 
         boolean areRemoteSuggestionsEnabled =
                 mUiDelegate.getSuggestionsSource().areRemoteSuggestionsEnabled();
         boolean allDismissed = hasAllBeenDismissed() && !areArticlesLoading();
+        boolean isArticleSectionVisible =
+                ChromeFeatureList.isEnabled(
+                        ChromeFeatureList.NTP_ARTICLE_SUGGESTIONS_EXPANDABLE_HEADER)
+                && mSections.getSection(KnownCategories.ARTICLES) != null;
 
         mAllDismissed.setVisible(areRemoteSuggestionsEnabled && allDismissed);
-        mFooter.setVisible(!SuggestionsConfig.scrollToLoad() && areRemoteSuggestionsEnabled
-                && !allDismissed);
+        mFooter.setVisible(!SuggestionsConfig.scrollToLoad() && !allDismissed
+                && (areRemoteSuggestionsEnabled || isArticleSectionVisible));
 
         if (mBottomSpacer != null) {
             mBottomSpacer.setVisible(areRemoteSuggestionsEnabled || !allDismissed);

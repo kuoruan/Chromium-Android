@@ -45,7 +45,7 @@
         <org.chromium.chrome.browser.widget.TintedImageButton
             android:id="@+id/expand_sheet_button"
             style="@style/ToolbarButton"
-            android:src="@drawable/ic_collapsed"
+            android:src="@drawable/ic_expand_less_black_24dp"
             android:contentDescription="@string/accessibility_toolbar_btn_expand"
             android:visibility="gone" />
 

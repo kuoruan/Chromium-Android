@@ -19,7 +19,7 @@ import org.chromium.services.service_manager.InterfaceFactory;
 
 /**
  * Android implementation of the VibrationManager interface defined in
- * services/device/public/interfaces/vibration_manager.mojom.
+ * services/device/public/mojom/vibration_manager.mojom.
  */
 @JNINamespace("device")
 public class VibrationManagerImpl implements VibrationManager {

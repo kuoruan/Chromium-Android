@@ -51,7 +51,7 @@
         <item name="android:textColor">@color/black_alpha_87</item>
         <item name="android:textSize">@dimen/headline_size_large</item>
     </style>
-    <style name="BlackHeadline2" parent="RobotoMediumStyle">
+    <style name="BlackHeadline2" parent="RobotoMediumStyle" tools:ignore="UnusedResources">
         <item name="android:textColor">@color/black_alpha_87</item>
         <item name="android:textSize">@dimen/headline_size_medium</item>
     </style>
@@ -59,7 +59,7 @@
         <item name="android:textColor">@color/black_alpha_87</item>
         <item name="android:textSize">@dimen/text_size_large</item>
     </style>
-    <style name="BlackTitle2" parent="RobotoMediumStyle">
+    <style name="BlackTitle2" parent="RobotoMediumStyle" tools:ignore="UnusedResources">
         <item name="android:textColor">@color/black_alpha_87</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
     </style>
@@ -91,11 +91,11 @@
         <item name="android:textColor">@color/black_alpha_87</item>
         <item name="android:textSize">@dimen/text_size_small</item>
     </style>
-    <style name="BlackCaption">
+    <style name="BlackCaption" tools:ignore="UnusedResources">
         <item name="android:textColor">@color/black_alpha_54</item>
         <item name="android:textSize">@dimen/text_size_small</item>
     </style>
-    <style name="BlackButtonText" parent="RobotoMediumStyle">
+    <style name="BlackButtonText" parent="RobotoMediumStyle" tools:ignore="UnusedResources">
         <item name="android:textColor">@color/black_alpha_54</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
     </style>
@@ -110,7 +110,7 @@
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textSize">@dimen/headline_size_large</item>
     </style>
-    <style name="WhiteHeadline2" parent="RobotoMediumStyle">
+    <style name="WhiteHeadline2" parent="RobotoMediumStyle" tools:ignore="UnusedResources">
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textSize">@dimen/headline_size_medium</item>
     </style>
@@ -126,7 +126,7 @@
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textSize">@dimen/text_size_large</item>
     </style>
-    <style name="WhiteTitle2" parent="RobotoMediumStyle">
+    <style name="WhiteTitle2" parent="RobotoMediumStyle" tools:ignore="UnusedResources">
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
     </style>
@@ -137,11 +137,11 @@
     </style>
 
     <!-- Blue Text Styles -->
-    <style name="BlueButtonText1" parent="RobotoMediumStyle">
+    <style name="BlueButtonText1" parent="RobotoMediumStyle" tools:ignore="UnusedResources">
         <item name="android:textColor">@color/google_blue_300</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
     </style>
-    <style name="BlueButtonText2" parent="RobotoMediumStyle">
+    <style name="BlueButtonText2" parent="RobotoMediumStyle" tools:ignore="UnusedResources">
         <item name="android:textColor">@color/google_blue_500</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
     </style>

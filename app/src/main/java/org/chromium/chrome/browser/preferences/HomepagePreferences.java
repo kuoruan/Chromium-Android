@@ -11,7 +11,6 @@ import android.preference.PreferenceFragment;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.partnercustomizations.HomepageManager;
-import org.chromium.chrome.browser.partnercustomizations.PartnerBrowserCustomizations;
 
 /**
  * Fragment that allows the user to configure homepage related preferences.
@@ -46,9 +45,9 @@ public class HomepagePreferences extends PreferenceFragment {
         updateCurrentHomepageUrl();
     }
     private void updateCurrentHomepageUrl() {
-        mHomepageEdit.setSummary((mHomepageManager.getPrefHomepageUseDefaultUri()
-                ? PartnerBrowserCustomizations.getHomePageUrl()
-                : mHomepageManager.getPrefHomepageCustomUri()));
+        mHomepageEdit.setSummary(mHomepageManager.getPrefHomepageUseDefaultUri()
+                        ? HomepageManager.getDefaultHomepageUri()
+                        : mHomepageManager.getPrefHomepageCustomUri());
     }
     @Override
     public void onResume() {

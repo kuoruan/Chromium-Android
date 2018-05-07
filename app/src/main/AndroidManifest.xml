@@ -143,7 +143,7 @@ by a child template that "extends" this file.
             android:relinquishTaskIdentity="true"
             android:taskAffinity=""
             android:excludeFromRecents="true"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize">
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density">
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.IntentDispatcher"
             android:targetActivity="org.chromium.chrome.browser.document.ChromeLauncherActivity"
@@ -185,6 +185,13 @@ by a child template that "extends" this file.
                 <data android:scheme="file"/>
                 <data android:scheme="content"/>
                 <data android:mimeType="multipart/related"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="file"/>
+                <data android:scheme="content"/>
+                <data android:mimeType="message/rfc822"/>
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -565,7 +572,15 @@ by a child template that "extends" this file.
             android:taskAffinity=""
             android:relinquishTaskIdentity="true"
             android:excludeFromRecents="true"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize">
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density">
+            <!-- TODO(mthiesse, b/72214458): This is a duplication of the icon metadata below.
+                 Daydream will actually ignore the metadata here, and use the metadata on the
+                 activity-alias. However, play store apk validation fails to find the icons on the
+                 alias, so we need to include them here to pass validation. -->
+            <meta-data android:name="com.google.android.vr.icon"
+                android:resource="@drawable/daydream_icon_foreground" />
+            <meta-data android:name="com.google.android.vr.icon_background"
+                android:resource="@drawable/daydream_icon_background" />
                         <intent-filter>
                 <action android:name="org.chromium.chrome.browser.dummy.action" />
                 <category android:name="com.google.intent.category.DAYDREAM" />
@@ -573,6 +588,25 @@ by a child template that "extends" this file.
             </intent-filter>
 
         </activity>
+        <!-- This alias allows us to dynamically toggle whether the Chrome icon shows up in Daydream
+             home. It starts off disabled and is enabled dynamically via a feature flag when Chrome
+             is started. -->
+        <activity-alias android:name="com.google.android.apps.chrome.VrIntentDispatcher"
+            android:targetActivity="org.chromium.chrome.browser.vr.VrMainActivity"
+            android:enabled="false"
+            android:exported="true">
+            <!-- These icons are placeholders, and only show up behind a flag that's disabled by
+                 default. -->
+            <meta-data android:name="com.google.android.vr.icon"
+                android:resource="@drawable/daydream_icon_foreground" />
+            <meta-data android:name="com.google.android.vr.icon_background"
+                android:resource="@drawable/daydream_icon_background" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <!-- Show icon in Daydream app launcher. -->
+                <category android:name="com.google.intent.category.DAYDREAM" />
+            </intent-filter>
+        </activity-alias>
         <activity android:name="org.chromium.chrome.browser.vr.CustomTabVrActivity"
             android:theme="@style/VrSupportTheme"
             android:screenOrientation="landscape"
@@ -1451,6 +1485,21 @@ by a child template that "extends" this file.
         </activity>
 
         <!-- Activities for Browser Actions -->
+        <activity android:name="org.chromium.chrome.browser.browseractions.BrowserActionActivity"
+            android:theme="@style/FullscreenTransparentActivityTheme"
+            android:exported="true"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize">
+            <intent-filter>
+                <action android:name="androidx.browser.browseractions.browser_action_open" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+            </intent-filter>
+        </activity>
+
+        <service android:name="org.chromium.chrome.browser.browseractions.BrowserActionsService"
+            android:exported="false">
+        </service>
 
         <!-- Service for Broadcasting a Physical Web URL -->
         <service
@@ -1704,8 +1753,6 @@ by a child template that "extends" this file.
              you also need to update kHelperProcessExecutableName in chrome_constants.cc. -->
         <meta-data android:name="org.chromium.content.browser.NUM_SANDBOXED_SERVICES"
             android:value="20"/>
-        <meta-data android:name="org.chromium.content.browser.SANDBOXED_SERVICES_NAME"
-            android:value="org.chromium.content.app.SandboxedProcessService"/>
 
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
@@ -1716,7 +1763,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1726,7 +1773,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1736,7 +1783,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1746,7 +1793,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1756,7 +1803,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1766,7 +1813,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1776,7 +1823,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1786,7 +1833,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1796,7 +1843,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1806,7 +1853,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1816,7 +1863,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1826,7 +1873,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1836,7 +1883,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1846,7 +1893,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1856,7 +1903,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1866,7 +1913,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1876,7 +1923,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1886,7 +1933,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1896,7 +1943,7 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
         <!-- When use_order_profiling is set, the renderer processes need to be
              able to write profiling information and thus cannot be
              sandboxed. Order profiling is used only on bots to optimize binary
@@ -1906,12 +1953,10 @@ by a child template that "extends" this file.
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
-             />
+ />
 
         <meta-data android:name="org.chromium.content.browser.NUM_PRIVILEGED_SERVICES"
             android:value="3"/>
-        <meta-data android:name="org.chromium.content.browser.PRIVILEGED_SERVICES_NAME"
-            android:value="org.chromium.content.app.PrivilegedProcessService"/>
 
         <!-- TODO(tedchoc): Omit this for release builds as MultiDex is debug only. -->
         <meta-data android:name="org.chromium.chrome:privileged_process0.ignore_multidex"
@@ -1997,7 +2042,7 @@ android:value="true" />
 
 
         <meta-data android:name="org.chromium.content.browser.SMART_CLIP_PROVIDER"
-            android:value="org.chromium.content.browser.SmartClipProvider"/>
+            android:value="org.chromium.content_public.browser.SmartClipProvider"/>
 
 
 

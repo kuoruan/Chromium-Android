@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 <string name="infobar_update_permissions_button_text">"继续"</string>
+<string name="ambient_badge_install">"添加到主屏幕"</string>
+<string name="ambient_badge_open">"在应用中打开"</string>
 <string name="search_or_type_web_address">"搜索或输入网址"</string>
 <string name="options_homepage_title">"主页"</string>
 <string name="autofill_from_google_account">"Google Pay"</string>

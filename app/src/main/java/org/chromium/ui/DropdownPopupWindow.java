@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnLayoutChangeListener;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.ListAdapter;
 import android.widget.ListPopupWindow;
@@ -108,7 +109,12 @@ public class DropdownPopupWindow extends ListPopupWindow {
             setWidth(ViewGroup.LayoutParams.WRAP_CONTENT);
         }
         boolean wasShowing = isShowing();
-        super.show();
+        try {
+            super.show();
+        } catch (WindowManager.BadTokenException e) {
+            // Intentionally ignore BadTokenException. This can happen in a real edge case where
+            // mAnchorView.getWindowToken is not valid. See http://crbug.com/826052.
+        }
         getListView().setDividerHeight(0);
         ApiCompatibilityUtils.setLayoutDirection(getListView(),
                 mRtl ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);

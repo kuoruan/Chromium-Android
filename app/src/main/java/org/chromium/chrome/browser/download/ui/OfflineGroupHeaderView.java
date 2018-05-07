@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.download.ui;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.text.format.DateUtils;
 import android.text.format.Formatter;
 import android.util.AttributeSet;
 import android.widget.ImageView;
@@ -22,8 +23,6 @@ import org.chromium.chrome.browser.widget.DateDividedAdapter.TimedItem;
 import org.chromium.chrome.browser.widget.TintedImageView;
 import org.chromium.chrome.browser.widget.selection.SelectableItemView;
 
-import java.util.Date;
-import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -53,7 +52,7 @@ public class OfflineGroupHeaderView
         mCheckedIconForegroundColorList = DownloadUtils.getIconForegroundColorList(context);
         mIconBackgroundResId = R.drawable.list_item_icon_modern_bg;
 
-        if (FeatureUtilities.isChromeHomeEnabled()) {
+        if (FeatureUtilities.isChromeModernDesignEnabled()) {
             mIconForegroundColorList = ApiCompatibilityUtils.getColorStateList(
                     context.getResources(), R.color.dark_mode_tint);
         } else {
@@ -100,9 +99,12 @@ public class OfflineGroupHeaderView
     public void displayHeader(SubsectionHeader header) {
         this.mHeader = header;
         // TODO(crbug.com/635567): Fix lint properly.
-        String description = String.format(Locale.getDefault(), "%s - %s",
-                Formatter.formatFileSize(getContext(), header.getTotalFileSize()),
-                getContext().getString(R.string.download_manager_offline_header_description));
+        CharSequence timeSinceLastUpdate = DateUtils.getRelativeTimeSpanString(
+                header.getTimestamp(), System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS);
+        String totalFileSize = Formatter.formatFileSize(getContext(), header.getTotalFileSize());
+        String description =
+                getContext().getString(R.string.download_manager_offline_header_description,
+                        totalFileSize, timeSinceLastUpdate);
         mDescriptionTextView.setText(description);
         updateExpandIcon(header.isExpanded());
         setChecked(mSelectionDelegate.isHeaderSelected(header));
@@ -110,15 +112,16 @@ public class OfflineGroupHeaderView
     }
 
     private void updateExpandIcon(boolean expanded) {
-        mExpandImage.setImageResource(expanded ? R.drawable.ic_collapsed : R.drawable.ic_expanded);
+        mExpandImage.setImageResource(expanded ? R.drawable.ic_expand_less_black_24dp
+                                               : R.drawable.ic_expand_more_black_24dp);
         mExpandImage.setContentDescription(
-                getResources().getString(expanded ? R.string.accessibility_collapse_offline_pages
-                                                  : R.string.accessibility_expand_offline_pages));
+                getResources().getString(expanded ? R.string.accessibility_collapse_section_header
+                                                  : R.string.accessibility_expand_section_header));
     }
 
     private void updateCheckIcon(boolean checked) {
         if (checked) {
-            if (FeatureUtilities.isChromeHomeEnabled()) {
+            if (FeatureUtilities.isChromeModernDesignEnabled()) {
                 mIconImageView.setBackgroundResource(mIconBackgroundResId);
                 mIconImageView.getBackground().setLevel(
                         getResources().getInteger(R.integer.list_item_level_selected));
@@ -130,7 +133,7 @@ public class OfflineGroupHeaderView
             mIconImageView.setTint(mCheckedIconForegroundColorList);
             mCheckDrawable.start();
         } else {
-            if (FeatureUtilities.isChromeHomeEnabled()) {
+            if (FeatureUtilities.isChromeModernDesignEnabled()) {
                 mIconImageView.setBackgroundResource(mIconBackgroundResId);
                 mIconImageView.getBackground().setLevel(
                         getResources().getInteger(R.integer.list_item_level_default));
@@ -146,7 +149,7 @@ public class OfflineGroupHeaderView
     @Override
     public void onClick() {
         boolean newState = !mHeader.isExpanded();
-        mAdapter.setSubsectionExpanded(new Date(mHeader.getTimestamp()), newState);
+        mAdapter.setPrefetchSectionExpanded(newState);
     }
 
     @Override

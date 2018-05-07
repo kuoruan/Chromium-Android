@@ -17,12 +17,12 @@ import org.chromium.chrome.browser.WebContentsFactory;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchManager;
 import org.chromium.chrome.browser.externalnav.ExternalNavigationHandler;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.components.content_view.ContentView;
 import org.chromium.components.navigation_interception.InterceptNavigationDelegate;
 import org.chromium.components.navigation_interception.NavigationParams;
 import org.chromium.components.web_contents_delegate_android.WebContentsDelegateAndroid;
 import org.chromium.content.browser.ContentVideoViewEmbedder;
-import org.chromium.content.browser.ContentView;
-import org.chromium.content.browser.ContentViewCore;
+import org.chromium.content_public.browser.ContentViewCore;
 import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.content_public.browser.WebContentsObserver;
@@ -94,6 +94,7 @@ public class OverlayPanelContent {
     /** The desired size of the {@link ContentView} associated with this panel content. */
     private int mContentViewWidth;
     private int mContentViewHeight;
+    private boolean mSubtractBarHeight;
 
     /** The height of the bar at the top of the OverlayPanel in pixels. */
     private int mBarHeightPx;
@@ -240,10 +241,12 @@ public class OverlayPanelContent {
      * by the {@link OverlayPanel} before the creation of the content view.
      * @param width The width of the content view.
      * @param height The height of the content view.
+     * @param subtractBarHeight if {@code true} view height should be smaller by {@code mBarHeight}.
      */
-    void setContentViewSize(int width, int height) {
+    void setContentViewSize(int width, int height, boolean subtractBarHeight) {
         mContentViewWidth = width;
         mContentViewHeight = height;
+        mSubtractBarHeight = subtractBarHeight;
     }
 
     /**
@@ -283,7 +286,6 @@ public class OverlayPanelContent {
             int height = mContentViewHeight == 0 ? ContentView.DEFAULT_MEASURE_SPEC
                     : MeasureSpec.makeMeasureSpec(mContentViewHeight, MeasureSpec.EXACTLY);
             cv.setDesiredMeasureSpec(width, height);
-            mActivity.getCompositorViewHolder().setOverlayContentInfo(cv, width, height);
         }
 
         // Creates an initially hidden WebContents which gets shown when the panel is opened.
@@ -361,11 +363,10 @@ public class OverlayPanelContent {
         nativeSetInterceptNavigationDelegate(
                 mNativeOverlayPanelContentPtr, mInterceptNavigationDelegate, panelWebContents);
 
-        mContentDelegate.onContentViewCreated(mContentViewCore);
-        if (mContentViewWidth != 0 && mContentViewHeight != 0) {
-            onPhysicalBackingSizeChanged(mContentViewWidth, mContentViewHeight);
-        }
-        panelWebContents.setSize(cv.getWidth(), cv.getHeight());
+        mContentDelegate.onContentViewCreated();
+        int viewHeight = mContentViewHeight - (mSubtractBarHeight ? mBarHeightPx : 0);
+        onPhysicalBackingSizeChanged(mContentViewWidth, viewHeight);
+        panelWebContents.setSize(mContentViewWidth, viewHeight);
     }
 
     /**
@@ -399,16 +400,12 @@ public class OverlayPanelContent {
 
     /**
      * Calls updateBrowserControlsState on the ContentViewCore.
-     * @param enableHiding Enable the toolbar's ability to hide.
-     * @param enableShowing If the toolbar is allowed to show.
-     * @param animate If the toolbar should animate when showing/hiding.
+     * @param areControlsHidden Whether the browser controls are hidden for the web contents. If
+     *                          false, the web contents viewport always accounts for the controls.
+     *                          Otherwise the web contents never accounts for them.
      */
-    public void updateBrowserControlsState(
-            boolean enableHiding, boolean enableShowing, boolean animate) {
-        if (mContentViewCore != null && mContentViewCore.getWebContents() != null) {
-            mContentViewCore.getWebContents().updateBrowserControlsState(
-                    enableHiding, enableShowing, animate);
-        }
+    public void updateBrowserControlsState(boolean areControlsHidden) {
+        nativeUpdateBrowserControlsState(mNativeOverlayPanelContentPtr, areControlsHidden);
     }
 
     /**
@@ -510,7 +507,7 @@ public class OverlayPanelContent {
     }
 
     void onSizeChanged(int width, int height) {
-        if (mContentViewCore == null || getWebContents() == null) return;
+        if (getWebContents() == null) return;
         getWebContents().setSize(width, height);
     }
 
@@ -559,4 +556,6 @@ public class OverlayPanelContent {
     private native void nativeDestroyWebContents(long nativeOverlayPanelContent);
     private native void nativeSetInterceptNavigationDelegate(long nativeOverlayPanelContent,
             InterceptNavigationDelegate delegate, WebContents webContents);
+    private native void nativeUpdateBrowserControlsState(
+            long nativeOverlayPanelContent, boolean areControlsHidden);
 }

@@ -21,7 +21,7 @@ import org.chromium.shape_detection.mojom.Landmark;
 
 /**
  * Android implementation of the FaceDetection service defined in
- * services/shape_detection/public/interfaces/facedetection.mojom
+ * services/shape_detection/public/mojom/facedetection.mojom
  */
 public class FaceDetectionImpl implements FaceDetection {
     private static final String TAG = "FaceDetectionImpl";

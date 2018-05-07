@@ -50,7 +50,7 @@ import org.chromium.components.feature_engagement.FeatureConstants;
 import org.chromium.components.feature_engagement.Tracker;
 import org.chromium.components.feature_engagement.TriggerState;
 import org.chromium.components.navigation_interception.NavigationParams;
-import org.chromium.content.browser.ContentViewCore;
+import org.chromium.content_public.browser.ContentViewCore;
 import org.chromium.content_public.browser.GestureStateListener;
 import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.content_public.browser.NavigationEntry;
@@ -1028,9 +1028,8 @@ public class ContextualSearchManager
         }
 
         @Override
-        public void onContentViewCreated(ContentViewCore contentViewCore) {
+        public void onContentViewCreated() {
             // TODO(mdjones): Move SearchContentViewDelegate ownership to panel.
-            mSearchContentViewDelegate.setOverlayPanelContentViewCore(contentViewCore);
             nativeEnableContextualSearchJsApiForWebContents(
                     mNativeContextualSearchManagerPtr, getSearchPanelWebContents());
         }
@@ -1038,7 +1037,7 @@ public class ContextualSearchManager
         @Override
         public void onContentViewDestroyed() {
             if (mSearchContentViewDelegate != null) {
-                mSearchContentViewDelegate.releaseOverlayPanelContentViewCore();
+                mSearchContentViewDelegate.releaseOverlayPanelContent();
             }
         }
 

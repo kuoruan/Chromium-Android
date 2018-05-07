@@ -26,7 +26,7 @@ import java.util.List;
 
 /**
  * Google Play services implementation of the FaceDetection service defined in
- * services/shape_detection/public/interfaces/facedetection.mojom
+ * services/shape_detection/public/mojom/facedetection.mojom
  */
 public class FaceDetectionImplGmsCore implements FaceDetection {
     private static final String TAG = "FaceDetectionImpl";

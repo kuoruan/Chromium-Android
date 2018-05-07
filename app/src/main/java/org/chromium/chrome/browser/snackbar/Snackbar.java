@@ -59,7 +59,7 @@ public class Snackbar {
     public static final int UMA_TRANSLATE_NEVER = 19;
     public static final int UMA_TRANSLATE_NEVER_SITE = 20;
     public static final int UMA_SNIPPET_FETCH_FAILED = 21;
-    public static final int UMA_CHROME_HOME_OPT_OUT_SURVEY = 22;
+    // Obsolete; don't use: UMA_CHROME_HOME_OPT_OUT_SURVEY = 22;
     public static final int UMA_SNIPPET_FETCH_NO_NEW_SUGGESTIONS = 23;
 
     private SnackbarController mController;
