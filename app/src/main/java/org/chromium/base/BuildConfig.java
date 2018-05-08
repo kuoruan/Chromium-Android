@@ -1,7 +1,7 @@
 package org.chromium.base;
 public class BuildConfig {
     public static boolean isMultidexEnabled() {
-        return false;
+        return true;
     }
     public static String FIREBASE_APP_ID = "";
     public static boolean DCHECK_IS_ON = false;

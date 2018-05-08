@@ -25,16 +25,22 @@ task clean(type: Delete) {
 }
 
 ext {
+    versionCode = 13
+    versionName = "66.0.3359.155"
+
+    // third_party/android_sdk/README.chromium
     compileSdkVersion = 27
     buildToolsVersion = "27.0.3"
     minSdkVersion = 19
-    targetSdkVersion = 27
+    targetSdkVersion = 25
 
-    versionCode = 10
-    versionName = "65.0.3325.230"
-
+    // tools/android/roll/update_support_library.py
     supportLibraryVersion = "27.1.1"
+    // build/android/play_services/config.json
     playServicesVersion = "11.8.0"
+    // third_party/gvr-android-sdk/README.chromium
+    googleVRVersion = "1.140.0"
+
     espressoVersion = "2.2.2"
     runnerVersion = "1.0.1"
     junitVersion = "4.12"
